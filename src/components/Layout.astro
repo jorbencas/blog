@@ -3,7 +3,8 @@ export interface Props {
 	title: string;
 }
 import { Markdown } from 'astro/components';
-
+import Footer  from './footer.astro';
+import Header from './header.astro';
 const { title } = Astro.props as Props;
 
 ---
@@ -17,18 +18,9 @@ const { title } = Astro.props as Props;
 	<title>{title}</title>
 </head>
 <body>
+  <Header />
 	<slot />
-  <footer>
-		<Markdown> 
-			- Twitter [@jorgevenkas](https://twitter.com/jorgevenkas)
-			- GitHub [@jorbencas](https://github.com/jorbencas)
-			- GitLab [@jorbencas](https://gitlab.com/jorbencas)
-			- WordPress [@jorgeblogbeneyto](https://jorgeblogbeneyto.wordpress.com/)
-			- Blogger [@jorbencas](https://cosasdejorget.blogspot.com/)
-			- Google Sites [@jorbencas](https://sites.google.com/site/saplicacioneswebjorge2smx/)
-			- Email jorgebeneytocastello@gmail.com
-		</Markdown>
-	</footer>
+		<Footer />
 </body>
 </html>
 
@@ -48,13 +40,6 @@ const { title } = Astro.props as Props;
 		--link-gradient: linear-gradient(45deg, #4F39FA, #DA62C4 30%, var(--color-border) 60%);
 		--night-sky-gradient: linear-gradient(0deg, #392362 -33%, #431f69 10%, #30216b 50%, #1f1638 100%);
   }
-
-	footer {
-		border-top: 1px solid blue;
-		min-height: 15px;
-		background: var(--link-gradient);
-		color: var(--color-border);
-	}
 
   html {
     font-family: system-ui, sans-serif;
