@@ -1,26 +1,33 @@
+---
+const yearCreation = new Date().getFullYear();
+---
+
 <footer>
     <div class="text">
         <p>
-            Creado por Jorge Beneyto Castelló
+            Creado por Jorge Beneyto Castelló {yearCreation}
         </p>
     </div>
-
     <div class="links">
-        <!-- [<img src="http://www.google.com.au/images/nav_logo7.png">](http://google.com.au/) -->
-        <a href='https://twitter.com/jorgevenkas' target="_blanck"> <img src='public/icons/twitter.svg'> </a>
-        <a href='https://github.com/jorbencas' target="_blanck"> <img src='public/icons/github.svg'> </a>
-        <a href='https://gitlab.com/jorbencas' target="_blanck"> <img src='public/icons/gitlab.svg'> </a>
-        <a href='https://jorgeblogbeneyto.wordpress.com/' target="_blanck"> <img src='public/icons/wordpress.svg'> </a>
-        <a href='https://cosasdejorget.blogspot.com/' target="_blanck"> <img src='public/icons/blogger.svg'> </a>
-        <a href='https://sites.google.com/site/saplicacioneswebjorge2smx/' target="_blanck"> <img
-                src='public/icons/googleSites.svg'> </a>
-        <a href='(mailto:jorgebeneytocastello@gmail.com' target="_blanck"> <img src='public/icons/email.svg'> </a>
+     <a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"><img alt="Licencia de Creative Commons" style="border-width:0;" src="https://i.creativecommons.org/l/by-nc/4.0/88x31.png" /></a>Este obra está bajo una <a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/">licencia de Creative Commons Reconocimiento-NoComercial 4.0 Internacional.</a>
     </div>
 </footer>
 
-
 <style>
-    	footer {
+  :root {
+    --font-size-base: clamp(1rem, 0.34vw + 0.91rem, 1.19rem);
+		--font-size-lg: clamp(1.2rem, 0.7vw + 1.2rem, 1.5rem); 
+    --font-size-xl: clamp(2.44rem, 2.38vw + 1.85rem, 3.75rem);
+
+    --color-text: hsl(12, 5%, 4%);
+    --color-bg: hsl(10, 21%, 95%);
+    --color-border: hsl(17, 24%, 90%);
+		--astro-gradient: linear-gradient(0deg,#4F39FA, #DA62C4);
+		--link-gradient: linear-gradient(45deg, #4F39FA, #DA62C4 30%, var(--color-border) 60%);
+		--night-sky-gradient: linear-gradient(0deg, #392362 -33%, #431f69 10%, #30216b 50%, #1f1638 100%);
+  }
+
+    footer {
 		border-top: 1px solid var(--astro-gradient);
 		min-height: 15px;
 		background-color: var(--astro-gradient);
@@ -35,14 +42,29 @@
         align-items: center;
     }
 
-    footer .text,
     footer .links {
-        /*background-color: hsla(0, 20%, 95%, 0.263);*/
-        padding: 0 10px;
+        max-width: 300px;
+        color: var(--color-text);
+        padding: 10px 0px;
+		/* font-weight: 900; */
+        font-size: 12px;
+		background-image: var(--astro-gradient);
+		-webkit-background-clip: text;
+  	-webkit-text-fill-color: transparent;
+		background-size: 100% 200%;
+		background-position-y: 100%;
+		border-radius: 0.4rem;
+		animation: pulse 4s ease-in-out infinite;
+	}
+
+    footer .links a {
+        color: var(--color-text);
+        text-decoration: none;
+        display: block;
+        text-decoration: none;
     }
 
-    footer a {
-        text-decoration: none;
-        padding: 10px 0;
+    footer .text {
+        padding: 0 10px;
     }
 </style>
