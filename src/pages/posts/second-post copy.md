@@ -6,7 +6,7 @@ tags: ['web']
 image: "img/default.jpg"
 author: "Jorge Beneyto Castelló"
 defaultimage: "img/default.jpg"
-layout: "../../components/BlogLayout.astro"
+layout: "../../layouts/BlogLayout.astro"
 ---
 
 # Segundo post de prueba
