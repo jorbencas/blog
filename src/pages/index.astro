@@ -1,12 +1,26 @@
 ---
 import Layout from '../components/Layout.astro';
+import PreviewPost from '../components/PreviewPost.astro';
+
+interface MarkdownFrontmatter {
+  date: number;
+}
+
+const allPosts = await Astro.glob<MarkdownFrontmatter>('./posts/*.md');
+const sortedPosts = allPosts.sort((a, b) => new Date(b.frontmatter.date).valueOf() - new Date(a.frontmatter.date).valueOf());
+
 ---
 
 <Layout title="Problemas de un desarollador Web">
 	<main>
 		<p class="instructions"><strong>Your first mission:</strong> tweak this message to try our hot module reloading. Check the <code>src/pages</code> directory!</p>
 		<ul role="list" class="link-card-grid">
-			<li class="link-card">
+			{
+				sortedPosts.map( p => 
+					<PreviewPost post={p} />
+				)
+			}
+			<!--<li class="link-card">
 				<a href="https://astro.build/integrations/">
 					<h2>Integrations <span>&rarr;</span></h2>
 					<p>Add component frameworks, Tailwind, Partytown, and more!</p>
@@ -42,7 +56,7 @@ import Layout from '../components/Layout.astro';
 						</svg>
 					</p>
 				</a>
-			</li>
+			</li>-->
 		</ul>
 	</main>
 </Layout>
@@ -65,6 +79,14 @@ import Layout from '../components/Layout.astro';
 		transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 	}
 
+	.link-card-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(24ch, 1fr));
+		gap: 1rem;
+		padding: 0;
+		max-width: 70vw;
+	}
+
 	code {
 		font-size: 0.875em;
 		border: 0.1em solid var(--color-border);
@@ -75,7 +97,7 @@ import Layout from '../components/Layout.astro';
 	main {
 		margin: auto;
     	padding: 1em;
-		max-width: 60ch;
+		max-width: 60vw;
 	}
 
 	.instructions {
@@ -85,47 +107,6 @@ import Layout from '../components/Layout.astro';
 		padding: 1.5rem;
 		border-radius: 0.4rem;
 		color: var(--color-bg);
-	}
-
-	.link-card-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(24ch, 1fr));
-		gap: 1rem;
-		padding: 0;
-	}
-
-	.link-card {
-		list-style: none;
-		display: flex;
-		padding: 0.15rem;
-		background-image: var(--link-gradient);
-		background-size: 400%;
-		border-radius: 0.5rem;
-		background-position: 100%;
-		transition: background-position 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-	}
-
-	.link-card > a {
-		width: 100%;
-		text-decoration: none;
-		line-height: 1.4;
-		padding: 1em 1.3em;
-		border-radius: 0.35rem;
-		color: var(--text-color);
-		background-color: white;
-		opacity: 0.8;
-	}
-
-	.link-card:is(:hover, :focus-within) {
-		background-position: 0;
-	}
-
-	.link-card:is(:hover, :focus-within) h2 {
-		color: #4F39FA;
-	}
-
-	.link-card:is(:hover, :focus-within) h2 span {
-		transform: translateX(2px);
 	}
 
 	.heart {

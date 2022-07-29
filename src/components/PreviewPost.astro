@@ -1,0 +1,86 @@
+---
+import { Markdown } from 'astro/components';
+
+export interface Props {
+  post: any;
+}
+
+const { post } = Astro.props;
+---
+
+<li class="link-card">
+    <a href={post.url}>
+        <img src={post.frontmatter.image} alt={post.frontmatter.tittle} srcset={post.frontmatter.defaultimage}>
+        <div class="info">
+            <h3>{post.frontmatter.tittle}</h3>
+            <p>{post.frontmatter.description}</p>
+            <p class="date">{post.frontmatter.date}</p>
+        </div>
+    </a>
+</li>
+
+
+<style>
+
+
+	.link-card {
+		list-style: none;
+		display: flex;
+		/*padding: 0.15rem;*/
+		background-image: var(--link-gradient);
+		background-size: 400%;
+		border-radius: 0.5rem;
+		background-position: 100%;
+		transition: background-position 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+	}
+
+	.link-card > a {
+		width: 100%;
+		text-decoration: none;
+		/*line-height: 1.4;
+		padding: 1em 1.3em;*/
+		border-radius: 0.35rem;
+		color: var(--text-color);
+		background-color: white;
+		opacity: 0.8;
+	}
+
+	.link-card:is(:hover, :focus-within) {
+		background-position: 0;
+	}
+
+	.link-card:is(:hover, :focus-within) h2 {
+		color: #4F39FA;
+	}
+
+	.link-card:is(:hover, :focus-within) h2 span {
+		transform: translateX(2px);
+	}
+
+    .link-card img {
+       width: 100%;
+       max-height: 225px;
+       object-fit: cover;
+       overflow: hidden;
+       box-sizing: content-box;
+       width: 100%;
+        aspect-ratio: 15/7;
+    }
+
+    .link-card .info {
+       display: block;
+       font-size: 12px;
+       padding: 5px;
+    }
+
+    .link-card .info * {
+        overflow: hidden;
+       box-sizing: content-box;
+       padding: 2px;
+       margin:0;
+    }
+
+    .link-card .info .date {
+        color: var(--link-gradient);
+    }
+</style>
