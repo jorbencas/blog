@@ -1,19 +1,19 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import PreviewPost from '../components/PreviewPost.astro';
+import Layout from '../../layouts/Layout.astro';
+import PreviewPost from '../../components/PreviewPost.astro';
 
 interface MarkdownFrontmatter {
   date: number;
 }
 
-const allPosts = await Astro.glob<MarkdownFrontmatter>('./posts/*.md');
-const sortedPosts = allPosts.sort((a, b) => new Date(b.frontmatter.date).valueOf() - new Date(a.frontmatter.date).valueOf()).reverse().slice(0, 3);
+const allPosts = await Astro.glob<MarkdownFrontmatter>('./*.md');
+const sortedPosts = allPosts.sort((a, b) => new Date(b.frontmatter.date).valueOf() - new Date(a.frontmatter.date).valueOf()).reverse();
 
 ---
 
 <Layout title="Problemas de un desarollador Web">
 	<main>
-		<p class="instructions"><strong>Your first mission:</strong> tweak this message to try our hot module reloading. Check the <code>src/pages</code> directory!</p>
+        <h1>Problemas de un desarollador Web</h1>
 		<ul role="list" class="link-card-grid">
 			{
 				sortedPosts.map( p => 
@@ -21,7 +21,6 @@ const sortedPosts = allPosts.sort((a, b) => new Date(b.frontmatter.date).valueOf
 				)
 			}
 		</ul>
-		<a href="/posts">ver Todos</a>
 	</main>
 </Layout>
 

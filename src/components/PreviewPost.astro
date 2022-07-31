@@ -21,61 +21,63 @@ const { post } = Astro.props;
 
 
 <style>
+    @import url('../styles/colors.css');
+
 	.link-card {
 		list-style: none;
 		display: flex;
-		background-image: var(--link-gradient);
-		background-size: 400%;
-		border-radius: 0.5rem;
-		background-position: 100%;
-		transition: background-position 0.6s cubic-bezier(0.22, 1, 0.36, 1);
 	}
+
+    .link-card:is(:hover, :focus-within) {
+        background-color: var(--opacity-color);
+        color: var(--color-primary);
+    }
+
+    .link-card:is(:hover, :focus-within) .info .date {
+        color: var(--color-primary);
+    }
 
 	.link-card > a {
 		width: 100%;
 		text-decoration: none;
-		border-radius: 0.35rem;
-		color: var(--text-color);
-		background-color: white;
+		color: var(--eggshell);
 		opacity: 0.8;
-	}
 
-	.link-card:is(:hover, :focus-within) {
-		background-position: 0;
-	}
-
-	.link-card:is(:hover, :focus-within) h2 {
-		color: #4F39FA;
-	}
-
-	.link-card:is(:hover, :focus-within) h2 span {
-		transform: translateX(2px);
 	}
 
     .link-card img {
-       width: 100%;
-       max-height: 225px;
-       object-fit: cover;
-       overflow: hidden;
-       box-sizing: content-box;
-       width: 100%;
+        width: 100%;
+        max-height: 225px;
+        object-fit: cover;
+        overflow: hidden;
+        box-sizing: content-box;
+        width: 100%;
         aspect-ratio: 15/7;
     }
 
     .link-card .info {
-       display: block;
-       font-size: 12px;
-       padding: 5px;
+        display: block;
+        font-size: 12px;
+        padding: 5px;
     }
 
     .link-card .info * {
         overflow: hidden;
-       box-sizing: content-box;
-       padding: 2px;
-       margin:0;
+        box-sizing: content-box;
+        padding: 2px;
+        margin:0;
+    }
+
+    .link-card .info h3 {
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin: 0;
+        padding: 0;
+        color:var(--deep-champagne);
     }
 
     .link-card .info .date {
-        color: var(--link-gradient);
+        color: var(--eggshell);
+        background-color: var(--deep-champagne);
     }
 </style>
