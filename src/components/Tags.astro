@@ -1,0 +1,45 @@
+---
+let tags = ['web', 'sistemas', 'react'];
+
+const { tagsList } = Astro.props;
+
+if (typeof tagsList === 'string') {
+    tags.slice(tags.length,1);
+    let tagsLists = JSON.parse(tagsList);
+    tagsLists.forEach(tag => {
+        tags.push(tag);
+    });
+}
+---
+<h3>Etiquetas</h3>
+<ul>
+    {tags.map((tag) => {
+        return <a href={"/tags/"+tag+"/1"}>{tag}</a>
+    })}
+</ul>
+
+<style>
+    a {
+        text-decoration: none;
+        margin-right: 10px;
+        padding: 5px;
+        box-shadow: 0;
+        border: 1px solid var(--color-primary);
+        border-radius: 10px;
+        color: black;
+    }
+    
+    a:hover {
+        background: var(--opacity-color);
+        color: var(--color-primary);
+    }
+
+    ul {
+        list-style: none;
+        padding: 0;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+    }
+</style>

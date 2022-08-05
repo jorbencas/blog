@@ -1,6 +1,8 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import PreviewPost from '../components/PreviewPost.astro';
+import Layout from '@layouts/Layout.astro';
+import PreviewPost from '@components/PreviewPost.astro';
+import Tags from '@components/Tags.astro';
+import Archive from '@components/Archive.astro';
 
 interface MarkdownFrontmatter {
   date: number;
@@ -12,8 +14,9 @@ const sortedPosts = allPosts.sort((a, b) => new Date(b.frontmatter.date).valueOf
 ---
 
 <Layout title="Problemas de un desarollador Web">
-	<main>
-		<p class="instructions"><strong>Your first mission:</strong> tweak this message to try our hot module reloading. Check the <code>src/pages</code> directory!</p>
+	<div class="content">
+		<!-- <p class="instructions"><strong>Your first mission:</strong> tweak this message to try our hot module reloading. Check the <code>src/pages</code> directory!</p> -->
+		<h1>Últimos artículos</h1>
 		<ul role="list" class="link-card-grid">
 			{
 				sortedPosts.map( p => 
@@ -21,21 +24,15 @@ const sortedPosts = allPosts.sort((a, b) => new Date(b.frontmatter.date).valueOf
 				)
 			}
 		</ul>
-		<a href="/posts">ver Todos</a>
-	</main>
+		<a class='showall' href="/posts/1">ver Todos</a>
+	</div>
+	<div class="lateralbar">
+		<Tags/>
+		<Archive />
+	</div>
 </Layout>
 
 <style>
-	h2 {
-		margin: 0;
-		transition: color 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-	}
-
-	h2 span {
-		display: inline-block;
-		transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
-	}
-
 	.link-card-grid {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(24ch, 1fr));
@@ -44,49 +41,26 @@ const sortedPosts = allPosts.sort((a, b) => new Date(b.frontmatter.date).valueOf
 		max-width: 70vw;
 	}
 
-	code {
-		font-size: 0.875em;
-		border: 0.1em solid var(--color-border);
-		border-radius: 4px;
-		padding: 0.15em 0.25em;
-	}
-
-	main {
-		margin: auto;
-    	padding: 1em;
-		max-width: 60vw;
-		background: var(--independence);
-	}
-
 	.instructions {
 		line-height: 1.8;
 		margin-bottom: 2rem;
-		color: var(--green-sheen);
+		color: var(--opacity-green);
 		padding: 15px;
 		border-radius: 25px;
-		border :1px solid var(--green-sheen);
+		border: 1px solid var(--opacity-green);
 	}
 
-	.heart {
-		display: inline-block;
-		color: #DA62C4;
-		animation: heartbeat 3s ease-in-out infinite;
+	.showall {
+		display: block;
+		margin: 1rem auto;
+		text-align: center;
+		font-size: 12px;
+		text-decoration: none;
+		background-color: var(--opacity-green);
+		padding: 5px 10px;
+		border-radius: 25px;
+		border: 1px solid var(--opacity-green);
+		color: var(--color-primary);
 	}
 
-	@keyframes heartbeat {
-		0%,
-		50%,
-		100% {
-			transform: scale(1);
-		}
-		5% {
-			transform: scale(1.125);
-		}
-		10% {
-			transform: scale(1.05);
-		}
-		15% {
-			transform: scale(1.25);
-		}
-	}
 </style>

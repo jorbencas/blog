@@ -1,0 +1,107 @@
+---
+import Layout from '@layouts/Layout.astro';
+import PreviewPost from '@components/PreviewPost.astro';
+import Tags from '@components/Tags.astro';
+import Archive from '@components/Archive.astro';
+
+export async function getStaticPaths({paginate}) {
+	const allPosts = await Astro.glob('./*.md');
+	const sortedPosts = allPosts.sort((a, b) => new Date(b.frontmatter.date).valueOf() - new Date(a.frontmatter.date).valueOf()).reverse();
+	return paginate(sortedPosts, {
+		pageSize: 12
+	});
+}
+
+const { page } = Astro.props;
+const posts = page.data;
+let next = page.url.next;
+let prev = page.url.prev;
+
+---
+
+<Layout title="Problemas de un desarollador Web">
+	<div class="content">
+		<h1>Últimos artículos</h1>
+		<ul role="list" class="link-card-grid">
+			{
+				posts.map( p => 
+					<PreviewPost post={p} />
+				)
+			}
+		</ul>
+
+		<ul class="paginator">
+			{
+				next && <li><a href={next}>Articulos Posteriores</a></li>
+			}
+			{
+				prev && <li><a href={prev}>Articulos Ateriores</a></li>
+			}
+		</ul>
+	</div>
+	<div class="lateralbar">
+		<Tags />
+		<Archive />
+	</div>
+</Layout>
+<style>
+
+	.link-card-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(24ch, 1fr));
+		gap: 1rem;
+		padding: 0;
+		max-width: 70vw;
+	}
+
+	.paginator {
+		display: flex;
+		justify-content: space-between;
+		margin: 1em 0;
+	}
+
+	.paginator a {
+		color: var(--color-text);
+		text-decoration: none;
+		transition: color 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+	}
+
+	.paginator li {
+		display: flex;
+		align-items: center;
+		list-style: none;
+	}
+
+	.paginator a {
+		color: var(--color-text);
+		text-decoration: none;
+	}
+	.instructions {
+		line-height: 1.8;
+		margin-bottom: 2rem;
+		padding: 15px;
+	}
+
+	.heart {
+		display: inline-block;
+		color: #DA62C4;
+		animation: heartbeat 3s ease-in-out infinite;
+	}
+
+	@keyframes heartbeat {
+		0%,
+		50%,
+		100% {
+			transform: scale(1);
+		}
+		5% {
+			transform: scale(1.125);
+		}
+		10% {
+			transform: scale(1.05);
+		}
+		15% {
+			transform: scale(1.25);
+		}
+	}
+</style>

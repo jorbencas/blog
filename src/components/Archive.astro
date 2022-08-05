@@ -1,0 +1,70 @@
+---
+const currentYear = new Date().getFullYear().toString();
+const allPosts = await Astro.glob("../pages/posts/*.md");
+let allYears = allPosts
+  .filter((f) => f.frontmatter.date != undefined)
+  .map((p) => new Date(p.frontmatter.date).getFullYear().toString());
+let allYearsUnique = [...new Set(allYears.flat())];
+
+// allPosts.forEach((post) => {
+//   let year = new Date(post.frontmatter.date).getFullYear().toString();
+//   if (allYearsUnique.indexOf(year) == -1) {
+//     allYearsUnique.push(year);
+//   }
+// });
+---
+<div class="taglist">
+    <h3>Explorar posts archivados</h3>
+    <ul>
+        {
+            allYearsUnique.map((year) => {
+                let className = currentYear == year ? "active" : "";
+                return <li class={className}>{year}</li>
+            })
+        }
+    </ul>
+</div>
+
+<style>
+	.taglist {
+		/* display: flex;
+		justify-content: center; */
+		margin: auto;
+	}
+
+	.taglist > * {
+		margin: 0.5rem;
+	}
+
+    ul {
+        display: block;
+        list-style: none;
+        padding: 0;
+    }
+    li {
+        display: block;
+        margin-right: 10px;
+    }
+
+    li:hover {
+        cursor: pointer;
+    }
+
+    li.active {
+        font-weight: bold;
+        color:var(--color-text);
+    }
+
+    li.active:hover {
+        cursor: default;
+    }
+
+    li.active:after {
+        content: " (current)";
+    }
+
+    li:after {
+        content: "";
+    }
+
+</style>

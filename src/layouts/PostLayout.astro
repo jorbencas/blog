@@ -1,0 +1,56 @@
+---
+import Archive from '@components/Archive.astro';
+import Tags from '@components/Tags.astro';
+import Layout from './Layout.astro';
+// export async function getStaticPaths({paginate}) {
+// 	const allTags = ['web', 'sistemas', 'react'];
+// 	const allPosts = await Astro.glob('@posts/*.md');
+// 	const sortedPosts = allPosts.sort((a, b) => new Date(b.frontmatter.date).valueOf() - new Date(a.frontmatter.date).valueOf()).reverse();
+// 	return allTags.map((tag) => {
+// 		const filteredPosts = sortedPosts.filter((post) => post.frontmatter.tags.includes(tag));
+// 		return paginate(filteredPosts, {
+// 		params: { tag },
+// 		pageSize: 12
+// 		});
+// 	});
+// }
+// const { content, page } = Astro.props;
+// console.log(page);
+
+// console.log(content);
+// let next = page.url.next;
+// let prev = page.url.prev;
+export interface Props {
+	title: string;
+}
+
+const { content } = Astro.props;
+---
+
+<Layout title={content.tittle}>
+  <div class="content">
+    <div>
+      <h1>{content.tittle}</h1>
+      <p>{content.description}</p>
+      <img aria-label={content.tittle} src={content.image} />
+    </div>
+    <slot />
+    <!-- <div class="prevnext">
+      <a href={prev}>Previous</a>
+      <a href={next}>Next</a>
+    </div> -->
+  </div>
+  <div class="lateralbar">
+    <Tags tagList={JSON.stringify(content.tags)}/>
+    <Archive />
+  </div>
+</Layout>
+
+<style>
+  .prevnext {
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		height: 100%;
+	}
+</style>
