@@ -7,7 +7,6 @@ export const get = () =>
     description: "A humble Astronaut’s guide to the stars",
     site: import.meta.env.SITE,
     items: posts.map((post) => ({
-      link: post.frontmatter.slug,
       title: post.frontmatter.title,
       pubDate: post.frontmatter.date,
     })),
