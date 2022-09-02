@@ -1,37 +1,48 @@
 ---
-const currentYear = new Date().getFullYear().toString();
+const currentYear = new Date().getFullYear();
 const allPosts = await Astro.glob("../pages/posts/*.md");
-let allYears = allPosts
+const mounths =  ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
+let allYears = [];
+allPosts
   .filter((f) => f.frontmatter.date != undefined)
-  .map((p) => new Date(p.frontmatter.date).getFullYear().toString());
-let allYearsUnique = [...new Set(allYears.flat())];
+  .forEach((p) => {
+    let m = new Date(p.frontmatter.date).getMonth();
+    let y = new Date(p.frontmatter.date).getFullYear();
+    let t  = p.frontmatter.tittle;
+   if(allYears.length == 0 || !allYears.includes(y) ) {
+    allYears[y] = { 'month':mounths[m - 1], 'posts':[]}; 
+   }
 
+  if(allYears[y].month !== mounths[m - 1]) {
+    allYears[y] = { 'month':mounths[m - 1], 'posts':[]}; 
+  }
+
+   if(allYears[y].posts.length == 0 || !allYears[y].posts.includes(t)) {
+    allYears[y].posts.push(t);
+   }    
+});
+/*
 allPosts.forEach((post) => {
-  let year = new Date(post.frontmatter.date).getFullYear().toString();
+  let year = new Date(post.frontmatter.date).toString();
   if (allYearsUnique.indexOf(year) == -1) {
     allYearsUnique.push(year);
   }
-});
-
-const toggler = document.getElementsByClassName("caret");
-for (let i = 0; i < toggler.length; i++) {
-  toggler[i].addEventListener("click", function() {
-    this.parentElement.querySelector(".nested").classList.toggle("active");
-    this.classList.toggle("caret-down");
-  });
-}
+});*/
 ---
 
 <div class="taglist">
   <h3>Explorar posts archivados</h3>
-  <h2>Tree View</h2>
-  <p>A tree view represents a hierarchical view of information, where each item can have a number of subitems.</p>
-  <p>Click on the arrow(s) to open or close the tree branches.</p>
-  <ul>
+  <ul class="myUL">
     {
-      allYearsUnique.map((year) => {
-          let className = currentYear == year ? "active" : "";
-          return <li class={className}>{year}</li>
+      
+      allYears.map((element , y) => {
+        return <li><span class="caret"> {element.month + ' ' + y}</span>
+          <ul class="nested">{
+            element.posts.map( (e) => {
+              return  <li>{e}</li>
+            })
+          } </ul>
+          </li>
       })
     }
   </ul>
@@ -60,79 +71,20 @@ for (let i = 0; i < toggler.length; i++) {
 </div>
 
 <style>
-	.taglist {
-		margin: auto;
-	}
+  @import url('Archive.css');
+</style> 
 
-	.taglist > * {
-		margin: 0.5rem;
-	}
 
-  ul {
-      display: block;
-      list-style: none;
-      padding: 0;
-  }
-  li {
-      display: block;
-      margin-right: 10px;
-  }
 
-  li:hover {
-      cursor: pointer;
-  }
 
-  li.active {
-      font-weight: bold;
-      color:var(--color-text);
-  }
+<script> 
 
-  li.active:hover {
-      cursor: default;
-  }
+const toggler = document.getElementsByClassName("caret");
+for (let i = 0; i < toggler.length; i++) {
+  toggler[i].addEventListener("click", function() {
+    this.parentElement.querySelector(".nested").classList.toggle("active");
+    this.classList.toggle("caret-down");
+  });
+}
 
-  li.active:after {
-      content: " (current)";
-  }
-
-  li:after {
-      content: "";
-  }
-
-  .myUL {
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  .caret {
-    cursor: pointer;
-    -webkit-user-select: none; /* Safari 3.1+ */
-    -moz-user-select: none; /* Firefox 2+ */
-    -ms-user-select: none; /* IE 10+ */
-    user-select: none;
-  }
-
-  .caret::before {
-    content: "\25B6";
-    color: black;
-    display: inline-block;
-    margin-right: 6px;
-  }
-
-  .caret-down::before {
-    -ms-transform: rotate(90deg); /* IE 9 */
-    -webkit-transform: rotate(90deg); /* Safari */'
-    transform: rotate(90deg);  
-  }
-
-  .nested {
-    display: none;
-  }
-
-  .active {
-    display: block;
-  }
-
-</style>
-
+</script>
