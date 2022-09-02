@@ -1,0 +1,21 @@
+---
+let tags = ['web', 'sistemas', 'react'];
+
+const { tagsList } = Astro.props;
+let tagsLists = JSON.parse(tagsList);
+tags = tagsLists.filter( tag => {
+    tags.includes(tag.toLowerCase().trim())
+    return tag
+} );
+
+---
+<p>Etiquetas del articulo: </p>
+<ul>
+    {tags.map((tag) => {
+        return <a href={"/tags/"+tag+"/1"}>{tag}</a>
+    })}
+</ul>
+
+<style>
+    @import url('../styles/Tags.css');
+</style>
