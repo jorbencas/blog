@@ -1,55 +1,87 @@
 ---
 const allPosts = await Astro.glob("../pages/posts/*.md");
-const mounths =  ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
+const mounths = [
+  "Enero",
+  "Febrero",
+  "Marzo",
+  "Abril",
+  "Mayo",
+  "Junio",
+  "Julio",
+  "Agosto",
+  "Septiembre",
+  "Octubre",
+  "Noviembre",
+  "Diciembre",
+];
 let allYears = [];
 allPosts
   .filter((f) => f.frontmatter.date != undefined)
   .forEach((p) => {
     let { date, tittle } = p.frontmatter;
     let fullDate = new Date(date);
-    let month = mounths[fullDate.getMonth()];
+    let month = fullDate.getMonth();
     let y = fullDate.getFullYear();
 
-    if(!allYears[y]) {
-      allYears[y] = { posts:[], month };
-    }
-    
-    if(allYears[y].month !== month) {
-      allYears[y].month = month;
+    if (!allYears[y]) {
+      allYears[y] = [];
     }
 
-
-    if(allYears[y].posts.length == 0 || !allYears[y].posts.includes(tittle)) {
-      allYears[y].posts.push({'url':p.url, tittle});
+    if (!allYears[y][month]) {
+      allYears[y][month] = [];
     }
-});
+
+    if (
+      allYears[y][month].length == 0 ||
+      !allYears[y][month].includes(tittle)
+    ) {
+      allYears[y][month].push({ url: p.url, tittle });
+    }
+  });
 ---
 
 <div class="taglist">
   <h3>Explorar posts archivados</h3>
   <ul class="myUL">
     {
-      allYears.map((element , y) => {
-        return <li><span class="caret"> {element.month + ' ' + y}</span>
-          <ul class="nested">{
-            element.posts.map( (e) => {
-              return  <li> <a href={e.url}>{e.tittle}</a></li>
-            })
-          } </ul>
+      allYears.map((e, y) => {
+        return (
+          <li>
+            <span class="caret">{y}</span>
+            <ul class="nested">
+              {e.map((el, yl) => {
+                return (
+                  <li>
+                    <span class="caret">{mounths[yl]}</span>
+                    <ul class="nested">
+                      {el.map((eu) => {
+                        return (
+                          <li>
+                            {" "}
+                            <a href={eu.url}>{eu.tittle}</a>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </li>
+                );
+              })}
+            </ul>
           </li>
+        );
       })
     }
   </ul>
 </div>
 
 <style>
-  @import url('../styles/Archive.css');
-</style> 
+  @import url("../styles/Archive.css");
+</style>
 
-<script> 
+<script>
   const toggler = document.getElementsByClassName("caret");
   for (let i = 0; i < toggler.length; i++) {
-    toggler[i].addEventListener("click", function() {
+    toggler[i].addEventListener("click", function () {
       this.parentElement.querySelector(".nested").classList.toggle("active");
       this.classList.toggle("caret-down");
     });

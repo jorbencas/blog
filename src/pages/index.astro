@@ -1,66 +1,66 @@
 ---
-import Layout from '@layouts/Layout.astro';
-import PreviewPost from '@components/PreviewPost.astro';
-import Tags from '@components/Tags.astro';
-import Archive from '@components/Archive.astro';
+import Layout from "@layouts/Layout.astro";
+import PreviewPost from "@components/PreviewPost.astro";
+import Tags from "@components/Tags.astro";
+import Archive from "@components/Archive.astro";
 
 interface MarkdownFrontmatter {
   date: number;
 }
 
-const allPosts = await Astro.glob<MarkdownFrontmatter>('./posts/*.md');
-const sortedPosts = allPosts.sort((a, b) => new Date(b.frontmatter.date).valueOf() - new Date(a.frontmatter.date).valueOf()).reverse().slice(0, 3);
-
+const allPosts = await Astro.glob<MarkdownFrontmatter>("./posts/*.md");
+const sortedPosts = allPosts
+  .sort(
+    (a, b) =>
+      new Date(b.frontmatter.date).valueOf() -
+      new Date(a.frontmatter.date).valueOf()
+  )
+  .slice(0, 3);
 ---
 
 <Layout title="Problemas de un desarollador Web">
-	<div class="content">
-		<!-- <p class="instructions"><strong>Your first mission:</strong> tweak this message to try our hot module reloading. Check the <code>src/pages</code> directory!</p> -->
-		<h1>Últimos artículos</h1>
-		<ul role="list" class="link-card-grid">
-			{
-				sortedPosts.map( p => 
-					<PreviewPost post={p} />
-				)
-			}
-		</ul>
-		<a class='showall' href="/posts/1">ver Todos</a>
-	</div>
-	<div class="lateralbar">
-		<Tags />
-		<Archive />
-	</div>
+  <div class="content">
+    <!-- <p class="instructions"><strong>Your first mission:</strong> tweak this message to try our hot module reloading. Check the <code>src/pages</code> directory!</p> -->
+    <h1>Últimos artículos</h1>
+    <ul role="list" class="link-card-grid">
+      {sortedPosts.map((p) => <PreviewPost post={p} />)}
+    </ul>
+    <a class="showall" href="/posts/1">ver Todos</a>
+  </div>
+  <div class="lateralbar">
+    <Tags />
+    <Archive />
+  </div>
 </Layout>
 
 <style>
-	.link-card-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(24ch, 1fr));
-		gap: 1rem;
-		padding: 0;
-		max-width: 70vw;
-	}
+  .link-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(24ch, 1fr));
+    gap: 1rem;
+    padding: 0;
+    max-width: 70vw;
+  }
 
-	.instructions {
-		line-height: 1.8;
-		margin-bottom: 2rem;
-		color: var(--opacity-green);
-		padding: 15px;
-		border-radius: 25px;
-		border: 1px solid var(--opacity-green);
-	}
+  .instructions {
+    line-height: 1.8;
+    margin-bottom: 2rem;
+    color: var(--opacity-green);
+    padding: 15px;
+    border-radius: 25px;
+    border: 1px solid var(--opacity-green);
+  }
 
-	.showall {
-		display: block;
-		margin: 1rem auto;
-		text-align: center;
-		font-size: 12px;
-		text-decoration: none;
-		background-color: var(--opacity-green);
-		padding: 5px 10px;
-		border-radius: 25px;
-		border: 1px solid var(--opacity-green);
-		color: var(--color-primary);
-	}
-
+  .showall {
+    display: block;
+    margin: 1rem auto;
+    text-align: center;
+    font-size: 12px;
+    text-decoration: none;
+    background-color: var(--opacity-green);
+    padding: 5px 10px;
+    border-radius: 25px;
+    border: 1px solid var(--opacity-green);
+    color: var(--color-primary);
+  }
 </style>

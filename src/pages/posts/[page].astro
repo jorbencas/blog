@@ -1,49 +1,56 @@
 ---
-import Layout from '@layouts/Layout.astro';
-import PreviewPost from '@components/PreviewPost.astro';
-import Tags from '@components/Tags.astro';
-import Archive from '@components/Archive.astro';
+import Layout from "@layouts/Layout.astro";
+import PreviewPost from "@components/PreviewPost.astro";
+import Tags from "@components/Tags.astro";
+import Archive from "@components/Archive.astro";
 
-export async function getStaticPaths({paginate}) {
-	const allPosts = await Astro.glob('./*.md');
-	const sortedPosts = allPosts.sort((a, b) => new Date(b.frontmatter.date).valueOf() - new Date(a.frontmatter.date).valueOf()).reverse();
-	return paginate(sortedPosts, {
-		pageSize: 12
-	});
+export async function getStaticPaths({ paginate }) {
+  const allPosts = await Astro.glob("./*.md");
+  const sortedPosts = allPosts.sort(
+    (a, b) =>
+      new Date(b.frontmatter.date).valueOf() -
+      new Date(a.frontmatter.date).valueOf()
+  );
+  return paginate(sortedPosts, {
+    pageSize: 12,
+  });
 }
 
 const { page } = Astro.props;
 const posts = page.data;
 let next = page.url.next;
 let prev = page.url.prev;
-
 ---
 
 <Layout title="Problemas de un desarollador Web">
-	<div class="content">
-		<h1>Últimos artículos</h1>
-		<ul role="list" class="link-card-grid">
-			{
-				posts.map( p => 
-					<PreviewPost post={p} />
-				)
-			}
-		</ul>
+  <div class="content">
+    <h1>Últimos artículos</h1>
+    <ul role="list" class="link-card-grid">
+      {posts.map((p) => <PreviewPost post={p} />)}
+    </ul>
 
-		<ul class="paginator">
-			{
-				next && <li><a href={next}>Articulos Posteriores</a></li>
-			}
-			{
-				prev && <li><a href={prev}>Articulos Ateriores</a></li>
-			}
-		</ul>
-	</div>
-	<div class="lateralbar">
-		<Tags />
-		<Archive />
-	</div>
+    <ul class="paginator">
+      {
+        next && (
+          <li>
+            <a href={next}>Articulos Posteriores</a>
+          </li>
+        )
+      }
+      {
+        prev && (
+          <li>
+            <a href={prev}>Articulos Ateriores</a>
+          </li>
+        )
+      }
+    </ul>
+  </div>
+  <div class="lateralbar">
+    <Tags />
+    <Archive />
+  </div>
 </Layout>
 <style>
-	@import url('../../styles/list.css');
+  @import url("../../styles/list.css");
 </style>
