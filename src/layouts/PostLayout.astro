@@ -1,4 +1,7 @@
 ---
+import TagsPosts from '@components/TagsPosts.astro';
+import Layout from './Layout.astro';
+const { content } = Astro.props;
 const mounths = [
   "Enero",
   "Febrero",
@@ -18,11 +21,7 @@ const days = [
   'Domingo', 'Lunes','Martes', 'Miercoles', 'Jueves','Viernes', 'Sabado',
 ];
 
-import TagsPosts from '@components/TagsPosts.astro';
-import Layout from './Layout.astro';
-const { content } = Astro.props;
-
-function formatDate(date){
+const formatDatePost = (date) => {
   let fullDate = new Date(date);
   let day = days[fullDate.getDay()];
   let month = mounths[fullDate.getMonth()];
@@ -37,7 +36,7 @@ function formatDate(date){
     <div>
       <h1>{content.tittle}</h1>
       <p>{content.description}</p>
-      <p>{formatDate(content.date)}</p>
+      <p>{formatDatePost(content.date)}</p>
       <img aria-label={content.tittle} src={content.image} />
     </div>
     <slot />
