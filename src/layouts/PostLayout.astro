@@ -1,18 +1,50 @@
 ---
+const mounths = [
+  "Enero",
+  "Febrero",
+  "Marzo",
+  "Abril",
+  "Mayo",
+  "Junio",
+  "Julio",
+  "Agosto",
+  "Septiembre",
+  "Octubre",
+  "Noviembre",
+  "Diciembre",
+];
+
+const days = [
+  'Domingo', 'Lunes','Martes', 'Miercoles', 'Jueves','Viernes', 'Sabado'
+];
+
 import TagsPosts from '@components/TagsPosts.astro';
 import Layout from './Layout.astro';
 const { content } = Astro.props;
+
+function formatDate(date){
+  let fullDate = new Date(date);
+  let day = days[fullDate.getDay()];
+  let month = mounths[fullDate.getMonth()];
+  let year = fullDate.getFullYear();
+  let numday = fullDate.getUTCDate();
+  return day +', ' numday + ' de ' + month + ' del ' +year;
+}
+
 ---
 <Layout title={content.tittle}>
   <div class="content">
     <div>
       <h1>{content.tittle}</h1>
       <p>{content.description}</p>
+      <p>{formatDate(content.date)}</p>
       <img aria-label={content.tittle} src={content.image} />
     </div>
     <slot />
     {
       content.tags && <TagsPosts tagsList={JSON.stringify(content.tags)}/>
     }
+
+    <p>Publicado por: {content.author}</p>
   </div>
 </Layout>
