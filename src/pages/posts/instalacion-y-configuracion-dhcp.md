@@ -42,9 +42,9 @@ Ahora debemos de instalar webmin que es una herramienta para configurar el servi
 
 Una vez descargado webmin lo que se debe de hacer es instalar el paquete.deb de webmin, para ello debemos de abrir una terminal y poner:
 
-`cd /`ruta donde este el archivo  y luego  `sudo dpkg -i webmin_1.770_all.deb`
+`cd /`ruta donde este el archivo  y luego `sudo dpkg -i \*webmin_1.770_all.deb\*`
 
-Una vez instalado webmin lo que se debe de hacer es abiri el navegador chorome, firefox, opera\*...\* y pones `https://localhost:10000/`
+Una vez instalado webmin lo que se debe de hacer es abirir el navegador chorome, firefox, opera \*...\* y pones `https://localhost:10000/`
 
 <img title="Configuración Webmin" alt="Configuración Webmin" src="/img/instalacion-y-configuracion-dhcp_3.png">
 
