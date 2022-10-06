@@ -88,10 +88,11 @@ una vez dentro habra que poner una dirección ip fija que sera la que se asignar
 ...
 \# internet
 subnet 192.168.101.0 netmask 255.255.255.0 {
-range 192.168.101.200 192.168.101.205;
-host client {
-    hardware ethernet 08:00:27:e9:ae:eb;
-    fixed-address 192.168.101.202;
+    range 192.168.101.200 192.168.101.205;
+    host client {
+        hardware ethernet 08:00:27:e9:ae:eb;
+        fixed-address 192.168.101.202;
+    }
 }
 \
 ...
