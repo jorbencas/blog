@@ -16,7 +16,8 @@ HTML5 (HyperText Markup Language, versión 5) es la quinta revisión importante 
 ### El html 5 incorpora:
 
 1 - Nuevos semánticas elementos como 
-```html
+```
+html
     <header></header>
     <article></article>
     <section></section>
