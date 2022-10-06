@@ -40,11 +40,13 @@ Ahora debemos de instalar webmin que es una herramienta para configurar el servi
 
 [Para descargar webmin](https://www.webmin.com/download.html)
 
-Una vez descargado webmin lo que se debe de hacer es instalar el paquete.deb de webmin, para ello debemos de abrir una terminal y poner
+Una vez descargado webmin lo que se debe de hacer es instalar el paquete.deb de webmin, para ello debemos de abrir una terminal y poner:
 
+...
 cd /ruta donde este el archivo  y luego  sudo dpkg -i webmin_1.770_all.deb
+...
 
-Una vez instalado webmin lo que se debe de hacer es abiri el navegador chorome, firefox, opera.. y pones << https://localhost:10000/ >>
+Una vez instalado webmin lo que se debe de hacer es abiri el navegador chorome, firefox, opera.. y pones `https://localhost:10000/ `
 
 <img title="Configuración Webmin" alt="Configuración Webmin" src="/img/instalacion-y-configuracion-dhcp_3.png">
 
@@ -52,13 +54,15 @@ Luego lo que habra que hacer es entrar con un usuario que tenga permiso de admin
 
 para que se apliquen los cambios una vez comprobado que podemos acceder  y cambiar el idioma lo que hay que hacer es minimizar el navegador y ir a el centro de Sofware de ubuntu para ver si tenemos instalado un programita que se llama Avahi IPv4LL network address configuration daemon, es importante que el avahi este instalado ja que es necesario para activar el servidor DHCP, luego de instalar-lo se debe de comprobar que funciona el avahi
 
+...
 sudo avahi-autoipd eth1     y luego       ping y una dirección ip 
+...
 
 Cuando este configurado el Avahi para que se autoasigne a el adaptador eth1 que es el adaptador del cliente y por tanto es el adaptador de red interna que es la que debe de  comunicar-se con el cliente, luego se debe de instalar el servidor DHCP en el servidor, para ello se debe de abrir una terminal y poner:
-
+...
 sudo apt-get install isc-dhcp-server
-
-Después de haber instalado el DHCP server se debe de maximizar el navegador y poner refrescar modulos y ir a servidores y luego debe de aparecer \<<servidor DHCP>>\.
+...
+Después de haber instalado el DHCP server se debe de maximizar el navegador y poner refrescar modulos y ir a servidores y luego debe de aparecer << servidor DHCP >>.
 
 <img title="Configuración Webmin" alt="Configuración Webmin" src="/img/instalacion-y-configuracion-dhcp_4.png">
 
