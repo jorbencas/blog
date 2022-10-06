@@ -84,9 +84,9 @@ También se puede hacer que se asigne a el cliente una ip fija, para ello debemo
 
 <img title="Configuración Webmin" alt="Configuración Webmin" src="/img/instalacion-y-configuracion-dhcp_7.png">
 
-una vez dentro habra que poner una dirección ip fija que sera la que se asignara a el cliente, una vez puesta la ip le damos a crear, luego hay que ir a editar manualmente, en este fichero abajo del todo y  hay que poner lo siguiente::
+una vez dentro habra que poner una dirección ip fija que sera la que se asignara a el cliente, una vez puesta la ip le damos a crear, luego hay que ir a editar manualmente, en este fichero abajo del todo y  hay que poner lo siguiente:
 ...
-\# internet
+/# internet
 subnet 192.168.101.0 netmask 255.255.255.0 {
     range 192.168.101.200 192.168.101.205;
     host client {
@@ -94,7 +94,6 @@ subnet 192.168.101.0 netmask 255.255.255.0 {
         fixed-address 192.168.101.202;
     }
 }
-\
 ...
 
 <img title="Configuración Webmin" alt="Configuración Webmin" src="/img/instalacion-y-configuracion-dhcp_8.png">
