@@ -46,7 +46,7 @@ Una vez descargado webmin lo que se debe de hacer es instalar el paquete.deb de 
 cd /ruta donde este el archivo  y luego  sudo dpkg -i webmin_1.770_all.deb
 ...
 
-Una vez instalado webmin lo que se debe de hacer es abiri el navegador chorome, firefox, opera.. y pones `https://localhost:10000/ `
+Una vez instalado webmin lo que se debe de hacer es abiri el navegador chorome, firefox, opera\*...\* y pones `https://localhost:10000/`
 
 <img title="Configuración Webmin" alt="Configuración Webmin" src="/img/instalacion-y-configuracion-dhcp_3.png">
 
@@ -89,8 +89,8 @@ También se puede hacer que se asigne a el cliente una ip fija, para ello debemo
 <img title="Configuración Webmin" alt="Configuración Webmin" src="/img/instalacion-y-configuracion-dhcp_7.png">
 
 una vez dentro habra que poner una dirección ip fija que sera la que se asignara a el cliente, una vez puesta la ip le damos a crear, luego hay que ir a editar manualmente, en este fichero abajo del todo y  hay que poner lo siguiente:
-...
-/# internet
+
+.../# internet
 subnet 192.168.101.0 netmask 255.255.255.0 {
     range 192.168.101.200 192.168.101.205;
     host client {
