@@ -42,7 +42,7 @@ Ahora debemos de instalar webmin que es una herramienta para configurar el servi
 Una vez descargado webmin lo que se debe de hacer es instalar el paquete.deb de webmin, para ello debemos de abrir una terminal y poner:
 `cd /ruta_donde_este_el_archivo_y_luego  sudo dpkg -i webmin_1.770_all.deb`
 
-Una vez instalado webmin lo que se debe de hacer es abirir el navegador chorome, firefox, opera... y pones `https://localhost:10000/`. 
+Una vez instalado webmin lo que se debe de hacer es abirir el navegador chorome, firefox, opera etc y pones `https://localhost:10000/`. 
 <img title="Configuración Webmin" alt="Configuración Webmin" src="/img/instalacion-y-configuracion-dhcp_3.png">
 
 Luego lo que habra que hacer es entrar con un usuario que tenga permiso de adminitrador y cambiar el idioma ya que por defecto esta en inglés, para ello nosvamos a webmin, y cambiamos el idioma, luego hay que ir a donde dice *refresh modules* para que se apliquen los cambios una vez comprobado que podemos acceder y cambiar el idioma lo que hay que hacer es minimizar el navegador y ir a el centro de Sofware de ubuntu para ver si tenemos instalado un programita que se llama Avahi IPv4LL network address configuration daemon, es importante que el avahi este instalado ja que es necesario para activar el servidor DHCP, luego de instalar-lo se debe de comprobar que funciona el avahi
