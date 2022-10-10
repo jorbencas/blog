@@ -6,75 +6,92 @@ export interface Props {
 const { post } = Astro.props;
 ---
 
-<li class="link-card">
-    <a href={post.url}>
-        <img src={post.frontmatter.image} alt={post.frontmatter.tittle} >
-        <div class="info">
-            <h3>{post.frontmatter.tittle}</h3>
-            <p>{post.frontmatter.description}</p>
-            <p class="date">{new Date(post.frontmatter.date).toLocaleDateString()}</p>
-        </div>
-    </a>
+<li class="">
+  <a
+    href={post.url}
+    class="flex items-center  hover:bg-gray-200 dark:hover:bg-sky-800 py-6 sm:py-4"
+  >
+    <div class="flex-shrink-0">
+      <img
+        class="w-8 h-8"
+        src={post.frontmatter.image}
+        alt={post.frontmatter.tittle}
+      />
+    </div>
+    <div class="flex-1 min-w-0">
+      <p class="text-sm font-medium text-gray-900 truncate dark:text-white">
+        {post.frontmatter.tittle}
+      </p>
+      <p class="text-sm text-gray-500 truncate dark:text-gray-400">
+        {post.frontmatter.description}
+      </p>
+    </div>
+    <div
+      class="inline-flex items-center text-sm font-semibold text-cyan-600 dark:text-white"
+    >
+      {new Date(post.frontmatter.date).toLocaleDateString()}
+    </div>
+  </a>
 </li>
 
-
+<!-- 
 <style>
-	.link-card {
-		list-style: none;
-		display: flex;
-        max-width: 265px;
-        max-height: 245px;
-	}
+  .link-card {
+    list-style: none;
+    display: flex;
+    max-width: 265px;
+    max-height: 245px;
+  }
 
-    .link-card:is(:hover, :focus-within) {
-        background-color: var(--opacity-color);
-        color: var(--color-primary);
-    }
+  .link-card:is(:hover, :focus-within) {
+    background-color: var(--opacity-color);
+    color: var(--color-primary);
+  }
 
-    .link-card:is(:hover, :focus-within) .info .date {
-        color: var(--color-primary);
-    }
+  .link-card:is(:hover, :focus-within) .info .date {
+    color: var(--color-primary);
+  }
 
-	.link-card > a {
-		width: 100%;
-		text-decoration: none;
-		color: var(--eggshell);
-		opacity: 0.8;
-	}
+  .link-card > a {
+    width: 100%;
+    text-decoration: none;
+    color: var(--eggshell);
+    opacity: 0.8;
+  }
 
-    .link-card img {
-        width: 100%;
-        max-height: 225px;
-        object-fit: cover;
-        overflow: hidden;
-        box-sizing: content-box;
-        width: 100%;
-        aspect-ratio: 15/7;
-    }
+  .link-card img {
+    width: 100%;
+    max-height: 225px;
+    object-fit: cover;
+    overflow: hidden;
+    box-sizing: content-box;
+    width: 100%;
+    aspect-ratio: 15/7;
+  }
 
-    .link-card .info {
-        display: block;
-        font-size: 12px;
-        padding: 5px;
-    }
+  .link-card .info {
+    display: block;
+    font-size: 12px;
+    padding: 5px;
+  }
 
-    .link-card .info * {
-        overflow: hidden;
-        box-sizing: content-box;
-        padding: 2px;
-        margin:0;
-    }
+  .link-card .info * {
+    overflow: hidden;
+    box-sizing: content-box;
+    padding: 2px;
+    margin: 0;
+  }
 
-    .link-card .info h3 {
-        font-size: 1.2rem;
-        font-weight: bold;
-        margin: 0;
-        padding: 0;
-        color:var(--deep-champagne);
-    }
+  .link-card .info h3 {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin: 0;
+    padding: 0;
+    color: var(--deep-champagne);
+  }
 
-    .link-card .info .date {
-        color: var(--eggshell);
-        background-color: var(--deep-champagne);
-    }
-</style>
+  .link-card .info .date {
+    color: var(--eggshell);
+    background-color: var(--deep-champagne);
+  }
+</style> -->

@@ -3,6 +3,7 @@ import Layout from "@layouts/Layout.astro";
 import PreviewPost from "@components/PreviewPost.astro";
 import Tags from "@components/Tags.astro";
 import Archive from "@components/Archive.astro";
+// import Information from "@components/Information.astro";
 
 interface MarkdownFrontmatter {
   date: number;
@@ -19,48 +20,35 @@ const sortedPosts = allPosts
 ---
 
 <Layout title="Problemas de un desarollador Web">
-  <div class="content">
-    <!-- <p class="instructions"><strong>Your first mission:</strong> tweak this message to try our hot module reloading. Check the <code>src/pages</code> directory!</p> -->
-    <h1>Últimos artículos</h1>
-    <ul role="list" class="link-card-grid">
-      {sortedPosts.map((p) => <PreviewPost post={p} />)}
-    </ul>
-    <a class="showall" href="/posts/1">ver Todos</a>
-  </div>
-  <div class="lateralbar">
-    <Tags />
-    <Archive />
+  <!-- <Information /> -->
+  <div class="grid grid-cols-4 gap-2 align-middle items-center">
+    <div class="col-span-2">
+      <div
+        class="p-4 w-full max-w-md bg-white rounded-lg border shadow-md sm:p-8 dark:bg-gray-800 dark:border-gray-700"
+      >
+        <div class="flex justify-between items-center mb-4">
+          <h5
+            class="text-xl font-bold leading-none text-gray-900 dark:text-white"
+          >
+            Últimos artículos
+          </h5>
+          <a
+            href="/posts/1"
+            class="text-sm font-medium text-cyan-300 hover:underline dark:text-cyan-500"
+          >
+            ver Todos
+          </a>
+        </div>
+        <div class="flow-root">
+          <ul role="list" class="divide-y divide-gray-200 dark:divide-gray-700">
+            {sortedPosts.map((p) => <PreviewPost post={p} />)}
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="col-span-1">
+      <Tags />
+      <Archive />
+    </div>
   </div>
 </Layout>
-
-<style>
-  .link-card-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(24ch, 1fr));
-    gap: 1rem;
-    padding: 0;
-    max-width: 70vw;
-  }
-
-  .instructions {
-    line-height: 1.8;
-    margin-bottom: 2rem;
-    color: var(--opacity-green);
-    padding: 15px;
-    border-radius: 25px;
-    border: 1px solid var(--opacity-green);
-  }
-
-  .showall {
-    display: block;
-    margin: 1rem auto;
-    text-align: center;
-    font-size: 12px;
-    text-decoration: none;
-    background-color: var(--opacity-green);
-    padding: 5px 10px;
-    border-radius: 25px;
-    border: 1px solid var(--opacity-green);
-    color: var(--color-primary);
-  }
-</style>

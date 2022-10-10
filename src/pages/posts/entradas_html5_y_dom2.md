@@ -8,7 +8,9 @@ image: "/img/html5.png"
 author: "Jorge Beneyto Castelló"
 layout: "../../layouts/PostLayout.astro"
 ---
+
 ## HTML 5
+
 HTML5 (HyperText Markup Language, versión 5) es la quinta revisión importante del lenguaje básico de la World Wide Web, HTML. HTML5 especifica dos variantes de sintaxis para HTML: una «clásica», HTML (text/html), conocida como HTML5, y una variante XHTML conocida como sintaxis XHTML5 que deberá servirse con sintaxis XML (application/xhtml+xml)
 
 ## Diferencias:

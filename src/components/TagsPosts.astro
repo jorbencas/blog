@@ -1,17 +1,26 @@
 ---
-import tagsListation  from './tags.json';
+import tagsListation from "./tags.json";
 let tags = tagsListation;
 const { tagsList } = Astro.props;
 let tagsLists = JSON.parse(tagsList);
-tags = tagsLists.filter( tag => {
-    tags.includes(tag.toLowerCase().trim())
-    return tag
-} );
-
+tags = tagsLists.filter((tag) => {
+  tags.includes(tag.toLowerCase().trim());
+  return tag;
+});
 ---
-<p>Etiquetas del articulo: </p>
+
+<p class="mt-9 text-base">Etiquetas del articulo:</p>
 <ul class="flex flex-wrap justify-center space-x-2">
-    {tags.map((tag) => {
-        return <a  class="px-4 py-2 rounded-full text-gray-500 bg-gray-200 font-semibold text-sm flex align-center w-max cursor-pointer active:bg-gray-300 transition duration-300 ease" href={"/tags/"+tag+"/1"}>{tag}</a>
-    })}
+  {
+    tags.map((tag) => {
+      return (
+        <a
+          class="px-4 py-2 rounded-full text-gray-500 bg-gray-200 font-semibold text-sm flex align-center w-max cursor-pointer active:bg-gray-300 transition duration-300 ease"
+          href={"/tags/" + tag + "/1"}
+        >
+          {tag}
+        </a>
+      );
+    })
+  }
 </ul>
