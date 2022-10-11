@@ -1,9 +1,9 @@
 ---
+import mounths from "./months.json";
+import days from "./days.json";
 import TagsPosts from "@components/TagsPosts.astro";
 import Layout from "./Layout.astro";
 const { content } = Astro.props;
-import mounths from "../components/months.json";
-import days from "../components/days.json";
 
 const formatDatePost = (date) => {
   let fullDate = new Date(date);
@@ -16,19 +16,20 @@ const formatDatePost = (date) => {
 ---
 
 <Layout title={content.tittle}>
-  <div class="w-full mx-52">
-    <div class="align-middle items-center">
-      <h1 class="text-2xl text-cyan-500 text-center">{content.tittle}</h1>
+  <div class="max-w-xl mx-auto align-middle items-center">
+    <div class="text-center">
+      <h1 class="text-xl font-bold leading-none text-gray-900 dark:text-white">
+        {content.tittle}
+      </h1>
       <p class="text-base">{content.description}</p>
-      <p class="text-cyan-700 mb-10">
+      <p class="text-cyan-500 mb-10">
         {formatDatePost(content.date)}
       </p>
       <img aria-label={content.tittle} src={content.image} />
     </div>
     <slot />
     {content.tags && <TagsPosts tagsList={JSON.stringify(content.tags)} />}
-
-    <p>
+    <p class="my-3">
       Publicado por: <strong class="text-cyan-500">{content.author}</strong>
     </p>
   </div>
