@@ -35,8 +35,14 @@
     (!("color-theme" in localStorage) &&
       window.matchMedia("(prefers-color-scheme: dark)").matches)
   ) {
+    document.documentElement.classList.add("dark");
+
     themeToggleLightIcon.classList.remove("hidden");
+    console.log("====================================");
+    console.log(localStorage);
+    console.log("====================================");
   } else {
+    document.documentElement.classList.remove("dark");
     themeToggleDarkIcon.classList.remove("hidden");
   }
 
@@ -46,7 +52,6 @@
     // toggle icons inside button
     themeToggleDarkIcon.classList.toggle("hidden");
     themeToggleLightIcon.classList.toggle("hidden");
-
     // if set via local storage previously
     if (localStorage.getItem("color-theme")) {
       if (localStorage.getItem("color-theme") === "light") {
