@@ -2,6 +2,7 @@
 tittle: "Google groups"
 description: "Descubre un poquito mas sobre la tecnologia de Google llamada Google groups"
 date: "2015/10/30"
+draft: true
 tags: ['groups chat', 'Google']
 slug: "google-goups.md"
 image: "/img/google-groups.png"

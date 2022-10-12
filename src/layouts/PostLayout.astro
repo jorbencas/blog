@@ -16,21 +16,38 @@ const formatDatePost = (date) => {
 ---
 
 <Layout title={content.tittle}>
-  <div class="max-w-xl mx-auto align-middle items-center">
-    <div class="text-center">
-      <h1 class="text-xl font-bold leading-none text-gray-900 dark:text-white">
-        {content.tittle}
-      </h1>
-      <p class="text-base">{content.description}</p>
-      <p class="text-cyan-500 mb-10">
-        {formatDatePost(content.date)}
-      </p>
-      <img aria-label={content.tittle} src={content.image} />
+  <div class="max-w-6xl mx-auto mt-10 align-top items-center text-left">
+    <div class="my-5 flex flex-shrink-0 justify-start w-auto">
+      <img
+        class="w-14 h-14 align-baseline text-right"
+        aria-label={content.tittle}
+        src={content.image}
+      />
+
+      <div class="block ml-4">
+        <h1 class="text-xl font-bold text-gray-900 dark:text-white">
+          {content.tittle}
+        </h1>
+        <p class="text-sm">{content.description}</p>
+        <p
+          class="text-base text-right font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-sky-800 to-cyan-500"
+        >
+          {formatDatePost(content.date)}
+        </p>
+      </div>
     </div>
-    <slot />
-    {content.tags && <TagsPosts tagsList={JSON.stringify(content.tags)} />}
+    <div
+      class="text-ellipsis my-5 prose dark:text-white dark:prose-pre:text-white dark:prose-a:text-gray-300 dark:prose-h2:text-white dark:prose-h1:text-white dark:prose-code:text-white dark:prose-strong:text-white dark:prose-h3:text-white"
+    >
+      <slot />
+    </div>
+    {
+      content.tags && (
+        <TagsPosts is-client tagsList={JSON.stringify(content.tags)} />
+      )
+    }
     <p class="my-3">
-      Publicado por: <strong class="text-cyan-500">{content.author}</strong>
+      Publicado por: <strong class="dark:text-white">{content.author}</strong>
     </p>
   </div>
 </Layout>

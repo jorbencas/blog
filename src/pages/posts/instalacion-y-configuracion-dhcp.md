@@ -2,12 +2,14 @@
 tittle: "Instalación y configuración de un servidor DHCP"
 description: ""
 date: "2015/11/03"
+draft: true
 tags: ['web', 'sistemas']
 slug: "instalacion-y-configuracion-dhcp.md"
 image: "/img/instalacion-y-configuracion-dhcp.png"
 author: "Jorge Beneyto Castelló"
 layout: "../../layouts/PostLayout.astro"
 ---
+
 Hoy vamos a instalar y configurar un servidor DHCP con Virtualbox, pero antes debemos saber que es y que hace el servicio DHCP.
 El servicio DHCP permite la configuración de direcciones IP, máscaras, pasarelas por defecto y muchas otras opciones de configuración de manera totalmente dinámica.
 
