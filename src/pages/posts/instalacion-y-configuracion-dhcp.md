@@ -2,7 +2,6 @@
 tittle: "Instalación y configuración de un servidor DHCP"
 description: ""
 date: "2015/11/03"
-draft: true
 tags: ['web', 'sistemas']
 slug: "instalacion-y-configuracion-dhcp.md"
 image: "/img/instalacion-y-configuracion-dhcp.png"
