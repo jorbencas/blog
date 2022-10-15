@@ -2,6 +2,7 @@
 import Layout from "@layouts/Layout.astro";
 import PreviewPost from "@components/PreviewPost.astro";
 import HomeLayout from "@layouts/HomeLayout.astro";
+import Information from "@components/Information.astro";
 
 interface MarkdownFrontmatter {
   date: number;
@@ -32,7 +33,7 @@ const sortedPosts = allPosts
     </div>
     <div class="flow-root">
       <ul role="list" class="divide-y divide-gray-700 dark:divide-grey-700">
-        {sortedPosts.map((p) => <PreviewPost post={p} />)}
+          {sortedPosts.length > 0 ? sortedPosts.map((p) => <PreviewPost post={p} />) : <Information />}
       </ul>
     </div>
   </HomeLayout>

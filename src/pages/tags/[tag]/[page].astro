@@ -4,6 +4,7 @@ import PreviewPost from "@components/PreviewPost.astro";
 import allTags from "@components/tags.json";
 import HomeLayout from "@layouts/HomeLayout.astro";
 import NextPrevLiks from "@components/NextPrevLiks.astro";
+import Information from "@components/Information.astro";
 
 export async function getStaticPaths({ paginate }) {
   const allPosts = await Astro.glob("../../posts/*.md");
@@ -38,7 +39,7 @@ const { prev, next } = url;
     </div>
     <div class="flow-root">
       <ul role="list" class="divide-y divide-gray-700 dark:divide-grey-700">
-        {data.map((p) => <PreviewPost post={p} />)}
+        {data.length > 0 ? data.map((p) => <PreviewPost post={p} />) : <Information />}
       </ul>
     </div>
   </HomeLayout>
