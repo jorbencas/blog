@@ -1,9 +1,9 @@
 ---
 import Layout from "@layouts/Layout.astro";
 import PreviewPost from "@components/PreviewPost.astro";
-import Tags from "@components/Tags.astro";
-import Archive from "@components/Archive.astro";
 import allTags from "@components/tags.json";
+import HomeLayout from "@layouts/HomeLayout.astro";
+import NextPrevLiks from "@components/NextPrevLiks.astro";
 
 export async function getStaticPaths({ paginate }) {
   const allPosts = await Astro.glob("../../posts/*.md");
@@ -22,64 +22,24 @@ export async function getStaticPaths({ paginate }) {
     });
   });
 }
-const params = Astro.params;
-const { tag } = params;
-const { page } = Astro.props;
-const posts = page.data;
-let next = page.url.next;
-let prev = page.url.prev;
+const { tag } = Astro.params;
+const { data, url } = Astro.props.page;
+const { prev, next } = url;
 ---
 
 <Layout title={"Articulos con " + tag}>
-  <div class="grid grid-cols-2 align-center items-start sm:mt-8">
-    <div class="col-span-1 ml-4">
-      <div
-        class="sm:py-4 sm:px-4 w-full max-w-md dark:bg-gray-800 dark:border-gray-700"
-      >
-        <div class="flex justify-between items-center mb-4">
-          <h5
-            class="text-xl font-bold leading-none text-gray-900 dark:text-white"
-          >
-            Articulos con: {tag}
-          </h5>
+  <HomeLayout>
+    <div class="flex justify-between items-start mb-4">
+      <h5 class="text-xl font-bold leading-none text-gray-900 dark:text-white">
+        Articulos con: {tag}
+      </h5>
 
-          <ul class="flex justify-between items-center mb-4">
-            {
-              next && (
-                <li class="mx-2">
-                  <a
-                    class="text-sm font-medium text-cyan-400 hover:underline dark:text-cyan-500"
-                    href={next}
-                  >
-                    Posteriores
-                  </a>
-                </li>
-              )
-            }
-            {
-              prev && (
-                <li class="mx-2">
-                  <a
-                    class="text-sm font-medium text-cyan-400 hover:underline dark:text-cyan-500"
-                    href={prev}
-                  >
-                    Ateriores
-                  </a>
-                </li>
-              )
-            }
-          </ul>
-        </div>
-        <div class="flow-root">
-          <ul role="list" class="divide-y divide-gray-700 dark:divide-grey-700">
-            {posts.map((p) => <PreviewPost post={p} />)}
-          </ul>
-        </div>
-      </div>
+      <NextPrevLiks next={next} prev={prev} />
     </div>
-    <div class="col-span-1 mr-4">
-      <Tags />
-      <Archive />
+    <div class="flow-root">
+      <ul role="list" class="divide-y divide-gray-700 dark:divide-grey-700">
+        {data.map((p) => <PreviewPost post={p} />)}
+      </ul>
     </div>
-  </div>
+  </HomeLayout>
 </Layout>

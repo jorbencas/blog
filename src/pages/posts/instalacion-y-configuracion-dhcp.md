@@ -11,16 +11,11 @@ layout: "../../layouts/PostLayout.astro"
 
 Hoy vamos a instalar y configurar un servidor DHCP con Virtualbox, pero antes debemos saber que es y que hace el servicio DHCP.
 El servicio DHCP permite la configuración de direcciones IP, máscaras, pasarelas por defecto y muchas otras opciones de configuración de manera totalmente dinámica.
-
-## ¿Qué hace el DHCP?
-
+#### ¿Qué hace el DHCP?
 Una forma campechana d’entender el DHCP es imaginar que los equipos de cliente al arrancar hacen un grito por la red y preguntan _«que hay algien?», «quien soy yo?»_. El servidor de DHCP les contesta proporcionándo les toda la información necesaria para que sepan quienes son y como deben configurar su configuración de red.
-## Instalación y Configuración del Servidor DHCP
-
+#### Instalación y Configuración del Servidor DHCP
 Vamos a proceder a la instal-lacion de un servidor DHCP. lo primero que debemos hacer es crear una maquina que actúe como servidor, en nuestro caso para crear el servidor vamos a utilizar Ubuntu Desktop 12.04 LTS:
-
 [Pagina para descargar ISO de Ubuntu](https://ubuntu.com/download/alternative-downloads)
-
 Una vez descargadas las ISO’s  es momento de crear la maquina virtual y instalar las ISO’s. Cuando ya tengamos las 2 maquinas virtuales instaladas la del cliente y la del servidor lo que debemos hacer es apagarlas y ir a configuracion red y habilitar en el servidor 2 adaptadores uno en Red Interna otro con NAT (Network Address Translation), aceptemos y encendemos la maquina Servidor.
 
 Se debe de asignar una ip fija a el sevidor, concretamente a la tarjeta de red interna,para ello hay que ir a las conexiones y clicar en editar conexiones, luyego en IPV4 y poner manualmente, aqui sera donde pondremos la IP, la mascara y la puerta de enlace
@@ -32,12 +27,9 @@ Para comprobar si nos la ha assignado, dedemos de abir una terminal y poner ifco
 
 <img title="Obtener dirección IP" alt="Obtener dirección IP" src="/img/instalacion-y-configuracion-dhcp_2.png">
 
-## Configuración con Webmin
-
+#### Configuración con Webmin
 Ahora debemos de instalar webmin que es una herramienta para configurar el servidor de forma grafica
-
 [Para descargar webmin](https://www.webmin.com/download.html)
-
 Una vez descargado webmin lo que se debe de hacer es instalar el paquete.deb de webmin, para ello debemos de abrir una terminal y poner:
 `cd /ruta_donde_este_el_archivo_y_luego  sudo dpkg -i webmin_1.770_all.deb`
 Una vez instalado webmin lo que se debe de hacer es abirir el navegador chorome, firefox, opera etc y pones https://localhost:10000/
@@ -94,5 +86,4 @@ subnet 192.168.101.0 netmask 255.255.255.0 {
 }
 ```
 <img title="Configuración Webmin" alt="Configuración Webmin" src="/img/instalacion-y-configuracion-dhcp_8.png">
-
 Ahora salvamos y iniciamos la maquina cliente para ver si nos la a asignado, si nos la ha asignado es que si que ha funcionado.

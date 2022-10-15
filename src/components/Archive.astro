@@ -41,24 +41,36 @@ allPosts
 ---
 
 <div class="taglist w-full max-w-md">
-  <h3 class=" mb-2 text-xl font-bold leading-none text-gray-900 dark:text-white">Explorar articulos archivados</h3>
-  <ul class="myUL">
+  <h3 class="mb-2 text-xl font-bold leading-none text-gray-900 dark:text-white">
+    Explorar articulos archivados
+  </h3>
+  <ul class="list-none block p-0 m-0 border-l-2 border-blue-600">
     {
       allYears.map((e, y) => {
         return (
-          <li>
-            <span class="caret">{y}</span>
-            <ul class="nested">
+          <li
+            class="ml-10 accordion-item"
+            data-bs-toggle="collapse"
+            data-bs-target="#collapseOne"
+            aria-expanded="false"
+            aria-controls="collapseOne"
+          >
+            <span class="cursor-pointer before:mr-5 before:inline-block before:text-black before:content-['\25B6'] active:before:rotate-45 before:transform-none">
+              {y}
+            </span>
+            <ul class="accordion m-2 border-l-2 border-blue-600">
               {e.map((el, yl) => {
                 return (
-                  <li>
+                  <li class="ml-10 accordion-item">
                     <span class="caret">{mounths[yl]}</span>
-                    <ul class="nested">
+                    <ul class="m-2 border-l-2 border-blue-600">
                       {el.map((eu) => {
                         return (
-                          <li>
+                          <li class="ml-10 accordion-item">
                             {" "}
-                            <a href={eu.url}>{eu.tittle}</a>
+                            <a class="no-underline text-sky-500" href={eu.url}>
+                              {eu.tittle}
+                            </a>
                           </li>
                         );
                       })}

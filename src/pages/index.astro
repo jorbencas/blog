@@ -1,9 +1,7 @@
 ---
 import Layout from "@layouts/Layout.astro";
 import PreviewPost from "@components/PreviewPost.astro";
-import Tags from "@components/Tags.astro";
-import Archive from "@components/Archive.astro";
-// import Information from "@components/Information.astro";
+import HomeLayout from "@layouts/HomeLayout.astro";
 
 interface MarkdownFrontmatter {
   date: number;
@@ -20,38 +18,22 @@ const sortedPosts = allPosts
 ---
 
 <Layout title="Problemas de un desarollador Web">
-  <!-- <Information /> -->
-  <div class="max-w-screen-2xl flex justify-center items-center sm:mt-8">
-    <div class="ml-4 mr-0">
-      <div
-        class="sm:py-4 sm:px-4 w-full max-w-lg rounded-lg sm:p-0 dark:bg-gray-800"
+  <HomeLayout>
+    <div class="flex justify-between items-start mb-4">
+      <h5 class="text-xl font-bold text-gray-900 dark:text-white">
+        Últimos artículos
+      </h5>
+      <a
+        href="/posts/1"
+        class="text-sm font-medium text-cyan-400 hover:underline dark:text-cyan-500"
       >
-        <div class="flex justify-between items-center mb-4">
-          <h5 class="text-xl font-bold text-gray-900 dark:text-white">
-            Últimos artículos
-          </h5>
-          <a
-            href="/posts/1"
-            class="text-sm font-medium text-cyan-400 hover:underline dark:text-cyan-500"
-          >
-            ver todos
-          </a>
-        </div>
-        <div class="flow-root">
-          <ul role="list" class="divide-y divide-gray-700 dark:divide-grey-700">
-            {sortedPosts.map((p) => <PreviewPost post={p} />)}
-          </ul>
-        </div>
-      </div>
+        ver todos
+      </a>
     </div>
-    <div class="mr-4 ml-0 max-w-sm">
-      <Tags />
-      <Archive />
+    <div class="flow-root">
+      <ul role="list" class="divide-y divide-gray-700 dark:divide-grey-700">
+        {sortedPosts.map((p) => <PreviewPost post={p} />)}
+      </ul>
     </div>
-  </div>
+  </HomeLayout>
 </Layout>
-<script>
-  console.log("====================================");
-  console.log("hehehhehehehehehehhehehehehehehhehehe");
-  console.log("====================================");
-</script>
