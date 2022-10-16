@@ -30,7 +30,7 @@ const { prev, next } = url;
 
 <Layout title={"Articulos con " + tag}>
   <HomeLayout>
-    <div class="flex justify-between items-start mb-4">
+    <div class="flex justify-between items-start">
       <h5 class="text-xl font-bold leading-none text-gray-900 dark:text-white">
         Articulos con: {tag}
       </h5>
@@ -38,8 +38,14 @@ const { prev, next } = url;
       <NextPrevLiks next={next} prev={prev} />
     </div>
     <div class="flow-root">
-      <ul role="list" class="divide-y divide-gray-700 dark:divide-grey-700">
-        {data.length > 0 ? data.map((p) => <PreviewPost post={p} />) : <Information />}
+      <ul role="list">
+        {
+          data.length > 0 ? (
+            data.map((p) => <PreviewPost post={p} />)
+          ) : (
+            <Information />
+          )
+        }
       </ul>
     </div>
   </HomeLayout>

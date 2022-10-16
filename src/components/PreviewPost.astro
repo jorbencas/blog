@@ -1,9 +1,20 @@
 ---
+import mounths from "../layouts/months.json";
+import days from "../layouts/days.json";
 export interface Props {
   post: any;
 }
 
 const { post } = Astro.props;
+
+const formatDatePost = (date) => {
+  let fullDate = new Date(date);
+  let day = days[fullDate.getDay()];
+  let month = mounths[fullDate.getMonth()];
+  let year = fullDate.getFullYear();
+  let numday = fullDate.getUTCDate();
+  return day + ", " + numday + " de " + month + " del " + year;
+};
 ---
 
 <li>
@@ -13,23 +24,21 @@ const { post } = Astro.props;
   >
     <div class="flex-shrink-0">
       <img
-        class="w-8 h-8 mr-2"
+        class="w-10 h-10 mr-2"
         src={post.frontmatter.image}
         alt={post.frontmatter.tittle}
       />
     </div>
-    <div class="flex-1 min-w-0">
-      <p class="text-sm font-medium text-gray-900 truncate dark:text-white">
+    <div class="flex-1">
+      <p class="text-lg font-medium text-gray-900 truncate dark:text-white">
         {post.frontmatter.tittle}
       </p>
       <p class="text-sm text-gray-500 truncate dark:text-gray-400">
         {post.frontmatter.description}
       </p>
-    </div>
-    <div
-      class="inline-flex items-center text-sm font-semibold text-cyan-600 dark:text-white"
-    >
-      {new Date(post.frontmatter.date).toLocaleDateString()}
+      <p class="text-sm font-semibold text-cyan-600 dark:text-white">
+        {formatDatePost(post.frontmatter.date)}
+      </p>
     </div>
   </a>
 </li>

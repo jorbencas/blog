@@ -23,15 +23,21 @@ const { prev, next } = url;
 
 <Layout title="Problemas de un desarollador Web">
   <HomeLayout>
-    <div class="flex justify-between items-start mb-4">
+    <div class="flex justify-between items-start">
       <h5 class="text-xl font-bold leading-none text-gray-900 dark:text-white">
         Últimos artículos
       </h5>
       <NextPrevLiks next={next} prev={prev} />
     </div>
     <div class="flow-root">
-      <ul role="list" class="divide-y divide-gray-700 dark:divide-grey-700">
-       {data.length > 0 ? data.map((p) => <PreviewPost post={p} />) : <Information />}
+      <ul role="list">
+        {
+          data.length > 0 ? (
+            data.map((p) => <PreviewPost post={p} />)
+          ) : (
+            <Information />
+          )
+        }
       </ul>
     </div>
   </HomeLayout>

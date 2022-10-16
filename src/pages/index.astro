@@ -20,7 +20,7 @@ const sortedPosts = allPosts
 
 <Layout title="Problemas de un desarollador Web">
   <HomeLayout>
-    <div class="flex justify-between items-start mb-4">
+    <div class="flex justify-between items-start">
       <h5 class="text-xl font-bold text-gray-900 dark:text-white">
         Últimos artículos
       </h5>
@@ -32,8 +32,14 @@ const sortedPosts = allPosts
       </a>
     </div>
     <div class="flow-root">
-      <ul role="list" class="divide-y divide-gray-700 dark:divide-grey-700">
-          {sortedPosts.length > 0 ? sortedPosts.map((p) => <PreviewPost post={p} />) : <Information />}
+      <ul role="list">
+        {
+          sortedPosts.length > 0 ? (
+            sortedPosts.map((p) => <PreviewPost post={p} />)
+          ) : (
+            <Information />
+          )
+        }
       </ul>
     </div>
   </HomeLayout>

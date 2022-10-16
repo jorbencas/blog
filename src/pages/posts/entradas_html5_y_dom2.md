@@ -9,12 +9,9 @@ author: "Jorge Beneyto Castelló"
 layout: "../../layouts/PostLayout.astro"
 ---
 
-#### HTML 5
-
+### HTML 5
 HTML5 (HyperText Markup Language, versión 5) es la quinta revisión importante del lenguaje básico de la World Wide Web, HTML. HTML5 especifica dos variantes de sintaxis para HTML: una «clásica», HTML (text/html), conocida como HTML5, y una variante XHTML conocida como sintaxis XHTML5 que deberá servirse con sintaxis XML (application/xhtml+xml)
-
-#### El html 5 incorpora:
-
+### El html 5 incorpora:
 1 - Nuevos semánticas elementos como 
 ```
 html
@@ -36,9 +33,7 @@ html
 - HTML Aplicación Caché
 - Trabajadores Web HTML
 - HTML SSE
-
-#### DOM
-
+### DOM
 El Document Object Model o DOM es esencialmente una interfaz de programación de aplicaciones (API) que proporciona un conjunto estándar de objetos para representar documentos HTML y XML, un modelo estándar sobre cómo pueden combinarse dichos objetos, y una interfaz estándar para acceder a ellos y manipularlos. A través del DOM, los programas pueden acceder y modificar el contenido, estructura y estilo de los documentos HTML y XML, que es para lo que se diseñó principalmente.
 
 El responsable del DOM es (W3C).
