@@ -59,15 +59,14 @@ Abrimos una terminal y ponemos sudo nautilus ( se pone sudo para que nos abra el
 ### Conectarse utilizando el Nautilus
 `sftp://jorge@192.168.101.1` (usuario@dirección IP)
 
-Nos pedirá la contraseña de dicho usuario, cuando ya la hayamos puesto  se nos abre el Nautilus de la maquina servidora
+Nos pedirá la contraseña de dicho usuario, cuando ya la hayamos puesto se nos abre el Nautilus de la maquina servidora
 
-<img title="Formas de conectarse con ssh" alt="Obtener dirección IP" src="/img/formas_de_conerse_por_ssh_3.webp
-">
+![Formas de conectarse con ssh](/img/formas_de_conerse_por_ssh_3.webp)
 
 Tambien nos podemos conectar por ssh utilizabdi el nautilus, iendo a la carpeta personal, ha archivo, a conectarse con el servidor y dentro hay que poner los datos, que son el tipo de conexión que en este caso es ssh , la IP del servidro, el puerto que es el 22, la carpeta a la cual queremos conectar-nos que en mi casdo es /home/jorge y ponemos el usuario y contraseña de este usuario, despues te pide la contraseña
 
-<img title="Formas de conectarse con ssh" alt="Obtener dirección IP" src="/img/formas_de_conectarse_con_ssh.png">
+![Formas de conectarse con ssh](/img/formas_de_conectarse_con_ssh.png)
 
 Como podemos ver nos la monta como una unidad de red
 
-<img title="Formas de conectarse con ssh" alt="Obtener dirección IP" src="/img/formas_de_conectarse_con_ssh_1.png">
+![Formas de conectarse con ssh](/img/formas_de_conectarse_con_ssh_1.png)
