@@ -5,6 +5,36 @@ import TagsPosts from "@components/TagsPosts.astro";
 import Layout from "./Layout.astro";
 const { content } = Astro.props;
 
+  let slug = Astro.url.pathname.split('/');
+  console.log(slug);
+  let bar = [];
+  const allPosts = await Astro.glob("../pages/posts/*.md");
+  const sortedPosts = allPosts.sort(
+    (a, b) =>
+      new Date(b.frontmatter.date).valueOf() -
+      new Date(a.frontmatter.date).valueOf()
+  ).filter( (post, i) => {
+    if(post.frontmatter.slug === slug[2]) {
+      bar.push({
+        prev: {
+          url:allPosts[i+1].frontmatter.url,
+          tittle:allPosts[i+1].frontmatter.title,
+          image:allPosts[i+1].frontmatter.image
+        },
+        next:{
+          url:allPosts[i - 1].frontmatter.url,
+          tittle:allPosts[i - 1].frontmatter.title,
+          image:allPosts[i - 1].frontmatter.image
+        }
+      });
+      return post;
+    }
+  });
+
+  console.log(Astro);
+  console.log("*******************************");
+const { b } = Astro.props;
+const {next, prev} = b[0];
 const formatDatePost = (date) => {
   let fullDate = new Date(date);
   let day = days[fullDate.getDay()];
@@ -33,7 +63,7 @@ const formatDatePost = (date) => {
           <strong class="text-base font-extrabold text-cyan-400">
             {formatDatePost(content.date)}
           </strong>
-          Publicado por: <strong class="dark:text-white"
+            Por: <strong class="dark:text-white"
             >{content.author}
           </strong>
         </p>
@@ -49,5 +79,35 @@ const formatDatePost = (date) => {
         <TagsPosts is-client tagsList={JSON.stringify(content.tags)} />
       )
     }
+
+
+  <!--<div class="flex w-auto">
+    <a class="block" href={prev.url}>
+      <img
+        class="inline-block w-14 h-14 align-middle items-center"
+        aria-label={prev.tittle}
+        src={prev.image}
+      />
+
+      <div class="block ml-4">
+        <h1 class="text-4xl font-sans text-gray-900 dark:text-white">
+          {prev.tittle}
+        </h1>
+      </div>
+    </a>
+    <a class="block" href={next.url}>
+      <img
+        class="inline-block w-14 h-14 align-middle items-center"
+        aria-label={next.tittle}
+        src={next.image}
+      />
+
+      <div class="block ml-4">
+        <h1 class="text-4xl font-sans text-gray-900 dark:text-white">
+          {next.tittle}
+        </h1>
+      </div>
+    </a>
+  </div>-->
   </div>
 </Layout>
