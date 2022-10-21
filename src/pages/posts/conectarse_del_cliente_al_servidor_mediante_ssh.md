@@ -1,4 +1,5 @@
 ---
+draft: false
 tittle: "Conectarse del cliente al servidor mediante ssh"
 description: "Descubre con un ejemplo la forma de conectarse del cliente a un servidor mediante ssh"
 date: "2015/12/02"

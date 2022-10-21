@@ -1,4 +1,5 @@
 ---
+draft: false
 tittle: "Instalación y configuración de un servidor DHCP"
 description: ""
 date: "2015/11/03"

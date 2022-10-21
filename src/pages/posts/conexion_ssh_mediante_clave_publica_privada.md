@@ -1,4 +1,5 @@
 ---
+draft: false
 tittle: "Conexión mediante clave pública privada"
 description: "Practica para crear una conexión ssh mediante clave pública privada"
 date: "2015/12/09"

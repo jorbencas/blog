@@ -1,4 +1,5 @@
 ---
+draft: false
 tittle: "Formas de conectarse por SSH"
 description: "Descubre las distintas formas de conectarse con ssh"
 date: "2015/11/25"

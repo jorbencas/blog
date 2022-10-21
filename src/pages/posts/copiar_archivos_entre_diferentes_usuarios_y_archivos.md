@@ -1,4 +1,5 @@
 ---
+draft: false
 tittle: "Copiar archivos entre diferentes usuarios y maquinas"
 description: "Descubre las principales arquitexturas web"
 date: "2015/11/30"
