@@ -6,28 +6,49 @@ import Layout from "./Layout.astro";
 import NextPrevLiks from "@components/NextPrevLiks.astro";
 const { content } = Astro.props;
 let bar = {
-  prevElement:{url:'', tittle:'', image:''},
-  nextElement:{url:'', tittle:'', image:''}
+  prevElement: { url: "", tittle: "", image: "" },
+  nextElement: { url: "", tittle: "", image: "" },
 };
 const allPosts = await Astro.glob("../pages/posts/*.md");
-const sortedPosts = allPosts.filter( post => !post.frontmatter.draft).sort(
-  (a, b) =>
-    new Date(b.frontmatter.date).valueOf() -
-    new Date(a.frontmatter.date).valueOf()
-).forEach( (post, i) => {
-  if(post.frontmatter.date === content.date) {
-    bar['prevElement'] = {
-      url: i + 1 <= allPosts.length ?  '/posts/'+allPosts[i+1].frontmatter.slug.replace('.md','') : bar.prevElement.url,
-      tittle: i + 1 <= allPosts.length ?  allPosts[i+1].frontmatter.tittle : bar.prevElement.tittle,
-      image: i + 1 <= allPosts.length ?  allPosts[i+1].frontmatter.image : bar.prevElement.image
-    };
-    bar['nextElement'] = {
-      url: i - 1 >= 0 ? '/posts/'+allPosts[i - 1].frontmatter.slug.replace('.md','') : bar.nextElement.url,
-      tittle: i - 1 >= 0 ? allPosts[i - 1].frontmatter.tittle : bar.nextElement.tittle,
-      image: i - 1 >= 0 ? allPosts[i - 1].frontmatter.image : bar.nextElement.image
-    };
-  }
-});
+const sortedPosts = allPosts
+  .filter((post) => !post.frontmatter.draft)
+  .sort(
+    (a, b) =>
+      new Date(b.frontmatter.date).valueOf() -
+      new Date(a.frontmatter.date).valueOf()
+  )
+  .forEach((post, i) => {
+    if (post.frontmatter.date === content.date) {
+      bar["prevElement"] = {
+        url:
+          i + 1 <= allPosts.length
+            ? "/posts/" + allPosts[i + 1].frontmatter.slug.replace(".md", "/")
+            : bar.prevElement.url,
+        tittle:
+          i + 1 <= allPosts.length
+            ? allPosts[i + 1].frontmatter.tittle
+            : bar.prevElement.tittle,
+        image:
+          i + 1 <= allPosts.length
+            ? allPosts[i + 1].frontmatter.image
+            : bar.prevElement.image,
+      };
+      bar["nextElement"] = {
+        url:
+          i - 1 >= 0
+            ? "/posts/" + allPosts[i - 1].frontmatter.slug.replace(".md", "")
+            : bar.nextElement.url,
+        tittle:
+          i - 1 >= 0
+            ? allPosts[i - 1].frontmatter.tittle
+            : bar.nextElement.tittle,
+        image:
+          i - 1 >= 0
+            ? allPosts[i - 1].frontmatter.image
+            : bar.nextElement.image,
+      };
+    }
+  });
 
 const formatDatePost = (date) => {
   let fullDate = new Date(date);
@@ -38,13 +59,11 @@ const formatDatePost = (date) => {
   return day + ", " + numday + " de " + month + " del " + year;
 };
 
-const { nextElement, prevElement } = bar;
-let urlPrev = prevElement.url;
-let textPrev = prevElement.tittle;
+let urlPrev = bar.prevElement.url;
+let textPrev = bar.prevElement.tittle;
 
-let urlNext = nextElement.url;
-let textNext = nextElement.tittle;
-
+let urlNext = bar.nextElement.url;
+let textNext = bar.nextElement.tittle;
 ---
 
 <Layout title={content.tittle}>
@@ -65,9 +84,7 @@ let textNext = nextElement.tittle;
           <strong class="text-base font-extrabold text-cyan-400">
             {formatDatePost(content.date)}
           </strong>
-            Por: <strong class="dark:text-white"
-            >{content.author}
-          </strong>
+          Por: <strong class="dark:text-white">{content.author}</strong>
         </p>
       </div>
     </div>
@@ -82,7 +99,11 @@ let textNext = nextElement.tittle;
       )
     }
 
-    
-  <NextPrevLiks nextURL={urlNext} prevURL={urlPrev} textNext={textNext} textPrev={textPrev} />
+    <NextPrevLiks
+      nextURL={urlNext}
+      prevURL={urlPrev}
+      textNext={textNext}
+      textPrev={textPrev}
+    />
   </div>
 </Layout>

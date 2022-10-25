@@ -1,12 +1,14 @@
 ---
-console.log(Astro.props);
 const { nextURL, prevURL, textNext, textPrev } = Astro.props;
 
-console.log( nextURL, prevURL, textNext, textPrev);
-
-
-let urlNext = nextURL !== undefined ? new URL("" + nextURL, Astro.site) : new URL("", Astro.site);
-let urlPreview = prevURL !== undefined ? new URL("" + prevURL, Astro.site) : new URL("", Astro.site);
+let urlNext =
+  nextURL !== undefined
+    ? new URL("" + nextURL, Astro.canonicalURL)
+    : new URL("", Astro.canonicalURL);
+let urlPreview =
+  prevURL !== undefined
+    ? new URL("" + prevURL, Astro.canonicalURL)
+    : new URL("", Astro.canonicalURL);
 ---
 
 <ul class="flex justify-between items-center mb-4">
