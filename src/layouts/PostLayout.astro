@@ -1,6 +1,5 @@
 ---
-import mounths from "./months.json";
-import days from "./days.json";
+import { formatDatePost } from 'src/utils.js';
 import TagsPosts from "@components/TagsPosts.astro";
 import Layout from "./Layout.astro";
 import NextPrevLiks from "@components/NextPrevLiks.astro";
@@ -49,15 +48,6 @@ const sortedPosts = allPosts
       };
     }
   });
-
-const formatDatePost = (date) => {
-  let fullDate = new Date(date);
-  let day = days[fullDate.getDay()];
-  let month = mounths[fullDate.getMonth()];
-  let year = fullDate.getFullYear();
-  let numday = fullDate.getUTCDate();
-  return day + ", " + numday + " de " + month + " del " + year;
-};
 
 let urlPrev = bar.prevElement.url;
 let textPrev = bar.prevElement.tittle;
