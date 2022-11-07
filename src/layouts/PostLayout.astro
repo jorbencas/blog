@@ -16,35 +16,35 @@ const sortedPosts = allPosts
       new Date(b.frontmatter.date).valueOf() -
       new Date(a.frontmatter.date).valueOf()
   )
-  .forEach((post, i) => {
-    if (post.frontmatter.date === content.date) {
+  .forEach(({frontmatter}, i) => {
+    if (new Date(frontmatter.date).valueOf() === new Date(content.date).valueOf()) {
       bar["prevElement"] = {
         url:
-          i + 1 <= allPosts.length
-            ? "/posts/" + allPosts[i + 1].frontmatter.slug.replace(".md", "/")
-            : bar.prevElement.url,
-        tittle:
-          i + 1 <= allPosts.length
-            ? allPosts[i + 1].frontmatter.tittle
-            : bar.prevElement.tittle,
-        image:
-          i + 1 <= allPosts.length
-            ? allPosts[i + 1].frontmatter.image
-            : bar.prevElement.image,
-      };
-      bar["nextElement"] = {
-        url:
           i - 1 >= 0
-            ? "/posts/" + allPosts[i - 1].frontmatter.slug.replace(".md", "")
-            : bar.nextElement.url,
+            ? "/posts/" + allPosts[i - 1].frontmatter.slug.replace(".md", "/")
+            : undefined,
         tittle:
           i - 1 >= 0
             ? allPosts[i - 1].frontmatter.tittle
-            : bar.nextElement.tittle,
+            : undefined,
         image:
           i - 1 >= 0
             ? allPosts[i - 1].frontmatter.image
-            : bar.nextElement.image,
+            : undefined,
+      };
+      bar["nextElement"] = {
+        url:
+          i + 1 <= allPosts.length
+            ? "/posts/" + allPosts[i + 1].frontmatter.slug.replace(".md", "")
+            : undefined,
+        tittle:
+          i + 1 <= allPosts.length
+            ? allPosts[i + 1].frontmatter.tittle
+            : undefined,
+        image:
+          i + 1 <= allPosts.length
+            ? allPosts[i + 1].frontmatter.image
+            : undefined,
       };
     }
   });
