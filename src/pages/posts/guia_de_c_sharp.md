@@ -1,5 +1,5 @@
 ---
-draft: false
+draft: true
 tittle: "Guia de C Sharp"
 description: "Guia paso a paso para empezar ha programar en C Sharp"
 date: "2022/11/07"
