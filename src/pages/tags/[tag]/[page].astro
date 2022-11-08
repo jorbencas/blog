@@ -5,14 +5,11 @@ import allTags from "@components/tags.json";
 import HomeLayout from "@layouts/HomeLayout.astro";
 import NextPrevLiks from "@components/NextPrevLiks.astro";
 import Information from "@components/Information.astro";
+import { getSortedPosts } from "src/utils";
 
 export async function getStaticPaths({ paginate }) {
   const allPosts = await Astro.glob("../../posts/*.md");
-  const sortedPosts = allPosts.filter( post => !post.frontmatter.draft).sort(
-    (a, b) =>
-      new Date(b.frontmatter.date).valueOf() -
-      new Date(a.frontmatter.date).valueOf()
-  );
+  const sortedPosts = await getSortedPosts(allPosts);
   return allTags.map((tag) => {
     const filteredPosts = sortedPosts.filter((post) =>
       post.frontmatter.tags.includes(tag)

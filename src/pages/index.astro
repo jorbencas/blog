@@ -3,19 +3,15 @@ import Layout from "@layouts/Layout.astro";
 import PreviewPost from "@components/PreviewPost.astro";
 import HomeLayout from "@layouts/HomeLayout.astro";
 import Information from "@components/Information.astro";
-
+import { getSortedPosts } from "src/utils";
+/*
 interface MarkdownFrontmatter {
   date: number;
   draft:boolean;
 }
-
-const allPosts = await Astro.glob<MarkdownFrontmatter>("./posts/*.md");
-const sortedPosts = allPosts.filter( post => !post.frontmatter.draft).sort(
-    (a, b) =>
-      new Date(b.frontmatter.date).valueOf() -
-      new Date(a.frontmatter.date).valueOf()
-  )
-  .slice(0, 3);
+*/
+const allPosts = await Astro.glob("./posts/*.md");
+const sortedPosts = await getSortedPosts(allPosts);
 ---
 
 <Layout title="Problemas de un desarollador Web">
@@ -35,7 +31,7 @@ const sortedPosts = allPosts.filter( post => !post.frontmatter.draft).sort(
       <ul role="list">
         {
           sortedPosts.length > 0 ? (
-            sortedPosts.map((p) => <PreviewPost post={p} />)
+            sortedPosts.slice(0, 3).map((p) => <PreviewPost post={p} />)
           ) : (
             <Information />
           )

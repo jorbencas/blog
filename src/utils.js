@@ -10,6 +10,15 @@ export const formatDatePost = (date) => {
     return day + ", " + numday + " de " + month + " del " + year;
   };
 
+export const getSortedPosts = async (allPosts) => {
+  return allPosts
+  .filter((post) => !post.frontmatter.draft)
+  .sort(
+    (a, b) =>
+      new Date(b.frontmatter.date).valueOf() -
+      new Date(a.frontmatter.date).valueOf()
+  );
+}
 
 export const makeUrl = (urlParam, Astro) => {
   let url = urlParam !== undefined ? "" + urlParam : '';

@@ -1,5 +1,5 @@
 ---
-import { formatDatePost } from 'src/utils.js';
+import { formatDatePost, getSortedPosts } from 'src/utils.js';
 import TagsPosts from "@components/TagsPosts.astro";
 import Layout from "./Layout.astro";
 import NextPrevLiks from "@components/NextPrevLiks.astro";
@@ -9,45 +9,40 @@ let bar = {
   nextElement: { url: "", tittle: "", image: "" },
 };
 const allPosts = await Astro.glob("../pages/posts/*.md");
-const sortedPosts = allPosts
-  .filter((post) => !post.frontmatter.draft)
-  .sort(
-    (a, b) =>
-      new Date(b.frontmatter.date).valueOf() -
-      new Date(a.frontmatter.date).valueOf()
-  )
-  .forEach(({frontmatter}, i) => {
-    if (new Date(frontmatter.date).valueOf() === new Date(content.date).valueOf()) {
-      bar["prevElement"] = {
-        url:
-          i - 1 >= 0
-            ? "/posts/" + allPosts[i - 1].frontmatter.slug.replace(".md", "/")
-            : undefined,
-        tittle:
-          i - 1 >= 0
-            ? allPosts[i - 1].frontmatter.tittle
-            : undefined,
-        image:
-          i - 1 >= 0
-            ? allPosts[i - 1].frontmatter.image
-            : undefined,
-      };
-      bar["nextElement"] = {
-        url:
-          i + 1 <= allPosts.length
-            ? "/posts/" + allPosts[i + 1].frontmatter.slug.replace(".md", "")
-            : undefined,
-        tittle:
-          i + 1 <= allPosts.length
-            ? allPosts[i + 1].frontmatter.tittle
-            : undefined,
-        image:
-          i + 1 <= allPosts.length
-            ? allPosts[i + 1].frontmatter.image
-            : undefined,
-      };
-    }
-  });
+const sortedPosts = await getSortedPosts(allPosts);
+for (let i = 0; i < sortedPosts.length; i++) {
+  const {frontmatter} = sortedPosts[i];
+  if (new Date(frontmatter.date).valueOf() === new Date(content.date).valueOf()) {
+    bar["prevElement"] = {
+      url:
+        i - 1 >= 0
+          ? "/posts/" + sortedPosts[i - 1].frontmatter.slug.replace(".md", "/")
+          : undefined,
+      tittle:
+        i - 1 >= 0
+          ? sortedPosts[i - 1].frontmatter.tittle
+          : undefined,
+      image:
+        i - 1 >= 0
+          ? sortedPosts[i - 1].frontmatter.image
+          : undefined,
+    };
+    bar["nextElement"] = {
+      url:
+        i + 1 <= sortedPosts.length
+          ? "/posts/" + sortedPosts[i + 1].frontmatter.slug.replace(".md", "")
+          : undefined,
+      tittle:
+        i + 1 <= sortedPosts.length
+          ? sortedPosts[i + 1].frontmatter.tittle
+          : undefined,
+      image:
+        i + 1 <= sortedPosts.length
+          ? sortedPosts[i + 1].frontmatter.image
+          : undefined,
+    };
+  }
+}
 
 let urlPrev = bar.prevElement.url;
 let textPrev = bar.prevElement.tittle;
