@@ -4,7 +4,7 @@ tittle: "Instalación y configuración de un servidor DHCP"
 description: ""
 date: "2015/11/03"
 tags: ['web', 'sistemas']
-slug: "instalacion-y-configuracion-dhcp.md"
+slug: "instalacion_y_configuracion_dhcp.md"
 image: "/img/instalacion-y-configuracion-dhcp.png"
 author: "Jorge Beneyto Castelló"
 layout: "../../layouts/PostLayout.astro"
