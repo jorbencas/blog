@@ -1,5 +1,5 @@
 ---
-import { formatDatePost, getSortedPosts } from 'src/utils.js';
+import { formatDatePost, getSortedPosts } from "src/utils.js";
 import TagsPosts from "@components/TagsPosts.astro";
 import Layout from "./Layout.astro";
 import NextPrevLiks from "@components/NextPrevLiks.astro";
@@ -7,25 +7,21 @@ const { content } = Astro.props;
 let bar = {
   prevElement: { url: "", tittle: "", image: "" },
   nextElement: { url: "", tittle: "", image: "" },
-};                                                                                                                                                                                                                               
+};
 const allPosts = await Astro.glob("../pages/posts/*.md");
 const sortedPosts = await getSortedPosts(allPosts);
 for (let i = 0; i < sortedPosts.length; i++) {
-  const {frontmatter} = sortedPosts[i];
-  if (new Date(frontmatter.date).valueOf() === new Date(content.date).valueOf()) {
+  const { frontmatter } = sortedPosts[i];
+  if (
+    new Date(frontmatter.date).valueOf() === new Date(content.date).valueOf()
+  ) {
     bar["prevElement"] = {
       url:
         i - 1 >= 0
           ? "/posts/" + sortedPosts[i - 1].frontmatter.slug.replace(".md", "/")
           : undefined,
-      tittle:
-        i - 1 >= 0
-          ? sortedPosts[i - 1].frontmatter.tittle
-          : undefined,
-      image:
-        i - 1 >= 0
-          ? sortedPosts[i - 1].frontmatter.image
-          : undefined,
+      tittle: i - 1 >= 0 ? sortedPosts[i - 1].frontmatter.tittle : undefined,
+      image: i - 1 >= 0 ? sortedPosts[i - 1].frontmatter.image : "prev.svg",
     };
     bar["nextElement"] = {
       url:
@@ -39,14 +35,14 @@ for (let i = 0; i < sortedPosts.length; i++) {
       image:
         i + 1 < sortedPosts.length
           ? sortedPosts[i + 1].frontmatter.image
-          : undefined,
+          : "next.svg",
     };
   }
 }
-
+let imagePrev = bar.prevElement.image;
 let urlPrev = bar.prevElement.url;
 let textPrev = bar.prevElement.tittle;
-
+let imageNext = bar.nextElement.image;
 let urlNext = bar.nextElement.url;
 let textNext = bar.nextElement.tittle;
 ---
@@ -85,8 +81,10 @@ let textNext = bar.nextElement.tittle;
     }
 
     <NextPrevLiks
+      imageNext={imageNext}
       nextURL={urlNext}
       prevURL={urlPrev}
+      imagePrev={imagePrev}
       textNext={textNext}
       textPrev={textPrev}
     />

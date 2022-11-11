@@ -1,26 +1,18 @@
 ---
-import { makeUrl } from "src/utils";
-const { nextURL, prevURL, textNext, textPrev } = Astro.props;
+import PaginationLinks from "./PaginationLinks.astro";
+const { nextURL, prevURL, textNext, textPrev, imageNext, imagePrev } =
+  Astro.props;
 ---
 
-<ul class="flex justify-between items-center mb-4">
-  <li class="mx-2">
-    {nextURL && (<a
-      class="text-sm font-medium text-cyan-400 hover:underline dark:text-cyan-500"
-      href={makeUrl(nextURL, Astro)}
-    >
-      {textNext}
-    </a>
-    )}
-  </li>
-  <li class="mx-2">
-    {
-      prevURL && (<a
-      class="text-sm font-medium text-cyan-400 hover:underline dark:text-cyan-500"
-      href={makeUrl(prevURL, Astro)}
-    >
-      {textPrev}
-    </a>
-    )}
-  </li>
+<ul class="flex justify-center items-center">
+  {
+    nextURL && (
+      <PaginationLinks url={nextURL} image={imageNext} text={textNext} />
+    )
+  }
+  {
+    prevURL && (
+      <PaginationLinks url={prevURL} image={imagePrev} text={textPrev} />
+    )
+  }
 </ul>
