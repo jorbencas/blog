@@ -22,6 +22,6 @@ export const getSortedPosts = (allPosts) => {
 
 export const makeUrl = (urlParam, Astro) => {
   let url = urlParam !== undefined ? "" + urlParam : '';
-  let site = Astro.request.url.includes("localhost") ? Astro.request.url : import.meta.site;
+  let site = Astro.request.url.includes("localhost") ? Astro.request.url : Astro.site;
   return new URL(url, site);
 }
