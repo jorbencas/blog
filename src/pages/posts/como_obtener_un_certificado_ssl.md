@@ -2,7 +2,7 @@
 draft: false
 title: "Cómo obtener un certificado SSL"
 description: ""
-pubDate: "2016/01/18"
+pubDate: "2016/01/19"
 tags: ['sistemas', 'web']
 slug: "como_obtener_un_certificado_ssl.md"
 image: "/img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl.webp"
