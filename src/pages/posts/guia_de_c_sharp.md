@@ -1,8 +1,8 @@
 ---
 draft: true 
-tittle: "Guia de C Sharp y .NET"
+title: "Guia de C Sharp y .NET"
 description: "Guia paso a paso para empezar ha conocer el ecosistema de .NET y C Sharp"
-date: "2022/11/07"
+pubDate: "2022/11/07"
 tags: ['sistemas','C Sharp']
 slug: "guia_de_c_sharp.md"
 image: "/img/guia_de_c_sharp.jpg"

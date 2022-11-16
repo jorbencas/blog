@@ -16,7 +16,7 @@ const mounths = [
 ];
 let allYears = [];
 allPosts
-  .filter((f) => f.frontmatter.date != undefined)
+  .filter((f) => f.frontmatter.pubDate != undefined)
   .forEach((p) => {
     let { date, tittle } = p.frontmatter;
     let fullDate = new Date(date);
@@ -69,7 +69,7 @@ allPosts
                           <li class="ml-10 accordion-item">
                             {" "}
                             <a class="no-underline text-sky-500" href={eu.url}>
-                              {eu.tittle}
+                              {eu.title}
                             </a>
                           </li>
                         );
@@ -90,7 +90,7 @@ allPosts
   @import url("../styles/Archive.css");
 </style>
 
-<script>
+<script  is-inline >
   const toggler = document.getElementsByClassName("caret");
   for (let i = 0; i < toggler.length; i++) {
     toggler[i].addEventListener("click", function () {

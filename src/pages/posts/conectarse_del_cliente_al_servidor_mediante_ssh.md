@@ -1,8 +1,8 @@
 ---
 draft: false
-tittle: "Conectarse del cliente al servidor mediante ssh"
+title: "Conectarse del cliente al servidor mediante ssh"
 description: "Descubre con un ejemplo la forma de conectarse del cliente a un servidor mediante ssh"
-date: "2015/12/02"
+pubDate: "2015/12/02"
 tags: ['sistemas']
 slug: "conectarse_del_cliente_al_servidor_mediante_ssh.md"
 image: "/img/conectarse_del_cliente_al_servidor_mediante_ssh.webp"
@@ -24,7 +24,7 @@ Lo primero que debemos hacer es iniciar el servidor,una vez iniciado ahora ahy q
 
 NOTA: En la dirección  IP debemos adaptarla a la nuestra, para ello hay que abrir una terminal y  poner  ifconfig y ver cual es tu dirección IP.
 
-NOTA2: Es importante que el script, que es funchero lo guardemos en sh , ya que si lo guardamos en otro formato no lo ejecutara.
+NOTA2: Es importante que el script, que es funchero lo guardemos en sh, ya que si lo guardamos en otro formato no lo ejecutara.
 
 Ahora hay que abrir una terminal y poner:
 

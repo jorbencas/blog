@@ -1,8 +1,8 @@
 ---
 draft: false
-tittle: "Copiar archivos entre diferentes usuarios y maquinas"
+title: "Copiar archivos entre diferentes usuarios y maquinas"
 description: "Descubre las principales arquitexturas web"
-date: "2015/11/30"
+pubDate: "2015/11/30"
 tags: ['sistemas']
 slug: "copiar_archivos_entre_diferentes_usuarios_y_archivos.md
 "

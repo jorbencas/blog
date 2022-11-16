@@ -1,8 +1,8 @@
 ---
 draft: false
-tittle: "Manual de Virtual-Box"
+title: "Manual de Virtual-Box"
 description: ""
-date: "2015/12/30"
+pubDate: "2015/12/30"
 tags: ['sistemas']
 slug: "manual_virtual_box.md"
 image: "/img/manual_virtual_box.jpg"

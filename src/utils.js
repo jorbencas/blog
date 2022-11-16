@@ -10,18 +10,18 @@ export const formatDatePost = (date) => {
     return day + ", " + numday + " de " + month + " del " + year;
   };
 
-export const getSortedPosts = async (allPosts) => {
+export const getSortedPosts = (allPosts) => {
   return allPosts
   .filter((post) => !post.frontmatter.draft)
   .sort(
     (a, b) =>
-      new Date(b.frontmatter.date).valueOf() -
-      new Date(a.frontmatter.date).valueOf()
+      new Date(b.frontmatter.pubDate).valueOf() -
+      new Date(a.frontmatter.pubDate).valueOf()
   );
 }
 
 export const makeUrl = (urlParam, Astro) => {
   let url = urlParam !== undefined ? "" + urlParam : '';
-  let site = Astro.request.url.includes("localhost") ? Astro.request.url : Astro.site;
+  let site = Astro.request.url.includes("localhost") ? Astro.request.url : import.meta.site;
   return new URL(url, site);
 }

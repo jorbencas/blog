@@ -1,8 +1,8 @@
 ---
-draft: true
-tittle: "ESTÁNDARAS HTML5 Y DOM2"
+draft: false
+title: "ESTÁNDARAS HTML5 Y DOM2"
 description: "Descubre las ventajas del html y el DOM 2"
-date: "2015/10/15"
+pubDate: "2015/10/15"
 tags: ['web', 'html5']
 slug: "entradas_html5_y_dom2.md"
 image: "/img/html5.png"

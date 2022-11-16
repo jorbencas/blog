@@ -1,8 +1,8 @@
 ---
 draft: false
-tittle: "Google groups"
+title: "Google groups"
 description: "Descubre un poquito mas sobre la tecnologia de Google llamada Google groups"
-date: "2015/10/30"
+pubDate: "2015/10/30"
 tags: ['groups chat', 'Google']
 slug: "google_goups.md"
 image: "/img/google-groups.png"

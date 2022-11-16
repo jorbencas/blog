@@ -1,8 +1,8 @@
 ---
 draft: true
-tittle: "Recursos"
+title: "Recursos"
 description: "Post de recursos"
-date: "2022/11/10"
+pubDate: "2022/11/10"
 tags: ['sistemas', 'web']
 slug: "resources.md"
 image: "/img/resources.webp"

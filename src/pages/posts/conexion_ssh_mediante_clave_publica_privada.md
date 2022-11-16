@@ -1,8 +1,8 @@
 ---
 draft: false
-tittle: "Conexión mediante clave pública privada"
+title: "Conexión mediante clave pública privada"
 description: "Practica para crear una conexión ssh mediante clave pública privada"
-date: "2015/12/09"
+pubDate: "2015/12/09"
 tags: ['sistemas']
 slug: "conexion_ssh_mediante_clave_publica_privada.md"
 image: "/img/conexion_ssh_mediante_clave_publica_privada.webp"

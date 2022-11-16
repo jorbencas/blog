@@ -13,14 +13,14 @@ const sortedPosts = await getSortedPosts(allPosts);
 for (let i = 0; i < sortedPosts.length; i++) {
   const { frontmatter } = sortedPosts[i];
   if (
-    new Date(frontmatter.date).valueOf() === new Date(content.date).valueOf()
+    new Date(frontmatter.pubDate).valueOf() === new Date(content.pubDate).valueOf()
   ) {
     bar["prevElement"] = {
       url:
         i - 1 >= 0
           ? "/posts/" + sortedPosts[i - 1].frontmatter.slug.replace(".md", "/")
           : undefined,
-      tittle: i - 1 >= 0 ? sortedPosts[i - 1].frontmatter.tittle : undefined,
+      tittle: i - 1 >= 0 ? sortedPosts[i - 1].frontmatter.title : undefined,
       image: i - 1 >= 0 ? sortedPosts[i - 1].frontmatter.image : "prev.svg",
     };
     bar["nextElement"] = {
@@ -30,7 +30,7 @@ for (let i = 0; i < sortedPosts.length; i++) {
           : undefined,
       tittle:
         i + 1 < sortedPosts.length
-          ? sortedPosts[i + 1].frontmatter.tittle
+          ? sortedPosts[i + 1].frontmatter.title
           : undefined,
       image:
         i + 1 < sortedPosts.length
@@ -47,23 +47,23 @@ let urlNext = bar.nextElement.url;
 let textNext = bar.nextElement.tittle;
 ---
 
-<Layout title={content.tittle}>
+<Layout title={content.title}>
   <div class="max-w-6xl mx-auto mt-10 items-start text-left">
     <div class="my-5 flex w-auto">
       <img
         class="inline-block w-14 h-14 align-middle items-center"
-        aria-label={content.tittle}
+        aria-label={content.title}
         src={content.image}
       />
 
       <div class="block ml-4">
         <h1 class="text-4xl font-sans text-gray-900 dark:text-white">
-          {content.tittle}
+          {content.title}
         </h1>
         <p class="text-sm">{content.description}</p>
         <p>
           <strong class="text-base font-extrabold text-cyan-400">
-            {formatDatePost(content.date)}
+            {formatDatePost(content.pubDate)}
           </strong>
           Por: <strong class="dark:text-white">{content.author}</strong>
         </p>

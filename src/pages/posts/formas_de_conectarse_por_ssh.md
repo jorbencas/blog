@@ -1,8 +1,8 @@
 ---
 draft: false
-tittle: "Formas de conectarse por SSH"
+title: "Formas de conectarse por SSH"
 description: "Descubre las distintas formas de conectarse con ssh"
-date: "2015/11/25"
+pubDate: "2015/11/25"
 tags: ['sistemas']
 slug: "formas_de_conectarse_por_ssh.md"
 image: "/img/html5.png"

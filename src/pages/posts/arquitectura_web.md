@@ -1,8 +1,8 @@
 ---
 draft: false
-tittle: "Arquitectura Web"
+title: "Arquitectura Web"
 description: "Descubre las principales arquitexturas web"
-date: "2017/10/04"
+pubDate: "2017/10/04"
 tags: ['web']
 slug: "arquitectura_web.md"
 image: "/img/arquitectura_web.webp"
