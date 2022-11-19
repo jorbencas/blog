@@ -10,6 +10,7 @@ author: "Jorge Beneyto Castelló"
 layout: "../../layouts/PostLayout.astro"
 ---
 
+https://swagger.io/
 
 https://squoosh.app/
 

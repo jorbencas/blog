@@ -1,19 +1,6 @@
 ---
+import mounths from "../layouts/months.json";
 const allPosts = await Astro.glob("../pages/posts/*.md");
-const mounths = [
-  "Enero",
-  "Febrero",
-  "Marzo",
-  "Abril",
-  "Mayo",
-  "Junio",
-  "Julio",
-  "Agosto",
-  "Septiembre",
-  "Octubre",
-  "Noviembre",
-  "Diciembre",
-];
 let allYears = [];
 allPosts
   .filter((f) => f.frontmatter.pubDate != undefined)
@@ -46,51 +33,40 @@ allPosts
   </h3>
   <ul class="list-none block p-0 m-0 border-l-2 border-blue-600">
     {
-      allYears.map((e, y) => {
-        return (
-          <li
-            class="ml-10 accordion-item"
-            data-bs-toggle="collapse"
-            data-bs-target="#collapseOne"
-            aria-expanded="false"
-            aria-controls="collapseOne"
-          >
-            <span class="cursor-pointer before:mr-5 before:inline-block before:text-black before:content-['\25B6'] active:before:rotate-45 before:transform-none">
-              {y}
-            </span>
-            <ul class="accordion m-2 border-l-2 border-blue-600">
-              {e.map((el, yl) => {
-                return (
-                  <li class="ml-10 accordion-item">
-                    <span class="caret">{mounths[yl]}</span>
-                    <ul class="m-2 border-l-2 border-blue-600">
-                      {el.map((eu) => {
-                        return (
-                          <li class="ml-10 accordion-item">
-                            {" "}
-                            <a class="no-underline text-sky-500" href={eu.url}>
-                              {eu.title}
-                            </a>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </li>
-                );
-              })}
-            </ul>
-          </li>
-        );
-      })
+      allYears.map((e, y) => (
+        <li
+          class="ml-10 accordion-item"
+          data-bs-toggle="collapse"
+          data-bs-target="#collapseOne"
+          aria-expanded="false"
+          aria-controls="collapseOne"
+        >
+          <span class="cursor-pointer before:mr-5 before:inline-block before:text-black before:content-['\25B6'] active:before:rotate-45 before:transform-none">
+            {y}
+          </span>
+          <ul class="accordion m-2 border-l-2 border-blue-600">
+            {e.map((el, yl) => (
+              <li class="ml-10 accordion-item">
+                <span class="caret">{mounths[yl]}</span>
+                <ul class="m-2 border-l-2 border-blue-600">
+                  {el.map((eu) => (
+                    <li class="ml-10 accordion-item">
+                      <a class="no-underline text-sky-500" href={eu.url}>
+                        {eu.title}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            ))}
+          </ul>
+        </li>
+      ))
     }
   </ul>
 </div>
 
-<style>
-  @import url("../styles/Archive.css");
-</style>
-
-<script  is-inline >
+<script is-inline>
   const toggler = document.getElementsByClassName("caret");
   for (let i = 0; i < toggler.length; i++) {
     toggler[i].addEventListener("click", function () {
