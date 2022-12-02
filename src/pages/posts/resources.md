@@ -10,6 +10,20 @@ author: "Jorge Beneyto Castelló"
 layout: "../../layouts/PostLayout.astro"
 ---
 
+// https://filecrypt.cc/Container/84EB24299F.html
+
+https://es.wikipedia.org/wiki/Complejidad_ciclom%C3%A1tica
+
+https://cloudinary.com/
+
+https://github.com/CKGrafico/papanasi
+
+https://codesignal.com/
+
+https://www.hackerrank.com/auth/signup
+
+https://github.com/CKGrafico/papanasi
+
 https://swagger.io/
 
 https://squoosh.app/
