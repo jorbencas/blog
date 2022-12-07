@@ -10,7 +10,9 @@ author: "Jorge Beneyto Castelló"
 layout: "../../layouts/PostLayout.astro"
 ---
 
-// https://filecrypt.cc/Container/84EB24299F.html
+https://developers.sendinblue.com/
+
+https://regexr.com/35rp0
 
 https://es.wikipedia.org/wiki/Complejidad_ciclom%C3%A1tica
 
