@@ -10,6 +10,8 @@ author: "Jorge Beneyto Castelló"
 layout: "../../layouts/PostLayout.astro"
 ---
 
+https://swagger.io/
+
 https://developers.sendinblue.com/
 
 https://regexr.com/35rp0
