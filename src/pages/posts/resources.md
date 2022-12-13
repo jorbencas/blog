@@ -10,6 +10,16 @@ author: "Jorge Beneyto Castelló"
 layout: "../../layouts/PostLayout.astro"
 ---
 
+https://thedotnetguide.com/
+
+https://www.c-sharpcorner.com/learn/
+
+https://zetcode.com/all/#csharp
+
+https://devblogs.microsoft.com/dotnet/
+
+https://dotnettutorials.net/
+
 https://swagger.io/
 
 https://developers.sendinblue.com/
