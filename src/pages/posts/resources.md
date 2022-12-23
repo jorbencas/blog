@@ -12,6 +12,7 @@ layout: "../../layouts/PostLayout.astro"
 
 https://chat.openai.com/chat
 
+https://fakerjs.dev/
 
 To create a calculator using a windows form, you will need to use a programming language that is capable of creating graphical user interfaces (GUIs) and has support for handling user input and basic arithmetic operations. Some popular languages for creating windows forms include C#, Visual Basic, and C++.
 
