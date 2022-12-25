@@ -10,6 +10,18 @@ author: "Jorge Beneyto Castelló"
 layout: "../../layouts/PostLayout.astro"
 ---
 
+https://daisyui.com/
+
+https://merakiui.com/
+
+https://kitwind.io/products/kometa/
+
+https://flowbite.com/
+
+https://www.material-tailwind.com/
+
+https://tailblocks.cc/
+
 https://chat.openai.com/chat
 
 https://fakerjs.dev/
