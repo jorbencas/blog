@@ -10,6 +10,49 @@ author: "Jorge Beneyto Castelló"
 layout: "../../layouts/PostLayout.astro"
 ---
 
+https://daisyui.com/
+
+https://merakiui.com/
+
+https://kitwind.io/products/kometa/
+
+https://flowbite.com/
+
+https://www.material-tailwind.com/
+
+https://tailblocks.cc/
+
+https://chat.openai.com/chat
+
+https://fakerjs.dev/
+
+To create a calculator using a windows form, you will need to use a programming language that is capable of creating graphical user interfaces (GUIs) and has support for handling user input and basic arithmetic operations. Some popular languages for creating windows forms include C#, Visual Basic, and C++.
+
+Here is a brief outline of the steps you might take to create a simple calculator using a windows form:
+
+    Create a new project in your chosen programming language and select the option to create a windows form application.
+
+    Use the visual designer in your development environment to create the layout for your calculator. This may include adding text boxes for the user to enter numbers, buttons for the various arithmetic operations, and a label to display the result.
+
+    Add event handlers for the buttons on your calculator. These will be responsible for performing the appropriate arithmetic operation when a button is clicked.
+
+    Write the code for your event handlers to perform the necessary arithmetic operations. This may involve parsing the user-entered numbers from the text boxes, performing the requested operation, and displaying the result in the label.
+
+    Test your calculator to make sure it is working as expected. This may involve manually testing different input values and operations to ensure the correct results are being displayed.
+
+Of course, this is just a very basic outline of the steps involved in creating a calculator using a windows form. Depending on the complexity of your calculator and your desired features, there may be additional steps or considerations involved. Overall, creating a calculator using a windows form can be a good way to learn the basics of GUI programming and user input handling.
+
+
+https://thedotnetguide.com/
+
+https://www.c-sharpcorner.com/learn/
+
+https://zetcode.com/all/#csharp
+
+https://devblogs.microsoft.com/dotnet/
+
+https://dotnettutorials.net/
+
 https://swagger.io/
 
 https://developers.sendinblue.com/
