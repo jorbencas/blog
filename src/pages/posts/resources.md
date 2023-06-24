@@ -287,6 +287,14 @@ https://dominioshdfull.com/
 
 https://www.youtube.com/watch?v=m3E_VbE9Hxw
 
+https://you.com/
+
+https://www.useblackbox.io/
+
+https://www.perplexity.ai
+
+https://chat.forefront.ai/
+
 https://css-tricks.com/easy-dark-mode-and-multiple-color-themes-in-react/
 
 https://www.youtube.com/watch?v=UjD761K-lvY
