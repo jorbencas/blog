@@ -9,7 +9,8 @@ image: "/img/resources.webp"
 author: "Jorge Beneyto Castelló"
 layout: "../../layouts/PostLayout.astro"
 ---
-#ar 1
+
+# ar 1
 ```
 #!/bin/bash
 
@@ -105,7 +106,7 @@ ffmpeg_exit_code=$?
             fi
 done
 ```
-#ar 2
+# ar 2
 ```
 #!/bin/bash
 
@@ -200,7 +201,8 @@ ffmpeg_exit_code=$?
             fi
 done
 ```
-#ar 3
+# ar 3
+```
 #!/bin/bash
 
 # Rutas de la carpeta que contiene videos y audios, y la carpeta de salida
