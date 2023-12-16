@@ -1,5 +1,5 @@
 ---
-draft: true
+draft: false
 title: "Scripts"
 description: "Post de Scripts"
 pubDate: "2023/12/16"
