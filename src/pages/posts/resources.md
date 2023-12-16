@@ -1,5 +1,5 @@
 ---
-draft: false
+draft: true
 title: "Recursos"
 description: "Post de recursos"
 pubDate: "2022/11/10"
