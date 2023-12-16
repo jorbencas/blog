@@ -9,6 +9,7 @@ image: "/img/resources.webp"
 author: "Jorge Beneyto Castelló"
 layout: "../../layouts/PostLayout.astro"
 ---
+https://tabler-icons.io/
 
 https://daisyui.com/
 
@@ -286,6 +287,14 @@ https://www.grammarly.com/signup?afterSurvey=recommend
 https://dominioshdfull.com/
 
 https://www.youtube.com/watch?v=m3E_VbE9Hxw
+
+https://you.com/
+
+https://www.useblackbox.io/
+
+https://www.perplexity.ai
+
+https://chat.forefront.ai/
 
 https://css-tricks.com/easy-dark-mode-and-multiple-color-themes-in-react/
 
