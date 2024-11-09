@@ -3,6 +3,9 @@ import { formatDatePost, getSortedPosts } from "src/utils.js";
 import TagsPosts from "@components/TagsPosts.astro";
 import Layout from "./Layout.astro";
 import NextPrevLiks from "@components/NextPrevLiks.astro";
+import PostIndex from "@components/PostIndex.astro";
+import Archive from "@components/Archive.astro";
+
 const { content } = Astro.props;
 let bar = {
   prevElement: { url: "", tittle: "", image: "" },
@@ -13,7 +16,8 @@ const sortedPosts = await getSortedPosts(allPosts);
 for (let i = 0; i < sortedPosts.length; i++) {
   const { frontmatter } = sortedPosts[i];
   if (
-    new Date(frontmatter.pubDate).valueOf() === new Date(content.pubDate).valueOf()
+    new Date(frontmatter.pubDate).valueOf() ===
+    new Date(content.pubDate).valueOf()
   ) {
     bar["prevElement"] = {
       url:
@@ -48,7 +52,8 @@ let textNext = bar.nextElement.tittle;
 ---
 
 <Layout title={content.title}>
-  <div class="max-w-6xl mx-auto mt-10 items-start text-left">
+   <Archive />
+  <div class="mx-auto mt-10 items-start text-left">
     <div class="my-5 flex w-auto">
       <img
         class="inline-block w-14 h-14 align-middle items-center"
@@ -65,7 +70,7 @@ let textNext = bar.nextElement.tittle;
           <strong class="text-base font-extrabold text-cyan-400">
             {formatDatePost(content.pubDate)}
           </strong>
-          Por: <strong class="dark:text-white">{content.author}</strong>
+           Por: <strong class="dark:text-white">{content.author}</strong>
         </p>
       </div>
     </div>
@@ -89,4 +94,5 @@ let textNext = bar.nextElement.tittle;
       textPrev={textPrev}
     />
   </div>
+  <PostIndex />
 </Layout>
