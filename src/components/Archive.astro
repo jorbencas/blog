@@ -8,7 +8,7 @@ allPosts.forEach((p) => {
   let fullDate = new Date(pubDate);
   let month = fullDate.getMonth();
   let y = fullDate.getFullYear();
-  if (!allYears[y]) {
+  if (!allYears[y] && draft) {
     allYears[y] = [];
   }
 
@@ -22,140 +22,140 @@ allPosts.forEach((p) => {
 });
 ---
 
-<div class="taglist w-full max-w-md mx-auto shadow-lg rounded-lg p-6">
+<div class="taglist w-full max-w-md mx-auto shadow-lg rounded-lg">
   <h3
     class="mb-4 text-2xl font-bold leading-none text-gray-900 dark:text-white text-center"
   >
     Explorar Artículos Archivados
   </h3>
-<div id="accordion-nested-parent" data-accordion="collapse"> 
- {allYears.map((e, y) => (
-<div class="accordion group relative rounded-md border border-purple-900">
-  <button
-    class="accordion__button flex w-full flex-1 items-center justify-between gap-2 p-3 text-left font-medium transition hover:text-purple-500 sm:px-4"
-    type="button"
-    id={`${y} accordion menu button`}
-    aria-expanded="false"
-    aria-controls={`${y} accordion menu content`}
-  >
-    Año {y}
-    <svg
-      class="accordion__chevron h-7 w-7 shrink-0 transition-transform"
-      aria-hidden="true"
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      ><path
-        fill="none"
-        stroke="currentColor"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        stroke-width="2"
-        d="m6 9l6 6l6-6"></path></svg>
-  </button>
+  <div id="accordion-nested-parent" data-accordion="collapse">
+    {
+      allYears.map((e, y) => (
+        <div class="accordion group relative rounded-md border border-purple-900">
+          <button
+            class="accordion__button flex w-full flex-1 items-center justify-between gap-2 p-4 text-left font-medium transition hover:text-purple-500 sm:px-4"
+            type="button"
+            id={`${y} accordion menu button`}
+            aria-expanded="false"
+            aria-controls={`${y} accordion menu content`}
+          >
+            Año {y}
+            <svg
+              class="accordion__chevron h-7 w-7 shrink-0 transition-transform"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+            >
+              <path
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="m6 9l6 6l6-6"
+              />
+            </svg>
+          </button>
 
-  <div
-    id={`${y} accordion menu content`}
-    aria-labelledby={`${y} accordion menu button`}
-    class="accordion__content hidden max-h-0 overflow-hidden px-3 transition-all duration-300 ease-in-out sm:px-4"
-  >
-    <ul class="prose mb-4 mt-1 max-w-full transition-[height]">
-      {e.map((el, yl) => (
+          <div
+            id={`${y} accordion menu content`}
+            aria-labelledby={`${y} accordion menu button`}
+            class="accordion__content hidden max-h-0 overflow-hidden px-3 transition-all duration-300 ease-in-out sm:px-4"
+          >
+            <ul class="prose mb-4 mt-1 max-w-full transition-[height]">
+              {e.map((el, yl) => (
+                <div class="accordion group relative rounded-md border border-purple-900">
+                  <button
+                    class="accordion__button flex w-full flex-1 items-center justify-between gap-2 p-3 text-left font-medium transition hover:text-purple-500 sm:px-4"
+                    type="button"
+                    id={`${months[yl]}'_'${yl} accordion menu button`}
+                    aria-expanded="false"
+                    aria-controls={`${months[yl]}'_'${yl} accordion menu content`}
+                  >
+                    Mes {months[yl]}
+                  </button>
 
-<div class="accordion group relative rounded-md border border-purple-900">
-  <button
-    class="accordion__button flex w-full flex-1 items-center justify-between gap-2 p-3 text-left font-medium transition hover:text-purple-500 sm:px-4"
-    type="button"
-    id={`${months[yl]} accordion menu button`}
-    aria-expanded="false"
-    aria-controls={`${months[yl]} accordion menu content`}
-  >
-     Mes {months[yl]}
-
-    
-  </button>
-
-  <div
-    id={`${months[yl]} accordion menu content`}
-    aria-labelledby={`${months[yl]} accordion menu button`}
-    class="accordion__content hidden max-h-0 overflow-hidden px-3 transition-all duration-300 ease-in-out sm:px-4"
-  >
-    <ul class="prose mb-4 mt-1 max-w-full transition-[height]">
-      {el.map((eu) => (
-                  <li class=" accordion-item ml-4">
-                   Enlace al artículo 
-                    <a class="block py-1 text-sky-500 hover:text-sky-700 transition duration-150" href={eu.url}>
-                      {eu.title}
-                    </a>
-                  </li>
-                ))}
-    </ul>
+                  <div
+                    id={`${months[yl]}'_'${yl} accordion menu content`}
+                    aria-labelledby={`${months[yl]}'_'${yl} accordion menu button`}
+                    class="accordion__content hidden max-h-0 overflow-hidden px-3 transition-all duration-300 ease-in-out sm:px-4"
+                  >
+                    <ul class="prose mb-4 mt-1 max-w-full transition-[height]">
+                      {el.map((eu) => (
+                        <li class=" accordion-item ml-4">
+                          Enlace al artículo
+                          <a
+                            class="block py-1 text-sky-500 hover:text-sky-700 transition duration-150"
+                            href={eu.url}
+                          >
+                            {eu.title}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              ))}
+            </ul>
+          </div>
+        </div>
+      ))
+    }
   </div>
-</div>
-          ))}
-        </ul>
-      </div>
-    </div>
-  ))}
-</div>    
-
 </div>
 <script is-inline>
 function accordionSetup() {
-    const accordionMenus = document.querySelectorAll(
-      ".accordion",
-    ) 
-    accordionMenus.forEach((accordionMenu) => {
-      const accordionButton = accordionMenu.querySelector(
-        ".accordion__button",
-      ) ;
-      const accordionChevron = accordionMenu.querySelector(
-        ".accordion__chevron",
-      );
-      const accordionContent = accordionMenu.querySelector(
-        ".accordion__content",
-      ) ;
+  const accordionMenus = document.querySelectorAll(".accordion");
+  accordionMenus.forEach((accordionMenu) => {
+    const accordionButton = accordionMenu.querySelector(".accordion__button");
+    const accordionChevron = accordionMenu.querySelector(
+      ".accordion__chevron"
+    );
+    const accordionContent = accordionMenu.querySelector(
+      ".accordion__content"
+    );
 
-      if (accordionButton && accordionContent && accordionChevron) {
-        accordionButton.addEventListener("click", (event) => {
-          if (!accordionMenu.classList.contains("active")) {
-            // if accordion is currently closed, so open it
-            accordionMenu.classList.add("active");
-            accordionButton.setAttribute("aria-expanded", "true");
+    if (accordionButton && accordionContent && accordionChevron) {
+      accordionButton.addEventListener("click", (event) => {
+        if (!accordionMenu.classList.contains("active")) {
+          // if accordion is currently closed, so open it
+          accordionMenu.classList.add("active");
+          accordionButton.setAttribute("aria-expanded", "true");
 
-            // set max-height to the height of the accordion content
-            // this makes it animate properly
-            accordionContent.classList.remove("hidden");
-            accordionContent.style.maxHeight =
-              accordionContent.scrollHeight + "px";
-            accordionChevron.classList.add("rotate-180");
-          } else {
-            // accordion is currently open, so close it
-            accordionMenu.classList.remove("active");
-            accordionButton.setAttribute("aria-expanded", "false");
+          // set max-height to the height of the accordion content
+          // this makes it animate properly
+          accordionContent.classList.remove("hidden");
+          accordionContent.style.maxHeight =
+            accordionContent.scrollHeight + "px";
+          accordionChevron.classList.add("rotate-180");
+        } else {
+          // accordion is currently open, so close it
+          accordionMenu.classList.remove("active");
+          accordionButton.setAttribute("aria-expanded", "false");
 
-            // set max-height to the height of the accordion content
-            // this makes it animate properly
-            accordionContent.style.maxHeight = "0px";
-            accordionChevron.classList.remove("rotate-180");
-            // delay to allow close animation
-            setTimeout(() => {
-              accordionContent.classList.add("hidden");
-            }, 300);
-          }
-          event.preventDefault();
-          return false;
-        });
-      }
-    });
-  }
+          // set max-height to the height of the accordion content
+          // this makes it animate properly
+          accordionContent.style.maxHeight = "0px";
+          accordionChevron.classList.remove("rotate-180");
+          // delay to allow close animation
+          setTimeout(() => {
+            accordionContent.classList.add("hidden");
+          }, 300);
+        }
+        event.preventDefault();
+        return false;
+      });
+    }
+  });
+}
 
-  // runs on initial page load
-  accordionSetup();
+// runs on initial page load
+accordionSetup();
 
-  // runs on view transitions navigation
-  document.addEventListener("astro:after-swap", accordionSetup);
+// runs on view transitions navigation
+document.addEventListener("astro:after-swap", accordionSetup);
 </script>
 
 <style>
