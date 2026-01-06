@@ -7,7 +7,7 @@ tags: ['sistemas', 'web']
 slug: "resources.md"
 image: "/img/resources.webp"
 author: "Jorge Beneyto Castelló"
-layout: "../../layouts/PostLayout.astro"
+layout: "@layouts/PostLayout.astro"
 ---
 https://tabler-icons.io/
 

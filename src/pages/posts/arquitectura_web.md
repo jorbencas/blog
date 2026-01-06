@@ -7,7 +7,7 @@ tags: ['web']
 slug: "arquitectura_web.md"
 image: "/img/arquitectura_web.webp"
 author: "Jorge Beneyto Castelló"
-layout: "../../layouts/PostLayout.astro"
+layout: "@layouts/PostLayout.astro"
 ---
 ##
 - [Introducción](#introducción)

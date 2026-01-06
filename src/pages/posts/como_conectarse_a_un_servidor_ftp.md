@@ -7,7 +7,7 @@ tags: ['web', "sistemas"]
 slug: "como_conectarse_a_un_servidor_ftp.md"
 image: "/img/como_conectarse_a_un_servidor_ftp/como_conectarse_a_un_servidor_ftpt.jpg"
 author: "Jorge Beneyto Castelló"
-layout: "../../layouts/PostLayout.astro"
+layout: "@layouts/PostLayout.astro"
 ---
 Hoy vamos ha ver como configurar nuestro servidor FTP, que ayer instalamos.
 
