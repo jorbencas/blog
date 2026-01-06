@@ -1,27 +1,5 @@
 ---
 const { content } = Astro.props;
-
-// Función para extraer los encabezados (h2, h3, h4) del contenido
-const extractHeadings = (htmlContent) => {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(htmlContent, "text/html");
-
-  const headings = [];
-  const headingElements = doc.querySelectorAll("h3, h2, h4"); // Cambiar si deseas h2 o h3
-
-  headingElements.forEach((heading) => {
-    const id =
-      heading.id || heading.textContent.toLowerCase().replace(/\s+/g, "-");
-    headings.push({
-      text: heading.textContent,
-      id: id,
-    });
-  });
-
-  return headings;
-};
-
-const headings = extractHeadings(content);
 ---
 
 <div class="font-sans">
@@ -30,20 +8,45 @@ const headings = extractHeadings(content);
     <h2 class="text-2xl font-bold mb-4 text-black dark:text-cyan-600">
       Contenido del artículo
     </h2>
-    <ul class="space-y-2">
-      <!-- Índice dinámico generado con los encabezados -->
-      {
-        headings.map((heading) => (
-          <li key={heading.id}>
-            <a
-              href={`#${heading.id}`}
-              class="text-blue-500 hover:text-blue-700 transition-colors duration-200"
-            >
-              {heading.text}
-            </a>
-          </li>
-        ))
-      }
+    <ul class="space-y-2" id="indice-lista">
+      <!-- El índice se generará dinámicamente aquí con JavaScript -->
     </ul>
   </section>
+
+  <!-- Script para generar el índice dinámicamente -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // Obtener el contenido de los encabezados (h2, h3, h4, etc.) dentro del artículo
+      const encabezados = document.querySelectorAll(
+        "#contenido h2, #contenido h3, #contenido h4"
+      );
+
+      // Seleccionar la lista del índice
+      const indiceLista = document.getElementById("indice-lista");
+
+      // Recorremos los encabezados y generamos los enlaces del índice
+      encabezados.forEach((encabezado) => {
+        // Crear un id único para cada encabezado si no lo tiene
+        const id =
+          encabezado.id ||
+          encabezado.textContent.toLowerCase().replace(/\s+/g, "-");
+
+        // Crear el enlace para el índice
+        const li = document.createElement("li");
+        const a = document.createElement("a");
+        a.href = `#${id}`;
+        a.textContent = encabezado.textContent;
+        a.classList.add(
+          "text-blue-500",
+          "hover:text-blue-700",
+          "transition-colors",
+          "duration-200"
+        );
+
+        // Añadir el enlace dentro de un <li> y luego al índice
+        li.appendChild(a);
+        indiceLista.appendChild(li);
+      });
+    });
+  </script>
 </div>
