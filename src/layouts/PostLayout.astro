@@ -6,7 +6,7 @@ import NextPrevLiks from "@components/NextPrevLiks.astro";
 import PostIndex from "@components/PostIndex.astro";
 // import Archive from "@components/Archive.astro";
 
-const { content } = Astro.props;
+const { content, frontmatter } = Astro.props;
 
 let bar = {
   prevElement: { url: "", tittle: "", image: "" },
@@ -75,14 +75,13 @@ let textNext = bar.nextElement.tittle;
           Por: <strong class="dark:text-white">{content.author}</strong>
         </p>
         <p
-          class="flex items-center gap-2 px-4 py-2 text-sm font-semibold
-         text-gray-100 bg-gray-900/80 backdrop-blur-md
-         rounded-2xl shadow-lg
-         hover:bg-gray-800 transition-colors duration-300"
+          class="flex items-center gap-2 text-sm font-medium
+         text-gray-300 dark:text-gray-100
+         transition-colors duration-200"
         >
           <!-- Icono de reloj -->
           <svg
-            class="w-5 h-5 text-indigo-400 animate-pulse"
+            class="w-5 h-5 text-gray-400 dark:text-gray-300"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -95,7 +94,7 @@ let textNext = bar.nextElement.tittle;
               d="M12 6v6l4 2"></path>
           </svg>
 
-          {Astro.props.frontmatter.minutesRead}
+          {frontmatter.minutesRead}
         </p>
       </div>
     </div>
