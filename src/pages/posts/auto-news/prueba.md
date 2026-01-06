@@ -5,7 +5,7 @@ description: "Noticia automática de Genbeta"
 pubDate: "2025/12/31"
 tags: ['tecnologia']
 slug: "prueba.md"
-image: "https://i.blogs.es/616c06/chatgpt-image-30-dic-2025-18_30_10/200_200.png"
+image: ""
 author: "Bot Scraper"
 layout: "../../layouts/PostLayout.astro"
 ---
