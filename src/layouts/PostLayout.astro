@@ -11,7 +11,7 @@ let bar = {
   prevElement: { url: "", tittle: "", image: "" },
   nextElement: { url: "", tittle: "", image: "" },
 };
-const allPosts = await Astro.glob("../pages/posts/*.md");
+const allPosts = await Astro.glob("../pages/posts/**/*.md");
 const sortedPosts = await getSortedPosts(allPosts);
 for (let i = 0; i < sortedPosts.length; i++) {
   const { frontmatter } = sortedPosts[i];
@@ -43,9 +43,9 @@ for (let i = 0; i < sortedPosts.length; i++) {
     };
   }
 }
- let imagePrev = bar.prevElement.image;
- let urlPrev = bar.prevElement.url;
- let textPrev = bar.prevElement.tittle;
+let imagePrev = bar.prevElement.image;
+let urlPrev = bar.prevElement.url;
+let textPrev = bar.prevElement.tittle;
 
 let imageNext = bar.nextElement.image;
 let urlNext = bar.nextElement.url;
@@ -71,11 +71,12 @@ let textNext = bar.nextElement.tittle;
           <strong class="text-base font-extrabold text-cyan-400">
             {formatDatePost(content.pubDate)}
           </strong>
-           Por: <strong class="dark:text-white">{content.author}</strong>
+          Por: <strong class="dark:text-white">{content.author}</strong>
         </p>
       </div>
     </div>
-    <div id="contenido"
+    <div
+      id="contenido"
       class="prose-xl my-5 dark:text-white dark:prose-pre:text-white prose-a:text-cyan-400 dark:prose-h2:text-white dark:prose-ul:text-white dark:prose-ol:text-white dark:prose-li:text-white dark:prose-h1:text-white dark:prose-code:text-white dark:prose-strong:text-white dark:prose-h3:text-white"
     >
       <slot />
@@ -95,6 +96,6 @@ let textNext = bar.nextElement.tittle;
       textPrev={textPrev}
     />
   </div>
-  
+
   <PostIndex />
 </Layout>

@@ -1,6 +1,6 @@
 ---
 import months from "../layouts/months.json";
-const allPosts = await Astro.glob("../pages/posts/*.md");
+const allPosts = await Astro.glob("../pages/posts/**/*.md");
 
 let allYears = [];
 allPosts.forEach((p) => {
@@ -106,56 +106,56 @@ allPosts.forEach((p) => {
   </div>
 </div>
 <script is-inline>
-function accordionSetup() {
-  const accordionMenus = document.querySelectorAll(".accordion");
-  accordionMenus.forEach((accordionMenu) => {
-    const accordionButton = accordionMenu.querySelector(".accordion__button");
-    const accordionChevron = accordionMenu.querySelector(
-      ".accordion__chevron"
-    );
-    const accordionContent = accordionMenu.querySelector(
-      ".accordion__content"
-    );
+  function accordionSetup() {
+    const accordionMenus = document.querySelectorAll(".accordion");
+    accordionMenus.forEach((accordionMenu) => {
+      const accordionButton = accordionMenu.querySelector(".accordion__button");
+      const accordionChevron = accordionMenu.querySelector(
+        ".accordion__chevron"
+      );
+      const accordionContent = accordionMenu.querySelector(
+        ".accordion__content"
+      );
 
-    if (accordionButton && accordionContent && accordionChevron) {
-      accordionButton.addEventListener("click", (event) => {
-        if (!accordionMenu.classList.contains("active")) {
-          // if accordion is currently closed, so open it
-          accordionMenu.classList.add("active");
-          accordionButton.setAttribute("aria-expanded", "true");
+      if (accordionButton && accordionContent && accordionChevron) {
+        accordionButton.addEventListener("click", (event) => {
+          if (!accordionMenu.classList.contains("active")) {
+            // if accordion is currently closed, so open it
+            accordionMenu.classList.add("active");
+            accordionButton.setAttribute("aria-expanded", "true");
 
-          // set max-height to the height of the accordion content
-          // this makes it animate properly
-          accordionContent.classList.remove("hidden");
-          accordionContent.style.maxHeight =
-            accordionContent.scrollHeight + "px";
-          accordionChevron.classList.add("rotate-180");
-        } else {
-          // accordion is currently open, so close it
-          accordionMenu.classList.remove("active");
-          accordionButton.setAttribute("aria-expanded", "false");
+            // set max-height to the height of the accordion content
+            // this makes it animate properly
+            accordionContent.classList.remove("hidden");
+            accordionContent.style.maxHeight =
+              accordionContent.scrollHeight + "px";
+            accordionChevron.classList.add("rotate-180");
+          } else {
+            // accordion is currently open, so close it
+            accordionMenu.classList.remove("active");
+            accordionButton.setAttribute("aria-expanded", "false");
 
-          // set max-height to the height of the accordion content
-          // this makes it animate properly
-          accordionContent.style.maxHeight = "0px";
-          accordionChevron.classList.remove("rotate-180");
-          // delay to allow close animation
-          setTimeout(() => {
-            accordionContent.classList.add("hidden");
-          }, 300);
-        }
-        event.preventDefault();
-        return false;
-      });
-    }
-  });
-}
+            // set max-height to the height of the accordion content
+            // this makes it animate properly
+            accordionContent.style.maxHeight = "0px";
+            accordionChevron.classList.remove("rotate-180");
+            // delay to allow close animation
+            setTimeout(() => {
+              accordionContent.classList.add("hidden");
+            }, 300);
+          }
+          event.preventDefault();
+          return false;
+        });
+      }
+    });
+  }
 
-// runs on initial page load
-accordionSetup();
+  // runs on initial page load
+  accordionSetup();
 
-// runs on view transitions navigation
-document.addEventListener("astro:after-swap", accordionSetup);
+  // runs on view transitions navigation
+  document.addEventListener("astro:after-swap", accordionSetup);
 </script>
 
 <style>

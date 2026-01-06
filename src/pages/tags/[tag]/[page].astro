@@ -8,7 +8,7 @@ import Information from "@components/Information.astro";
 import { getSortedPosts } from "src/utils";
 
 export async function getStaticPaths({ paginate }) {
-  const allPosts = await Astro.glob("../../posts/*.md");
+  const allPosts = await Astro.glob("../../posts/**/*.md");
   const sortedPosts = await getSortedPosts(allPosts);
   return allTags.map((tag) => {
     const filteredPosts = sortedPosts.filter((post) =>
