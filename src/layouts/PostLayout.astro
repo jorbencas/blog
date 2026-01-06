@@ -5,10 +5,8 @@ import Layout from "./Layout.astro";
 import NextPrevLiks from "@components/NextPrevLiks.astro";
 import PostIndex from "@components/PostIndex.astro";
 // import Archive from "@components/Archive.astro";
-import { render } from "astro:content";
 
-const { content, entry } = Astro.props;
-const { remarkPluginFrontmatter } = await render(entry);
+const { content } = Astro.props;
 
 let bar = {
   prevElement: { url: "", tittle: "", image: "" },
@@ -77,7 +75,8 @@ let textNext = bar.nextElement.tittle;
           Por: <strong class="dark:text-white">{content.author}</strong>
         </p>
         <p class="text-sm italic">
-          Tiempo de lectura: {remarkPluginFrontmatter.minutesRead} min
+          Tiempo de lectura: {Astro.props.frontmatter.minutesRead}
+          <!-- Mostramos minutos de lectura -->
         </p>
       </div>
     </div>
