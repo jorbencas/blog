@@ -1,0 +1,49 @@
+---
+const { content } = Astro.props;
+
+// Función para extraer los encabezados (h2, h3, h4) del contenido
+const extractHeadings = (htmlContent) => {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(htmlContent, "text/html");
+
+  const headings = [];
+  const headingElements = doc.querySelectorAll("h3, h2, h4"); // Cambiar si deseas h2 o h3
+
+  headingElements.forEach((heading) => {
+    const id =
+      heading.id || heading.textContent.toLowerCase().replace(/\s+/g, "-");
+    headings.push({
+      text: heading.textContent,
+      id: id,
+    });
+  });
+
+  return headings;
+};
+
+const headings = extractHeadings(content);
+---
+
+<div class="font-sans">
+  <!-- Contenedor del índice -->
+  <section id="indice" class="shadow-md rounded-lg p-4">
+    <h2 class="text-2xl font-bold mb-4 text-black dark:text-cyan-600">
+      Contenido del artículo
+    </h2>
+    <ul class="space-y-2">
+      <!-- Índice dinámico generado con los encabezados -->
+      {
+        headings.map((heading) => (
+          <li key={heading.id}>
+            <a
+              href={`#${heading.id}`}
+              class="text-blue-500 hover:text-blue-700 transition-colors duration-200"
+            >
+              {heading.text}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</div>
