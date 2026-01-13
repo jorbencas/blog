@@ -1,15 +1,15 @@
 ---
-const { headings } = Astro.props; // Recibimos headings directamente
+// Astro inyecta automáticamente 'headings' si este componente 
+// recibe las props del layout de Markdown.
+const { headings } = Astro.props;
 
-// 1. Filtramos (ahora headings ya es un array simple)
-const toc = headings
-  ? headings
-      .filter((h) => h.depth > 1 && h.depth < 4)
-      .map((h) => ({
-        ...h,
-        text: h.text.replace(/<[^>]*>?/gm, '')
-      }))
-  : [];
+// Filtramos en el servidor (esto sí se pinta al cargar)
+const toc = (headings || [])
+  .filter((h) => h.depth > 1 && h.depth < 4)
+  .map((h) => ({
+    ...h,
+    text: h.text.replace(/<[^>]*>?/gm, '')
+  }));
 
 const hasContent = toc.length > 2;
 ---
@@ -17,52 +17,26 @@ const hasContent = toc.length > 2;
 {hasContent && (
   <>
     <div class="fixed top-0 left-0 w-full h-1 z-[100] bg-transparent">
-      <div 
-        id="reading-progress-bar" 
-        class="h-full bg-gradient-to-r from-cyan-500 to-blue-600 w-0 transition-all duration-150 ease-out shadow-[0_0_10px_rgba(6,182,212,0.5)]"
-      ></div>
+      <div id="reading-progress-bar" class="h-full bg-gradient-to-r from-cyan-500 to-blue-600 w-0 transition-all duration-150 ease-out"></div>
     </div>
 
     <div class="toc-wrapper">
-      <button
-        id="toc-mobile-toggle"
-        class="fixed bottom-6 right-6 z-50 p-4 bg-cyan-600 text-white rounded-full shadow-2xl md:hidden hover:scale-110 active:scale-95 transition-all focus:outline-none"
-        aria-label="Ver índice"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
-        </svg>
+      <button id="toc-mobile-toggle" class="fixed bottom-6 right-6 z-50 p-4 bg-cyan-600 text-white rounded-full shadow-2xl md:hidden">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M4 6h16M4 12h16m-7 6h7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
 
-      <aside
-        id="toc-menu"
-        class="fixed inset-y-0 right-0 z-[60] w-72 bg-white dark:bg-slate-900 shadow-2xl transform translate-x-full transition-transform duration-300 md:relative md:translate-x-0 md:shadow-none md:bg-transparent md:w-full md:block"
-      >
+      <aside id="toc-menu" class="fixed inset-y-0 right-0 z-[60] w-72 bg-white dark:bg-slate-900 shadow-2xl transform translate-x-full transition-transform duration-300 md:relative md:translate-x-0 md:shadow-none md:bg-transparent md:w-full md:block">
         <div class="h-full p-8 md:p-0 md:sticky md:top-24">
-          <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xs font-bold uppercase tracking-[0.2em] text-gray-400 dark:text-cyan-500/80">
-              Contenido del post
-            </h2>
-            <button id="toc-close-mobile" class="md:hidden text-gray-400 p-1">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
+          <h2 class="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-cyan-500 mb-6">Contenido</h2>
           <nav>
-            <ul class="space-y-1 border-l border-gray-200 dark:border-slate-800 relative">
+            <ul class="space-y-1 border-l border-gray-200 dark:border-slate-800">
               {toc.map((h) => (
-                <li class={`depth-${h.depth}`}>
-                  <a
-                    href={`#${h.slug}`}
-                    data-toc-link={h.slug}
-                    class:list={[
-                      "block py-2 pl-4 -ml-[2px] border-l-2 border-transparent transition-all duration-300 text-gray-500 dark:text-gray-400 hover:text-cyan-500 dark:hover:text-cyan-400",
-                      { "text-[15px]": h.depth === 2 },
-                      { "ml-4 text-[13px]": h.depth === 3 },
-                    ]}
-                  >
+                <li>
+                  <a href={`#${h.slug}`} data-toc-link={h.slug} class:list={[
+                    "block py-2 pl-4 -ml-[2px] border-l-2 border-transparent transition-all duration-300 text-gray-500 dark:text-gray-400 hover:text-cyan-500",
+                    { "text-[15px]": h.depth === 2 },
+                    { "ml-4 text-[13px]": h.depth === 3 },
+                  ]}>
                     {h.text}
                   </a>
                 </li>
@@ -71,26 +45,15 @@ const hasContent = toc.length > 2;
           </nav>
         </div>
       </aside>
-
       <div id="toc-blur" class="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-50 hidden md:hidden"></div>
     </div>
   </>
 )}
 
 <style is:global>
-  html {
-    scroll-behavior: smooth;
-  }
-  
-  /* Evita que los títulos queden tapados por el menú o la barra de progreso */
-  #contenido h2, #contenido h3 {
-    scroll-margin-top: 100px;
-  }
-
-  /* Estilo del link activo aplicado por JS */
-  .toc-link-active {
-    @apply border-cyan-500 text-cyan-600 dark:text-cyan-400 font-bold bg-cyan-50/50 dark:bg-cyan-900/20 !important;
-  }
+  html { scroll-behavior: smooth; }
+  #contenido h2, #contenido h3 { scroll-margin-top: 100px; }
+  .toc-link-active { @apply border-cyan-500 text-cyan-600 dark:text-cyan-400 font-bold bg-cyan-50/50 dark:bg-cyan-900/20 !important; }
 </style>
 
 <script>
@@ -100,62 +63,26 @@ const hasContent = toc.length > 2;
     const links = document.querySelectorAll('[data-toc-link]');
     const headings = document.querySelectorAll('#contenido h2, #contenido h3');
     
-    // --- 1. LÓGICA BARRA DE PROGRESO ---
-    const handleScroll = () => {
-      if (!content || !progress) return;
-      const rect = content.getBoundingClientRect();
-      const windowHeight = window.innerHeight;
-      
-      // Calculamos cuánto del contenedor #contenido ha pasado por el scroll
-      const totalHeight = rect.height - windowHeight;
-      const progressPercentage = Math.max(0, Math.min(100, (Math.abs(rect.top) / totalHeight) * 100));
-      
-      // Solo mostramos progreso si hemos empezado a leer el contenido
-      progress.style.width = rect.top > 0 ? '0%' : `${progressPercentage}%`;
-    };
+    // Solo lógica de scroll e interactividad (el HTML ya existe)
+    if (!content) return;
 
-    // --- 2. RESALTADO DE SECCIÓN ACTIVA (Intersection Observer) ---
-    const observerOptions = {
-      rootMargin: '-5% 0px -85% 0px', // Activa la sección cuando está en la parte superior
-      threshold: 0
+    const handleScroll = () => {
+      const rect = content.getBoundingClientRect();
+      const scrolled = (Math.abs(rect.top) / (rect.height - window.innerHeight)) * 100;
+      if (progress) progress.style.width = rect.top > 0 ? '0%' : `${Math.min(100, scrolled)}%`;
     };
 
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           links.forEach(l => l.classList.remove('toc-link-active'));
-          const activeLink = document.querySelector(`[data-toc-link="${entry.target.id}"]`);
-          activeLink?.classList.add('toc-link-active');
+          document.querySelector(`[data-toc-link="${entry.target.id}"]`)?.classList.add('toc-link-active');
         }
       });
-    }, observerOptions);
+    }, { rootMargin: '-5% 0px -85% 0px' });
 
-    // --- 3. UI MÓVIL (Toggle de menú) ---
-    const toggleBtn = document.getElementById('toc-mobile-toggle');
-    const closeBtn = document.getElementById('toc-close-mobile');
-    const menu = document.getElementById('toc-menu');
-    const blur = document.getElementById('toc-blur');
-
-    const toggleMenu = () => {
-      menu?.classList.toggle('translate-x-full');
-      blur?.classList.toggle('hidden');
-      document.body.classList.toggle('overflow-hidden');
-    };
-
-    toggleBtn?.addEventListener('click', toggleMenu);
-    closeBtn?.addEventListener('click', toggleMenu);
-    blur?.addEventListener('click', toggleMenu);
-    
-    // Cerrar al clickear un enlace en móvil
-    links.forEach(l => l.addEventListener('click', () => {
-      if (window.innerWidth < 768) toggleMenu();
-    }));
-
-    // Iniciar eventos
     window.addEventListener('scroll', handleScroll);
     headings.forEach(h => observer.observe(h));
   }
-
-  // Se ejecuta al cargar y al navegar con View Transitions de Astro
   document.addEventListener('astro:page-load', initTOC);
 </script>
