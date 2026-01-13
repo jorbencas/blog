@@ -1,52 +1,164 @@
 ---
+// src/components/TableOfContents.astro
 const { content } = Astro.props;
+
+// 1. Extraemos los encabezados del contenido
+const { headings } = await content.render();
+
+// 2. Filtramos niveles H2 y H3
+const toc = headings
+  .filter((h) => h.depth > 1 && h.depth < 4)
+  .map((h) => ({
+    ...h,
+    text: h.text.replace(/<[^>]*>?/gm, '') // Limpiar posibles etiquetas HTML en el título
+  }));
+
+// 3. Solo mostramos el índice si hay contenido suficiente (ej. más de 2 encabezados)
+const hasContent = toc.length > 2;
 ---
 
-<div class="font-sans">
-  <!-- Contenedor del índice -->
-  <section id="indice" class="shadow-md rounded-lg p-4">
-    <h2 class="text-2xl font-bold mb-4 text-black dark:text-cyan-600">
-      Contenido del artículo
-    </h2>
-    <ul class="space-y-2" id="indice-lista">
-      <!-- El índice se generará dinámicamente aquí con JavaScript -->
-    </ul>
-  </section>
+{hasContent && (
+  <>
+    <div class="fixed top-0 left-0 w-full h-1 z-[100] bg-transparent">
+      <div 
+        id="reading-progress-bar" 
+        class="h-full bg-gradient-to-r from-cyan-500 to-blue-600 w-0 transition-all duration-150 ease-out shadow-[0_0_10px_rgba(6,182,212,0.5)]"
+      ></div>
+    </div>
 
-  <!-- Script para generar el índice dinámicamente -->
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      // Obtener el contenido de los encabezados (h2, h3, h4, etc.) dentro del artículo
-      const encabezados = document.querySelectorAll(
-        "#contenido h2, #contenido h3, #contenido h4"
-      );
+    <div class="toc-wrapper">
+      <button
+        id="toc-mobile-toggle"
+        class="fixed bottom-6 right-6 z-50 p-4 bg-cyan-600 text-white rounded-full shadow-2xl md:hidden hover:scale-110 active:scale-95 transition-all focus:outline-none"
+        aria-label="Ver índice"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+        </svg>
+      </button>
 
-      // Seleccionar la lista del índice
-      const indiceLista = document.getElementById("indice-lista");
+      <aside
+        id="toc-menu"
+        class="fixed inset-y-0 right-0 z-[60] w-72 bg-white dark:bg-slate-900 shadow-2xl transform translate-x-full transition-transform duration-300 md:relative md:translate-x-0 md:shadow-none md:bg-transparent md:w-full md:block"
+      >
+        <div class="h-full p-8 md:p-0 md:sticky md:top-24">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xs font-bold uppercase tracking-[0.2em] text-gray-400 dark:text-cyan-500/80">
+              Contenido del post
+            </h2>
+            <button id="toc-close-mobile" class="md:hidden text-gray-400 p-1">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
 
-      // Recorremos los encabezados y generamos los enlaces del índice
-      encabezados.forEach((encabezado) => {
-        // Crear un id único para cada encabezado si no lo tiene
-        const id =
-          encabezado.id ||
-          encabezado.textContent.toLowerCase().replace(/\s+/g, "-");
+          <nav>
+            <ul class="space-y-1 border-l border-gray-200 dark:border-slate-800 relative">
+              {toc.map((h) => (
+                <li class={`depth-${h.depth}`}>
+                  <a
+                    href={`#${h.slug}`}
+                    data-toc-link={h.slug}
+                    class:list={[
+                      "block py-2 pl-4 -ml-[2px] border-l-2 border-transparent transition-all duration-300 text-gray-500 dark:text-gray-400 hover:text-cyan-500 dark:hover:text-cyan-400",
+                      { "text-[15px]": h.depth === 2 },
+                      { "ml-4 text-[13px]": h.depth === 3 },
+                    ]}
+                  >
+                    {h.text}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </div>
+      </aside>
 
-        // Crear el enlace para el índice
-        const li = document.createElement("li");
-        const a = document.createElement("a");
-        a.href = `#${id}`;
-        a.textContent = encabezado.textContent;
-        a.classList.add(
-          "text-blue-500",
-          "hover:text-blue-700",
-          "transition-colors",
-          "duration-200"
-        );
+      <div id="toc-blur" class="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-50 hidden md:hidden"></div>
+    </div>
+  </>
+)}
 
-        // Añadir el enlace dentro de un <li> y luego al índice
-        li.appendChild(a);
-        indiceLista.appendChild(li);
+<style is:global>
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  /* Evita que los títulos queden tapados por el menú o la barra de progreso */
+  #contenido h2, #contenido h3 {
+    scroll-margin-top: 100px;
+  }
+
+  /* Estilo del link activo aplicado por JS */
+  .toc-link-active {
+    @apply border-cyan-500 text-cyan-600 dark:text-cyan-400 font-bold bg-cyan-50/50 dark:bg-cyan-900/20 !important;
+  }
+</style>
+
+<script>
+  function initTOC() {
+    const progress = document.getElementById('reading-progress-bar');
+    const content = document.getElementById('contenido');
+    const links = document.querySelectorAll('[data-toc-link]');
+    const headings = document.querySelectorAll('#contenido h2, #contenido h3');
+    
+    // --- 1. LÓGICA BARRA DE PROGRESO ---
+    const handleScroll = () => {
+      if (!content || !progress) return;
+      const rect = content.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      
+      // Calculamos cuánto del contenedor #contenido ha pasado por el scroll
+      const totalHeight = rect.height - windowHeight;
+      const progressPercentage = Math.max(0, Math.min(100, (Math.abs(rect.top) / totalHeight) * 100));
+      
+      // Solo mostramos progreso si hemos empezado a leer el contenido
+      progress.style.width = rect.top > 0 ? '0%' : `${progressPercentage}%`;
+    };
+
+    // --- 2. RESALTADO DE SECCIÓN ACTIVA (Intersection Observer) ---
+    const observerOptions = {
+      rootMargin: '-5% 0px -85% 0px', // Activa la sección cuando está en la parte superior
+      threshold: 0
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          links.forEach(l => l.classList.remove('toc-link-active'));
+          const activeLink = document.querySelector(`[data-toc-link="${entry.target.id}"]`);
+          activeLink?.classList.add('toc-link-active');
+        }
       });
-    });
-  </script>
-</div>
+    }, observerOptions);
+
+    // --- 3. UI MÓVIL (Toggle de menú) ---
+    const toggleBtn = document.getElementById('toc-mobile-toggle');
+    const closeBtn = document.getElementById('toc-close-mobile');
+    const menu = document.getElementById('toc-menu');
+    const blur = document.getElementById('toc-blur');
+
+    const toggleMenu = () => {
+      menu?.classList.toggle('translate-x-full');
+      blur?.classList.toggle('hidden');
+      document.body.classList.toggle('overflow-hidden');
+    };
+
+    toggleBtn?.addEventListener('click', toggleMenu);
+    closeBtn?.addEventListener('click', toggleMenu);
+    blur?.addEventListener('click', toggleMenu);
+    
+    // Cerrar al clickear un enlace en móvil
+    links.forEach(l => l.addEventListener('click', () => {
+      if (window.innerWidth < 768) toggleMenu();
+    }));
+
+    // Iniciar eventos
+    window.addEventListener('scroll', handleScroll);
+    headings.forEach(h => observer.observe(h));
+  }
+
+  // Se ejecuta al cargar y al navegar con View Transitions de Astro
+  document.addEventListener('astro:page-load', initTOC);
+</script>

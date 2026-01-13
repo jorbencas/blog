@@ -8,5 +8,7 @@ export default defineConfig({
   site: "https://blog-jorbencas.vercel.app/",
   markdown: {
     remarkPlugins: [remarkReadingTime],
+    smartypants: true, // Mejora tipografía (comillas, guiones)
+    gfm: true, // Habilita GitHub Flavored Markdown (por defecto es true)
   },
 });
