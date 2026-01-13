@@ -7,6 +7,8 @@ import TableOfContents from "../components/TableOfContents.astro";
 // import Archive from "@components/Archive.astro";
 
 const { content, frontmatter } = Astro.props;
+// 1. Obtenemos los headings aquí, donde sabemos que 'content' es válido
+const { headings } = await content.render();
 
 let bar = {
   prevElement: { url: "", tittle: "", image: "" },
@@ -121,6 +123,6 @@ let textNext = bar.nextElement.tittle;
   </div>
 
   <div class="hidden md:block col-span-1">
-    <TableOfContents content={content} />
+    <TableOfContents headings={headings} />
   </div>
 </Layout>

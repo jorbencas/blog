@@ -1,19 +1,16 @@
 ---
-// src/components/TableOfContents.astro
-const { content } = Astro.props;
+const { headings } = Astro.props; // Recibimos headings directamente
 
-// 1. Extraemos los encabezados del contenido
-const { headings } = await content.render();
-
-// 2. Filtramos niveles H2 y H3
+// 1. Filtramos (ahora headings ya es un array simple)
 const toc = headings
-  .filter((h) => h.depth > 1 && h.depth < 4)
-  .map((h) => ({
-    ...h,
-    text: h.text.replace(/<[^>]*>?/gm, '') // Limpiar posibles etiquetas HTML en el título
-  }));
+  ? headings
+      .filter((h) => h.depth > 1 && h.depth < 4)
+      .map((h) => ({
+        ...h,
+        text: h.text.replace(/<[^>]*>?/gm, '')
+      }))
+  : [];
 
-// 3. Solo mostramos el índice si hay contenido suficiente (ej. más de 2 encabezados)
 const hasContent = toc.length > 2;
 ---
 
