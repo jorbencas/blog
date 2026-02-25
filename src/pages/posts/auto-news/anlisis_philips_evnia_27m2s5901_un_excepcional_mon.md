@@ -1,6 +1,6 @@
 ---
 draft: false
-title: "Análisis Philips Evnia 27M2S5901, un excepcional monitor "dos en uno" para los que quieren tenerlo todo y jugar en 4K a 160Hz y 1080p a 320 Hz"
+title: "Análisis Philips Evnia 27M2S5901, un excepcional monitor \"dos en uno\" para los que quieren tenerlo todo y jugar en 4K a 160Hz y 1080p a 320 Hz"
 description: "Noticia automática de HobbyConsolas"
 pubDate: "2026/01/24"
 tags: ['tecnologia']
