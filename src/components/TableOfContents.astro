@@ -1,7 +1,6 @@
 ---
 const { headings } = Astro.props;
 
-// Filtramos los encabezados para el TOC
 const toc = (headings || [])
   .filter((h) => h.depth > 1 && h.depth < 4)
   .map((h) => ({
@@ -9,7 +8,6 @@ const toc = (headings || [])
     text: h.text.replace(/<[^>]*>?/gm, ""),
   }));
 
-// Cálculo rápido de tiempo de lectura (aprox. 200 palabras por minuto)
 const estWords = toc.map((h) => h.text).join(" ").length / 5;
 const readingTime = Math.max(1, Math.ceil(estWords / 200));
 
@@ -42,34 +40,34 @@ const hasContent = toc.length > 2;
 
         <aside
           id="toc-menu"
-          class="fixed top-32 right-8 lg:right-16 z-40 w-64 transform translate-x-[150%] md:translate-x-0 transition-transform duration-300 bg-transparent"
+          class="relative w-full w-72 transform translate-x-[150%] md:translate-x-0 transition-all duration-300"
         >
-          <div class="pointer-events-auto">
-            <div class="flex items-center gap-3 mb-2">
+          <div class="p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl shadow-2xl">
+            <div class="flex items-center justify-between mb-2">
               <h2 class="text-3xl font-black tracking-tighter text-slate-900 dark:text-white">
                 Contenido
               </h2>
-              <div class="relative w-8 h-8">
+              <div class="relative w-10 h-10">
                 <svg class="w-full h-full transform -rotate-90">
                   <circle
-                    cx="16"
-                    cy="16"
-                    r="14"
+                    cx="20"
+                    cy="20"
+                    r="16"
                     stroke="currentColor"
                     stroke-width="3"
                     fill="transparent"
-                    class="text-slate-200 dark:text-slate-800"
+                    class="text-slate-100 dark:text-slate-800"
                   />
                   <circle
                     id="progress-circle"
-                    cx="16"
-                    cy="16"
-                    r="14"
+                    cx="20"
+                    cy="20"
+                    r="16"
                     stroke="currentColor"
                     stroke-width="3"
                     fill="transparent"
-                    stroke-dasharray="88"
-                    stroke-dashoffset="88"
+                    stroke-dasharray="100"
+                    stroke-dashoffset="100"
                     class="text-cyan-500 transition-all duration-150 ease-out"
                     stroke-linecap="round"
                   />
@@ -77,21 +75,21 @@ const hasContent = toc.length > 2;
               </div>
             </div>
 
-            <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500 mb-8">
-              {readingTime} min lectura • {toc.length} secciones
+            <p class="text-[10px] font-bold uppercase tracking-widest text-cyan-600 mb-6">
+              {readingTime} MIN LECTURA
             </p>
 
-            <nav>
-              <ul class="relative space-y-4 border-l-2 border-slate-200 dark:border-slate-800">
+            <nav class="max-h-[50vh] overflow-y-auto pr-2 custom-scrollbar">
+              <ul class="relative space-y-2 border-l-2 border-slate-100 dark:border-slate-800">
                 {toc.map((h) => (
                   <li>
                     <a
                       href={`#${h.slug}`}
                       data-toc-link={h.slug}
                       class:list={[
-                        "block py-1 pl-5 -ml-[2px] border-l-2 border-transparent transition-all duration-300 text-slate-400 dark:text-slate-500 hover:text-cyan-600 dark:hover:text-cyan-400",
-                        { "text-base font-bold": h.depth === 2 },
-                        { "ml-4 text-sm font-semibold": h.depth === 3 },
+                        "toc-link block py-2 pl-4 -ml-[2px] border-l-2 border-transparent transition-all duration-200 text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-slate-100",
+                        { "text-sm font-bold": h.depth === 2 },
+                        { "ml-4 text-xs font-medium": h.depth === 3 },
                       ]}
                     >
                       {h.text}
@@ -102,11 +100,6 @@ const hasContent = toc.length > 2;
             </nav>
           </div>
         </aside>
-
-        <div
-          id="toc-blur"
-          class="fixed inset-0 bg-white/40 dark:bg-slate-950/40 backdrop-blur-md z-30 hidden md:hidden"
-        />
       </div>
     </div>
   )
@@ -117,22 +110,25 @@ const hasContent = toc.length > 2;
     scroll-behavior: smooth;
   }
 
+  /* Ajuste para que el scroll no tape el encabezado */
   #contenido h2,
   #contenido h3 {
-    scroll-margin-top: 100px;
+    scroll-margin-top: 120px;
   }
 
-  /* Indicador Activo Animado */
+  /* --- ESTADO ACTIVO DINÁMICO --- */
   .toc-link-active {
     @apply text-cyan-600 dark:text-cyan-400 font-black !important;
-    border-left-color: #0891b2 !important;
+    border-left-color: #0891b2 !important; /* Color Cian 600 */
     background: linear-gradient(to right, rgba(8, 145, 178, 0.1), transparent);
-    transform: translateX(2px);
   }
 
-  /* Suavizado de transiciones para los links */
-  [data-toc-link] {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 3px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #0891b2;
+    border-radius: 10px;
   }
 </style>
 
@@ -140,75 +136,56 @@ const hasContent = toc.length > 2;
   function initTOC() {
     const circle = document.getElementById("progress-circle");
     const content = document.getElementById("contenido");
-    const links = document.querySelectorAll("[data-toc-link]");
-    const headings = document.querySelectorAll("#contenido h2, #contenido h3");
-    const mobileToggle = document.getElementById("toc-mobile-toggle");
-    const menu = document.getElementById("toc-menu");
-    const blur = document.getElementById("toc-blur");
+    const links = document.querySelectorAll(".toc-link");
+    const headings = Array.from(
+      document.querySelectorAll("#contenido h2, #contenido h3")
+    );
 
     if (!content || !circle) return;
 
-    // Radio del círculo es 14, longitud (2 * PI * r) es ~88
-    const circumference = 88;
+    const circumference = 100.5;
 
-    const handleScroll = () => {
+    // 1. BARRA DE PROGRESO CIRCULAR
+    const updateProgress = () => {
       const rect = content.getBoundingClientRect();
-      const windowHeight = window.innerHeight;
-      // Calculamos el progreso basado en el área del contenido
-      const totalHeight = rect.height - windowHeight;
       const scrolled = Math.max(
         0,
-        Math.min(1, Math.abs(rect.top) / totalHeight)
+        Math.min(1, Math.abs(rect.top) / (rect.height - window.innerHeight))
       );
+      circle.style.strokeDashoffset =
+        rect.top > 0 ? circumference : circumference - scrolled * circumference;
+    };
 
-      if (rect.top > 0) {
-        circle.style.strokeDashoffset = circumference.toString();
-      } else {
-        const offset = circumference - scrolled * circumference;
-        circle.style.strokeDashoffset = offset.toString();
+    // 2. ACTUALIZACIÓN DEL LINK ACTIVO (SCROLL SPY)
+    const updateActiveLink = () => {
+      let currentId = "";
+
+      // Buscamos cuál es el encabezado que está más cerca de la parte superior
+      headings.forEach((heading) => {
+        const top = heading.getBoundingClientRect().top;
+        if (top < 150) {
+          // Margen de 150px desde el top
+          currentId = heading.id;
+        }
+      });
+
+      if (currentId) {
+        links.forEach((link) => {
+          link.classList.remove("toc-link-active");
+          if (link.getAttribute("href") === `#${currentId}`) {
+            link.classList.add("toc-link-active");
+          }
+        });
       }
     };
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            links.forEach((l) => l.classList.remove("toc-link-active"));
-            const activeLink = document.querySelector(
-              `[data-toc-link="${entry.target.id}"]`
-            );
-            if (activeLink) activeLink.classList.add("toc-link-active");
-          }
-        });
-      },
-      { rootMargin: "-15% 0px -70% 0px" }
-    );
+    window.addEventListener("scroll", () => {
+      updateProgress();
+      updateActiveLink();
+    });
 
-    const toggleMenu = () => {
-      menu?.classList.toggle("translate-x-[150%]");
-      menu?.classList.toggle("translate-x-0");
-      blur?.classList.toggle("hidden");
-    };
-
-    mobileToggle?.addEventListener("click", toggleMenu);
-    blur?.addEventListener("click", toggleMenu);
-    links.forEach((l) =>
-      l.addEventListener("click", () => {
-        if (window.innerWidth < 768) toggleMenu();
-      })
-    );
-
-    window.addEventListener("scroll", handleScroll);
-    headings.forEach((h) => observer.observe(h));
-
-    document.addEventListener(
-      "astro:before-preparation",
-      () => {
-        window.removeEventListener("scroll", handleScroll);
-        observer.disconnect();
-      },
-      { once: true }
-    );
+    // Ejecutar una vez al cargar por si el usuario ya está a mitad de página
+    updateActiveLink();
   }
 
   document.addEventListener("astro:page-load", initTOC);

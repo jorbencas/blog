@@ -5,7 +5,7 @@ import Layout from "./Layout.astro";
 import NextPrevLiks from "@components/NextPrevLiks.astro";
 import TableOfContents from "../components/TableOfContents.astro";
 // import Archive from "@components/Archive.astro";
-import CodeEnhancer from '@components/CodeEnhancer.astro';
+import CodeEnhancer from "@components/CodeEnhancer.astro";
 const { content, frontmatter, headings } = Astro.props;
 
 let bar = {
@@ -55,7 +55,7 @@ let textNext = bar.nextElement.tittle;
 
 <Layout title={content.title}>
   <!-- <Archive /> -->
-  <div class="max-w-8xl mx-auto px-4 sm:px-6 md:px-8">
+  <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
     <div class="my-5 flex w-auto">
       <img
         class="inline-block w-14 h-14 align-middle items-center"
@@ -72,7 +72,7 @@ let textNext = bar.nextElement.tittle;
           <strong class="text-base font-extrabold text-cyan-400">
             {formatDatePost(content.pubDate)}
           </strong>
-          Por: <strong class="dark:text-white">{content.author}</strong>
+           Por: <strong class="dark:text-white">{content.author}</strong>
         </p>
         <p
           class="flex items-center gap-2 text-sm font-medium
@@ -98,30 +98,34 @@ let textNext = bar.nextElement.tittle;
         </p>
       </div>
     </div>
-    <div
-      id="contenido"
-      class="prose-xl my-5 dark:text-white dark:prose-pre:text-white prose-a:text-cyan-400 dark:prose-h2:text-white dark:prose-ul:text-white dark:prose-ol:text-white dark:prose-li:text-white dark:prose-h1:text-white dark:prose-code:text-white dark:prose-strong:text-white dark:prose-h3:text-white"
-    >
-      <slot />
-    </div>
-    <CodeEnhancer />
-    {
-      content.tags && (
-        <TagsPosts is-client tagsList={JSON.stringify(content.tags)} />
-      )
-    }
+    <main class="lg:col-span-9">
+      <div
+        id="contenido"
+        class="prose-xl my-5 dark:text-white dark:prose-pre:text-white prose-a:text-cyan-400 dark:prose-h2:text-white dark:prose-ul:text-white dark:prose-ol:text-white dark:prose-li:text-white dark:prose-h1:text-white dark:prose-code:text-white dark:prose-strong:text-white dark:prose-h3:text-white"
+      >
+        <slot />
+      </div>
+      <CodeEnhancer />
+      {
+        content.tags && (
+          <TagsPosts is-client tagsList={JSON.stringify(content.tags)} />
+        )
+      }
 
-    <NextPrevLiks
-      imageNext={imageNext}
-      nextURL={urlNext}
-      prevURL={urlPrev}
-      imagePrev={imagePrev}
-      textNext={textNext}
-      textPrev={textPrev}
-    />
+      <NextPrevLiks
+        imageNext={imageNext}
+        nextURL={urlNext}
+        prevURL={urlPrev}
+        imagePrev={imagePrev}
+        textNext={textNext}
+        textPrev={textPrev}
+      />
+    </main>
   </div>
 
-  <div class="hidden md:block col-span-1">
-    <TableOfContents headings={headings} />
+  <div class="hidden lg:block lg:col-span-3">
+    <div class="sticky top-32">
+      <TableOfContents headings={headings} />
+    </div>
   </div>
 </Layout>
