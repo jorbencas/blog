@@ -1,88 +1,215 @@
 ---
-// Astro inyecta automáticamente 'headings' si este componente 
-// recibe las props del layout de Markdown.
 const { headings } = Astro.props;
 
-// Filtramos en el servidor (esto sí se pinta al cargar)
+// Filtramos los encabezados para el TOC
 const toc = (headings || [])
   .filter((h) => h.depth > 1 && h.depth < 4)
   .map((h) => ({
     ...h,
-    text: h.text.replace(/<[^>]*>?/gm, '')
+    text: h.text.replace(/<[^>]*>?/gm, ""),
   }));
+
+// Cálculo rápido de tiempo de lectura (aprox. 200 palabras por minuto)
+const estWords = toc.map((h) => h.text).join(" ").length / 5;
+const readingTime = Math.max(1, Math.ceil(estWords / 200));
 
 const hasContent = toc.length > 2;
 ---
 
-{hasContent && (
-  <>
-    <div class="fixed top-0 left-0 w-full h-1 z-[100] bg-transparent">
-      <div id="reading-progress-bar" class="h-full bg-gradient-to-r from-cyan-500 to-blue-600 w-0 transition-all duration-150 ease-out"></div>
-    </div>
+{
+  hasContent && (
+    <div id="toc-container">
+      <div class="toc-wrapper">
+        <button
+          id="toc-mobile-toggle"
+          class="fixed bottom-6 right-6 z-[100] p-4 bg-cyan-600 text-white rounded-full shadow-2xl md:hidden"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              d="M4 6h16M4 12h16m-7 6h7"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </button>
 
-    <div class="toc-wrapper">
-      <button id="toc-mobile-toggle" class="fixed bottom-6 right-6 z-50 p-4 bg-cyan-600 text-white rounded-full shadow-2xl md:hidden">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M4 6h16M4 12h16m-7 6h7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
+        <aside
+          id="toc-menu"
+          class="fixed top-32 right-8 lg:right-16 z-40 w-64 transform translate-x-[150%] md:translate-x-0 transition-transform duration-300 bg-transparent"
+        >
+          <div class="pointer-events-auto">
+            <div class="flex items-center gap-3 mb-2">
+              <h2 class="text-3xl font-black tracking-tighter text-slate-900 dark:text-white">
+                Contenido
+              </h2>
+              <div class="relative w-8 h-8">
+                <svg class="w-full h-full transform -rotate-90">
+                  <circle
+                    cx="16"
+                    cy="16"
+                    r="14"
+                    stroke="currentColor"
+                    stroke-width="3"
+                    fill="transparent"
+                    class="text-slate-200 dark:text-slate-800"
+                  />
+                  <circle
+                    id="progress-circle"
+                    cx="16"
+                    cy="16"
+                    r="14"
+                    stroke="currentColor"
+                    stroke-width="3"
+                    fill="transparent"
+                    stroke-dasharray="88"
+                    stroke-dashoffset="88"
+                    class="text-cyan-500 transition-all duration-150 ease-out"
+                    stroke-linecap="round"
+                  />
+                </svg>
+              </div>
+            </div>
 
-      <aside id="toc-menu" class="fixed inset-y-0 right-0 z-[60] w-72 bg-white dark:bg-slate-900 shadow-2xl transform translate-x-full transition-transform duration-300 md:relative md:translate-x-0 md:shadow-none md:bg-transparent md:w-full md:block">
-        <div class="h-full p-8 md:p-0 md:sticky md:top-24">
-          <h2 class="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-cyan-500 mb-6">Contenido</h2>
-          <nav>
-            <ul class="space-y-1 border-l border-gray-200 dark:border-slate-800">
-              {toc.map((h) => (
-                <li>
-                  <a href={`#${h.slug}`} data-toc-link={h.slug} class:list={[
-                    "block py-2 pl-4 -ml-[2px] border-l-2 border-transparent transition-all duration-300 text-gray-500 dark:text-gray-400 hover:text-cyan-500",
-                    { "text-[15px]": h.depth === 2 },
-                    { "ml-4 text-[13px]": h.depth === 3 },
-                  ]}>
-                    {h.text}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        </div>
-      </aside>
-      <div id="toc-blur" class="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-50 hidden md:hidden"></div>
+            <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500 mb-8">
+              {readingTime} min lectura • {toc.length} secciones
+            </p>
+
+            <nav>
+              <ul class="relative space-y-4 border-l-2 border-slate-200 dark:border-slate-800">
+                {toc.map((h) => (
+                  <li>
+                    <a
+                      href={`#${h.slug}`}
+                      data-toc-link={h.slug}
+                      class:list={[
+                        "block py-1 pl-5 -ml-[2px] border-l-2 border-transparent transition-all duration-300 text-slate-400 dark:text-slate-500 hover:text-cyan-600 dark:hover:text-cyan-400",
+                        { "text-base font-bold": h.depth === 2 },
+                        { "ml-4 text-sm font-semibold": h.depth === 3 },
+                      ]}
+                    >
+                      {h.text}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </div>
+        </aside>
+
+        <div
+          id="toc-blur"
+          class="fixed inset-0 bg-white/40 dark:bg-slate-950/40 backdrop-blur-md z-30 hidden md:hidden"
+        />
+      </div>
     </div>
-  </>
-)}
+  )
+}
 
 <style is:global>
-  html { scroll-behavior: smooth; }
-  #contenido h2, #contenido h3 { scroll-margin-top: 100px; }
-  .toc-link-active { @apply border-cyan-500 text-cyan-600 dark:text-cyan-400 font-bold bg-cyan-50/50 dark:bg-cyan-900/20 !important; }
+  html {
+    scroll-behavior: smooth;
+  }
+
+  #contenido h2,
+  #contenido h3 {
+    scroll-margin-top: 100px;
+  }
+
+  /* Indicador Activo Animado */
+  .toc-link-active {
+    @apply text-cyan-600 dark:text-cyan-400 font-black !important;
+    border-left-color: #0891b2 !important;
+    background: linear-gradient(to right, rgba(8, 145, 178, 0.1), transparent);
+    transform: translateX(2px);
+  }
+
+  /* Suavizado de transiciones para los links */
+  [data-toc-link] {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
 </style>
 
 <script>
   function initTOC() {
-    const progress = document.getElementById('reading-progress-bar');
-    const content = document.getElementById('contenido');
-    const links = document.querySelectorAll('[data-toc-link]');
-    const headings = document.querySelectorAll('#contenido h2, #contenido h3');
-    
-    // Solo lógica de scroll e interactividad (el HTML ya existe)
-    if (!content) return;
+    const circle = document.getElementById("progress-circle");
+    const content = document.getElementById("contenido");
+    const links = document.querySelectorAll("[data-toc-link]");
+    const headings = document.querySelectorAll("#contenido h2, #contenido h3");
+    const mobileToggle = document.getElementById("toc-mobile-toggle");
+    const menu = document.getElementById("toc-menu");
+    const blur = document.getElementById("toc-blur");
+
+    if (!content || !circle) return;
+
+    // Radio del círculo es 14, longitud (2 * PI * r) es ~88
+    const circumference = 88;
 
     const handleScroll = () => {
       const rect = content.getBoundingClientRect();
-      const scrolled = (Math.abs(rect.top) / (rect.height - window.innerHeight)) * 100;
-      if (progress) progress.style.width = rect.top > 0 ? '0%' : `${Math.min(100, scrolled)}%`;
+      const windowHeight = window.innerHeight;
+      // Calculamos el progreso basado en el área del contenido
+      const totalHeight = rect.height - windowHeight;
+      const scrolled = Math.max(
+        0,
+        Math.min(1, Math.abs(rect.top) / totalHeight)
+      );
+
+      if (rect.top > 0) {
+        circle.style.strokeDashoffset = circumference.toString();
+      } else {
+        const offset = circumference - scrolled * circumference;
+        circle.style.strokeDashoffset = offset.toString();
+      }
     };
 
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          links.forEach(l => l.classList.remove('toc-link-active'));
-          document.querySelector(`[data-toc-link="${entry.target.id}"]`)?.classList.add('toc-link-active');
-        }
-      });
-    }, { rootMargin: '-5% 0px -85% 0px' });
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            links.forEach((l) => l.classList.remove("toc-link-active"));
+            const activeLink = document.querySelector(
+              `[data-toc-link="${entry.target.id}"]`
+            );
+            if (activeLink) activeLink.classList.add("toc-link-active");
+          }
+        });
+      },
+      { rootMargin: "-15% 0px -70% 0px" }
+    );
 
-    window.addEventListener('scroll', handleScroll);
-    headings.forEach(h => observer.observe(h));
+    const toggleMenu = () => {
+      menu?.classList.toggle("translate-x-[150%]");
+      menu?.classList.toggle("translate-x-0");
+      blur?.classList.toggle("hidden");
+    };
+
+    mobileToggle?.addEventListener("click", toggleMenu);
+    blur?.addEventListener("click", toggleMenu);
+    links.forEach((l) =>
+      l.addEventListener("click", () => {
+        if (window.innerWidth < 768) toggleMenu();
+      })
+    );
+
+    window.addEventListener("scroll", handleScroll);
+    headings.forEach((h) => observer.observe(h));
+
+    document.addEventListener(
+      "astro:before-preparation",
+      () => {
+        window.removeEventListener("scroll", handleScroll);
+        observer.disconnect();
+      },
+      { once: true }
+    );
   }
-  document.addEventListener('astro:page-load', initTOC);
+
+  document.addEventListener("astro:page-load", initTOC);
 </script>
