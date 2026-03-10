@@ -135,4 +135,6 @@ git config --global core.excludesfile ~/.gitignore_global
 # .idea/
 # .DS_Store
 # Thumbs.db
+
 # .env
+```  
