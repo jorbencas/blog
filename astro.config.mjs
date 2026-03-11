@@ -4,7 +4,6 @@ import tailwind from "@astrojs/tailwind";
 import mdx from "@astrojs/mdx";
 import sitemap from "@astrojs/sitemap";
 
-// https://astro.build/config
 export default defineConfig({
   output: "static", // <-- Asegúrate de que sea static o borra la línea
   integrations: [tailwind(), mdx(), sitemap()],
