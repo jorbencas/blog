@@ -6,6 +6,7 @@ import sitemap from "@astrojs/sitemap";
 
 // https://astro.build/config
 export default defineConfig({
+  output: "static", // <-- Asegúrate de que sea static o borra la línea
   integrations: [tailwind(), mdx(), sitemap()],
   site: "https://blog-jorbencas.vercel.app/",
   markdown: {
