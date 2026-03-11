@@ -4,18 +4,18 @@ import TagsPosts from "@components/TagsPosts.astro";
 import Layout from "./Layout.astro";
 import NextPrevLiks from "@components/NextPrevLiks.astro";
 import TableOfContents from "../components/TableOfContents.astro";
-// import Archive from "@components/Archive.astro";
 import CodeEnhancer from "@components/CodeEnhancer.astro";
 const { content, frontmatter, headings } = Astro.props;
+import { getCollection } from 'astro:content'; // NUEVO IMPORT
 
 let bar = {
   prevElement: { url: "", tittle: "", image: "" },
   nextElement: { url: "", tittle: "", image: "" },
 };
-const allPosts = await Astro.glob("../pages/posts/**/*.md");
+const allPosts = await getCollection('posts');;
 const sortedPosts = await getSortedPosts(allPosts);
 for (let i = 0; i < sortedPosts.length; i++) {
-  const { frontmatter } = sortedPosts[i];
+  const { frontmatter } = sortedPosts[i].data;
   if (
     new Date(frontmatter.pubDate).valueOf() ===
     new Date(content.pubDate).valueOf()
@@ -23,23 +23,23 @@ for (let i = 0; i < sortedPosts.length; i++) {
     bar["prevElement"] = {
       url:
         i - 1 >= 0
-          ? "/posts/" + sortedPosts[i - 1].frontmatter.slug.replace(".md", "/")
+          ? "/posts/" + sortedPosts[i - 1].data.frontmatter.slug.replace(".md", "/")
           : undefined,
-      tittle: i - 1 >= 0 ? sortedPosts[i - 1].frontmatter.title : undefined,
-      image: i - 1 >= 0 ? sortedPosts[i - 1].frontmatter.image : "prev.svg",
+      tittle: i - 1 >= 0 ? sortedPosts[i - 1].data.frontmatter.title : undefined,
+      image: i - 1 >= 0 ? sortedPosts[i - 1].data.frontmatter.image : "prev.svg",
     };
     bar["nextElement"] = {
       url:
         i + 1 < sortedPosts.length
-          ? "/posts/" + sortedPosts[i + 1].frontmatter.slug.replace(".md", "")
+          ? "/posts/" + sortedPosts[i + 1].data.frontmatter.slug.replace(".md", "")
           : undefined,
       tittle:
         i + 1 < sortedPosts.length
-          ? sortedPosts[i + 1].frontmatter.title
+          ? sortedPosts[i + 1].data.frontmatter.title
           : undefined,
       image:
         i + 1 < sortedPosts.length
-          ? sortedPosts[i + 1].frontmatter.image
+          ? sortedPosts[i + 1].data.frontmatter.image
           : "next.svg",
     };
   }

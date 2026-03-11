@@ -4,14 +4,11 @@ import PreviewPost from "@components/PreviewPost.astro";
 import HomeLayout from "@layouts/HomeLayout.astro";
 import Information from "@components/Information.astro";
 import { getSortedPosts } from "src/utils";
-/*
-interface MarkdownFrontmatter {
-  date: number;
-  draft:boolean;
-}
-*/
-const allPosts = await Astro.glob("./posts/**/*.md");
-const sortedPosts = await getSortedPosts(allPosts);
+import { getCollection } from 'astro:content'; // NUEVO IMPORT
+
+const allPosts = await getCollection('posts');
+const manualPosts = allPosts.filter(p => !p.file.includes('auto-news'));
+const sortedPosts = await getSortedPosts(manualPosts);
 ---
 
 <Layout title="Problemas de un desarollador Web">
@@ -31,7 +28,7 @@ const sortedPosts = await getSortedPosts(allPosts);
       <ul role="list">
         {
           sortedPosts.length > 0 ? (
-            sortedPosts.slice(0, 5).map((p) => <PreviewPost post={p} />)
+            sortedPosts.slice(0, 5).map((p) => <PreviewPost post={p.data} />)
           ) : (
             <Information />
           )

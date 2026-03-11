@@ -5,9 +5,10 @@ import HomeLayout from "@layouts/HomeLayout.astro";
 import NextPrevLiks from "@components/NextPrevLiks.astro";
 import Information from "@components/Information.astro";
 import { getSortedPosts } from "src/utils";
+import { getCollection } from 'astro:content'; // NUEVO IMPORT
 
 export async function getStaticPaths({ paginate }) {
-  const allPosts = await Astro.glob("./**/*.md");
+  const allPosts = await getCollection('posts');
   const sortedPosts = await getSortedPosts(allPosts);
   return paginate(sortedPosts, {
     pageSize: 12,
@@ -35,7 +36,7 @@ const { prev, next } = url;
       <ul role="list">
         {
           data.length > 0 ? (
-            data.map((p) => <PreviewPost post={p} />)
+            data.map((p) => <PreviewPost post={p.data} />)
           ) : (
             <Information />
           )
