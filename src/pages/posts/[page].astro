@@ -5,21 +5,24 @@ import HomeLayout from "@layouts/HomeLayout.astro";
 import NextPrevLiks from "@components/NextPrevLiks.astro";
 import Information from "@components/Information.astro";
 import { getSortedPosts } from "src/utils";
-import { getCollection } from 'astro:content'; // NUEVO IMPORT
+import { getCollection } from "astro:content"; // NUEVO IMPORT
 
 export async function getStaticPaths({ paginate }) {
-  const allPosts = await getCollection('posts');
+  const allPosts = await getCollection("posts");
   const sortedPosts = await getSortedPosts(allPosts);
   return paginate(sortedPosts, {
     pageSize: 12,
   });
 }
 
-const { data, url } = Astro.props.page;
+const { data, url, currentPage } = Astro.props.page;
 const { prev, next } = url;
 ---
 
-<Layout title="Problemas de un desarollador Web">
+<Layout
+  title={`Blog de desarrollo web - Página ${currentPage}`}
+  description="Artículos sobre desarrollo web y programación"
+>
   <HomeLayout>
     <div class="flex justify-between items-start">
       <h5 class="text-xl font-bold leading-none text-gray-900 dark:text-white">
