@@ -2,22 +2,39 @@ const { execSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
-console.log("--- Listando contenido del directorio raíz ---");
-console.log(fs.readdirSync(".")); // Esto nos dirá qué carpetas existen realmente
+function findDir(dir) {
+  if (!fs.existsSync(dir)) return null;
+  const files = fs.readdirSync(dir, { withFileTypes: true });
+  for (const file of files) {
+    if (file.isDirectory()) {
+      // Buscamos carpetas que suelen contener los HTML finales
+      if (
+        file.name === "dist" ||
+        file.name === "static" ||
+        file.name === "out"
+      ) {
+        return path.join(dir, file.name);
+      }
+      // Evitamos entrar en node_modules o carpetas ocultas para ser más rápidos
+      if (file.name === "node_modules" || file.name.startsWith(".")) continue;
 
-// Si ves una carpeta como 'output', '.vercel' o similar, la añadiremos a la lista
-const possiblePaths = [
-  "dist",
-  ".vercel/output/static",
-  ".vercel/output",
-  "build",
-];
-const foundPath = possiblePaths.find((p) => fs.existsSync(p));
+      const found = findDir(path.join(dir, file.name));
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+console.log("--- Buscando carpeta de salida automáticamente ---");
+const foundPath = findDir(".");
 
 if (foundPath) {
-  console.log(`Carpeta encontrada: ${foundPath}. Iniciando Pagefind...`);
+  console.log(`¡Encontrado! Carpeta: ${foundPath}. Iniciando Pagefind...`);
   execSync(`npx pagefind --site ${foundPath}`, { stdio: "inherit" });
 } else {
-  console.error("¡ALERTA! Ninguna de las rutas esperadas existe.");
+  console.error(
+    "--- ERROR: No se encontró ninguna carpeta de salida con HTML ---"
+  );
+  console.error("Contenido del directorio actual:", fs.readdirSync("."));
   process.exit(1);
 }
