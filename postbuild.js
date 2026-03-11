@@ -1,18 +1,23 @@
 const { execSync } = require("child_process");
 const fs = require("fs");
+const path = require("path");
 
-console.log("--- Iniciando proceso de búsqueda de archivos ---");
+console.log("--- Listando contenido del directorio raíz ---");
+console.log(fs.readdirSync(".")); // Esto nos dirá qué carpetas existen realmente
 
-// Vercel suele usar esta ruta cuando el adaptador está activo
-const paths = [".vercel/output/static", "dist"];
-let foundPath = paths.find((p) => fs.existsSync(p));
+// Si ves una carpeta como 'output', '.vercel' o similar, la añadiremos a la lista
+const possiblePaths = [
+  "dist",
+  ".vercel/output/static",
+  ".vercel/output",
+  "build",
+];
+const foundPath = possiblePaths.find((p) => fs.existsSync(p));
 
 if (foundPath) {
   console.log(`Carpeta encontrada: ${foundPath}. Iniciando Pagefind...`);
   execSync(`npx pagefind --site ${foundPath}`, { stdio: "inherit" });
 } else {
-  console.error(
-    "Error: No se encontró la carpeta de salida (dist o .vercel/output/static)"
-  );
+  console.error("¡ALERTA! Ninguna de las rutas esperadas existe.");
   process.exit(1);
 }
