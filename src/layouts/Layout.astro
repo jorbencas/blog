@@ -9,6 +9,7 @@ export interface Props {
   description: string;
 }
 const { title, description } = Astro.props as Props;
+const tags = frontmatter?.tags || [];
 ---
 
 <!doctype html>
@@ -20,10 +21,10 @@ const { title, description } = Astro.props as Props;
     <title>{title}</title>
   </head>
   <body
-    class="bg-stone-200 dark:bg-gray-800 text-gray-600 dark:text-gray-300 transition duration-300 ease"
+    class="bg-stone-200 dark:bg-gray-800 text-gray-600 dark:text-gray-300 transition duration-300 ease" data-pagefind-body
   >
     <Header />
-    <main class="mt-10 flex justify-around items-start">
+    <main class="mt-10 flex justify-around items-start" data-pagefind-filter={`tags:${tags.join(', ')}`}>
       <slot />
     </main>
     <Footer />
