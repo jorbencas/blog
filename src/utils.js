@@ -31,5 +31,3 @@ export const makeUrl = (urlParam, Astro) => {
 export const doSomething = () => {
   console.log("doSomething");
 };
-
-// test
