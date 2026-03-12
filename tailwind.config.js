@@ -1,3 +1,8 @@
+/** @type {import('tailwindcss').Config} */
+import typography from '@tailwindcss/typography';
+import forms from '@tailwindcss/forms';
+import aspectRatio from '@tailwindcss/aspect-ratio';
+
 module.exports = {
   darkMode: "class",
   content: ["./src/**/*.{astro,html,js,jsx,svelte,ts,tsx,vue}"],
@@ -5,9 +10,8 @@ module.exports = {
     extend: {},
   },
   plugins: [
-    require("@tailwindcss/typography"),
-    require("@tailwindcss/forms"),
-    require("@tailwindcss/line-clamp"),
-    require("@tailwindcss/aspect-ratio"),
+    typography,
+    forms,
+    aspectRatio,
   ],
 };
