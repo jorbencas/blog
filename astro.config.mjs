@@ -5,12 +5,7 @@ import mdx from "@astrojs/mdx";
 import sitemap from "@astrojs/sitemap";
 //import vercel from '@astrojs/vercel'
 export default defineConfig({
-  output: "static", // <-- Asegúrate de que sea static o borra la línea
   // adapter: vercel(),
-  build: {
-    format: "directory", // Fuerza a crear carpetas con index.html
-    outDir: "./dist", // Fuerza a crear la carpeta dist en la raíz
-  },
   integrations: [tailwind(), mdx(), sitemap()],
   site: "https://blog-jorbencas.vercel.app/",
   markdown: {
