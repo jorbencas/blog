@@ -10,6 +10,9 @@ export interface Props {
 }
 const { title, description } = Astro.props as Props;
 const tags = frontmatter?.tags || [];
+
+const finalTitle = title || frontmatter?.title || "Blog";
+const finalDescription = description || frontmatter?.description || "";
 ---
 
 <!doctype html>
@@ -24,11 +27,11 @@ const tags = frontmatter?.tags || [];
     class="bg-stone-200 dark:bg-gray-800 text-gray-600 dark:text-gray-300 transition duration-300 ease" 
   >
     <Header />
-    <main class="mt-10 flex justify-around items-start" data-pagefind-body data-pagefind-filter={`tags:${tags.join(', ')}`}>
+    <main class="mt-10 flex justify-around items-start" data-pagefind-body data-pagefind-filter={tags.length > 0 ? `tags:${tags.join(', ')}` : undefined}>
       <slot />
     </main>
     <Footer />
     <SpeedInsights />
-    <SEO title={title} description={description} />
+    <SEO title={finalTitle} description={finalDescription} />
   </body>
 </html>

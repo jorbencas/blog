@@ -9,71 +9,73 @@ const { content, frontmatter, headings } = Astro.props;
 import { getCollection } from 'astro:content'; // NUEVO IMPORT
 
 let bar = {
-  prevElement: { url: "", tittle: "", image: "" },
-  nextElement: { url: "", tittle: "", image: "" },
+  prevElement: { url: undefined, tittle: undefined, image: "prev.svg" },
+  nextElement: { url: undefined, tittle: undefined, image: "next.svg" },
 };
-const allPosts = await getCollection('posts');;
+
+const allPosts = await getCollection('posts');
+// Asegúrate de que getSortedPosts use 'p.data.pubDate' para ordenar
 const sortedPosts = await getSortedPosts(allPosts);
-for (let i = 0; i < sortedPosts.length; i++) {
-  const { frontmatter } = sortedPosts[i].data;
-  if (
-    new Date(frontmatter.pubDate).valueOf() ===
-    new Date(content.pubDate).valueOf()
-  ) {
-    bar["prevElement"] = {
-      url:
-        i - 1 >= 0
-          ? "/posts/" + sortedPosts[i - 1].data.frontmatter.slug.replace(".md", "/")
-          : undefined,
-      tittle: i - 1 >= 0 ? sortedPosts[i - 1].data.frontmatter.title : undefined,
-      image: i - 1 >= 0 ? sortedPosts[i - 1].data.frontmatter.image : "prev.svg",
+
+// Buscamos el índice del post actual comparando fechas o títulos
+const currentIndex = sortedPosts.findIndex(post => 
+  new Date(post.data.pubDate).valueOf() === new Date(content.pubDate).valueOf()
+);
+
+if (currentIndex !== -1) {
+  // Post Anterior
+  if (currentIndex > 0) {
+    const prev = sortedPosts[currentIndex - 1];
+    bar.prevElement = {
+      // Accedemos directamente a post.data, ya no existe .frontmatter
+      url: "/posts/" + (prev.data.slug || prev.id).replace(".md", ""),
+      tittle: prev.data.title,
+      image: prev.data.image || "prev.svg",
     };
-    bar["nextElement"] = {
-      url:
-        i + 1 < sortedPosts.length
-          ? "/posts/" + sortedPosts[i + 1].data.frontmatter.slug.replace(".md", "")
-          : undefined,
-      tittle:
-        i + 1 < sortedPosts.length
-          ? sortedPosts[i + 1].data.frontmatter.title
-          : undefined,
-      image:
-        i + 1 < sortedPosts.length
-          ? sortedPosts[i + 1].data.frontmatter.image
-          : "next.svg",
+  }
+
+  // Post Siguiente
+  if (currentIndex < sortedPosts.length - 1) {
+    const next = sortedPosts[currentIndex + 1];
+    bar.nextElement = {
+      url: "/posts/" + (next.data.slug || next.id).replace(".md", ""),
+      tittle: next.data.title,
+      image: next.data.image || "next.svg",
     };
   }
 }
-let imagePrev = bar.prevElement.image;
-let urlPrev = bar.prevElement.url;
-let textPrev = bar.prevElement.tittle;
 
-let imageNext = bar.nextElement.image;
-let urlNext = bar.nextElement.url;
-let textNext = bar.nextElement.tittle;
+// Variables para tu HTML (con valores por defecto para evitar errores de undefined)
+let imagePrev = bar.prevElement?.image;
+let urlPrev = bar.prevElement?.url;
+let textPrev = bar.prevElement?.tittle;
+
+let imageNext = bar.nextElement?.image;
+let urlNext = bar.nextElement?.url;
+let textNext = bar.nextElement?.tittle
 ---
 
-<Layout title={content.title}>
+<Layout title={content.data.title}>
   <!-- <Archive /> -->
   <div class="max-w-10xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
     <main class="lg:col-span-9 ml-3">
       <div class="my-5 flex w-auto">
         <img
           class="inline-block w-14 h-14 align-middle items-center"
-          aria-label={content.title}
-          src={content.image}
+          aria-label={content.data.title}
+          src={content.data.image}
         />
 
         <div class="block ml-4">
           <h1 class="text-4xl font-sans text-gray-900 dark:text-white">
-            {content.title}
+            {content.data.title}
           </h1>
-          <p class="text-sm">{content.description}</p>
+          <p class="text-sm">{content.data.description}</p>
           <p>
             <strong class="text-base font-extrabold text-cyan-400">
               {formatDatePost(content.pubDate)}
             </strong>
-             Por: <strong class="dark:text-white">{content.author}</strong>
+             Por: <strong class="dark:text-white">{content.data.author}</strong>
           </p>
           <p
             class="flex items-center gap-2 text-sm font-medium
@@ -107,7 +109,7 @@ let textNext = bar.nextElement.tittle;
       </div>
       <CodeEnhancer />
       {
-        content.tags && (
+        content.data.tags && (
           <TagsPosts is-client tagsList={JSON.stringify(content.tags)} />
         )
       }

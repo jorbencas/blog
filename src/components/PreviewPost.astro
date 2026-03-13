@@ -6,30 +6,31 @@ export interface Props {
 }
 
 const { post } = Astro.props;
+const postUrl = `/posts/${post.data.slug || post.id.replace(/\.[^/.]+$/, "")}`;
 const cleanHTML = (str) => str ? str.replace(/<[^>]*>?/gm, '') : '';
 ---
 
 <li>
   <a
-    href={post.url}
+    href={postUrl}
     class="flex items-center px-6 hover:bg-gray-200 dark:hover:bg-sky-800 py-6 sm:py-4"
   >
     <div class="flex-shrink-0">
       <img
         class="w-10 h-10 mr-2"
-        src={post.frontmatter.image}
-        alt={post.frontmatter.title}
+        src={post.data.image}
+        alt={post.data.title}
       />
     </div>
     <div class="truncate md:text-clip">
       <p class="text-lg font-medium text-gray-900 truncate dark:text-white">
-        {post.frontmatter.title}
+        {post.data.title}
       </p>
       <p class="truncate block text-sm text-gray-500 dark:text-gray-400">
-        {cleanHTML(post.frontmatter.description)}
+        {cleanHTML(post.data.description)}
       </p>
       <p class="text-sm font-semibold text-cyan-600 dark:text-white">
-        {formatDatePost(post.frontmatter.pubDate)}
+        {formatDatePost(post.data.pubDate)}
       </p>
     </div>
   </a>
