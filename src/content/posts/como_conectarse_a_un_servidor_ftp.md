@@ -4,7 +4,7 @@ title: "Cómo conectarse al servidor FTP de diferentes formas"
 description: ""
 pubDate: "2016/02/01"
 tags: ['web', "sistemas"]
-slug: "como_conectarse_a_un_servidor_ftp.md"
+slug: "como_conectarse_a_un_servidor_ftp"
 image: "/img/como_conectarse_a_un_servidor_ftp/como_conectarse_a_un_servidor_ftpt.jpg"
 author: "Jorge Beneyto Castelló"
 layout: "@layouts/PostLayout.astro"

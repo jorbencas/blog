@@ -4,7 +4,7 @@ title: "5 metroidvanias para Nintendo Switch muy buenos, pero poco conocidos, qu
 description: "Noticia automática de HobbyConsolas"
 pubDate: "2026/01/19"
 tags: ['tecnologia']
-slug: "5_metroidvanias_para_nintendo_switch_muy_buenos_pe.md"
+slug: "5_metroidvanias_para_nintendo_switch_muy_buenos_pe"
 image: "https://imagenes.hobbyconsolas.com/files/image_640_360/uploads/imagenes/2026/01/18/696d17262c05c3-73918360.jpeg"
 author: "Bot Scraper"
 layout: "@layouts/PostLayout.astro"

@@ -4,7 +4,7 @@ title: "Cómo obtener un certificado SSL"
 description: ""
 pubDate: "2016/01/19"
 tags: ['sistemas', 'web']
-slug: "como_obtener_un_certificado_ssl.md"
+slug: "como_obtener_un_certificado_ssl"
 image: "/img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl.webp"
 author: "Jorge Beneyto Castelló"
 layout: "@layouts/PostLayout.astro"

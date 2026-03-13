@@ -4,7 +4,7 @@ title: "Amazon cambia Fire TV por completo: Alexa+ y diseño más moderno llegan
 description: "Noticia automática de ComputerHoy"
 pubDate: "2026/01/07"
 tags: ['tecnologia']
-slug: "amazon_cambia_fire_tv_por_completo_alexa_y_diseo_m.md"
+slug: "amazon_cambia_fire_tv_por_completo_alexa_y_diseo_m"
 image: "https://imagenes.computerhoy.20minutos.es/files/image_320_240/uploads/imagenes/2026/01/06/695d63c21a6156-61728497.jpeg"
 author: "Bot Scraper"
 layout: "../../../layouts/PostLayout.astro"

@@ -4,7 +4,7 @@ title: Evangelion anuncia una nueva serie de anime de la mano de Yoko Tarō (Nie
 description: "Noticia automática de HobbyConsolas"
 pubDate: "2026/02/23"
 tags: ['tecnologia']
-slug: "evangelion_anuncia_una_nueva_serie_de_anime_de_la.md"
+slug: "evangelion_anuncia_una_nueva_serie_de_anime_de_la"
 image: "https://imagenes.hobbyconsolas.com/files/image_320_240/uploads/imagenes/2025/11/22/69217b1a183393-69563540.jpeg"
 author: "Bot Scraper"
 layout: "@layouts/PostLayout.astro"

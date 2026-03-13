@@ -4,7 +4,7 @@ title: "Análisis Philips Evnia 27M2S5901, un excepcional monitor \"dos en uno\"
 description: "Noticia automática de HobbyConsolas"
 pubDate: "2026/01/24"
 tags: ['tecnologia']
-slug: "anlisis_philips_evnia_27m2s5901_un_excepcional_mon.md"
+slug: "anlisis_philips_evnia_27m2s5901_un_excepcional_mon"
 image: "https://imagenes.hobbyconsolas.com/files/image_320_240/uploads/imagenes/2026/01/21/6971155ace9fd7-38728647.jpeg"
 author: "Bot Scraper"
 layout: "@layouts/PostLayout.astro"

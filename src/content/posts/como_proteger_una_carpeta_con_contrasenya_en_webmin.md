@@ -4,7 +4,7 @@ title: "Cómo proteger con contraseña una carpeta con Webmin"
 description: ""
 pubDate: "2016/01/18"
 tags: ['sistemas']
-slug: "como_proteger_una_carpeta_con_contrasenya_en_webmin.md"
+slug: "como_proteger_una_carpeta_con_contrasenya_en_webmin"
 image: "/img/como_proteger_una_carpeta_con_contrasenya_en_webmin/como_proteger_una_carpeta_con_contrasenya_en_webminc.webp"
 author: "Jorge Beneyto Castelló"
 layout: "@layouts/PostLayout.astro"

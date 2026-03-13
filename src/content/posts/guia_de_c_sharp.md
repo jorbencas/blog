@@ -4,7 +4,7 @@ title: "Guia de C Sharp y .NET"
 description: "Guia paso a paso para empezar ha conocer el ecosistema de .NET y C Sharp"
 pubDate: "2022/11/07"
 tags: ['sistemas','C Sharp']
-slug: "guia_de_c_sharp.md"
+slug: "guia_de_c_sharp"
 image: "/img/guia_de_c_sharp.jpg"
 author: "Jorge Beneyto Castelló"
 layout: "@layouts/PostLayout.astro"

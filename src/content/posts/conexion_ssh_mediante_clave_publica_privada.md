@@ -4,7 +4,7 @@ title: "Conexión mediante clave pública privada"
 description: "Practica para crear una conexión ssh mediante clave pública privada"
 pubDate: "2015/12/09"
 tags: ['sistemas']
-slug: "conexion_ssh_mediante_clave_publica_privada.md"
+slug: "conexion_ssh_mediante_clave_publica_privada"
 image: "/img/conexion_ssh_mediante_clave_publica_privada.webp"
 author: "Jorge Beneyto Castelló"
 layout: "@layouts/PostLayout.astro"

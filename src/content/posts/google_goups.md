@@ -4,7 +4,7 @@ title: "Google groups"
 description: "Descubre un poquito mas sobre la tecnologia de Google llamada Google groups"
 pubDate: "2015/10/30"
 tags: ['groups chat', 'Google']
-slug: "google_goups.md"
+slug: "google_goups"
 image: "/img/google-groups.png"
 author: "Jorge Beneyto Castelló"
 layout: "@layouts/PostLayout.astro"

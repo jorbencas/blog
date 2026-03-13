@@ -4,7 +4,7 @@ title: "Como crear un servidor virtual"
 description: ""
 pubDate: "2016/01/17"
 tags: ['sistemas', 'web']
-slug: "como_crear_un_servidor_virtual.md"
+slug: "como_crear_un_servidor_virtual"
 image: "/img/como_crear_un_servidor_virtual/como_crear_un_servidor_virtual.png"
 author: "Jorge Beneyto Castelló"
 layout: "@layouts/PostLayout.astro"

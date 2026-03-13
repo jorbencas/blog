@@ -4,7 +4,7 @@ title: "Manual de Virtual-Box"
 description: ""
 pubDate: "2015/12/30"
 tags: ['sistemas']
-slug: "manual_virtual_box.md"
+slug: "manual_virtual_box"
 image: "/img/manual_virtual_box.jpg"
 author: "Jorge Beneyto Castelló"
 layout: "@layouts/PostLayout.astro"

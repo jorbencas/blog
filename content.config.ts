@@ -5,14 +5,15 @@ import { glob } from 'astro/loaders';
 const posts = defineCollection({
   loader: glob({ pattern: '**/[^_]*.{md,mdx}', base: "./src/content/posts" }),
   schema: z.object({
+    draft: z.boolean().optional().default(false),
     title: z.string(),
     description: z.string(),
     pubDate: z.string().or(z.date()), // Acepta texto o fecha
-    image: z.string().optional(),
     tags: z.array(z.string()).default([]),
-    draft: z.boolean().optional().default(false),
-    autor: z.string(),
-    slug: z.string()
+    slug: z.string().optional(),
+    image: z.string().optional(),
+    author: z.string(),
+    layout: z.string().optional(),
   }),
 });
 

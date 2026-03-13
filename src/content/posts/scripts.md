@@ -4,7 +4,7 @@ title: "Scripts"
 description: "Post de Scripts"
 pubDate: "2023/12/16"
 tags: ['sistemas', 'linux', 'bash']
-slug: "resources.md"
+slug: "resources"
 image: "/img/resources.webp"
 author: "Jorge Beneyto Castelló"
 layout: "@layouts/PostLayout.astro"

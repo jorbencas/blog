@@ -4,7 +4,7 @@ title: "Arquitectura Web"
 description: "Descubre las principales arquitexturas web"
 pubDate: "2017/10/04"
 tags: ['web']
-slug: "arquitectura_web.md"
+slug: "arquitectura_web"
 image: "/img/arquitectura_web.webp"
 author: "Jorge Beneyto Castelló"
 layout: "@layouts/PostLayout.astro"
