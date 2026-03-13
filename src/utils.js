@@ -12,11 +12,11 @@ export const formatDatePost = (date) => {
 
 export const getSortedPosts = (allPosts) => {
   return allPosts
-    .filter((post) => !post.frontmatter.draft)
+    .filter((post) => !post.data.draft)
     .sort(
       (a, b) =>
-        new Date(b.frontmatter.pubDate).valueOf() -
-        new Date(a.frontmatter.pubDate).valueOf()
+        new Date(b.data.pubDate).valueOf() -
+        new Date(a.data.pubDate).valueOf()
     );
 };
 
