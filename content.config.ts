@@ -1,8 +1,9 @@
 // src/content/config.ts
 import { defineCollection, z } from 'astro:content';
+import { glob } from 'astro/loaders';
 
 const postsCollection = defineCollection({
-  type: 'content', // indica que son archivos .md o .mdx
+  loader: glob({ pattern: '**/[^_]*.{md,mdx}', base: "./src/content/posts" }),
   schema: z.object({
     title: z.string(),
     description: z.string(),
