@@ -1,6 +1,6 @@
-//import typography from "@tailwindcss/typography";
-//import forms from "@tailwindcss/forms";
-//import aspectRatio from "@tailwindcss/aspect-ratio";
+import typography from "@tailwindcss/typography";
+import forms from "@tailwindcss/forms";
+import aspectRatio from "@tailwindcss/aspect-ratio";
 
 export default {
   darkMode: "class",
@@ -8,6 +8,5 @@ export default {
   theme: {
     extend: {},
   },
-  //plugins: [typography, forms, aspectRatio],
-    plugins: [],
+  plugins: [typography, forms, aspectRatio],
 };
