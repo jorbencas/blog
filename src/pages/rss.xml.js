@@ -8,7 +8,7 @@ export async function GET(context) {
     title: "Problemas de un desarrollador Web",
     description: "Blog con artículos sobre programación y ejercicios",
     site: context.site,
-    items: posts.map((post) => ({
+    items: posts.flatMap((post) => ({
       title: post.data.title,
       pubDate: post.data.pubDate,
       link: `/posts/${post.slug}`,
