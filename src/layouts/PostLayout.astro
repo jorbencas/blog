@@ -5,7 +5,7 @@ import Layout from "./Layout.astro";
 import NextPrevLiks from "@components/NextPrevLiks.astro";
 import TableOfContents from "../components/TableOfContents.astro";
 import CodeEnhancer from "@components/CodeEnhancer.astro";
-const { content, frontmatter, headings } = Astro.props;
+const { content, headings, remarkPluginFrontmatter } = Astro.props;
 import { getCollection } from 'astro:content'; // NUEVO IMPORT
 
 let bar = {
@@ -27,7 +27,6 @@ if (currentIndex !== -1) {
   if (currentIndex > 0) {
     const prev = sortedPosts[currentIndex - 1];
     bar.prevElement = {
-      // Accedemos directamente a post.data, ya no existe .frontmatter
       url: "/posts/" + (prev.data.slug || prev.id).replace(".md", ""),
       tittle: prev.data.title,
       image: prev.data.image || "prev.svg",
@@ -53,30 +52,35 @@ let textPrev = bar.prevElement?.tittle;
 let imageNext = bar.nextElement?.image;
 let urlNext = bar.nextElement?.url;
 let textNext = bar.nextElement?.tittle
+const postData = content.data;
+
+
+const minutesRead = remarkPluginFrontmatter?.minutesRead;
 ---
 
-<Layout title={content.data.title}>
+<Layout title={postData.title} description={postData.description}, tags={postData.tags}>
   <!-- <Archive /> -->
   <div class="max-w-10xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
     <main class="lg:col-span-9 ml-3">
       <div class="my-5 flex w-auto">
         <img
           class="inline-block w-14 h-14 align-middle items-center"
-          aria-label={content.data.title}
-          src={content.data.image}
+          aria-label={postData.title}
+          src={postData.image}
         />
 
         <div class="block ml-4">
           <h1 class="text-4xl font-sans text-gray-900 dark:text-white">
-            {content.data.title}
+            {postData.title}
           </h1>
-          <p class="text-sm">{content.data.description}</p>
+          <p class="text-sm">{postData.description}</p>
           <p>
             <strong class="text-base font-extrabold text-cyan-400">
               {formatDatePost(content.pubDate)}
             </strong>
-             Por: <strong class="dark:text-white">{content.data.author}</strong>
+             Por: <strong class="dark:text-white">{postData.author}</strong>
           </p>
+          {minutesRead && (
           <p
             class="flex items-center gap-2 text-sm font-medium
          text-gray-300 dark:text-gray-100
@@ -97,8 +101,9 @@ let textNext = bar.nextElement?.tittle
                 d="M12 6v6l4 2"></path>
             </svg>
 
-            {frontmatter.minutesRead}
+            {minutesRead}
           </p>
+          )}
         </div>
       </div>
       <div
@@ -109,8 +114,8 @@ let textNext = bar.nextElement?.tittle
       </div>
       <CodeEnhancer />
       {
-        content.data.tags && (
-          <TagsPosts is-client tagsList={JSON.stringify(content.tags)} />
+        postData.tags && (
+          <TagsPosts is-client tagsList={JSON.stringify(postData.tags)} />
         )
       }
 

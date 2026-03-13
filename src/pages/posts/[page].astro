@@ -15,7 +15,9 @@ export async function getStaticPaths({ paginate }) {
   });
 }
 
-const { data, url, currentPage } = Astro.props.page;
+const { tag } = Astro.params;
+const { page } = Astro.props;
+const { data, url, currentPage } = page;
 const { prev, next } = url;
 ---
 
@@ -39,7 +41,7 @@ const { prev, next } = url;
       <ul role="list">
         {
           data.length > 0 ? (
-            data.map((p) => <PreviewPost post={p.data} />)
+            data.map((p) => <PreviewPost post={p} />)
           ) : (
             <Information />
           )

@@ -1,12 +1,12 @@
 ---
-import { getCollection } from "astro:content";
+import { getCollection, render } from "astro:content";
 import SEO from "@components/SEO.astro";
 
 export async function getStaticPaths() {
   const posts = await getCollection("posts");
-
+  if (!posts) return [];
   return posts.map((post) => ({
-    params: { slug: post.data.slug || post.id },
+    params: { slug: post.data.slug || post.id.replace(/\.[^/.]+$/, "") },
     props: { post },
   }));
 }

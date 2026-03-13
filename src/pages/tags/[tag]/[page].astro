@@ -13,7 +13,7 @@ export async function getStaticPaths({ paginate }) {
   const sortedPosts = await getSortedPosts(allPosts);
   return allTags.map((tag) => {
     const filteredPosts = sortedPosts.filter((post) =>
-      post.frontmatter.tags.includes(tag)
+      post.data.tags.includes(tag)
     );
     return paginate(filteredPosts, {
       params: { tag },
@@ -22,7 +22,8 @@ export async function getStaticPaths({ paginate }) {
   });
 }
 const { tag } = Astro.params;
-const { data, url } = Astro.props.page;
+const { page } = Astro.props;
+const { data, url } = page;
 const { prev, next } = url;
 
 ---
@@ -45,7 +46,7 @@ const { prev, next } = url;
       <ul role="list">
         {
           data.length > 0 ? (
-            data.map((p) => <PreviewPost post={p.data} />)
+            data.map((p) => <PreviewPost post={p} />)
           ) : (
             <Information />
           )

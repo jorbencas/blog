@@ -8,6 +8,6 @@ export function remarkReadingTime() {
     const readingTime = getReadingTime(textOnPage);
     const minutes = Math.ceil(readingTime.minutes);
     const formattedText = `${minutes} minuto${minutes === 1 ? '' : 's'} de lectura`;
-    data.astro.frontmatter.minutesRead = formattedText;
+    file.data.astro.frontmatter.minutesRead = formattedText;
   };
 }
