@@ -5,21 +5,20 @@ import SEO from "@components/SEO.astro";
 export async function getStaticPaths() {
   const posts = await getCollection("posts");
   if (!posts) return [];
-  return posts.flatMap((post) => ({
-    params: { slug: post.data.slug || post.id.replace(/\.[^/.]+$/, "") },
+  return posts.map((post: { id: any; })  => ({
+    params: { slug: post.id },
     props: { post },
   }));
 }
 
 const { post } = Astro.props;
-
 const { Content } = await render(post);
 ---
 
 <SEO
   title={post.data.title}
   description={post.data.description}
-  url={`https://tusitio.com/blog/${post.slug}`}
+  url={Astro.url.href}
 />
 
 <article>

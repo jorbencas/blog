@@ -1,17 +1,17 @@
 ---
-draft: true
+draft: false
 title: "Scripts"
 description: "Post de Scripts"
 pubDate: "2023/12/16"
 tags: ['sistemas', 'linux', 'bash']
-slug: "resources"
+slug: "scripts"
 image: "/img/resources.webp"
 author: "Jorge Beneyto Castelló"
 layout: "@layouts/PostLayout.astro"
 ---
 
 # ar 1
-```
+``` bash
 #!/bin/bash
 
 # Ruta de las carpetas de videos y audios
@@ -107,7 +107,7 @@ ffmpeg_exit_code=$?
 done
 ```
 # ar 2
-```
+```bash
 #!/bin/bash
 
 # Ruta de las carpetas de videos y audios
@@ -202,7 +202,7 @@ ffmpeg_exit_code=$?
 done
 ```
 # ar 3
-```
+```bash
 #!/bin/bash
 
 # Rutas de la carpeta que contiene videos y audios, y la carpeta de salida
