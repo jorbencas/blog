@@ -5,7 +5,7 @@ import Layout from "./Layout.astro";
 import NextPrevLiks from "@components/NextPrevLiks.astro";
 import TableOfContents from "../components/TableOfContents.astro";
 import CodeEnhancer from "@components/CodeEnhancer.astro";
-const { content, headings = {}, remarkPluginFrontmatter } = Astro.props;
+const { content, headings = [], remarkPluginFrontmatter } = Astro.props;
 import { getCollection } from 'astro:content'; // NUEVO IMPORT
 
 let bar = {
@@ -27,7 +27,7 @@ if (currentIndex !== -1) {
   if (currentIndex > 0) {
     const prev = sortedPosts[currentIndex - 1];
     bar.prevElement = {
-      url: "/posts/" + (prev.data.slug || prev.id).replace(".md", ""),
+      url: "/posts/" + (prev.data.slug || prev.id),
       tittle: prev.data.title,
       image: prev.data.image || "prev.svg",
     };
@@ -37,7 +37,7 @@ if (currentIndex !== -1) {
   if (currentIndex < sortedPosts.length - 1) {
     const next = sortedPosts[currentIndex + 1];
     bar.nextElement = {
-      url: "/posts/" + (next.data.slug || next.id).replace(".md", ""),
+      url: "/posts/" + (next.data.slug || next.id),
       tittle: next.data.title,
       image: next.data.image || "next.svg",
     };

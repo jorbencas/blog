@@ -7,9 +7,9 @@ import SEO from "@components/SEO.astro";
 export interface Props {
   title: string;
   description?: string;
-  tags?: any
+  tags?: string[];
 }
-const { title, description, tags } = Astro.props as Props;
+const { title, description, tags = [] } = Astro.props as Props;
 
 const finalTitle = title || "Blog";
 const finalDescription = description || "";
@@ -21,17 +21,17 @@ const finalDescription = description || "";
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <SEO title={finalTitle} description={finalDescription} />
     <title>{finalTitle}</title>
   </head>
   <body
     class="bg-stone-200 dark:bg-gray-800 text-gray-600 dark:text-gray-300 transition duration-300 ease" 
   >
     <Header />
-    <main class="mt-10 flex justify-around items-start" data-pagefind-body data-pagefind-filter={tags.length > 0 ? `tags:${tags.join(', ')}` : undefined}>
+    <main class="mt-10 flex justify-around items-start" data-pagefind-body data-pagefind-filter={tags?.length > 0 ? `tags:${tags.join(', ')}` : undefined}>
       <slot />
     </main>
     <Footer />
     <SpeedInsights />
-    <SEO title={finalTitle} description={finalDescription} />
   </body>
 </html>
