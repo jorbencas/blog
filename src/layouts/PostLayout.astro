@@ -13,9 +13,22 @@ let bar = {
   nextElement: { url: undefined, title: undefined, image: "next.svg" },
 };
 
+interface Props {
+  slug:string;
+  title: string;
+  description: string;
+  tags: string;
+  author: string;
+  image: string;
+  pubDate: string;
+  headings?: MarkdownHeading[];
+  remarkPluginFrontmatter?: Record<string, any>;
+}
+const {slug, title, description, tags, author, image, pubDate, headings = [], remarkPluginFrontmatter } = Astro.props;
+
 const allPosts = await getCollection('posts');
 const sortedPosts = await getSortedPosts(allPosts);
-const currentIndex = sortedPosts.findIndex(p => p.id === id);
+const currentIndex = sortedPosts.findIndex(p => p.slug === slug);
 
 if (currentIndex > -1) {
   // Post Anterior
@@ -52,18 +65,7 @@ let textNext = bar.nextElement?.title
 
 const minutesRead = remarkPluginFrontmatter?.minutesRead;
 
-interface Props {
-  id:number;
-  title: string;
-  description: string;
-  tags: string;
-  author: string;
-  image: string;
-  pubDate: string;
-  headings?: MarkdownHeading[];
-  remarkPluginFrontmatter?: Record<string, any>;
-}
-const {id, title, description, tags, author, image, pubDate, headings = [], remarkPluginFrontmatter } = Astro.props;
+
 ---
 
 <Layout title={title} description={description}, tags={tags}>
