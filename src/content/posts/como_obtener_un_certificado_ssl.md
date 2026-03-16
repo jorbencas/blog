@@ -7,7 +7,6 @@ tags: ['sistemas', 'web']
 slug: "como_obtener_un_certificado_ssl"
 image: "/img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl.webp"
 author: "Jorge Beneyto Castelló"
-layout: "@layouts/PostLayout.astro"
 ---
 
 Hoy vamos ha ver como configurar un certificado ssl, para ello hay que ir a nuestro servidor Webmin, desde la maquina servidora, hay que iniciar nuestro servidor web, irnos a Servidor web apache, una vez en el servidor  web apache , hay que ir ha Global Configuration, una vez allí ahi que ir a configuración de apache modules, una vez allí hay que ir ha la opción de ssl

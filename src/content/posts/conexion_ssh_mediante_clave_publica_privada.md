@@ -7,7 +7,6 @@ tags: ['sistemas']
 slug: "conexion_ssh_mediante_clave_publica_privada"
 image: "/img/conexion_ssh_mediante_clave_publica_privada.webp"
 author: "Jorge Beneyto Castelló"
-layout: "@layouts/PostLayout.astro"
 ---
 Hoy vamos ha ver como conectamos por ssh pero en lugar de usar la contraseña del usuario  servidor usaremos una autentificación de clave publica, o sea que nos pedirá una contraseña de clave pribada
 

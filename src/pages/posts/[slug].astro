@@ -3,26 +3,38 @@ import { getCollection, render } from "astro:content";
 import SEO from "@components/SEO.astro";
 
 export async function getStaticPaths() {
-  const posts = await getCollection("posts");
-  if (!posts) return [];
-  return posts.map((post: { id: any; })  => ({
-    params: { slug: post.id },
+  const posts = await getCollection('posts');
+  return posts.map(post => ({
+    params: { slug: post.slug },
     props: { post },
   }));
 }
 
 const { post } = Astro.props;
-const { Content } = await render(post);
----
 
+// 1. Aquí es donde ocurre la magia: render() devuelve el contenido y los metadatos
+const { Content, headings, remarkPluginFrontmatter } = await post.render();
+const {title, description, tags, author, image } = post.data
+---
 <SEO
-  title={post.data.title}
-  description={post.data.description}
+  title=title}
+  description=description}
   url={Astro.url.href}
 />
+<PostLayout 
+  title={title} 
+  description={description}
+  tags={tags ?? []}
+  author={author}
+  image={image}
+  headings={headings}
+  remarkPluginFrontmatter={remarkPluginFrontmatter}
 
-<article>
-  <h1>{post.data.title}</h1>
-
+>
   <Content />
-</article>
+</PostLayout>
+
+
+
+
+

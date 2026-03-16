@@ -7,7 +7,6 @@ tags: ['sistemas', 'web']
 slug: "como_crear_un_servidor_virtual"
 image: "/img/como_crear_un_servidor_virtual/como_crear_un_servidor_virtual.png"
 author: "Jorge Beneyto Castelló"
-layout: "@layouts/PostLayout.astro"
 ---
 
 

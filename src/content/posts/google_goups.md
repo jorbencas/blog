@@ -7,7 +7,6 @@ tags: ['groups chat', 'Google']
 slug: "google_goups"
 image: "/img/google-groups.png"
 author: "Jorge Beneyto Castelló"
-layout: "@layouts/PostLayout.astro"
 ---
 
 Grupos de Google es un servicio de Google que ofrece grupos de discusión para las personas que comparten intereses comunes. El servicio de grupos también proporciona una puerta de entrada a Usenet newsgroup a través de una compartida interfaz de usuario.

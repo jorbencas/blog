@@ -7,7 +7,6 @@ tags: ['sistemas','C Sharp']
 slug: "guia_de_c_sharp"
 image: "/img/guia_de_c_sharp.jpg"
 author: "Jorge Beneyto Castelló"
-layout: "@layouts/PostLayout.astro"
 ---
 Guia paso a paso para empezar ha programar en C Sharp
 

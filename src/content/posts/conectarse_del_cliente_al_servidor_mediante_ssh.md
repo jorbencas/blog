@@ -7,7 +7,6 @@ tags: ['sistemas']
 slug: "conectarse_del_cliente_al_servidor_mediante_ssh"
 image: "/img/conectarse_del_cliente_al_servidor_mediante_ssh.webp"
 author: "Jorge Beneyto Castelló"
-layout: "@layouts/PostLayout.astro"
 ---
 
 Lo que hoy vamos ha intentar es  tener internet en un odenador cliente, conectando nos  através del servidor, ya que este es el que tiene una tarjeta NAT y por ello es el que tiene internet,gracias a la tarjeta NAT, y nosotros lo que vamos a hacer es que el cliente através de su tarjeta que esta en red interna, que es común en los 2 ordenadores se conecte a el servidor y coja el internet de su tarjeta NAT.

@@ -7,7 +7,6 @@ tags: ['sistemas']
 slug: "formas_de_conectarse_por_ssh"
 image: "/img/html5.png"
 author: "Jorge Beneyto Castelló"
-layout: "@layouts/PostLayout.astro"
 ---
 
 ### Instalación del SSH

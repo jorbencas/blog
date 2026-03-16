@@ -5,8 +5,8 @@ import Layout from "./Layout.astro";
 import NextPrevLiks from "@components/NextPrevLiks.astro";
 import TableOfContents from "../components/TableOfContents.astro";
 import CodeEnhancer from "@components/CodeEnhancer.astro";
-const { content, headings = [], remarkPluginFrontmatter } = Astro.props;
 import { getCollection } from 'astro:content'; // NUEVO IMPORT
+import type { MarkdownHeading } from 'astro';
 
 let bar = {
   prevElement: { url: undefined, tittle: undefined, image: "prev.svg" },
@@ -52,33 +52,42 @@ let textPrev = bar.prevElement?.tittle;
 let imageNext = bar.nextElement?.image;
 let urlNext = bar.nextElement?.url;
 let textNext = bar.nextElement?.tittle
-const postData = content.data;
-
 
 const minutesRead = remarkPluginFrontmatter?.minutesRead;
+
+interface Props {
+  title: string;
+  description: string;
+  tags: string;
+  author: string;
+  image: string;
+  headings?: MarkdownHeading[];
+  remarkPluginFrontmatter?: Record<string, any>;
+}
+const {title, description, tags, author, image, headings = [], remarkPluginFrontmatter } = Astro.props;
 ---
 
-<Layout title={postData.title} description={postData.description}, tags={postData.tags}>
+<Layout title={title} description={description}, tags={tags}>
   <!-- <Archive /> -->
   <div class="max-w-10xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
     <main class="lg:col-span-9 ml-3">
       <div class="my-5 flex w-auto">
         <img
           class="inline-block w-14 h-14 align-middle items-center"
-          aria-label={postData.title}
-          src={postData.image}
+          aria-label={title}
+          src={image}
         />
 
         <div class="block ml-4">
           <h1 class="text-4xl font-sans text-gray-900 dark:text-white">
-            {postData.title}
+            {title}
           </h1>
-          <p class="text-sm">{postData.description}</p>
+          <p class="text-sm">{description}</p>
           <p>
             <strong class="text-base font-extrabold text-cyan-400">
               {formatDatePost(content.pubDate)}
             </strong>
-             Por: <strong class="dark:text-white">{postData.author}</strong>
+             Por: <strong class="dark:text-white">{author}</strong>
           </p>
           {minutesRead && (
           <p
@@ -114,8 +123,8 @@ const minutesRead = remarkPluginFrontmatter?.minutesRead;
       </div>
       <CodeEnhancer />
       {
-        postData.tags && (
-          <TagsPosts is-client tagsList={JSON.stringify(postData.tags)} />
+        tags && (
+          <TagsPosts is-client tagsList={JSON.stringify(tags)} />
         )
       }
 

@@ -7,7 +7,6 @@ tags: ['sistemas', 'linux', 'bash']
 slug: "scripts"
 image: "/img/resources.webp"
 author: "Jorge Beneyto Castelló"
-layout: "@layouts/PostLayout.astro"
 ---
 
 # ar 1

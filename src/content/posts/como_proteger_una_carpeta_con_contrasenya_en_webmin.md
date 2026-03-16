@@ -7,7 +7,6 @@ tags: ['sistemas']
 slug: "como_proteger_una_carpeta_con_contrasenya_en_webmin"
 image: "/img/como_proteger_una_carpeta_con_contrasenya_en_webmin/como_proteger_una_carpeta_con_contrasenya_en_webminc.webp"
 author: "Jorge Beneyto Castelló"
-layout: "@layouts/PostLayout.astro"
 ---
 
 Hoy vamos ha ver como proteger una carpeta con Webmin, lo que significa que esa capeta estara protegida con un usuario y una contraseña

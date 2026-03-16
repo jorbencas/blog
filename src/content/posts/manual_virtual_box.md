@@ -7,7 +7,6 @@ tags: ['sistemas']
 slug: "manual_virtual_box"
 image: "/img/manual_virtual_box.jpg"
 author: "Jorge Beneyto Castelló"
-layout: "@layouts/PostLayout.astro"
 ---
 
 Hoy os ofreceré una sencilla guía de instalación y configuración de Virtual-Box, que es una herramienta o programa de virtualización.

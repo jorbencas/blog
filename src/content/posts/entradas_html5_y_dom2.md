@@ -7,7 +7,6 @@ tags: ['web', 'html5']
 slug: "entradas_html5_y_dom2"
 image: "/img/html5.png"
 author: "Jorge Beneyto Castelló"
-layout: "@layouts/PostLayout.astro"
 ---
 
 ### HTML 5

@@ -8,7 +8,6 @@ slug: "copiar_archivos_entre_diferentes_usuarios_y_archivos"
 image: "/img/copiar_archivos_entre_diferentes_usuarios_y_archivos.png
 "
 author: "Jorge Beneyto Castelló"
-layout: "@layouts/PostLayout.astro"
 ---
 
 Hay que copiar des de el usuario usu1 el archivo hola.txt que se encuentra en el usuario usu2 a la paquina servidora, a la canpeta m’usica con el nombre canço.txt

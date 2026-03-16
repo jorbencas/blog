@@ -7,7 +7,6 @@ tags: ['web', 'sistemas']
 slug: "instalacion_y_configuracion_dhcp"
 image: "/img/instalacion-y-configuracion-dhcp.png"
 author: "Jorge Beneyto Castelló"
-layout: "@layouts/PostLayout.astro"
 ---
 
 Hoy vamos a instalar y configurar un servidor DHCP con Virtualbox, pero antes debemos saber que es y que hace el servicio DHCP.

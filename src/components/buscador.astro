@@ -1,50 +1,80 @@
-<div class="relative max-w-xl mx-auto mt-10">
-  <!-- Caja de búsqueda -->
-  <input
-    id="search-input"
-    type="text"
-    placeholder="Buscar..."
-    class="w-full p-3 pl-4 rounded-xl shadow-lg bg-white/90 focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-gray-400"
-  />
+<div class="relative max-w-3xl mx-auto mt-10 px-4">
+  <div class="relative group">
+    <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-slate-500 transition-colors group-focus-within:text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+    </svg>
 
-  <!-- Contenedor de resultados -->
+    <input
+      id="search-input"
+      type="text"
+      placeholder="Buscar artículos..."
+      class="w-full p-4 pl-12 pr-20 rounded-2xl shadow-xl transition-all duration-300
+             bg-white/90 text-gray-800 placeholder-gray-400 border border-gray-200
+             focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white
+             dark:bg-slate-800/90 dark:text-slate-100 dark:placeholder-slate-500 dark:border-slate-700
+             dark:focus:ring-indigo-400 dark:focus:bg-slate-800"
+    />
+
+    <div class="absolute right-4 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-1 pointer-events-none">
+      <kbd class="px-2 py-1 text-xs font-semibold text-gray-500 bg-gray-100 border border-gray-300 rounded-md dark:bg-slate-700 dark:text-slate-400 dark:border-slate-600">
+        Ctrl
+      </kbd>
+      <span class="text-gray-400">+</span>
+      <kbd class="px-2 py-1 text-xs font-semibold text-gray-500 bg-gray-100 border border-gray-300 rounded-md dark:bg-slate-700 dark:text-slate-400 dark:border-slate-600">
+        K
+      </kbd>
+    </div>
+  </div>
+
   <div
     id="search-results"
-    class="absolute w-full mt-2 bg-white rounded-xl shadow-lg overflow-y-auto max-h-96 hidden"
+    class="absolute w-[calc(100%-2rem)] left-4 right-4 mt-3 rounded-2xl shadow-2xl overflow-y-auto max-h-[500px] hidden
+           bg-white border border-gray-100 divide-y divide-gray-100
+           dark:bg-slate-900 dark:border-slate-800 dark:divide-slate-800 z-50"
   >
-    <!-- Resultados se inyectan aquí -->
   </div>
 </div>
-<!-- <script src="/pagefind/pagefind-ui.js"></script> -->
-<script is-inline>
-// Importamos la librería de búsqueda que Pagefind genera automáticamente DESPUÉS del build
-window.addEventListener("DOMContentLoaded", async () => {
-  // @ts-ignore
-  const pagefind = await import("/pagefind/pagefind.js");
 
+<script is-inline>
+window.addEventListener("DOMContentLoaded", async () => {
   const input = document.querySelector("#search-input");
   const container = document.querySelector("#search-results");
+
+  // 1. Lógica del atajo de teclado
+  document.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+      e.preventDefault(); // Evita que el navegador abra su propia búsqueda
+      input?.focus();
+    }
+  });
+
+  // 2. Importación y búsqueda (Pagefind)
+  // @ts-ignore
+  const pagefind = await import("/pagefind/pagefind.js");
 
   input?.addEventListener("input", async (e) => {
     const query = e.target.value;
     if (query.length > 2) {
       const search = await pagefind.search(query);
       const results = await Promise.all(
-        search.results.flatMap((r) => r.data())
+        search.results.slice(0, 8).map((r) => r.data())
       );
 
       container.innerHTML = "";
       if (results.length === 0) {
-        container.innerHTML =
-          '<p class="p-4 text-gray-500">No se encontraron resultados</p>';
+        container.innerHTML = `<div class="p-6 text-center text-gray-500 dark:text-slate-400">No hay resultados para "${query}"</div>`;
       } else {
         results.forEach((item) => {
           const div = document.createElement("div");
-          div.className = "p-4 border-b hover:bg-indigo-50 cursor-pointer";
+          div.className = "group transition-colors hover:bg-indigo-50 dark:hover:bg-slate-800/50";
           div.innerHTML = `
-              <a href="${item.url}" class="block">
-                <h3 class="font-semibold text-indigo-700">${item.meta.title}</h3>
-                <p class="text-gray-600 text-sm">${item.excerpt}</p>
+              <a href="${item.url}" class="block p-5">
+                <h3 class="font-bold text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-700 dark:group-hover:text-indigo-300">
+                  ${item.meta.title}
+                </h3>
+                <p class="text-gray-600 dark:text-slate-400 text-sm mt-1 line-clamp-2">
+                  ${item.excerpt}
+                </p>
               </a>`;
           container.appendChild(div);
         });
@@ -54,5 +84,12 @@ window.addEventListener("DOMContentLoaded", async () => {
       container.classList.add("hidden");
     }
   });
+
+  // Cerrar al hacer clic fuera
+  document.addEventListener("click", (e) => {
+    if (!input.contains(e.target) && !container.contains(e.target)) {
+      container.classList.add("hidden");
+    }
   });
+});
 </script>
