@@ -14,10 +14,13 @@ export const getSortedPosts = (allPosts) => {
   return allPosts
     .filter((post) => !post.data.draft)
     .sort(
-      (a, b) =>
-        new Date(b.data.pubDate).valueOf() -
-        new Date(a.data.pubDate).valueOf()
-    );
+      (a, b) => {
+        let dateA = new Date(a.data.pubDate).getTime();
+        let dateB = new Date(b.data.pubDate).getTime();
+        // Si la fecha es inválida, getTime() devuelve NaN. 
+        // Esto asegura que el build no se rompa silenciosamente.
+        return dateB - dateA;
+  })
 };
 
 export const makeUrl = (urlParam, Astro) => {

@@ -9,27 +9,22 @@ import { getCollection } from 'astro:content'; // NUEVO IMPORT
 import type { MarkdownHeading } from 'astro';
 
 let bar = {
-  prevElement: { url: undefined, tittle: undefined, image: "prev.svg" },
-  nextElement: { url: undefined, tittle: undefined, image: "next.svg" },
+  prevElement: { url: undefined, title: undefined, image: "prev.svg" },
+  nextElement: { url: undefined, title: undefined, image: "next.svg" },
 };
 
 const allPosts = await getCollection('posts');
-// Asegúrate de que getSortedPosts use 'p.data.pubDate' para ordenar
 const sortedPosts = await getSortedPosts(allPosts);
+const currentIndex = sortedPosts.findIndex(p => p.id === id);
 
-// Buscamos el índice del post actual comparando fechas o títulos
-const currentIndex = sortedPosts.findIndex(post => 
-  new Date(post.data.pubDate).valueOf() === new Date(content.pubDate).valueOf()
-);
-
-if (currentIndex !== -1) {
+if (currentIndex > -1) {
   // Post Anterior
   if (currentIndex > 0) {
     const prev = sortedPosts[currentIndex - 1];
     const prevSlug = prev.id || prev.slug;
     bar.prevElement = {
-      url: "/posts/" + prevSlug,
-      tittle: prev.data.title,
+      url: `/posts/${prevSlug}/`,
+      title: prev.data.title,
       image: prev.data.image || "prev.svg",
     };
   }
@@ -39,8 +34,8 @@ if (currentIndex !== -1) {
     const next = sortedPosts[currentIndex + 1];
     const nextSlug = next.id || next.slug;
     bar.nextElement = {
-      url: "/posts/" + nextSlug,
-      tittle: next.data.title,
+      url: `/posts/${nextSlug}/`,
+      title: next.data.title,
       image: next.data.image || "next.svg",
     };
   }
@@ -49,15 +44,16 @@ if (currentIndex !== -1) {
 // Variables para tu HTML (con valores por defecto para evitar errores de undefined)
 let imagePrev = bar.prevElement?.image;
 let urlPrev = bar.prevElement?.url;
-let textPrev = bar.prevElement?.tittle;
+let textPrev = bar.prevElement?.title;
 
 let imageNext = bar.nextElement?.image;
 let urlNext = bar.nextElement?.url;
-let textNext = bar.nextElement?.tittle
+let textNext = bar.nextElement?.title
 
 const minutesRead = remarkPluginFrontmatter?.minutesRead;
 
 interface Props {
+  id:number;
   title: string;
   description: string;
   tags: string;
@@ -66,7 +62,7 @@ interface Props {
   headings?: MarkdownHeading[];
   remarkPluginFrontmatter?: Record<string, any>;
 }
-const {title, description, tags, author, image, headings = [], remarkPluginFrontmatter } = Astro.props;
+const {id, title, description, tags, author, image, headings = [], remarkPluginFrontmatter } = Astro.props;
 ---
 
 <Layout title={title} description={description}, tags={tags}>
