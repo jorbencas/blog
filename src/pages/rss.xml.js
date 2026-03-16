@@ -10,8 +10,11 @@ export async function GET(context) {
     site: context.site,
     items: posts.flatMap((post) => ({
       title: post.data.title,
+      description: post.data.description,
       pubDate: post.data.pubDate,
+      author: post.data.author,
       link: `/posts/${post.slug}`,
+      categories: post.data.tags || [],
     })),
   });
 }
