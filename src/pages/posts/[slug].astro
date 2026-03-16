@@ -5,7 +5,7 @@ import SEO from "@components/SEO.astro";
 export async function getStaticPaths() {
   const posts = await getCollection('posts');
   return posts.map(post => ({
-    params: { slug: post.slug },
+    params: { slug: post.slug || post.id },
     props: { post },
   }));
 }
@@ -14,7 +14,7 @@ const { post } = Astro.props;
 
 // 1. Aquí es donde ocurre la magia: render() devuelve el contenido y los metadatos
 const { Content, headings, remarkPluginFrontmatter } = await post.render();
-const {title, description, tags, author, image } = post.data
+const {title, description, tags, author, image, pubDate } = post.data
 ---
 <SEO
   title={title}
@@ -28,6 +28,7 @@ const {title, description, tags, author, image } = post.data
   tags={tags ?? []}
   author={author}
   image={image}
+  pubDate={pubDate}
   headings={headings}
   remarkPluginFrontmatter={remarkPluginFrontmatter}
 

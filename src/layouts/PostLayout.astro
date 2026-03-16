@@ -59,10 +59,11 @@ interface Props {
   tags: string;
   author: string;
   image: string;
+  pubDate: string;
   headings?: MarkdownHeading[];
   remarkPluginFrontmatter?: Record<string, any>;
 }
-const {id, title, description, tags, author, image, headings = [], remarkPluginFrontmatter } = Astro.props;
+const {id, title, description, tags, author, image, pubDate, headings = [], remarkPluginFrontmatter } = Astro.props;
 ---
 
 <Layout title={title} description={description}, tags={tags}>
@@ -83,7 +84,7 @@ const {id, title, description, tags, author, image, headings = [], remarkPluginF
           <p class="text-sm">{description}</p>
           <p>
             <strong class="text-base font-extrabold text-cyan-400">
-              {formatDatePost(content.pubDate)}
+              {formatDatePost(pubDate)}
             </strong>
              Por: <strong class="dark:text-white">{author}</strong>
           </p>
