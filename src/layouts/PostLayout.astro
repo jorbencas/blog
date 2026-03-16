@@ -3,7 +3,7 @@ import { formatDatePost, getSortedPosts } from "src/utils.js";
 import TagsPosts from "@components/TagsPosts.astro";
 import Layout from "./Layout.astro";
 import NextPrevLiks from "@components/NextPrevLiks.astro";
-import TableOfContents from "../components/TableOfContents.astro";
+import TableOfContents from "@components/TableOfContents.astro";
 import CodeEnhancer from "@components/CodeEnhancer.astro";
 import { getCollection } from 'astro:content'; // NUEVO IMPORT
 import type { MarkdownHeading } from 'astro';
@@ -26,8 +26,9 @@ if (currentIndex !== -1) {
   // Post Anterior
   if (currentIndex > 0) {
     const prev = sortedPosts[currentIndex - 1];
+    const prevSlug = prev.id || prev.slug;
     bar.prevElement = {
-      url: "/posts/" + prev.slug,
+      url: "/posts/" + prevSlug,
       tittle: prev.data.title,
       image: prev.data.image || "prev.svg",
     };
@@ -36,8 +37,9 @@ if (currentIndex !== -1) {
   // Post Siguiente
   if (currentIndex < sortedPosts.length - 1) {
     const next = sortedPosts[currentIndex + 1];
+    const nextSlug = next.id || next.slug;
     bar.nextElement = {
-      url: "/posts/" + next.slug),
+      url: "/posts/" + nextSlug,
       tittle: next.data.title,
       image: next.data.image || "next.svg",
     };
