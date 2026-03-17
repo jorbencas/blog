@@ -5,52 +5,58 @@ const hasContent = headings?.length > 2;
 
 {
   hasContent && (
-    <div id="toc-container" class="relative">
-      <div class="toc-wrapper">
-        {/* Botón Móvil Estilo "Floating Action" */}
+    /* h-full aquí asegura que el contenedor principal use todo el alto del padre */
+    <div id="toc-container" class="relative h-full">
+      <div class="toc-wrapper h-full">
+        {/* Botón Móvil */}
         <button
           id="toc-mobile-toggle"
-          class="fixed bottom-8 right-8 z-[100] flex items-center justify-center w-14 h-14 bg-cyan-600 dark:bg-cyan-500 text-white rounded-2xl shadow-[0_20px_50px_rgba(8,145,178,0.3)] md:hidden transition-transform active:scale-90"
+          class="fixed bottom-8 right-8 z-[100] flex items-center justify-center w-12 h-12 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-full shadow-xl md:hidden transition-transform active:scale-90"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
           </svg>
         </button>
 
         <aside
           id="toc-menu"
-          class="relative w-72 transform translate-x-[150%] md:translate-x-0 transition-all duration-500 ease-out"
+          class="relative w-80 h-full transform translate-x-[150%] md:translate-x-0 transition-all duration-500 ease-in-out"
         >
-          <div class="sticky top-24 p-1 rounded-[2.5rem] bg-gradient-to-b from-gray-200/50 to-white/50 dark:from-slate-700/50 dark:to-slate-900/50 backdrop-blur-xl border border-white/20 shadow-2xl">
-            <div class="bg-white/80 dark:bg-slate-900/80 rounded-[2.3rem] p-7">
-              <div class="flex items-center gap-3 mb-6">
-                <div class="w-1.5 h-6 bg-cyan-500 rounded-full shadow-[0_0_10px_rgba(6,182,212,0.5)]"></div>
-                <h2 class="text-xs font-black uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400">
-                  Contenido
-                </h2>
-              </div>
-
-              <nav class="max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
-                <ul class="relative space-y-1">
-                  {headings.map((h) => (
-                    <li>
-                      <a
-                        href={`#${h.slug}`}
-                        data-toc-link={h.slug}
-                        class:list={[
-                          "toc-link block transition-all duration-300 rounded-xl px-4 py-2",
-                          h.depth === 2 
-                            ? "text-[13px] font-bold text-slate-600 dark:text-slate-300" 
-                            : "ml-4 text-[11px] font-medium text-slate-400 dark:text-slate-500 italic",
-                        ]}
-                      >
-                        <span class="relative z-10">{h.text}</span>
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
+          {/* sticky top permite que el índice te siga mientras haces scroll dentro del padre */}
+          <div class="sticky top-24 h-[calc(100vh-120px)] flex flex-col py-4 px-2">
+            
+            {/* Título minimalista */}
+            <div class="flex items-center gap-2 mb-8 opacity-50 shrink-0">
+              <span class="text-[10px] font-bold uppercase tracking-[0.4em] text-slate-900 dark:text-white">
+                Índice
+              </span>
+              <div class="h-[1px] flex-grow bg-slate-200 dark:bg-slate-800"></div>
             </div>
+
+            {/* nav flex-grow hace que el área de navegación ocupe el resto del alto */}
+            <nav class="flex-grow overflow-y-auto pr-4 custom-scrollbar">
+              <ul class="relative space-y-4">
+                {/* Línea vertical de fondo */}
+                <div class="absolute left-0 top-0 h-full w-[1px] bg-slate-100 dark:bg-slate-800/50"></div>
+                
+                {headings.map((h) => (
+                  <li class="relative">
+                    <a
+                      href={`#${h.slug}`}
+                      data-toc-link={h.slug}
+                      class:list={[
+                        "toc-link block transition-all duration-300 border-l-2 border-transparent pl-6",
+                        h.depth === 2 
+                          ? "text-sm font-medium text-slate-500 dark:text-slate-400" 
+                          : "text-xs text-slate-400 dark:text-slate-500 ml-2",
+                      ]}
+                    >
+                      {h.text}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
           </div>
         </aside>
       </div>
@@ -59,24 +65,19 @@ const hasContent = headings?.length > 2;
 }
 
 <style is:global>
+  /* Mantenemos tus estilos de estado activo y scrollbar */
   html { scroll-behavior: smooth; }
-
-  /* Ajuste de scroll para encabezados */
   #contenido h2, #contenido h3 { scroll-margin-top: 100px; }
 
-  /* --- ESTADO ACTIVO ELEGANTE --- */
   .toc-link-active {
-    @apply text-cyan-600 dark:text-cyan-400 translate-x-1 !important;
-    background: rgba(6, 182, 212, 0.08);
-    box-shadow: inset 4px 0 0 #06b6d4;
+    @apply text-cyan-600 dark:text-cyan-400 !important;
+    border-left-color: currentColor !important;
   }
 
-  /* Scrollbar Minimalista */
   .custom-scrollbar::-webkit-scrollbar { width: 2px; }
   .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(6, 182, 212, 0.2);
-    border-radius: 10px;
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: transparent; }
+  .custom-scrollbar:hover::-webkit-scrollbar-thumb { 
+    background: rgba(6, 182, 212, 0.3); 
   }
-  .custom-scrollbar:hover::-webkit-scrollbar-thumb { background: #06b6d4; }
 </style>
