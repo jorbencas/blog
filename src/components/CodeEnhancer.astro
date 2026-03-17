@@ -78,36 +78,26 @@
   document.addEventListener('astro:page-load', mejorarBloquesCodigo);
   document.addEventListener('DOMContentLoaded', mejorarBloquesCodigo);
 </script>
-
 <style is:global>
-  /* Scrollbar personalizado para los bloques de código */
-  .bloque-codigo-wrapper div::-webkit-scrollbar {
-    height: 5px;
-  }
-  .bloque-codigo-wrapper div::-webkit-scrollbar-thumb {
-    background: rgba(156, 163, 175, 0.2); /* slate-400 con opacidad */
-    border-radius: 10px;
-  }
-  .dark .bloque-codigo-wrapper div::-webkit-scrollbar-thumb {
-    background: rgba(6, 182, 212, 0.2); /* cyan-500 con opacidad */
-  }
-
-  /* Forzar fuente JetBrains Mono */
+  /* Eliminamos el color forzado para que Shiki use sus colores */
   .bloque-codigo-wrapper pre, 
   .bloque-codigo-wrapper code {
     font-family: 'JetBrains Mono', monospace !important;
-    background: transparent !important;
-    font-size: 13.5px !important;
+    background: transparent !important; /* Mantenemos el fondo transparente */
+    font-size: 14px !important;
     line-height: 1.6 !important;
   }
 
-  /* Estilo Light: Texto oscuro por defecto en bloques */
-  .bloque-codigo-wrapper pre {
-    color: #1e293b; /* slate-800 */
+  /* Ajustamos el fondo del contenedor principal para que combine con Shiki */
+  .bloque-codigo-wrapper {
+    @apply bg-[#ffffff] dark:bg-[#0d1117]; 
   }
 
-  /* Estilo Dark: Texto claro */
-  .dark .bloque-codigo-wrapper pre {
-    color: #f1f5f9; /* slate-100 */
+  /* Si quieres que los comentarios del código sean itálicos */
+  .shiki .comment {
+    font-style: italic;
+    opacity: 0.7;
   }
 </style>
+
+https://gemini.google.com/share/7c3d3b44c494

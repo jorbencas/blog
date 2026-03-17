@@ -1,5 +1,56 @@
 ---
-// ... (Mantenemos todo el JS anterior igual)
+import { formatDatePost, getSortedPosts } from "src/utils.js";
+import Layout from "./Layout.astro";
+import NextPrevLiks from "@components/NextPrevLiks.astro";
+import TableOfContents from "@components/TableOfContents.astro";
+import CodeEnhancer from "@components/CodeEnhancer.astro";
+import { getCollection } from 'astro:content';
+import type { MarkdownHeading } from 'astro';
+
+let bar = {
+  prevElement: { url: undefined, title: undefined, image: "prev.svg" },
+  nextElement: { url: undefined, title: undefined, image: "next.svg" },
+};
+
+interface Props {
+  slug: string;
+  title: string;
+  description: string;
+  tags: string | string[];
+  author: string;
+  image: string;
+  pubDate: string;
+  headings?: MarkdownHeading[];
+  remarkPluginFrontmatter?: Record<string, any>;
+}
+
+const { slug, title, description, tags, author, image, pubDate, headings = [], remarkPluginFrontmatter } = Astro.props;
+
+const allPosts = await getCollection('posts');
+const sortedPosts = await getSortedPosts(allPosts);
+const currentIndex = sortedPosts.findIndex(p => p.slug === slug);
+
+if (currentIndex > -1) {
+  if (currentIndex > 0) {
+    const prev = sortedPosts[currentIndex - 1];
+    bar.prevElement = {
+      url: `/posts/${prev.id || prev.slug}/`,
+      title: prev.data.title,
+      image: prev.data.image || "prev.svg",
+    };
+  }
+  if (currentIndex < sortedPosts.length - 1) {
+    const next = sortedPosts[currentIndex + 1];
+    bar.nextElement = {
+      url: `/posts/${next.id || next.slug}/`,
+      title: next.data.title,
+      image: next.data.image || "next.svg",
+    };
+  }
+}
+
+const minutesRead = remarkPluginFrontmatter?.minutesRead;
+const tagsArray = Array.isArray(tags) ? tags : (typeof tags === 'string' ? tags.split(',').map(t => t.trim()) : []);
 ---
 
 <Layout title={title} description={description} tags={tagsArray}>
@@ -8,42 +59,41 @@
     <main class="lg:col-span-8 px-4 lg:px-0">
       
       <header class="mb-12">
-        <div class="relative w-full h-[300px] md:h-[400px] overflow-hidden border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-slate-900 shadow-xl mb-8 group/banner">
+        <div class="relative w-full h-[300px] md:h-[400px] overflow-hidden border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-slate-900 shadow-xl mb-10 group/banner">
           <img
-            class="w-full h-full object-cover opacity-90 dark:opacity-60 grayscale-[20%] transition-transform duration-[2s] ease-out group-hover/banner:scale-110"
+            class="w-full h-full object-cover opacity-90 dark:opacity-70 grayscale-[10%] transition-transform duration-[3s] ease-out group-hover/banner:scale-110"
             src={image}
             alt={title}
           />
-          <div class="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent opacity-50"></div>
         </div>
 
         <div class="space-y-6">
-          <div class="flex items-center gap-4">
+          <div class="flex items-center gap-3">
              <div class="h-[2px] w-12 bg-cyan-500"></div>
-             <span class="font-mono text-[10px] uppercase tracking-[0.3em] text-cyan-600 dark:text-cyan-400 font-bold">Post_Detail</span>
+             <span class="font-mono text-[10px] uppercase tracking-[0.4em] text-cyan-600 dark:text-cyan-400 font-bold">Articulo_Tecnico</span>
           </div>
 
-          <h1 class="text-3xl md:text-5xl font-black uppercase italic tracking-tighter leading-[1.1] text-slate-900 dark:text-white">
+          <h1 class="text-3xl md:text-5xl font-black uppercase italic tracking-tighter leading-tight text-slate-900 dark:text-white">
             {title}
           </h1>
           
-          <p class="text-xl text-slate-600 dark:text-slate-400 font-medium leading-relaxed max-w-3xl border-l-2 border-slate-200 dark:border-white/10 pl-6 italic">
+          <p class="text-xl text-slate-600 dark:text-slate-400 font-medium leading-relaxed max-w-3xl border-l-4 border-cyan-500/20 pl-6 italic">
             {description}
           </p>
 
-          <div class="flex flex-wrap items-center gap-6 pt-6 border-t border-slate-100 dark:border-white/5 font-mono text-[10px] uppercase tracking-[0.2em]">
+          <div class="flex flex-wrap items-center gap-8 pt-6 border-t border-slate-100 dark:border-white/5 font-mono text-[10px] uppercase tracking-[0.2em]">
             <div class="flex items-center gap-2">
-              <span class="text-slate-400">FECHA:</span>
+              <span class="text-slate-400 dark:text-slate-500">FECHA:</span>
               <time class="text-slate-900 dark:text-white font-bold">{formatDatePost(pubDate)}</time>
             </div>
             <div class="flex items-center gap-2">
-              <span class="text-slate-400">AUTOR:</span>
+              <span class="text-slate-400 dark:text-slate-500">AUTOR:</span>
               <span class="text-slate-900 dark:text-white font-bold">{author}</span>
             </div>
             {minutesRead && (
               <div class="flex items-center gap-2">
-                <span class="text-slate-400">LECTURA:</span>
-                <span class="text-slate-900 dark:text-white font-bold">{minutesRead.replace('min read', 'MIN')}</span>
+                <span class="text-slate-400 dark:text-slate-500">LECTURA:</span>
+                <span class="text-slate-900 dark:text-white font-bold">{minutesRead.toUpperCase()}</span>
               </div>
             )}
           </div>
@@ -54,25 +104,26 @@
         id="contenido"
         class="prose prose-xl max-w-none
                prose-slate dark:prose-invert
-               prose-p:text-slate-700 dark:prose-p:text-slate-300 prose-p:leading-relaxed
+               prose-p:text-slate-700 dark:prose-p:text-slate-300 prose-p:leading-[1.8]
                prose-headings:uppercase prose-headings:italic prose-headings:tracking-tighter prose-headings:font-black
                prose-a:text-cyan-600 dark:prose-a:text-cyan-400 prose-a:no-underline hover:prose-a:underline
                prose-strong:text-cyan-600 dark:prose-strong:text-cyan-400
-               prose-img:border prose-img:border-slate-200 dark:prose-img:border-white/10 prose-img:shadow-lg"
+               prose-code:text-cyan-600 dark:prose-code:text-cyan-300
+               prose-img:border prose-img:border-slate-200 dark:prose-img:border-white/10 prose-img:shadow-2xl prose-img:rounded-sm"
       >
         <slot />
       </article>
 
-      <div class="mt-16 pt-12 border-t border-slate-200 dark:border-white/10 space-y-12">
+      <div class="mt-20 pt-12 border-t border-slate-200 dark:border-white/10 space-y-16">
         
         {tagsArray.length > 0 && (
-          <div class="space-y-4">
-            <span class="font-mono text-xs font-bold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 block">
+          <div class="space-y-6">
+            <span class="font-mono text-sm font-bold uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400 block border-b border-cyan-500/10 pb-2 w-fit">
               ETIQUETADO EN:
             </span>
-            <div class="flex flex-wrap gap-3">
+            <div class="flex flex-wrap gap-4">
               {tagsArray.map(tag => (
-                <div class="bg-gradient-to-r from-sky-800 to-cyan-600 px-4 py-1.5 text-[11px] font-black uppercase tracking-wider text-white shadow-[3px_3px_0px_0px_rgba(0,0,0,0.2)] hover:shadow-[0_0_15px_rgba(6,182,212,0.4)] hover:-translate-y-1 transition-all cursor-default">
+                <div class="bg-gradient-to-r from-sky-800 to-cyan-600 px-5 py-2 text-[11px] font-black uppercase tracking-widest text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:-translate-y-1 transition-all cursor-pointer">
                   {tag}
                 </div>
               ))}
@@ -100,3 +151,16 @@
   
   <CodeEnhancer />
 </Layout>
+
+<style is:global>
+  /* Selección de texto personalizada */
+  ::selection {
+    background-color: rgba(6, 182, 212, 0.3);
+    color: inherit;
+  }
+  
+  /* Scroll suave para la página */
+  html {
+    scroll-behavior: smooth;
+  }
+</style>

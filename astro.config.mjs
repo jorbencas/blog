@@ -11,6 +11,14 @@ export default defineConfig({
   site: "https://blog-jorbencas.vercel.app/",
   markdown: {
     remarkPlugins: [remarkReadingTime],
+    shikiConfig: {
+      // Usamos un tema para Light y otro para Dark
+      themes: {
+        light: 'github-light',
+        dark: 'github-dark',
+      },
+    // Esto envuelve el código para que no se rompa la línea
+    wrap: true,
     smartypants: true, // Mejora tipografía (comillas, guiones)
     gfm: true, // Habilita GitHub Flavored Markdown (por defecto es true)
   },
