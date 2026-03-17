@@ -3,29 +3,24 @@ import PaginationLinks from "./PaginationLinks.astro";
 const { nextURL, prevURL, textNext, textPrev } = Astro.props;
 ---
 
-<div class="w-full border-t border-slate-200 dark:border-white/10 mt-12">
-  <ul class="flex flex-col sm:flex-row w-full divide-y sm:divide-y-0 sm:divide-x divide-slate-200 dark:divide-white/10">
-    {
-      prevURL && (
-        <li class="flex-1">
-          <PaginationLinks 
-            url={prevURL} 
-            text={textPrev} 
-            isPrev={true} 
-          />
-        </li>
-      )
-    }
-    {
-      nextURL && (
-        <li class="flex-1">
-          <PaginationLinks 
-            url={nextURL} 
-            text={textNext} 
-            isPrev={false} 
-          />
-        </li>
-      )
-    }
-  </ul>
+<div class="flex flex-col sm:flex-row justify-between items-center gap-6 w-full py-8">
+  <div class="w-full sm:w-auto flex justify-start">
+    {prevURL && (
+      <PaginationLinks 
+        url={prevURL} 
+        text={textPrev} 
+        isNext={false} 
+      />
+    )}
+  </div>
+
+  <div class="w-full sm:w-auto flex justify-end">
+    {nextURL && (
+      <PaginationLinks 
+        url={nextURL} 
+        text={textNext} 
+        isNext={true} 
+      />
+    )}
+  </div>
 </div>
