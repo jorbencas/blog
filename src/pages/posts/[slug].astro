@@ -5,7 +5,7 @@ import PostLayout from "@layouts/PostLayout.astro";
 export async function getStaticPaths() {
   const posts = await getCollection("posts");
   return posts.map((post) => ({
-    params: { id: post.id },
+    params: { slug: post.id.replace(/\.[^/.]+$/, "") },
     props: { post },
   }));
 }
