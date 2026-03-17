@@ -5,13 +5,12 @@ const hasContent = headings?.length > 2;
 
 {
   hasContent && (
-    /* h-full aquí asegura que el contenedor principal use todo el alto del padre */
     <div id="toc-container" class="relative h-full">
       <div class="toc-wrapper h-full">
         {/* Botón Móvil */}
         <button
           id="toc-mobile-toggle"
-          class="fixed bottom-8 right-8 z-[100] flex items-center justify-center w-12 h-12 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-full shadow-xl md:hidden transition-transform active:scale-90"
+          class="fixed bottom-8 right-8 z-[100] flex items-center justify-center w-12 h-12 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-full shadow-xl md:hidden"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
@@ -20,30 +19,27 @@ const hasContent = headings?.length > 2;
 
         <aside
           id="toc-menu"
-          class="relative w-80 h-full transform translate-x-[150%] md:translate-x-0 transition-all duration-500 ease-in-out"
+          class="w-80 h-full transform translate-x-[150%] md:translate-x-0 transition-transform duration-500 ease-in-out"
         >
-          {/* sticky top permite que el índice te siga mientras haces scroll dentro del padre */}
-          <div class="sticky top-24 h-[calc(100vh-120px)] flex flex-col py-4 px-2">
+          {/* STICKY: Asegúrate de que el padre NO tenga overflow-hidden */}
+          <div class="sticky top-24 h-fit flex flex-col py-4 px-2">
             
-            {/* Título minimalista */}
-            <div class="flex items-center gap-2 mb-8 opacity-50 shrink-0">
+            <div class="flex items-center gap-2 mb-8 opacity-40 shrink-0">
               <span class="text-[10px] font-bold uppercase tracking-[0.4em] text-slate-900 dark:text-white">
                 Índice
               </span>
               <div class="h-[1px] flex-grow bg-slate-200 dark:bg-slate-800"></div>
             </div>
 
-            {/* nav flex-grow hace que el área de navegación ocupe el resto del alto */}
             <nav class="flex-grow overflow-y-auto pr-4 custom-scrollbar">
               <ul class="relative space-y-4">
-                {/* Línea vertical de fondo */}
+                {/* Línea base vertical */}
                 <div class="absolute left-0 top-0 h-full w-[1px] bg-slate-100 dark:bg-slate-800/50"></div>
                 
                 {headings.map((h) => (
                   <li class="relative">
                     <a
                       href={`#${h.slug}`}
-                      data-toc-link={h.slug}
                       class:list={[
                         "toc-link block transition-all duration-300 border-l-2 border-transparent pl-6",
                         h.depth === 2 
@@ -65,19 +61,56 @@ const hasContent = headings?.length > 2;
 }
 
 <style is:global>
-  /* Mantenemos tus estilos de estado activo y scrollbar */
   html { scroll-behavior: smooth; }
-  #contenido h2, #contenido h3 { scroll-margin-top: 100px; }
 
+  /* Ajuste para que el scroll no tape el título */
+  h1[id], h2[id], h3[id] {
+    scroll-margin-top: 120px;
+  }
+
+  /* ESTADO ACTIVO FORZADO */
   .toc-link-active {
-    @apply text-cyan-600 dark:text-cyan-400 !important;
-    border-left-color: currentColor !important;
+    color: #06b6d4 !important; /* Cyan 500 */
+    border-left-color: #06b6d4 !important;
+    font-weight: 700 !important;
+    opacity: 1 !important;
   }
 
-  .custom-scrollbar::-webkit-scrollbar { width: 2px; }
-  .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-  .custom-scrollbar::-webkit-scrollbar-thumb { background: transparent; }
-  .custom-scrollbar:hover::-webkit-scrollbar-thumb { 
-    background: rgba(6, 182, 212, 0.3); 
-  }
+  .custom-scrollbar::-webkit-scrollbar { width: 0px; } /* Oculto por defecto */
 </style>
+
+<script>
+  function initTOC() {
+    const links = document.querySelectorAll(".toc-link");
+    // Seleccionamos los encabezados reales del contenido
+    const headings = Array.from(document.querySelectorAll("h2[id], h3[id]"));
+
+    if (links.length === 0 || headings.length === 0) return;
+
+    const spyOptions = {
+      root: null,
+      rootMargin: '0px 0px -80% 0px', // Detecta cuando el título entra en el 20% superior
+      threshold: 0
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const id = entry.target.getAttribute("id");
+          
+          links.forEach((link) => {
+            link.classList.remove("toc-link-active");
+            if (link.getAttribute("href") === `#${id}`) {
+              link.classList.add("toc-link-active");
+            }
+          });
+        }
+      });
+    }, spyOptions);
+
+    headings.forEach((h) => observer.observe(h));
+  }
+
+  // Se ejecuta en cada carga de página (incluyendo View Transitions)
+  document.addEventListener("astro:page-load", initTOC);
+</script>
