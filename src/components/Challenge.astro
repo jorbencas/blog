@@ -1,55 +1,34 @@
 ---
-const { href, title, description, image, difficulty } = Astro.props;
+// src/components/Challenge.astro
+interface Props {
+  nivel: string;
+  mision: string;
+}
 
-const difficultyStyle =
-  {
-    Iniciación: "text-emerald-400 border-emerald-500/30 bg-emerald-500/10",
-    Intermedio: "text-cyan-400 border-cyan-500/30 bg-cyan-500/10",
-    Avanzado: "text-rose-400 border-rose-500/30 bg-rose-500/10",
-  }[difficulty] || "text-slate-400 border-slate-500/30";
+const { nivel, mision } = Astro.props;
+
+const styles = {
+  Iniciación: "border-emerald-500/50 text-emerald-400 bg-emerald-500/5",
+  Intermedio: "border-cyan-500/50 text-cyan-400 bg-cyan-500/5",
+  Avanzado: "border-rose-500/50 text-rose-400 bg-rose-500/5",
+};
+
+const currentStyle =
+  styles[nivel as keyof typeof styles] || styles["Intermedio"];
 ---
 
-<a
-  href={href}
-  class="group relative flex flex-col bg-slate-900/50 border border-white/10 rounded-xl overflow-hidden hover:border-cyan-500/50 transition-all duration-300"
+<div
+  class={`my-10 p-8 border-l-4 rounded-r-2xl backdrop-blur-sm ${currentStyle}`}
 >
-  <div class="aspect-video overflow-hidden">
-    <img
-      src={image}
-      alt={title}
-      class="w-full h-full object-cover opacity-70 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
-    />
+  <div class="flex items-center gap-3 mb-4 opacity-70">
+    <span class="text-[10px] font-black tracking-widest uppercase"
+      >Misión_Briefing</span
+    >
+    <span class="h-[1px] flex-1 bg-current opacity-20"></span>
+    <span class="text-[10px] font-mono">[{nivel}]</span>
   </div>
 
-  <div class="p-5 flex-1 flex flex-col">
-    <div
-      class={`inline-block self-start px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-widest border mb-3 ${difficultyStyle}`}
-    >
-      {difficulty}
-    </div>
-
-    <h3
-      class="text-xl font-black italic tracking-tighter text-white group-hover:text-cyan-400 transition-colors line-clamp-2"
-    >
-      {title}
-    </h3>
-
-    <p class="mt-2 text-sm text-slate-400 line-clamp-2 italic">
-      {description}
-    </p>
-
-    <div
-      class="mt-auto pt-4 flex items-center justify-between border-t border-white/5"
-    >
-      <span
-        class="text-[9px] font-mono text-slate-500 uppercase tracking-widest"
-        >Status: Open</span
-      >
-      <span
-        class="text-cyan-500 text-[10px] font-black uppercase tracking-[0.2em] group-hover:translate-x-1 transition-transform"
-      >
-        Resolver_Reto >>
-      </span>
-    </div>
-  </div>
-</a>
+  <p class="text-2xl font-bold italic leading-tight">
+    "{mision}"
+  </p>
+</div>

@@ -1,55 +1,80 @@
 ---
-const { href, title, description, image, difficulty } = Astro.props;
+import Layout from "@layouts/Layout.astro";
+import HomeLayout from "@layouts/HomeLayout.astro";
+import ChallengeCard from "@components/ChallengeCard.astro"; // El componente que me pasaste
+import { getCollection } from "astro:content";
 
-const difficultyStyle =
-  {
-    Iniciación: "text-emerald-400 border-emerald-500/30 bg-emerald-500/10",
-    Intermedio: "text-cyan-400 border-cyan-500/30 bg-cyan-500/10",
-    Avanzado: "text-rose-400 border-rose-500/30 bg-rose-500/10",
-  }[difficulty] || "text-slate-400 border-slate-500/30";
+// 1. Recuperamos todos los retos de la colección
+const allChallenges = await getCollection("challenges");
+
+// 2. Los ordenamos por fecha (el más reciente primero)
+const sortedChallenges = allChallenges.sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+);
+
+const totalRetos = allChallenges.length;
 ---
 
-<a
-  href={href}
-  class="group relative flex flex-col bg-slate-900/50 border border-white/10 rounded-xl overflow-hidden hover:border-cyan-500/50 transition-all duration-300"
->
-  <div class="aspect-video overflow-hidden">
-    <img
-      src={image}
-      alt={title}
-      class="w-full h-full object-cover opacity-70 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
-    />
-  </div>
-
-  <div class="p-5 flex-1 flex flex-col">
-    <div
-      class={`inline-block self-start px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-widest border mb-3 ${difficultyStyle}`}
-    >
-      {difficulty}
-    </div>
-
-    <h3
-      class="text-xl font-black italic tracking-tighter text-white group-hover:text-cyan-400 transition-colors line-clamp-2"
-    >
-      {title}
-    </h3>
-
-    <p class="mt-2 text-sm text-slate-400 line-clamp-2 italic">
-      {description}
-    </p>
-
-    <div
-      class="mt-auto pt-4 flex items-center justify-between border-t border-white/5"
-    >
-      <span
-        class="text-[9px] font-mono text-slate-500 uppercase tracking-widest"
-        >Status: Open</span
+<Layout title="Códice de Retos | Academia Tech">
+  <HomeLayout>
+    <section class="space-y-12">
+      <div
+        class="border-b border-white/10 pb-8 flex flex-col md:flex-row md:items-end justify-between gap-6"
       >
-      <span
-        class="text-cyan-500 text-[10px] font-black uppercase tracking-[0.2em] group-hover:translate-x-1 transition-transform"
-      >
-        Resolver_Reto >>
-      </span>
-    </div>
-  </div>
-</a>
+        <div class="space-y-2">
+          <div
+            class="inline-block bg-cyan-500/10 border border-cyan-500/20 px-3 py-1 rounded"
+          >
+            <span
+              class="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-500"
+              >System_Archive</span
+            >
+          </div>
+          <h1
+            class="text-5xl md:text-7xl font-black italic tracking-tighter uppercase text-white"
+          >
+            Retos<span class="text-cyan-500">_Log</span>
+          </h1>
+          <p class="text-slate-400 font-mono text-xs max-w-xl">
+            > [STATUS: ONLINE] - Registro de misiones de código. Resuelve los
+            desafíos para subir de nivel.
+          </p>
+        </div>
+
+        <div
+          class="flex items-baseline gap-2 bg-slate-900/50 p-4 rounded-xl border border-white/5"
+        >
+          <span class="text-4xl font-black text-cyan-500"
+            >{totalRetos.toString().padStart(2, "0")}</span
+          >
+          <span
+            class="text-[10px] font-mono text-slate-500 uppercase tracking-widest"
+            >Misiones_Cargadas</span
+          >
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {
+          sortedChallenges.length > 0 ? (
+            sortedChallenges.map((ch) => (
+              <ChallengeCard
+                href={`/retos/${ch.slug}`}
+                title={ch.data.title}
+                description={ch.data.description}
+                image={ch.data.image}
+                difficulty={ch.data.difficulty}
+              />
+            ))
+          ) : (
+            <div class="col-span-full py-20 text-center border-2 border-dashed border-white/5 rounded-2xl">
+              <p class="text-slate-500 font-mono italic">
+                Esperando nuevas transmisiones de desafíos...
+              </p>
+            </div>
+          )
+        }
+      </div>
+    </section>
+  </HomeLayout>
+</Layout>
