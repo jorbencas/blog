@@ -14,9 +14,10 @@ export default defineConfig({
     shikiConfig: {
       // Usamos un tema para Light y otro para Dark
       themes: {
-        light: 'github-light',
-        dark: 'github-dark',
+        light: "github-light",
+        dark: "github-dark",
       },
+    },
     // Esto envuelve el código para que no se rompa la línea
     wrap: true,
     smartypants: true, // Mejora tipografía (comillas, guiones)

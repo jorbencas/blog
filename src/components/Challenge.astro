@@ -1,0 +1,78 @@
+---
+interface Props {
+  nivel: "Iniciación" | "Intermedio" | "Avanzado";
+  mision: string;
+}
+
+const { nivel, mision } = Astro.props;
+
+// Colores dinámicos según el nivel
+const colors = {
+  Iniciación: "border-emerald-500 text-emerald-500 bg-emerald-500/5",
+  Intermedio: "border-amber-500 text-amber-500 bg-amber-500/5",
+  Avanzado: "border-rose-500 text-rose-500 bg-rose-500/5",
+};
+
+const currentColor = colors[nivel];
+---
+
+<div
+  class={`my-12 p-8 border-l-8 ${currentColor} bg-slate-50 dark:bg-white/5 shadow-xl relative overflow-hidden group`}
+>
+  <div
+    class="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="64"
+      height="64"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      ><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path
+        d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"
+      ></path><path
+        d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"
+      ></path><path
+        d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"
+      ></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg
+    >
+  </div>
+
+  <div class="relative z-10">
+    <div class="flex items-center gap-3 mb-4">
+      <span
+        class="font-mono text-[10px] font-black uppercase tracking-[0.3em] px-2 py-1 bg-current text-white dark:text-slate-900"
+      >
+        RETO_DEL_DÍA
+      </span>
+      <span
+        class="font-mono text-[10px] font-bold uppercase tracking-widest opacity-70"
+      >
+        Dificultad: {nivel}
+      </span>
+    </div>
+
+    <h4
+      class="text-2xl font-black italic uppercase tracking-tighter text-slate-900 dark:text-white mb-4"
+    >
+      Misión del Programador
+    </h4>
+
+    <p
+      class="text-lg text-slate-700 dark:text-slate-300 leading-relaxed font-medium italic"
+    >
+      "{mision}"
+    </p>
+
+    <div
+      class="mt-6 flex items-center gap-2 text-[10px] font-bold font-mono uppercase tracking-widest text-cyan-600 dark:text-cyan-400"
+    >
+      <span>>_ Esperando ejecución...</span>
+      <span class="animate-pulse">|</span>
+    </div>
+  </div>
+</div>
