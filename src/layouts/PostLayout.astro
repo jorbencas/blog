@@ -13,7 +13,7 @@ let bar = {
 };
 
 interface Props {
-  slug: string;
+  id: number;
   title: string;
   description: string;
   tags: string | string[];
@@ -25,7 +25,7 @@ interface Props {
 }
 
 const {
-  slug,
+  id,
   title,
   description,
   tags,
@@ -38,7 +38,7 @@ const {
 
 const allPosts = await getCollection("posts");
 const sortedPosts = await getSortedPosts(allPosts);
-const currentIndex = sortedPosts.findIndex((p) => p.slug === slug);
+const currentIndex = sortedPosts.findIndex((p) => p.id === id);
 
 if (currentIndex > -1) {
   if (currentIndex > 0) {
