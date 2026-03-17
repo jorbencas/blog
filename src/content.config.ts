@@ -32,4 +32,17 @@ const autoNews = defineCollection({
     layout: z.string().optional(),
   }),
 });
-export const collections = { posts, autoNews };
+
+const challenges = defineCollection({
+  type: 'content',
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    pubDate: z.coerce.date(),
+    image: z.string(),
+    tags: z.array(z.string()),
+    difficulty: z.enum(['Iniciación', 'Intermedio', 'Avanzado']), // Tipado para los retos
+  }),
+});
+
+export const collections = { posts, autoNews, challenges };

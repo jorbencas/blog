@@ -1,0 +1,43 @@
+---
+const pathname = new URL(Astro.url).pathname;
+const currentPath = pathname.slice(1); // Elimina la barra inicial
+---
+
+<nav class="flex items-center gap-8 py-6">
+  <a
+    href="/posts"
+    class={`group relative text-sm font-black uppercase tracking-[0.2em] italic transition-colors ${
+      currentPath.startsWith("posts")
+        ? "text-cyan-500"
+        : "text-slate-400 hover:text-white"
+    }`}
+  >
+    Blog
+    <span
+      class={`absolute -bottom-1 left-0 h-0.5 bg-cyan-500 transition-all duration-300 ${
+        currentPath.startsWith("posts") ? "w-full" : "w-0 group-hover:w-full"
+      }`}></span>
+  </a>
+
+  <a
+    href="/retos"
+    class={`group relative text-sm font-black uppercase tracking-[0.2em] italic transition-colors ${
+      currentPath.startsWith("retos")
+        ? "text-cyan-500"
+        : "text-slate-400 hover:text-white"
+    }`}
+  >
+    Retos
+    <span
+      class={`absolute -bottom-1 left-0 h-0.5 bg-cyan-500 transition-all duration-300 ${
+        currentPath.startsWith("retos") ? "w-full" : "w-0 group-hover:w-full"
+      }`}></span>
+  </a>
+
+  <a
+    href="/about"
+    class="text-sm font-black uppercase tracking-[0.2em] italic text-slate-400 hover:text-white transition-colors"
+  >
+    Bio
+  </a>
+</nav>

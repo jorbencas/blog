@@ -4,8 +4,8 @@ import Layout from "./Layout.astro";
 import NextPrevLiks from "@components/NextPrevLiks.astro";
 import TableOfContents from "@components/TableOfContents.astro";
 import CodeEnhancer from "@components/CodeEnhancer.astro";
-import { getCollection } from 'astro:content';
-import type { MarkdownHeading } from 'astro';
+import { getCollection } from "astro:content";
+import type { MarkdownHeading } from "astro";
 
 let bar = {
   prevElement: { url: undefined, title: undefined, image: "prev.svg" },
@@ -24,11 +24,21 @@ interface Props {
   remarkPluginFrontmatter?: Record<string, any>;
 }
 
-const { slug, title, description, tags, author, image, pubDate, headings = [], remarkPluginFrontmatter } = Astro.props;
+const {
+  slug,
+  title,
+  description,
+  tags,
+  author,
+  image,
+  pubDate,
+  headings = [],
+  remarkPluginFrontmatter,
+} = Astro.props;
 
-const allPosts = await getCollection('posts');
+const allPosts = await getCollection("posts");
 const sortedPosts = await getSortedPosts(allPosts);
-const currentIndex = sortedPosts.findIndex(p => p.slug === slug);
+const currentIndex = sortedPosts.findIndex((p) => p.slug === slug);
 
 if (currentIndex > -1) {
   if (currentIndex > 0) {
@@ -50,16 +60,22 @@ if (currentIndex > -1) {
 }
 
 const minutesRead = remarkPluginFrontmatter?.minutesRead;
-const tagsArray = Array.isArray(tags) ? tags : (typeof tags === 'string' ? tags.split(',').map(t => t.trim()) : []);
+const tagsArray = Array.isArray(tags)
+  ? tags
+  : typeof tags === "string"
+  ? tags.split(",").map((t) => t.trim())
+  : [];
 ---
 
 <Layout title={title} description={description} tags={tagsArray}>
-  <div class="max-w-screen-xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 py-10 font-sans">
-    
+  <div
+    class="max-w-screen-xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 py-10 font-sans"
+  >
     <main class="lg:col-span-8 px-4 lg:px-0">
-      
       <header class="mb-12">
-        <div class="relative w-full h-[300px] md:h-[400px] overflow-hidden border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-slate-900 shadow-xl mb-10 group/banner">
+        <div
+          class="relative w-full h-[300px] md:h-[400px] overflow-hidden border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-slate-900 shadow-xl mb-10 group/banner"
+        >
           <img
             class="w-full h-full object-cover opacity-90 dark:opacity-70 grayscale-[10%] transition-transform duration-[3s] ease-out group-hover/banner:scale-110"
             src={image}
@@ -69,33 +85,52 @@ const tagsArray = Array.isArray(tags) ? tags : (typeof tags === 'string' ? tags.
 
         <div class="space-y-6">
           <div class="flex items-center gap-3">
-             <div class="h-[2px] w-12 bg-cyan-500"></div>
-             <span class="font-mono text-[10px] uppercase tracking-[0.4em] text-cyan-600 dark:text-cyan-400 font-bold">Articulo_Tecnico</span>
+            <div class="h-[2px] w-12 bg-cyan-500"></div>
+            <span
+              class="font-mono text-[10px] uppercase tracking-[0.4em] text-cyan-600 dark:text-cyan-400 font-bold"
+              >Articulo_Tecnico</span
+            >
           </div>
 
-          <h1 class="text-3xl md:text-5xl font-black uppercase italic tracking-tighter leading-tight text-slate-900 dark:text-white">
+          <h1
+            class="text-3xl md:text-5xl font-black uppercase italic tracking-tighter leading-tight text-slate-900 dark:text-white"
+          >
             {title}
           </h1>
-          
-          <p class="text-xl text-slate-600 dark:text-slate-400 font-medium leading-relaxed max-w-3xl border-l-4 border-cyan-500/20 pl-6 italic">
+
+          <p
+            class="text-xl text-slate-600 dark:text-slate-400 font-medium leading-relaxed max-w-3xl border-l-4 border-cyan-500/20 pl-6 italic"
+          >
             {description}
           </p>
 
-          <div class="flex flex-wrap items-center gap-8 pt-6 border-t border-slate-100 dark:border-white/5 font-mono text-[10px] uppercase tracking-[0.2em]">
+          <div
+            class="flex flex-wrap items-center gap-8 pt-6 border-t border-slate-100 dark:border-white/5 font-mono text-[10px] uppercase tracking-[0.2em]"
+          >
             <div class="flex items-center gap-2">
               <span class="text-slate-400 dark:text-slate-500">FECHA:</span>
-              <time class="text-slate-900 dark:text-white font-bold">{formatDatePost(pubDate)}</time>
+              <time class="text-slate-900 dark:text-white font-bold"
+                >{formatDatePost(pubDate)}</time
+              >
             </div>
             <div class="flex items-center gap-2">
               <span class="text-slate-400 dark:text-slate-500">AUTOR:</span>
-              <span class="text-slate-900 dark:text-white font-bold">{author}</span>
+              <span class="text-slate-900 dark:text-white font-bold"
+                >{author}</span
+              >
             </div>
-            {minutesRead && (
-              <div class="flex items-center gap-2">
-                <span class="text-slate-400 dark:text-slate-500">LECTURA:</span>
-                <span class="text-slate-900 dark:text-white font-bold">{minutesRead.toUpperCase()}</span>
-              </div>
-            )}
+            {
+              minutesRead && (
+                <div class="flex items-center gap-2">
+                  <span class="text-slate-400 dark:text-slate-500">
+                    LECTURA:
+                  </span>
+                  <span class="text-slate-900 dark:text-white font-bold">
+                    {minutesRead.toUpperCase()}
+                  </span>
+                </div>
+              )
+            }
           </div>
         </div>
       </header>
@@ -114,25 +149,28 @@ const tagsArray = Array.isArray(tags) ? tags : (typeof tags === 'string' ? tags.
         <slot />
       </article>
 
-      <div class="mt-20 pt-12 border-t border-slate-200 dark:border-white/10 space-y-16">
-        
-        {tagsArray.length > 0 && (
-          <div class="space-y-6">
-            <span class="font-mono text-sm font-bold uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400 block border-b border-cyan-500/10 pb-2 w-fit">
-              ETIQUETADO EN:
-            </span>
-            <div class="flex flex-wrap gap-4">
-              {tagsArray.map(tag => (
-                <a 
-                  href={`/tags/${tag}`} 
-                  class="bg-gradient-to-r from-sky-800 to-cyan-600 px-5 py-2 text-[11px] font-black uppercase tracking-widest text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:-translate-y-1 hover:scale-105 active:scale-95 transition-all block no-underline"
-                >
-                  {tag}
-                </a>
-              ))}
+      <div
+        class="mt-20 pt-12 border-t border-slate-200 dark:border-white/10 space-y-16"
+      >
+        {
+          tagsArray.length > 0 && (
+            <div class="space-y-6">
+              <span class="font-mono text-sm font-bold uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400 block border-b border-cyan-500/10 pb-2 w-fit">
+                ETIQUETADO EN:
+              </span>
+              <div class="flex flex-wrap gap-4">
+                {tagsArray.map((tag) => (
+                  <a
+                    href={`/tags/${tag}`}
+                    class="bg-gradient-to-r from-sky-800 to-cyan-600 px-5 py-2 text-[11px] font-black uppercase tracking-widest text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:-translate-y-1 hover:scale-105 active:scale-95 transition-all block no-underline"
+                  >
+                    {tag}
+                  </a>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )
+        }
 
         <NextPrevLiks
           imageNext={bar.nextElement?.image}
@@ -146,12 +184,14 @@ const tagsArray = Array.isArray(tags) ? tags : (typeof tags === 'string' ? tags.
     </main>
 
     <aside class="hidden lg:block lg:col-span-4">
-      <div class="sticky top-24 pl-8 border-l border-slate-100 dark:border-white/5 h-fit">
+      <div
+        class="sticky top-24 pl-8 border-l border-slate-100 dark:border-white/5 h-fit"
+      >
         <TableOfContents headings={headings} />
       </div>
     </aside>
   </div>
-  
+
   <CodeEnhancer />
 </Layout>
 
@@ -161,9 +201,95 @@ const tagsArray = Array.isArray(tags) ? tags : (typeof tags === 'string' ? tags.
     background-color: rgba(6, 182, 212, 0.3);
     color: inherit;
   }
-  
+
   /* Scroll suave para la página */
   html {
     scroll-behavior: smooth;
+  }
+
+  /* Animación para el bloque de solución */
+  details .details-content {
+    animation: slideDown 0.4s ease-out;
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Personalización del scrollbar dentro del código si es muy largo */
+  .details-content pre::-webkit-scrollbar {
+    height: 4px;
+  }
+  .details-content pre::-webkit-scrollbar-thumb {
+    background: rgba(6, 182, 212, 0.3);
+    border-radius: 10px;
+  }
+
+  /* --- Estenedor de Solución (Details) --- */
+  details {
+    @apply my-6 border border-slate-200 dark:border-white/10 rounded-xl transition-all duration-300 bg-white/40 dark:bg-slate-900/40 overflow-hidden;
+  }
+
+  details[open] {
+    @apply shadow-[0_0_30px_rgba(6,182,212,0.15)] border-cyan-500/40 ring-1 ring-cyan-500/20;
+  }
+
+  /* --- Cabecera del desplegable --- */
+  summary {
+    @apply p-5 cursor-pointer font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between select-none list-none;
+    transition: background 0.2s ease;
+  }
+
+  summary:hover {
+    @apply bg-slate-500/5;
+  }
+
+  /* Indicador de estado personalizado */
+  summary::after {
+    content: "DECRYPT";
+    @apply text-[9px] font-black tracking-widest bg-slate-200 dark:bg-white/10 px-3 py-1 rounded-md transition-all;
+  }
+
+  details[open] summary::after {
+    content: "ENCRYPTED";
+    @apply bg-cyan-500 text-white shadow-[0_0_10px_rgba(6,182,212,0.5)];
+  }
+
+  /* --- Contenedor Interno de la Solución --- */
+  .details-content {
+    @apply p-6 pt-2 border-t border-slate-100 dark:border-white/5;
+    animation: fadeInSlide 0.4s ease-out;
+  }
+
+  /* Estilos para los títulos dentro de la solución */
+  .details-content h3 {
+    @apply text-cyan-600 dark:text-cyan-400 text-sm font-black uppercase tracking-widest mt-6 mb-2 !important;
+  }
+
+  /* Animación de apertura */
+  @keyframes fadeInSlide {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* --- Scrollbar para bloques de código --- */
+  .details-content pre::-webkit-scrollbar {
+    height: 5px;
+  }
+  .details-content pre::-webkit-scrollbar-thumb {
+    @apply bg-cyan-500/30 rounded-full;
   }
 </style>
