@@ -23,15 +23,97 @@ const finalDescription = description || "";
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <SEO title={finalTitle} description={finalDescription} />
     <title>{finalTitle}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+
+    <script is:inline>
+      const theme = (() => {
+        if (typeof localStorage !== 'undefined' && localStorage.getItem('color-theme')) {
+          return localStorage.getItem('color-theme');
+        }
+        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          return 'dark';
+        }
+        return 'light';
+      })();
+    
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    </script>
   </head>
   <body
-    class="bg-stone-200 dark:bg-gray-800 text-gray-600 dark:text-gray-300 transition duration-300 ease" 
+    class="bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-500 min-h-screen flex flex-col"
   >
     <Header />
-    <main class="mt-10 flex justify-around items-start" data-pagefind-body data-pagefind-filter={tags?.length > 0 ? `tags:${tags.join(', ')}` : undefined}>
+    
+    <main 
+      class="flex-grow mt-10 max-w-screen-xl mx-auto w-full px-4" 
+      data-pagefind-body 
+      data-pagefind-filter={tags?.length > 0 ? `tags:${tags.join(', ')}` : undefined}
+    >
       <slot />
     </main>
+    
     <Footer />
     <SpeedInsights />
+
+    <style is:global>
+      :root {
+        --font-main: 'Space Grotesk', sans-serif;
+        --font-mono: 'Space Mono', monospace;
+      }
+
+      html {
+        font-family: var(--font-main);
+      }
+
+      /* Estilo Mono para elementos técnicos y brutalistas */
+      kbd, 
+      .font-mono, 
+      span.uppercase, 
+      .tracking-widest, 
+      .text-[10px],
+      .text-[9px], 
+      time {
+        font-family: var(--font-mono);
+      }
+
+      /* Ajuste para que el footer siempre esté abajo si hay poco contenido */
+      body {
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* Mejora de la scrollbar para modo tech */
+      ::-webkit-scrollbar {
+        width: 10px;
+      }
+      ::-webkit-scrollbar-track {
+        @apply bg-white dark:bg-slate-950;
+      }
+      ::-webkit-scrollbar-thumb {
+        @apply bg-slate-200 dark:bg-slate-800 border-4 border-transparent bg-clip-content;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        @apply bg-cyan-500;
+      }
+
+
+
+
+      /* Esto hace que no tengas que escribir la fuente en cada componente */
+      kbd, 
+      .font-mono, 
+      span.uppercase, 
+      .tracking-widest, 
+      time {
+        font-family: 'Space Mono', monospace;
+      }
+    </style>
   </body>
 </html>

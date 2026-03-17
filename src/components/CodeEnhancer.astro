@@ -4,21 +4,18 @@
 
 <script is-inline>
   const setupCodeBlocks = () => {
-    // Configuración de Lenguajes: Etiqueta, Color y Slug de SimpleIcons
-    const langConfig: Record<string, { label: string; color: string; icon: string }> = {
-      js: { label: 'JavaScript', color: 'text-yellow-400 bg-yellow-400/10', icon: 'javascript' },
-      ts: { label: 'TypeScript', color: 'text-blue-400 bg-blue-400/10', icon: 'typescript' },
-      py: { label: 'Python', color: 'text-blue-500 bg-blue-500/10', icon: 'python' },
-      bash: { label: 'Terminal', color: 'text-slate-400 bg-slate-400/10', icon: 'gnubash' },
-      sh: { label: 'Shell', color: 'text-slate-400 bg-slate-400/10', icon: 'gnubash' },
-      jsx: { label: 'React', color: 'text-cyan-400 bg-cyan-400/10', icon: 'react' },
-      tsx: { label: 'React', color: 'text-cyan-400 bg-cyan-400/10', icon: 'react' },
-      redux: { label: 'Redux', color: 'text-purple-400 bg-purple-400/10', icon: 'redux' },
-      vue: { label: 'Vue.js', color: 'text-emerald-400 bg-emerald-400/10', icon: 'vuedotjs' },
-      html: { label: 'HTML5', color: 'text-orange-400 bg-orange-400/10', icon: 'html5' },
-      css: { label: 'CSS3', color: 'text-blue-300 bg-blue-300/10', icon: 'css3' },
-      git: { label: 'Git', color: 'text-orange-600 bg-orange-600/10', icon: 'git' },
-      txt: { label: 'Texto', color: 'text-gray-400 bg-gray-400/10', icon: 'git' }, // Icono genérico
+    const langConfig = {
+      js: { label: 'JAVASCRIPT', color: 'text-yellow-400', icon: 'javascript' },
+      ts: { label: 'TYPESCRIPT', color: 'text-blue-400', icon: 'typescript' },
+      py: { label: 'PYTHON', color: 'text-blue-500', icon: 'python' },
+      bash: { label: 'TERMINAL', color: 'text-slate-400', icon: 'gnubash' },
+      sh: { label: 'SHELL', color: 'text-slate-400', icon: 'gnubash' },
+      jsx: { label: 'REACT_JSX', color: 'text-cyan-400', icon: 'react' },
+      tsx: { label: 'REACT_TSX', color: 'text-cyan-400', icon: 'react' },
+      vue: { label: 'VUE_JS', color: 'text-emerald-400', icon: 'vuedotjs' },
+      html: { label: 'HTML_5', color: 'text-orange-400', icon: 'html5' },
+      css: { label: 'CSS_3', color: 'text-blue-300', icon: 'css3' },
+      astro: { label: 'ASTRO', color: 'text-orange-500', icon: 'astro' },
     };
 
     const codeBlocks = document.querySelectorAll('pre');
@@ -28,36 +25,35 @@
 
       const langClass = Array.from(pre.classList).find(c => c.startsWith('language-')) || 'language-txt';
       const langKey = langClass.replace('language-', '').toLowerCase();
-      const config = langConfig[langKey] || { label: langKey.toUpperCase(), color: 'text-slate-400 bg-slate-400/10', icon: 'code' };
+      const config = langConfig[langKey] || { label: langKey.toUpperCase(), color: 'text-slate-400', icon: 'code' };
 
-      // Contenedor principal
+      // Contenedor principal: BORDES RECTOS Y SOMBRA SÓLIDA
       const wrapper = document.createElement('div');
-      wrapper.className = 'code-wrapper group relative my-8 overflow-hidden rounded-xl border border-white/10 bg-[#0d1117] shadow-2xl';
+      wrapper.className = 'code-wrapper group relative my-10 border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] dark:shadow-[4px_4px_0px_0px_rgba(6,182,212,0.2)] transition-all';
 
-      // Cabecera con Icono
+      // Cabecera Estilo Terminal
       const header = document.createElement('div');
-      header.className = 'flex items-center justify-between border-b border-white/5 bg-white/[0.03] px-4 py-2';
+      header.className = 'flex items-center justify-between border-b border-slate-200 dark:border-white/5 bg-slate-100 dark:bg-white/[0.02] px-4 py-2 font-mono';
       
-      // Construimos el HTML de la cabecera inyectando el SVG del icono
       header.innerHTML = `
         <div class="flex items-center gap-3">
           <img 
-            src="https://cdn.simpleicons.org/${config.icon}/${config.color.split(' ')[0].replace('text-', '')}" 
+            src="https://cdn.simpleicons.org/${config.icon}/${config.color.replace('text-', '')}" 
             alt="${config.label}"
-            class="w-4 h-4 opacity-80"
+            class="w-3.5 h-3.5 opacity-70 grayscale group-hover:grayscale-0 transition-all"
           />
-          <span class="text-[10px] font-bold tracking-widest uppercase ${config.color.split(' ')[0]}">
+          <span class="text-[10px] font-bold tracking-[0.2em] ${config.color}">
             ${config.label}
           </span>
         </div>
-        <button class="copy-button flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-slate-300 transition-all hover:bg-white/10 active:scale-95">
-          <span class="copy-text text-[11px]">Copiar</span>
-          <span class="check-icon hidden text-green-400 text-[11px]">¡Copiado!</span>
+        <button class="copy-button relative overflow-hidden border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-800 px-3 py-1 text-[9px] font-bold uppercase tracking-widest text-slate-600 dark:text-slate-400 hover:border-cyan-500 hover:text-cyan-500 transition-all active:translate-y-[1px]">
+          <span class="copy-text">COPY_DATA</span>
+          <span class="check-icon hidden text-cyan-500">DONE_</span>
         </button>
       `;
 
       const content = document.createElement('div');
-      content.className = 'code-content overflow-x-auto p-4 text-sm leading-relaxed';
+      content.className = 'code-content overflow-x-auto p-5 text-sm leading-relaxed font-mono';
 
       pre.parentNode?.insertBefore(wrapper, pre);
       wrapper.appendChild(header);
@@ -75,49 +71,47 @@
 
         text?.classList.add('hidden');
         check?.classList.remove('hidden');
-        copyBtn.classList.add('border-green-500/40', 'bg-green-500/10');
+        copyBtn.classList.add('border-cyan-500');
 
         setTimeout(() => {
           text?.classList.remove('hidden');
           check?.classList.add('hidden');
-          copyBtn.classList.remove('border-green-500/40', 'bg-green-500/10');
+          copyBtn.classList.remove('border-cyan-500');
         }, 2000);
       });
     });
   };
 
   setupCodeBlocks();
-  document.addEventListener('astro:after-swap', setupCodeBlocks);
+  document.addEventListener('astro:page-load', setupCodeBlocks);
 </script>
 
 <style is:global>
+  /* Reset de pre-estilos de Astro/Markdown */
   .code-wrapper pre {
     margin: 0 !important;
     background-color: transparent !important;
     padding: 0 !important;
+    font-family: 'Space Mono', monospace !important;
   }
-  /* Scrollbar estético */
-  .code-content::-webkit-scrollbar { height: 5px; }
-  .code-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
 
-  /* Código Inline (el que no está dentro de un <pre>) */
+  /* Scrollbar brutalista (Cian en Dark) */
+  .code-content::-webkit-scrollbar { height: 4px; }
+  .code-content::-webkit-scrollbar-track { @apply bg-transparent; }
+  .code-content::-webkit-scrollbar-thumb { 
+    @apply bg-slate-300 dark:bg-cyan-500/30;
+  }
+
+  /* Código Inline (Texto dentro de párrafos) */
   :not(pre) > code {
-    background-color: rgba(51, 65, 85, 0.4); /* slate-700 con opacidad */
-    color: #f1f5f9; /* slate-100 */
-    padding: 0.2rem 0.4rem;
-    border-radius: 0.375rem;
-    font-size: 0.875em;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    @apply font-mono font-bold text-cyan-600 dark:text-cyan-400 bg-cyan-500/5 dark:bg-cyan-500/10 px-1.5 py-0.5 border border-cyan-500/20;
+    font-size: 0.9em;
     word-break: break-word;
   }
 
-  /* Ajuste para que el código dentro de bloques NO herede el estilo inline */
+  /* Ajuste para que el código dentro de bloques NO sea cyan */
   pre code {
-    background-color: transparent !important;
-    padding: 0 !important;
-    border: none !important;
+    @apply text-inherit bg-transparent border-none p-0 font-normal;
     font-size: inherit !important;
-    color: inherit !important;
   }
 </style>

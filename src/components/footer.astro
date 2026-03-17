@@ -2,26 +2,56 @@
 const yearCreation = new Date().getFullYear();
 ---
 
-<footer class="min-h-15 flex align-middle justify-between p-10">
-  <div class="flex justify-content-start" >
-      <p class='mx-2'>
-    Creado por Jorge Beneyto Castelló {yearCreation}
-  </p>
-  <a  class='mx-2' href="/rss.xml">RSS</a>
+<footer class="w-full mt-20 border-t border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 transition-colors duration-500">
+  <div class="border-b border-slate-200 dark:border-white/10">
+    <div class="max-w-screen-xl mx-auto flex flex-wrap justify-center sm:justify-between items-center px-6 py-6 gap-6">
+      <span class="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">Conecta conmigo</span>
+      
+      <div class="flex flex-wrap justify-center gap-6">
+        {[
+          { href: "https://twitter.com/jorgevenkas", icon: "/icons/twitter.svg", label: "twitter" },
+          { href: "https://github.com/jorbencas", icon: "/icons/github.svg", label: "github" },
+          { href: "https://gitlab.com/jorbencas", icon: "/icons/gitlab.svg", label: "gitlab" },
+          { href: "https://jorgeblogbeneyto.wordpress.com/", icon: "/icons/wordpress.svg", label: "wordpress" },
+          { href: "https://cosasdejorget.blogspot.com/", icon: "/icons/blogger.svg", label: "blogger" },
+          { href: "https://sites.google.com/site/saplicacioneswebjorge2smx/", icon: "/icons/googleSites.svg", label: "google" },
+          { href: "mailto:jorgebeneytocastello@gmail.com", icon: "/icons/email.svg", label: "contacto" }
+        ].map(social => (
+          <a 
+            href={social.href} 
+            target="_blank" 
+            aria-label={social.label}
+            class="transition-all duration-300 hover:scale-125 hover:brightness-125 grayscale hover:grayscale-0"
+          >
+            <img src={social.icon} alt={social.label} class="w-5 h-5 dark:invert" />
+          </a>
+        ))}
+      </div>
+    </div>
   </div>
 
-  <div class="w-27">
-    <a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"
-      ><img
-        alt="Licencia de Creative Commons"
-        style="border-width:0;"
-        src="https://i.creativecommons.org/l/by-nc/4.0/88x31.png"
-      />
-    </a>Este obra está bajo una <a
-      rel="license"
-      href="http://creativecommons.org/licenses/by-nc/4.0/"
-      >licencia de Creative Commons Reconocimiento-NoComercial 4.0
-      Internacional.</a
-    >
+  <div class="max-w-screen-xl mx-auto px-6 py-10 grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+    
+    <div class="space-y-4">
+      <div class="flex items-center gap-2">
+        <div class="w-6 h-1 bg-cyan-500"></div>
+        <p class="text-sm font-black uppercase tracking-tighter text-slate-900 dark:text-white italic">
+          Jorge Beneyto Castelló <span class="text-cyan-500 not-italic font-medium ml-2">{yearCreation}</span>
+        </p>
+      </div>
+      <a href="/rss.xml" class="inline-block border border-slate-200 dark:border-white/10 px-4 py-1 text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:border-cyan-500 hover:text-cyan-500 transition-colors">
+        Suscripción RSS
+      </a>
+    </div>
+
+    <div class="text-[11px] leading-relaxed text-slate-400 uppercase tracking-wide border-l border-slate-200 dark:border-white/5 pl-6">
+      <a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/" class="text-slate-900 dark:text-white font-bold hover:text-cyan-500 transition-colors">
+        Creative Commons BY-NC 4.0
+      </a>
+      <p class="mt-2">
+        Este obra está bajo una licencia de Reconocimiento-NoComercial 4.0 Internacional. 
+        Puedes compartir y adaptar el contenido citando la autoría.
+      </p>
+    </div>
   </div>
 </footer>

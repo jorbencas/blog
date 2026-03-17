@@ -5,7 +5,7 @@ import Layout from "./Layout.astro";
 import NextPrevLiks from "@components/NextPrevLiks.astro";
 import TableOfContents from "@components/TableOfContents.astro";
 import CodeEnhancer from "@components/CodeEnhancer.astro";
-import { getCollection } from 'astro:content'; // NUEVO IMPORT
+import { getCollection } from 'astro:content';
 import type { MarkdownHeading } from 'astro';
 
 let bar = {
@@ -24,6 +24,7 @@ interface Props {
   headings?: MarkdownHeading[];
   remarkPluginFrontmatter?: Record<string, any>;
 }
+
 const {slug, title, description, tags, author, image, pubDate, headings = [], remarkPluginFrontmatter } = Astro.props;
 
 const allPosts = await getCollection('posts');
@@ -31,118 +32,111 @@ const sortedPosts = await getSortedPosts(allPosts);
 const currentIndex = sortedPosts.findIndex(p => p.slug === slug);
 
 if (currentIndex > -1) {
-  // Post Anterior
   if (currentIndex > 0) {
     const prev = sortedPosts[currentIndex - 1];
-    const prevSlug = prev.id || prev.slug;
     bar.prevElement = {
-      url: `/posts/${prevSlug}/`,
+      url: `/posts/${prev.id || prev.slug}/`,
       title: prev.data.title,
       image: prev.data.image || "prev.svg",
     };
   }
-
-  // Post Siguiente
   if (currentIndex < sortedPosts.length - 1) {
     const next = sortedPosts[currentIndex + 1];
-    const nextSlug = next.id || next.slug;
     bar.nextElement = {
-      url: `/posts/${nextSlug}/`,
+      url: `/posts/${next.id || next.slug}/`,
       title: next.data.title,
       image: next.data.image || "next.svg",
     };
   }
 }
 
-// Variables para tu HTML (con valores por defecto para evitar errores de undefined)
-let imagePrev = bar.prevElement?.image;
-let urlPrev = bar.prevElement?.url;
-let textPrev = bar.prevElement?.title;
-
-let imageNext = bar.nextElement?.image;
-let urlNext = bar.nextElement?.url;
-let textNext = bar.nextElement?.title
-
 const minutesRead = remarkPluginFrontmatter?.minutesRead;
-
-
 ---
 
-<Layout title={title} description={description}, tags={tags}>
-  <!-- <Archive /> -->
-  <div class="max-w-10xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
-    <main class="lg:col-span-9 ml-3">
-      <div class="my-5 flex w-auto">
-        <img
-          class="inline-block w-14 h-14 align-middle items-center"
-          aria-label={title}
-          src={image}
-        />
+<Layout title={title} description={description} tags={tags.split(',')}>
+  <div class="max-w-screen-xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 py-10">
+    
+    <main class="lg:col-span-8 px-4 lg:px-0">
+      
+      <header class="mb-12 space-y-6">
+        <div class="flex items-center gap-4">
+          <img
+            class="w-16 h-16 object-contain border border-slate-200 dark:border-white/10 p-2 bg-white dark:bg-slate-900"
+            src={image}
+            alt={title}
+          />
+          <div class="h-[2px] flex-grow bg-gradient-to-r from-cyan-500 to-transparent"></div>
+        </div>
 
-        <div class="block ml-4">
-          <h1 class="text-4xl font-sans text-gray-900 dark:text-white">
+        <div class="space-y-4">
+          <h1 class="text-4xl md:text-6xl font-black uppercase italic tracking-tighter leading-none text-slate-900 dark:text-white">
             {title}
           </h1>
-          <p class="text-sm">{description}</p>
-          <p>
-            <strong class="text-base font-extrabold text-cyan-400">
-              {formatDatePost(pubDate)}
-            </strong>
-             Por: <strong class="dark:text-white">{author}</strong>
+          
+          <p class="text-xl text-slate-500 dark:text-slate-400 font-medium leading-relaxed max-w-2xl">
+            {description}
           </p>
-          {minutesRead && (
-          <p
-            class="flex items-center gap-2 text-sm font-medium
-         text-gray-300 dark:text-gray-100
-         transition-colors duration-200"
-          >
-            <!-- Icono de reloj -->
-            <svg
-              class="w-5 h-5 text-gray-400 dark:text-gray-300"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 6v6l4 2"></path>
-            </svg>
 
-            {minutesRead}
-          </p>
-          )}
+          <div class="flex flex-wrap items-center gap-6 pt-4 border-t border-slate-100 dark:border-white/5 font-mono text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400">
+            <div class="flex items-center gap-2">
+              <span class="text-cyan-500 font-bold">DATE:</span>
+              <time class="text-slate-900 dark:text-white font-bold">{formatDatePost(pubDate)}</time>
+            </div>
+            
+            <div class="flex items-center gap-2">
+              <span class="text-cyan-500 font-bold">AUTHOR:</span>
+              <span class="text-slate-900 dark:text-white font-bold">{author}</span>
+            </div>
+
+            {minutesRead && (
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3" />
+                </svg>
+                <span>{minutesRead}</span>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-      <div
+      </header>
+
+      <article
         id="contenido"
-        class="prose-xl my-5 dark:text-white dark:prose-pre:text-white prose-a:text-cyan-400 dark:prose-h2:text-white dark:prose-ul:text-white dark:prose-ol:text-white dark:prose-li:text-white dark:prose-h1:text-white dark:prose-code:text-white dark:prose-strong:text-white dark:prose-h3:text-white"
+        class="prose prose-lg md:prose-xl max-w-none
+               prose-slate dark:prose-invert
+               prose-headings:uppercase prose-headings:italic prose-headings:tracking-tighter prose-headings:font-black
+               prose-a:text-cyan-500 prose-a:no-underline hover:prose-a:underline
+               prose-strong:text-cyan-500 dark:prose-strong:text-cyan-400
+               prose-img:border prose-img:border-slate-200 dark:prose-img:border-white/10"
       >
         <slot />
+      </article>
+
+      <div class="mt-16 pt-12 border-t border-slate-200 dark:border-white/10 space-y-12">
+        <CodeEnhancer />
+        
+        {tags && (
+          <div class="space-y-4">
+            <span class="font-mono text-[10px] uppercase tracking-[0.4em] text-slate-400">Tagged in:</span>
+            <TagsPosts tagsList={JSON.stringify(tags)} />
+          </div>
+        )}
+
+        <NextPrevLiks
+          imageNext={bar.nextElement?.image}
+          nextURL={bar.nextElement?.url}
+          prevURL={bar.prevElement?.url}
+          imagePrev={bar.prevElement?.image}
+          textNext={bar.nextElement?.title}
+          textPrev={bar.prevElement?.title}
+        />
       </div>
-      <CodeEnhancer />
-      {
-        tags && (
-          <TagsPosts is-client tagsList={JSON.stringify(tags)} />
-        )
-      }
-
-      <NextPrevLiks
-        imageNext={imageNext}
-        nextURL={urlNext}
-        prevURL={urlPrev}
-        imagePrev={imagePrev}
-        textNext={textNext}
-        textPrev={textPrev}
-      />
     </main>
-  </div>
 
-  <div class="lg:block lg:col-span-3 h-full">
-    <div class="sticky z-50 mr-3 h-[calc(100vh-8rem)]">
-      <TableOfContents headings={headings} />
-    </div>
+    <aside class="hidden lg:block lg:col-span-4 h-full">
+      <div class="sticky top-24 pl-8 border-l border-slate-100 dark:border-white/5">
+        <TableOfContents headings={headings} />
+      </div>
+    </aside>
   </div>
 </Layout>

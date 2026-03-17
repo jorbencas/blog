@@ -1,58 +1,64 @@
 ---
 const { headings = [] } = Astro.props;
-const hasContent = headings?.length > 2;
+// Solo mostramos si hay suficientes encabezados para justificar un índice
+const hasContent = headings?.length > 1;
 ---
 
 {
   hasContent && (
-    <div id="toc-container" class="relative h-full">
+    <div id="toc-container" class="relative h-full font-mono">
       <div class="toc-wrapper h-full">
-        {/* Botón Móvil */}
+        {/* Botón Móvil Brutalista */}
         <button
           id="toc-mobile-toggle"
-          class="fixed bottom-8 right-8 z-[100] flex items-center justify-center w-12 h-12 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-full shadow-xl md:hidden"
+          class="fixed bottom-8 right-8 z-[100] flex items-center justify-center w-12 h-12 bg-slate-900 dark:bg-cyan-500 text-white dark:text-slate-900 border border-cyan-500/50 shadow-[4px_4px_0px_0px_rgba(6,182,212,1)] md:hidden active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
 
         <aside
           id="toc-menu"
-          class="w-80 h-full transform translate-x-[150%] md:translate-x-0 transition-transform duration-500 ease-in-out"
+          class="w-full md:w-64 h-full transform translate-x-[150%] md:translate-x-0 transition-transform duration-500 ease-in-out"
         >
-          {/* STICKY: Asegúrate de que el padre NO tenga overflow-hidden */}
-          <div class="sticky top-24 h-fit flex flex-col py-4 px-2">
+          <div class="sticky top-28 h-fit flex flex-col px-2">
             
-            <div class="flex items-center gap-2 mb-8 opacity-40 shrink-0">
-              <span class="text-[10px] font-bold uppercase tracking-[0.4em] text-slate-900 dark:text-white">
-                Índice
+            {/* Header del Índice */}
+            <div class="flex items-center gap-2 mb-6 opacity-60 shrink-0">
+              <span class="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-900 dark:text-cyan-400">
+                00_INDEX
               </span>
-              <div class="h-[1px] flex-grow bg-slate-200 dark:bg-slate-800"></div>
+              <div class="h-[1px] flex-grow bg-slate-200 dark:bg-cyan-500/20"></div>
             </div>
 
             <nav class="flex-grow overflow-y-auto pr-4 custom-scrollbar">
-              <ul class="relative space-y-4">
-                {/* Línea base vertical */}
-                <div class="absolute left-0 top-0 h-full w-[1px] bg-slate-100 dark:bg-slate-800/50"></div>
+              <ul class="relative space-y-3">
+                {/* Línea base vertical decorativa */}
+                <div class="absolute left-0 top-0 h-full w-[1px] bg-slate-100 dark:bg-white/5"></div>
                 
                 {headings.map((h) => (
-                  <li class="relative">
+                  <li class={`relative ${h.depth > 2 ? 'ml-4' : ''}`}>
                     <a
                       href={`#${h.slug}`}
                       class:list={[
-                        "toc-link block transition-all duration-300 border-l-2 border-transparent pl-6",
+                        "toc-link block transition-all duration-200 border-l-2 border-transparent pl-4 text-[11px] uppercase tracking-wider",
                         h.depth === 2 
-                          ? "text-sm font-medium text-slate-500 dark:text-slate-400" 
-                          : "text-xs text-slate-400 dark:text-slate-500 ml-2",
+                          ? "text-slate-500 dark:text-slate-400 font-bold" 
+                          : "text-slate-400 dark:text-slate-500 font-medium"
                       ]}
                     >
-                      {h.text}
+                      <span class="mr-2 opacity-30">/</span>{h.text}
                     </a>
                   </li>
                 ))}
               </ul>
             </nav>
+
+            {/* Decoración inferior tech */}
+            <div class="mt-8 pt-4 border-t border-slate-100 dark:border-white/5 opacity-20">
+               <span class="text-[9px] uppercase tracking-tighter text-slate-500">Navigation_System_v2.6</span>
+            </div>
           </div>
         </aside>
       </div>
@@ -61,35 +67,37 @@ const hasContent = headings?.length > 2;
 }
 
 <style is:global>
-  html { scroll-behavior: smooth; }
-
-  /* Ajuste para que el scroll no tape el título */
+  /* Ajuste de scroll para no tapar títulos con el header */
   h1[id], h2[id], h3[id] {
-    scroll-margin-top: 120px;
+    scroll-margin-top: 100px;
   }
 
-  /* ESTADO ACTIVO FORZADO */
+  /* ESTADO ACTIVO TECH */
   .toc-link-active {
     color: #06b6d4 !important; /* Cyan 500 */
     border-left-color: #06b6d4 !important;
-    font-weight: 700 !important;
+    background: linear-gradient(90deg, rgba(6, 182, 212, 0.1) 0%, transparent 100%);
+    padding-left: 1.5rem !important;
     opacity: 1 !important;
   }
 
-  .custom-scrollbar::-webkit-scrollbar { width: 0px; } /* Oculto por defecto */
+  .custom-scrollbar::-webkit-scrollbar { width: 0px; }
 </style>
 
 <script>
   function initTOC() {
     const links = document.querySelectorAll(".toc-link");
-    // Seleccionamos los encabezados reales del contenido
-    const headings = Array.from(document.querySelectorAll("h2[id], h3[id]"));
+    const content = document.querySelector("#contenido");
+    if (!content) return;
+    
+    const headings = Array.from(content.querySelectorAll("h2[id], h3[id]"));
 
     if (links.length === 0 || headings.length === 0) return;
 
+    // Observer para resaltar el enlace activo
     const spyOptions = {
       root: null,
-      rootMargin: '0px 0px -80% 0px', // Detecta cuando el título entra en el 20% superior
+      rootMargin: '-10% 0px -70% 0px', // Zona de detección optimizada
       threshold: 0
     };
 
@@ -97,7 +105,6 @@ const hasContent = headings?.length > 2;
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           const id = entry.target.getAttribute("id");
-          
           links.forEach((link) => {
             link.classList.remove("toc-link-active");
             if (link.getAttribute("href") === `#${id}`) {
@@ -109,8 +116,17 @@ const hasContent = headings?.length > 2;
     }, spyOptions);
 
     headings.forEach((h) => observer.observe(h));
+
+    // Lógica básica para el toggle móvil (si decides implementarla)
+    const mobileBtn = document.getElementById("toc-mobile-toggle");
+    const menu = document.getElementById("toc-menu");
+    if (mobileBtn && menu) {
+      mobileBtn.addEventListener("click", () => {
+        menu.classList.toggle("translate-x-0");
+        menu.classList.toggle("translate-x-[150%]");
+      });
+    }
   }
 
-  // Se ejecuta en cada carga de página (incluyendo View Transitions)
   document.addEventListener("astro:page-load", initTOC);
 </script>
