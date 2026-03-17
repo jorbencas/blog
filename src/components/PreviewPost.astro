@@ -9,55 +9,55 @@ const tags = post.data.tags || [];
 <li class="group list-none flex font-sans">
   <a
     href={postUrl}
-    class="relative flex flex-col w-full h-[450px] overflow-hidden border border-slate-200 dark:border-white/5 bg-slate-950 transition-all duration-500 hover:border-cyan-500/50 shadow-2xl"
+    class="relative flex flex-col w-full h-[450px] overflow-hidden border border-slate-200 dark:border-white/5 bg-white dark:bg-slate-950 transition-all duration-500 hover:border-cyan-500 shadow-xl dark:shadow-2xl"
   >
-    {/* Contenedor de Imagen con Overlay */}
+    {/* Contenedor de Imagen */}
     <div class="absolute inset-0 z-0 h-full w-full overflow-hidden">
       <img
-        class="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-105 opacity-60 group-hover:opacity-30 grayscale-[50%] group-hover:grayscale-0"
+        class="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-105 opacity-80 dark:opacity-60 group-hover:opacity-100 dark:group-hover:opacity-30 grayscale-[30%] group-hover:grayscale-0"
         src={post.data.image}
         alt={post.data.title}
       />
-      {/* Gradiente más profundo para legibilidad */}
-      <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent"></div>
+      {/* Overlay: En Light es más suave, en Dark es muy profundo */}
+      <div class="absolute inset-0 bg-gradient-to-t from-white via-white/40 to-transparent dark:from-slate-950 dark:via-slate-950/80 dark:to-transparent"></div>
     </div>
 
     {/* Contenido */}
     <div class="relative z-10 flex flex-col h-full justify-end">
       <div class="p-8 transition-all duration-500 transform group-hover:-translate-y-2">
         
-        {/* Fecha en Mono */}
+        {/* Fecha */}
         <div class="mb-4 flex items-center gap-3">
-            <span class="h-[1px] w-8 bg-cyan-500/50"></span>
-            <span class="text-[10px] font-bold tracking-[0.2em] text-cyan-400 font-mono">
+            <span class="h-[1px] w-8 bg-cyan-600 dark:bg-cyan-500/50"></span>
+            <span class="text-[10px] font-bold tracking-[0.2em] text-cyan-700 dark:text-cyan-400 font-mono">
               {formatDatePost(post.data.pubDate)}
             </span>
         </div>
         
-        {/* Título: Sans-Serif Limpia y Potente */}
-        <h3 class="mb-3 text-3xl font-black leading-[1.1] text-white tracking-tight group-hover:text-cyan-400 transition-colors duration-300">
+        {/* Título */}
+        <h3 class="mb-3 text-3xl font-black leading-[1.1] text-slate-900 dark:text-white tracking-tight group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors duration-300">
           {post.data.title}
         </h3>
         
-        {/* Descripción: Inter para máxima legibilidad */}
-        <p class="mb-6 line-clamp-2 text-sm leading-relaxed text-slate-400 font-normal max-w-[90%]">
+        {/* Descripción */}
+        <p class="mb-6 line-clamp-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400 font-normal max-w-[90%]">
           {post.data.description}
         </p>
 
-        {/* Tags Estilo "Label" */}
+        {/* Tags Estilo Index (Unificados) */}
         {tags.length > 0 && (
           <div class="flex flex-wrap gap-2">
             {tags.slice(0, 3).map((tag) => (
-              <span class="border border-white/10 bg-white/5 px-2 py-1 text-[9px] font-bold uppercase tracking-widest text-slate-300 font-mono group-hover:border-cyan-500/30 group-hover:text-cyan-300 transition-colors">
+              <div class="bg-gradient-to-r from-sky-800 to-cyan-600 px-3 py-1 text-[9px] font-black uppercase tracking-wider text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)]">
                 {tag}
-              </span>
+              </div>
             ))}
           </div>
         )}
       </div>
     </div>
 
-    {/* Brillo decorativo en la esquina al hacer hover */}
-    <div class="absolute top-0 right-0 w-24 h-24 bg-cyan-500/10 blur-[50px] opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+    {/* Brillo de Hover (Solo visible en Dark para no ensuciar el Light) */}
+    <div class="absolute top-0 right-0 w-24 h-24 bg-cyan-500/10 blur-[50px] opacity-0 dark:group-hover:opacity-100 transition-opacity duration-700"></div>
   </a>
 </li>

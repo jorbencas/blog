@@ -2,98 +2,82 @@
 // src/components/CodeEnhancer.astro
 ---
 
-<script is-inline>
-  const setupCodeBlocks = () => {
-    // Configuración de Lenguajes traducida
+<script is:inline>
+  // Usamos una función autoejecutable para evitar conflictos
+  const initCodeEnhancer = () => {
+    console.log("Iniciando CodeEnhancer..."); // Para debug en consola
+    
     const langConfig = {
       js: { label: 'JAVASCRIPT', color: 'text-yellow-400', icon: 'javascript' },
       ts: { label: 'TYPESCRIPT', color: 'text-blue-400', icon: 'typescript' },
       py: { label: 'PYTHON', color: 'text-blue-500', icon: 'python' },
-      bash: { label: 'TERMINAL', color: 'text-slate-400', icon: 'gnubash' },
-      sh: { label: 'CONSOLA', color: 'text-slate-400', icon: 'gnubash' },
+      bash: { label: 'CONSOLA', color: 'text-slate-400', icon: 'gnubash' },
       jsx: { label: 'REACT_JSX', color: 'text-cyan-400', icon: 'react' },
       tsx: { label: 'REACT_TSX', color: 'text-cyan-400', icon: 'react' },
-      vue: { label: 'VUE_JS', color: 'text-emerald-400', icon: 'vuedotjs' },
       html: { label: 'HTML_5', color: 'text-orange-400', icon: 'html5' },
-      css: { label: 'CSS_3', color: 'text-blue-300', icon: 'css3' },
       astro: { label: 'ASTRO', color: 'text-orange-500', icon: 'astro' },
     };
 
-    const codeBlocks = document.querySelectorAll('pre');
+    // Seleccionamos todos los bloques pre que no hayan sido procesados
+    const codeBlocks = document.querySelectorAll('pre:not(.enhanced)');
 
     codeBlocks.forEach((pre) => {
-      if (pre.parentElement?.classList.contains('code-content')) return;
-
+      pre.classList.add('enhanced'); // Marcamos para no repetir el proceso
+      
       const langClass = Array.from(pre.classList).find(c => c.startsWith('language-')) || 'language-txt';
       const langKey = langClass.replace('language-', '').toLowerCase();
       const config = langConfig[langKey] || { label: langKey.toUpperCase(), color: 'text-slate-400', icon: 'code' };
 
-      // Contenedor principal con sombra Cian
+      // 1. Crear Wrapper
       const wrapper = document.createElement('div');
-      wrapper.className = 'code-wrapper group relative my-10 border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0d1117] shadow-[4px_4px_0px_0px_rgba(6,182,212,0.1)] transition-all';
+      wrapper.className = 'code-wrapper relative my-8 border border-slate-200 dark:border-white/10 bg-slate-950 shadow-[4px_4px_0px_0px_rgba(6,182,212,0.2)]';
 
-      // Cabecera traducida
+      // 2. Crear Cabecera
       const header = document.createElement('div');
-      header.className = 'flex items-center justify-between border-b border-slate-200 dark:border-white/5 bg-slate-100 dark:bg-white/[0.02] px-4 py-2 font-mono';
-      
+      header.className = 'flex items-center justify-between border-b border-white/5 bg-white/5 px-4 py-2 font-mono';
       header.innerHTML = `
-        <div class="flex items-center gap-3">
-          <img 
-            src="https://cdn.simpleicons.org/${config.icon}/${config.color.replace('text-', '')}" 
-            alt="${config.label}"
-            class="w-3.5 h-3.5 opacity-70"
-          />
-          <span class="text-[10px] font-bold tracking-[0.2em] ${config.color}">
-            ${config.label}
-          </span>
+        <div class="flex items-center gap-2">
+          <span class="text-[10px] font-bold tracking-widest ${config.color}">${config.label}</span>
         </div>
-        <button class="copy-button border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-800 px-3 py-1 text-[9px] font-bold uppercase tracking-widest text-slate-600 dark:text-slate-400 hover:border-cyan-500 hover:text-cyan-500 transition-all active:scale-95">
-          <span class="copy-text">COPIAR_CODIGO</span>
-          <span class="check-icon hidden text-cyan-500">¡COPIADO!</span>
+        <button class="copy-btn text-[9px] font-bold uppercase tracking-tighter text-slate-400 hover:text-cyan-400 transition-colors">
+          [ COPIAR ]
         </button>
       `;
 
+      // 3. Re-estructurar DOM
       const content = document.createElement('div');
-      content.className = 'code-content overflow-x-auto p-5 text-sm leading-relaxed font-mono';
-
-      pre.parentNode?.insertBefore(wrapper, pre);
+      content.className = 'p-4 overflow-x-auto text-sm';
+      
+      pre.parentNode.insertBefore(wrapper, pre);
       wrapper.appendChild(header);
       wrapper.appendChild(content);
       content.appendChild(pre);
 
-      // Lógica de Copiado con feedback en castellano
-      const copyBtn = header.querySelector('.copy-button');
-      copyBtn?.addEventListener('click', async () => {
-        const codeText = pre.innerText;
-        await navigator.clipboard.writeText(codeText);
-
-        const text = copyBtn.querySelector('.copy-text');
-        const check = copyBtn.querySelector('.check-icon');
-
-        text?.classList.add('hidden');
-        check?.classList.remove('hidden');
-
-        setTimeout(() => {
-          text?.classList.remove('hidden');
-          check?.classList.add('hidden');
-        }, 2000);
+      // 4. Lógica de copia
+      const btn = header.querySelector('.copy-btn');
+      btn.addEventListener('click', () => {
+        navigator.clipboard.writeText(pre.innerText);
+        btn.innerText = '¡COPIADO!';
+        setTimeout(() => btn.innerText = '[ COPIAR ]', 2000);
       });
     });
   };
 
-  document.addEventListener('astro:page-load', setupCodeBlocks);
+  // ESTO ES CLAVE: Se ejecuta en cada carga de página de Astro
+  document.addEventListener('astro:page-load', initCodeEnhancer);
+  // Y como fallback por si no usas View Transitions
+  document.addEventListener('DOMContentLoaded', initCodeEnhancer);
 </script>
 
 <style is:global>
-  /* Fuente JetBrains Mono para el código */
-  .code-wrapper pre, .code-wrapper code {
-    font-family: 'JetBrains Mono', monospace !important;
+  .code-wrapper pre {
+    margin: 0 !important;
     background: transparent !important;
+    padding: 0 !important;
+    font-family: 'JetBrains Mono', monospace !important;
   }
-
-  /* Estilo para el código que va suelto en el texto */
+  /* Estilo para los tags dentro del texto (inline) */
   :not(pre) > code {
-    @apply font-mono font-bold text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 px-1.5 py-0.5 rounded;
-    font-size: 0.9em;
+    @apply bg-cyan-500/10 text-cyan-500 px-1.5 py-0.5 font-mono font-bold text-sm;
   }
 </style>
