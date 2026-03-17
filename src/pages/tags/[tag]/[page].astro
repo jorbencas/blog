@@ -6,7 +6,7 @@ import HomeLayout from "@layouts/HomeLayout.astro";
 import NextPrevLiks from "@components/NextPrevLiks.astro";
 import Information from "@components/Information.astro";
 import { getSortedPosts } from "src/utils";
-import { getCollection } from "astro:content"; // NUEVO IMPORT
+import { getCollection } from "astro:content";
 
 export async function getStaticPaths({ paginate }) {
   const allPosts = await getCollection("posts");
@@ -21,36 +21,50 @@ export async function getStaticPaths({ paginate }) {
     });
   });
 }
+
 const { tag } = Astro.params;
 const { page } = Astro.props;
 const { data, url } = page;
 const { prev, next } = url;
 ---
 
-<Layout title={"Articulos con " + tag}>
+<Layout title={"Artículos sobre " + tag}>
   <HomeLayout>
-    <div class="flex justify-between items-start">
-      <h5 class="text-xl font-bold leading-none text-gray-900 dark:text-white">
-        Articulos con: {tag}
-      </h5>
+    <section class="space-y-12">
+      <div class="text-center space-y-4">
+        <div class="inline-block bg-gradient-to-r from-sky-800 to-cyan-500 px-6 py-2">
+           <span class="text-[10px] font-black uppercase tracking-[0.4em] text-white/80">Categoría</span>
+        </div>
+        <h1 class="text-4xl md:text-6xl font-black uppercase tracking-tighter text-slate-900 dark:text-white italic">
+          {tag}
+        </h1>
+        <div class="h-1 w-24 bg-cyan-500 mx-auto"></div>
+      </div>
 
-      <NextPrevLiks
-        nextURL={next}
-        prevURL={prev}
-        textNext="Ateriores"
-        textPrev="Posteriores"
-      />
-    </div>
-    <div class="flow-root">
-      <ul role="list">
-        {
-          data.length > 0 ? (
-            data.flatMap((p) => <PreviewPost post={p} />)
-          ) : (
-            <Information />
-          )
-        }
-      </ul>
-    </div>
+      <div class="flow-root">
+        <ul role="list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {
+            data.length > 0 ? (
+              data.map((p) => <PreviewPost post={p} />)
+            ) : (
+              <div class="col-span-full">
+                <Information />
+              </div>
+            )
+          }
+        </ul>
+      </div>
+
+      { (next || prev) && (
+        <div class="pt-12 border-t border-slate-200 dark:border-white/5">
+          <NextPrevLiks
+            nextURL={next}
+            prevURL={prev}
+            textNext="Anteriores"
+            textPrev="Posteriores"
+          />
+        </div>
+      )}
+    </section>
   </HomeLayout>
 </Layout>

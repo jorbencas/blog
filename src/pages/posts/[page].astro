@@ -5,7 +5,7 @@ import HomeLayout from "@layouts/HomeLayout.astro";
 import NextPrevLiks from "@components/NextPrevLiks.astro";
 import Information from "@components/Information.astro";
 import { getSortedPosts } from "src/utils";
-import { getCollection } from "astro:content"; // NUEVO IMPORT
+import { getCollection } from "astro:content";
 
 export async function getStaticPaths({ paginate }) {
   const allPosts = await getCollection("posts");
@@ -25,27 +25,34 @@ const { prev, next } = url;
   description="Artículos sobre desarrollo web y programación"
 >
   <HomeLayout>
-    <div class="flex justify-between items-start">
-      <h5 class="text-xl font-bold leading-none text-gray-900 dark:text-white">
-        Últimos artículos
-      </h5>
-      <NextPrevLiks
-        nextURL={next}
-        prevURL={prev}
-        textNext="Ateriores"
-        textPrev="Posteriores"
-      />
-    </div>
-    <div class="flow-root">
-      <ul role="list">
-        {
-          data.length > 0 ? (
-            data.flatMap((p) => <PreviewPost post={p} />)
-          ) : (
-            <Information />
-          )
-        }
-      </ul>
-    </div>
+    <section class="space-y-12">
+      <div class="text-center space-y-2">
+        <h1 class="text-4xl font-black uppercase tracking-tighter text-gray-900 dark:text-white">
+          Bitácora <span class="text-cyan-500 text-2xl align-top">Pg.{currentPage}</span>
+        </h1>
+        <div class="h-1 w-24 bg-cyan-500 mx-auto"></div>
+      </div>
+
+      <div class="flow-root">
+        <ul role="list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {
+            data.length > 0 ? (
+              data.map((p) => <PreviewPost post={p} />)
+            ) : (
+              <Information />
+            )
+          }
+        </ul>
+      </div>
+
+      <div class="pt-12 border-t border-slate-200 dark:border-white/5">
+        <NextPrevLiks
+          nextURL={next}
+          prevURL={prev}
+          textNext="Anteriores"
+          textPrev="Posteriores"
+        />
+      </div>
+    </section>
   </HomeLayout>
 </Layout>

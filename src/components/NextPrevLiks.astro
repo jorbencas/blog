@@ -1,18 +1,31 @@
 ---
 import PaginationLinks from "./PaginationLinks.astro";
-const { nextURL, prevURL, textNext, textPrev, imageNext, imagePrev } =
-  Astro.props;
+const { nextURL, prevURL, textNext, textPrev } = Astro.props;
 ---
 
-<ul class="flex justify-center items-center">
-  {
-    nextURL && (
-      <PaginationLinks url={nextURL} image={imageNext} text={textNext} />
-    )
-  }
-  {
-    prevURL && (
-      <PaginationLinks url={prevURL} image={imagePrev} text={textPrev} />
-    )
-  }
-</ul>
+<div class="w-full border-t border-slate-200 dark:border-white/10 mt-12">
+  <ul class="flex flex-col sm:flex-row w-full divide-y sm:divide-y-0 sm:divide-x divide-slate-200 dark:divide-white/10">
+    {
+      prevURL && (
+        <li class="flex-1">
+          <PaginationLinks 
+            url={prevURL} 
+            text={textPrev} 
+            isPrev={true} 
+          />
+        </li>
+      )
+    }
+    {
+      nextURL && (
+        <li class="flex-1">
+          <PaginationLinks 
+            url={nextURL} 
+            text={textNext} 
+            isPrev={false} 
+          />
+        </li>
+      )
+    }
+  </ul>
+</div>
