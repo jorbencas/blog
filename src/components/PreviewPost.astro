@@ -10,44 +10,47 @@ const postUrl = `/posts/${post.data.slug || post.id.replace(/\.[^/.]+$/, "")}`;
 const tags = post.data.tags || [];
 ---
 
-<li class="group list-none flex">
+<li class="group list-none flex h-[400px]">
   <a
     href={postUrl}
-    class="relative flex flex-col w-full overflow-hidden rounded-[2.5rem] border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 transition-all duration-300 hover:border-cyan-500/50 dark:hover:border-cyan-400/50 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+    class="relative flex flex-col w-full overflow-hidden border border-slate-200 dark:border-white/10 bg-slate-900 transition-all duration-500 hover:border-cyan-500"
   >
-    <div class="relative aspect-[16/10] w-full overflow-hidden border-b border-slate-200 dark:border-white/10">
+    <div class="absolute inset-0 z-0">
       <img
-        class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+        class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-60 group-hover:opacity-40"
         src={post.data.image}
         alt={post.data.title}
-        loading="lazy"
       />
+      <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/20 to-transparent"></div>
     </div>
 
-    <div class="flex flex-col flex-grow p-6 sm:p-8">
-      <span class="mb-3 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
-        {formatDatePost(post.data.pubDate)}
-      </span>
-      
-      <h3 class="mb-3 text-xl sm:text-2xl font-black leading-tight text-slate-900 dark:text-white transition-colors group-hover:text-cyan-600 dark:group-hover:text-cyan-400">
-        {post.data.title}
-      </h3>
-      
-      <p class="mb-6 line-clamp-3 text-sm sm:text-base leading-relaxed text-slate-500 dark:text-slate-400">
-        {post.data.description}
-      </p>
+    <div class="relative z-10 flex flex-col h-full justify-end">
+      <div class="bg-slate-900/60 backdrop-blur-sm p-6 border-t border-white/10 transition-colors group-hover:bg-slate-900/80">
+        
+        <span class="mb-2 block text-[10px] font-black uppercase tracking-[0.3em] text-cyan-400">
+          {formatDatePost(post.data.pubDate)}
+        </span>
+        
+        <h3 class="mb-2 text-2xl font-black leading-tight text-white">
+          {post.data.title}
+        </h3>
+        
+        <p class="mb-4 line-clamp-2 text-sm leading-relaxed text-slate-300">
+          {post.data.description}
+        </p>
 
-      {tags.length > 0 && (
-        <div class="mt-auto flex flex-wrap gap-2">
-          {tags.map((tag: string) => (
-            <div
-              class="flex items-center rounded-full bg-gradient-to-r from-sky-800 to-cyan-500 px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-white"
-            >
-              {tag}
-            </div>
-          ))}
-        </div>
-      )}
+        {tags.length > 0 && (
+          <div class="flex flex-wrap gap-2">
+            {tags.map((tag: string) => (
+              <div
+                class="bg-gradient-to-r from-sky-800 to-cyan-500 px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-white"
+              >
+                {tag}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   </a>
 </li>
