@@ -1,123 +1,79 @@
 ---
 const { headings = [] } = Astro.props;
-// Solo mostramos si hay suficientes encabezados para justificar un índice
 const hasContent = headings?.length > 1;
 ---
 
 {
   hasContent && (
-    <div id="toc-container" class="relative h-full font-mono">
-      <div class="toc-wrapper h-full">
-        {/* Botón Móvil Brutalista */}
-        <button
-          id="toc-mobile-toggle"
-          class="fixed bottom-8 right-8 z-[100] flex items-center justify-center w-12 h-12 bg-slate-900 dark:bg-cyan-500 text-white dark:text-slate-900 border border-cyan-500/50 shadow-[4px_4px_0px_0px_rgba(6,182,212,1)] md:hidden active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
+    <nav id="toc-container" class="relative h-full font-sans">
+      <div class="sticky top-32 h-fit flex flex-col py-4 px-2">
+        {/* Header del Índice */}
+        <div class="flex items-center gap-2 mb-6 opacity-40">
+          <span class="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-900 dark:text-white font-mono">
+            Contenido
+          </span>
+          <div class="h-[1px] flex-grow bg-slate-200 dark:bg-white/10"></div>
+        </div>
 
-        <aside
-          id="toc-menu"
-          class="w-full md:w-64 h-full transform translate-x-[150%] md:translate-x-0 transition-transform duration-500 ease-in-out"
-        >
-          <div class="sticky top-28 h-fit flex flex-col px-2">
-            
-            {/* Header del Índice */}
-            <div class="flex items-center gap-2 mb-6 opacity-60 shrink-0">
-              <span class="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-900 dark:text-cyan-400">
-                00_INDEX
-              </span>
-              <div class="h-[1px] flex-grow bg-slate-200 dark:bg-cyan-500/20"></div>
-            </div>
-
-            <nav class="flex-grow overflow-y-auto pr-4 custom-scrollbar">
-              <ul class="relative space-y-3">
-                {/* Línea base vertical decorativa */}
-                <div class="absolute left-0 top-0 h-full w-[1px] bg-slate-100 dark:bg-white/5"></div>
-                
-                {headings.map((h) => (
-                  <li class={`relative ${h.depth > 2 ? 'ml-4' : ''}`}>
-                    <a
-                      href={`#${h.slug}`}
-                      class:list={[
-                        "toc-link block transition-all duration-200 border-l-2 border-transparent pl-4 text-[11px] uppercase tracking-wider",
-                        h.depth === 2 
-                          ? "text-slate-500 dark:text-slate-400 font-bold" 
-                          : "text-slate-400 dark:text-slate-500 font-medium"
-                      ]}
-                    >
-                      <span class="mr-2 opacity-30">/</span>{h.text}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-
-            {/* Decoración inferior tech */}
-            <div class="mt-8 pt-4 border-t border-slate-100 dark:border-white/5 opacity-20">
-               <span class="text-[9px] uppercase tracking-tighter text-slate-500">Navigation_System_v2.6</span>
-            </div>
-          </div>
-        </aside>
+        <ul class="space-y-1 border-l border-slate-200 dark:border-white/5">
+          {headings.map((h) => (
+            <li>
+              <a
+                href={`#${h.slug}`}
+                class:list={[
+                  "toc-link block py-2 pl-4 -ml-[1px] border-l-2 border-transparent transition-all duration-300",
+                  "text-sm font-medium hover:text-cyan-500",
+                  h.depth === 2 ? "text-slate-600 dark:text-slate-400" : "text-slate-400 dark:text-slate-500 text-xs ml-2"
+                ]}
+              >
+                {h.text}
+              </a>
+            </li>
+          ))}
+        </ul>
       </div>
-    </div>
+    </nav>
   )
 }
 
 <style is:global>
-  /* Ajuste de scroll para no tapar títulos con el header */
+  /* EL ESTADO ACTIVO: Ahora con más presencia */
+  .toc-link-active {
+    color: #06b6d4 !important; /* Cyan 500 */
+    border-left-color: #06b6d4 !important;
+    background: linear-gradient(90deg, rgba(6, 182, 212, 0.1) 0%, transparent 100%);
+    font-weight: 700 !important;
+    font-size: 15px !important; /* Texto un poco más grande al estar activo */
+  }
+
+  /* Ajuste de scroll para no tapar títulos */
   h1[id], h2[id], h3[id] {
-    scroll-margin-top: 100px;
+    scroll-margin-top: 120px;
   }
-
-  .custom-scrollbar::-webkit-scrollbar { width: 0px; }
-
-  <style is:global>
-  /* El enlace que NO está activo */
-  .toc-link {
-    @apply text-slate-400 dark:text-slate-500 border-l-2 border-transparent pl-4 py-1 block transition-all duration-200;
-    font-family: var(--font-mono);
-    font-size: 12px;
-  }
-
-  /* EL ESTADO ACTIVO: Aquí es donde cambiamos el color */
-  .toc-link-active {
-    @apply text-cyan-600 dark:text-cyan-400 border-l-cyan-500 font-bold !important;
-    background: rgba(6, 182, 212, 0.05); /* Un fondo sutil cian */
-    transform: translateX(4px); /* Un pequeño desplazamiento a la derecha */
-  }
-
-  /* Efecto hover general */
-  .toc-link:hover {
-    @apply text-slate-900 dark:text-white;
-  }
-
-
-  .toc-link-active {
-  color: #22d3ee !important; /* Cyan 400 */
-  border-left: 3px solid #22d3ee !important;
-  background: linear-gradient(90deg, rgba(34, 211, 238, 0.1) 0%, transparent 100%);
-  padding-left: 1.5rem !important;
-  font-weight: 700 !important;
-}
 </style>
 
 <script>
   function initTOC() {
     const links = document.querySelectorAll(".toc-link");
-    const content = document.querySelector("#contenido");
-    if (!content) return;
-    
-    const headings = Array.from(content.querySelectorAll("h2[id], h3[id]"));
+    // Buscamos los encabezados dentro del artículo principal
+    const headings = Array.from(document.querySelectorAll("article h2[id], article h3[id]"));
 
     if (links.length === 0 || headings.length === 0) return;
 
-    // Observer para resaltar el enlace activo
-    const spyOptions = {
+    // Función para limpiar activos
+    const removeAllActive = () => {
+      links.forEach(link => link.classList.remove("toc-link-active"));
+    };
+
+    // FUNCIÓN PARA ACTIVAR EL PRIMERO POR DEFECTO
+    const activateFirst = () => {
+       removeAllActive();
+       links[0].classList.add("toc-link-active");
+    };
+
+    const observerOptions = {
       root: null,
-      rootMargin: '-10% 0px -70% 0px', // Zona de detección optimizada
+      rootMargin: "-100px 0px -70% 0px", // Detecta cuando están en la parte superior
       threshold: 0
     };
 
@@ -125,28 +81,26 @@ const hasContent = headings?.length > 1;
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           const id = entry.target.getAttribute("id");
-          links.forEach((link) => {
-            link.classList.remove("toc-link-active");
-            if (link.getAttribute("href") === `#${id}`) {
-              link.classList.add("toc-link-active");
-            }
-          });
+          const activeLink = document.querySelector(`.toc-link[href="#${id}"]`);
+
+          if (activeLink) {
+            removeAllActive();
+            activeLink.classList.add("toc-link-active");
+          }
         }
       });
-    }, spyOptions);
+    }, observerOptions);
 
     headings.forEach((h) => observer.observe(h));
 
-    // Lógica básica para el toggle móvil (si decides implementarla)
-    const mobileBtn = document.getElementById("toc-mobile-toggle");
-    const menu = document.getElementById("toc-menu");
-    if (mobileBtn && menu) {
-      mobileBtn.addEventListener("click", () => {
-        menu.classList.toggle("translate-x-0");
-        menu.classList.toggle("translate-x-[150%]");
-      });
+    // Si estamos al inicio de la página, activar el primero
+    if (window.scrollY < 100) {
+      activateFirst();
     }
   }
 
+  // Ejecutar en carga inicial y en cambios de página de Astro
   document.addEventListener("astro:page-load", initTOC);
+  // Por si acaso no usas View Transitions, ejecutar también en DOMContentLoaded
+  document.addEventListener("DOMContentLoaded", initTOC);
 </script>

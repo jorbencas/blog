@@ -4,12 +4,13 @@
 
 <script is-inline>
   const setupCodeBlocks = () => {
+    // Configuración de Lenguajes traducida
     const langConfig = {
       js: { label: 'JAVASCRIPT', color: 'text-yellow-400', icon: 'javascript' },
       ts: { label: 'TYPESCRIPT', color: 'text-blue-400', icon: 'typescript' },
       py: { label: 'PYTHON', color: 'text-blue-500', icon: 'python' },
       bash: { label: 'TERMINAL', color: 'text-slate-400', icon: 'gnubash' },
-      sh: { label: 'SHELL', color: 'text-slate-400', icon: 'gnubash' },
+      sh: { label: 'CONSOLA', color: 'text-slate-400', icon: 'gnubash' },
       jsx: { label: 'REACT_JSX', color: 'text-cyan-400', icon: 'react' },
       tsx: { label: 'REACT_TSX', color: 'text-cyan-400', icon: 'react' },
       vue: { label: 'VUE_JS', color: 'text-emerald-400', icon: 'vuedotjs' },
@@ -27,11 +28,11 @@
       const langKey = langClass.replace('language-', '').toLowerCase();
       const config = langConfig[langKey] || { label: langKey.toUpperCase(), color: 'text-slate-400', icon: 'code' };
 
-      // Contenedor principal: BORDES RECTOS Y SOMBRA SÓLIDA
+      // Contenedor principal con sombra Cian
       const wrapper = document.createElement('div');
-      wrapper.className = 'code-wrapper group relative my-10 border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] dark:shadow-[4px_4px_0px_0px_rgba(6,182,212,0.2)] transition-all';
+      wrapper.className = 'code-wrapper group relative my-10 border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0d1117] shadow-[4px_4px_0px_0px_rgba(6,182,212,0.1)] transition-all';
 
-      // Cabecera Estilo Terminal
+      // Cabecera traducida
       const header = document.createElement('div');
       header.className = 'flex items-center justify-between border-b border-slate-200 dark:border-white/5 bg-slate-100 dark:bg-white/[0.02] px-4 py-2 font-mono';
       
@@ -40,15 +41,15 @@
           <img 
             src="https://cdn.simpleicons.org/${config.icon}/${config.color.replace('text-', '')}" 
             alt="${config.label}"
-            class="w-3.5 h-3.5 opacity-70 grayscale group-hover:grayscale-0 transition-all"
+            class="w-3.5 h-3.5 opacity-70"
           />
           <span class="text-[10px] font-bold tracking-[0.2em] ${config.color}">
             ${config.label}
           </span>
         </div>
-        <button class="copy-button relative overflow-hidden border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-800 px-3 py-1 text-[9px] font-bold uppercase tracking-widest text-slate-600 dark:text-slate-400 hover:border-cyan-500 hover:text-cyan-500 transition-all active:translate-y-[1px]">
-          <span class="copy-text">COPY_DATA</span>
-          <span class="check-icon hidden text-cyan-500">DONE_</span>
+        <button class="copy-button border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-800 px-3 py-1 text-[9px] font-bold uppercase tracking-widest text-slate-600 dark:text-slate-400 hover:border-cyan-500 hover:text-cyan-500 transition-all active:scale-95">
+          <span class="copy-text">COPIAR_CODIGO</span>
+          <span class="check-icon hidden text-cyan-500">¡COPIADO!</span>
         </button>
       `;
 
@@ -60,7 +61,7 @@
       wrapper.appendChild(content);
       content.appendChild(pre);
 
-      // Lógica de Copiado
+      // Lógica de Copiado con feedback en castellano
       const copyBtn = header.querySelector('.copy-button');
       copyBtn?.addEventListener('click', async () => {
         const codeText = pre.innerText;
@@ -71,47 +72,28 @@
 
         text?.classList.add('hidden');
         check?.classList.remove('hidden');
-        copyBtn.classList.add('border-cyan-500');
 
         setTimeout(() => {
           text?.classList.remove('hidden');
           check?.classList.add('hidden');
-          copyBtn.classList.remove('border-cyan-500');
         }, 2000);
       });
     });
   };
 
-  setupCodeBlocks();
   document.addEventListener('astro:page-load', setupCodeBlocks);
 </script>
 
 <style is:global>
-  /* Reset de pre-estilos de Astro/Markdown */
-  .code-wrapper pre {
-    margin: 0 !important;
-    background-color: transparent !important;
-    padding: 0 !important;
-    font-family: 'Space Mono', monospace !important;
+  /* Fuente JetBrains Mono para el código */
+  .code-wrapper pre, .code-wrapper code {
+    font-family: 'JetBrains Mono', monospace !important;
+    background: transparent !important;
   }
 
-  /* Scrollbar brutalista (Cian en Dark) */
-  .code-content::-webkit-scrollbar { height: 4px; }
-  .code-content::-webkit-scrollbar-track { @apply bg-transparent; }
-  .code-content::-webkit-scrollbar-thumb { 
-    @apply bg-slate-300 dark:bg-cyan-500/30;
-  }
-
-  /* Código Inline (Texto dentro de párrafos) */
+  /* Estilo para el código que va suelto en el texto */
   :not(pre) > code {
-    @apply font-mono font-bold text-cyan-600 dark:text-cyan-400 bg-cyan-500/5 dark:bg-cyan-500/10 px-1.5 py-0.5 border border-cyan-500/20;
+    @apply font-mono font-bold text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 px-1.5 py-0.5 rounded;
     font-size: 0.9em;
-    word-break: break-word;
-  }
-
-  /* Ajuste para que el código dentro de bloques NO sea cyan */
-  pre code {
-    @apply text-inherit bg-transparent border-none p-0 font-normal;
-    font-size: inherit !important;
   }
 </style>
