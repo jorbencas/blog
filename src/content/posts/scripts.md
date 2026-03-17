@@ -10,7 +10,7 @@ author: "Jorge Beneyto Castelló"
 ---
 
 # ar 1
-``` bash
+```bash
 #!/bin/bash
 
 # Ruta de las carpetas de videos y audios
