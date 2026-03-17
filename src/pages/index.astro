@@ -3,139 +3,131 @@ import Layout from "@layouts/Layout.astro";
 import HomeLayout from "@layouts/HomeLayout.astro";
 import PreviewPost from "@components/PreviewPost.astro";
 import ChallengeCard from "@components/ChallengeCard.astro";
-import { getSortedPosts } from "../utils";
+import { getSortedPosts } from "src/utils";
 import { getCollection } from "astro:content";
 
-// 1. Cargamos Posts y filtramos los automáticos
+// Lógica de carga (se mantiene igual)
 const allPosts = await getCollection("posts");
 const manualPosts = allPosts.filter((p) => !p.id.includes("auto-news"));
 const sortedPosts = await getSortedPosts(manualPosts);
 const latestPosts = sortedPosts.slice(0, 6);
 
-// 2. Cargamos Retos y filtramos (opcionalmente) los automáticos
 const allChallenges = await getCollection("challenges");
-// Filtro de seguridad: solo retos que no estén en carpetas de auto-generación si así lo deseas
 const manualChallenges = allChallenges.filter(
   (c) => !c.id.includes("auto-challenges")
 );
-
 const sortedChallenges = manualChallenges.sort(
   (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
 );
 const latestChallenges = sortedChallenges.slice(0, 3);
 ---
 
-<Layout title="Code_Nexus | Desafíos y Bitácora">
+<Layout title="Code_Nexus | Inicio">
   <HomeLayout>
     <section
-      class="relative py-12 md:py-20 text-center space-y-8 overflow-hidden bg-grid-cyber rounded-3xl border border-white/5 mb-16"
+      class="relative py-12 md:py-24 text-center space-y-6 md:space-y-10 overflow-hidden bg-grid-cyber rounded-2xl md:rounded-3xl border border-white/5 mb-12 md:mb-20 px-4"
     >
       <div class="absolute inset-0 hero-glow -z-10"></div>
 
-      <div class="space-y-4 relative z-10">
+      <div class="space-y-3 md:space-y-4 relative z-10">
         <h1
-          class="text-6xl md:text-8xl font-black italic uppercase tracking-tighter text-white"
+          class="text-5xl sm:text-6xl md:text-8xl font-black italic uppercase tracking-tighter text-white leading-none"
         >
           Code<span class="text-cyan-500">_Nexus</span>
         </h1>
-        <p class="text-slate-400 font-mono text-sm uppercase tracking-[0.4em]">
+        <p
+          class="text-slate-400 font-mono text-[10px] md:text-sm uppercase tracking-[0.2em] md:tracking-[0.4em] max-w-xs md:max-w-none mx-auto"
+        >
           Desafíos de ingeniería & Bitácora de desarrollo
         </p>
       </div>
 
-      <div class="max-w-2xl mx-auto relative group px-6">
+      <div class="max-w-2xl mx-auto relative group w-full">
         <div
-          class="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-sky-800 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-1000"
+          class="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-sky-800 rounded-lg blur opacity-20 group-hover:opacity-40 transition duration-1000"
         >
         </div>
         <div
-          class="relative bg-slate-900 rounded-lg border border-white/10 p-2 flex items-center gap-4"
+          class="relative bg-slate-900/90 rounded-lg border border-white/10 p-1.5 md:p-2 flex items-center gap-3 md:gap-4 backdrop-blur-sm"
         >
-          <span class="pl-4 text-cyan-500 font-mono text-lg font-bold">>></span>
+          <span
+            class="pl-3 md:pl-4 text-cyan-500 font-mono text-sm md:text-lg font-bold"
+            >>></span
+          >
           <input
             id="main-search"
             type="text"
-            placeholder="Buscar protocolos, retos o tags..."
-            class="bg-transparent border-none focus:ring-0 text-white font-mono text-sm w-full placeholder:text-slate-600 outline-none"
+            placeholder="Buscar protocolos..."
+            class="bg-transparent border-none focus:ring-0 text-white font-mono text-xs md:text-sm w-full placeholder:text-slate-600 outline-none"
           />
         </div>
       </div>
     </section>
 
-    <div class="space-y-24">
-      <section class="space-y-8">
+    <div class="space-y-16 md:space-y-28">
+      <section class="space-y-6 md:space-y-10 px-2 md:px-0">
         <div
-          class="flex items-end justify-between border-b border-white/10 pb-4"
+          class="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-white/10 pb-4 md:pb-6"
         >
-          <div>
+          <div class="space-y-1">
             <span
-              class="text-[10px] font-mono text-cyan-500 uppercase tracking-[0.3em]"
+              class="text-[9px] md:text-[10px] font-mono text-cyan-500 uppercase tracking-[0.2em]"
               >Nuevas Misiones</span
             >
             <h2
-              class="text-3xl font-black italic uppercase tracking-tighter text-white"
+              class="text-2xl md:text-4xl font-black italic uppercase tracking-tighter text-white"
             >
               Challenge_Laboratory
             </h2>
           </div>
           <a
             href="/retos"
-            class="text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-cyan-400 transition-colors"
+            class="text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-cyan-400 transition-colors self-start md:self-auto"
           >
             Ver todos los retos →
           </a>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div
+          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10"
+        >
           {
-            latestChallenges.length > 0 ? (
-              latestChallenges.map((ch) => (
-                <div class="card-searchable h-full">
-                  <ChallengeCard
-                    href={`/retos/${ch.slug}`}
-                    title={ch.data.title}
-                    description={ch.data.description}
-                    image={ch.data.image}
-                    difficulty={ch.data.difficulty}
-                  />
-                </div>
-              ))
-            ) : (
-              <p class="text-slate-500 italic font-mono col-span-full text-center py-10">
-                No hay retos disponibles.
-              </p>
-            )
+            latestChallenges.map((ch) => (
+              <div class="card-searchable">
+                <ChallengeCard {...ch.data} href={`/retos/${ch.slug}`} />
+              </div>
+            ))
           }
         </div>
       </section>
 
-      <section class="space-y-8">
+      <section class="space-y-6 md:space-y-10 px-2 md:px-0">
         <div
-          class="flex items-end justify-between border-b border-white/10 pb-4"
+          class="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-white/10 pb-4 md:pb-6"
         >
-          <div>
+          <div class="space-y-1">
             <span
-              class="text-[10px] font-mono text-slate-500 uppercase tracking-[0.3em]"
+              class="text-[9px] md:text-[10px] font-mono text-slate-500 uppercase tracking-[0.2em]"
               >Últimas Entradas</span
             >
             <h2
-              class="text-3xl font-black italic uppercase tracking-tighter text-white"
+              class="text-2xl md:text-4xl font-black italic uppercase tracking-tighter text-white"
             >
               Dev_Log / Blog
             </h2>
           </div>
           <a
             href="/posts"
-            class="text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-white transition-colors"
+            class="text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-white transition-colors self-start md:self-auto"
           >
             Ir a la bitácora →
           </a>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {
             latestPosts.map((p) => (
-              <div class="card-searchable h-full">
+              <div class="card-searchable">
                 <PreviewPost post={p} />
               </div>
             ))
@@ -147,28 +139,30 @@ const latestChallenges = sortedChallenges.slice(0, 3);
 </Layout>
 
 <style>
-  /* Animación sutil de fondo */
   .bg-grid-cyber {
-    background-size: 40px 40px;
+    background-size: 30px 30px;
     background-image: linear-gradient(
         to right,
-        rgba(6, 182, 212, 0.05) 1px,
+        rgba(6, 182, 212, 0.04) 1px,
         transparent 1px
       ),
-      linear-gradient(to bottom, rgba(6, 182, 212, 0.05) 1px, transparent 1px);
+      linear-gradient(to bottom, rgba(6, 182, 212, 0.04) 1px, transparent 1px);
   }
-
+  @media (min-width: 768px) {
+    .bg-grid-cyber {
+      background-size: 50px 50px;
+    }
+  }
   .hero-glow {
     background: radial-gradient(
       circle at center,
-      rgba(6, 182, 212, 0.15) 0%,
-      transparent 70%
+      rgba(6, 182, 212, 0.12) 0%,
+      transparent 80%
     );
   }
 </style>
 
 <script>
-  // Selección precisa para evitar bugs
   const searchInput = document.getElementById(
     "main-search"
   ) as HTMLInputElement;
@@ -176,18 +170,14 @@ const latestChallenges = sortedChallenges.slice(0, 3);
 
   searchInput?.addEventListener("input", (e) => {
     const searchTerm = (e.target as HTMLInputElement).value.toLowerCase();
-
     cards.forEach((card) => {
-      // Buscamos dentro de los h3 y p de cada tarjeta
       const title = card.querySelector("h3")?.textContent?.toLowerCase() || "";
       const description =
         card.querySelector("p")?.textContent?.toLowerCase() || "";
-
-      if (title.includes(searchTerm) || description.includes(searchTerm)) {
-        (card as HTMLElement).style.display = "block";
-      } else {
-        (card as HTMLElement).style.display = "none";
-      }
+      (card as HTMLElement).style.display =
+        title.includes(searchTerm) || description.includes(searchTerm)
+          ? "block"
+          : "none";
     });
   });
 </script>
