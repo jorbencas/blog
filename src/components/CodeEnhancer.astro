@@ -3,81 +3,111 @@
 ---
 
 <script is:inline>
-  // Usamos una función autoejecutable para evitar conflictos
-  const initCodeEnhancer = () => {
-    console.log("Iniciando CodeEnhancer..."); // Para debug en consola
+  function mejorarBloquesCodigo() {
+    const bloques = document.querySelectorAll('pre:not(.mejorado)');
     
-    const langConfig = {
-      js: { label: 'JAVASCRIPT', color: 'text-yellow-400', icon: 'javascript' },
-      ts: { label: 'TYPESCRIPT', color: 'text-blue-400', icon: 'typescript' },
-      py: { label: 'PYTHON', color: 'text-blue-500', icon: 'python' },
-      bash: { label: 'CONSOLA', color: 'text-slate-400', icon: 'gnubash' },
-      jsx: { label: 'REACT_JSX', color: 'text-cyan-400', icon: 'react' },
-      tsx: { label: 'REACT_TSX', color: 'text-cyan-400', icon: 'react' },
-      html: { label: 'HTML_5', color: 'text-orange-400', icon: 'html5' },
-      astro: { label: 'ASTRO', color: 'text-orange-500', icon: 'astro' },
+    // Mapeo de iconos y colores oficiales
+    const configLang = {
+      js: { icon: 'javascript', color: 'F7DF1E' },
+      ts: { icon: 'typescript', color: '3178C6' },
+      py: { icon: 'python', color: '3776AB' },
+      html: { icon: 'html5', color: 'E34F26' },
+      css: { icon: 'css3', color: '1572B6' },
+      astro: { icon: 'astro', color: 'FF5D01' },
+      jsx: { icon: 'react', color: '61DAFB' },
+      tsx: { icon: 'react', color: '61DAFB' },
+      vue: { icon: 'vuedotjs', color: '4FC08D' },
+      bash: { icon: 'gnubash', color: '4EAA25' },
+      sh: { icon: 'gnubash', color: '4EAA25' },
+      json: { icon: 'json', color: '000000' }
     };
 
-    // Seleccionamos todos los bloques pre que no hayan sido procesados
-    const codeBlocks = document.querySelectorAll('pre:not(.enhanced)');
-
-    codeBlocks.forEach((pre) => {
-      pre.classList.add('enhanced'); // Marcamos para no repetir el proceso
+    bloques.forEach((pre) => {
+      pre.classList.add('mejorado');
       
-      const langClass = Array.from(pre.classList).find(c => c.startsWith('language-')) || 'language-txt';
-      const langKey = langClass.replace('language-', '').toLowerCase();
-      const config = langConfig[langKey] || { label: langKey.toUpperCase(), color: 'text-slate-400', icon: 'code' };
+      const claseLang = Array.from(pre.classList).find(c => c.startsWith('language-')) || 'language-txt';
+      const langKey = claseLang.replace('language-', '').toLowerCase();
+      const info = configLang[langKey] || { icon: 'code', color: '64748b' };
 
-      // 1. Crear Wrapper
+      // 1. Crear el Wrapper (Adaptable a Temas)
       const wrapper = document.createElement('div');
-      wrapper.className = 'code-wrapper relative my-8 border border-slate-200 dark:border-white/10 bg-slate-950 shadow-[4px_4px_0px_0px_rgba(6,182,212,0.2)]';
-
-      // 2. Crear Cabecera
+      wrapper.className = 'bloque-codigo-wrapper my-10 border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0d1117] shadow-[4px_4px_0px_0px_rgba(0,0,0,0.05)] dark:shadow-[4px_4px_0px_0px_rgba(6,182,212,0.1)] overflow-hidden transition-all';
+      
+      // 2. Cabecera con Icono Dinámico
       const header = document.createElement('div');
-      header.className = 'flex items-center justify-between border-b border-white/5 bg-white/5 px-4 py-2 font-mono';
+      header.className = 'flex justify-between items-center px-4 py-2 bg-slate-50 dark:bg-white/[0.03] border-b border-slate-200 dark:border-white/10 font-mono text-[10px] font-bold tracking-widest';
+      
+      // Inyectamos el icono desde SimpleIcons CDN usando el color de la config
       header.innerHTML = `
         <div class="flex items-center gap-2">
-          <span class="text-[10px] font-bold tracking-widest ${config.color}">${config.label}</span>
+          <img 
+            src="https://cdn.simpleicons.org/${info.icon}/${info.color}" 
+            class="w-3.5 h-3.5 opacity-80 dark:opacity-100" 
+            alt="${langKey}"
+          />
+          <span class="text-slate-600 dark:text-slate-300">${langKey.toUpperCase()}</span>
         </div>
-        <button class="copy-btn text-[9px] font-bold uppercase tracking-tighter text-slate-400 hover:text-cyan-400 transition-colors">
+        <button class="boton-copiar p-1 text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors uppercase">
           [ COPIAR ]
         </button>
       `;
 
-      // 3. Re-estructurar DOM
-      const content = document.createElement('div');
-      content.className = 'p-4 overflow-x-auto text-sm';
+      // 3. Estructura de contenido
+      const divContenido = document.createElement('div');
+      divContenido.className = 'p-5 overflow-x-auto selection:bg-cyan-500/30';
       
       pre.parentNode.insertBefore(wrapper, pre);
       wrapper.appendChild(header);
-      wrapper.appendChild(content);
-      content.appendChild(pre);
+      wrapper.appendChild(divContenido);
+      divContenido.appendChild(pre);
 
       // 4. Lógica de copia
-      const btn = header.querySelector('.copy-btn');
-      btn.addEventListener('click', () => {
-        navigator.clipboard.writeText(pre.innerText);
-        btn.innerText = '¡COPIADO!';
-        setTimeout(() => btn.innerText = '[ COPIAR ]', 2000);
+      const btn = header.querySelector('.boton-copiar');
+      btn.addEventListener('click', async () => {
+        await navigator.clipboard.writeText(pre.innerText);
+        btn.innerText = '¡LISTO!';
+        btn.classList.add('text-cyan-600', 'dark:text-cyan-400');
+        setTimeout(() => {
+          btn.innerText = '[ COPIAR ]';
+          btn.classList.remove('text-cyan-600', 'dark:text-cyan-400');
+        }, 2000);
       });
     });
-  };
+  }
 
-  // ESTO ES CLAVE: Se ejecuta en cada carga de página de Astro
-  document.addEventListener('astro:page-load', initCodeEnhancer);
-  // Y como fallback por si no usas View Transitions
-  document.addEventListener('DOMContentLoaded', initCodeEnhancer);
+  document.addEventListener('astro:page-load', mejorarBloquesCodigo);
+  document.addEventListener('DOMContentLoaded', mejorarBloquesCodigo);
 </script>
 
 <style is:global>
-  .code-wrapper pre {
-    margin: 0 !important;
-    background: transparent !important;
-    padding: 0 !important;
-    font-family: 'JetBrains Mono', monospace !important;
+  /* Scrollbar personalizado para los bloques de código */
+  .bloque-codigo-wrapper div::-webkit-scrollbar {
+    height: 5px;
   }
-  /* Estilo para los tags dentro del texto (inline) */
-  :not(pre) > code {
-    @apply bg-cyan-500/10 text-cyan-500 px-1.5 py-0.5 font-mono font-bold text-sm;
+  .bloque-codigo-wrapper div::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.2); /* slate-400 con opacidad */
+    border-radius: 10px;
+  }
+  .dark .bloque-codigo-wrapper div::-webkit-scrollbar-thumb {
+    background: rgba(6, 182, 212, 0.2); /* cyan-500 con opacidad */
+  }
+
+  /* Forzar fuente JetBrains Mono */
+  .bloque-codigo-wrapper pre, 
+  .bloque-codigo-wrapper code {
+    font-family: 'JetBrains Mono', monospace !important;
+    background: transparent !important;
+    font-size: 13.5px !important;
+    line-height: 1.6 !important;
+  }
+
+  /* Estilo Light: Texto oscuro por defecto en bloques */
+  .bloque-codigo-wrapper pre {
+    color: #1e293b; /* slate-800 */
+  }
+
+  /* Estilo Dark: Texto claro */
+  .dark .bloque-codigo-wrapper pre {
+    color: #f1f5f9; /* slate-100 */
   }
 </style>
