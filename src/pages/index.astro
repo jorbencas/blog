@@ -11,29 +11,41 @@ const manualPosts = allPosts.filter((p) => !p.id.includes("auto-news"));
 const sortedPosts = await getSortedPosts(manualPosts);
 ---
 
-<Layout title="Problemas de un desarollador Web">
+<Layout title="Problemas de un desarrollador Web">
   <HomeLayout>
-    <div class="flex justify-between items-start">
-      <h5 class="text-xl font-bold text-gray-900 dark:text-white">
-        Últimos artículos
-      </h5>
-      <a
-        href="/posts/1"
-        class="inline-block rounded-lg border border-cyan-500 px-5 py-2 text-sm font-medium text-cyan-500 transition-all hover:bg-cyan-500 hover:text-white active:scale-95 dark:border-cyan-400 dark:text-cyan-400 dark:hover:bg-cyan-400 dark:hover:text-gray-900"
-      >
-        ver todos
-      </a>
-    </div>
-    <div class="flow-root">
-      <ul role="list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {
-          sortedPosts.length > 0 ? (
-            sortedPosts.slice(0, 5).flatMap((p) => <PreviewPost post={p} />)
-          ) : (
-            <Information />
-          )
-        }
-      </ul>
-    </div>
+    <section class="space-y-12">
+      <div class="text-center space-y-2">
+        <h5 class="text-3xl font-black uppercase tracking-tighter text-gray-900 dark:text-white">
+          Últimos artículos
+        </h5>
+        <div class="h-1 w-20 bg-cyan-500 mx-auto"></div>
+      </div>
+
+      <div class="flow-root">
+        <ul role="list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {
+            sortedPosts.length > 0 ? (
+              sortedPosts.slice(0, 6).map((p) => <PreviewPost post={p} />)
+            ) : (
+              <Information />
+            )
+          }
+        </ul>
+      </div>
+
+      {sortedPosts.length > 0 && (
+        <div class="flex justify-center pt-8">
+          <a
+            href="/posts/1"
+            class="group flex items-center gap-2 border border-cyan-500 px-8 py-3 text-xs font-black uppercase tracking-[0.2em] text-cyan-500 transition-all hover:bg-cyan-500 hover:text-white active:scale-95 dark:border-cyan-400 dark:text-cyan-400 dark:hover:bg-cyan-400 dark:hover:text-gray-900"
+          >
+            Ver toda la bitácora
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </a>
+        </div>
+      )}
+    </section>
   </HomeLayout>
 </Layout>
