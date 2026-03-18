@@ -1,5 +1,5 @@
 ---
-import { getCollection } from "astro:content";
+import { getCollection, render } from "astro:content";
 import ChallengesLayout from "@layouts/ChallengesLayout.astro";
 
 // 1. ESTA FUNCIÓN ES OBLIGATORIA Y DEBE LLEVAR "export"
@@ -14,7 +14,7 @@ export async function getStaticPaths() {
 
 // 2. RECUPERAMOS EL RETO DESDE LAS PROPS
 const { entry } = Astro.props;
-const { Content } = await entry.render();
+const { Content } = await render(entry);
 ---
 
 <ChallengesLayout frontmatter={entry.data} url={Astro.url.pathname}>
