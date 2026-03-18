@@ -41,6 +41,7 @@ const challenges = defineCollection({
     pubDate: z.coerce.date(),
     image: z.string(),
     tags: z.array(z.string()),
+    slug: z.string().optional(),
     difficulty: z.enum(['Iniciación', 'Intermedio', 'Avanzado']), // Tipado para los retos
   }),
 });
