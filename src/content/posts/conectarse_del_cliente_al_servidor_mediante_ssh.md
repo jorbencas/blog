@@ -4,7 +4,6 @@ title: "Conectarse del cliente al servidor mediante ssh"
 description: "Descubre con un ejemplo la forma de conectarse del cliente a un servidor mediante ssh"
 pubDate: "2015/12/02"
 tags: ['sistemas']
-slug: "conectarse_del_cliente_al_servidor_mediante_ssh"
 image: "/img/conectarse_del_cliente_al_servidor_mediante_ssh.webp"
 author: "Jorge Beneyto Castelló"
 ---

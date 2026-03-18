@@ -4,7 +4,6 @@ title: "📕 Manual Maestro de Git: Flags y Comandos consolidado"
 description: "Diccionario Consolidado de Comandos y Flags de Git con estrategias de limpieza y configuración global."
 pubDate: "2026/03/10"
 tags: ['git', 'terminal', 'desarrollo']
-slug: "git_comandos_flags"
 image: "/img/git_comandos_flags.png"
 author: "Jorge Beneyto Castelló"
 layout: "@layouts/PostLayout.astro"

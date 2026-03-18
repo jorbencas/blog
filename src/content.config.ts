@@ -11,7 +11,6 @@ const posts = defineCollection({
     description: z.string(),
     pubDate: z.coerce.string().or(z.coerce.date()), // Acepta texto o fecha
     tags: z.array(z.string()).default([]),
-    slug: z.string(),
     image: z.string().optional(),
     author: z.string(),
     layout: z.string().optional(),
@@ -26,7 +25,6 @@ const autoNews = defineCollection({
     description: z.string(),
     pubDate: z.string().or(z.date()), // Acepta texto o fecha
     tags: z.array(z.string()).default([]),
-    slug: z.string().optional(),
     image: z.string().optional(),
     author: z.string(),
     layout: z.string().optional(),
@@ -41,7 +39,6 @@ const challenges = defineCollection({
     pubDate: z.coerce.date(),
     image: z.string(),
     tags: z.array(z.string()),
-    slug: z.string().optional(),
     difficulty: z.enum(['Iniciación', 'Intermedio', 'Avanzado']), // Tipado para los retos
   }),
 });

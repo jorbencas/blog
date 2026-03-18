@@ -7,7 +7,7 @@ export async function getStaticPaths() {
   const challenges = await getCollection("challenges");
 
   return challenges.map((entry) => ({
-    params: { slug: entry.slug },
+    params: { slug: entry.id.replace(/\.[^/.]+$/, "") },
     props: { entry },
   }));
 }

@@ -4,7 +4,6 @@ title: "Recursos"
 description: "Post de recursos"
 pubDate: "2022/11/10"
 tags: ['sistemas', 'web']
-slug: "resources"
 image: "/img/resources.webp"
 author: "Jorge Beneyto Castelló"
 ---

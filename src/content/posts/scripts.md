@@ -4,7 +4,6 @@ title: "Scripts"
 description: "Post de Scripts"
 pubDate: "2023/12/16"
 tags: ['sistemas', 'linux', 'bash']
-slug: "scripts"
 image: "/img/resources.webp"
 author: "Jorge Beneyto Castelló"
 ---

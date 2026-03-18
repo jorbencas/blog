@@ -4,7 +4,6 @@ title: "Formas de conectarse por SSH"
 description: "Descubre las distintas formas de conectarse con ssh"
 pubDate: "2015/11/25"
 tags: ['sistemas']
-slug: "formas_de_conectarse_por_ssh"
 image: "/img/html5.png"
 author: "Jorge Beneyto Castelló"
 ---
