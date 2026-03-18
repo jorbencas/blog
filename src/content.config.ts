@@ -34,7 +34,7 @@ const autoNews = defineCollection({
 });
 
 const challenges = defineCollection({
-  type: 'content',
+  loader: glob({ pattern: '**/*.{md,mdx}', base: "./src/content/auto-challenges" }),
   schema: z.object({
     title: z.string(),
     description: z.string(),
