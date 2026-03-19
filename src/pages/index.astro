@@ -21,19 +21,24 @@ const allProjects = await getCollection("myprojects");
 const latestProjects = allProjects
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
   .slice(0, 3);
+
+// Clase base para los enlaces "Ver más"
+const linkBase = "group relative text-[10px] font-black uppercase tracking-[0.2em] italic transition-colors pb-1";
 ---
 
 <Layout title="Inicio | Portfolio">
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-20">
     <div class="space-y-24 md:space-y-32 mb-20">
       
+      <!-- SECCIÓN: PROYECTOS -->
       <section class="space-y-10">
         <div class="flex items-end justify-between border-b border-slate-200 dark:border-white/10 pb-6">
           <h2 class="text-3xl md:text-4xl font-black italic uppercase tracking-tighter text-slate-900 dark:text-white">
             My_Projects
           </h2>
-          <a href="/proyectos/1" class="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-purple-500 transition-colors">
-            Ver portafolio →
+          <a href="/proyectos/1" class={`${linkBase} text-slate-400 hover:text-purple-500`}>
+            Ver portafolio <span class="inline-block transition-transform group-hover:translate-x-1">→</span>
+            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-purple-500 transition-all duration-300 group-hover:w-full"></span>
           </a>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -43,13 +48,15 @@ const latestProjects = allProjects
         </div>
       </section>
 
+      <!-- SECCIÓN: RETOS -->
       <section class="space-y-10">
         <div class="flex items-end justify-between border-b border-slate-200 dark:border-white/10 pb-6">
           <h2 class="text-3xl md:text-4xl font-black italic uppercase tracking-tighter text-slate-900 dark:text-white">
             Challenges
           </h2>
-          <a href="/retos/1" class="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-cyan-500 transition-colors">
-            Ver retos →
+          <a href="/retos/1" class={`${linkBase} text-slate-400 hover:text-cyan-500`}>
+            Ver retos <span class="inline-block transition-transform group-hover:translate-x-1">→</span>
+            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-cyan-500 transition-all duration-300 group-hover:w-full"></span>
           </a>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -59,13 +66,15 @@ const latestProjects = allProjects
         </div>
       </section>
 
+      <!-- SECCIÓN: BLOG -->
       <section class="space-y-10">
         <div class="flex items-end justify-between border-b border-slate-200 dark:border-white/10 pb-6">
           <h2 class="text-3xl md:text-4xl font-black italic uppercase tracking-tighter text-slate-900 dark:text-white">
             Latest_Posts
           </h2>
-          <a href="/posts/1" class="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
-            Ir a la bitácora →
+          <a href="/posts/1" class={`${linkBase} text-slate-400 hover:text-slate-900 dark:hover:text-white`}>
+            Ir a la bitácora <span class="inline-block transition-transform group-hover:translate-x-1">→</span>
+            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-slate-900 dark:bg-white transition-all duration-300 group-hover:w-full"></span>
           </a>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -74,6 +83,7 @@ const latestProjects = allProjects
           ))}
         </div>
       </section>
+
     </div>
   </div>
 </Layout>
