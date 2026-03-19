@@ -1,177 +1,115 @@
 ---
-import { getCollection } from "astro:content"; // NUEVO IMPORT
+import { getCollection } from "astro:content";
 
-import months from "../layouts/months.json";
-const allPosts = await getCollection("posts");
-
-let allYears = [];
-allPosts.forEach((p) => {
-  let { pubDate, title, draft } = p.data;
-  let fullDate = new Date(pubDate);
-  let month = fullDate.getMonth();
-  let y = fullDate.getFullYear();
-  if (!allYears[y] && draft) {
-    allYears[y] = [];
-  }
-
-  if (!allYears[y][month]) {
-    allYears[y][month] = [];
-  }
-
-  if (allYears[y][month].length == 0 || !allYears[y][month].includes(title)) {
-    allYears[y][month].push({ url: p.url, title });
-  }
+// 1. OBTENCIÓN Y FILTRADO DE DATOS
+// Filtramos posts que no sean borradores
+const allPosts = await getCollection("posts", ({ data }) => {
+  return data.draft !== true;
 });
+
+// 2. AGRUPACIÓN POR AÑO Y MES
+// Usamos reduce para crear un mapa: { 2024: { "enero": [...], "febrero": [...] } }
+const archive = allPosts.reduce((acc, post) => {
+  const date = new Date(post.data.pubDate);
+  const year = date.getFullYear();
+  const month = date.toLocaleString('es-ES', { month: 'long' });
+  
+  // Generamos la URL limpia usando el ID del archivo
+  const url = `/posts/${post.id.replace(/\.[^/.]+$/, "")}`;
+
+  if (!acc[year]) acc[year] = {};
+  if (!acc[year][month]) acc[year][month] = [];
+  
+  acc[year][month].push({ 
+    title: post.data.title, 
+    url 
+  });
+  
+  return acc;
+}, {});
+
+// 3. ORDENACIÓN
+// Ordenamos los años de más reciente a más antiguo
+const sortedYears = Object.keys(archive).sort((a, b) => b - a);
 ---
 
-<div class="taglist w-full max-w-md mx-auto shadow-lg rounded-lg">
-  <h3
-    class="mb-4 text-2xl font-bold leading-none text-gray-900 dark:text-white text-center"
-  >
-    Explorar Artículos Archivados
-  </h3>
-  <div id="accordion-nested-parent" data-accordion="collapse">
-    {
-      allYears.flatMap((e, y) => (
-        <div class="accordion group relative rounded-md border border-purple-900">
-          <button
-            class="accordion__button flex w-full flex-1 items-center justify-between gap-2 p-4 text-left font-medium transition hover:text-purple-500 sm:px-4"
-            type="button"
-            id={`${y} accordion menu button`}
-            aria-expanded="false"
-            aria-controls={`${y} accordion menu content`}
-          >
-            Año {y}
-            <svg
-              class="accordion__chevron h-7 w-7 shrink-0 transition-transform"
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-            >
-              <path
-                fill="none"
-                stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="m6 9l6 6l6-6"
-              />
-            </svg>
-          </button>
-
-          <div
-            id={`${y} accordion menu content`}
-            aria-labelledby={`${y} accordion menu button`}
-            class="accordion__content hidden max-h-0 overflow-hidden px-3 transition-all duration-300 ease-in-out sm:px-4"
-          >
-            <ul class="prose mb-4 mt-1 max-w-full transition-[height]">
-              {e.flatMap((el, yl) => (
-                <div class="accordion group relative rounded-md border border-purple-900">
-                  <button
-                    class="accordion__button flex w-full flex-1 items-center justify-between gap-2 p-3 text-left font-medium transition hover:text-purple-500 sm:px-4"
-                    type="button"
-                    id={`${months[yl]}'_'${yl} accordion menu button`}
-                    aria-expanded="false"
-                    aria-controls={`${months[yl]}'_'${yl} accordion menu content`}
-                  >
-                    Mes {months[yl]}
-                  </button>
-
-                  <div
-                    id={`${months[yl]}'_'${yl} accordion menu content`}
-                    aria-labelledby={`${months[yl]}'_'${yl} accordion menu button`}
-                    class="accordion__content hidden max-h-0 overflow-hidden px-3 transition-all duration-300 ease-in-out sm:px-4"
-                  >
-                    <ul class="prose mb-4 mt-1 max-w-full transition-[height]">
-                      {el.flatMap((eu) => (
-                        <li class=" accordion-item ml-4">
-                          Enlace al artículo
-                          <a
-                            class="block py-1 text-sky-500 hover:text-sky-700 transition duration-150"
-                            href={eu.url}
-                          >
-                            {eu.title}
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              ))}
-            </ul>
-          </div>
-        </div>
-      ))
-    }
+<section class="w-full bg-slate-900/40 dark:bg-slate-900/60 border border-slate-200 dark:border-white/5 rounded-2xl p-6 backdrop-blur-md shadow-xl transition-colors duration-300">
+  <div class="flex items-center gap-2 mb-6">
+    <div class="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></div>
+    <h3 class="text-sm font-mono font-bold uppercase tracking-[0.3em] text-slate-900 dark:text-cyan-500">
+      ARCHIVO_SISTEMA
+    </h3>
   </div>
-</div>
-<script is-inline>
-function accordionSetup() {
-  const accordionMenus = document.querySelectorAll(".accordion");
-  accordionMenus.forEach((accordionMenu) => {
-    const accordionButton = accordionMenu.querySelector(".accordion__button");
-    const accordionChevron = accordionMenu.querySelector(
-      ".accordion__chevron"
-    );
-    const accordionContent = accordionMenu.querySelector(
-      ".accordion__content"
-    );
 
-    if (accordionButton && accordionContent && accordionChevron) {
-      accordionButton.addEventListener("click", (event) => {
-        if (!accordionMenu.classList.contains("active")) {
-          // if accordion is currently closed, so open it
-          accordionMenu.classList.add("active");
-          accordionButton.setAttribute("aria-expanded", "true");
+  <div class="space-y-4">
+    {sortedYears.map((year) => (
+      <details class="group border-b border-slate-100 dark:border-white/5 pb-3 last:border-0">
+        <summary class="flex justify-between items-center cursor-pointer list-none py-2 px-3 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 transition-all">
+          <span class="font-mono text-lg text-slate-700 dark:text-white font-black italic tracking-tighter">
+            > {year}
+          </span>
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            class="h-5 w-5 text-cyan-600 dark:text-cyan-500 group-open:rotate-180 transition-transform duration-300" 
+            fill="none" viewBox="0 0 24 24" stroke="currentColor"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </summary>
 
-          // set max-height to the height of the accordion content
-          // this makes it animate properly
-          accordionContent.classList.remove("hidden");
-          accordionContent.style.maxHeight =
-            accordionContent.scrollHeight + "px";
-          accordionChevron.classList.add("rotate-180");
-        } else {
-          // accordion is currently open, so close it
-          accordionMenu.classList.remove("active");
-          accordionButton.setAttribute("aria-expanded", "false");
+        <div class="mt-4 ml-4 space-y-6 overflow-hidden animate-slide-down">
+          {Object.keys(archive[year]).map((month) => (
+            <div class="relative pl-4 border-l-2 border-cyan-500/20">
+              <h4 class="text-[10px] font-mono uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500 mb-3 flex items-center gap-2">
+                <span class="w-1 h-1 bg-cyan-500 rounded-full"></span>
+                {month}
+              </h4>
+              
+              <ul class="space-y-3">
+                {archive[year][month].map((post) => (
+                  <li class="group/item">
+                    <a 
+                      href={post.url} 
+                      class="text-sm text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-white transition-colors flex items-start gap-2"
+                    >
+                      <span class="opacity-0 group-hover/item:opacity-100 text-cyan-500 transition-opacity">→</span>
+                      {post.title}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </details>
+    ))}
+  </div>
 
-          // set max-height to the height of the accordion content
-          // this makes it animate properly
-          accordionContent.style.maxHeight = "0px";
-          accordionChevron.classList.remove("rotate-180");
-          // delay to allow close animation
-          setTimeout(() => {
-            accordionContent.classList.add("hidden");
-          }, 300);
-        }
-        event.preventDefault();
-        return false;
-      });
-    }
-  });
-}
-
-// runs on initial page load
-accordionSetup();
-
-// runs on view transitions navigation
-document.addEventListener("astro:after-swap", accordionSetup);
-</script>
+  <div class="mt-6 pt-4 border-t border-slate-100 dark:border-white/5 opacity-50">
+    <p class="text-[9px] font-mono text-center text-slate-400 uppercase tracking-widest">
+      Total_Entradas: {allPosts.length}
+    </p>
+  </div>
+</section>
 
 <style>
-  /* Estilos adicionales para el acordeón */
-  .nested {
-    display: none; /* Oculto por defecto */
+  /* Quitar flecha por defecto de Chrome/Safari */
+  summary::-webkit-details-marker {
+    display: none;
   }
-  .active {
-    display: block; /* Muestra cuando está activo */
+
+  /* Animación de apertura suave */
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
-  .caret-down::before {
-    content: "▼"; /* Cambia el ícono cuando está abierto */
+
+  .animate-slide-down {
+    animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   }
-  .caret::before {
-    content: "▶"; /* Ícono de flecha para cerrado */
+
+  /* Personalización para Light Mode */
+  :global(.light) summary {
+    color: #1e293b;
   }
 </style>

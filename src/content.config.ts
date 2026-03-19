@@ -43,4 +43,18 @@ const challenges = defineCollection({
   }),
 });
 
-export const collections = { posts, autoNews, challenges };
+const myprojects = defineCollection({
+  type: 'content',
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    pubDate: z.coerce.date(),
+    image: z.string(),
+    repository: z.string().url().optional(), // Enlace a GitHub
+    url: z.string().url().optional(),        // Enlace al proyecto en vivo
+    tags: z.array(z.string()),               // Tecnologías (React, Astro, etc.)
+    featured: z.boolean().default(false),    // Por si quieres destacar alguno
+  }),
+});
+
+export const collections = { posts, autoNews, challenges, myprojects };
