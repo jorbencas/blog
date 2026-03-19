@@ -4,6 +4,7 @@ import PreviewPost from "@components/PreviewPost.astro";
 import HomeLayout from "@layouts/HomeLayout.astro";
 import NextPrevLiks from "@components/NextPrevLiks.astro";
 import Information from "@components/Information.astro";
+import Archive from "@components/Archive.astro"; // Importamos el archivo
 import { getSortedPosts } from "src/utils";
 import { getCollection } from "astro:content";
 
@@ -11,7 +12,7 @@ export async function getStaticPaths({ paginate }) {
   const allPosts = await getCollection("posts");
   const sortedPosts = await getSortedPosts(allPosts);
   return paginate(sortedPosts, {
-    pageSize: 12,
+    pageSize: 12, // Mantenemos tus 12 posts por página
   });
 }
 
@@ -25,27 +26,55 @@ const { prev, next } = url;
   description="Artículos sobre desarrollo web y programación"
 >
   <HomeLayout>
-    <section class="space-y-12">
+    <section class="space-y-12 py-4 md:py-8">
+      
+      <!-- CABECERA -->
       <div class="text-center space-y-2">
-        <h1 class="text-4xl font-black uppercase tracking-tighter text-gray-900 dark:text-white">
-          Bitácora <span class="text-cyan-500 text-2xl align-top">Pg.{currentPage}</span>
+        <h1 class="text-3xl md:text-4xl font-black uppercase tracking-tighter text-gray-900 dark:text-white transition-colors">
+          Bitácora <span class="text-cyan-500 text-xl md:text-2xl align-top italic">Pg.{currentPage}</span>
         </h1>
-        <div class="h-1 w-24 bg-cyan-500 mx-auto"></div>
+        <div class="h-1.5 w-20 bg-cyan-500 mx-auto rounded-full"></div>
       </div>
 
-      <div class="flow-root">
-        <ul role="list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- GRID PRINCIPAL (Igual que el index) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 xl:gap-12 items-start">
+        
+        <!-- COLUMNA IZQUIERDA: LISTA DE POSTS (8/12) -->
+        <div class="lg:col-span-8 w-full order-1">
           {
             data.length > 0 ? (
-              data.map((p) => <PreviewPost post={p} />)
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+                {data.map((p) => (
+                  <div class="w-full h-full">
+                    <PreviewPost post={p} />
+                  </div>
+                ))}
+              </div>
             ) : (
-              <Information />
+              <div class="py-20 text-center">
+                <Information />
+              </div>
             )
           }
-        </ul>
+        </div>
+
+        <!-- COLUMNA DERECHA: ARCHIVO (4/12) -->
+        <aside class="lg:col-span-4 mt-4 lg:mt-0 w-full order-2">
+          <div class="lg:sticky lg:top-28 space-y-8">
+            <Archive />
+            
+            <!-- Widget visual opcional -->
+            <div class="hidden lg:block p-6 rounded-2xl border border-dashed border-slate-200 dark:border-white/10 text-center opacity-60">
+              <p class="text-[10px] font-mono uppercase tracking-[0.2em] text-slate-500">
+                Navegación_Paginada_v2
+              </p>
+            </div>
+          </div>
+        </aside>
       </div>
 
-      <div class="pt-12 border-t border-slate-200 dark:border-white/5">
+      <!-- NAVEGACIÓN (Next/Prev) -->
+      <div class="pt-12 border-t border-slate-200 dark:border-white/5 order-3">
         <NextPrevLiks
           nextURL={next}
           prevURL={prev}
@@ -53,6 +82,21 @@ const { prev, next } = url;
           textPrev="Posteriores"
         />
       </div>
+
     </section>
   </HomeLayout>
 </Layout>
+
+<style>
+  /* Mantenemos la animación solo en escritorio */
+  @media (min-width: 1024px) {
+    aside {
+      animation: fadeInRight 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+  }
+
+  @keyframes fadeInRight {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+</style>

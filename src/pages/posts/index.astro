@@ -7,11 +7,8 @@ import Archive from "@components/Archive.astro";
 import { getSortedPosts } from "src/utils";
 import { getCollection } from "astro:content";
 
-// 1. OBTENCIÓN DE DATOS (Tu lógica original)
 const allPosts = await getCollection("posts");
-// Filtramos para ignorar las noticias automáticas
 const manualPosts = allPosts.filter((p) => !p.id.includes("auto-news"));
-// Ordenamos usando tu utilidad personalizada
 const sortedPosts = await getSortedPosts(manualPosts);
 
 // Limitamos a los 6 más recientes para la vista principal
@@ -20,48 +17,50 @@ const displayPosts = sortedPosts.slice(0, 6);
 
 <Layout title="Problemas de un desarrollador Web | Bitácora">
   <HomeLayout>
-    <section class="space-y-12 py-8">
+    <section class="space-y-8 md:space-y-12 py-4 md:py-8">
       
-      <!-- CABECERA DE SECCIÓN -->
+      <!-- CABECERA -->
       <div class="text-center space-y-2">
-        <h2 class="text-3xl md:text-4xl font-black uppercase tracking-tighter text-gray-900 dark:text-white transition-colors">
+        <h2 class="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tighter text-gray-900 dark:text-white transition-colors">
           Últimos artículos
         </h2>
-        <div class="h-1.5 w-20 bg-cyan-500 mx-auto rounded-full"></div>
+        <div class="h-1 w-16 md:w-20 bg-cyan-500 mx-auto rounded-full"></div>
       </div>
 
-      <!-- GRID PRINCIPAL: 12 COLUMNAS -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 xl:gap-16 items-start">
+      <!-- GRID PRINCIPAL RESPONSIVE -->
+      <!-- grid-cols-1 para móvil, lg:grid-cols-12 para escritorio -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 xl:gap-12 items-start">
         
-        <!-- COLUMNA IZQUIERDA: LISTA DE POSTS (Ocupa 8/12) -->
-        <div class={`${sortedPosts.length > 0 ? "lg:col-span-8" : "lg:col-span-12"} flow-root`}>
+        <!-- COLUMNA IZQUIERDA: POSTS (Ocupa todo en móvil, 8/12 en escritorio) -->
+        <div class="order-1 lg:col-span-8 w-full">
           {
-            sortedPosts.length > 0 ? (
-              <ul role="list" class="grid grid-cols-1 md:grid-cols-2 gap-y-12 gap-x-8">
+            displayPosts.length > 0 ? (
+              /* 1 columna en móvil, 2 columnas desde tablets (md) */
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                 {displayPosts.map((p) => (
-                  <li class="list-none">
+                  <div class="w-full h-full">
                     <PreviewPost post={p} />
-                  </li>
+                  </div>
                 ))}
-              </ul>
+              </div>
             ) : (
-              <div class="py-20">
+              <div class="py-10 md:py-20 text-center">
                 <Information />
               </div>
             )
           }
         </div>
 
-        <!-- COLUMNA DERECHA: ARCHIVO Y NAVEGACIÓN (Ocupa 4/12) -->
+        <!-- COLUMNA DERECHA: ARCHIVO (Ocupa todo en móvil, 4/12 en escritorio) -->
         {sortedPosts.length > 0 && (
-          <aside class="lg:col-span-4 mt-12 lg:mt-0">
-            <div class="sticky top-28 space-y-8">
-              <!-- El componente que acabamos de crear -->
+          <aside class="order-2 lg:col-span-4 mt-4 lg:mt-0 w-full">
+            <!-- El 'sticky' solo se activa en pantallas grandes (lg) para no estorbar en móvil -->
+            <div class="lg:sticky lg:top-28 space-y-6 md:space-y-8">
               <Archive />
 
-              <!-- Widget de estado opcional para rellenar el sidebar -->
-              <div class="hidden lg:block p-6 rounded-2xl border border-dashed border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-transparent transition-colors">
-                <div class="flex items-center gap-3 mb-2">
+              <!-- Widget de estado: Oculto en móviles pequeños para limpiar la vista -->
+              <div class="hidden sm:block p-6 rounded-2xl border border-dashed border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-slate-900/20 transition-colors text-center">
+                <div class="flex items-center justify-center gap-3 mb-2">
                   <span class="relative flex h-2 w-2">
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
                     <span class="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
@@ -70,8 +69,8 @@ const displayPosts = sortedPosts.slice(0, 6);
                     Sincronización_OK
                   </span>
                 </div>
-                <p class="text-[11px] leading-relaxed text-slate-400 dark:text-slate-500 font-mono">
-                  Explora el histórico completo de protocolos y desafíos técnicos documentados.
+                <p class="text-[11px] leading-relaxed text-slate-400 dark:text-slate-500 font-mono italic">
+                  Base de datos de ingeniería actualizada.
                 </p>
               </div>
             </div>
@@ -79,16 +78,14 @@ const displayPosts = sortedPosts.slice(0, 6);
         )}
       </div>
 
-      <!-- BOTÓN DE ACCESO A LA BITÁCORA COMPLETA -->
+      <!-- BOTÓN DE ACCESO COMPLETO -->
       {sortedPosts.length > 0 && (
-        <div class="flex justify-center pt-12 border-t border-slate-100 dark:border-white/5">
+        <div class="flex justify-center pt-8 md:pt-12 border-t border-slate-100 dark:border-white/5 order-3">
           <a
             href="/posts/1"
-            class="group relative inline-flex items-center gap-3 overflow-hidden border border-cyan-500 px-10 py-4 text-xs font-black uppercase tracking-[0.2em] text-cyan-500 transition-all hover:text-white active:scale-95 dark:border-cyan-400 dark:text-cyan-400 dark:hover:text-gray-900"
+            class="w-full sm:w-auto group relative inline-flex items-center justify-center gap-3 overflow-hidden border border-cyan-500 px-6 md:px-10 py-3 md:py-4 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-cyan-500 transition-all hover:text-white active:scale-95 dark:border-cyan-400 dark:text-cyan-400 dark:hover:text-gray-900"
           >
-            <!-- Efecto de fondo al hacer hover -->
             <span class="absolute inset-0 bg-cyan-500 transition-transform translate-y-full group-hover:translate-y-0 duration-300 ease-out dark:bg-cyan-400 -z-10"></span>
-            
             Ver toda la bitácora
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform group-hover:translate-x-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
@@ -96,15 +93,16 @@ const displayPosts = sortedPosts.slice(0, 6);
           </a>
         </div>
       )}
-
     </section>
   </HomeLayout>
 </Layout>
 
 <style>
-  /* Suavizado de la entrada del sidebar */
-  aside {
-    animation: fadeInRight 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  /* Solo aplicamos la animación si la pantalla es mayor a móvil para evitar saltos visuales raros al cargar */
+  @media (min-width: 1024px) {
+    aside {
+      animation: fadeInRight 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
   }
 
   @keyframes fadeInRight {

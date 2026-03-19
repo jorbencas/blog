@@ -2,64 +2,40 @@
 import Layout from "@layouts/Layout.astro";
 import PreviewPost from "@components/PreviewPost.astro";
 import ChallengeCard from "@components/ChallengeCard.astro";
-// Asumiendo que crearás un componente para los proyectos, si no, puedes usar PreviewPost
 import ProjectCard from "@components/ProjectCard.astro"; 
 import { getSortedPosts } from "src/utils";
 import { getCollection } from "astro:content";
 
-// 1. CARGA DE POSTS
 const allPosts = await getCollection("posts");
 const manualPosts = allPosts.filter((p) => !p.id.includes("auto-news"));
 const sortedPosts = await getSortedPosts(manualPosts);
 const latestPosts = sortedPosts.slice(0, 3);
 
-// 2. CARGA DE RETOS
 const allChallenges = await getCollection("challenges");
 const manualChallenges = allChallenges.filter((c) => !c.id.includes("auto-challenges"));
 const latestChallenges = manualChallenges
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
   .slice(0, 3);
 
-// 3. CARGA DE PROYECTOS (Nueva Colección)
 const allProjects = await getCollection("myprojects");
 const latestProjects = allProjects
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
   .slice(0, 3);
 ---
 
-<Layout title="Portfolio & DevLog">
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
-    
-    <!-- HERO SIMPLIFICADO -->
-    <section class="relative py-16 md:py-32 text-center rounded-3xl border border-slate-200 dark:border-white/5 mb-20 px-4 bg-grid-cyber">
-      <div class="absolute inset-0 hero-glow -z-10"></div>
-      
-      <div class="relative z-10">
-        <h1 class="text-5xl md:text-8xl font-black italic uppercase tracking-tighter text-slate-900 dark:text-white mb-4">
-          Dev_ <span class="text-cyan-600 dark:text-cyan-500">Portfolio</span>
-        </h1>
-        <p class="text-slate-500 dark:text-slate-400 font-mono text-xs md:text-base uppercase tracking-[0.3em] max-w-2xl mx-auto">
-          Ingeniería de software, retos de código y documentación técnica.
-        </p>
-      </div>
-    </section>
-
+<Layout title="Inicio | Portfolio">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-20">
     <div class="space-y-24 md:space-y-32 mb-20">
       
-      <!-- SECCIÓN PROYECTOS (NUEVA) -->
       <section class="space-y-10">
         <div class="flex items-end justify-between border-b border-slate-200 dark:border-white/10 pb-6">
-          <div>
-            <span class="text-[10px] font-mono text-purple-500 uppercase tracking-widest">Builds_Recientes</span>
-            <h2 class="text-3xl md:text-4xl font-black italic uppercase tracking-tighter text-slate-900 dark:text-white">
-              My_Projects
-            </h2>
-          </div>
-          <a href="/proyectos" class="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-purple-500 transition-colors">
+          <h2 class="text-3xl md:text-4xl font-black italic uppercase tracking-tighter text-slate-900 dark:text-white">
+            My_Projects
+          </h2>
+          <a href="/proyectos/1" class="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-purple-500 transition-colors">
             Ver portafolio →
           </a>
         </div>
-
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {latestProjects.map((project) => (
              <ProjectCard {...project.data} id={project.id.replace(/\.[^/.]+$/, "")} />
@@ -67,20 +43,15 @@ const latestProjects = allProjects
         </div>
       </section>
 
-      <!-- SECCIÓN RETOS -->
       <section class="space-y-10">
         <div class="flex items-end justify-between border-b border-slate-200 dark:border-white/10 pb-6">
-          <div>
-            <span class="text-[10px] font-mono text-cyan-500 uppercase tracking-widest">Entrenamiento_Hacker</span>
-            <h2 class="text-3xl md:text-4xl font-black italic uppercase tracking-tighter text-slate-900 dark:text-white">
-              Challenges
-            </h2>
-          </div>
-          <a href="/retos" class="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-cyan-500 transition-colors">
+          <h2 class="text-3xl md:text-4xl font-black italic uppercase tracking-tighter text-slate-900 dark:text-white">
+            Challenges
+          </h2>
+          <a href="/retos/1" class="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-cyan-500 transition-colors">
             Ver retos →
           </a>
         </div>
-
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {latestChallenges.map((ch) => (
             <ChallengeCard {...ch.data} href={`/retos/${ch.id.replace(/\.[^/.]+$/, "")}`} />
@@ -88,39 +59,21 @@ const latestProjects = allProjects
         </div>
       </section>
 
-      <!-- SECCIÓN BLOG -->
       <section class="space-y-10">
         <div class="flex items-end justify-between border-b border-slate-200 dark:border-white/10 pb-6">
-          <div>
-            <span class="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Documentación_Técnica</span>
-            <h2 class="text-3xl md:text-4xl font-black italic uppercase tracking-tighter text-slate-900 dark:text-white">
-              Latest_Posts
-            </h2>
-          </div>
-          <a href="/posts" class="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+          <h2 class="text-3xl md:text-4xl font-black italic uppercase tracking-tighter text-slate-900 dark:text-white">
+            Latest_Posts
+          </h2>
+          <a href="/posts/1" class="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
             Ir a la bitácora →
           </a>
         </div>
-
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {latestPosts.map((p) => (
             <PreviewPost post={p} />
           ))}
         </div>
       </section>
-
     </div>
   </div>
 </Layout>
-
-<style>
-  .bg-grid-cyber {
-    background-size: 40px 40px;
-    background-image: 
-      linear-gradient(to right, rgba(6, 182, 212, 0.05) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(6, 182, 212, 0.05) 1px, transparent 1px);
-  }
-  .hero-glow {
-    background: radial-gradient(circle at center, rgba(6, 182, 212, 0.08) 0%, transparent 70%);
-  }
-</style>

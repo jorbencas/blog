@@ -44,7 +44,7 @@ const challenges = defineCollection({
 });
 
 const myprojects = defineCollection({
-  type: 'content',
+  loader: glob({ pattern: '**/*.{md,mdx}', base: "./src/content/myprojects" }),
   schema: z.object({
     title: z.string(),
     description: z.string(),
