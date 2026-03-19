@@ -7,21 +7,21 @@ import Information from "@components/Information.astro";
 import { getCollection } from "astro:content";
 
 export async function getStaticPaths({ paginate }) {
-  const allChallenges = await getCollection("challenges");
-  
-  // Filtramos los automáticos si quieres mantener limpia la lista paginada
-  const manualChallenges = allChallenges.filter(
-    (c) => !c.id.includes("auto-challenges")
-  );
+ const allChallenges = await getCollection("challenges");
+ 
+ // Filtramos los automáticos si quieres mantener limpia la lista paginada
+ const manualChallenges = allChallenges.filter(
+ (c) => !c.id.includes("auto-challenges")
+ );
 
-  // Ordenamos por fecha (más recientes primero)
-  const sortedChallenges = manualChallenges.sort(
-    (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
-  );
+ // Ordenamos por fecha (más recientes primero)
+ const sortedChallenges = manualChallenges.sort(
+ (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+ );
 
-  return paginate(sortedChallenges, {
-    pageSize: 12, // Consistencia con el resto de la web
-  });
+ return paginate(sortedChallenges, {
+ pageSize: 12, // Consistencia con el resto de la web
+ });
 }
 
 const { page } = Astro.props;
@@ -30,47 +30,47 @@ const { prev, next } = url;
 ---
 
 <Layout
-  title={`Laboratorio de Retos - Página ${currentPage}`}
-  description="Desafíos de programación, algoritmos y lógica de ingeniería."
+ title={`Laboratorio de Retos - Página ${currentPage}`}
+ description="Desafíos de programación, algoritmos y lógica de ingeniería."
 >
-  <HomeLayout>
-    <section class="space-y-12" data-pagefind-ignore>
-      <div class="text-center space-y-2">
-        <h1 class="text-4xl font-black uppercase tracking-tighter text-gray-900 dark:text-white">
-          Retos <span class="text-cyan-500 text-2xl align-top">Pg.{currentPage}</span>
-        </h1>
-        <div class="h-1 w-24 bg-cyan-500 mx-auto"></div>
-      </div>
+ <HomeLayout>
+ <section class="space-y-12" data-pagefind-ignore>
+ <div class="text-center space-y-2">
+ <h1 class="text-4xl font-black uppercase tracking-tighter text-gray-900 dark:text-white">
+ Retos <span class="text-cyan-500 text-2xl align-top">Pg.{currentPage}</span>
+ </h1>
+ <div class="h-1 w-24 bg-cyan-500 mx-auto"></div>
+ </div>
 
-      <div class="flow-root">
-        <ul role="list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {
-            data.length > 0 ? (
-              data.map((ch) => (
-                <li class="list-none">
-                  <ChallengeCard 
-                    {...ch.data} 
-                    href={`/retos/${ch.id.replace(/\.[^/.]+$/, "")}`} 
-                  />
-                </li>
-              ))
-            ) : (
-              <div class="col-span-full">
-                <Information />
-              </div>
-            )
-          }
-        </ul>
-      </div>
+ <div class="flow-root">
+ <ul role="list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+ {
+ data.length > 0 ? (
+ data.map((ch) => (
+ <li class="list-none">
+ <ChallengeCard 
+ {...ch.data} 
+ href={`/retos/${ch.id.replace(/\.[^/.]+$/, "")}`} 
+ />
+ </li>
+ ))
+ ) : (
+ <div class="col-span-full">
+ <Information />
+ </div>
+ )
+ }
+ </ul>
+ </div>
 
-      <div class="pt-12 border-t border-slate-200 dark:border-white/5">
-        <NextPrevLiks
-          nextURL={next}
-          prevURL={prev}
-          textNext="Misiones antiguas"
-          textPrev="Misiones recientes"
-        />
-      </div>
-    </section>
-  </HomeLayout>
+ <div class="pt-12 border-t dark:">
+ <NextPrevLiks
+ nextURL={next}
+ prevURL={prev}
+ textNext="Misiones antiguas"
+ textPrev="Misiones recientes"
+ />
+ </div>
+ </section>
+ </HomeLayout>
 </Layout>

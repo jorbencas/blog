@@ -4,149 +4,149 @@
 
 <script is:inline>
 function mejorarBloquesCodigo() {
-  const bloques = document.querySelectorAll("pre:not(.mejorado)");
+ const bloques = document.querySelectorAll("pre:not(.mejorado)");
 
-  // Mapeo de iconos y colores oficiales
-  const configLang = {
-    js: { icon: "javascript", color: "F7DF1E" },
-    javascript: { icon: "javascript", color: "F7DF1E" },
-    ts: { icon: "typescript", color: "3178C6" },
-    typescript: { icon: "typescript", color: "3178C6" },
-    astro: { icon: "astro", color: "FF5D01" },
-    vue: { icon: "vuedotjs", color: "4FC08D" },
-    svelte: { icon: "svelte", color: "FF3E00" },
-    angular: { icon: "angular", color: "DD0031" },
-    react: { icon: "react", color: "61DAFB" },
-    jsx: { icon: "react", color: "61DAFB" },
-    tsx: { icon: "react", color: "61DAFB" },
-    html: { icon: "html5", color: "E34F26" },
-    html5: { icon: "html5", color: "E34F26" },
-    css: { icon: "css3", color: "1572B6" },
+ // Mapeo de iconos y colores oficiales
+ const configLang = {
+ js: { icon: "javascript", color: "F7DF1E" },
+ javascript: { icon: "javascript", color: "F7DF1E" },
+ ts: { icon: "typescript", color: "3178C6" },
+ typescript: { icon: "typescript", color: "3178C6" },
+ astro: { icon: "astro", color: "FF5D01" },
+ vue: { icon: "vuedotjs", color: "4FC08D" },
+ svelte: { icon: "svelte", color: "FF3E00" },
+ angular: { icon: "angular", color: "DD0031" },
+ react: { icon: "react", color: "61DAFB" },
+ jsx: { icon: "react", color: "61DAFB" },
+ tsx: { icon: "react", color: "61DAFB" },
+ html: { icon: "html5", color: "E34F26" },
+ html5: { icon: "html5", color: "E34F26" },
+ css: { icon: "css3", color: "1572B6" },
 
-    // Programación General
-    py: { icon: "python", color: "3776AB" },
-    python: { icon: "python", color: "3776AB" },
-    java: { icon: "openjdk", color: "007396" },
-    csharp: { icon: "csharp", color: "239120" },
-    "c#": { icon: "csharp", color: "239120" },
-    cpp: { icon: "cplusplus", color: "00599C" },
-    "c++": { icon: "cplusplus", color: "00599C" },
-    c: { icon: "c", color: "A8B9CC" },
-    rust: { icon: "rust", color: "000000" }, // Rust es negro/naranja, uso negro para contraste
-    php: { icon: "php", color: "777BB4" },
-    go: { icon: "go", color: "00ADD8" },
-    kotlin: { icon: "kotlin", color: "7F52FF" },
-    swift: { icon: "swift", color: "F05138" },
-    visualbasic: { icon: "visualbasic", color: "512BD4" },
-    vb: { icon: "visualbasic", color: "512BD4" },
-    dart: { icon: "dart", color: "0175C2" },
-    ruby: { icon: "ruby", color: "CC342D" },
+ // Programación General
+ py: { icon: "python", color: "3776AB" },
+ python: { icon: "python", color: "3776AB" },
+ java: { icon: "openjdk", color: "007396" },
+ csharp: { icon: "csharp", color: "239120" },
+ "c#": { icon: "csharp", color: "239120" },
+ cpp: { icon: "cplusplus", color: "00599C" },
+ "c++": { icon: "cplusplus", color: "00599C" },
+ c: { icon: "c", color: "A8B9CC" },
+ rust: { icon: "rust", color: "000000" }, // Rust es negro/naranja, uso negro para contraste
+ php: { icon: "php", color: "777BB4" },
+ go: { icon: "go", color: "00ADD8" },
+ kotlin: { icon: "kotlin", color: "7F52FF" },
+ swift: { icon: "swift", color: "F05138" },
+ visualbasic: { icon: "visualbasic", color: "512BD4" },
+ vb: { icon: "visualbasic", color: "512BD4" },
+ dart: { icon: "dart", color: "0175C2" },
+ ruby: { icon: "ruby", color: "CC342D" },
 
-    // Bases de Datos (SQL & NoSQL)
-    sql: { icon: "sqlite", color: "003B57" },
-    sqlite: { icon: "sqlite", color: "003B57" },
-    mysql: { icon: "mysql", color: "4479A1" },
-    postgresql: { icon: "postgresql", color: "4169E1" },
-    postgres: { icon: "postgresql", color: "4169E1" },
-    mongodb: { icon: "mongodb", color: "47A248" },
-    redis: { icon: "redis", color: "DC382D" },
-    prisma: { icon: "prisma", color: "2D3748" },
+ // Bases de Datos (SQL & NoSQL)
+ sql: { icon: "sqlite", color: "003B57" },
+ sqlite: { icon: "sqlite", color: "003B57" },
+ mysql: { icon: "mysql", color: "4479A1" },
+ postgresql: { icon: "postgresql", color: "4169E1" },
+ postgres: { icon: "postgresql", color: "4169E1" },
+ mongodb: { icon: "mongodb", color: "47A248" },
+ redis: { icon: "redis", color: "DC382D" },
+ prisma: { icon: "prisma", color: "2D3748" },
 
-    // Configuración, Devops & Terminal
-    bash: { icon: "gnubash", color: "4EAA25" },
-    sh: { icon: "gnubash", color: "4EAA25" },
-    shell: { icon: "gnubash", color: "4EAA25" },
-    powershell: { icon: "powershell", color: "5391FE" },
-    docker: { icon: "docker", color: "2496ED" },
-    dockerfile: { icon: "docker", color: "2496ED" },
-    yaml: { icon: "yaml", color: "CB171E" },
-    yml: { icon: "yaml", color: "CB171E" },
-    toml: { icon: "toml", color: "9C4221" },
-    json: { icon: "json", color: "000000" },
-    markdown: { icon: "markdown", color: "000000" },
-    md: { icon: "markdown", color: "000000" },
-    git: { icon: "git", color: "F05032" },
-    npm: { icon: "npm", color: "CB3837" },
-  };
+ // Configuración, Devops & Terminal
+ bash: { icon: "gnubash", color: "4EAA25" },
+ sh: { icon: "gnubash", color: "4EAA25" },
+ shell: { icon: "gnubash", color: "4EAA25" },
+ powershell: { icon: "powershell", color: "5391FE" },
+ docker: { icon: "docker", color: "2496ED" },
+ dockerfile: { icon: "docker", color: "2496ED" },
+ yaml: { icon: "yaml", color: "CB171E" },
+ yml: { icon: "yaml", color: "CB171E" },
+ toml: { icon: "toml", color: "9C4221" },
+ json: { icon: "json", color: "000000" },
+ markdown: { icon: "markdown", color: "000000" },
+ md: { icon: "markdown", color: "000000" },
+ git: { icon: "git", color: "F05032" },
+ npm: { icon: "npm", color: "CB3837" },
+ };
 
-  bloques.forEach((pre) => {
-    pre.classList.add("mejorado");
+ bloques.forEach((pre) => {
+ pre.classList.add("mejorado");
 
-    const claseLang =
-      Array.from(pre.classList).find((c) => c.startsWith("language-")) ||
-      "language-txt";
-    const langKey = claseLang.replace("language-", "").toLowerCase();
-    const info = configLang[langKey] || { icon: "code", color: "64748b" };
+ const claseLang =
+ Array.from(pre.classList).find((c) => c.startsWith("language-")) ||
+ "language-txt";
+ const langKey = claseLang.replace("language-", "").toLowerCase();
+ const info = configLang[langKey] || { icon: "code", color: "64748b" };
 
-    // 1. Crear el Wrapper (Adaptable a Temas)
-    const wrapper = document.createElement("div");
-    wrapper.className =
-      "bloque-codigo-wrapper my-10 border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0d1117] shadow-[4px_4px_0px_0px_rgba(0,0,0,0.05)] dark:shadow-[4px_4px_0px_0px_rgba(6,182,212,0.1)] overflow-hidden transition-all";
+ // 1. Crear el Wrapper (Adaptable a Temas)
+ const wrapper = document.createElement("div");
+ wrapper.className =
+ "bloque-codigo-wrapper my-10 border dark: bg-white dark:bg-[#0d1117] shadow-[4px_4px_0px_0px_rgba(0,0,0,0.05)] dark:shadow-[4px_4px_0px_0px_rgba(6,182,212,0.1)] overflow-hidden transition-all";
 
-    // 2. Cabecera con Icono Dinámico
-    const header = document.createElement("div");
-    header.className =
-      "flex justify-between items-center px-4 py-2 bg-slate-50 dark:bg-white/[0.03] border-b border-slate-200 dark:border-white/10 font-mono text-[10px] font-bold tracking-widest";
+ // 2. Cabecera con Icono Dinámico
+ const header = document.createElement("div");
+ header.className =
+ "flex justify-between items-center px-4 py-2 bg-slate-50 dark:bg-white/[0.03] border-b dark: font-mono text-[10px] font-bold tracking-widest";
 
-    // Inyectamos el icono desde SimpleIcons CDN usando el color de la config
-    header.innerHTML = `
-        <div class="flex items-center gap-2">
-          <img 
-            src="https://cdn.simpleicons.org/${info.icon}/${info.color}" 
-            class="w-3.5 h-3.5 opacity-80 dark:opacity-100" 
-            alt="${langKey}"
-          />
-          <span class="text-slate-600 dark:text-slate-300">${langKey.toUpperCase()}</span>
-        </div>
-        <button class="boton-copiar p-1 text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors uppercase">
-          [ COPIAR ]
-        </button>
-      `;
+ // Inyectamos el icono desde SimpleIcons CDN usando el color de la config
+ header.innerHTML = `
+ <div class="flex items-center gap-2">
+ <img 
+ src="https://cdn.simpleicons.org/${info.icon}/${info.color}" 
+ class="w-3.5 h-3.5 opacity-80 dark:opacity-100" 
+ alt="${langKey}"
+ />
+ <span class="text-slate-600 dark:text-slate-300">${langKey.toUpperCase()}</span>
+ </div>
+ <button class="boton-copiar p-1 text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors uppercase">
+ [ COPIAR ]
+ </button>
+ `;
 
-    // 3. Estructura de contenido
-    const divContenido = document.createElement("div");
-    divContenido.className = "p-5 overflow-x-auto selection:bg-cyan-500/30";
+ // 3. Estructura de contenido
+ const divContenido = document.createElement("div");
+ divContenido.className = "p-5 overflow-x-auto selection:bg-cyan-500/30";
 
-    pre.parentNode.insertBefore(wrapper, pre);
-    wrapper.appendChild(header);
-    wrapper.appendChild(divContenido);
-    divContenido.appendChild(pre);
+ pre.parentNode.insertBefore(wrapper, pre);
+ wrapper.appendChild(header);
+ wrapper.appendChild(divContenido);
+ divContenido.appendChild(pre);
 
-    // 4. Lógica de copia
-    const btn = header.querySelector(".boton-copiar");
-    btn.addEventListener("click", async () => {
-      await navigator.clipboard.writeText(pre.innerText);
-      btn.innerText = "¡LISTO!";
-      btn.classList.add("text-cyan-600", "dark:text-cyan-400");
-      setTimeout(() => {
-        btn.innerText = "[ COPIAR ]";
-        btn.classList.remove("text-cyan-600", "dark:text-cyan-400");
-      }, 2000);
-    });
-  });
+ // 4. Lógica de copia
+ const btn = header.querySelector(".boton-copiar");
+ btn.addEventListener("click", async () => {
+ await navigator.clipboard.writeText(pre.innerText);
+ btn.innerText = "¡LISTO!";
+ btn.classList.add("text-cyan-600", "dark:text-cyan-400");
+ setTimeout(() => {
+ btn.innerText = "[ COPIAR ]";
+ btn.classList.remove("text-cyan-600", "dark:text-cyan-400");
+ }, 2000);
+ });
+ });
 }
 
 document.addEventListener("astro:page-load", mejorarBloquesCodigo);
 document.addEventListener("DOMContentLoaded", mejorarBloquesCodigo);
 </script>
 <style is:global>
-  /* Eliminamos el color forzado para que Shiki use sus colores */
-  .bloque-codigo-wrapper pre,
-  .bloque-codigo-wrapper code {
-    font-family: "JetBrains Mono", monospace !important;
-    background: transparent !important; /* Mantenemos el fondo transparente */
-    font-size: 14px !important;
-    line-height: 1.6 !important;
-  }
+ /* Eliminamos el color forzado para que Shiki use sus colores */
+ .bloque-codigo-wrapper pre,
+ .bloque-codigo-wrapper code {
+ font-family: "JetBrains Mono", monospace !important;
+ background: transparent !important; /* Mantenemos el fondo transparente */
+ font-size: 14px !important;
+ line-height: 1.6 !important;
+ }
 
-  /* Ajustamos el fondo del contenedor principal para que combine con Shiki */
-  .bloque-codigo-wrapper {
-    @apply bg-[#ffffff] dark:bg-[#0d1117];
-  }
+ /* Ajustamos el fondo del contenedor principal para que combine con Shiki */
+ .bloque-codigo-wrapper {
+ @apply bg-[#ffffff] dark:bg-[#0d1117];
+ }
 
-  /* Si quieres que los comentarios del código sean itálicos */
-  .shiki .comment {
-    font-style: italic;
-    opacity: 0.7;
-  }
+ /* Si quieres que los comentarios del código sean itálicos */
+ .shiki .comment {
+ font-style: italic;
+ opacity: 0.7;
+ }
 </style>

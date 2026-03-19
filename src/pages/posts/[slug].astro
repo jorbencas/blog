@@ -3,11 +3,11 @@ import { getCollection, render } from "astro:content";
 import SEO from "@components/SEO.astro";
 import PostLayout from "@layouts/PostLayout.astro";
 export async function getStaticPaths() {
-  const posts = await getCollection("posts");
-  return posts.map((post) => ({
-    params: { slug: post.id.replace(/\.[^/.]+$/, "") },
-    props: { post },
-  }));
+ const posts = await getCollection("posts");
+ return posts.map((post) => ({
+ params: { slug: post.id.replace(/\.[^/.]+$/, "") },
+ props: { post },
+ }));
 }
 
 const { post } = Astro.props;
@@ -19,15 +19,15 @@ const { title, description, tags, author, image, pubDate } = post.data;
 
 <SEO title={title} description={description} url={Astro.url.href} />
 <PostLayout
-  id={post.id}
-  title={title}
-  description={description}
-  tags={tags ?? []}
-  author={author}
-  image={image}
-  pubDate={pubDate}
-  headings={headings}
-  remarkPluginFrontmatter={remarkPluginFrontmatter}
+ id={post.id}
+ title={title}
+ description={description}
+ tags={tags ?? []}
+ author={author}
+ image={image}
+ pubDate={pubDate}
+ headings={headings}
+ remarkPluginFrontmatter={remarkPluginFrontmatter}
 >
-  <Content />
+ <Content />
 </PostLayout>

@@ -4,12 +4,12 @@ import ChallengesLayout from "@layouts/ChallengesLayout.astro";
 
 // 1. ESTA FUNCIÓN ES OBLIGATORIA Y DEBE LLEVAR "export"
 export async function getStaticPaths() {
-  const challenges = await getCollection("challenges");
+ const challenges = await getCollection("challenges");
 
-  return challenges.map((entry) => ({
-    params: { slug: entry.id.replace(/\.[^/.]+$/, "") },
-    props: { entry },
-  }));
+ return challenges.map((entry) => ({
+ params: { slug: entry.id.replace(/\.[^/.]+$/, "") },
+ props: { entry },
+ }));
 }
 
 // 2. RECUPERAMOS EL RETO DESDE LAS PROPS
@@ -18,5 +18,5 @@ const { Content } = await render(entry);
 ---
 
 <ChallengesLayout frontmatter={entry.data} url={Astro.url.pathname}>
-  <Content />
+ <Content />
 </ChallengesLayout>
