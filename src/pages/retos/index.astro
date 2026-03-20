@@ -9,72 +9,70 @@ const allChallenges = await getCollection("challenges");
 
 // 2. Los ordenamos por fecha (el más reciente primero)
 const sortedChallenges = allChallenges.sort(
- (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
 );
 
 const totalRetos = allChallenges.length;
 ---
 
 <Layout title="Códice de Retos | Academia Tech">
- <HomeLayout>
- <section class="space-y-12" data-pagefind-ignore >
- <div
- class="border-b pb-8 flex flex-col md:flex-row md:items-end justify-between gap-6"
- >
- <div class="space-y-2">
- <div
- class="inline-block bg-cyan-500/10 border px-3 py-1 rounded"
- >
- <span
- class="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-500"
- >System_Archive</span
- >
- </div>
- <h1
- class="text-5xl md:text-7xl font-black italic tracking-tighter uppercase text-white"
- >
- Retos<span class="text-cyan-500">_Log</span>
- </h1>
- <p class="text-slate-400 font-mono text-xs max-w-xl">
- > [STATUS: ONLINE] - Registro de misiones de código. Resuelve los
- desafíos para subir de nivel.
- </p>
- </div>
+  <HomeLayout>
+    <section class="space-y-12" data-pagefind-ignore>
+      <div
+        class="border-b pb-8 flex flex-col md:flex-row md:items-end justify-between gap-6"
+      >
+        <div class="space-y-2">
+          <div class="inline-block bg-cyan-500/10 border px-3 py-1 rounded">
+            <span
+              class="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-500"
+              >System_Archive</span
+            >
+          </div>
+          <h1
+            class="text-5xl md:text-7xl font-black italic tracking-tighter uppercase text-white"
+          >
+            Retos<span class="text-cyan-500">_Log</span>
+          </h1>
+          <p class="text-slate-400 font-mono text-xs max-w-xl">
+            > [STATUS: ONLINE] - Registro de misiones de código. Resuelve los
+            desafíos para subir de nivel.
+          </p>
+        </div>
 
- <div
- class="flex items-baseline gap-2 bg-slate-900/50 p-4 rounded-xl border "
- >
- <span class="text-4xl font-black text-cyan-500"
- >{totalRetos.toString().padStart(2, "0")}</span
- >
- <span
- class="text-[10px] font-mono text-slate-500 uppercase tracking-widest"
- >Misiones_Cargadas</span
- >
- </div>
- </div>
+        <div
+          class="flex items-baseline gap-2 bg-slate-900/50 p-4 rounded-xl border"
+        >
+          <span class="text-4xl font-black text-cyan-500"
+            >{totalRetos.toString().padStart(2, "0")}</span
+          >
+          <span
+            class="text-[10px] font-mono text-slate-500 uppercase tracking-widest"
+            >Misiones_Cargadas</span
+          >
+        </div>
+      </div>
 
- <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
- {
- sortedChallenges.length > 0 ? (
- sortedChallenges.map((ch) => (
- <ChallengeCard
- href={`/retos/${ch.id.replace(/\.[^/.]+$/, "")}`}
- title={ch.data.title}
- description={ch.data.description}
- image={ch.data.image}
- difficulty={ch.data.difficulty}
- />
- ))
- ) : (
- <div class="col-span-full py-20 text-center border-2 border-dashed rounded-2xl">
- <p class="text-slate-500 font-mono italic">
- Esperando nuevas transmisiones de desafíos...
- </p>
- </div>
- )
- }
- </div>
- </section>
- </HomeLayout>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {
+          sortedChallenges.length > 0 ? (
+            sortedChallenges.map((ch) => (
+              <ChallengeCard
+                href={`/retos/${ch.id.replace(/\.[^/.]+$/, "")}`}
+                title={ch.data.title}
+                description={ch.data.description}
+                image={ch.data.image}
+                difficulty={ch.data.difficulty}
+              />
+            ))
+          ) : (
+            <div class="col-span-full py-20 text-center border-2 border-dashed ">
+              <p class="text-slate-500 font-mono italic">
+                Esperando nuevas transmisiones de desafíos...
+              </p>
+            </div>
+          )
+        }
+      </div>
+    </section>
+  </HomeLayout>
 </Layout>
