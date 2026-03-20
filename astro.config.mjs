@@ -14,8 +14,8 @@ export default defineConfig({
     shikiConfig: {
       // Usamos un tema para Light y otro para Dark
       themes: {
-        light: "github-light",
-        dark: "github-dark",
+        light: "one-light",
+        dark: "one-dark-pro",
       },
     },
     // Esto envuelve el código para que no se rompa la línea
