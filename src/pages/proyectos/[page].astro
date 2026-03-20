@@ -7,15 +7,15 @@ import Information from "@components/Information.astro";
 import { getCollection } from "astro:content";
 
 export async function getStaticPaths({ paginate }) {
- const allProjects = await getCollection("myprojects");
- // Ordenamos por fecha descendente
- const sortedProjects = allProjects.sort(
- (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
- );
+  const allProjects = await getCollection("myprojects");
+  // Ordenamos por fecha descendente
+  const sortedProjects = allProjects.sort(
+    (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+  );
 
- return paginate(sortedProjects, {
- pageSize: 12, // Mantenemos tu estándar de 12 elementos por página
- });
+  return paginate(sortedProjects, {
+    pageSize: 12, // Mantenemos tu estándar de 12 elementos por página
+  });
 }
 
 const { page } = Astro.props;
@@ -24,47 +24,54 @@ const { prev, next } = url;
 ---
 
 <Layout
- title={`Portafolio de Proyectos - Página ${currentPage}`}
- description="Galería de proyectos de desarrollo, software y experimentación técnica."
+  title={`Portafolio de Proyectos - Página ${currentPage}`}
+  description="Galería de proyectos de desarrollo, software y experimentación técnica."
 >
- <HomeLayout>
- <section class="space-y-12" data-pagefind-ignore>
- <div class="text-center space-y-2">
- <h1 class="text-4xl font-black uppercase tracking-tighter text-gray-900 dark:text-white">
- Proyectos <span class="text-purple-500 text-2xl align-top">Pg.{currentPage}</span>
- </h1>
- <div class="h-1 w-24 bg-purple-500 mx-auto"></div>
- </div>
+  <HomeLayout>
+    <section class="space-y-12" data-pagefind-ignore>
+      <div class="text-center space-y-2">
+        <h1
+          class="text-4xl font-black uppercase tracking-tighter text-gray-900 dark:text-white"
+        >
+          Proyectos <span class="text-purple-500 text-2xl align-top"
+            >Pg.{currentPage}</span
+          >
+        </h1>
+        <div class="h-1 w-24 bg-purple-500 mx-auto"></div>
+      </div>
 
- <div class="flow-root">
- <ul role="list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
- {
- data.length > 0 ? (
- data.map((project) => (
- <li class="list-none">
- <ProjectCard 
- {...project.data} 
- id={project.id.replace(/\.[^/.]+$/, "")} 
- />
- </li>
- ))
- ) : (
- <div class="col-span-full">
- <Information />
- </div>
- )
- }
- </ul>
- </div>
+      <div class="flow-root">
+        <ul
+          role="list"
+          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
+          {
+            data.length > 0 ? (
+              data.map((project) => (
+                <li class="list-none">
+                  <ProjectCard
+                    {...project.data}
+                    id={project.id.replace(/\.[^/.]+$/, "")}
+                  />
+                </li>
+              ))
+            ) : (
+              <div class="col-span-full">
+                <Information />
+              </div>
+            )
+          }
+        </ul>
+      </div>
 
- <div class="pt-12 border-t dark:">
- <NextPrevLiks
- nextURL={next}
- prevURL={prev}
- textNext="Proyectos antiguos"
- textPrev="Proyectos recientes"
- />
- </div>
- </section>
- </HomeLayout>
+      <div class="pt-12">
+        <NextPrevLiks
+          nextURL={next}
+          prevURL={prev}
+          textNext="Proyectos antiguos"
+          textPrev="Proyectos recientes"
+        />
+      </div>
+    </section>
+  </HomeLayout>
 </Layout>

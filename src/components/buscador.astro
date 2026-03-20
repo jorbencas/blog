@@ -21,8 +21,8 @@
       placeholder="BUSCAR EN LA BITÁCORA..."
       class="w-full p-3 sm:p-4 pl-10 sm:pl-12 pr-10 sm:pr-20 transition-all duration-300
  bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100
- placeholder-slate-500 border
- focus:outline-none focus:border-cyan-500 dark:focus:border-cyan-400
+ placeholder-slate-500
+ focus:outline-none
  font-black uppercase tracking-widest text-[10px] sm:text-xs"
     />
   </div>
@@ -31,8 +31,7 @@
   <div
     id="search-results"
     class="absolute w-full left-0 mt-1 overflow-y-auto max-h-[60vh] sm:max-h-[450px] hidden
- bg-white dark:bg-slate-900 border
- shadow-2xl shadow-cyan-500/10 z-50 rounded-b-xl"
+  dark:bg-slate-900z-50 rounded-b-xl"
   >
   </div>
 </div>
@@ -44,7 +43,6 @@
     color: #06b6d4 !important; /* Texto cian fuerte */
     font-weight: 800;
     padding: 0 1px;
-    border-radius: 2px;
   }
   .dark mark {
     background-color: rgba(34, 211, 238, 0.2) !important;
@@ -60,7 +58,6 @@
   }
   #search-results::-webkit-scrollbar-thumb {
     background: #06b6d4;
-    border-radius: 10px;
   }
 </style>
 
@@ -106,7 +103,7 @@
           results.forEach((item) => {
             const div = document.createElement("div");
             div.className =
-              " last:border-none group transition-all hover:bg-slate-50 dark:hover:bg-cyan-500/5";
+              " group transition-all hover:bg-slate-50 dark:hover:bg-cyan-500/5";
 
             // Detectar si es un reto o un post por la URL (opcional)
             const isChallenge = item.url.includes("/retos/");
@@ -116,7 +113,7 @@
             div.innerHTML = `
  <a href="${item.url}" class="block p-5 sm:p-6">
  <div class="flex items-center gap-2 mb-2">
- <span class="text-[8px] font-mono px-1.5 py-0.5 border border-current ${labelColor} opacity-70">
+ <span class="text-[8px] font-mono px-1.5 py-0.5 ${labelColor} opacity-70">
  ${label}
  </span>
  </div>

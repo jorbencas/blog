@@ -9,36 +9,36 @@ import { getSortedPosts } from "src/utils";
 import { getCollection } from "astro:content";
 
 export async function getStaticPaths({ paginate }) {
- const allPosts = await getCollection("posts");
- const allChallenges = await getCollection("challenges");
+  const allPosts = await getCollection("posts");
+  const allChallenges = await getCollection("challenges");
 
- // Obtenemos todos los tags únicos de ambas colecciones
- const uniqueTags = [
- ...new Set([
- ...allPosts.flatMap((p) => p.data.tags),
- ...allChallenges.flatMap((c) => c.data.tags),
- ]),
- ];
+  // Obtenemos todos los tags únicos de ambas colecciones
+  const uniqueTags = [
+    ...new Set([
+      ...allPosts.flatMap((p) => p.data.tags),
+      ...allChallenges.flatMap((c) => c.data.tags),
+    ]),
+  ];
 
- const sortedPosts = await getSortedPosts(allPosts);
+  const sortedPosts = await getSortedPosts(allPosts);
 
- return uniqueTags.flatMap((tag) => {
- // Filtramos posts para la paginación
- const filteredPosts = sortedPosts.filter((post) =>
- post.data.tags.includes(tag)
- );
+  return uniqueTags.flatMap((tag) => {
+    // Filtramos posts para la paginación
+    const filteredPosts = sortedPosts.filter((post) =>
+      post.data.tags.includes(tag),
+    );
 
- // Filtramos retos para pasarlos como props a todas las páginas de ese tag
- const filteredChallenges = allChallenges
- .filter((c) => c.data.tags.includes(tag))
- .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+    // Filtramos retos para pasarlos como props a todas las páginas de ese tag
+    const filteredChallenges = allChallenges
+      .filter((c) => c.data.tags.includes(tag))
+      .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 
- return paginate(filteredPosts, {
- params: { tag },
- props: { tag, challenges: filteredChallenges }, // Pasamos los retos aquí
- pageSize: 12,
- });
- });
+    return paginate(filteredPosts, {
+      params: { tag },
+      props: { tag, challenges: filteredChallenges }, // Pasamos los retos aquí
+      pageSize: 12,
+    });
+  });
 }
 
 const { tag } = Astro.params;
@@ -48,89 +48,89 @@ const { prev, next } = url;
 ---
 
 <Layout title={"Contenido sobre " + tag}>
- <HomeLayout>
- <section class="space-y-20" data-pagefind-ignore>
- <div class="text-center space-y-4">
- <div
- class="inline-block bg-gradient-to-r from-sky-800 to-cyan-500 px-6 py-2"
- >
- <span
- class="text-[10px] font-black uppercase tracking-[0.4em] text-white/80"
- >Protocolo_Etiqueta</span
- >
- </div>
- <h1
- class="text-4xl md:text-6xl font-black uppercase tracking-tighter text-slate-900 dark:text-white italic"
- >
- #{tag}
- </h1>
- <div class="h-1 w-24 bg-cyan-500 mx-auto"></div>
- </div>
+  <HomeLayout>
+    <section class="space-y-20" data-pagefind-ignore>
+      <div class="text-center space-y-4">
+        <div
+          class="inline-block bg-gradient-to-r from-sky-800 to-cyan-500 px-6 py-2"
+        >
+          <span
+            class="text-[10px] font-black uppercase tracking-[0.4em] text-white/80"
+            >Protocolo_Etiqueta</span
+          >
+        </div>
+        <h1
+          class="text-4xl md:text-6xl font-black uppercase tracking-tighter text-slate-900 dark:text-white italic"
+        >
+          #{tag}
+        </h1>
+        <div class="h-1 w-24 bg-cyan-500 mx-auto"></div>
+      </div>
 
- {
- challenges.length > 0 && (
- <div class="space-y-8">
- <div class="flex items-center gap-4">
- <h2 class="text-sm font-black uppercase tracking-[0.3em] text-cyan-600 dark:text-cyan-400">
- Retos_Disponibles
- </h2>
- <div class="h-[1px] flex-1 bg-cyan-500/20" />
- </div>
- <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
- {challenges.slice(0, 3).map((ch) => (
- <ChallengeCard
- href={`/retos/${ch.slug}`}
- title={ch.data.title}
- description={ch.data.description}
- image={ch.data.image}
- difficulty={ch.data.difficulty}
- />
- ))}
- </div>
- </div>
- )
- }
+      {
+        challenges.length > 0 && (
+          <div class="space-y-8">
+            <div class="flex items-center gap-4">
+              <h2 class="text-sm font-black uppercase tracking-[0.3em] text-cyan-600 dark:text-cyan-400">
+                Retos_Disponibles
+              </h2>
+              <div class="h-[1px] flex-1 bg-cyan-500/20" />
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {challenges.slice(0, 3).map((ch) => (
+                <ChallengeCard
+                  href={`/retos/${ch.slug}`}
+                  title={ch.data.title}
+                  description={ch.data.description}
+                  image={ch.data.image}
+                  difficulty={ch.data.difficulty}
+                />
+              ))}
+            </div>
+          </div>
+        )
+      }
 
- <div class="space-y-8">
- <div class="flex items-center gap-4">
- <h2
- class="text-sm font-black uppercase tracking-[0.3em] text-slate-400"
- >
- Documentación_Artículos
- </h2>
- <div class="h-[1px] flex-1 bg-slate-200 dark:bg-white/5"></div>
- </div>
+      <div class="space-y-8">
+        <div class="flex items-center gap-4">
+          <h2
+            class="text-sm font-black uppercase tracking-[0.3em] text-slate-400"
+          >
+            Documentación_Artículos
+          </h2>
+          <div class="h-[1px] flex-1 bg-slate-200 dark:bg-white/5"></div>
+        </div>
 
- <div class="flow-root">
- <ul
- role="list"
- class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
- >
- {
- data.length > 0 ? (
- data.map((p) => <PreviewPost post={p} />)
- ) : (
- <div class="col-span-full">
- <Information />
- </div>
- )
- }
- </ul>
- </div>
- </div>
+        <div class="flow-root">
+          <ul
+            role="list"
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          >
+            {
+              data.length > 0 ? (
+                data.map((p) => <PreviewPost post={p} />)
+              ) : (
+                <div class="col-span-full">
+                  <Information />
+                </div>
+              )
+            }
+          </ul>
+        </div>
+      </div>
 
- {
- (next || prev) && (
- <div class="pt-12 border-t dark:">
- <NextPrevLiks
- nextURL={next}
- prevURL={prev}
- textNext="Anteriores"
- textPrev="Posteriores"
- />
- </div>
- )
- }
- </section>
- </HomeLayout>
+      {
+        (next || prev) && (
+          <div class="pt-12 ">
+            <NextPrevLiks
+              nextURL={next}
+              prevURL={prev}
+              textNext="Anteriores"
+              textPrev="Posteriores"
+            />
+          </div>
+        )
+      }
+    </section>
+  </HomeLayout>
 </Layout>
