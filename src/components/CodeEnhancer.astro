@@ -2,7 +2,7 @@
 // src/components/CodeEnhancer.astro
 ---
 
-<script is:inline>
+<script>
   function mejorarBloquesCodigo() {
     const bloques = document.querySelectorAll("pre:not(.mejorado)");
 
@@ -72,9 +72,14 @@
     bloques.forEach((pre) => {
       pre.classList.add("mejorado");
 
+      const codeElement = pre.querySelector("code");
+      const clasesCombinadas = [
+        ...Array.from(pre.classList),
+        ...(codeElement ? Array.from(codeElement.classList) : []),
+      ];
       const claseLang =
-        Array.from(pre.classList).find((c) => c.startsWith("language-")) ||
-        "language-txt";
+        clasesCombinadas.find((c) => c.startsWith("language-")) ||
+        "language-sh";
       const langKey = claseLang.replace("language-", "").toLowerCase();
       const info = configLang[langKey] || { icon: "code", color: "64748b" };
 

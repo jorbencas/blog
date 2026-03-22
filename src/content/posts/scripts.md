@@ -105,7 +105,8 @@ ffmpeg_exit_code=$?
 done
 ```
 # ar 2
-```bash
+
+``` sh
 #!/bin/bash
 
 # Ruta de las carpetas de videos y audios
@@ -200,7 +201,8 @@ ffmpeg_exit_code=$?
 done
 ```
 # ar 3
-```bash
+
+```sh
 #!/bin/bash
 
 # Rutas de la carpeta que contiene videos y audios, y la carpeta de salida

@@ -1,34 +1,32 @@
 ---
 // src/components/Challenge.astro
 interface Props {
- nivel: string;
- mision: string;
+  nivel: string;
+  mision: string;
 }
 
 const { nivel, mision } = Astro.props;
 
 const styles = {
- Iniciación: "border-emerald-500/50 text-emerald-400 bg-emerald-500/5",
- Intermedio: " text-cyan-400 bg-cyan-500/5",
- Avanzado: "border-rose-500/50 text-rose-400 bg-rose-500/5",
+  Iniciación: "border-emerald-500/50 text-emerald-400 bg-emerald-500/5",
+  Intermedio: " text-cyan-400 bg-cyan-500/5",
+  Avanzado: "border-rose-500/50 text-rose-400 bg-rose-500/5",
 };
 
 const currentStyle =
- styles[nivel as keyof typeof styles] || styles["Intermedio"];
+  styles[nivel as keyof typeof styles] || styles["Intermedio"];
 ---
 
-<div
- class={`my-10 p-8 border-l-4 rounded-r-2xl ${currentStyle}`}
->
- <div class="flex items-center gap-3 mb-4 opacity-70">
- <span class="text-[10px] font-black tracking-widest uppercase"
- >Misión_Briefing</span
- >
- <span class="h-[1px] flex-1 bg-current opacity-20"></span>
- <span class="text-[10px] font-mono">[{nivel}]</span>
- </div>
+<div class={`my-10 p-8 ${currentStyle}`}>
+  <div class="flex items-center gap-3 mb-4 opacity-70">
+    <span class="text-[10px] font-black tracking-widest uppercase"
+      >Misión_Briefing</span
+    >
+    <span class="h-[1px] flex-1 bg-current opacity-20"></span>
+    <span class="text-[10px] font-mono">[{nivel}]</span>
+  </div>
 
- <p class="text-2xl font-bold italic leading-tight">
- "{mision}"
- </p>
+  <p class="text-2xl font-bold italic leading-tight">
+    "{mision}"
+  </p>
 </div>
