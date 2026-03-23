@@ -13,11 +13,10 @@ const posts = defineCollection({
     tags: z.array(z.string()).default([]),
     image: z.string().optional(),
     author: z.string(),
-    layout: z.string().optional(),
   }),
 });
 
-const autoNews = defineCollection({
+const weeklyPosts = defineCollection({
   loader: glob({ pattern: '**/*.{md,mdx}', base: "./src/content/auto-news" }),
   schema: z.object({
     draft: z.boolean().optional().default(false),
@@ -27,7 +26,6 @@ const autoNews = defineCollection({
     tags: z.array(z.string()).default([]),
     image: z.string().optional(),
     author: z.string(),
-    layout: z.string().optional(),
   }),
 });
 
@@ -57,4 +55,4 @@ const myprojects = defineCollection({
   }),
 });
 
-export const collections = { posts, autoNews, challenges, myprojects };
+export const collections = { posts, weeklyPosts, challenges, myprojects };

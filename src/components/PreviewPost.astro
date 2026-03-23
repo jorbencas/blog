@@ -7,6 +7,8 @@ const date = new Date(pubDate).toLocaleDateString("es-ES", {
   month: "short",
   day: "2-digit",
 });
+
+const tags = post.data.tags || [];
 ---
 
 <a href={`/posts/${post.id}`} class="group block h-full">
@@ -95,10 +97,17 @@ const date = new Date(pubDate).toLocaleDateString("es-ES", {
           </svg>
         </div>
 
-        <span
-          class="text-[8px] font-mono text-slate-600 uppercase tracking-tighter italic"
-          >Ref_0x{post.id.slice(0, 3)}</span
-        >
+         {tags.length > 0 && (
+          <div class="flex flex-wrap gap-2">
+            {tags.map((tag: string) => (
+              <div
+                class="bg-gradient-to-r from-sky-800 to-cyan-500 px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-white"
+              >
+                {tag}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
 

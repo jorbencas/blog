@@ -5,7 +5,7 @@ import ChallengeCard from "@components/ChallengeCard.astro";
 import ProjectCard from "@components/ProjectCard.astro";
 import { getSortedPosts } from "src/utils";
 import { getCollection } from "astro:content";
-
+import wekkly from "@components/wekkly.astro";
 const allPosts = await getCollection("posts");
 const manualPosts = allPosts.filter((p) => !p.id.includes("auto-news"));
 const sortedPosts = await getSortedPosts(manualPosts);
@@ -23,6 +23,12 @@ const allProjects = await getCollection("myprojects");
 const latestProjects = allProjects
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
   .slice(0, 3);
+
+const allWeeklyPosts = await getCollection("weeklyPosts");
+const latest6Weekly = allWeeklyPosts
+  .filter(p => !p.data.draft)
+  .sort((a, b) => new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime())
+  .slice(0, 6);
 
 // Clase base para los enlaces "Ver más"
 const linkBase =
@@ -123,6 +129,28 @@ const linkBase =
           {latestPosts.map((p) => <PreviewPost post={p} />)}
         </div>
       </section>
+
+      <!--SECCIÓN WEEKLY-->
+      {latest6Weekly.length > 0 && (
+        <section class="space-y-10">
+          <div class="flex items-end justify-between pb-6 border-b border-slate-100 dark:border-white/5">
+            <h2 class="text-3xl md:text-4xl font-black italic uppercase tracking-tighter text-slate-900 dark:text-white">
+              Weekly_Recaps <span class="text-cyan-500 text-sm align-top">ARCHIVE</span>
+            </h2>
+            <a href="/weekly/1" class="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-cyan-500 transition-colors">
+              Ver todo el archivo →
+            </a>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {latest6Weekly.map((weekly, index) => (
+              <div class={index === 0 ? "md:col-span-2 lg:col-span-2" : ""}>
+                <wekkly post={weekly} />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   </div>
 </Layout>
