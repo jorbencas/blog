@@ -3,7 +3,7 @@ title: "Weekly Tech Recap: El avance de la IA y nuevas herramientas Dev"
 description: "Resumen semanal de las 5 noticias más impactantes en el mundo del desarrollo y la tecnología."
 pubDate: "2026-03-23"
 author: "Tu Nombre"
-image: "/public/img/arquitectura_web.webp"
+image: "/public/img/https://images.unsplash.com/photo-1760256993927-eeb8654d046e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w5MDM1ODJ8MHwxfHJhbmRvbXx8fHx8fHx8fDE3NzQyNzA4OTh8&ixlib=rb-4.1.0&q=80&w=1080"
 tags: ["weekly", "tecnología", "ia"]
 draft: false
 ---
