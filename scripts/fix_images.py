@@ -5,7 +5,7 @@ import requests
 # CONFIGURACIÓN
 ACCESS_KEY = os.getenv("UNSPLASH_ACCESS_KEY")
 TARGET_DIR = "src/content/auto-news"
-OLD_IMAGE = "arquitectura_web.webp"
+OLD_IMAGE = "public/img/arquitectura_web.webp"
 
 def get_unsplash_image(query):
     url = f"https://api.unsplash.com/photos/random?query={query},tech&orientation=landscape&client_id={ACCESS_KEY}"
