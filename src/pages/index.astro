@@ -5,7 +5,7 @@ import ChallengeCard from "@components/ChallengeCard.astro";
 import ProjectCard from "@components/ProjectCard.astro";
 import { getSortedPosts } from "src/utils";
 import { getCollection } from "astro:content";
-import wekkly from "@components/wekkly.astro";
+import Weekly from "@components/Weekly.astro";
 const allPosts = await getCollection("posts");
 const manualPosts = allPosts.filter((p) => !p.id.includes("auto-news"));
 const sortedPosts = await getSortedPosts(manualPosts);
@@ -145,7 +145,7 @@ const linkBase =
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {latest6Weekly.map((weekly, index) => (
               <div class={index === 0 ? "md:col-span-2 lg:col-span-2" : ""}>
-                <wekkly post={weekly} />
+                <Weekly post={weekly} />
               </div>
             ))}
           </div>
