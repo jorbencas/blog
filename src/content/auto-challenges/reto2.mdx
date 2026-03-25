@@ -1,0 +1,57 @@
+---
+draft: false
+title: "🏆 RETO: El Clásico Hola Mundo"
+description: "Tu primera misión en el sistema. Aprende a imprimir mensajes en consola y a configurar tu entorno de desarrollo básico."
+pubDate: "2023-10-27"
+tags: ["Basics", "Python", "Introducción"]
+image: "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1169&q=80"
+difficulty: "Iniciación"
+author: "Jorge Beneyto Castelló"
+---
+
+import Challenge from '../../components/Challenge.astro';
+🎯 Desafío #5: Gestión de Memoria y Closures (JS)
+
+JavaScript puede ser peligroso si no entiendes cómo se mantienen vivas las variables en el "Heap". Vamos a crear un sistema de caché privado.
+
+<Challenge
+nivel="Avanzado"
+mision="Crea una función que devuelva otra función (Closure). La función interna debe actuar como una caché: si se le pasa un ID que ya ha procesado, debe devolver el valor guardado; si es nuevo, debe calcularlo y guardarlo. La variable de caché NO debe ser accesible desde fuera."
+/>
+
+<details>
+<summary><b>Ver explicación y código 🛠️ (¡No hagas spoiler!)</b></summary>
+<div class="details-content">
+🏗️ Paso 1: Análisis
+
+El objetivo es el encapsulamiento. Al definir un objeto dentro de una función y devolver otra que hace referencia a él, creamos un ámbito privado que persiste en memoria.
+⚙️ Paso 2: Implementación
+
+Utilizaremos un objeto literal o un Map para almacenar los pares clave-valor. La función retornada comprobará la existencia de la clave antes de procesar.
+🚀 Paso 3: Optimización
+
+El uso de Map en JavaScript es más eficiente que los objetos literales para cachés frecuentes debido a su rendimiento en inserciones y búsquedas.
+💻 Código de la Solución
+JavaScript
+
+function crearCachePro() {
+  const memoria = new Map(); // Variable privada, inaccesible desde el exterior
+
+  return function(id) {
+    if (memoria.has(id)) {
+      return `[CACHE] Recuperando: ${memoria.get(id)}`;
+    }
+    
+    // Simulación de cálculo costoso
+    const resultado = `Dato_Complejo_${id}_${Math.random().toString(36).substr(2, 5)}`;
+    memoria.set(id, resultado);
+    return `[PROCESADO] Nuevo valor: ${resultado}`;
+  };
+}
+
+const consultor = crearCachePro();
+console.log(consultor(101)); // Procesa
+console.log(consultor(101)); // Recupera de caché inmediatamente
+
+</div>
+</details>

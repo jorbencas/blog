@@ -6,7 +6,6 @@ pubDate: "2026/03/10"
 tags: ['git', 'terminal', 'desarrollo']
 image: "/img/git_comandos_flags.png"
 author: "Jorge Beneyto Castelló"
-layout: "@layouts/PostLayout.astro"
 ---
 
 ## 1. Clonado y Configuración (Obtener proyectos)
