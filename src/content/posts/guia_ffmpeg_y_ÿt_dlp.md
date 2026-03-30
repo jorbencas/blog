@@ -1,6 +1,6 @@
 ---
 draft: false
-title: "Guia de  consegos y utilidades de yt-dlp y ffmpeg"
+title: "Guia de consegos y utilidades de yt-dlp y ffmpeg"
 description: ""
 pubDate: "2016/03/30"
 tags: ['web', 'sistemas']
