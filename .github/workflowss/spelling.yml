@@ -1,0 +1,24 @@
+name: Spelling Check Reviewer
+
+on:
+  pull_request:
+    paths:
+      - 'src/content/**/*.md*'
+
+jobs:
+  languagetool:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: LanguageTool Check
+        uses: reviewdog/action-languagetool@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # 'github-pr-review' hace que Reviewdog comente en la PR
+          reporter: github-pr-review 
+          level: warning
+          language: es
+          glob: 'src/content/**/*.md*'
+          # Esto permite que Reviewdog sugiera la corrección exacta
+          filter_mode: added
