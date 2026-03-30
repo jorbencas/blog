@@ -50,7 +50,7 @@ const myprojects = defineCollection({
     image: z.string(),
     repository: z.string().url().optional(), // Enlace a GitHub
     url: z.string().url().optional(),        // Enlace al proyecto en vivo
-    tags: z.array(z.string()),               // Tecnologías (React, Astro, etc.)
+    tags: z.array(z.string()).optional(),               // Tecnologías (React, Astro, etc.)
     featured: z.boolean().default(false),    // Por si quieres destacar alguno
   }),
 });
