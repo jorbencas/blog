@@ -4,7 +4,7 @@ import requests
 
 # CONFIGURACIÓN
 ACCESS_KEY = os.getenv("UNSPLASH_ACCESS_KEY")
-TARGET_DIR = "src/content/**/"
+TARGET_DIR = "src/content/*"
 OLD_IMAGE = "public/img/arquitectura_web.webp"
 
 def get_unsplash_image(query):
@@ -37,7 +37,7 @@ def enhance_metadata(content, title):
 
 def process_posts():
     for filename in os.listdir(TARGET_DIR):
-        if filename.endswith(".md"):
+        if filename.endswith(".md") or filename.endswith(".mdx"):
             path = os.path.join(TARGET_DIR, filename)
             with open(path, 'r', encoding='utf-8') as f:
                 content = f.read()
