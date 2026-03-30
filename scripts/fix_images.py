@@ -4,7 +4,7 @@ import requests
 
 # CONFIGURACIÓN
 ACCESS_KEY = os.getenv("UNSPLASH_ACCESS_KEY")
-TARGET_DIR = "src/content/auto-news"
+TARGET_DIR = "src/content/**/"
 OLD_IMAGE = "public/img/arquitectura_web.webp"
 
 def get_unsplash_image(query):
