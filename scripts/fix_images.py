@@ -49,13 +49,31 @@ def slugify(text):
 def extract_md_images(content):
     return re.findall(r'!\[(.*?)\]\((.*?)\)', content)
 
-def ensure_component_import(content):
+def extract_frontmatter_image(content):
+    match = re.search(r'image:\s*["\']?(.*?)["\']?\n', content)
+    return match.group(1).strip() if match else None
+
+def replace_frontmatter_image(content, new_value):
+    return re.sub(
+        r'image:\s*["\']?(.*?)["\']?\n',
+        f'image: "{new_value}"\n',
+        content
+    )
+
+def has_responsive_component(content):
+    return "<ResponsiveImage" in content
+
+def add_import_if_needed(content, used):
+    if not used:
+        return content
+
     if "ResponsiveImage" in content:
         return content
+
     return f'import ResponsiveImage from "@components/ResponsiveImage.astro";\n\n{content}'
 
 # ========================
-# IMAGE GENERATION
+# IMAGE
 # ========================
 
 def generate_placeholder(img):
@@ -70,12 +88,10 @@ def generate_placeholder(img):
 def generate_images(img, base_name, folder):
     avif = []
     webp = []
-
     blur = generate_placeholder(img)
 
     for size in SIZES:
 
-        # WEBP
         webp_name = f"{base_name}-{size}.webp"
         webp_path = os.path.join(folder, webp_name)
 
@@ -86,7 +102,6 @@ def generate_images(img, base_name, folder):
 
         webp.append((webp_name, size))
 
-        # AVIF
         avif_name = f"{base_name}-{size}.avif"
         avif_path = os.path.join(folder, avif_name)
 
@@ -99,41 +114,42 @@ def generate_images(img, base_name, folder):
 
     return avif, webp, blur
 
-# ========================
-# LOAD IMAGE
-# ========================
-
 async def fetch_image(session, url):
     try:
-        async with session.get(url, timeout=10) as resp:
-            if resp.status != 200:
+        async with session.get(url, timeout=10) as r:
+            if r.status != 200:
                 return None
-            return await resp.read()
+            return await r.read()
     except:
         return None
 
-async def load_image(session, source):
+async def load_image(session, src):
     try:
-        if source.startswith("http"):
-            data = await fetch_image(session, source)
+        if src.startswith("http"):
+            data = await fetch_image(session, src)
             if not data:
                 return None
             return Image.open(BytesIO(data))
         else:
-            full = os.path.join(ROOT_DIR, source.lstrip("/"))
+            full = os.path.join(ROOT_DIR, src.lstrip("/"))
             if not os.path.exists(full):
                 return None
             return Image.open(full)
     except:
         return None
 
-# ========================
-# SRCSET
-# ========================
-
 def build_srcset(images, prefix):
     return ", ".join([f"{prefix}/{n} {s}w" for n, s in images])
 
+def clean_unused_import(content):
+    if "<ResponsiveImage" in content:
+        return content
+
+    return re.sub(
+        r'import\s+ResponsiveImage\s+from\s+["\']@components/ResponsiveImage\.astro["\'];?\n?',
+        '',
+        content
+    )
 # ========================
 # PROCESS FILE
 # ========================
@@ -149,12 +165,26 @@ async def process_file(session, old_path):
     with open(old_path, "r", encoding="utf-8") as f:
         content = f.read()
 
-    content = ensure_component_import(content)
+    # ⚠️ si ya está procesado → skip
+    if has_responsive_component(content):
+        return
 
     base_name = slugify(os.path.splitext(new_filename)[0])
-    images = extract_md_images(content)
 
-    multiple = len(images) > 1
+    md_images = extract_md_images(content)
+    fm_image = extract_frontmatter_image(content)
+
+    total_images = len(md_images) + (1 if fm_image else 0)
+
+    if total_images == 0:
+        # no imágenes → solo convertir a mdx si hace falta
+        if is_md:
+            with open(new_path, "w", encoding="utf-8") as f:
+                f.write(content)
+            os.remove(old_path)
+        return
+
+    multiple = total_images > 1
 
     folder = IMG_DIR
     prefix = "/img"
@@ -164,9 +194,29 @@ async def process_file(session, old_path):
         os.makedirs(folder, exist_ok=True)
         prefix = f"/img/{base_name}"
 
-    for i, (alt, src) in enumerate(images):
+    used_component = False
 
-        name = f"{base_name}_{i+1}" if multiple else base_name
+    # ========================
+    # FRONTMATTER IMAGE
+    # ========================
+
+    if fm_image:
+        img = await load_image(session, fm_image)
+
+        if img:
+            if img.mode in ("RGBA", "P"):
+                img = img.convert("RGB")
+
+            avif, webp, blur = generate_images(img, f"{base_name}_cover", folder)
+
+            fallback = f"{prefix}/{webp[-1][0]}"
+            content = replace_frontmatter_image(content, fallback)
+
+    # ========================
+    # MARKDOWN IMAGES
+    # ========================
+
+    for i, (alt, src) in enumerate(md_images):
 
         img = await load_image(session, src)
         if not img:
@@ -175,31 +225,38 @@ async def process_file(session, old_path):
         if img.mode in ("RGBA", "P"):
             img = img.convert("RGB")
 
+        name = f"{base_name}_{i+1}" if multiple else base_name
+
         avif, webp, blur = generate_images(img, name, folder)
-
-        avif_srcset = build_srcset(avif, prefix)
-        webp_srcset = build_srcset(webp, prefix)
-
-        fallback = f"{prefix}/{webp[-1][0]}"
-
-        md_pattern = f"![{alt}]({src})"
 
         component = f'''
 <ResponsiveImage
-  avif="{avif_srcset}"
-  webp="{webp_srcset}"
-  fallback="{fallback}"
+  avif="{build_srcset(avif, prefix)}"
+  webp="{build_srcset(webp, prefix)}"
+  fallback="{prefix}/{webp[-1][0]}"
   alt="{alt}"
   blur="{blur}"
 />
 '''
 
-        content = content.replace(md_pattern, component)
+        content = content.replace(f"![{alt}]({src})", component)
+        used_component = True
+
+    # ========================
+    # IMPORT
+    # ========================
+
+    content = add_import_if_needed(content, used_component)
+    content = clean_unused_import(content)
+
+    # ========================
+    # SAVE
+    # ========================
 
     with open(new_path, "w", encoding="utf-8") as f:
         f.write(content)
 
-    if is_md and old_path != new_path:
+    if is_md:
         os.remove(old_path)
 
 # ========================
@@ -207,11 +264,12 @@ async def process_file(session, old_path):
 # ========================
 
 async def process_posts():
-    tasks = []
 
     connector = aiohttp.TCPConnector(limit=10)
 
     async with aiohttp.ClientSession(connector=connector) as session:
+
+        tasks = []
 
         for root, _, files in os.walk(TARGET_DIR):
             for file in files:
