@@ -1,0 +1,61 @@
+import ResponsiveImage from "@components/ResponsiveImage.astro";
+
+---
+draft: false
+title: "🏆 RETO: El Clásico Hola Mundo"
+description: "Tu primera misión en el sistema. Aprende a imprimir mensajes en consola y a configurar tu entorno de desarrollo básico."
+pubDate: "2023-10-27"
+tags: ["Basics", "Python", "Introducción"]
+image: "public/img/arquitectura_web.webp"
+difficulty: "Iniciación"
+author: "Jorge Beneyto Castelló"
+---
+
+import Challenge from '../../components/Challenge.astro';
+
+🎯 Desafío #6: El Motor Asíncrono (JS / Promesas)
+
+El verdadero poder de JS está en su Event Loop. Vamos a forzar el paralelismo controlado.
+
+<Challenge
+nivel="Avanzado"
+mision="Escribe una función asíncrona que reciba un array de URLs (simuladas) y las 'descargue' todas a la vez (en paralelo), pero que solo devuelva el resultado cuando TODAS hayan terminado o falle si una sola falla."
+/>
+
+<details>
+<summary><b>Ver explicación y código 🛠️ (¡No hagas spoiler!)</b></summary>
+<div class="details-content">
+🏗️ Paso 1: Análisis
+
+Si usamos un bucle await dentro de un for, las descargas serán secuenciales (lentas). Para el paralelismo real, necesitamos Promise.all.
+⚙️ Paso 2: Implementación
+
+Mapearemos el array de URLs a un array de Promesas y las pasaremos al orquestador de promesas de JavaScript.
+🚀 Paso 3: Optimización
+
+Añadir un bloque try/catch es obligatorio, ya que Promise.all aplica la política de "fallo rápido" (si una falla, la promesa global se rechaza).
+💻 Código de la Solución
+```JavaScript
+
+const simularDescarga = (url) => {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(`Contenido de ${url}`), Math.random() * 2000);
+  });
+};
+
+async function descargarTodo(urls) {
+  try {
+    console.log("Iniciando descarga masiva...");
+    // Promise.all lanza todas las peticiones simultáneamente
+    const resultados = await Promise.all(urls.map(url => simularDescarga(url)));
+    console.log("--- RESULTADOS ---");
+    resultados.forEach(res => console.log(res));
+  } catch (error) {
+    console.error("Error crítico en una descarga:", error);
+  }
+}
+
+descargarTodo(["https://api.v1", "https://api.v2", "https://api.v3"]);
+```
+</div>
+</details>
