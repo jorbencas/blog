@@ -1,61 +1,181 @@
 import os
 import re
+import json
 import requests
+import unicodedata
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from PIL import Image
+from io import BytesIO
 
-# CONFIGURACIÓN
+# CONFIG
 ACCESS_KEY = os.getenv("UNSPLASH_ACCESS_KEY")
-TARGET_DIR = "src/content/*"
-OLD_IMAGE = "public/img/arquitectura_web.webp"
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+TARGET_DIR = os.path.join(BASE_DIR, "src", "content")
+IMG_DIR = os.path.join(BASE_DIR, "public", "img")
+
+CACHE_FILE = os.path.join(BASE_DIR, "unsplash_cache.json")
+
+SIZES = [480, 768, 1200]
+
+os.makedirs(IMG_DIR, exist_ok=True)
+
+# ------------------------
+# CACHE
+# ------------------------
+
+try:
+    with open(CACHE_FILE, "r") as f:
+        unsplash_cache = json.load(f)
+except:
+    unsplash_cache = {}
+
+def save_cache():
+    with open(CACHE_FILE, "w") as f:
+        json.dump(unsplash_cache, f, indent=2)
+
+# ------------------------
+# HELPERS
+# ------------------------
+
+def slugify(text):
+    text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('ascii')
+    text = re.sub(r'[^\w\s-]', '', text).strip().lower()
+    return re.sub(r'[-\s]+', '_', text)
+
+def get_post_folder(base_name, multiple):
+    if multiple:
+        folder = os.path.join(IMG_DIR, base_name)
+        os.makedirs(folder, exist_ok=True)
+        return folder, f"/img/{base_name}"
+    return IMG_DIR, "/img"
+
+# ------------------------
+# UNSPLASH
+# ------------------------
 
 def get_unsplash_image(query):
-    url = f"https://api.unsplash.com/photos/random?query={query},tech&orientation=landscape&client_id={ACCESS_KEY}"
+    if query in unsplash_cache:
+        return unsplash_cache[query]
+
+    url = f"https://api.unsplash.com/photos/random?query={query},tech&client_id={ACCESS_KEY}"
+
     try:
-        response = requests.get(url, timeout=10)
-        if response.status_code == 200:
-            return response.json()['urls']['regular']
-    except: return None
+        r = requests.get(url, timeout=10)
+        if r.status_code == 200:
+            img_url = r.json()['urls']['regular']
+            unsplash_cache[query] = img_url
+            return img_url
+    except:
+        pass
+
     return None
 
-def enhance_metadata(content, title):
-    # 1. Autogenerar tags si hay pocos
-    tags_match = re.search(r'tags:\s*\[(.*?)\]', content)
-    if tags_match:
-        current_tags = [t.strip().replace('"', '').replace("'", "") for t in tags_match.group(1).split(',')]
-        if len(current_tags) < 3:
-            # Añadimos tags genéricos basados en palabras del título
-            extra_tags = ["tech", "innovation", "development"]
-            new_tags = list(set(current_tags + extra_tags))
-            content = content.replace(f"tags: [{tags_match.group(1)}]", f"tags: {str(new_tags)}")
+# ------------------------
+# IMÁGENES
+# ------------------------
 
-    # 2. Arreglar descripción si es muy genérica o corta
-    desc_match = re.search(r'description:\s*["\']?(.*?)["\']?\n', content)
-    if desc_match and len(desc_match.group(1)) < 30:
-        new_desc = f"Análisis profundo sobre {title}. Descubre las últimas novedades en el ecosistema tecnológico."
-        content = content.replace(desc_match.group(1), new_desc)
-    
-    return content
+def generate_responsive(img, base_name, folder):
+    outputs = []
+
+    for size in SIZES:
+        filename = f"{base_name}-{size}.webp"
+        path = os.path.join(folder, filename)
+
+        if not os.path.exists(path):
+            copy = img.copy()
+            copy.thumbnail((size, size))
+            copy.save(path, "WEBP", quality=80)
+
+        outputs.append((filename, size))
+
+    return outputs
+
+def process_image(url_or_path, base_name, folder):
+    try:
+        if url_or_path.startswith("http"):
+            r = requests.get(url_or_path, timeout=10)
+            if r.status_code != 200:
+                return None
+            img = Image.open(BytesIO(r.content))
+        else:
+            full = os.path.join(BASE_DIR, url_or_path.lstrip("/"))
+            if not os.path.exists(full):
+                return None
+            img = Image.open(full)
+
+        if img.mode in ("RGBA", "P"):
+            img = img.convert("RGB")
+
+        return generate_responsive(img, base_name, folder)
+
+    except:
+        return None
+
+# ------------------------
+# MARKDOWN
+# ------------------------
+
+def extract_md_images(content):
+    return re.findall(r'!\[.*?\]\((.*?)\)', content)
+
+def replace_md_image(content, old, new):
+    return content.replace(old, new)
+
+def build_src(images, prefix):
+    return f"{prefix}/{images[-1][0]}"
+
+# ------------------------
+# MAIN
+# ------------------------
 
 def process_posts():
-    for filename in os.listdir(TARGET_DIR):
-        if filename.endswith(".md") or filename.endswith(".mdx"):
-            path = os.path.join(TARGET_DIR, filename)
-            with open(path, 'r', encoding='utf-8') as f:
-                content = f.read()
+    tasks = []
 
-            title_match = re.search(r'title:\s*["\']?(.*?)["\']?\n', content)
-            title = title_match.group(1) if title_match else "technology"
+    with ThreadPoolExecutor(max_workers=5) as executor:
 
-            # Mejorar metadatos (Tags y Desc)
-            content = enhance_metadata(content, title)
+        for root, _, files in os.walk(TARGET_DIR):
+            for file in files:
 
-            # Cambiar imagen si es la repetida
-            if OLD_IMAGE in content:
-                new_img = get_unsplash_image(title)
-                if new_img:
-                    content = content.replace(OLD_IMAGE, new_img)
-            
-            with open(path, 'w', encoding='utf-8') as f:
-                f.write(content)
+                if not file.endswith((".md", ".mdx")):
+                    continue
+
+                path = os.path.join(root, file)
+
+                with open(path, "r", encoding="utf-8") as f:
+                    content = f.read()
+
+                base_name = slugify(os.path.splitext(file)[0])
+
+                md_images = extract_md_images(content)
+                multiple = len(md_images) > 1
+
+                folder, prefix = get_post_folder(base_name, multiple)
+
+                def task(content=content, path=path):
+
+                    new_content = content
+
+                    for i, img in enumerate(md_images):
+
+                        name = f"{base_name}_{i+1}" if multiple else base_name
+
+                        images = process_image(img, name, folder)
+
+                        if images:
+                            new_path = f"{prefix}/{images[-1][0]}"
+                            new_content = replace_md_image(new_content, img, new_path)
+
+                    with open(path, "w", encoding="utf-8") as f:
+                        f.write(new_content)
+
+                tasks.append(executor.submit(task))
+
+        for f in as_completed(tasks):
+            f.result()
+
+    save_cache()
+
 
 if __name__ == "__main__":
     process_posts()
