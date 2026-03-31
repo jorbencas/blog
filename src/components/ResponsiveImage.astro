@@ -1,0 +1,23 @@
+---
+const { avif, webp, fallback, alt, blur } = Astro.props;
+---
+
+<picture>
+  <source srcset={avif} type="image/avif" />
+  <source srcset={webp} type="image/webp" />
+
+  <img
+    src={fallback}
+    alt={alt}
+    loading="lazy"
+    decoding="async"
+    style={`background-image: url("data:image/jpeg;base64,${blur}");
+            background-size: cover;
+            background-position: center;
+            filter: blur(20px);
+            transition: filter 0.3s ease;`}
+    onload="
+    this.style.filter = 'blur(0)'
+    "
+  />
+</picture>
