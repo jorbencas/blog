@@ -158,9 +158,11 @@ async def process_file(session, old_path):
 
     file = os.path.basename(old_path)
     is_md = file.endswith(".md")
-    if not is_md: return
+    if is_md:
+        new_filename = file.replace(".md", ".mdx")
+    else:
+        new_filename = file
 
-    new_filename = file.replace(".md", ".mdx")
     new_path = os.path.join(os.path.dirname(old_path), new_filename)
 
     with open(old_path, "r", encoding="utf-8") as f:
