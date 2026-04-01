@@ -79,6 +79,21 @@ def clean_unused_import(content):
         content
     )
 
+def fix_broken_url(src):
+    if src.startswith("/img/http"):
+        fixed = src.replace("/img/", "")
+        print(f"🛠️ URL arreglada: {fixed}")
+        return fixed
+    return src
+
+
+def is_local_missing(src):
+    if src.startswith("/img/"):
+        full = os.path.join(ROOT_DIR, src.lstrip("/"))
+        return not os.path.exists(full)
+    return False
+
+
 # ========================
 # IMAGE
 # ========================
@@ -198,6 +213,14 @@ async def process_file(session, old_path):
     md_images = extract_md_images(content)
     fm_image = extract_frontmatter_image(content)
 
+
+    if fm_image:
+        fm_image = fix_broken_url(fm_image)
+
+        if is_local_missing(fm_image):
+            print(f"♻️ Imagen faltante detectada: {fm_image}")
+            # forzar regeneración
+
     total_images = len(md_images) + (1 if fm_image else 0)
     print(f"🔍 Imágenes detectadas: {total_images}")
 
@@ -241,6 +264,7 @@ async def process_file(session, old_path):
 
     # MARKDOWN
     for i, (alt, src) in enumerate(md_images):
+        src = fix_broken_url(src)
         print(f"🖼️ Markdown image: {src}")
 
         img = await load_image(session, src)
@@ -273,6 +297,8 @@ async def process_file(session, old_path):
 
     content = add_import_if_needed(content, used_component)
     content = clean_unused_import(content)
+    if src.startswith("/img/http"):
+        content = content.replace(src, src.replace("/img/", ""))
 
     with open(new_path, "w", encoding="utf-8") as f:
         f.write(content)
