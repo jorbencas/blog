@@ -1,9 +1,12 @@
 import os
 import re
+import json
 import asyncio
 import aiohttp
 import base64
+import hashlib
 import unicodedata
+import urllib.parse
 from PIL import Image
 from io import BytesIO
 
@@ -17,9 +20,28 @@ ROOT_DIR = os.path.dirname(BASE_DIR)
 TARGET_DIR = os.path.join(ROOT_DIR, "src", "content")
 IMG_DIR = os.path.join(ROOT_DIR, "public", "img")
 
+CACHE_FILE = os.path.join(ROOT_DIR, "image_cache.json")
+
 SIZES = [480, 768, 1200]
 
 os.makedirs(IMG_DIR, exist_ok=True)
+
+# ========================
+# CACHE
+# ========================
+
+try:
+    with open(CACHE_FILE, "r") as f:
+        CACHE = json.load(f)
+except:
+    CACHE = {
+        "url_map": {},   # url → base_name
+        "hash_map": {}   # hash → base_name
+    }
+
+def save_cache():
+    with open(CACHE_FILE, "w") as f:
+        json.dump(CACHE, f, indent=2)
 
 # ========================
 # HELPERS
@@ -29,131 +51,137 @@ def slugify(text):
     text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('ascii')
     return re.sub(r'[\W_]+', '_', text.lower()).strip('_')
 
-def extract_md_images(content):
-    return re.findall(r'!\[(.*?)\]\((.*?)\)', content)
+def hash_bytes(data):
+    return hashlib.md5(data).hexdigest()
 
-def extract_frontmatter_image(content):
-    match = re.search(r'image:\s*["\']?(.*?)["\']?\n', content)
-    return match.group(1).strip() if match else None
+def build_unsplash_url(query):
+    clean = re.sub(r'[^a-z0-9\s]', '', query.lower())
+    clean = " ".join(clean.split()[:5])
+    return f"https://source.unsplash.com/1600x900/?{urllib.parse.quote(clean)}"
 
-def replace_frontmatter_image(content, new_value):
-    return re.sub(
-        r'image:\s*["\']?(.*?)["\']?\n',
-        f'image: "{new_value}"\n',
-        content
-    )
-
-def clean_imports(content):
-    if "<ResponsiveImage" not in content:
-        return re.sub(
-            r'import\s+ResponsiveImage.*\n',
-            '',
-            content
-        )
-    if "import ResponsiveImage" not in content:
-        content = f'import ResponsiveImage from "@components/ResponsiveImage.astro";\n\n{content}'
-    return content
-
-# ========================
-# URL FIXES
-# ========================
+def fallback_image():
+    return "https://picsum.photos/1600/900"
 
 def fix_url(src):
     if not src:
         return None
 
-    # 🔥 /img/https:// → arreglar
     if src.startswith("/img/http"):
         src = src.replace("/img/", "")
 
-    # 🔥 github blob → raw
     if "github.com" in src and "/blob/" in src:
         src = src.replace("github.com", "raw.githubusercontent.com").replace("/blob/", "/")
 
     return src
 
-def is_local(src):
-    return src and src.startswith("/img/")
+# ========================
+# NETWORK
+# ========================
 
-def local_exists(src):
-    full = os.path.join(ROOT_DIR, src.lstrip("/"))
-    return os.path.exists(full)
+async def fetch(session, url, retries=3):
+    for i in range(retries):
+        try:
+            async with session.get(url, timeout=15) as r:
+                if r.status == 200:
+                    return await r.read()
+        except:
+            pass
+        await asyncio.sleep(1)
+    return None
 
 # ========================
 # IMAGE
 # ========================
 
-async def fetch(session, url):
-    try:
-        async with session.get(url, timeout=15) as r:
-            if r.status != 200:
-                print(f"❌ HTTP {r.status} → {url}")
-                return None
-            return await r.read()
-    except Exception as e:
-        print(f"❌ Error descarga: {e}")
-        return None
-
-async def load_image(session, src):
-    if not src:
-        return None
-
-    src = fix_url(src)
-
-    if src.startswith("http"):
-        print(f"🌐 Descargando: {src}")
-        data = await fetch(session, src)
-        if not data:
-            return None
-        return Image.open(BytesIO(data))
-
-    if is_local(src):
-        full = os.path.join(ROOT_DIR, src.lstrip("/"))
-        if os.path.exists(full):
-            print(f"📂 Cargando local: {full}")
-            return Image.open(full)
-
-    return None
-
-def placeholder(img):
+def generate_placeholder(img):
     small = img.copy()
     small.thumbnail((20, 20))
     buffer = BytesIO()
     small.save(buffer, format="JPEG", quality=30)
     return base64.b64encode(buffer.getvalue()).decode()
 
-def generate(img, name, folder):
-    os.makedirs(folder, exist_ok=True)
-
-    avif = []
+def generate_images(img, base_name):
     webp = []
-    blur = placeholder(img)
+    avif = []
 
-    for s in SIZES:
-        w_name = f"{name}-{s}.webp"
-        w_path = os.path.join(folder, w_name)
-
+    for size in SIZES:
         copy = img.copy()
-        copy.thumbnail((s, s))
-        copy.save(w_path, "WEBP", quality=80)
+        copy.thumbnail((size, size))
 
-        webp.append((w_name, s))
+        w_name = f"{base_name}-{size}.webp"
+        w_path = os.path.join(IMG_DIR, w_name)
+
+        if not os.path.exists(w_path):
+            copy.save(w_path, "WEBP", quality=80)
+
+        webp.append((w_name, size))
 
         try:
-            a_name = f"{name}-{s}.avif"
-            a_path = os.path.join(folder, a_name)
-            copy.save(a_path, "AVIF", quality=50)
-            avif.append((a_name, s))
+            a_name = f"{base_name}-{size}.avif"
+            a_path = os.path.join(IMG_DIR, a_name)
+
+            if not os.path.exists(a_path):
+                copy.save(a_path, "AVIF", quality=50)
+
+            avif.append((a_name, size))
         except:
             pass
 
-    return avif, webp, blur
+    return avif, webp, generate_placeholder(img)
 
-def srcset(data, prefix):
-    return ", ".join([f"{prefix}/{n} {s}w" for n, s in data])
+def build_srcset(data):
+    return ", ".join([f"/img/{n} {s}w" for n, s in data])
 
 # ========================
-# CORE
+# CORE CACHE LOGIC
+# ========================
+
+async def get_or_create_image(session, url, base_name):
+
+    url = fix_url(url)
+
+    # 🔁 URL cache
+    if url in CACHE["url_map"]:
+        print(f"⚡ Cache URL hit: {url}")
+        return CACHE["url_map"][url]
+
+    data = await fetch(session, url)
+
+    if not data:
+        print("⚠️ fallback")
+        data = await fetch(session, build_unsplash_url(base_name))
+
+    if not data:
+        data = await fetch(session, fallback_image())
+
+    if not data:
+        print("💀 fallo total imagen")
+        return None
+
+    h = hash_bytes(data)
+
+    # 🔁 HASH cache (deduplicación)
+    if h in CACHE["hash_map"]:
+        print(f"♻️ Imagen duplicada detectada")
+        base = CACHE["hash_map"][h]
+        CACHE["url_map"][url] = base
+        return base
+
+    # 🆕 nueva imagen
+    img = Image.open(BytesIO(data))
+
+    if img.mode in ("RGBA", "P"):
+        img = img.convert("RGB")
+
+    generate_images(img, base_name)
+
+    CACHE["url_map"][url] = base_name
+    CACHE["hash_map"][h] = base_name
+
+    return base_name
+
+# ========================
+# PROCESS FILE
 # ========================
 
 async def process_file(session, path):
@@ -163,108 +191,43 @@ async def process_file(session, path):
         content = f.read()
 
     filename = os.path.basename(path)
-    is_md = filename.endswith(".md")
-
-    new_path = path.replace(".md", ".mdx") if is_md else path
-
     base = slugify(os.path.splitext(filename)[0])
 
     title_match = re.search(r'title:\s*["\']?(.*?)["\']?\n', content)
     title = title_match.group(1) if title_match else base
 
-    md_imgs = extract_md_images(content)
-    fm_img = extract_frontmatter_image(content)
+    fm_match = re.search(r'image:\s*["\']?(.*?)["\']?\n', content)
+    fm_img = fm_match.group(1) if fm_match else None
 
-    total = len(md_imgs) + (1 if fm_img else 0)
+    if not fm_img:
+        fm_img = build_unsplash_url(title)
 
-    if total == 0:
-        print("⚠️ Sin imágenes → fallback Unsplash")
-        fm_img = f"https://source.unsplash.com/1600x900/?{title}"
-        content = content.replace("---", f"---\nimage: \"{fm_img}\"", 1)
-        total = 1
+    base_img = await get_or_create_image(session, fm_img, f"{base}_cover")
 
-    folder = IMG_DIR if total == 1 else os.path.join(IMG_DIR, base)
-    prefix = "/img" if total == 1 else f"/img/{base}"
+    if not base_img:
+        return
 
-    # ========================
-    # FRONTMATTER
-    # ========================
+    fallback = f"/img/{base_img}-1200.webp"
 
-    if fm_img:
-        fm_img = fix_url(fm_img)
+    content = re.sub(
+        r'image:\s*["\']?(.*?)["\']?\n',
+        f'image: "{fallback}"\n',
+        content
+    )
 
-        if is_local(fm_img) and not local_exists(fm_img):
-            print("♻️ Imagen rota → regenerar")
-            fm_img = f"https://source.unsplash.com/1600x900/?{title}"
-
-        img = await load_image(session, fm_img)
-
-        if not img:
-            print("⚠️ Fallback Unsplash")
-            img = await load_image(session, f"https://source.unsplash.com/1600x900/?{title}")
-
-        if img:
-            if img.mode in ("RGBA", "P"):
-                img = img.convert("RGB")
-
-            _, webp, _ = generate(img, f"{base}_cover", folder)
-            fallback = f"{prefix}/{webp[-1][0]}"
-
-            content = replace_frontmatter_image(content, fallback)
-
-    # ========================
-    # MARKDOWN
-    # ========================
-
-    for i, (alt, src) in enumerate(md_imgs):
-        src = fix_url(src)
-
-        img = await load_image(session, src)
-
-        if not img:
-            print("⚠️ fallback markdown → Unsplash")
-            img = await load_image(session, f"https://source.unsplash.com/800x600/?{title}")
-
-        if not img:
-            continue
-
-        if img.mode in ("RGBA", "P"):
-            img = img.convert("RGB")
-
-        name = f"{base}_{i+1}" if total > 1 else base
-
-        avif, webp, blur = generate(img, name, folder)
-
-        comp = f"""
-<ResponsiveImage
-  avif="{srcset(avif, prefix)}"
-  webp="{srcset(webp, prefix)}"
-  fallback="{prefix}/{webp[-1][0]}"
-  alt="{alt}"
-  blur="{blur}"
-/>
-"""
-
-        content = content.replace(f"![{alt}]({src})", comp)
-
-    content = clean_imports(content)
-
-    with open(new_path, "w", encoding="utf-8") as f:
+    with open(path, "w", encoding="utf-8") as f:
         f.write(content)
 
-    if is_md:
-        os.remove(path)
-
-    print(f"✅ OK → {new_path}")
+    print(f"✅ OK → {path}")
 
 # ========================
 # MAIN
 # ========================
 
 async def main():
-    print("🚀 REPAIR MODE ACTIVADO\n")
+    print("🚀 CACHE + DEDUP MODE\n")
 
-    connector = aiohttp.TCPConnector(limit=10)
+    connector = aiohttp.TCPConnector(limit=3)
 
     async with aiohttp.ClientSession(connector=connector) as session:
         tasks = []
@@ -276,7 +239,8 @@ async def main():
 
         await asyncio.gather(*tasks)
 
-    print("\n🔥 TODO REPARADO")
+    save_cache()
+    print("\n🔥 DONE (cache optimizada)")
 
 if __name__ == "__main__":
     asyncio.run(main())
