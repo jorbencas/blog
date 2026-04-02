@@ -34,10 +34,7 @@ try:
     with open(CACHE_FILE, "r") as f:
         CACHE = json.load(f)
 except:
-    CACHE = {
-        "url_map": {},   # url → base_name
-        "hash_map": {}   # hash → base_name
-    }
+    CACHE = {"url_map": {}, "hash_map": {}}
 
 def save_cache():
     with open(CACHE_FILE, "w") as f:
@@ -54,14 +51,6 @@ def slugify(text):
 def hash_bytes(data):
     return hashlib.md5(data).hexdigest()
 
-def build_unsplash_url(query):
-    clean = re.sub(r'[^a-z0-9\s]', '', query.lower())
-    clean = " ".join(clean.split()[:5])
-    return f"https://source.unsplash.com/1600x900/?{urllib.parse.quote(clean)}"
-
-def fallback_image():
-    return "https://picsum.photos/1600/900"
-
 def fix_url(src):
     if not src:
         return None
@@ -74,6 +63,14 @@ def fix_url(src):
 
     return src
 
+def build_unsplash_url(query):
+    clean = re.sub(r'[^a-z0-9\s]', '', query.lower())
+    clean = " ".join(clean.split()[:5])
+    return f"https://source.unsplash.com/1600x900/?{urllib.parse.quote(clean)}"
+
+def fallback_image():
+    return "https://picsum.photos/1600/900"
+
 # ========================
 # NETWORK
 # ========================
@@ -84,9 +81,13 @@ async def fetch(session, url, retries=3):
             async with session.get(url, timeout=15) as r:
                 if r.status == 200:
                     return await r.read()
-        except:
-            pass
+                print(f"⚠️ intento {i+1} fallo ({r.status}) → {url}")
+        except Exception as e:
+            print(f"⚠️ intento {i+1} error: {e}")
+
         await asyncio.sleep(1)
+
+    print(f"❌ fallo definitivo → {url}")
     return None
 
 # ========================
@@ -108,14 +109,17 @@ def generate_images(img, base_name):
         copy = img.copy()
         copy.thumbnail((size, size))
 
+        # WEBP
         w_name = f"{base_name}-{size}.webp"
         w_path = os.path.join(IMG_DIR, w_name)
 
         if not os.path.exists(w_path):
             copy.save(w_path, "WEBP", quality=80)
+            print(f"✅ WEBP: {w_name}")
 
         webp.append((w_name, size))
 
+        # AVIF (puede fallar en CI)
         try:
             a_name = f"{base_name}-{size}.avif"
             a_path = os.path.join(IMG_DIR, a_name)
@@ -124,8 +128,8 @@ def generate_images(img, base_name):
                 copy.save(a_path, "AVIF", quality=50)
 
             avif.append((a_name, size))
-        except:
-            pass
+        except Exception as e:
+            print(f"⚠️ AVIF skip: {e}")
 
     return avif, webp, generate_placeholder(img)
 
@@ -133,36 +137,37 @@ def build_srcset(data):
     return ", ".join([f"/img/{n} {s}w" for n, s in data])
 
 # ========================
-# CORE CACHE LOGIC
+# CACHE + DEDUP
 # ========================
 
 async def get_or_create_image(session, url, base_name):
 
     url = fix_url(url)
 
-    # 🔁 URL cache
+    # 🔁 cache por URL
     if url in CACHE["url_map"]:
-        print(f"⚡ Cache URL hit: {url}")
+        print(f"⚡ cache URL → {url}")
         return CACHE["url_map"][url]
 
     data = await fetch(session, url)
 
     if not data:
-        print("⚠️ fallback")
+        print("⚠️ fallback unsplash")
         data = await fetch(session, build_unsplash_url(base_name))
 
     if not data:
+        print("⚠️ fallback picsum")
         data = await fetch(session, fallback_image())
 
     if not data:
-        print("💀 fallo total imagen")
+        print("💀 no se pudo obtener imagen")
         return None
 
     h = hash_bytes(data)
 
-    # 🔁 HASH cache (deduplicación)
+    # 🔁 deduplicación por hash
     if h in CACHE["hash_map"]:
-        print(f"♻️ Imagen duplicada detectada")
+        print("♻️ imagen duplicada detectada")
         base = CACHE["hash_map"][h]
         CACHE["url_map"][url] = base
         return base
@@ -200,11 +205,13 @@ async def process_file(session, path):
     fm_img = fm_match.group(1) if fm_match else None
 
     if not fm_img:
+        print("⚠️ sin imagen → unsplash")
         fm_img = build_unsplash_url(title)
 
     base_img = await get_or_create_image(session, fm_img, f"{base}_cover")
 
     if not base_img:
+        print("❌ no se pudo generar imagen")
         return
 
     fallback = f"/img/{base_img}-1200.webp"
@@ -225,7 +232,7 @@ async def process_file(session, path):
 # ========================
 
 async def main():
-    print("🚀 CACHE + DEDUP MODE\n")
+    print("🚀 IMAGE REPAIR + CACHE MODE\n")
 
     connector = aiohttp.TCPConnector(limit=3)
 
@@ -240,7 +247,7 @@ async def main():
         await asyncio.gather(*tasks)
 
     save_cache()
-    print("\n🔥 DONE (cache optimizada)")
+    print("\n🔥 DONE")
 
 if __name__ == "__main__":
     asyncio.run(main())
