@@ -1,6 +1,5 @@
 import os
 import re
-import json
 import asyncio
 import aiohttp
 import base64
@@ -18,25 +17,9 @@ ROOT_DIR = os.path.dirname(BASE_DIR)
 TARGET_DIR = os.path.join(ROOT_DIR, "src", "content")
 IMG_DIR = os.path.join(ROOT_DIR, "public", "img")
 
-CACHE_FILE = os.path.join(ROOT_DIR, "unsplash_cache.json")
-
 SIZES = [480, 768, 1200]
 
 os.makedirs(IMG_DIR, exist_ok=True)
-
-# ========================
-# CACHE
-# ========================
-
-try:
-    with open(CACHE_FILE, "r") as f:
-        cache = json.load(f)
-except:
-    cache = {}
-
-def save_cache():
-    with open(CACHE_FILE, "w") as f:
-        json.dump(cache, f, indent=2)
 
 # ========================
 # HELPERS
@@ -60,282 +43,240 @@ def replace_frontmatter_image(content, new_value):
         content
     )
 
-def has_responsive_component(content):
-    return "<ResponsiveImage" in content
+def clean_imports(content):
+    if "<ResponsiveImage" not in content:
+        return re.sub(
+            r'import\s+ResponsiveImage.*\n',
+            '',
+            content
+        )
+    if "import ResponsiveImage" not in content:
+        content = f'import ResponsiveImage from "@components/ResponsiveImage.astro";\n\n{content}'
+    return content
 
-def add_import_if_needed(content, used):
-    if not used:
-        return content
-    if "ResponsiveImage" in content:
-        return content
-    return f'import ResponsiveImage from "@components/ResponsiveImage.astro";\n\n{content}'
+# ========================
+# URL FIXES
+# ========================
 
-def clean_unused_import(content):
-    if "<ResponsiveImage" in content:
-        return content
-    return re.sub(
-        r'import\s+ResponsiveImage\s+from\s+["\']@components/ResponsiveImage\.astro["\'];?\n?',
-        '',
-        content
-    )
+def fix_url(src):
+    if not src:
+        return None
 
-def fix_broken_url(src):
+    # 🔥 /img/https:// → arreglar
     if src.startswith("/img/http"):
-        fixed = src.replace("/img/", "")
-        print(f"🛠️ URL arreglada: {fixed}")
-        return fixed
+        src = src.replace("/img/", "")
+
+    # 🔥 github blob → raw
+    if "github.com" in src and "/blob/" in src:
+        src = src.replace("github.com", "raw.githubusercontent.com").replace("/blob/", "/")
+
     return src
 
+def is_local(src):
+    return src and src.startswith("/img/")
 
-def is_local_missing(src):
-    if src.startswith("/img/"):
-        full = os.path.join(ROOT_DIR, src.lstrip("/"))
-        return not os.path.exists(full)
-    return False
-
+def local_exists(src):
+    full = os.path.join(ROOT_DIR, src.lstrip("/"))
+    return os.path.exists(full)
 
 # ========================
 # IMAGE
 # ========================
 
-def generate_placeholder(img):
-    small = img.copy()
-    small.thumbnail((20, 20))
-
-    buffer = BytesIO()
-    small.save(buffer, format="JPEG", quality=30)
-
-    return base64.b64encode(buffer.getvalue()).decode()
-
-def generate_images(img, base_name, folder):
-    print(f"🖼️ Generando imágenes para: {base_name}")
-
-    avif = []
-    webp = []
-    blur = generate_placeholder(img)
-
-    os.makedirs(folder, exist_ok=True)
-
-    for size in SIZES:
-        try:
-            webp_name = f"{base_name}-{size}.webp"
-            webp_path = os.path.join(folder, webp_name)
-
-            if not os.path.exists(webp_path):
-                copy = img.copy()
-                copy.thumbnail((size, size))
-                copy.save(webp_path, "WEBP", quality=80)
-                print(f"   ✅ WEBP creado: {webp_path}")
-            else:
-                print(f"   ⚡ WEBP ya existe: {webp_path}")
-
-            webp.append((webp_name, size))
-
-        except Exception as e:
-            print(f"   ❌ Error WEBP ({size}): {e}")
-
-        # ⚠️ AVIF puede fallar
-        try:
-            avif_name = f"{base_name}-{size}.avif"
-            avif_path = os.path.join(folder, avif_name)
-
-            if not os.path.exists(avif_path):
-                copy = img.copy()
-                copy.thumbnail((size, size))
-                copy.save(avif_path, "AVIF", quality=50)
-                print(f"   ✅ AVIF creado: {avif_path}")
-
-            avif.append((avif_name, size))
-
-        except Exception as e:
-            print(f"   ⚠️ AVIF no soportado: {e}")
-
-    return avif, webp, blur
-
-async def fetch_image(session, url):
-    print(f"🌐 Descargando: {url}")
+async def fetch(session, url):
     try:
-        async with session.get(url, timeout=10) as r:
+        async with session.get(url, timeout=15) as r:
             if r.status != 200:
-                print(f"❌ HTTP {r.status} en {url}")
+                print(f"❌ HTTP {r.status} → {url}")
                 return None
             return await r.read()
     except Exception as e:
-        print(f"❌ Error descargando {url}: {e}")
+        print(f"❌ Error descarga: {e}")
         return None
 
 async def load_image(session, src):
-    try:
-        if src.startswith("http"):
-            data = await fetch_image(session, src)
-            if not data:
-                print(f"❌ No se pudo descargar: {src}")
-                return None
-            print(f"✅ Imagen descargada")
-            return Image.open(BytesIO(data))
-        else:
-            full = os.path.join(ROOT_DIR, src.lstrip("/"))
-            if not os.path.exists(full):
-                print(f"❌ No existe local: {full}")
-                return None
-            print(f"📂 Cargando local: {full}")
-            return Image.open(full)
-    except Exception as e:
-        print(f"❌ Error cargando imagen {src}: {e}")
+    if not src:
         return None
 
-def build_srcset(images, prefix):
-    return ", ".join([f"{prefix}/{n} {s}w" for n, s in images])
+    src = fix_url(src)
+
+    if src.startswith("http"):
+        print(f"🌐 Descargando: {src}")
+        data = await fetch(session, src)
+        if not data:
+            return None
+        return Image.open(BytesIO(data))
+
+    if is_local(src):
+        full = os.path.join(ROOT_DIR, src.lstrip("/"))
+        if os.path.exists(full):
+            print(f"📂 Cargando local: {full}")
+            return Image.open(full)
+
+    return None
+
+def placeholder(img):
+    small = img.copy()
+    small.thumbnail((20, 20))
+    buffer = BytesIO()
+    small.save(buffer, format="JPEG", quality=30)
+    return base64.b64encode(buffer.getvalue()).decode()
+
+def generate(img, name, folder):
+    os.makedirs(folder, exist_ok=True)
+
+    avif = []
+    webp = []
+    blur = placeholder(img)
+
+    for s in SIZES:
+        w_name = f"{name}-{s}.webp"
+        w_path = os.path.join(folder, w_name)
+
+        copy = img.copy()
+        copy.thumbnail((s, s))
+        copy.save(w_path, "WEBP", quality=80)
+
+        webp.append((w_name, s))
+
+        try:
+            a_name = f"{name}-{s}.avif"
+            a_path = os.path.join(folder, a_name)
+            copy.save(a_path, "AVIF", quality=50)
+            avif.append((a_name, s))
+        except:
+            pass
+
+    return avif, webp, blur
+
+def srcset(data, prefix):
+    return ", ".join([f"{prefix}/{n} {s}w" for n, s in data])
 
 # ========================
-# PROCESS FILE
+# CORE
 # ========================
 
-async def process_file(session, old_path):
+async def process_file(session, path):
+    print(f"\n📄 {path}")
 
-    print(f"\n📄 Procesando: {old_path}")
-
-    file = os.path.basename(old_path)
-    is_md = file.endswith(".md")
-
-    new_filename = file.replace(".md", ".mdx") if is_md else file
-    new_path = os.path.join(os.path.dirname(old_path), new_filename)
-
-    with open(old_path, "r", encoding="utf-8") as f:
+    with open(path, "r", encoding="utf-8") as f:
         content = f.read()
 
-    if has_responsive_component(content):
-        print("⚡ Ya procesado, skip")
-        return
+    filename = os.path.basename(path)
+    is_md = filename.endswith(".md")
 
-    base_name = slugify(os.path.splitext(new_filename)[0])
+    new_path = path.replace(".md", ".mdx") if is_md else path
 
-    md_images = extract_md_images(content)
-    fm_image = extract_frontmatter_image(content)
+    base = slugify(os.path.splitext(filename)[0])
 
+    title_match = re.search(r'title:\s*["\']?(.*?)["\']?\n', content)
+    title = title_match.group(1) if title_match else base
 
-    if fm_image:
-        fm_image = fix_broken_url(fm_image)
+    md_imgs = extract_md_images(content)
+    fm_img = extract_frontmatter_image(content)
 
-        if is_local_missing(fm_image):
-            print(f"♻️ Imagen faltante detectada: {fm_image}")
-            # forzar regeneración
+    total = len(md_imgs) + (1 if fm_img else 0)
 
-    total_images = len(md_images) + (1 if fm_image else 0)
-    print(f"🔍 Imágenes detectadas: {total_images}")
+    if total == 0:
+        print("⚠️ Sin imágenes → fallback Unsplash")
+        fm_img = f"https://source.unsplash.com/1600x900/?{title}"
+        content = content.replace("---", f"---\nimage: \"{fm_img}\"", 1)
+        total = 1
 
-    if total_images == 0:
-        print("⚠️ Sin imágenes")
-        if is_md:
-            with open(new_path, "w", encoding="utf-8") as f:
-                f.write(content)
-            os.remove(old_path)
-        return
+    folder = IMG_DIR if total == 1 else os.path.join(IMG_DIR, base)
+    prefix = "/img" if total == 1 else f"/img/{base}"
 
-    multiple = total_images > 1
-
-    folder = IMG_DIR
-    prefix = "/img"
-
-    if multiple:
-        folder = os.path.join(IMG_DIR, base_name)
-        prefix = f"/img/{base_name}"
-
-    used_component = False
-
+    # ========================
     # FRONTMATTER
-    if fm_image:
-        print(f"🖼️ Frontmatter image: {fm_image}")
+    # ========================
 
-        img = await load_image(session, fm_image)
+    if fm_img:
+        fm_img = fix_url(fm_img)
+
+        if is_local(fm_img) and not local_exists(fm_img):
+            print("♻️ Imagen rota → regenerar")
+            fm_img = f"https://source.unsplash.com/1600x900/?{title}"
+
+        img = await load_image(session, fm_img)
+
+        if not img:
+            print("⚠️ Fallback Unsplash")
+            img = await load_image(session, f"https://source.unsplash.com/1600x900/?{title}")
 
         if img:
             if img.mode in ("RGBA", "P"):
                 img = img.convert("RGB")
 
-            _, webp, _ = generate_images(img, f"{base_name}_cover", folder)
+            _, webp, _ = generate(img, f"{base}_cover", folder)
+            fallback = f"{prefix}/{webp[-1][0]}"
 
-            if webp:
-                fallback = f"{prefix}/{webp[-1][0]}"
-                content = replace_frontmatter_image(content, fallback)
-                print(f"✅ Frontmatter actualizado: {fallback}")
-            else:
-                print("❌ No se generaron imágenes")
+            content = replace_frontmatter_image(content, fallback)
 
+    # ========================
     # MARKDOWN
-    for i, (alt, src) in enumerate(md_images):
-        src = fix_broken_url(src)
-        print(f"🖼️ Markdown image: {src}")
+    # ========================
+
+    for i, (alt, src) in enumerate(md_imgs):
+        src = fix_url(src)
 
         img = await load_image(session, src)
+
+        if not img:
+            print("⚠️ fallback markdown → Unsplash")
+            img = await load_image(session, f"https://source.unsplash.com/800x600/?{title}")
+
         if not img:
             continue
 
         if img.mode in ("RGBA", "P"):
             img = img.convert("RGB")
 
-        name = f"{base_name}_{i+1}" if multiple else base_name
+        name = f"{base}_{i+1}" if total > 1 else base
 
-        avif, webp, blur = generate_images(img, name, folder)
+        avif, webp, blur = generate(img, name, folder)
 
-        if not webp:
-            print("❌ No se generaron imágenes markdown")
-            continue
-
-        component = f'''
+        comp = f"""
 <ResponsiveImage
-  avif="{build_srcset(avif, prefix)}"
-  webp="{build_srcset(webp, prefix)}"
+  avif="{srcset(avif, prefix)}"
+  webp="{srcset(webp, prefix)}"
   fallback="{prefix}/{webp[-1][0]}"
   alt="{alt}"
   blur="{blur}"
 />
-'''
+"""
 
-        content = content.replace(f"![{alt}]({src})", component)
-        used_component = True
+        content = content.replace(f"![{alt}]({src})", comp)
 
-    content = add_import_if_needed(content, used_component)
-    content = clean_unused_import(content)
-    if src.startswith("/img/http"):
-        content = content.replace(src, src.replace("/img/", ""))
+    content = clean_imports(content)
 
     with open(new_path, "w", encoding="utf-8") as f:
         f.write(content)
 
     if is_md:
-        os.remove(old_path)
+        os.remove(path)
 
-    print(f"✅ Guardado: {new_path}")
+    print(f"✅ OK → {new_path}")
 
 # ========================
 # MAIN
 # ========================
 
-async def process_posts():
-
-    print("🚀 Iniciando procesamiento...\n")
+async def main():
+    print("🚀 REPAIR MODE ACTIVADO\n")
 
     connector = aiohttp.TCPConnector(limit=10)
 
     async with aiohttp.ClientSession(connector=connector) as session:
-
         tasks = []
 
         for root, _, files in os.walk(TARGET_DIR):
-            for file in files:
-                if not file.endswith((".md", ".mdx")):
-                    continue
-
-                path = os.path.join(root, file)
-                tasks.append(process_file(session, path))
+            for f in files:
+                if f.endswith((".md", ".mdx")):
+                    tasks.append(process_file(session, os.path.join(root, f)))
 
         await asyncio.gather(*tasks)
 
-    save_cache()
-    print("\n✅ DONE")
-
-# ========================
+    print("\n🔥 TODO REPARADO")
 
 if __name__ == "__main__":
-    asyncio.run(process_posts())
+    asyncio.run(main())
