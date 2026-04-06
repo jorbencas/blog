@@ -26,6 +26,8 @@ jobs:
         run: pip install Pillow aiohttp requests
 
       - name: Run Image Fixer
+        env:
+          UNSPLASH_ACCESS_KEY: ${{ secrets.UNSPLASH_ACCESS_KEY }}
         run: python scripts/fix_images.py
 
       - name: Debug output
