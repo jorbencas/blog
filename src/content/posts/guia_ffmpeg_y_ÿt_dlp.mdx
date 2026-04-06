@@ -35,3 +35,196 @@ para unir 2  videos en uno :
 ```bash
 ffmpeg -i video1.mp4 -i video2.mp4 -filter_complex "[0:v][0:a][1:v][1:a]concat=n=2:v=1:a=1" output.mp4
 ```
+Acontinuación un script que convirte de formato a mp4 (sin logs):
+```bash
+#!/bin/bash
+
+# Definir el directorio de entrada y salida
+input_dir="./"
+output_dir="./optimizados"
+max_threads=6
+
+# LIMPIEZA DEL LOG: Se machaca al iniciar
+echo "--- Inicio de sesión: $(date) ---"
+
+if [[ ! -d $output_dir ]]; then 
+    mkdir -p "$output_dir"
+fi
+
+# Extensiones de video compatibles
+extensiones=("avi" "webm" "mkv" "mp4" "flv")
+
+# Función para convertir un archivo
+convertir_archivo() {
+    local file="$1"
+    local output_dir="$2"
+    local filename=$(basename "$file" | sed 's/\.[^.]*$//') # Nombre sin extensión
+
+    echo "Procesando: $file"
+    
+    # EXPLICACIÓN DEL CAMBIO:
+    # -map 0:v:0 -> Toma el video
+    # -map 0:a:0 -> Toma SOLO la primera pista de audio disponible
+    # Si quieres la segunda pista, cambia 0:a:0 por 0:a:1
+    ffmpeg -i "$file" \
+    -map 0:v:0 -map 0:a:0 \
+    -c:v libx264 -crf 23 -preset medium -threads 0 \
+    -c:a aac -b:a 128k \
+    "$output_dir/$filename.mp4" -y -loglevel error
+
+    # Opcional: eliminar el archivo original después de la conversión
+    if [[ $? -eq 0 ]]; then
+        if [[ -f "$file" ]]; then
+            rm "$file"
+            echo "[$filename] OK - Original eliminado"
+        fi
+    else
+        echo "[$filename] ERROR - Falló la conversión"
+    fi
+}
+
+# Array para controlar los hilos activos
+active_threads=()
+
+# Buscar archivos en el directorio de entrada con las extensiones especificadas
+for ext in "${extensiones[@]}"; do
+    for file in "$input_dir"/*."$ext"; do
+        # Saltar si no hay archivos coincidentes
+        [[ -e "$file" ]] || continue
+
+        # Llamar a la función en segundo plano
+        convertir_archivo "$file" "$output_dir" &
+        
+        # Agregar el PID del proceso a la lista
+        active_threads+=($!)
+
+        # Si el número de hilos activos alcanza el límite, esperar a que terminen
+        while [ "${#active_threads[@]}" -ge "$max_threads" ]; do
+            for i in "${!active_threads[@]}"; do
+                # Comprobar si el proceso sigue activo
+                if ! kill -0 "${active_threads[i]}" 2>/dev/null; then
+                    unset 'active_threads[i]' # Eliminar el proceso terminado de la lista
+                fi
+            done
+            active_threads=("${active_threads[@]}") # Reindexar el array
+            sleep 1 # Esperar un momento antes de verificar nuevamente
+        done
+    done
+done
+
+# Esperar a que todos los procesos en segundo plano terminen
+wait
+
+echo "Proceso finalizado."
+```
+Un script parecido pero con logs:
+```bash
+#!/bin/bash
+
+# Definir el directorio de entrada y salida
+input_dir="./"
+output_dir="./optimizados"
+max_threads=4 # Número máximo de hilos en paralelo
+
+if [[ ! -d $output_dir ]]; then 
+    # Asegurarse de que el directorio de salida exista
+    mkdir -p "$output_dir"
+fi
+
+# Extensiones de video compatibles (puedes agregar más si es necesario)
+extensiones=("avi" "webm" "mkv" "mp4" "flv")
+
+# Función para convertir un archivo
+convertir_archivo() {
+    local file="$1"
+    local output_dir="$2"
+    local filename=$(basename "$file" | sed 's/\.[^.]*$//') # Nombre sin extensión
+
+    echo "Procesando: $file"
+    ffmpeg -i "$file" -c:v libx264 -crf 23 -preset medium -c:a aac -b:a 128k "$output_dir/$filename.mp4"
+
+    # Opcional: eliminar el archivo original después de la conversión
+    if [[ -f $file ]]; then
+        rm "$file"
+        echo "Eliminado archivo original: $file"
+    fi
+}
+
+# Array para controlar los hilos activos
+active_threads=()
+
+# Buscar archivos en el directorio de entrada con las extensiones especificadas
+for ext in "${extensiones[@]}"; do
+    for file in "$input_dir"/*."$ext"; do
+        # Saltar si no hay archivos coincidentes
+        [[ -e "$file" ]] || continue
+
+        # Llamar a la función en segundo plano
+        convertir_archivo "$file" "$output_dir" &
+        
+        # Agregar el PID del proceso a la lista
+        active_threads+=($!)
+
+        # Si el número de hilos activos alcanza el límite, esperar a que terminen
+        while [ "${#active_threads[@]}" -ge "$max_threads" ]; do
+            for i in "${!active_threads[@]}"; do
+                # Comprobar si el proceso sigue activo
+                if ! kill -0 "${active_threads[i]}" 2>/dev/null; then
+                    unset 'active_threads[i]' # Eliminar el proceso terminado de la lista
+                fi
+            done
+            active_threads=("${active_threads[@]}") # Reindexar el array
+            sleep 1 # Esperar un momento antes de verificar nuevamente
+        done
+    done
+done
+
+# Esperar a que todos los procesos en segundo plano terminen
+wait
+
+echo "Todos los archivos han sido procesados."
+
+```
+Pequeño script para crear x archivo en blanco:
+```bash
+#!/bin/bash
+
+# Preguntar por el número de copias si no se proporciona como parámetro
+if [ -z "$1" ]; then
+  read -p "No se ha proporcionado un número de copias. ¿Cuántas copias deseas crear? (Presiona Enter para crear 1 copia): " NUM_COPIAS
+  # Si no se introduce un valor, hacer una copia
+  NUM_COPIAS=${NUM_COPIAS:-1}
+else
+  # Si el número de copias fue proporcionado como primer parámetro
+  NUM_COPIAS=$1
+fi
+
+# Archivo a copiar (si no se proporciona, será 'midu.sh')
+ARCHIVO_ORIGEN=${2:-midu.sh}
+
+# Crear el archivo si no existe
+if [ ! -f "$ARCHIVO_ORIGEN" ]; then
+  echo "El archivo '$ARCHIVO_ORIGEN' no existe, se va a crear."
+  echo "#!/bin/bash" > "$ARCHIVO_ORIGEN"
+  echo "echo 'Este es el archivo midu.sh por defecto'" >> "$ARCHIVO_ORIGEN"
+  chmod +x "$ARCHIVO_ORIGEN"
+fi
+
+# Crear la carpeta 'copias' si no existe
+if [ ! -d "copias" ]; then
+  mkdir copias
+fi
+
+# Bucle para hacer las copias
+for ((i=1; i<=NUM_COPIAS; i++))
+do
+  cp "$ARCHIVO_ORIGEN" "copias/${ARCHIVO_ORIGEN%.sh}_copia_$i.sh"
+  echo "Copia $i de $ARCHIVO_ORIGEN creada en 'copias/${ARCHIVO_ORIGEN%.sh}_copia_$i.sh'"
+done
+
+echo "Proceso de copias finalizado."
+```
+
+
+
+
