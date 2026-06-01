@@ -15,7 +15,7 @@ export default defineConfig({
       // Usamos un tema para Light y otro para Dark
       themes: {
         light: "one-light",
-         "one-dark-pro",
+        dark: "one-dark-pro",
       },
     },
     // Esto envuelve el código para que no se rompa la línea
