@@ -212,7 +212,11 @@ async def load_image(session, src, query=None):
         data = await fetch_image(session, src)
 
         if data:
-            return Image.open(BytesIO(data))
+            try:
+                return Image.open(BytesIO(data))
+            except Exception as e:
+                print(f"❌ Error decoding image from {src}: {str(e)}")
+                return None
 
         if query:
             photo = await search_unsplash(session, query)
@@ -227,12 +231,20 @@ async def load_image(session, src, query=None):
                 img_data = await fetch_image(session, photo["urls"]["raw"])
 
                 if img_data:
-                    return Image.open(BytesIO(img_data))
+                    try:
+                        return Image.open(BytesIO(img_data))
+                    except Exception as e:
+                        print(f"❌ Error decoding image from Unsplash: {str(e)}")
+                        return None
 
     else:
         full = os.path.join(ROOT_DIR, src.lstrip("/"))
         if os.path.exists(full):
-            return Image.open(full)
+            try:
+                return Image.open(full)
+            except Exception as e:
+                print(f"❌ Error opening local image {full}: {str(e)}")
+                return None
 
     return None
 
@@ -282,15 +294,9 @@ async def process_file(session, path):
     with open(path, "r", encoding="utf-8") as f:
         content = f.read()
 
-    # Check if images actually exist on disk
     base_name = slugify(os.path.splitext(os.path.basename(path))[0])
-    cover_expected = os.path.join(IMG_DIR, f"{base_name}_cover-1200.webp")
     
-    if has_responsive_component(content) and os.path.exists(cover_expected):
-        return
-
-    base_name = slugify(os.path.splitext(os.path.basename(path))[0])
-
+    # We always check the file now to ensure all images (FM and MD) exist.
     await generate_cover_if_missing(session, base_name)
 
     md_images = extract_md_images(content)
@@ -303,6 +309,7 @@ async def process_file(session, path):
 
     # FRONTMATTER
     if fm_image:
+        fm_image = fix_broken_url(fm_image)
         img = await load_image(session, fm_image, base_name)
 
         if img:
