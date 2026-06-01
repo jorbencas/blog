@@ -20,7 +20,7 @@ ROOT_DIR = os.path.dirname(BASE_DIR)
 TARGET_DIR = os.path.join(ROOT_DIR, "src", "content")
 IMG_DIR = os.path.join(ROOT_DIR, "public", "img")
 
-CACHE_FILE = os.path.join(ROOT_DIR, "unsplash_cache.json")
+CACHE_FILE = os.path.join(ROOT_DIR, "image_cache.json")
 
 SIZES = [480, 768, 1200]
 
@@ -115,7 +115,8 @@ async def search_unsplash(session, query):
     }
 
     headers = {
-        "Authorization": f"Client-ID {ACCESS_KEY}"
+        "Authorization": f"Client-ID {ACCESS_KEY}",
+        "User-Agent": "AstroBlogImageFixer/1.0"
     }
 
     async with session.get(url, params=params, headers=headers) as r:
@@ -185,12 +186,17 @@ def generate_images(img, base_name, folder):
     return avif, webp, blur
 
 async def fetch_image(session, url):
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    }
     try:
-        async with session.get(url, timeout=10) as r:
+        async with session.get(url, headers=headers, timeout=15) as r:
             if r.status != 200:
+                print(f"⚠️ Failed to fetch image: {url} (Status: {r.status})")
                 return None
             return await r.read()
-    except:
+    except Exception as e:
+        print(f"❌ Error fetching {url}: {str(e)}")
         return None
 
 async def load_image(session, src, query=None):
@@ -270,7 +276,11 @@ async def process_file(session, path):
     with open(path, "r", encoding="utf-8") as f:
         content = f.read()
 
-    if has_responsive_component(content):
+    # Check if images actually exist on disk
+    base_name = slugify(os.path.splitext(os.path.basename(path))[0])
+    cover_expected = os.path.join(IMG_DIR, f"{base_name}_cover-1200.webp")
+    
+    if has_responsive_component(content) and os.path.exists(cover_expected):
         return
 
     base_name = slugify(os.path.splitext(os.path.basename(path))[0])
