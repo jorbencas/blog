@@ -23,6 +23,7 @@ IMG_DIR = os.path.join(ROOT_DIR, "public", "img")
 CACHE_FILE = os.path.join(ROOT_DIR, "image_cache.json")
 
 SIZES = [480, 768, 1200]
+DEFAULT_IMAGE = "/img/default.jpg"
 
 os.makedirs(IMG_DIR, exist_ok=True)
 
@@ -101,6 +102,8 @@ def build_srcset(images, prefix):
 # ========================
 
 async def search_unsplash(session, query):
+    if not ACCESS_KEY:
+        return None
 
     if query in cache:
         print(f"⚡ Cache hit: {query}")
@@ -121,7 +124,10 @@ async def search_unsplash(session, query):
 
     async with session.get(url, params=params, headers=headers) as r:
         if r.status != 200:
-            print(f"❌ Unsplash error: {r.status}")
+            if r.status == 403:
+                print(f"🛑 Unsplash API limit reached or invalid key (403).")
+            else:
+                print(f"❌ Unsplash error: {r.status}")
             return None
 
         data = await r.json()
@@ -308,16 +314,22 @@ async def process_file(session, path):
             if webp:
                 fallback = f"{prefix}/{webp[-1][0]}"
                 content = replace_frontmatter_image(content, fallback)
+        else:
+            # Fallback for frontmatter
+            content = replace_frontmatter_image(content, DEFAULT_IMAGE)
 
     # MARKDOWN
-    for i, (alt, src) in enumerate(md_images):
+    for i, (alt, original_src) in enumerate(md_images):
 
-        src = fix_broken_url(src)
+        src = fix_broken_url(original_src)
 
         query = alt or base_name
         img = await load_image(session, src, query=query)
 
         if not img:
+            # If we fixed a broken URL, or if it's completely missing, use the default image
+            replacement = f"![{alt}]({DEFAULT_IMAGE})"
+            content = content.replace(f"![{alt}]({original_src})", replacement)
             continue
 
         if img.mode in ("RGBA", "P"):
