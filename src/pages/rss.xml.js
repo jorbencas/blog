@@ -13,7 +13,7 @@ export async function GET(context) {
       description: post.data.description,
       pubDate: post.data.pubDate,
       author: post.data.author,
-      link: `/posts/${post.slug}`,
+      link: new URL(`/posts/${post.id}`, context.site).toString(),
       categories: post.data.tags || [],
     })),
   });
