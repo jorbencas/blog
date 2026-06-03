@@ -7,7 +7,7 @@ import CodeEnhancer from "@components/CodeEnhancer.astro";
 import ReadingProgress from "@components/ReadingProgress.astro";
 import { getCollection } from "astro:content";
 import type { MarkdownHeading } from "astro";
-
+import AudioPlayer from '@components/AudioPlayer.astro';
 let bar = {
   prevElement: { url: undefined, title: undefined, image: "prev.svg" },
   nextElement: { url: undefined, title: undefined, image: "next.svg" },
@@ -23,6 +23,7 @@ interface Props {
   pubDate: string;
   headings?: MarkdownHeading[];
   remarkPluginFrontmatter?: Record<string, any>;
+  audioSrc?: string;
 }
 
 const {
@@ -35,6 +36,7 @@ const {
   pubDate,
   headings = [],
   remarkPluginFrontmatter,
+  audioSrc
 } = Astro.props;
 
 const allPosts = await getCollection("posts");
@@ -135,6 +137,7 @@ const tagsArray = Array.isArray(tags)
             }
           </div>
         </div>
+        <AudioPlayer src={audioSrc} />
       </header>
 
       <article
