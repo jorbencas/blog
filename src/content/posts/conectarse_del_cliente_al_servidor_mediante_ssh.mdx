@@ -5,7 +5,7 @@ title: "Conectarse del cliente al servidor mediante ssh"
 description: "Descubre con un ejemplo la forma de conectarse del cliente a un servidor mediante ssh"
 pubDate: "2015/12/02"
 tags: ['sistemas']
-image: "/img/conectarse_del_cliente_al_servidor_mediante_ssh_cover-1200.webp"
+image: "/img/default.jpg"
 author: "Jorge Beneyto Castelló"
 ---
 
@@ -48,10 +48,10 @@ Osea sh por que es un script, y en linux los scripts se ejecutan con la extensi�
 Hubiera funcionado pero cuando hubiesemos reiniciado el equipo toda la configuración del iptables se abria borrado, por eso hay que ejecutarlo en un script con extensión sh y luego guardar-lo en `/etc/rc.local`.
 
 Ya es el momento de cerrrar la terminal y el editor de tecto y abrir el navegador y entrar a el gestor webmin, ir a servidores>servidor dhcp>cliente>editar opciones de cliente
-![Webmin](/img/conectarse_del_cliente_al_servidor_mediante_ssh.webp)
+![Webmin](/img/default.jpg)
 
 Ademas de poner de la IP de DNS que hay poner otra por si acaso en esa que hay no esta, que pueda ir a buscar-la ala otra dirección IP de DNS.
-![Webmin](/img/conectarse_del_cliente_al_servidor_mediante_ssh_1.png)
+![Webmin](/img/default.jpg)
 
 Ahora salvamos y ya podemos iniciar el cliente y hacer un túnel para que se conecta a la tarjeta en red interna que tienen en común el servidor y el cliente, para así luego que se conecte a la NAT y que le devuelva a el cliente la conexión a internet.
 
@@ -68,19 +68,19 @@ Nos conectamos por ssh .
 - La opción N lo que hace es que sea invisible a el usuario, osea que no abre la terminal del servidor y lo ejecuta, sino que lo ejecuta de forma transparente a los ojos del usuario.
 
 Luego ponemos el usuario y la dirección IP y se nos quedara así:
-![Webmin](/img/conectarse_del_cliente_al_servidor_mediante_ssh_2.png)
+![Webmin](/img/default.jpg)
 
 Como vemos hay que tener cuidado con escribir bien la contraseña del servidor, sino nos la vuelve a preguntar, un máximo de 3 veces
 
 Ahora ya nos esta haciendo el puente a la maquina servidora, pero si queremos que salga a internet, debemos especificar en el navegador web una serie de parametros.
 
 Para ello abrimos el navegador web, nos vamos a editar>preferencias>avanzado>red>Configuración.
-![Webmin](/img/conectarse_del_cliente_al_servidor_mediante_ssh_1.webp)
+![Webmin](/img/default.jpg)
 
 Aqui es donde  los datos, hay que marcar la opción «Configuración manual del proxy», ya que por defecto nos pone sin proxy, ahora ya le pondremos que el servidor SOCKS sea el localhost, osea la maquina local que es el servidor y le indicaremos el puerto que es el 8080, ya no hay que tocar nada mas
-![Webmin](/img/conectarse_del_cliente_al_servidor_mediante_ssh_3.png)
+![Webmin](/img/default.jpg)
 
 Asi es como debe quedar nuestra configuración, luego le damos a aceptar, cerramos y ya podremos navegar con el cliente.
-![Webmin](/img/conectarse_del_cliente_al_servidor_mediante_ssh_2.webp)
+![Webmin](/img/default.jpg)
 
 Como vemos ya nos podemos conectar a internet con el cliente atraves del servidor, si quisieramos dejarlo como estava, nos vamos otravez a edita >preferencias>avanzado>red>configuración y ponemos «sin proxy»

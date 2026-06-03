@@ -4,7 +4,7 @@ description: "Esta semana hemos seguido de cerca las principales tendencias en t
 desarrollo."
 pubDate: "2026-05-30"
 author: "Jorge Beneyto Castelló"
-image: "/img/2026_w22_tech_recap_cover-1200.webp"
+image: "/img/default.jpg"
 tags: ["tech", "semanal"]
 slug: "2026-w22-tech-recap"
 draft: false
