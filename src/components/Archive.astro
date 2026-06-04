@@ -1,104 +1,90 @@
 ---
 import { getCollection } from "astro:content";
 
-// 1. OBTENCIÓN Y FILTRADO DE DATOS
-// Filtramos posts que no sean borradores
 const allPosts = await getCollection("posts", ({ data }) => {
  return data.draft !== true;
 });
 
-// 2. AGRUPACIÓN POR AÑO Y MES
-// Usamos reduce para crear un mapa: { 2024: { "enero": [...], "febrero": [...] } }
 const archive = allPosts.reduce((acc, post) => {
  const date = new Date(post.data.pubDate);
  const year = date.getFullYear();
  const month = date.toLocaleString('es-ES', { month: 'long' });
- 
- // Generamos la URL limpia usando el ID del archivo
  const url = `/posts/${post.id.replace(/\.[^/.]+$/, "")}`;
 
  if (!acc[year]) acc[year] = {};
  if (!acc[year][month]) acc[year][month] = [];
  
- acc[year][month].push({ 
- title: post.data.title, 
- url 
- });
- 
+ acc[year][month].push({ title: post.data.title, url });
  return acc;
 }, {});
 
-// 3. ORDENACIÓN
-// Ordenamos los años de más reciente a más antiguo
 const sortedYears = Object.keys(archive).sort((a, b) => b - a);
 ---
 
-<section class="w-full bg-slate-900/40 bg-slate-900/60    p-6 shadow-xl transition-colors duration-300">
+<section class="w-full bg-slate-100 dark:bg-slate-900/60 p-6 shadow-xl transition-colors duration-300 rounded-lg">
  <div class="flex items-center gap-2 mb-6">
  <div class="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></div>
- <h3 class="text-sm font-mono font-bold uppercase tracking-[0.3em] text-slate-900 text-cyan-500">
- ARCHIVO_SISTEMA
+ <h3 class="text-sm font-mono font-bold uppercase tracking-[0.3em] text-slate-700 dark:text-cyan-500">
+  ARCHIVO_SISTEMA
  </h3>
  </div>
 
  <div class="space-y-4">
  {sortedYears.map((year) => (
- <details class="group  pb-3">
- <summary class="flex justify-between items-center cursor-pointer list-none py-2 px-3 rounded-lg hover:bg-slate-100 hover:bg-white/5 transition-all">
- <span class="font-mono text-lg text-slate-700 text-white font-black italic tracking-tighter">
- > {year}
- </span>
- <svg 
- xmlns="http://www.w3.org/2000/svg" 
- class="h-5 w-5 text-cyan-600 text-cyan-500 group-open:rotate-180 transition-transform duration-300" 
- fill="none" viewBox="0 0 24 24" stroke="currentColor"
- >
- <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
- </svg>
- </summary>
+ <details class="group pb-3">
+  <summary class="flex justify-between items-center cursor-pointer list-none py-2 px-3 rounded-lg hover:bg-slate-200 dark:hover:bg-white/5 transition-all">
+  <span class="font-mono text-lg text-slate-800 dark:text-white font-black italic tracking-tighter">
+   > {year}
+  </span>
+  <svg 
+   xmlns="http://www.w3.org/2000/svg" 
+   class="h-5 w-5 text-cyan-600 dark:text-cyan-500 group-open:rotate-180 transition-transform duration-300" 
+   fill="none" viewBox="0 0 24 24" stroke="currentColor"
+  >
+   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+  </svg>
+  </summary>
 
- <div class="mt-4 ml-4 space-y-6 overflow-hidden animate-slide-down">
- {Object.keys(archive[year]).map((month) => (
- <div class="relative pl-4 ">
- <h4 class="text-xs font-mono uppercase tracking-[0.2em] text-slate-400 text-slate-500 mb-3 flex items-center gap-2">
- <span class="w-1 h-1 bg-cyan-500 rounded-full"></span>
- {month}
- </h4>
- 
- <ul class="space-y-3">
- {archive[year][month].map((post) => (
- <li class="group/item">
- <a 
- href={post.url} 
- class="text-sm text-slate-600 text-slate-400 hover:text-cyan-600 hover:text-white transition-colors flex items-start gap-2"
- >
- <span class="opacity-0 group-hover/item:opacity-100 text-cyan-500 transition-opacity">→</span>
- {post.title}
- </a>
- </li>
- ))}
- </ul>
- </div>
- ))}
- </div>
+  <div class="mt-4 ml-4 space-y-6 overflow-hidden animate-slide-down">
+  {Object.keys(archive[year]).map((month) => (
+   <div class="relative pl-4">
+   <h4 class="text-xs font-mono uppercase tracking-[0.2em] text-slate-600 dark:text-slate-400 mb-3 flex items-center gap-2">
+    <span class="w-1 h-1 bg-cyan-500 rounded-full"></span>
+    {month}
+   </h4>
+   
+   <ul class="space-y-3">
+    {archive[year][month].map((post) => (
+    <li class="group/item">
+     <a 
+     href={post.url} 
+     class="text-sm text-slate-700 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-white transition-colors flex items-start gap-2"
+     >
+     <span class="opacity-0 group-hover/item:opacity-100 text-cyan-500 transition-opacity">→</span>
+     {post.title}
+     </a>
+    </li>
+    ))}
+   </ul>
+   </div>
+  ))}
+  </div>
  </details>
  ))}
  </div>
 
- <div class="mt-6 pt-4  opacity-50">
- <p class="text-xs font-mono text-center text-slate-400 uppercase tracking-widest">
- Total_Entradas: {allPosts.length}
+ <div class="mt-6 pt-4">
+ <p class="text-xs font-mono text-center text-slate-500 dark:text-slate-500 uppercase tracking-widest">
+  Total_Entradas: {allPosts.length}
  </p>
  </div>
 </section>
 
 <style>
- /* Quitar flecha por defecto de Chrome/Safari */
  summary::-webkit-details-marker {
  display: none;
  }
 
- /* Animación de apertura suave */
  @keyframes slideDown {
  from { opacity: 0; transform: translateY(-10px); }
  to { opacity: 1; transform: translateY(0); }
@@ -106,10 +92,5 @@ const sortedYears = Object.keys(archive).sort((a, b) => b - a);
 
  .animate-slide-down {
  animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1);
- }
-
- /* Personalización para Light Mode */
- :global(.light) summary {
- color: #1e293b;
  }
 </style>

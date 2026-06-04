@@ -5,12 +5,13 @@ interface Props {
 }
 
 const { src } = Astro.props;
+if (!src) return;
 const id = Math.random().toString(36).substring(2, 9);
 ---
 
 <div class="bg-gray-100 dark:bg-zinc-800/50 p-4 rounded-lg mb-8 transition-colors audio-player" data-id={id}>
-  <p class="text-gray-800 dark:text-gray-200 font-semibold mb-3 flex items-center gap-2">
-    <span>🎧</span> ¿Prefieres escuchar este artículo?
+  <p id={`statusText-${id}`} class="text-gray-800 dark:text-gray-200 font-semibold mb-3 flex items-center gap-2">
+    <span id={`statusIcon-${id}`}>🎧</span> <span id={`statusLabel-${id}`}>¿Prefieres escuchar este artículo?</span>
   </p>
 
   <audio src={src} id={`audio-${id}`} preload="metadata" class="hidden"></audio>
@@ -39,6 +40,8 @@ const id = Math.random().toString(36).substring(2, 9);
     const progressBar = document.getElementById(`progressBar-${id}`) as HTMLInputElement;
     const currentTimeText = document.getElementById(`currentTime-${id}`);
     const durationTime = document.getElementById(`durationTime-${id}`);
+    const statusIcon = document.getElementById(`statusIcon-${id}`);
+    const statusLabel = document.getElementById(`statusLabel-${id}`);
 
     const formatTime = (time: number) => {
       if (isNaN(time)) return "0:00";
@@ -56,10 +59,14 @@ const id = Math.random().toString(36).substring(2, 9);
         audio.play();
         iconPlay.classList.add('hidden');
         iconPause.classList.remove('hidden');
+        statusIcon.textContent = '🔊';
+        statusLabel.textContent = 'Reproduciendo...';
       } else {
         audio.pause();
         iconPlay.classList.remove('hidden');
         iconPause.classList.add('hidden');
+        statusIcon.textContent = '🎧';
+        statusLabel.textContent = '¿Prefieres escuchar este artículo?';
       }
     });
 
@@ -81,6 +88,8 @@ const id = Math.random().toString(36).substring(2, 9);
       iconPause.classList.add('hidden');
       progressBar.value = '0';
       currentTimeText.innerText = '0:00';
+      statusIcon.textContent = '🎧';
+      statusLabel.textContent = '¿Prefieres escuchar este artículo?';
     });
   });
 </script>

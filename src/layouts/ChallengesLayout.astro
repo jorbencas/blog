@@ -6,9 +6,8 @@ import CodeEnhancer from "@components/CodeEnhancer.astro";
 const { frontmatter, url } = Astro.props;
 const allChallenges = await getCollection("challenges");
 
-// Obtenemos 5 retos aleatorios o recientes para la barra lateral
 const sidebarChallenges = allChallenges
-  .filter((c) => c.slug !== url?.split("/").pop()) // Evitamos mostrar el reto actual
+  .filter((c) => c.slug !== url?.split("/").pop())
   .slice(0, 5);
 ---
 
@@ -19,35 +18,35 @@ const sidebarChallenges = allChallenges
         <header class="space-y-4 pb-8">
           <div class="flex items-center gap-4">
             <span
-              class="px-3 py-1 rounded bg-cyan-500/10 border text-cyan-500 text-xs font-black uppercase tracking-widest"
+              class="px-3 py-1 rounded bg-cyan-500/10 border border-cyan-500/30 text-cyan-700 dark:text-cyan-500 text-xs font-black uppercase tracking-widest"
             >
               Challenge_Task
             </span>
-            <span class="text-slate-500 font-mono text-xs uppercase"
+            <span class="text-slate-600 dark:text-slate-500 font-mono text-xs uppercase"
               >{frontmatter.pubDate}</span
             >
           </div>
           <h1
-            class="text-4xl md:text-6xl font-black italic uppercase tracking-tighter text-white"
+            class="text-4xl md:text-6xl font-black italic uppercase tracking-tighter text-slate-900 dark:text-white"
           >
             {frontmatter.title}
           </h1>
         </header>
 
         <div
-          class="prose prose-invert prose-cyan max-w-none
+          class="prose dark:prose-invert prose-cyan max-w-none
  prose-headings:italic prose-headings:font-black prose-headings:uppercase prose-headings:tracking-tighter
- prose-p:text-slate-500 prose-p:leading-relaxed
- prose-code:text-cyan-400 prose-code:bg-cyan-950/30 prose-code:px-1 prose-code:rounded"
+ prose-p:text-slate-600 dark:prose-p:text-slate-400 prose-p:leading-relaxed
+ prose-code:text-cyan-600 dark:prose-code:text-cyan-400 prose-code:bg-cyan-100 dark:prose-code:bg-cyan-950/30 prose-code:px-1 prose-code:rounded"
         >
           <slot />
         </div>
       </main>
 
       <aside class="lg:col-span-4 space-y-8">
-        <div class="sticky top-24 p-6 bg-slate-900/50">
+        <div class="sticky top-24 p-6 bg-slate-100 dark:bg-slate-900/50 rounded-lg">
           <h2
-            class="text-xs font-black uppercase tracking-[0.3em] text-slate-500 mb-6 pb-2"
+            class="text-xs font-black uppercase tracking-[0.3em] text-slate-600 dark:text-slate-500 mb-6 pb-2"
           >
             Otras_Misiones
           </h2>
@@ -59,10 +58,10 @@ const sidebarChallenges = allChallenges
                   href={`/retos/${ch.id.replace(/\.[^/.]+$/, "")}`}
                   class="group block"
                 >
-                  <span class="text-xs font-mono text-cyan-500/50 block uppercase mb-1">
+                  <span class="text-xs font-mono text-cyan-700/60 dark:text-cyan-500/50 block uppercase mb-1">
                     [{ch.data.difficulty}]
                   </span>
-                  <p class="text-sm font-bold text-slate-300 group-hover:text-cyan-400 transition-colors line-clamp-2 italic uppercase tracking-tighter">
+                  <p class="text-sm font-bold text-slate-700 dark:text-slate-300 group-hover:text-cyan-500 dark:group-hover:text-cyan-400 transition-colors line-clamp-2 italic uppercase tracking-tighter">
                     {ch.data.title}
                   </p>
                   <div class="h-[1px] w-0 group-hover:w-full bg-cyan-500/30 transition-all duration-500 mt-2" />
@@ -73,7 +72,7 @@ const sidebarChallenges = allChallenges
 
           <a
             href="/retos"
-            class="block text-center mt-8 py-3 border rounded text-xs font-black uppercase tracking-widest text-cyan-500 hover:bg-cyan-500/10 transition-all"
+            class="block text-center mt-8 py-3 border border-cyan-500/30 rounded text-xs font-black uppercase tracking-widest text-cyan-700 dark:text-cyan-500 hover:bg-cyan-500/10 transition-all"
           >
             Volver al laboratorio
           </a>
