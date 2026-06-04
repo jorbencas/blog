@@ -11,12 +11,12 @@ export async function getStaticPaths({ paginate }) {
 
   // Filtramos los automáticos si quieres mantener limpia la lista paginada
   const manualChallenges = allChallenges.filter(
-    (c) => !c.id.includes("auto-challenges"),
+    (c) => !c.id.includes("auto-challenges")
   );
 
   // Ordenamos por fecha (más recientes primero)
   const sortedChallenges = manualChallenges.sort(
-    (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+    (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
   );
 
   return paginate(sortedChallenges, {
@@ -37,7 +37,7 @@ const { prev, next } = url;
     <section class="space-y-12" data-pagefind-ignore>
       <div class="text-center space-y-2">
         <h1
-          class="text-4xl font-black uppercase tracking-tighter text-slate-900 dark:text-white"
+          class="text-3xl md:text-4xl font-black uppercase tracking-tighter text-slate-900 dark:text-white transition-colors"
         >
           Retos <span class="text-cyan-500 text-2xl align-top"
             >Pg.{currentPage}</span
