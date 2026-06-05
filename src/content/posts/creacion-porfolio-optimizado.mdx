@@ -8,73 +8,86 @@ image: "/img/default.jpg"
 author: "Jorge Beneyto Castelló"
 ---
 
-Cuando decides lanzar tu porfolio web, es fácil caer en la tentación de instalar un framework pesado, meter librerías de animaciones en 3D y preocuparte solo de que "se vea bonito". Sin embargo, el mercado actual y los motores de búsqueda exigen algo más: **rendimiento real, accesibilidad y semántica**.
+Cuando decides lanzar tu porfolio web, es fácil caer en la tentación de instalar un framework pesado, meter librerías de animaciones complejas en 3D y preocuparte solo de la estética superficial. Sin embargo, el mercado técnico actual y los motores de búsqueda exigen mucho más: **rendimiento real, accesibilidad universal y semántica impecable**.
 
-En este artículo te cuento el *detrás de escena* de cómo optimicé mi porfolio personal para conseguir una puntuación perfecta en Google Lighthouse, sin sacrificar la estética.
-
----
-
-## 🎨 1. La Psicología del Color: ¿Por qué esta paleta?
-
-La primera impresión entra por los ojos, pero los colores deben responder a una estrategia, no a un impulso. Para este proyecto elegí una combinación que equilibra la tecnología con la calidez:
-
-| Color | Código Hex | Propósito Psicológico / Técnico |
-| :--- | :--- | :--- |
-| **Azul Eléctrico** | `#0066cc` | Color dominante. Transmite profesionalidad, confianza, serenidad y es el estándar de la industria tech. |
-| **Fondo Crema Cálido**| `#efe0d8d7`| Rompe con el típico blanco frío de hospital o el modo oscuro genérico. Da una sensación orgánica, premium y reduce la fatiga visual. |
-| **Negro Puro** | `#111111` | Usado en textos principales para garantizar un contraste ultra alto (imprescindible para cumplir las normativas WCAG de accesibilidad). |
+En este artículo analizo a fondo el desarrollo de mi porfolio personal, detallando cada decisión de ingeniería aplicada para conseguir una puntuación perfecta en Google Lighthouse sin sacrificar la interactividad.
 
 ---
 
-## 🏗️ 2. HTML Semántico y Accesibilidad (SEO Nativo)
+## 🎨 1. Estrategia de Diseño y Psicología del Color
 
-Los robots de Google no "ven" los colores; leen el código. Reemplacé la típica estructura inundada de `<div>` por etiquetas semánticas que explican qué es cada cosa:
+La interfaz visual responde a una estrategia clara de accesibilidad y psicología corporativa. Se ha evitado el uso de modos oscuros genéricos o fondos blancos fríos de hospital, optando por una paleta optimizada para largas lecturas:
 
-*   **`<header>` y `<nav>`**: Para la cabecera fija, indicando explícitamente a los lectores de pantalla que es la navegación principal mediante `aria-label="Navegación principal"`.
-*   **`<main>` y `<section>`**: Delimitan las áreas clave de la página (Experiencia, Conocimientos, Proyectos), permitiendo a los motores de búsqueda indexar el contenido en orden de importancia.
-*   **`<article>`**: Utilizado para cada tarjeta de experiencia laboral y presentación, indicando que son bloques de información independientes.
-*   **Mejora en enlaces (`aria-label` y `title`)**: Los botones como el de "Descargar CV" o los iconos de redes sociales ahora llevan descripciones nativas detalladas para que cualquier usuario con discapacidad visual sepa exactamente a dónde dirigen.
+*   **Azul Eléctrico Corporativo (`#0066cc`):** Es el color dominante y de acento. Utilizado estratégicamente para enlaces, roles y títulos principales. Transmite profesionalidad, confianza, seguridad técnica y es el estándar de la industria tecnológica.
+*   **Fondo Crema Orgánico (`#efe0d8d7`):** Actúa como base global de la aplicación. Rompe con la frialdad cromática tradicional, aporta una estética premium y reduce drásticamente la fatiga visual.
+*   **Negro Grafito Puro (`#111111`):** Reservado para la tipografía de lectura principal. Su combinación sobre el fondo crema garantiza un contraste cromático ultra-alto que supera con creces las normativas de accesibilidad **WCAG AAA**.
 
 ---
 
-## ⚡ 3. Rendimiento Gráfico: Forzando la GPU para evitar parpadeos
+## 🏗️ 2. Arquitectura de Componentes e Inyección de HTML Semántico
 
-Uno de los mayores retos visuales apareció al combinar una cabecera con efecto de desenfoque (`backdrop-filter: blur`) con una lista de habilidades repleta de iconos en formato SVG con animaciones en `hover`. 
+Los rastreadores de los motores de búsqueda no "ven" los colores ni las animaciones; leen la estructura de datos. Para maximizar el SEO nativo, se ha reemplazado por completo la clásica estructura inundada de `<div>` vacíos por etiquetas semánticas nativas:
 
-Al hacer scroll, los elementos vibraban o daban pequeños tirones. ¿La razón? El navegador calculaba las capas usando la CPU en tiempo real. Lo solucionamos aplicando **Aceleración por Hardware** en el archivo CSS:
+*   **`<header>` y `<nav>`:** Delimitan la barra de navegación fija. La lista se ha dotado de atributos explicitos de accesibilidad como `aria-label="Navegación principal"` para lectores de pantalla.
+*   **`<main>` y `<section>`:** Estructuran el flujo lineal de la página, permitiendo a los indexadores jerarquizar correctamente secciones clave como Experiencia, Conocimientos, Proyectos o Artículos.
+*   **`<article>`:** Cada tarjeta de trayectoria profesional y post del blog utiliza esta etiqueta, lo que indica a los bots de búsqueda que el bloque de información contiene texto autónomo, independiente y reutilizable.
+*   **Botones e Hipervínculos Enriquecidos:** Elementos interactivos como el botón de "Descargar CV" o los enlaces a repositorios contienen atributos `title` y descripciones nativas de destino, mejorando el presupuesto de rastreo (*Crawl Budget*).
+
+---
+
+## ⚡ 3. Aceleración por Hardware: Forzando la GPU en Elementos de Interfaz
+
+Uno de los mayores retos de rendimiento visual apareció al superponer la cabecera con efecto de desenfoque dinámico (`backdrop-filter: blur`) con una sección de conocimientos que contiene una lista con 20 iconos en formato SVG enriquecidos con animaciones de escalado en `hover`.
+
+Durante el desplazamiento (*scroll*), la CPU sufría picos de cálculo para renderizar estas capas vectoriales, generando micro-tirones o parpadeos gráficos. La solución consistió en aplicar **aislamiento de capas y aceleración por hardware** directamente en la hoja de estilos:
 
 ```css
 .knowledge ul li img {
-  will-change: transform;       /* Avisa al navegador de futuros cambios */
-  transform: translateZ(0);     /* Fuerza al renderizador a usar la tarjeta gráfica (GPU) */
+  will-change: transform;       /* Avisa proactivamente al navegador del cambio geométrico */
+  transform: translateZ(0);     /* Fuerza al motor de renderizado a procesar el elemento mediante la GPU */
 }
 ```
 
-Con estas dos líneas, el scroll pasó de ser tosco a correr a unos fluidos 60 FPS en cualquier dispositivo móvil.
+Con este sutil ajuste de ingeniería CSS, el hilo de renderizado delega el procesamiento gráfico a la GPU, manteniendo una tasa de refresco ultra-fluida de **60 FPS** incluso en dispositivos móviles de gama baja.
 
-## 📸 4. Estrategia de Imágenes: El mito del .webp
+---
 
-Usar el formato .webp es un gran paso, pero no es mágico si la imagen original mide 4000px. Para este proyecto, apliqué reglas estrictas de compresión:
+## 📸 4. Optimización de Imágenes y Metaetiquetas Open Graph (SEO Técnico)
 
-    El Banner de Fondo: Redimensionado a un máximo de 1920px de ancho y comprimido por debajo de los 150 KB.
+El uso de formatos modernos como `.webp` es insuficiente si no se acompaña de una estrategia de dimensiones y metadatos correctos:
 
-    El Avatar: Aunque la foto original tenía mucha resolución, en la web se muestra a un tamaño máximo de 140x140px. Se recortó a esa medida exacta y su peso final se redujo a escasos 15 KB.
+### Dimensionamiento y Carga Pérezosa
+1.  **Avatar de Perfil:** Aunque la imagen original cuenta con alta resolución, el navegador la renderiza a un tamaño máximo de `140x140px`. Se realizó un recorte y compresión exacta para dejarla en apenas **15 KB**.
+2.  **Uso de Layout Shift Prevention:** Se inyectaron dimensiones explícitas (`width` y `height`) en cada etiqueta `<img>` para reservar el espacio en el layout antes de la descarga, reduciendo a cero el *Cumulative Layout Shift (CLS)*.
+3.  **Carga Diferida:** Se aplicó el atributo nativo `loading="lazy"` en toda la parrilla de iconos de tecnologías para posponer su descarga hasta que el usuario se aproxime a la sección.
 
-    Atributos Nativos: Se añadieron dimensiones explícitas (width y height) en el HTML para evitar el Cumulative Layout Shift (CLS), es decir, que la página dé saltos mientras se carga.
+### Redes Sociales y Visibilidad (Open Graph)
+Para asegurar que los enlaces compartidos en plataformas como LinkedIn, Twitter o WhatsApp se muestren de forma atractiva con su correspondiente tarjeta visual, se ha configurado de manera estricta el bloque de metadatos `og:image`. Un error común en producción es enlazar una imagen local sin la URL absoluta o usar rutas rotas, lo que provoca que las plataformas omitan la vista previa. La configuración se ha diseñado garantizando la concordancia absoluta de las siguientes propiedades:
 
-## 🔄 5. Integración Dinámica: Consumiendo la API del Blog
+```html
+<meta property="og:type" content="website">
+<meta property="og:title" content="Jorge Beneyto Castelló | Full Stack Developer Porfolio">
+<meta property="og:description" content="Explora mis proyectos, experiencia en desarrollo web y artículos técnicos sobre programación.">
+<meta property="og:url" content="https://github.com/jorbencas">
+<!-- El secreto de Open Graph: URL absoluta o ruta perfectamente mapeada en producción -->
+<meta property="og:image" content="https://tu-dominio-real.com/img/Avatar.webp">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+```
 
-Para mantener el porfolio actualizado de forma automática, añadí un script en JavaScript puro (index.js) que realiza una petición asíncrona (fetch) a la API del blog (desarrollado de forma externa con Astro).
+---
 
-El script inyecta dinámicamente las últimas publicaciones dentro de un contenedor dedicado:
+## 🔄 5. Integración Dinámica: Consumo de API en el Lado del Cliente
 
-``` JavaScript
+Con el objetivo de mantener la sección de artículos actualizada en tiempo real sin necesidad de recompilar el porfolio ante cada nueva publicación, se desarrolló un módulo asíncrono en JavaScript puro (`index.js`). Este script realiza una petición de red (*fetch*) hacia el endpoint del blog de Astro, parsea la respuesta en formato JSON e inyecta las tarjetas dinámicamente en el DOM:
 
-// Ejemplo conceptual de la integración de la API
+```javascript
 async function cargarUltimosPosts() {
   const container = document.getElementById('dynamic-posts-container');
   try {
-    const response = await fetch('[https://api.tu-blog-ficticio.com/posts?limit=3](https://api.tu-blog-ficticio.com/posts?limit=3)');
+    const response = await fetch('https://api.tu-blog-ficticio.com/posts?limit=3');
+    if (!response.ok) throw new Error('Error en la respuesta de la API');
+    
     const posts = await response.json();
     
     container.innerHTML = posts.map(post => `
@@ -89,9 +102,21 @@ async function cargarUltimosPosts() {
   }
 }
 ```
+
+---
+
+## 📱 6. Experiencia de Usuario Móvil: Menú Hamburguesa Nativo
+
+El menú de navegación tradicional colapsaba visualmente en pantallas reducidas. Para resolverlo, se diseñó un menú de hamburguesa modular que transforma la barra horizontal en un panel lateral deslizante mediante la combinación de estados CSS (`.is-active`) gestionados de forma eficiente mediante JavaScript, garantizando que el usuario pueda interactuar con una sola mano de forma natural y fluida.
+
+---
+
 ### 💡 Nota de arquitectura futura: 
 Aunque este sistema mediante JavaScript del lado del cliente funciona perfectamente, para mejorar el presupuesto de rastreo (Crawl Budget) de Google, el siguiente paso evolutivo será traer estos posts durante la fase de compilación en el servidor aprovechando las bondades nativas de Astro.
 
-## 🚀 Conclusión y Resultados
 
-Optimizar un porfolio no consiste en usar herramientas complejas, sino en entender cómo consumen la web tanto los usuarios como las máquinas. Al corregir el orden de las secciones en el menú móvil, ajustar los espacios de scroll (scroll-padding-top) y limpiar la estructura semántica, la web no solo es visualmente atractiva, sino técnicamente impecable.
+---
+
+## 🚀 Conclusión y Métricas
+
+La optimización de un entorno web profesional no radica en implementar tecnologías complejas innecesarias, sino en exprimir las capacidades nativas del navegador. Al rediseñar la sección de experiencia hacia una arquitectura de cuadrícula ejecutiva, corregir el comportamiento de las imágenes y blindar las metaetiquetas de indexación, el porfolio se convierte en una herramienta técnica impecable, veloz y lista para destacar en cualquier proceso de selección.
