@@ -1,11 +1,67 @@
 ---
-const { title, description, tags = [] } = Astro.props;
+// seo.astro
+interface Props {
+  title: string;
+  description: string;
+  tags?: string[];
+  image?: string;
+  pubDate?: string;
+  author?: string;
+}
+
+const { title, description, tags = [], image, pubDate, author } = Astro.props;
+
+// Obtenemos la URL de la página actual de forma nativa con Astro
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 ---
 
+<!-- SEO Estándar -->
 <title>{title}</title>
-
 <meta name="description" content={description} />
+<link rel="canonical" href={canonicalURL} />
+{
+  pubDate && (
+    <meta
+      property="article:published_time"
+      content={new Date(pubDate).toISOString()}
+    />
+  )
+}
+{author && <meta property="article:author" content={author} />}
+<!-- Open Graph / Facebook / LinkedIn -->
+<meta property="og:type" content="article" />
+<meta property="og:url" content={canonicalURL} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+{image && <meta property="og:image" content={new URL(image, Astro.site)} />}
 
-{tags.map(tag => (
- <meta property="article:tag" content={tag} />
-))}
+<!-- Tus etiquetas de artículo (¡Tu lógica perfecta!) -->
+{tags.map((tag) => <meta property="article:tag" content={tag} />)}
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image" />
+<meta property="twitter:url" content={canonicalURL} />
+<meta property="twitter:title" content={title} />
+<meta property="twitter:description" content={description} />
+
+---
+// Preparamos el objeto JSON-LD para un artículo de blog
+const jsonLD = {
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": title,
+  "description": description,
+  "keywords": tags.join(", "),
+  "url": canonicalURL,
+  ...(pubDate && { "datePublished": new Date(pubDate).toISOString() }),
+  ...(author && {
+    "author": {
+      "@type": "Person",
+      "name": author
+    }
+  })
+};
+---
+
+<!-- Insertamos el JSON-LD de forma segura en el HTML -->
+<script type="application/ld+json" set:html={JSON.stringify(jsonLD)} />

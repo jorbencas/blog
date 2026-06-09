@@ -1,5 +1,4 @@
 ---
-import { makeUrl } from "src/utils";
 const { url, text, isNext } = Astro.props;
 
 // Usamos EXACTAMENTE tus clases de referencia
@@ -9,7 +8,7 @@ const baseClasses =
 
 {
   url && (
-    <a class={baseClasses} href={makeUrl(url, Astro)}>
+    <a class={baseClasses} href={new URL(url, Astro.site)}>
       {!isNext && (
         <svg
           xmlns="http://www.w3.org/2000/svg"

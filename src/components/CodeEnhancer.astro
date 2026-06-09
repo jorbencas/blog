@@ -67,7 +67,7 @@
       md: { icon: "markdown", color: "000000" },
       git: { icon: "git", color: "F05032" },
       npm: { icon: "npm", color: "CB3837" },
-      terminal: { icon: "gnubash", color: "4EAA25" }
+      terminal: { icon: "gnubash", color: "4EAA25" },
     };
 
     bloques.forEach((pre) => {
@@ -78,27 +78,33 @@
         ...Array.from(pre.classList),
         ...(codeElement ? Array.from(codeElement.classList) : []),
       ];
-      
+
       const claseLang = clasesCombinadas.find((c) => c.startsWith("language-"));
-      const dataLang = pre.getAttribute("data-language") || pre.getAttribute("data-lang");
-      
-      let rawLang = dataLang || (claseLang ? claseLang.replace("language-", "") : "terminal");
+      const dataLang =
+        pre.getAttribute("data-language") || pre.getAttribute("data-lang");
+
+      let rawLang =
+        dataLang ||
+        (claseLang ? claseLang.replace("language-", "") : "terminal");
       const langKey = rawLang.toLowerCase();
-      
+
       const info = configLang[langKey] || { icon: "code", color: "64748b" };
 
       // Si el icono es code, fallamos seguro en simpleicons, usemos codepen o gnubash o escondemos la imagen
-      const imgHtml = info.icon === "code" 
-        ? `<span class="text-slate-400">⚡</span>`
-        : `<img src="https://cdn.simpleicons.org/${info.icon}/${info.color}" class="w-4 h-4 opacity-80 dark:opacity-100" alt="${langKey}" onerror="this.style.display='none'"/>`;
+      const imgHtml =
+        info.icon === "code"
+          ? `<span class="text-slate-400">⚡</span>`
+          : `<img src="https://cdn.simpleicons.org/${info.icon}/${info.color}" class="w-4 h-4 opacity-80 dark:opacity-100" alt="${langKey}" onerror="this.style.display='none'"/>`;
 
       // 1. Crear el Wrapper (Adaptable a Temas)
       const wrapper = document.createElement("div");
-      wrapper.className = "bloque-codigo-wrapper my-10 bg-white dark:bg-[#0d1117] shadow-sm border border-slate-200 dark:border-transparent overflow-hidden transition-all rounded-lg";
+      wrapper.className =
+        "bloque-codigo-wrapper my-10 bg-white dark:bg-[#0d1117] shadow-sm border border-slate-200 dark:border-transparent overflow-hidden transition-all rounded-lg";
 
       // 2. Cabecera con Icono Dinámico
       const header = document.createElement("div");
-      header.className = "flex justify-between items-center px-4 py-2 bg-slate-50 dark:bg-white/[0.03] border-b border-slate-200 dark:border-[#30363d] font-mono text-xs sm:text-sm font-bold tracking-widest";
+      header.className =
+        "flex justify-between items-center px-4 py-2 bg-slate-50 dark:bg-white/[0.03] border-b border-slate-200 dark:border-[#30363d] text-xs sm:text-sm font-bold tracking-widest";
 
       header.innerHTML = `
         <div class="flex items-center gap-2">
@@ -112,7 +118,8 @@
 
       // 3. Estructura de contenido
       const divContenido = document.createElement("div");
-      divContenido.className = "p-4 overflow-x-auto selection:bg-cyan-500/30 text-sm";
+      divContenido.className =
+        "p-4 overflow-x-auto selection:bg-cyan-500/30 text-sm";
 
       pre.parentNode.insertBefore(wrapper, pre);
       wrapper.appendChild(header);

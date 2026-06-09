@@ -9,10 +9,11 @@ const posts = defineCollection({
     draft: z.boolean().optional().default(false),
     title: z.string(),
     description: z.string(),
-    pubDate: z.coerce.string().or(z.coerce.date()), // Acepta texto o fecha
+    pubDate: z.coerce.string().or(z.coerce.date()),
     tags: z.array(z.string()).default([]),
     image: z.string().optional(),
     author: z.string(),
+    audioSrc: z.string().optional()
   }),
 });
 
@@ -22,7 +23,7 @@ const weeklyPosts = defineCollection({
     draft: z.boolean().optional().default(false),
     title: z.string(),
     description: z.string(),
-    pubDate: z.string().or(z.date()), // Acepta texto o fecha
+    pubDate: z.string().or(z.date()),
     tags: z.array(z.string()).default([]),
     image: z.string().optional(),
     author: z.string(),
@@ -38,7 +39,7 @@ const challenges = defineCollection({
     pubDate: z.coerce.date(),
     image: z.string(),
     tags: z.array(z.string()),
-    difficulty: z.enum(['Iniciación', 'Intermedio', 'Avanzado']), // Tipado para los retos
+    difficulty: z.enum(['Iniciación', 'Intermedio', 'Avanzado']),
   }),
 });
 

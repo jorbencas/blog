@@ -13,7 +13,7 @@ const latestPosts = sortedPosts.slice(0, 3);
 
 const allChallenges = await getCollection("challenges");
 const manualChallenges = allChallenges.filter(
-  (c) => !c.id.includes("auto-challenges"),
+  (c) => !c.id.includes("auto-challenges")
 );
 const latestChallenges = manualChallenges
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
@@ -24,11 +24,11 @@ const latestProjects = allProjects
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
   .slice(0, 3);
 
-const allWeeklyPosts = await getCollection("weeklyPosts");
-const latest6Weekly = allWeeklyPosts
-  .filter(p => !p.data.draft)
-  .sort((a, b) => new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime())
-  .slice(0, 6);
+// const allWeeklyPosts = await getCollection("weeklyPosts");
+// const latest6Weekly = allWeeklyPosts
+//   .filter(p => !p.data.draft)
+//   .sort((a, b) => new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime())
+//   .slice(0, 6);
 
 // Clase base para los enlaces "Ver más"
 const linkBase =
@@ -131,7 +131,7 @@ const linkBase =
       </section>
 
       <!--SECCIÓN WEEKLY-->
-      {latest6Weekly.length > 0 && (
+      <!-- {latest6Weekly.length > 0 && (
         <section class="space-y-10">
           <div class="flex items-end justify-between pb-6 border-b border-slate-100 dark:border-white/5">
             <h2 class="text-3xl md:text-4xl font-black italic uppercase tracking-tighter text-slate-900 dark:text-white">
@@ -150,7 +150,7 @@ const linkBase =
             ))}
           </div>
         </section>
-      )}
+      )} -->
     </div>
   </div>
 </Layout>
