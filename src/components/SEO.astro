@@ -13,6 +13,23 @@ const { title, description, tags = [], image, pubDate, author } = Astro.props;
 
 // Obtenemos la URL de la página actual de forma nativa con Astro
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+
+// Preparamos el objeto JSON-LD para un artículo de blog
+const jsonLD = {
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  headline: title,
+  description: description,
+  keywords: tags.join(", "),
+  url: canonicalURL,
+  ...(pubDate && { datePublished: new Date(pubDate).toISOString() }),
+  ...(author && {
+    author: {
+      "@type": "Person",
+      name: author,
+    },
+  }),
+};
 ---
 
 <!-- SEO Estándar -->
@@ -43,25 +60,6 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 <meta property="twitter:url" content={canonicalURL} />
 <meta property="twitter:title" content={title} />
 <meta property="twitter:description" content={description} />
-
----
-// Preparamos el objeto JSON-LD para un artículo de blog
-const jsonLD = {
-  "@context": "https://schema.org",
-  "@type": "BlogPosting",
-  "headline": title,
-  "description": description,
-  "keywords": tags.join(", "),
-  "url": canonicalURL,
-  ...(pubDate && { "datePublished": new Date(pubDate).toISOString() }),
-  ...(author && {
-    "author": {
-      "@type": "Person",
-      "name": author
-    }
-  })
-};
----
 
 <!-- Insertamos el JSON-LD de forma segura en el HTML -->
 <script type="application/ld+json" set:html={JSON.stringify(jsonLD)} />
