@@ -63,75 +63,105 @@ const id = Math.random().toString(36).substring(2, 9);
 </div>
 
 <script>
-  document.querySelectorAll(".audio-player").forEach((player) => {
-    const id = player.getAttribute("data-id");
-    const audio = document.getElementById(`audio-${id}`) as HTMLAudioElement;
-    const playBtn = document.getElementById(`playBtn-${id}`);
-    const iconPlay = document.getElementById(`iconPlay-${id}`);
-    const iconPause = document.getElementById(`iconPause-${id}`);
-    const progressBar = document.getElementById(
-      `progressBar-${id}`
-    ) as HTMLInputElement;
-    const currentTimeText = document.getElementById(`currentTime-${id}`);
-    const durationTime = document.getElementById(`durationTime-${id}`);
-    const statusIcon = document.getElementById(`statusIcon-${id}`);
-    const statusLabel = document.getElementById(`statusLabel-${id}`);
+  // Esta función encapsula toda tu lógica original
+  function initAudioPlayers() {
+    document.querySelectorAll(".audio-player").forEach((player) => {
+      const id = player.getAttribute("data-id");
+      const audio = document.getElementById(`audio-${id}`) as HTMLAudioElement;
+      const playBtn = document.getElementById(`playBtn-${id}`);
+      const iconPlay = document.getElementById(`iconPlay-${id}`);
+      const iconPause = document.getElementById(`iconPause-${id}`);
+      const progressBar = document.getElementById(
+        `progressBar-${id}`
+      ) as HTMLInputElement;
+      const currentTimeText = document.getElementById(`currentTime-${id}`);
+      const durationTime = document.getElementById(`durationTime-${id}`);
+      const statusIcon = document.getElementById(`statusIcon-${id}`);
+      const statusLabel = document.getElementById(`statusLabel-${id}`);
 
-    const formatTime = (time: number) => {
-      if (isNaN(time)) return "0:00";
-      const min = Math.floor(time / 60);
-      const sec = Math.floor(time % 60)
-        .toString()
-        .padStart(2, "0");
-      return `${min}:${sec}`;
-    };
+      // Evitamos errores si por alguna razón el elemento no existe en la página actual
+      if (
+        !audio ||
+        !playBtn ||
+        !progressBar ||
+        !currentTimeText ||
+        !durationTime
+      )
+        return;
 
-    audio.addEventListener("loadedmetadata", () => {
-      durationTime.innerText = formatTime(audio.duration);
-    });
+      const formatTime = (time: number) => {
+        if (isNaN(time) || !isFinite(time)) return "0:00";
+        const min = Math.floor(time / 60);
+        const sec = Math.floor(time % 60)
+          .toString()
+          .padStart(2, "0");
+        return `${min}:${sec}`;
+      };
 
-    playBtn.addEventListener("click", () => {
-      if (audio.paused) {
-        audio.play();
-        iconPlay.classList.add("hidden");
-        iconPause.classList.remove("hidden");
-        statusIcon.textContent = "🔊";
-        statusLabel.textContent = "Reproduciendo...";
-      } else {
-        audio.pause();
+      // SOLUCIÓN AL PROBLEMA DE DURACIÓN CONGELADA:
+      // Si el navegador ya cargó los metadatos antes de que se ejecute el script:
+      if (audio.readyState >= 1) {
+        durationTime.innerText = formatTime(audio.duration);
+      }
+
+      // El evento por si acaso aún no se han cargado
+      audio.addEventListener("loadedmetadata", () => {
+        durationTime.innerText = formatTime(audio.duration);
+      });
+
+      // También escuchamos 'durationchange' por si el navegador actualiza el dato tarde
+      audio.addEventListener("durationchange", () => {
+        durationTime.innerText = formatTime(audio.duration);
+      });
+
+      playBtn.addEventListener("click", () => {
+        if (audio.paused) {
+          audio.play().catch((err) => console.log("Error al reproducir:", err));
+          iconPlay.classList.add("hidden");
+          iconPause.classList.remove("hidden");
+          statusIcon.textContent = "🔊";
+          statusLabel.textContent = "Reproduciendo...";
+        } else {
+          audio.pause();
+          iconPlay.classList.remove("colors-changed", "hidden"); // Asegurar reset
+          iconPlay.classList.remove("hidden");
+          iconPause.classList.add("hidden");
+          statusIcon.textContent = "🎧";
+          statusLabel.textContent = "¿Prefieres escuchar este artículo?";
+        }
+      });
+
+      audio.addEventListener("timeupdate", () => {
+        currentTimeText.innerText = formatTime(audio.currentTime);
+        if (audio.duration) {
+          progressBar.value = (
+            (audio.currentTime / audio.duration) *
+            100
+          ).toString();
+        }
+      });
+
+      progressBar.addEventListener("input", () => {
+        if (audio.duration) {
+          audio.currentTime =
+            (parseFloat(progressBar.value) / 100) * audio.duration;
+        }
+      });
+
+      audio.addEventListener("ended", () => {
         iconPlay.classList.remove("hidden");
         iconPause.classList.add("hidden");
+        progressBar.value = "0";
+        currentTimeText.innerText = "0:00";
         statusIcon.textContent = "🎧";
         statusLabel.textContent = "¿Prefieres escuchar este artículo?";
-      }
+      });
     });
+  }
 
-    audio.addEventListener("timeupdate", () => {
-      currentTimeText.innerText = formatTime(audio.currentTime);
-      if (audio.duration) {
-        progressBar.value = (
-          (audio.currentTime / audio.duration) *
-          100
-        ).toString();
-      }
-    });
-
-    progressBar.addEventListener("input", () => {
-      if (audio.duration) {
-        audio.currentTime =
-          (parseFloat(progressBar.value) / 100) * audio.duration;
-      }
-    });
-
-    audio.addEventListener("ended", () => {
-      iconPlay.classList.remove("hidden");
-      iconPause.classList.add("hidden");
-      progressBar.value = "0";
-      currentTimeText.innerText = "0:00";
-      statusIcon.textContent = "🎧";
-      statusLabel.textContent = "¿Prefieres escuchar este artículo?";
-    });
-  });
+  // SOLUCIÓN AL NAVEGAR ENTRE PÁGINAS (ClientRouter / ViewTransitions):
+  // Se ejecuta en la primera carga y en cada transición de página exitosa.
+  document.addEventListener("astro:page-load", initAudioPlayers);
 </script>
 
 <style>
