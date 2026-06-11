@@ -16,11 +16,13 @@ import Challenge from '../../components/Challenge.astro';
 
 ### 📝 Descripción del Reto
 
-Resuelve el siguiente reto de programación: **Filtro de Spam por Keywords**.
+En este reto, debes implementar un sistema básico de filtrado de spam. La función recibirá un mensaje (String) y una lista de palabras clave prohibidas (Keywords).
+
+Si el mensaje contiene alguna de las palabras clave, debe ser marcado como "Spam". De lo contrario, se considerará "Seguro".
 
 <Challenge 
   nivel="Intermedio" 
-  mision="Resuelve el siguiente reto de programación: **Filtro de Spam por Keywords**." 
+  mision="Escribe una función que detecte si un mensaje contiene palabras de spam." 
 />
 
 ---
@@ -32,31 +34,33 @@ Resuelve el siguiente reto de programación: **Filtro de Spam por Keywords**.
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-
-Analizar el problema y definir casos de prueba.
+La forma más eficiente es convertir el mensaje a minúsculas y verificar si alguna de las keywords está presente utilizando el método `.any?`.
 
 ### ⚙️ Paso 2: Implementación en Ruby
-
-Implementar la solución en Ruby.
-
-### 🚀 Paso 3: Complejidad y Optimización
-
-Optimizar si es necesario.
+Ruby permite iterar sobre la lista de keywords y usar `.include?` para verificar la presencia en el mensaje.
 
 ### 💻 Código de la Solución (Ruby)
 
 ```ruby
-# Filtro de Spam por Keywords
-# Resuelve el siguiente reto de programación: **Filtro de Spam por Keywords**.
-
-def resolver(entrada)
-  entrada
+def es_spam?(mensaje, keywords)
+  mensaje_down = mensaje.downcase
+  keywords.any? { |word| mensaje_down.include?(word.downcase) }
 end
 
-["caso_1", "caso_2"].each do |c|
-  puts "▶ #{c} → #{resolver(c)}"
-end
+# Configuración
+spam_keywords = ["oferta", "gana dinero", "gratis", "clic aquí"]
 
+# Casos de prueba
+mensajes = [
+  "¡Gana dinero rápido haciendo clic aquí!",
+  "Hola, ¿cómo va todo?",
+  "Esta es una oferta increíble que no puedes perder"
+]
+
+mensajes.each do |msg|
+  resultado = es_spam?(msg, spam_keywords) ? "🚫 SPAM" : "✅ SEGURO"
+  puts "▶ [#{resultado}] - #{msg}"
+end
 ```
 
 </div>

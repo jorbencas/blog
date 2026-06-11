@@ -16,11 +16,13 @@ import Challenge from '../../components/Challenge.astro';
 
 ### 📝 Descripción del Reto
 
-Resuelve el siguiente reto de programación: **Lista de Compras**.
+El objetivo de este reto es gestionar una **Lista de Compras** sencilla. Deberás ser capaz de añadir elementos a la lista, borrarlos y comprobar si un elemento ya existe.
+
+Este es un excelente ejercicio para practicar el uso de estructuras de datos básicas como `ArrayList` en Java.
 
 <Challenge 
   nivel="Iniciación" 
-  mision="Resuelve el siguiente reto de programación: **Lista de Compras**." 
+  mision="Implementa un gestor de lista de compras que permita añadir, quitar y buscar artículos." 
 />
 
 ---
@@ -31,37 +33,52 @@ Resuelve el siguiente reto de programación: **Lista de Compras**.
 <summary><b>Ver explicación y código 🛠️ (¡No hagas spoiler!)</b></summary>
 <div class="details-content">
 
-### 🏗️ Paso 1: Análisis de la lógica
+### 🏗️ Paso 1: Uso de ArrayList
+`ArrayList` es ideal aquí porque su tamaño es dinámico.
 
-Analizar el problema y definir casos de prueba.
-
-### ⚙️ Paso 2: Implementación en Java
-
-Implementar la solución en Java.
-
-### 🚀 Paso 3: Complejidad y Optimización
-
-Optimizar si es necesario.
+### ⚙️ Paso 2: Métodos de manipulación
+1. `add()` para insertar.
+2. `remove()` para eliminar.
+3. `contains()` para buscar.
 
 ### 💻 Código de la Solución (Java)
 
 ```java
-// Lista de Compras
-// Resuelve el siguiente reto de programación: **Lista de Compras**.
+import java.util.ArrayList;
+import java.util.List;
 
-public class Reto {
-    public static String resolver(String entrada) {
-        return entrada;
+public class ListaCompras {
+    private List<String> items;
+
+    public ListaCompras() {
+        this.items = new ArrayList<>();
+    }
+
+    public void agregar(String item) {
+        items.add(item);
+        System.out.println("➕ Añadido: " + item);
+    }
+
+    public void eliminar(String item) {
+        if (items.remove(item)) {
+            System.out.println("➖ Eliminado: " + item);
+        }
+    }
+
+    public void mostrar() {
+        System.out.println("🛒 Lista actual: " + items);
     }
 
     public static void main(String[] args) {
-        String[] casos = {"caso_1", "caso_2"};
-        for (String c : casos) {
-            System.out.println("▶ " + c + " → " + resolver(c));
-        }
+        ListaCompras miLista = new ListaCompras();
+        miLista.agregar("Pan");
+        miLista.agregar("Leche");
+        miLista.agregar("Huevos");
+        miLista.mostrar();
+        miLista.eliminar("Leche");
+        miLista.mostrar();
     }
 }
-
 ```
 
 </div>

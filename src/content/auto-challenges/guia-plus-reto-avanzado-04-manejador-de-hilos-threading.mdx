@@ -16,11 +16,13 @@ import Challenge from '../../components/Challenge.astro';
 
 ### 📝 Descripción del Reto
 
-Resuelve el siguiente reto de programación: **Reto Avanzado 04: Manejador de Hilos (Threading)**.
+El objetivo de este reto es manejar la ejecución concurrente utilizando **Goroutines** y **Channels** en Go.
+
+Deberás implementar un sistema que procese múltiples tareas de forma simultánea. Cada tarea simula un trabajo pesado (como una descarga o un cálculo) que tarda un tiempo aleatorio. El programa debe esperar a que todas las tareas terminen y mostrar los resultados en el orden en que se completaron.
 
 <Challenge 
   nivel="Avanzado" 
-  mision="Resuelve el siguiente reto de programación: **Reto Avanzado 04: Manejador de Hilos (Threading)**." 
+  mision="Utiliza goroutines y canales para procesar un conjunto de tareas de forma concurrente en Go." 
 />
 
 ---
@@ -31,38 +33,60 @@ Resuelve el siguiente reto de programación: **Reto Avanzado 04: Manejador de Hi
 <summary><b>Ver explicación y código 🛠️ (¡No hagas spoiler!)</b></summary>
 <div class="details-content">
 
-### 🏗️ Paso 1: Análisis de la lógica
+### 🏗️ Paso 1: Definición de la tarea
+Representamos una tarea con un ID y un tiempo de duración simulado.
 
-Analizar el problema y definir casos de prueba.
+### ⚙️ Paso 2: Uso de Goroutines
+Lanzamos cada proceso en una goroutine independiente usando la palabra clave `go`.
 
-### ⚙️ Paso 2: Implementación en Go
-
-Implementar la solución en Go.
-
-### 🚀 Paso 3: Complejidad y Optimización
-
-Optimizar si es necesario.
+### 🚀 Paso 3: Comunicación por Canales
+Usamos un canal para enviar los resultados desde las goroutines de vuelta a la función principal.
 
 ### 💻 Código de la Solución (Go)
 
 ```go
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"math/rand"
+	"time"
+)
 
-// resolver - Reto Avanzado 04: Manejador de Hilos (Threading)
-// Resuelve el siguiente reto de programación: **Reto Avanzado 04: Manejador de Hilos (Threading)**.
-func resolver(entrada string) string {
-	return entrada
+type Resultado struct {
+	ID    int
+	Mensaje string
 }
 
-func main() {
-	casos := []string{"caso_1", "caso_2"}
-	for _, c := range casos {
-		fmt.Printf("▶ %s → %s\n", c, resolver(c))
+func procesarTarea(id int, c chan Resultado) {
+	// Simulamos un trabajo que tarda entre 1 y 3 segundos
+	duracion := time.Duration(rand.Intn(2000)+1000) * time.Millisecond
+	time.Sleep(duracion)
+	
+	c <- Resultado{
+		ID:    id,
+		Mensaje: fmt.Sprintf("Tarea %d completada en %v", id, duracion),
 	}
 }
 
+func main() {
+	rand.Seed(time.Now().UnixNano())
+	numTareas := 5
+	canalResultados := make(chan Resultado)
+
+	fmt.Printf("🚀 Iniciando %d tareas concurrentes...\n", numTareas)
+
+	for i := 1; i <= numTareas; i++ {
+		go procesarTarea(i, canalResultados)
+	}
+
+	for i := 1; i <= numTareas; i++ {
+		res := <-canalResultados
+		fmt.Printf("✅ %s\n", res.Mensaje)
+	}
+
+	fmt.Println("🏁 Todas las tareas han finalizado.")
+}
 ```
 
 </div>

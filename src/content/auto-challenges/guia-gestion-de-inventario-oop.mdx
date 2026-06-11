@@ -16,11 +16,15 @@ import Challenge from '../../components/Challenge.astro';
 
 ### 📝 Descripción del Reto
 
-Resuelve el siguiente reto de programación: **Gestión de Inventario (OOP)**.
+El objetivo de este reto es aplicar los principios de la **Programación Orientada a Objetos (OOP)** para gestionar un inventario de productos.
+
+Deberás crear una clase `Producto` y una clase `Inventario`.
+- La clase `Producto` debe tener propiedades como nombre, precio y cantidad.
+- La clase `Inventario` debe permitir añadir productos, buscar un producto por nombre y calcular el valor total del inventario.
 
 <Challenge 
   nivel="Intermedio" 
-  mision="Resuelve el siguiente reto de programación: **Gestión de Inventario (OOP)**." 
+  mision="Crea un sistema de gestión de inventario utilizando clases en JavaScript." 
 />
 
 ---
@@ -31,40 +35,55 @@ Resuelve el siguiente reto de programación: **Gestión de Inventario (OOP)**.
 <summary><b>Ver explicación y código 🛠️ (¡No hagas spoiler!)</b></summary>
 <div class="details-content">
 
-### 🏗️ Paso 1: Análisis de la lógica
+### 🏗️ Paso 1: Definición de la clase Producto
+Creamos un constructor que inicialice las propiedades básicas del producto.
 
-Analizar el problema y definir casos de prueba.
+### ⚙️ Paso 2: Definición de la clase Inventario
+Usaremos un array interno para almacenar instancias de `Producto` y métodos para manipularlo.
 
-### ⚙️ Paso 2: Implementación en JavaScript
-
-Implementar la solución en JavaScript.
-
-### 🚀 Paso 3: Complejidad y Optimización
-
-Optimizar si es necesario.
+### 🚀 Paso 3: Métodos de utilidad
+1. `agregarProducto(producto)`: Añade al array.
+2. `buscarProducto(nombre)`: Usa `.find()`.
+3. `calcularTotal()`: Usa `.reduce()`.
 
 ### 💻 Código de la Solución (JavaScript)
 
 ```javascript
-// Gestión de Inventario (OOP)
-// Resuelve el siguiente reto de programación: **Gestión de Inventario (OOP)**.
-
-function resolver(entrada) {
-  // Lógica principal
-  return entrada;
+class Producto {
+  constructor(nombre, precio, cantidad) {
+    this.nombre = nombre;
+    this.precio = precio;
+    this.cantidad = cantidad;
+  }
 }
 
-const casos = [
-  { entrada: "caso_1", esperado: "resultado_1" },
-  { entrada: "caso_2", esperado: "resultado_2" },
-];
+class Inventario {
+  constructor() {
+    this.productos = [];
+  }
 
-casos.forEach(({ entrada, esperado }) => {
-  const resultado = resolver(entrada);
-  const ok = resultado === esperado;
-  console.log(`${ok ? '✅' : '❓'} ${entrada} → ${resultado}`);
-});
+  agregarProducto(producto) {
+    this.productos.push(producto);
+  }
 
+  buscarProducto(nombre) {
+    return this.productos.find(p => p.nombre.toLowerCase() === nombre.toLowerCase());
+  }
+
+  calcularTotal() {
+    return this.productos.reduce((total, p) => total + (p.precio * p.cantidad), 0);
+  }
+}
+
+// Ejemplo de uso
+const miInventario = new Inventario();
+miInventario.agregarProducto(new Producto("Laptop", 1200, 5));
+miInventario.agregarProducto(new Producto("Mouse", 25, 10));
+miInventario.agregarProducto(new Producto("Teclado", 45, 8));
+
+console.log(`💰 Valor total del inventario: $${miInventario.calcularTotal()}`);
+const p = miInventario.buscarProducto("Mouse");
+console.log(`🔍 Producto encontrado: ${p ? `${p.nombre} ($${p.precio})` : "No encontrado"}`);
 ```
 
 </div>

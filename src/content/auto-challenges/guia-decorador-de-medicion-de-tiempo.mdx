@@ -16,11 +16,13 @@ import Challenge from '../../components/Challenge.astro';
 
 ### 📝 Descripción del Reto
 
-Resuelve el siguiente reto de programación: **Decorador de Medición de Tiempo**.
+En programación, un **Decorador** (o un wrapper) es una función que envuelve a otra para añadirle alguna funcionalidad extra sin modificar su código original.
+
+Tu objetivo es crear una función en Go que reciba otra función como argumento, la ejecute y mida cuánto tiempo tarda en completarse, imprimiendo el resultado en consola.
 
 <Challenge 
   nivel="Avanzado" 
-  mision="Resuelve el siguiente reto de programación: **Decorador de Medición de Tiempo**." 
+  mision="Implementa una función de orden superior que mida el tiempo de ejecución de cualquier función que se le pase." 
 />
 
 ---
@@ -31,38 +33,38 @@ Resuelve el siguiente reto de programación: **Decorador de Medición de Tiempo*
 <summary><b>Ver explicación y código 🛠️ (¡No hagas spoiler!)</b></summary>
 <div class="details-content">
 
-### 🏗️ Paso 1: Análisis de la lógica
+### 🏗️ Paso 1: Funciones de Orden Superior
+En Go, las funciones son ciudadanos de primera clase, lo que significa que pueden pasarse como argumentos.
 
-Analizar el problema y definir casos de prueba.
-
-### ⚙️ Paso 2: Implementación en Go
-
-Implementar la solución en Go.
-
-### 🚀 Paso 3: Complejidad y Optimización
-
-Optimizar si es necesario.
+### ⚙️ Paso 2: Medición de Tiempo
+Usamos el paquete `time` para capturar el instante antes y después de la ejecución: `time.Now()` y `time.Since()`.
 
 ### 💻 Código de la Solución (Go)
 
 ```go
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
-// resolver - Decorador de Medición de Tiempo
-// Resuelve el siguiente reto de programación: **Decorador de Medición de Tiempo**.
-func resolver(entrada string) string {
-	return entrada
+// Decorador que envuelve una función y mide su tiempo
+func medirTiempo(f func()) {
+	inicio := time.Now()
+	f()
+	fmt.Printf("⏱️ Tiempo de ejecución: %v\n", time.Since(inicio))
+}
+
+func tareaPesada() {
+	fmt.Println("⏳ Procesando algo pesado...")
+	time.Sleep(1500 * time.Millisecond) // Simulamos espera
 }
 
 func main() {
-	casos := []string{"caso_1", "caso_2"}
-	for _, c := range casos {
-		fmt.Printf("▶ %s → %s\n", c, resolver(c))
-	}
+	fmt.Println("🚀 Iniciando tarea decorada:")
+	medirTiempo(tareaPesada)
 }
-
 ```
 
 </div>

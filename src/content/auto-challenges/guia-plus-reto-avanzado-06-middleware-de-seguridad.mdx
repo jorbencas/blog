@@ -16,11 +16,13 @@ import Challenge from '../../components/Challenge.astro';
 
 ### 📝 Descripción del Reto
 
-Resuelve el siguiente reto de programación: **Reto Avanzado 06: Middleware de Seguridad**.
+En el desarrollo web, un **Middleware** es una pieza de código que se ejecuta entre una petición y la respuesta final, permitiendo interceptar, modificar o validar la solicitud.
+
+Tu objetivo es implementar un sistema de **Middleware de Seguridad** que verifique si una petición contiene un token de autenticación válido (`"SECRET_TOKEN"`) antes de permitir el acceso al recurso.
 
 <Challenge 
   nivel="Avanzado" 
-  mision="Resuelve el siguiente reto de programación: **Reto Avanzado 06: Middleware de Seguridad**." 
+  mision="Implementa el patrón Middleware en Java para validar tokens de seguridad en peticiones simuladas." 
 />
 
 ---
@@ -31,37 +33,55 @@ Resuelve el siguiente reto de programación: **Reto Avanzado 06: Middleware de S
 <summary><b>Ver explicación y código 🛠️ (¡No hagas spoiler!)</b></summary>
 <div class="details-content">
 
-### 🏗️ Paso 1: Análisis de la lógica
+### 🏗️ Paso 1: Interfaz Middleware
+Definimos una interfaz con un método para procesar la petición y pasarla al siguiente elemento en la cadena.
 
-Analizar el problema y definir casos de prueba.
+### ⚙️ Paso 2: Implementación concreta
+Creamos el `AuthMiddleware` que comprueba el encabezado `"Authorization"`.
 
-### ⚙️ Paso 2: Implementación en Java
-
-Implementar la solución en Java.
-
-### 🚀 Paso 3: Complejidad y Optimización
-
-Optimizar si es necesario.
+### 🚀 Paso 3: Cadena de Responsabilidad
+El middleware puede estar encadenado, permitiendo ejecutar múltiples validaciones secuencialmente.
 
 ### 💻 Código de la Solución (Java)
 
 ```java
-// Reto Avanzado 06: Middleware de Seguridad
-// Resuelve el siguiente reto de programación: **Reto Avanzado 06: Middleware de Seguridad**.
+import java.util.HashMap;
+import java.util.Map;
 
-public class Reto {
-    public static String resolver(String entrada) {
-        return entrada;
-    }
+interface Middleware {
+    boolean handle(Map<String, String> request);
+}
 
-    public static void main(String[] args) {
-        String[] casos = {"caso_1", "caso_2"};
-        for (String c : casos) {
-            System.out.println("▶ " + c + " → " + resolver(c));
+class AuthMiddleware implements Middleware {
+    private static final String VALID_TOKEN = "SECRET_TOKEN";
+
+    @Override
+    public boolean handle(Map<String, String> request) {
+        String token = request.get("Authorization");
+        if (token != null && token.equals(VALID_TOKEN)) {
+            System.out.println("✅ Autenticación exitosa.");
+            return true;
         }
+        System.out.println("❌ Error: Token no válido o ausente.");
+        return false;
     }
 }
 
+public class SistemaSeguridad {
+    public static void main(String[] args) {
+        AuthMiddleware auth = new AuthMiddleware();
+
+        // Caso 1: Petición válida
+        Map<String, String> reqValida = new HashMap<>();
+        reqValida.put("Authorization", "SECRET_TOKEN");
+        System.out.println("Petición 1: " + (auth.handle(reqValida) ? "ACCESO PERMITIDO" : "ACCESO DENEGADO"));
+
+        // Caso 2: Petición inválida
+        Map<String, String> reqInvalida = new HashMap<>();
+        reqInvalida.put("Authorization", "token_falso");
+        System.out.println("Petición 2: " + (auth.handle(reqInvalida) ? "ACCESO PERMITIDO" : "ACCESO DENEGADO"));
+    }
+}
 ```
 
 </div>

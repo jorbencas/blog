@@ -16,11 +16,13 @@ import Challenge from '../../components/Challenge.astro';
 
 ### 📝 Descripción del Reto
 
-Resuelve el siguiente reto de programación: **Reto Avanzado 03: Optimización de Rutas (Greedy)**.
+El objetivo de este reto es implementar un algoritmo **Greedy (Voraz)** para resolver un problema de optimización de rutas.
+
+Imagina que eres un repartidor que tiene que visitar varios puntos en un mapa. El algoritmo Greedy elige en cada paso la opción que parece mejor en ese momento (en este caso, el punto más cercano) con la esperanza de encontrar una solución óptima o cercana a la óptima.
 
 <Challenge 
   nivel="Avanzado" 
-  mision="Resuelve el siguiente reto de programación: **Reto Avanzado 03: Optimización de Rutas (Greedy)**." 
+  mision="Implementa un algoritmo Greedy para encontrar una ruta eficiente visitando todos los puntos desde un origen." 
 />
 
 ---
@@ -31,38 +33,61 @@ Resuelve el siguiente reto de programación: **Reto Avanzado 03: Optimización d
 <summary><b>Ver explicación y código 🛠️ (¡No hagas spoiler!)</b></summary>
 <div class="details-content">
 
-### 🏗️ Paso 1: Análisis de la lógica
+### 🏗️ Paso 1: Definición de puntos y distancias
+Usaremos interfaces para definir la estructura de los puntos y la fórmula de distancia euclidiana.
 
-Analizar el problema y definir casos de prueba.
-
-### ⚙️ Paso 2: Implementación en TypeScript
-
-Implementar la solución en TypeScript.
-
-### 🚀 Paso 3: Complejidad y Optimización
-
-Optimizar si es necesario.
+### ⚙️ Paso 2: Lógica Greedy
+1. Comenzamos en el punto de origen.
+2. Buscamos el punto no visitado más cercano al actual.
+3. Nos movemos a ese punto y lo marcamos como visitado.
 
 ### 💻 Código de la Solución (TypeScript)
 
 ```typescript
-// Reto Avanzado 03: Optimización de Rutas (Greedy)
-// Resuelve el siguiente reto de programación: **Reto Avanzado 03: Optimización de Rutas (Greedy)**.
-
-function resolver<T>(entrada: T): T {
-  return entrada;
+interface Punto {
+  id: string;
+  x: number;
+  y: number;
 }
 
-const casos: Array<{ entrada: string; esperado: string }> = [
-  { entrada: "caso_1", esperado: "resultado_1" },
-  { entrada: "caso_2", esperado: "resultado_2" },
+const puntos: Punto[] = [
+  { id: 'Origen', x: 0, y: 0 },
+  { id: 'A', x: 2, y: 3 },
+  { id: 'B', x: 5, y: 1 },
+  { id: 'C', x: 1, y: 8 },
+  { id: 'D', x: 4, y: 6 }
 ];
 
-casos.forEach(({ entrada, esperado }) => {
-  const resultado = resolver(entrada);
-  console.log(`${resultado === esperado ? '✅' : '❓'} ${entrada} → ${resultado}`);
-});
+function calcularDistancia(p1: Punto, p2: Punto): number {
+  return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+}
 
+function optimizarRutaGreedy(puntos: Punto[]): Punto[] {
+  let actual = puntos[0];
+  const noVisitados = puntos.slice(1);
+  const ruta: Punto[] = [actual];
+
+  while (noVisitados.length > 0) {
+    let masCercanoIndice = 0;
+    let distanciaMinima = calcularDistancia(actual, noVisitados[0]);
+
+    for (let i = 1; i < noVisitados.length; i++) {
+      let d = calcularDistancia(actual, noVisitados[i]);
+      if (d < distanciaMinima) {
+        distanciaMinima = d;
+        masCercanoIndice = i;
+      }
+    }
+
+    actual = noVisitados.splice(masCercanoIndice, 1)[0];
+    ruta.push(actual);
+  }
+
+  return ruta;
+}
+
+const rutaFinal = optimizarRutaGreedy(puntos);
+console.log("📍 Ruta optimizada (Greedy):", rutaFinal.map(p => p.id).join(" → "));
 ```
 
 </div>

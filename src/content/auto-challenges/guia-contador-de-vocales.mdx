@@ -16,11 +16,11 @@ import Challenge from '../../components/Challenge.astro';
 
 ### 📝 Descripción del Reto
 
-Resuelve el siguiente reto de programación: **Contador de Vocales**.
+El objetivo de este reto es crear una función que reciba una cadena de texto y devuelva el número total de vocales (a, e, i, o, u) que contiene, sin importar si son mayúsculas o minúsculas.
 
 <Challenge 
   nivel="Iniciación" 
-  mision="Resuelve el siguiente reto de programación: **Contador de Vocales**." 
+  mision="Escribe una función que cuente el número de vocales en una cadena dada." 
 />
 
 ---
@@ -32,31 +32,27 @@ Resuelve el siguiente reto de programación: **Contador de Vocales**.
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-
-Analizar el problema y definir casos de prueba.
+Podemos abordar este problema de varias formas:
+1. Iterar por cada carácter y comprobar si es una vocal.
+2. Utilizar expresiones regulares para buscar todas las vocales y contar las coincidencias.
 
 ### ⚙️ Paso 2: Implementación en Ruby
-
-Implementar la solución en Ruby.
-
-### 🚀 Paso 3: Complejidad y Optimización
-
-Optimizar si es necesario.
+Ruby nos ofrece métodos muy potentes como `.count` o `.scan` con expresiones regulares.
 
 ### 💻 Código de la Solución (Ruby)
 
 ```ruby
-# Contador de Vocales
-# Resuelve el siguiente reto de programación: **Contador de Vocales**.
-
-def resolver(entrada)
-  entrada
+def contar_vocales(cadena)
+  # Usamos count con una cadena que contiene todas las vocales
+  cadena.downcase.count("aeiouáéíóú")
 end
 
-["caso_1", "caso_2"].each do |c|
-  puts "▶ #{c} → #{resolver(c)}"
-end
+# Casos de prueba
+casos = ["Hola Mundo", "Retos de Programación", "AEIOU", "bcdfg"]
 
+casos.each do |c|
+  puts "▶ '#{c}' → #{contar_vocales(c)} vocales"
+end
 ```
 
 </div>

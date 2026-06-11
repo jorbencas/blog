@@ -16,11 +16,13 @@ import Challenge from '../../components/Challenge.astro';
 
 ### 📝 Descripción del Reto
 
-Resuelve el siguiente reto de programación: **Juego de Adivinar Número**.
+El clásico **Juego de Adivinar el Número** consiste en que el programa genera un número aleatorio y el usuario debe intentar adivinarlo siguiendo pistas de "más alto" o "más bajo".
+
+En este reto, deberás implementar la lógica principal del juego en Go.
 
 <Challenge 
   nivel="Intermedio" 
-  mision="Resuelve el siguiente reto de programación: **Juego de Adivinar Número**." 
+  mision="Implementa la lógica de un juego que genere un número aleatorio y responda a los intentos del usuario." 
 />
 
 ---
@@ -31,38 +33,47 @@ Resuelve el siguiente reto de programación: **Juego de Adivinar Número**.
 <summary><b>Ver explicación y código 🛠️ (¡No hagas spoiler!)</b></summary>
 <div class="details-content">
 
-### 🏗️ Paso 1: Análisis de la lógica
+### 🏗️ Paso 1: Generación Aleatoria
+Usamos `math/rand` para generar un número entre 1 y 100.
 
-Analizar el problema y definir casos de prueba.
-
-### ⚙️ Paso 2: Implementación en Go
-
-Implementar la solución en Go.
-
-### 🚀 Paso 3: Complejidad y Optimización
-
-Optimizar si es necesario.
+### ⚙️ Paso 2: Bucle de Juego
+Comparamos el intento del usuario con el número secreto y devolvemos la pista correspondiente.
 
 ### 💻 Código de la Solución (Go)
 
 ```go
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"math/rand"
+	"time"
+)
 
-// resolver - Juego de Adivinar Número
-// Resuelve el siguiente reto de programación: **Juego de Adivinar Número**.
-func resolver(entrada string) string {
-	return entrada
+func jugar(intento int, secreto int) string {
+	if intento < secreto {
+		return "📈 ¡Más alto!"
+	} else if intento > secreto {
+		return "📉 ¡Más bajo!"
+	}
+	return "🎉 ¡Correcto! Has ganado."
 }
 
 func main() {
-	casos := []string{"caso_1", "caso_2"}
-	for _, c := range casos {
-		fmt.Printf("▶ %s → %s\n", c, resolver(c))
+	rand.Seed(time.Now().UnixNano())
+	numeroSecreto := rand.Intn(100) + 1
+	intentos := []int{10, 50, 75, numeroSecreto}
+
+	fmt.Println("🎮 Juego de Adivinar iniciado (1-100)")
+	
+	for _, intento := range intentos {
+		resultado := jugar(intento, numeroSecreto)
+		fmt.Printf("👉 Intento: %d | Resultado: %s\n", intento, resultado)
+		if intento == numeroSecreto {
+			break
+		}
 	}
 }
-
 ```
 
 </div>

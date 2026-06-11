@@ -16,11 +16,18 @@ import Challenge from '../../components/Challenge.astro';
 
 ### 📝 Descripción del Reto
 
-Resuelve el siguiente reto de programación: **Ordenamiento por Burbuja**.
+El **Ordenamiento por Burbuja (Bubble Sort)** es uno de los algoritmos de ordenación más sencillos de entender e implementar. Su nombre proviene de la forma en que los elementos más grandes "burbujean" hacia el final de la lista.
+
+Deberás implementar una función que reciba un array de números y lo devuelva ordenado de menor a mayor utilizando este algoritmo.
+
+**Funcionamiento:**
+1. Compara elementos adyacentes.
+2. Si están en el orden incorrecto, los intercambia.
+3. Repite el proceso hasta que no se necesiten más intercambios.
 
 <Challenge 
   nivel="Intermedio" 
-  mision="Resuelve el siguiente reto de programación: **Ordenamiento por Burbuja**." 
+  mision="Implementa el algoritmo de ordenación por burbuja para ordenar un array de números." 
 />
 
 ---
@@ -32,31 +39,41 @@ Resuelve el siguiente reto de programación: **Ordenamiento por Burbuja**.
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-
-Analizar el problema y definir casos de prueba.
+Necesitamos dos bucles anidados:
+- El bucle externo recorre la lista varias veces.
+- El bucle interno compara elementos vecinos e intercambia si el actual es mayor que el siguiente.
 
 ### ⚙️ Paso 2: Implementación en Ruby
-
-Implementar la solución en Ruby.
-
-### 🚀 Paso 3: Complejidad y Optimización
-
-Optimizar si es necesario.
+Ruby permite intercambiar valores de forma muy elegante: `a, b = b, a`.
 
 ### 💻 Código de la Solución (Ruby)
 
 ```ruby
-# Ordenamiento por Burbuja
-# Resuelve el siguiente reto de programación: **Ordenamiento por Burbuja**.
-
-def resolver(entrada)
-  entrada
+def bubble_sort(lista)
+  n = lista.length
+  loop do
+    intercambiado = false
+    (n - 1).times do |i|
+      if lista[i] > lista[i + 1]
+        lista[i], lista[i + 1] = lista[i + 1], lista[i]
+        intercambiado = true
+      end
+    end
+    break unless intercambiado
+  end
+  lista
 end
 
-["caso_1", "caso_2"].each do |c|
-  puts "▶ #{c} → #{resolver(c)}"
-end
+# Casos de prueba
+casos = [
+  [64, 34, 25, 12, 22, 11, 90],
+  [5, 1, 4, 2, 8],
+  [1, 2, 3, 4]
+]
 
+casos.each do |c|
+  puts "▶ Original: #{c.inspect} → Ordenado: #{bubble_sort(c.dup).inspect}"
+end
 ```
 
 </div>

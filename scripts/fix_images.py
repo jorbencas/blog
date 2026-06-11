@@ -5,14 +5,16 @@ import asyncio
 import aiohttp
 import base64
 import unicodedata
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
+import random
 
 # ========================
 # CONFIG
 # ========================
 
 ACCESS_KEY = os.getenv("UNSPLASH_ACCESS_KEY")
+GEMINI_KEY = os.getenv("GEMINI_API_KEY") # Shared key for AI conceptualization
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.dirname(BASE_DIR)
@@ -40,6 +42,35 @@ except:
 def save_cache():
     with open(CACHE_FILE, "w") as f:
         json.dump(cache, f, indent=2)
+
+# ========================
+# GEMINI (Optional)
+# ========================
+
+def get_gemini_theme(query):
+    if not GEMINI_KEY:
+        return None
+    try:
+        import google.generativeai as genai
+        genai.configure(api_key=GEMINI_KEY)
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        prompt = f"""
+        Define a visual tech theme for a blog post titled "{query}".
+        Provide only a JSON with:
+        {{
+          "color1": "CSS Hex color (dark)",
+          "color2": "CSS Hex color (vibrant)",
+          "concept": "One word tech concept (e.g. circuit, code, neural)"
+        }}
+        """
+        response = model.generate_content(prompt)
+        match = re.search(r'(\{.*\})', response.text, re.DOTALL)
+        if match:
+            return json.loads(match.group(1))
+    except:
+        pass
+    return None
 
 # ========================
 # HELPERS
@@ -110,38 +141,114 @@ async def search_unsplash(session, query):
         return cache[query]
 
     url = "https://api.unsplash.com/search/photos"
-
     params = {
         "query": query,
         "per_page": 1,
         "orientation": "landscape"
     }
-
     headers = {
         "Authorization": f"Client-ID {ACCESS_KEY}",
         "User-Agent": "AstroBlogImageFixer/1.0"
     }
 
-    async with session.get(url, params=params, headers=headers) as r:
-        if r.status != 200:
-            if r.status == 403:
-                print(f"🛑 Unsplash API limit reached or invalid key (403).")
-            else:
+    try:
+        async with session.get(url, params=params, headers=headers) as r:
+            if r.status != 200:
                 print(f"❌ Unsplash error: {r.status}")
+                return None
+
+            data = await r.json()
+            if not data["results"]:
+                print(f"❌ Sin resultados: {query}")
+                return None
+
+            photo = data["results"][0]
+            cache[query] = photo
+            save_cache()
+            return photo
+    except Exception as e:
+        print(f"⚠️ Unsplash request error: {e}")
+        return None
+
+def generate_local_banner(title, theme=None):
+    try:
+        width, height = 1200, 630
+        
+        # Default theme
+        c1 = theme.get("color1", "#1a1a2e") if theme else "#1a1a2e"
+        c2 = theme.get("color2", "#16213e") if theme else "#16213e"
+        
+        # Create gradient background
+        base = Image.new('RGB', (width, height), c1)
+        top = Image.new('RGB', (width, height), c2)
+        mask = Image.new('L', (width, height))
+        for y in range(height):
+            for x in range(width):
+                mask.putpixel((x, y), int(255 * (x / width)))
+        
+        img = Image.composite(base, top, mask)
+        draw = ImageDraw.Draw(img)
+        
+        # Draw simple tech patterns (dots)
+        for _ in range(200):
+            x, y = random.randint(0, width), random.randint(0, height)
+            draw.ellipse([x, y, x+2, y+2], fill="#ffffff22")
+
+        # Text rendering
+        try:
+            # Preferred fonts on Linux
+            font_paths = [
+                "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+                "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+                "/usr/share/fonts/TTF/DejaVuSans-Bold.ttf"
+            ]
+            font = None
+            for p in font_paths:
+                if os.path.exists(p):
+                    font = ImageFont.truetype(p, 60)
+                    break
+            if not font:
+                font = ImageFont.load_default()
+        except:
+            font = ImageFont.load_default()
+
+        # Draw centered text
+        text = title.upper()
+        bbox = draw.textbbox((0, 0), text, font=font)
+        tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
+        draw.text(((width-tw)/2, (height-th)/2), text, font=font, fill="white")
+        
+        # Add branding
+        try:
+            small_font = ImageFont.truetype(font_paths[0], 24) if os.path.exists(font_paths[0]) else font
+            draw.text((50, height-60), "BLOG RETOS", font=small_font, fill="#ffffff88")
+        except:
+            pass
+
+        return img
+    except Exception as e:
+        print(f"⚠️ Error generating local banner: {e}")
+        # Final emergency fallback: open default image
+        try:
+            return Image.open(os.path.join(ROOT_DIR, "public", DEFAULT_IMAGE.lstrip("/")))
+        except:
             return None
 
-        data = await r.json()
+async def search_all_providers(session, query):
+    # 1. Unsplash
+    photo = await search_unsplash(session, query)
+    if photo:
+        return {"url": photo["urls"]["raw"], "source": "unsplash", "data": photo}
 
-        if not data["results"]:
-            print(f"❌ Sin resultados: {query}")
-            return None
-
-        photo = data["results"][0]
-
-        cache[query] = photo
-        save_cache()
-
-        return photo
+    # 2. Local Generation (Conceptualized by Gemini if possible)
+    print(f"🎨 Generating local creative banner for: {query}")
+    theme = get_gemini_theme(query)
+    
+    return {
+        "source": "local_gen",
+        "title": query,
+        "theme": theme
+    }
 
 # ========================
 # IMAGE
@@ -219,22 +326,19 @@ async def load_image(session, src, query=None):
                 return None
 
         if query:
-            photo = await search_unsplash(session, query)
+            result = await search_all_providers(session, query)
 
-            if photo:
-                headers = {
-                    "Authorization": f"Client-ID {ACCESS_KEY}"
-                }
-
-                await session.get(photo["links"]["download_location"], headers=headers)
-
-                img_data = await fetch_image(session, photo["urls"]["raw"])
+            if result:
+                if result["source"] == "local_gen":
+                    return generate_local_banner(result["title"], result["theme"])
+                
+                img_data = await fetch_image(session, result["url"])
 
                 if img_data:
                     try:
                         return Image.open(BytesIO(img_data))
                     except Exception as e:
-                        print(f"❌ Error decoding image from Unsplash: {str(e)}")
+                        print(f"❌ Error decoding image from {result['source']}: {str(e)}")
                         return None
 
     else:
@@ -262,23 +366,18 @@ async def generate_cover_if_missing(session, base_name):
 
     query = clean_query(base_name)
 
-    photo = await search_unsplash(session, query)
+    result = await search_all_providers(session, query)
 
-    if not photo:
+    if not result:
         return
 
-    headers = {
-        "Authorization": f"Client-ID {ACCESS_KEY}"
-    }
-
-    await session.get(photo["links"]["download_location"], headers=headers)
-
-    img_data = await fetch_image(session, photo["urls"]["raw"])
-
-    if not img_data:
-        return
-
-    img = Image.open(BytesIO(img_data))
+    if result["source"] == "local_gen":
+        img = generate_local_banner(result["title"], result["theme"])
+    else:
+        img_data = await fetch_image(session, result["url"])
+        if not img_data:
+            return
+        img = Image.open(BytesIO(img_data))
 
     if img.mode in ("RGBA", "P"):
         img = img.convert("RGB")

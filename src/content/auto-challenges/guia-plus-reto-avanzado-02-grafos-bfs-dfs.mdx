@@ -16,11 +16,16 @@ import Challenge from '../../components/Challenge.astro';
 
 ### 📝 Descripción del Reto
 
-Resuelve el siguiente reto de programación: **Reto Avanzado 02: Grafos (BFS/DFS)**.
+El objetivo de este reto es implementar dos de los algoritmos de recorrido de grafos más fundamentales: **BFS (Breadth-First Search)** y **DFS (Depth-First Search)**.
+
+Deberás crear una función que, dado un grafo (representado como una lista de adyacencia) y un nodo inicial, devuelva el orden en que se visitan los nodos utilizando ambos métodos.
+
+- **BFS**: Utiliza una cola para explorar los vecinos nivel por nivel.
+- **DFS**: Utiliza una pila (o recursividad) para explorar lo más profundo posible antes de retroceder.
 
 <Challenge 
   nivel="Avanzado" 
-  mision="Resuelve el siguiente reto de programación: **Reto Avanzado 02: Grafos (BFS/DFS)**." 
+  mision="Implementa los algoritmos BFS y DFS para recorrer un grafo desde un nodo inicial y devolver el orden de visita." 
 />
 
 ---
@@ -31,40 +36,66 @@ Resuelve el siguiente reto de programación: **Reto Avanzado 02: Grafos (BFS/DFS
 <summary><b>Ver explicación y código 🛠️ (¡No hagas spoiler!)</b></summary>
 <div class="details-content">
 
-### 🏗️ Paso 1: Análisis de la lógica
+### 🏗️ Paso 1: Representación del Grafo
+Usaremos un objeto de JavaScript para representar la lista de adyacencia, donde cada clave es un nodo y su valor es un array de nodos conectados.
 
-Analizar el problema y definir casos de prueba.
+### ⚙️ Paso 2: Implementación de BFS
+1. Creamos una cola y añadimos el nodo inicial.
+2. Usamos un conjunto (`Set`) para registrar los nodos visitados.
+3. Mientras la cola no esté vacía:
+   - Extraemos el primer nodo.
+   - Si no ha sido visitado, lo marcamos y añadimos sus vecinos no visitados a la cola.
 
-### ⚙️ Paso 2: Implementación en JavaScript
-
-Implementar la solución en JavaScript.
-
-### 🚀 Paso 3: Complejidad y Optimización
-
-Optimizar si es necesario.
+### ⚙️ Paso 3: Implementación de DFS (Iterativo)
+Similar a BFS, pero usamos una pila (stack) en lugar de una cola.
 
 ### 💻 Código de la Solución (JavaScript)
 
 ```javascript
-// Reto Avanzado 02: Grafos (BFS/DFS)
-// Resuelve el siguiente reto de programación: **Reto Avanzado 02: Grafos (BFS/DFS)**.
+const grafo = {
+  'A': ['B', 'C'],
+  'B': ['A', 'D', 'E'],
+  'C': ['A', 'F'],
+  'D': ['B'],
+  'E': ['B', 'F'],
+  'F': ['C', 'E']
+};
 
-function resolver(entrada) {
-  // Lógica principal
-  return entrada;
+function bfs(grafo, inicio) {
+  const visitados = new Set();
+  const cola = [inicio];
+  const orden = [];
+
+  while (cola.length > 0) {
+    const nodo = cola.shift();
+    if (!visitados.has(nodo)) {
+      visitados.add(nodo);
+      orden.push(nodo);
+      cola.push(...grafo[nodo].filter(n => !visitados.has(n)));
+    }
+  }
+  return orden;
 }
 
-const casos = [
-  { entrada: "caso_1", esperado: "resultado_1" },
-  { entrada: "caso_2", esperado: "resultado_2" },
-];
+function dfs(grafo, inicio) {
+  const visitados = new Set();
+  const pila = [inicio];
+  const orden = [];
 
-casos.forEach(({ entrada, esperado }) => {
-  const resultado = resolver(entrada);
-  const ok = resultado === esperado;
-  console.log(`${ok ? '✅' : '❓'} ${entrada} → ${resultado}`);
-});
+  while (pila.length > 0) {
+    const nodo = pila.pop();
+    if (!visitados.has(nodo)) {
+      visitados.add(nodo);
+      orden.push(nodo);
+      // Invertimos para mantener el orden de inserción visual si es necesario
+      pila.push(...grafo[nodo].filter(n => !visitados.has(n)).reverse());
+    }
+  }
+  return orden;
+}
 
+console.log("🚀 Recorrido BFS:", bfs(grafo, 'A')); // ['A', 'B', 'C', 'D', 'E', 'F']
+console.log("🚀 Recorrido DFS:", dfs(grafo, 'A')); // ['A', 'B', 'D', 'E', 'F', 'C']
 ```
 
 </div>
