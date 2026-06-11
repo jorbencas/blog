@@ -3,7 +3,7 @@ draft: false
 title: "Reto Intermedio 29: Detector de Archivos Duplicados"
 description: "Identifica archivos duplicados comparando contenido (hashes)."
 pubDate: "2026-01-01"
-tags: ["rust", "retos", "intermedio", "guia-plus"]
+tags: ["python", "retos", "intermedio", "guia-plus"]
 slug: "guia-plus-reto-intermedio-29-detector-de-archivos-duplicados"
 image: "/img/default.jpg"
 author: "Jorge Beneyto Castelló"
@@ -35,7 +35,7 @@ Identifica archivos duplicados comparando contenido (hashes).
 
 Calcular hash (MD5/SHA1) de cada archivo.
 
-### ⚙️ Paso 2: Implementación en Rust
+### ⚙️ Paso 2: Implementación en Python
 
 Diccionario hash -> lista_rutas.
 
@@ -43,9 +43,9 @@ Diccionario hash -> lista_rutas.
 
 O(n*size).
 
-### 💻 Código de la Solución (Rust)
+### 💻 Código de la Solución (Python)
 
-```rust
+```python
 import hashlib
 def h(f): return hashlib.md5(open(f,'rb').read()).hexdigest()
 def sol(L): d={}; [d.setdefault(h(f),[]).append(f) for f in L]; return [v for v in d.values() if len(v)>1]
