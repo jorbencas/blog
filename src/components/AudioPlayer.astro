@@ -85,6 +85,8 @@ const id = src ? Math.random().toString(36).substring(2, 9) : "";
       const iconPause = document.getElementById(`iconPause-${id}`);
       const currentTimeText = document.getElementById(`currentTime-${id}`);
       const durationTime = document.getElementById(`durationTime-${id}`);
+      const statusIcon = document.getElementById(`statusIcon-${id}`);
+      const statusLabel = document.getElementById(`statusLabel-${id}`);
 
       if (!playBtn || !currentTimeText || !durationTime) return;
 
@@ -132,16 +134,23 @@ const id = src ? Math.random().toString(36).substring(2, 9) : "";
         iconPlay.classList.add("hidden");
         iconPause.classList.remove("hidden");
         playBtn.classList.add("is-playing");
+        statusIcon.textContent = "🔊";
+        statusLabel.textContent = "Reproduciendo...";
       });
 
       wavesurfer.on("pause", () => {
         iconPlay.classList.remove("hidden");
         iconPause.classList.add("hidden");
         playBtn.classList.remove("is-playing");
+        statusIcon.textContent = "🎧";
+        statusLabel.textContent = "¿Prefieres escuchar este artículo?";
       });
 
       wavesurfer.on("finish", () => {
         currentTimeText.innerText = "0:00";
+        playBtn.classList.remove("is-playing");
+        statusIcon.textContent = "🎧";
+        statusLabel.textContent = "¿Prefieres escuchar este artículo?";
       });
     });
   }
