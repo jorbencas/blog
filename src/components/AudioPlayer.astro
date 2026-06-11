@@ -71,7 +71,7 @@ const id = src ? Math.random().toString(36).substring(2, 9) : "";
     "https://unpkg.com/wavesurfer.js@7/dist/wavesurfer.esm.js"
   );
 
-  function initAudioPlayers() {
+  function setupAudioPlayers() {
     document.querySelectorAll(".audio-player").forEach((player) => {
       const id = player.getAttribute("data-id");
       const src = player.getAttribute("data-src");
@@ -146,7 +146,17 @@ const id = src ? Math.random().toString(36).substring(2, 9) : "";
     });
   }
 
-  document.addEventListener("audio-player", initAudioPlayers);
+  // 1. Carga inicial de la web
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", setupAudioPlayers);
+  } else {
+    setupAudioPlayers();
+  }
+
+  // 2. Evento NATIVO para capturar cuando el usuario navega (atrás/adelante o enlaces)
+  window.addEventListener("popstate", () => {
+    setTimeout(setupAudioPlayers, 50);
+  });
 </script>
 
 <style>
