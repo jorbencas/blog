@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "Reto Avanzado 26: Database Sharding Logic"
-description: "Resuelve el siguiente reto de programación: **Reto Avanzado 26: Database Sharding Logic**. Implementa una solución eficiente que maneje los casos base..."
+description: "Distribuye datos en N nodos usando Sharding (Consistent Hashing)."
 pubDate: "2025-11-07"
 tags: ["javascript", "retos", "avanzado", "guia-plus"]
 slug: "guia-plus-reto-avanzado-26-database-sharding-logic"
@@ -16,11 +16,11 @@ import Challenge from '../../components/Challenge.astro';
 
 ### 📝 Descripción del Reto
 
-Resuelve el siguiente reto de programación: **Reto Avanzado 26: Database Sharding Logic**. Implementa una solución eficiente que maneje los casos base y edge cases correctamente.
+Distribuye datos en N nodos usando Sharding (Consistent Hashing).
 
 <Challenge 
   nivel="Avanzado" 
-  mision="Resuelve el siguiente reto de programación: **Reto Avanzado 26: Database Sharding Logic**. Implementa una solución eficiente que maneje los casos base..." 
+  mision="Distribuye datos en N nodos usando Sharding (Consistent Hashing)." 
 />
 
 ---
@@ -33,38 +33,20 @@ Resuelve el siguiente reto de programación: **Reto Avanzado 26: Database Shardi
 
 ### 🏗️ Paso 1: Análisis de la lógica
 
-Analizar el problema 'Reto Avanzado 26: Database Sharding Logic': identificar entradas, salidas esperadas y restricciones. Definir los casos límite que la solución debe manejar.
+Hash de la clave modulo N servidores.
 
 ### ⚙️ Paso 2: Implementación en JavaScript
 
-Elegir la estructura de datos y algoritmo más adecuado para resolver 'Reto Avanzado 26: Database Sharding Logic' en JavaScript. Implementar la lógica paso a paso con comentarios claros.
+Garantizar distribución uniforme.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-La solución tiene complejidad temporal O(n) en el caso general. Para grandes volúmenes de datos, considerar optimizaciones como memoización o estructuras de datos más eficientes.
+O(1).
 
 ### 💻 Código de la Solución (JavaScript)
 
 ```javascript
-// Reto Avanzado 26: Database Sharding Logic
-// Resuelve el siguiente reto de programación: **Reto Avanzado 26: Database Sharding Logic**. Implementa una solución eficiente que maneje los casos base y edge cases correctamente.
-
-function resolver(entrada) {
-  // Lógica principal
-  return entrada;
-}
-
-const casos = [
-  { entrada: "caso_1", esperado: "resultado_1" },
-  { entrada: "caso_2", esperado: "resultado_2" },
-];
-
-casos.forEach(({ entrada, esperado }) => {
-  const resultado = resolver(entrada);
-  const ok = resultado === esperado;
-  console.log(`${ok ? '✅' : '❓'} ${entrada} → ${resultado}`);
-});
-
+const sol = (k, n) => { let h=0; for(let c of k) h+=c.charCodeAt(0); return h%n; };
 ```
 
 </div>

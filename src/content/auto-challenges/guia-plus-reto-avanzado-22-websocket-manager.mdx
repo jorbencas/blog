@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "Reto Avanzado 22: Websocket Manager"
-description: "Resuelve el siguiente reto de programación: **Reto Avanzado 22: Websocket Manager**. Implementa una solución eficiente que maneje los casos base y edg..."
+description: "Gestiona estados de múltiples conexiones (Broadcast, Unicast)."
 pubDate: "2025-11-13"
 tags: ["php", "retos", "avanzado", "guia-plus"]
 slug: "guia-plus-reto-avanzado-22-websocket-manager"
@@ -16,11 +16,11 @@ import Challenge from '../../components/Challenge.astro';
 
 ### 📝 Descripción del Reto
 
-Resuelve el siguiente reto de programación: **Reto Avanzado 22: Websocket Manager**. Implementa una solución eficiente que maneje los casos base y edge cases correctamente.
+Gestiona estados de múltiples conexiones (Broadcast, Unicast).
 
 <Challenge 
   nivel="Avanzado" 
-  mision="Resuelve el siguiente reto de programación: **Reto Avanzado 22: Websocket Manager**. Implementa una solución eficiente que maneje los casos base y edg..." 
+  mision="Gestiona estados de múltiples conexiones (Broadcast, Unicast)." 
 />
 
 ---
@@ -33,32 +33,23 @@ Resuelve el siguiente reto de programación: **Reto Avanzado 22: Websocket Manag
 
 ### 🏗️ Paso 1: Análisis de la lógica
 
-Analizar el problema 'Reto Avanzado 22: Websocket Manager': identificar entradas, salidas esperadas y restricciones. Definir los casos límite que la solución debe manejar.
+Diccionario de IDs -> Sockets.
 
 ### ⚙️ Paso 2: Implementación en PHP
 
-Elegir la estructura de datos y algoritmo más adecuado para resolver 'Reto Avanzado 22: Websocket Manager' en PHP. Implementar la lógica paso a paso con comentarios claros.
+Loop para enviar a todos.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-La solución tiene complejidad temporal O(n) en el caso general. Para grandes volúmenes de datos, considerar optimizaciones como memoización o estructuras de datos más eficientes.
+O(n).
 
 ### 💻 Código de la Solución (PHP)
 
 ```php
-<?php
-// Reto Avanzado 22: Websocket Manager
-// Resuelve el siguiente reto de programación: **Reto Avanzado 22: Websocket Manager**. Implementa una solución eficiente que maneje los casos base y edge cases correctamente.
-
-function resolver(string $entrada): string {
-    return $entrada;
-}
-
-$casos = ["caso_1", "caso_2"];
-foreach ($casos as $c) {
-    echo "▶ $c → " . resolver($c) . "\n";
-}
-
+class WS:
+ def __init__(self): self.clients = {}
+ def reg(self, id, s): self.clients[id] = s
+ def bcast(self, msg): [s.send(msg) for s in self.clients.values()]
 ```
 
 </div>

@@ -1,47 +1,61 @@
 ---
+draft: false
 title: "Algoritmo de Dijkstra Simple"
 description: "Encuentra el camino más corto en un grafo pequeño."
 pubDate: "2026-03-15"
-tags: ["python", "reto", "avanzado"]
+tags: ["python", "retos", "avanzado", "guia-plus"]
+slug: "guia-algoritmo-de-dijkstra-simple"
 image: "/img/default.jpg"
-difficulty: "Avanzado"
 author: "Jorge Beneyto Castelló"
+difficulty: "Avanzado"
 ---
 
 import Challenge from '../../components/Challenge.astro';
 
-# 🏆 Algoritmo de Dijkstra Simple
+# 🎯 Algoritmo de Dijkstra Simple
 
-Aprende a dominar la lógica de programación con este reto enfocado en Algoritmo de Dijkstra Simple. Encuentra el camino más corto en un grafo pequeño.
+### 📝 Descripción del Reto
+
+Encuentra el camino más corto en un grafo pequeño.
 
 <Challenge 
   nivel="Avanzado" 
   mision="Encuentra el camino más corto en un grafo pequeño." 
 />
 
+---
+
+## 💡 Guía de Solución Paso a Paso
+
 <details>
-<summary><b>Ver análisis y solución 🛠️</b></summary>
+<summary><b>Ver explicación y código 🛠️ (¡No hagas spoiler!)</b></summary>
 <div class="details-content">
 
-### 🏗️ Paso 1: Análisis del Problema
-Para resolver el problema 'Algoritmo de Dijkstra Simple', primero debemos identificar las entradas (inputs) y salidas (outputs). En este caso, el objetivo es encuentra el camino más corto en un grafo pequeño. Es fundamental entender los límites del problema (edge cases).
+### 🏗️ Paso 1: Análisis de la lógica
 
-### ⚙️ Paso 2: Lógica de Programación
-Implementaremos una solución utilizando python. Utilizaremos estructuras de control estándar. La lógica principal se basa en recorrer los datos y aplicar la transformación necesaria según el algoritmo de Algoritmo de Dijkstra Simple.
+Usar una cola de prioridad para explorar el nodo con menor distancia.
+
+### ⚙️ Paso 2: Implementación en Python
+
+Relajar aristas actualizando distancias mínimas.
 
 ### 🚀 Paso 3: Complejidad y Optimización
-Esta solución tiene una complejidad temporal de O(n) en el peor de los casos. Podríamos optimizar el uso de memoria si el conjunto de datos crece exponencialmente, utilizando generadores o lazy loading.
 
-### 💻 Código de la Solución (python)
+O((V+E) log V).
+
+### 💻 Código de la Solución (Python)
 
 ```python
-def solution(data):
-    # Encuentra el camino más corto en un grafo pequeño.
-    result = []
-    for item in data:
-        # Proceso para Algoritmo de Dijkstra Simple
-        pass
-    return result
+import heapq
+def sol(g, s):
+ dist = {n: float('inf') for n in g}; dist[s] = 0
+ pq = [(0, s)]
+ while pq:
+  d, u = heapq.heappop(pq)
+  if d > dist[u]: continue
+  for v, w in g[u].items():
+   if dist[u] + w < dist[v]: dist[v] = dist[u] + w; heapq.heappush(pq, (dist[v], v))
+ return dist
 ```
 
 </div>

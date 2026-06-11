@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "Reto Avanzado 19: Compresión Huffman"
-description: "Resuelve el siguiente reto de programación: **Reto Avanzado 19: Compresión Huffman**. Implementa una solución eficiente que maneje los casos base y ed..."
+description: "Genera el árbol de Huffman para un texto dado."
 pubDate: "2025-11-17"
 tags: ["csharp", "retos", "avanzado", "guia-plus"]
 slug: "guia-plus-reto-avanzado-19-compresion-huffman"
@@ -16,11 +16,11 @@ import Challenge from '../../components/Challenge.astro';
 
 ### 📝 Descripción del Reto
 
-Resuelve el siguiente reto de programación: **Reto Avanzado 19: Compresión Huffman**. Implementa una solución eficiente que maneje los casos base y edge cases correctamente.
+Genera el árbol de Huffman para un texto dado.
 
 <Challenge 
   nivel="Avanzado" 
-  mision="Resuelve el siguiente reto de programación: **Reto Avanzado 19: Compresión Huffman**. Implementa una solución eficiente que maneje los casos base y ed..." 
+  mision="Genera el árbol de Huffman para un texto dado." 
 />
 
 ---
@@ -33,34 +33,30 @@ Resuelve el siguiente reto de programación: **Reto Avanzado 19: Compresión Huf
 
 ### 🏗️ Paso 1: Análisis de la lógica
 
-Analizar el problema 'Reto Avanzado 19: Compresión Huffman': identificar entradas, salidas esperadas y restricciones. Definir los casos límite que la solución debe manejar.
+Contar frecuencias, construir nodos y usar heap para unir los dos menores.
 
 ### ⚙️ Paso 2: Implementación en C#
 
-Elegir la estructura de datos y algoritmo más adecuado para resolver 'Reto Avanzado 19: Compresión Huffman' en C#. Implementar la lógica paso a paso con comentarios claros.
+Árbol binario de prefijos.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-La solución tiene complejidad temporal O(n) en el caso general. Para grandes volúmenes de datos, considerar optimizaciones como memoización o estructuras de datos más eficientes.
+O(n log n).
 
 ### 💻 Código de la Solución (C#)
 
 ```csharp
-// Reto Avanzado 19: Compresión Huffman
-// Resuelve el siguiente reto de programación: **Reto Avanzado 19: Compresión Huffman**. Implementa una solución eficiente que maneje los casos base y edge cases correctamente.
-
-using System;
-
-class Reto {
-    static string Resolver(string entrada) => entrada;
-
-    static void Main() {
-        string[] casos = {"caso_1", "caso_2"};
-        foreach (var c in casos)
-            Console.WriteLine($"▶ {c} → {Resolver(c)}");
-    }
-}
-
+import heapq
+def sol(txt):
+ from collections import Counter
+ f = Counter(txt); pq = [[v, [k, '']] for k,v in f.items()]
+ heapq.heapify(pq)
+ while len(pq) > 1:
+  lo = heapq.heappop(pq); hi = heapq.heappop(pq)
+  for p in lo[1:]: p[1] = '0' + p[1]
+  for p in hi[1:]: p[1] = '1' + p[1]
+  heapq.heappush(pq, [lo[0] + hi[0]] + lo[1:] + hi[1:])
+ return sorted(heapq.heappop(pq)[1:], key=lambda p: (len(p[-1]), p))
 ```
 
 </div>

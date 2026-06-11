@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "Reto Avanzado 28: Audit Log con Inmutabilidad"
-description: "Resuelve el siguiente reto de programación: **Reto Avanzado 28: Audit Log con Inmutabilidad**. Implementa una solución eficiente que maneje los casos..."
+description: "Sistema de log donde cada entrada incluye el hash de la anterior."
 pubDate: "2025-11-04"
 tags: ["go", "retos", "avanzado", "guia-plus"]
 slug: "guia-plus-reto-avanzado-28-audit-log-con-inmutabilidad"
@@ -16,11 +16,11 @@ import Challenge from '../../components/Challenge.astro';
 
 ### 📝 Descripción del Reto
 
-Resuelve el siguiente reto de programación: **Reto Avanzado 28: Audit Log con Inmutabilidad**. Implementa una solución eficiente que maneje los casos base y edge cases correctamente.
+Sistema de log donde cada entrada incluye el hash de la anterior.
 
 <Challenge 
   nivel="Avanzado" 
-  mision="Resuelve el siguiente reto de programación: **Reto Avanzado 28: Audit Log con Inmutabilidad**. Implementa una solución eficiente que maneje los casos..." 
+  mision="Sistema de log donde cada entrada incluye el hash de la anterior." 
 />
 
 ---
@@ -33,36 +33,22 @@ Resuelve el siguiente reto de programación: **Reto Avanzado 28: Audit Log con I
 
 ### 🏗️ Paso 1: Análisis de la lógica
 
-Analizar el problema 'Reto Avanzado 28: Audit Log con Inmutabilidad': identificar entradas, salidas esperadas y restricciones. Definir los casos límite que la solución debe manejar.
+Encadenar registros como una blockchain simple.
 
 ### ⚙️ Paso 2: Implementación en Go
 
-Elegir la estructura de datos y algoritmo más adecuado para resolver 'Reto Avanzado 28: Audit Log con Inmutabilidad' en Go. Implementar la lógica paso a paso con comentarios claros.
+Garantiza que no se han borrado registros intermedios.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-La solución tiene complejidad temporal O(n) en el caso general. Para grandes volúmenes de datos, considerar optimizaciones como memoización o estructuras de datos más eficientes.
+O(n).
 
 ### 💻 Código de la Solución (Go)
 
 ```go
-package main
-
-import "fmt"
-
-// resolver - Reto Avanzado 28: Audit Log con Inmutabilidad
-// Resuelve el siguiente reto de programación: **Reto Avanzado 28: Audit Log con Inmutabilidad**. Implementa una solución eficiente que maneje los casos base y edge cases correctamente.
-func resolver(entrada string) string {
-	return entrada
-}
-
-func main() {
-	casos := []string{"caso_1", "caso_2"}
-	for _, c := range casos {
-		fmt.Printf("▶ %s → %s\n", c, resolver(c))
-	}
-}
-
+import hashlib
+log = []
+def add(m): prev = log[-1]['h'] if log else '0'; h = hashlib.sha256(f'{prev}{m}'.encode()).hexdigest(); log.append({'m':m, 'h':h})
 ```
 
 </div>

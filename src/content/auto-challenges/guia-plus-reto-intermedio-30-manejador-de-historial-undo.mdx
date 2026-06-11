@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "Reto Intermedio 30: Manejador de Historial (Undo)"
-description: "Resuelve el siguiente reto de programación: **Reto Intermedio 30: Manejador de Historial (Undo)**. Implementa una solución eficiente que maneje los ca..."
+description: "Implementa un historial con Undo/Redo usando dos pilas."
 pubDate: "2025-12-31"
 tags: ["java", "retos", "intermedio", "guia-plus"]
 slug: "guia-plus-reto-intermedio-30-manejador-de-historial-undo"
@@ -16,11 +16,11 @@ import Challenge from '../../components/Challenge.astro';
 
 ### 📝 Descripción del Reto
 
-Resuelve el siguiente reto de programación: **Reto Intermedio 30: Manejador de Historial (Undo)**. Implementa una solución eficiente que maneje los casos base y edge cases correctamente.
+Implementa un historial con Undo/Redo usando dos pilas.
 
 <Challenge 
   nivel="Intermedio" 
-  mision="Resuelve el siguiente reto de programación: **Reto Intermedio 30: Manejador de Historial (Undo)**. Implementa una solución eficiente que maneje los ca..." 
+  mision="Implementa un historial con Undo/Redo usando dos pilas." 
 />
 
 ---
@@ -33,35 +33,26 @@ Resuelve el siguiente reto de programación: **Reto Intermedio 30: Manejador de 
 
 ### 🏗️ Paso 1: Análisis de la lógica
 
-Analizar el problema 'Reto Intermedio 30: Manejador de Historial (Undo)': identificar entradas, salidas esperadas y restricciones. Definir los casos límite que la solución debe manejar.
+Pila de acciones y pila de descartados.
 
 ### ⚙️ Paso 2: Implementación en Java
 
-Elegir la estructura de datos y algoritmo más adecuado para resolver 'Reto Intermedio 30: Manejador de Historial (Undo)' en Java. Implementar la lógica paso a paso con comentarios claros.
+Mover entre pilas según comando.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-La solución tiene complejidad temporal O(n) en el caso general. Para grandes volúmenes de datos, considerar optimizaciones como memoización o estructuras de datos más eficientes.
+O(1).
 
 ### 💻 Código de la Solución (Java)
 
 ```java
-// Reto Intermedio 30: Manejador de Historial (Undo)
-// Resuelve el siguiente reto de programación: **Reto Intermedio 30: Manejador de Historial (Undo)**. Implementa una solución eficiente que maneje los casos base y edge cases correctamente.
-
-public class Reto {
-    public static String resolver(String entrada) {
-        return entrada;
-    }
-
-    public static void main(String[] args) {
-        String[] casos = {"caso_1", "caso_2"};
-        for (String c : casos) {
-            System.out.println("▶ " + c + " → " + resolver(c));
-        }
-    }
-}
-
+class Hist:
+ def __init__(self): self.do, self.re = [], []
+ def add(self, x): self.do.append(x); self.re = []
+ def undo(self): 
+  if self.do: self.re.append(self.do.pop())
+ def redo(self): 
+  if self.re: self.do.append(self.re.pop())
 ```
 
 </div>

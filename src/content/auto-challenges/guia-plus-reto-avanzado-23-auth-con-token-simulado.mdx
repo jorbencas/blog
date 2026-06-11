@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "Reto Avanzado 23: Auth con Token (Simulado)"
-description: "Resuelve el siguiente reto de programación: **Reto Avanzado 23: Auth con Token (Simulado)**. Implementa una solución eficiente que maneje los casos ba..."
+description: "Valida tokens JWT (simplificado) comprobando firma."
 pubDate: "2025-11-11"
 tags: ["ruby", "retos", "avanzado", "guia-plus"]
 slug: "guia-plus-reto-avanzado-23-auth-con-token-simulado"
@@ -16,11 +16,11 @@ import Challenge from '../../components/Challenge.astro';
 
 ### 📝 Descripción del Reto
 
-Resuelve el siguiente reto de programación: **Reto Avanzado 23: Auth con Token (Simulado)**. Implementa una solución eficiente que maneje los casos base y edge cases correctamente.
+Valida tokens JWT (simplificado) comprobando firma.
 
 <Challenge 
   nivel="Avanzado" 
-  mision="Resuelve el siguiente reto de programación: **Reto Avanzado 23: Auth con Token (Simulado)**. Implementa una solución eficiente que maneje los casos ba..." 
+  mision="Valida tokens JWT (simplificado) comprobando firma." 
 />
 
 ---
@@ -33,30 +33,24 @@ Resuelve el siguiente reto de programación: **Reto Avanzado 23: Auth con Token 
 
 ### 🏗️ Paso 1: Análisis de la lógica
 
-Analizar el problema 'Reto Avanzado 23: Auth con Token (Simulado)': identificar entradas, salidas esperadas y restricciones. Definir los casos límite que la solución debe manejar.
+Header.Payload.Signature. Hashing de H+P con secreto.
 
 ### ⚙️ Paso 2: Implementación en Ruby
 
-Elegir la estructura de datos y algoritmo más adecuado para resolver 'Reto Avanzado 23: Auth con Token (Simulado)' en Ruby. Implementar la lógica paso a paso con comentarios claros.
+HMAC SHA256.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-La solución tiene complejidad temporal O(n) en el caso general. Para grandes volúmenes de datos, considerar optimizaciones como memoización o estructuras de datos más eficientes.
+O(n).
 
 ### 💻 Código de la Solución (Ruby)
 
 ```ruby
-# Reto Avanzado 23: Auth con Token (Simulado)
-# Resuelve el siguiente reto de programación: **Reto Avanzado 23: Auth con Token (Simulado)**. Implementa una solución eficiente que maneje los casos base y edge cases correctamente.
-
-def resolver(entrada)
-  entrada
-end
-
-["caso_1", "caso_2"].each do |c|
-  puts "▶ #{c} → #{resolver(c)}"
-end
-
+import hmac, hashlib, base64
+def sol(t, s):
+ p, sig = t.rsplit('.', 1)
+ exp_sig = hmac.new(s.encode(), p.encode(), hashlib.sha256).digest()
+ return sig == base64.b64encode(exp_sig).decode()
 ```
 
 </div>

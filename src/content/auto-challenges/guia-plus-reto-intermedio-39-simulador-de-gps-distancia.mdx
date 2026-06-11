@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "Reto Intermedio 39: Simulador de GPS (Distancia)"
-description: "Resuelve el siguiente reto de programación: **Reto Intermedio 39: Simulador de GPS (Distancia)**. Implementa una solución eficiente que maneje los cas..."
+description: "Calcula distancia Haversine entre dos coordenadas (lat, lon)."
 pubDate: "2025-12-17"
 tags: ["typescript", "retos", "intermedio", "guia-plus"]
 slug: "guia-plus-reto-intermedio-39-simulador-de-gps-distancia"
@@ -16,11 +16,11 @@ import Challenge from '../../components/Challenge.astro';
 
 ### 📝 Descripción del Reto
 
-Resuelve el siguiente reto de programación: **Reto Intermedio 39: Simulador de GPS (Distancia)**. Implementa una solución eficiente que maneje los casos base y edge cases correctamente.
+Calcula distancia Haversine entre dos coordenadas (lat, lon).
 
 <Challenge 
   nivel="Intermedio" 
-  mision="Resuelve el siguiente reto de programación: **Reto Intermedio 39: Simulador de GPS (Distancia)**. Implementa una solución eficiente que maneje los cas..." 
+  mision="Calcula distancia Haversine entre dos coordenadas (lat, lon)." 
 />
 
 ---
@@ -33,36 +33,24 @@ Resuelve el siguiente reto de programación: **Reto Intermedio 39: Simulador de 
 
 ### 🏗️ Paso 1: Análisis de la lógica
 
-Analizar el problema 'Reto Intermedio 39: Simulador de GPS (Distancia)': identificar entradas, salidas esperadas y restricciones. Definir los casos límite que la solución debe manejar.
+Fórmula trigonométrica para distancia en esfera.
 
 ### ⚙️ Paso 2: Implementación en TypeScript
 
-Elegir la estructura de datos y algoritmo más adecuado para resolver 'Reto Intermedio 39: Simulador de GPS (Distancia)' en TypeScript. Implementar la lógica paso a paso con comentarios claros.
+Radios a radianes.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-La solución tiene complejidad temporal O(n) en el caso general. Para grandes volúmenes de datos, considerar optimizaciones como memoización o estructuras de datos más eficientes.
+O(1).
 
 ### 💻 Código de la Solución (TypeScript)
 
 ```typescript
-// Reto Intermedio 39: Simulador de GPS (Distancia)
-// Resuelve el siguiente reto de programación: **Reto Intermedio 39: Simulador de GPS (Distancia)**. Implementa una solución eficiente que maneje los casos base y edge cases correctamente.
-
-function resolver<T>(entrada: T): T {
-  return entrada;
-}
-
-const casos: Array<{ entrada: string; esperado: string }> = [
-  { entrada: "caso_1", esperado: "resultado_1" },
-  { entrada: "caso_2", esperado: "resultado_2" },
-];
-
-casos.forEach(({ entrada, esperado }) => {
-  const resultado = resolver(entrada);
-  console.log(`${resultado === esperado ? '✅' : '❓'} ${entrada} → ${resultado}`);
-});
-
+import math
+def sol(lat1,lon1,lat2,lon2):
+ r=6371; dlat=math.radians(lat2-lat1); dlon=math.radians(lon2-lon1)
+ a=math.sin(dlat/2)**2 + math.cos(math.radians(lat1))*math.cos(math.radians(lat2))*math.sin(dlon/2)**2
+ return 2*r*math.atan2(math.sqrt(a), math.sqrt(1-a))
 ```
 
 </div>

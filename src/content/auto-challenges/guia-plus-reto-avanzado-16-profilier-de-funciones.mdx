@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "Reto Avanzado 16: Profilier de Funciones"
-description: "Resuelve el siguiente reto de programación: **Reto Avanzado 16: Profilier de Funciones**. Implementa una solución eficiente que maneje los casos base..."
+description: "Cuenta llamadas y tiempo total por función."
 pubDate: "2025-11-22"
 tags: ["go", "retos", "avanzado", "guia-plus"]
 slug: "guia-plus-reto-avanzado-16-profilier-de-funciones"
@@ -16,11 +16,11 @@ import Challenge from '../../components/Challenge.astro';
 
 ### 📝 Descripción del Reto
 
-Resuelve el siguiente reto de programación: **Reto Avanzado 16: Profilier de Funciones**. Implementa una solución eficiente que maneje los casos base y edge cases correctamente.
+Cuenta llamadas y tiempo total por función.
 
 <Challenge 
   nivel="Avanzado" 
-  mision="Resuelve el siguiente reto de programación: **Reto Avanzado 16: Profilier de Funciones**. Implementa una solución eficiente que maneje los casos base..." 
+  mision="Cuenta llamadas y tiempo total por función." 
 />
 
 ---
@@ -33,36 +33,25 @@ Resuelve el siguiente reto de programación: **Reto Avanzado 16: Profilier de Fu
 
 ### 🏗️ Paso 1: Análisis de la lógica
 
-Analizar el problema 'Reto Avanzado 16: Profilier de Funciones': identificar entradas, salidas esperadas y restricciones. Definir los casos límite que la solución debe manejar.
+Uso de wrapper que actualiza estadísticas globales.
 
 ### ⚙️ Paso 2: Implementación en Go
 
-Elegir la estructura de datos y algoritmo más adecuado para resolver 'Reto Avanzado 16: Profilier de Funciones' en Go. Implementar la lógica paso a paso con comentarios claros.
+Diccionario de rastro {func: {count, time}}.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-La solución tiene complejidad temporal O(n) en el caso general. Para grandes volúmenes de datos, considerar optimizaciones como memoización o estructuras de datos más eficientes.
+O(1) overhead.
 
 ### 💻 Código de la Solución (Go)
 
 ```go
-package main
-
-import "fmt"
-
-// resolver - Reto Avanzado 16: Profilier de Funciones
-// Resuelve el siguiente reto de programación: **Reto Avanzado 16: Profilier de Funciones**. Implementa una solución eficiente que maneje los casos base y edge cases correctamente.
-func resolver(entrada string) string {
-	return entrada
-}
-
-func main() {
-	casos := []string{"caso_1", "caso_2"}
-	for _, c := range casos {
-		fmt.Printf("▶ %s → %s\n", c, resolver(c))
-	}
-}
-
+stats = {}
+def profile(f):
+ def w(*a,**kw):
+  s=stats.setdefault(f.__name__,{'c':0,'t':0}); s['c']+=1
+  return f(*a,**kw)
+ return w
 ```
 
 </div>

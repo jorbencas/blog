@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "Reto Intermedio 38: Validador de ISBN"
-description: "Resuelve el siguiente reto de programación: **Reto Intermedio 38: Validador de ISBN**. Implementa una solución eficiente que maneje los casos base y e..."
+description: "Valida un código ISBN-10 (suma de pesos)."
 pubDate: "2025-12-19"
 tags: ["javascript", "retos", "intermedio", "guia-plus"]
 slug: "guia-plus-reto-intermedio-38-validador-de-isbn"
@@ -16,11 +16,11 @@ import Challenge from '../../components/Challenge.astro';
 
 ### 📝 Descripción del Reto
 
-Resuelve el siguiente reto de programación: **Reto Intermedio 38: Validador de ISBN**. Implementa una solución eficiente que maneje los casos base y edge cases correctamente.
+Valida un código ISBN-10 (suma de pesos).
 
 <Challenge 
   nivel="Intermedio" 
-  mision="Resuelve el siguiente reto de programación: **Reto Intermedio 38: Validador de ISBN**. Implementa una solución eficiente que maneje los casos base y e..." 
+  mision="Valida un código ISBN-10 (suma de pesos)." 
 />
 
 ---
@@ -33,38 +33,20 @@ Resuelve el siguiente reto de programación: **Reto Intermedio 38: Validador de 
 
 ### 🏗️ Paso 1: Análisis de la lógica
 
-Analizar el problema 'Reto Intermedio 38: Validador de ISBN': identificar entradas, salidas esperadas y restricciones. Definir los casos límite que la solución debe manejar.
+Suma (10-i)*digito % 11 == 0.
 
 ### ⚙️ Paso 2: Implementación en JavaScript
 
-Elegir la estructura de datos y algoritmo más adecuado para resolver 'Reto Intermedio 38: Validador de ISBN' en JavaScript. Implementar la lógica paso a paso con comentarios claros.
+Ultimo dígito puede ser X (10).
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-La solución tiene complejidad temporal O(n) en el caso general. Para grandes volúmenes de datos, considerar optimizaciones como memoización o estructuras de datos más eficientes.
+O(1).
 
 ### 💻 Código de la Solución (JavaScript)
 
 ```javascript
-// Reto Intermedio 38: Validador de ISBN
-// Resuelve el siguiente reto de programación: **Reto Intermedio 38: Validador de ISBN**. Implementa una solución eficiente que maneje los casos base y edge cases correctamente.
-
-function resolver(entrada) {
-  // Lógica principal
-  return entrada;
-}
-
-const casos = [
-  { entrada: "caso_1", esperado: "resultado_1" },
-  { entrada: "caso_2", esperado: "resultado_2" },
-];
-
-casos.forEach(({ entrada, esperado }) => {
-  const resultado = resolver(entrada);
-  const ok = resultado === esperado;
-  console.log(`${ok ? '✅' : '❓'} ${entrada} → ${resultado}`);
-});
-
+const sol = s => { s=s.replace(/-/g,''); if(s.length!==10) return false; let t=s.split('').reduce((a,c,i)=>a+(10-i)*(c==='X'?10:+c),0); return t%11===0; };
 ```
 
 </div>

@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "Reto Avanzado 30: Motor de Recomendaciones (Basado en Tags)"
-description: "Resuelve el siguiente reto de programación: **Reto Avanzado 30: Motor de Recomendaciones (Basado en Tags)**. Implementa una solución eficiente que man..."
+description: "Recomienda items similares basados en la intersección de sus etiquetas."
 pubDate: "2025-11-01"
 tags: ["java", "retos", "avanzado", "guia-plus"]
 slug: "guia-plus-reto-avanzado-30-motor-de-recomendaciones-basado-en-tags"
@@ -16,11 +16,11 @@ import Challenge from '../../components/Challenge.astro';
 
 ### 📝 Descripción del Reto
 
-Resuelve el siguiente reto de programación: **Reto Avanzado 30: Motor de Recomendaciones (Basado en Tags)**. Implementa una solución eficiente que maneje los casos base y edge cases correctamente.
+Recomienda items similares basados en la intersección de sus etiquetas.
 
 <Challenge 
   nivel="Avanzado" 
-  mision="Resuelve el siguiente reto de programación: **Reto Avanzado 30: Motor de Recomendaciones (Basado en Tags)**. Implementa una solución eficiente que man..." 
+  mision="Recomienda items similares basados en la intersección de sus etiquetas." 
 />
 
 ---
@@ -33,35 +33,22 @@ Resuelve el siguiente reto de programación: **Reto Avanzado 30: Motor de Recome
 
 ### 🏗️ Paso 1: Análisis de la lógica
 
-Analizar el problema 'Reto Avanzado 30: Motor de Recomendaciones (Basado en Tags)': identificar entradas, salidas esperadas y restricciones. Definir los casos límite que la solución debe manejar.
+Calcular coeficiente de Jaccard o simplemente intersección de sets.
 
 ### ⚙️ Paso 2: Implementación en Java
 
-Elegir la estructura de datos y algoritmo más adecuado para resolver 'Reto Avanzado 30: Motor de Recomendaciones (Basado en Tags)' en Java. Implementar la lógica paso a paso con comentarios claros.
+Ordenar por mayor coincidencia.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-La solución tiene complejidad temporal O(n) en el caso general. Para grandes volúmenes de datos, considerar optimizaciones como memoización o estructuras de datos más eficientes.
+O(N*M).
 
 ### 💻 Código de la Solución (Java)
 
 ```java
-// Reto Avanzado 30: Motor de Recomendaciones (Basado en Tags)
-// Resuelve el siguiente reto de programación: **Reto Avanzado 30: Motor de Recomendaciones (Basado en Tags)**. Implementa una solución eficiente que maneje los casos base y edge cases correctamente.
-
-public class Reto {
-    public static String resolver(String entrada) {
-        return entrada;
-    }
-
-    public static void main(String[] args) {
-        String[] casos = {"caso_1", "caso_2"};
-        for (String c : casos) {
-            System.out.println("▶ " + c + " → " + resolver(c));
-        }
-    }
-}
-
+def sol(item, Others):
+ s1 = set(item['tags'])
+ return sorted(Others, key=lambda x: len(s1 & set(x['tags'])), reverse=True)
 ```
 
 </div>

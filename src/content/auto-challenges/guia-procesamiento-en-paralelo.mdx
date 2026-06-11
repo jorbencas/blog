@@ -1,47 +1,54 @@
 ---
+draft: false
 title: "Procesamiento en Paralelo"
-description: "Usa threading para descargar 5 recursos simultáneos."
+description: "Ejecuta una lista de tareas en paralelo usando hilos o procesos."
 pubDate: "2026-03-26"
-tags: ["python", "reto", "avanzado"]
+tags: ["rust", "retos", "avanzado", "guia-plus"]
+slug: "guia-procesamiento-en-paralelo"
 image: "/img/default.jpg"
-difficulty: "Avanzado"
 author: "Jorge Beneyto Castelló"
+difficulty: "Avanzado"
 ---
 
 import Challenge from '../../components/Challenge.astro';
 
-# 🏆 Procesamiento en Paralelo
+# 🎯 Procesamiento en Paralelo
 
-Aprende a dominar la lógica de programación con este reto enfocado en Procesamiento en Paralelo. Usa threading para descargar 5 recursos simultáneos.
+### 📝 Descripción del Reto
+
+Ejecuta una lista de tareas en paralelo usando hilos o procesos.
 
 <Challenge 
   nivel="Avanzado" 
-  mision="Usa threading para descargar 5 recursos simultáneos." 
+  mision="Ejecuta una lista de tareas en paralelo usando hilos o procesos." 
 />
 
+---
+
+## 💡 Guía de Solución Paso a Paso
+
 <details>
-<summary><b>Ver análisis y solución 🛠️</b></summary>
+<summary><b>Ver explicación y código 🛠️ (¡No hagas spoiler!)</b></summary>
 <div class="details-content">
 
-### 🏗️ Paso 1: Análisis del Problema
-Para resolver el problema 'Procesamiento en Paralelo', primero debemos identificar las entradas (inputs) y salidas (outputs). En este caso, el objetivo es usa threading para descargar 5 recursos simultáneos. Es fundamental entender los límites del problema (edge cases).
+### 🏗️ Paso 1: Análisis de la lógica
 
-### ⚙️ Paso 2: Lógica de Programación
-Implementaremos una solución utilizando python. Utilizaremos estructuras de control estándar. La lógica principal se basa en recorrer los datos y aplicar la transformación necesaria según el algoritmo de Procesamiento en Paralelo.
+Dividir carga entre múltiples núcleos.
+
+### ⚙️ Paso 2: Implementación en Rust
+
+Uso de concurrent.futures en Python.
 
 ### 🚀 Paso 3: Complejidad y Optimización
-Esta solución tiene una complejidad temporal de O(n) en el peor de los casos. Podríamos optimizar el uso de memoria si el conjunto de datos crece exponencialmente, utilizando generadores o lazy loading.
 
-### 💻 Código de la Solución (python)
+O(n/cores).
 
-```python
-def solution(data):
-    # Usa threading para descargar 5 recursos simultáneos.
-    result = []
-    for item in data:
-        # Proceso para Procesamiento en Paralelo
-        pass
-    return result
+### 💻 Código de la Solución (Rust)
+
+```rust
+from concurrent.futures import ThreadPoolExecutor
+def sol(L, f): 
+ with ThreadPoolExecutor() as e: return list(e.map(f, L))
 ```
 
 </div>

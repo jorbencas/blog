@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "Reto Intermedio 29: Detector de Archivos Duplicados"
-description: "Resuelve el siguiente reto de programación: **Reto Intermedio 29: Detector de Archivos Duplicados**. Implementa una solución eficiente que maneje los..."
+description: "Identifica archivos duplicados comparando contenido (hashes)."
 pubDate: "2026-01-01"
 tags: ["rust", "retos", "intermedio", "guia-plus"]
 slug: "guia-plus-reto-intermedio-29-detector-de-archivos-duplicados"
@@ -16,11 +16,11 @@ import Challenge from '../../components/Challenge.astro';
 
 ### 📝 Descripción del Reto
 
-Resuelve el siguiente reto de programación: **Reto Intermedio 29: Detector de Archivos Duplicados**. Implementa una solución eficiente que maneje los casos base y edge cases correctamente.
+Identifica archivos duplicados comparando contenido (hashes).
 
 <Challenge 
   nivel="Intermedio" 
-  mision="Resuelve el siguiente reto de programación: **Reto Intermedio 29: Detector de Archivos Duplicados**. Implementa una solución eficiente que maneje los..." 
+  mision="Identifica archivos duplicados comparando contenido (hashes)." 
 />
 
 ---
@@ -33,33 +33,22 @@ Resuelve el siguiente reto de programación: **Reto Intermedio 29: Detector de A
 
 ### 🏗️ Paso 1: Análisis de la lógica
 
-Analizar el problema 'Reto Intermedio 29: Detector de Archivos Duplicados': identificar entradas, salidas esperadas y restricciones. Definir los casos límite que la solución debe manejar.
+Calcular hash (MD5/SHA1) de cada archivo.
 
 ### ⚙️ Paso 2: Implementación en Rust
 
-Elegir la estructura de datos y algoritmo más adecuado para resolver 'Reto Intermedio 29: Detector de Archivos Duplicados' en Rust. Implementar la lógica paso a paso con comentarios claros.
+Diccionario hash -> lista_rutas.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-La solución tiene complejidad temporal O(n) en el caso general. Para grandes volúmenes de datos, considerar optimizaciones como memoización o estructuras de datos más eficientes.
+O(n*size).
 
 ### 💻 Código de la Solución (Rust)
 
 ```rust
-// Reto Intermedio 29: Detector de Archivos Duplicados
-// Resuelve el siguiente reto de programación: **Reto Intermedio 29: Detector de Archivos Duplicados**. Implementa una solución eficiente que maneje los casos base y edge cases correctamente.
-
-fn resolver(entrada: &str) -> String {
-    entrada.to_string()
-}
-
-fn main() {
-    let casos = vec!["caso_1", "caso_2"];
-    for c in casos {
-        println!("▶ {} → {}", c, resolver(c));
-    }
-}
-
+import hashlib
+def h(f): return hashlib.md5(open(f,'rb').read()).hexdigest()
+def sol(L): d={}; [d.setdefault(h(f),[]).append(f) for f in L]; return [v for v in d.values() if len(v)>1]
 ```
 
 </div>

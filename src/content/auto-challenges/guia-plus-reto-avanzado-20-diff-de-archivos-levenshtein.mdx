@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "Reto Avanzado 20: Diff de Archivos (Levenshtein)"
-description: "Resuelve el siguiente reto de programación: **Reto Avanzado 20: Diff de Archivos (Levenshtein)**. Implementa una solución eficiente que maneje los cas..."
+description: "Calcula la distancia de edición mínima entre dos textos."
 pubDate: "2025-11-16"
 tags: ["kotlin", "retos", "avanzado", "guia-plus"]
 slug: "guia-plus-reto-avanzado-20-diff-de-archivos-levenshtein"
@@ -16,11 +16,11 @@ import Challenge from '../../components/Challenge.astro';
 
 ### 📝 Descripción del Reto
 
-Resuelve el siguiente reto de programación: **Reto Avanzado 20: Diff de Archivos (Levenshtein)**. Implementa una solución eficiente que maneje los casos base y edge cases correctamente.
+Calcula la distancia de edición mínima entre dos textos.
 
 <Challenge 
   nivel="Avanzado" 
-  mision="Resuelve el siguiente reto de programación: **Reto Avanzado 20: Diff de Archivos (Levenshtein)**. Implementa una solución eficiente que maneje los cas..." 
+  mision="Calcula la distancia de edición mínima entre dos textos." 
 />
 
 ---
@@ -33,30 +33,29 @@ Resuelve el siguiente reto de programación: **Reto Avanzado 20: Diff de Archivo
 
 ### 🏗️ Paso 1: Análisis de la lógica
 
-Analizar el problema 'Reto Avanzado 20: Diff de Archivos (Levenshtein)': identificar entradas, salidas esperadas y restricciones. Definir los casos límite que la solución debe manejar.
+Programación dinámica con matriz de distancias.
 
 ### ⚙️ Paso 2: Implementación en Kotlin
 
-Elegir la estructura de datos y algoritmo más adecuado para resolver 'Reto Avanzado 20: Diff de Archivos (Levenshtein)' en Kotlin. Implementar la lógica paso a paso con comentarios claros.
+Opciones: insertar, borrar, reemplazar.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-La solución tiene complejidad temporal O(n) en el caso general. Para grandes volúmenes de datos, considerar optimizaciones como memoización o estructuras de datos más eficientes.
+O(n*m).
 
 ### 💻 Código de la Solución (Kotlin)
 
 ```kotlin
-// Reto Avanzado 20: Diff de Archivos (Levenshtein)
-// Resuelve el siguiente reto de programación: **Reto Avanzado 20: Diff de Archivos (Levenshtein)**. Implementa una solución eficiente que maneje los casos base y edge cases correctamente.
-
-fun resolver(entrada: String) = entrada
-
-fun main() {
-    listOf("caso_1", "caso_2").forEach {
-        println("▶ $it → ${resolver(it)}")
-    }
-}
-
+def sol(a, b):
+ m, n = len(a), len(b)
+ d = [[0]*(n+1) for _ in range(m+1)]
+ for i in range(m+1): d[i][0]=i
+ for j in range(n+1): d[0][j]=j
+ for i in range(1,m+1):
+  for j in range(1,n+1):
+   cost = 0 if a[i-1] == b[j-1] else 1
+   d[i][j] = min(d[i-1][j]+1, d[i][j-1]+1, d[i-1][j-1]+cost)
+ return d[m][n]
 ```
 
 </div>

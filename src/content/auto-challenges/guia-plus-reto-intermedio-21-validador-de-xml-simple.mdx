@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "Reto Intermedio 21: Validador de XML Simple"
-description: "Resuelve el siguiente reto de programación: **Reto Intermedio 21: Validador de XML Simple**. Implementa una solución eficiente que maneje los casos ba..."
+description: "Comprueba si las etiquetas de apertura y cierre coinciden en un XML simple."
 pubDate: "2026-01-13"
 tags: ["swift", "retos", "intermedio", "guia-plus"]
 slug: "guia-plus-reto-intermedio-21-validador-de-xml-simple"
@@ -16,11 +16,11 @@ import Challenge from '../../components/Challenge.astro';
 
 ### 📝 Descripción del Reto
 
-Resuelve el siguiente reto de programación: **Reto Intermedio 21: Validador de XML Simple**. Implementa una solución eficiente que maneje los casos base y edge cases correctamente.
+Comprueba si las etiquetas de apertura y cierre coinciden en un XML simple.
 
 <Challenge 
   nivel="Intermedio" 
-  mision="Resuelve el siguiente reto de programación: **Reto Intermedio 21: Validador de XML Simple**. Implementa una solución eficiente que maneje los casos ba..." 
+  mision="Comprueba si las etiquetas de apertura y cierre coinciden en un XML simple." 
 />
 
 ---
@@ -33,29 +33,27 @@ Resuelve el siguiente reto de programación: **Reto Intermedio 21: Validador de 
 
 ### 🏗️ Paso 1: Análisis de la lógica
 
-Analizar el problema 'Reto Intermedio 21: Validador de XML Simple': identificar entradas, salidas esperadas y restricciones. Definir los casos límite que la solución debe manejar.
+Usar una pila para emparejar etiquetas.
 
 ### ⚙️ Paso 2: Implementación en Swift
 
-Elegir la estructura de datos y algoritmo más adecuado para resolver 'Reto Intermedio 21: Validador de XML Simple' en Swift. Implementar la lógica paso a paso con comentarios claros.
+Regex para extraer etiquetas.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-La solución tiene complejidad temporal O(n) en el caso general. Para grandes volúmenes de datos, considerar optimizaciones como memoización o estructuras de datos más eficientes.
+O(n).
 
 ### 💻 Código de la Solución (Swift)
 
 ```swift
-// Reto Intermedio 21: Validador de XML Simple
-// Resuelve el siguiente reto de programación: **Reto Intermedio 21: Validador de XML Simple**. Implementa una solución eficiente que maneje los casos base y edge cases correctamente.
-
-func resolver(_ entrada: String) -> String { entrada }
-
-let casos = ["caso_1", "caso_2"]
-for c in casos {
-    print("▶ \(c) → \(resolver(c))")
-}
-
+import re
+def sol(xml):
+ stack = []
+ for tag, close in re.findall(r'<(/?)(\w+)>', xml):
+  if not tag: stack.append(close)
+  else: 
+   if not stack or stack.pop() != close: return False
+ return not stack
 ```
 
 </div>
