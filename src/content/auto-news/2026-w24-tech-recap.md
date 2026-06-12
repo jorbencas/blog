@@ -4,7 +4,7 @@ description: "Esta semana marca una clara bifurcación en el panorama tecnológi
 la inteligencia artificial domina con rondas de financiación estratosféri"
 pubDate: "2026-06-12"
 author: "Jorge Beneyto Castelló"
-image: "public/img/arquitectura_web.webp"
+image: "/img/2026_w24_tech_recap_cover-1200.webp"
 tags: ["Inteligencia Artificial", "Venture Capital", "Desarrollo de Juegos", "Ciberseguridad IA", "Arquitectura Software"]
 slug: "2026-w24-tech-recap"
 draft: false
