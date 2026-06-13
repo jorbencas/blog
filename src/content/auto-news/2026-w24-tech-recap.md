@@ -5,7 +5,7 @@ entre la innovación disruptiva y los desafíos de la vida cotidiana. La
 Inte"
 pubDate: "2026-06-13"
 author: "Jorge Beneyto Castelló"
-image: "public/img/arquitectura_web.webp"
+image: "/img/2026_w24_tech_recap_cover-1200.webp"
 tags: ["InteligenciaArtificial", "Vivienda", "CosteDeVida", "ExperienciaUsuario", "Innovacion"]
 slug: "2026-w24-tech-recap"
 draft: false
