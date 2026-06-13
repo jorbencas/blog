@@ -76,11 +76,13 @@ def get_gemini_theme(query):
 # HELPERS
 # ========================
 
-STOPWORDS = ["guia", "tutorial", "como", "ejemplo", "simple", "introduccion"]
+STOPWORDS = ["guia", "tutorial", "como", "ejemplo", "simple", "introduccion", "png", "jpg", "jpeg", "webp"]
 
 def clean_query(text):
+    # Reemplaza guiones y barras para limpiar nombres de archivos rotos
+    text = text.replace("/", "_").replace("\\", "_").replace("-", "_")
     words = text.split("_")
-    words = [w for w in words if w not in STOPWORDS]
+    words = [w for w in words if w not in STOPWORDS and len(w) > 2]
     return " ".join(words)
 
 def slugify(text):
@@ -114,11 +116,10 @@ def build_srcset(images, prefix):
 # ========================
 
 async def search_unsplash(session, query):
-    if not ACCESS_KEY:
+    if not ACCESS_KEY or not query.strip():
         return None
 
     if query in cache:
-        print(f"⚡ Cache hit: {query}")
         return cache[query]
 
     url = "https://api.unsplash.com/search/photos"
@@ -135,20 +136,15 @@ async def search_unsplash(session, query):
     try:
         async with session.get(url, params=params, headers=headers) as r:
             if r.status != 200:
-                print(f"❌ Unsplash error: {r.status}")
                 return None
-
             data = await r.json()
             if not data["results"]:
-                print(f"❌ Sin resultados: {query}")
                 return None
-
             photo = data["results"][0]
             cache[query] = photo
             save_cache()
             return photo
-    except Exception as e:
-        print(f"⚠️ Unsplash request error: {e}")
+    except:
         return None
 
 # ========================
@@ -157,9 +153,7 @@ async def search_unsplash(session, query):
 def generate_local_banner(title, theme=None):
     try:
         width, height = 1200, 630
-        
         c1 = theme.get("color1", "#0f172a") if theme else "#0f172a"
-        c2 = theme.get("color2", "#1e3a8a") if theme else "#1e3a8a"
         
         img = Image.new('RGB', (width, height), c1)
         draw = ImageDraw.Draw(img, "RGBA")
@@ -217,9 +211,7 @@ async def search_all_providers(session, query):
     if photo:
         return {"url": photo["urls"]["raw"], "source": "unsplash", "data": photo}
 
-    print(f"🎨 Generando banner local con Pillow para: {query}")
     theme = get_gemini_theme(query)
-    
     return {
         "source": "local_gen",
         "title": query,
@@ -270,47 +262,44 @@ def generate_images(img, base_name, folder):
     return avif, webp, blur
 
 async def fetch_image(session, url):
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-    }
+    headers = {"User-Agent": "Mozilla/5.0"}
     try:
         async with session.get(url, headers=headers, timeout=15) as r:
             if r.status != 200:
-                print(f"⚠️ Falló descarga: {url} (Status: {r.status})")
                 return None
             return await r.read()
-    except Exception as e:
-        print(f"❌ Error descargando {url}: {str(e)}")
+    except:
         return None
 
 async def load_image(session, src, query=None):
+    # 1. Si es remota, se descarga
     if src.startswith("http"):
         data = await fetch_image(session, src)
         if data:
-            try:
-                return Image.open(BytesIO(data))
-            except Exception as e:
-                print(f"❌ Error decodificando remota {src}: {str(e)}")
+            try: return Image.open(BytesIO(data))
+            except: pass
     else:
+        # 2. Si es local, se comprueba si de verdad existe el archivo en disco
         full = os.path.join(ROOT_DIR, src.lstrip("/"))
-        if os.path.exists(full):
-            try:
-                return Image.open(full)
-            except Exception as e:
-                print(f"❌ Error abriendo local {full}: {str(e)}")
+        if os.path.exists(full) and os.path.isfile(full):
+            try: return Image.open(full)
+            except: pass
 
-    if query:
-        result = await search_all_providers(session, query)
-        if result:
-            if result["source"] == "local_gen":
-                return generate_local_banner(result["title"], result["theme"])
-            
-            img_data = await fetch_image(session, result["url"])
-            if img_data:
-                try:
-                    return Image.open(BytesIO(img_data))
-                except Exception as e:
-                    print(f"❌ Error decodificando imagen de proveedor: {str(e)}")
+    # 3. 🚨 PLAN DE RESCATE: Si el archivo no existe o está corrupto, buscamos/generamos uno nuevo
+    print(f"🔍 Archivo ausente o roto ({src}). Activando protocolo de rescate...")
+    
+    # Intentamos buscar usando el texto alternativo (alt) o el nombre del archivo roto limpiado
+    search_term = clean_query(query or os.path.basename(src))
+    result = await search_all_providers(session, search_term)
+    
+    if result:
+        if result["source"] == "local_gen":
+            return generate_local_banner(result["title"], result["theme"])
+        
+        img_data = await fetch_image(session, result["url"])
+        if img_data:
+            try: return Image.open(BytesIO(img_data))
+            except: pass
 
     return cargar_imagen_por_defecto_segura()
 
@@ -318,10 +307,9 @@ async def load_image(session, src, query=None):
 # COVER
 # ========================
 
-async def generate_cover_if_missing(session, base_name):
+async def generate_cover_if_missing(session, base_name, current_folder):
     name = f"{base_name}_cover"
-    
-    expected = os.path.join(IMG_DIR, f"{name}-1200.webp")
+    expected = os.path.join(current_folder, f"{name}-1200.webp")
     if os.path.exists(expected):
         return
 
@@ -343,37 +331,25 @@ async def generate_cover_if_missing(session, base_name):
     if img.mode in ("RGBA", "P"):
         img = img.convert("RGB")
 
-    generate_images(img, name, IMG_DIR)
+    generate_images(img, name, current_folder)
 
 # ========================
-# CONTROL DE IMPORTS COMPATIBLE CON FRONTMATTER ASTRO
+# CONTROL DE IMPORTS
 # ========================
 
 def fix_imports_and_clean(content):
     import_statement = 'import ResponsiveImage from "@components/ResponsiveImage.astro";'
-    
-    # 1. Limpieza absoluta de cualquier rastro viejo o duplicado para evitar ruido en el post
     content = re.sub(r'import\s+ResponsiveImage\s+from\s+["\']@components/ResponsiveImage\.astro["\'];?\n*', '', content)
     
-    # 2. Si el contenido actual está utilizando el componente reactivo
     if "<ResponsiveImage" in content:
-        # Buscamos el cierre de la cabecera (el segundo '---') usando expresiones regulares
-        # El patrón busca el primer bloque encerrado entre guiones altos de Frontmatter
         frontmatter_match = re.search(r'^---\s*\n(.*?)\n---\s*\n', content, re.DOTALL)
-        
         if frontmatter_match:
-            # Capturamos dónde termina exactamente el bloque de la cabecera
             end_of_frontmatter = frontmatter_match.end()
-            
-            # Segmentamos el post e inyectamos el import JUSTO DESPUÉS del cierre de la cabecera
             header = content[:end_of_frontmatter]
             body = content[end_of_frontmatter:]
-            
             return f"{header}{import_statement}\n\n{body}"
         else:
-            # Si por algún motivo el archivo no tuviera cabecera Frontmatter (raro), lo pone arriba
             return f"{import_statement}\n\n{content}"
-            
     return content
 
 # ========================
@@ -385,26 +361,33 @@ async def process_file(session, path):
         content = f.read()
 
     base_name = slugify(os.path.splitext(os.path.basename(path))[0])
-    
-    await generate_cover_if_missing(session, base_name)
-
     md_images = extract_md_images(content)
     fm_image = extract_frontmatter_image(content)
 
-    prefix = "/img"
-    folder = IMG_DIR
+    # Selección dinámica de carpetas según tu criterio de volumen de imágenes
+    if len(md_images) > 1:
+        current_folder = os.path.join(IMG_DIR, base_name)
+        prefix = f"/img/{base_name}"
+    else:
+        current_folder = IMG_DIR
+        prefix = "/img"
 
-    # FRONTMATTER
+    os.makedirs(current_folder, exist_ok=True)
+
+    await generate_cover_if_missing(session, base_name, current_folder)
+
+    # FRONTMATTER COVER
     if fm_image:
         fm_image = fix_broken_url(fm_image)
-        portada_optimizada_existe = os.path.exists(os.path.join(folder, f"{base_name}_cover-1200.webp"))
+        portada_optimizada_existe = os.path.exists(os.path.join(current_folder, f"{base_name}_cover-1200.webp"))
         
         if not portada_optimizada_existe:
-            img = await load_image(session, fm_image, base_name)
+            # Aquí load_image rescatará la portada si la ruta original de la metadata está rota
+            img = await load_image(session, fm_image, query=base_name)
             if img:
                 if img.mode in ("RGBA", "P"):
                     img = img.convert("RGB")
-                _, webp, _ = generate_images(img, f"{base_name}_cover", folder)
+                _, webp, _ = generate_images(img, f"{base_name}_cover", current_folder)
                 if webp:
                     fallback = f"{prefix}/{webp[-1][0]}"
                     content = replace_frontmatter_image(content, fallback)
@@ -418,26 +401,22 @@ async def process_file(session, path):
         src = fix_broken_url(original_src)
         name = f"{base_name}_{i+1}"
         
-        rutas_resoluciones = [os.path.join(folder, f"{name}-{size}.webp") for size in SIZES]
+        rutas_resoluciones = [os.path.join(current_folder, f"{name}-{size}.webp") for size in SIZES]
         archivos_existen = all(os.path.exists(r) for r in rutas_resoluciones)
 
         if not archivos_existen:
-            query = alt or base_name
-            img = await load_image(session, src, query=query)
-
-            if not img:
-                replacement = f"![{alt}]({DEFAULT_IMAGE})"
-                content = content.replace(f"![{alt}]({original_src})", replacement)
-                continue
+            # Mandamos el término de búsqueda 'alt' o el 'base_name' por si la ruta física del mdx está rota
+            query_fallback = alt if alt.strip() else base_name
+            img = await load_image(session, src, query=query_fallback)
 
             if img.mode in ("RGBA", "P"):
                 img = img.convert("RGB")
 
-            avif, webp, blur = generate_images(img, name, folder)
+            avif, webp, blur = generate_images(img, name, current_folder)
         else:
             avif = [(f"{name}-{size}.avif", size) for size in SIZES]
             webp = [(f"{name}-{size}.webp", size) for size in SIZES]
-            blur = "data:image/jpeg;base64,/9j/4AAQSkZJRgApexG..." # Tiny safe string fallback
+            blur = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAAUABQBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA="
 
         component = f'''
 <ResponsiveImage
@@ -451,7 +430,6 @@ async def process_file(session, path):
         content = content.replace(f"![{alt}]({original_src})", component)
         content = content.replace(f"![{alt}]({src})", component)
 
-    # Inyección garantizada respetando las especificaciones de Frontmatter de Astro
     content = fix_imports_and_clean(content)
 
     with open(path, "w", encoding="utf-8") as f:
@@ -473,8 +451,6 @@ async def process_posts():
                         tasks.append(process_file(session, path))
             if tasks:
                 await asyncio.gather(*tasks)
-        else:
-            print(f"⚠️ El directorio no existe: {TARGET_DIR}")
 
     save_cache()
 
