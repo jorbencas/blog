@@ -38,7 +38,11 @@ jobs:
           ls -R public/img || true
           echo "📂 CONTENT:"
           ls -R src/content || true
-
+      - name: Stage generated files
+        run: |
+          git add public/img/
+          git add image_cache.json || true
+          git status
       - name: Commit and Push changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
