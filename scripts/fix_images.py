@@ -9,9 +9,6 @@ from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 import random
 
-# Nota: El plugin 'pillow-avif-plugin' se registra automáticamente en Pillow 
-# al ser importado por el entorno, por lo que no requiere código extra aquí.
-
 # ========================
 # CONFIG
 # ========================
@@ -104,25 +101,6 @@ def replace_frontmatter_image(content, new_value):
         content
     )
 
-def has_responsive_component(content):
-    return "<ResponsiveImage" in content
-
-def add_import_if_needed(content, used):
-    if not used:
-        return content
-    if "ResponsiveImage" in content:
-        return content
-    return f'import ResponsiveImage from "@components/ResponsiveImage.astro";\n\n{content}'
-
-def clean_unused_import(content):
-    if "<ResponsiveImage" in content:
-        return content
-    return re.sub(
-        r'import\s+ResponsiveImage\s+from\s+["\']@components/ResponsiveImage\.astro["\'];?\n?',
-        '',
-        content
-    )
-
 def fix_broken_url(src):
     if src.startswith("/img/http"):
         return src.replace("/img/", "")
@@ -186,19 +164,16 @@ def generate_local_banner(title, theme=None):
         img = Image.new('RGB', (width, height), c1)
         draw = ImageDraw.Draw(img, "RGBA")
         
-        # Grid técnico de fondo
         grid_spacing = 40
         for x in range(0, width, grid_spacing):
             draw.line([(x, 0), (x, height)], fill=(255, 255, 255, 6))
         for y in range(0, height, grid_spacing):
             draw.line([(0, y), (width, y)], fill=(255, 255, 255, 6))
             
-        # Resplandor abstracto
         for r in range(350, 0, -8):
             alpha = int(30 * (1 - r/350))
             draw.ellipse([width-r, height-r, width+r, height+r], fill=(56, 189, 248, alpha))
 
-        # Tipografías del sistema Linux
         font_paths = [
             "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
             "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
@@ -219,7 +194,6 @@ def generate_local_banner(title, theme=None):
         draw.text(((width-tw)/2 + 3, (height-th)/2 + 3), text, font=font, fill=(0, 0, 0, 100))
         draw.text(((width-tw)/2, (height-th)/2), text, font=font, fill="white")
         
-        # Botones estilo ventana IDE
         draw.ellipse([50, 50, 62, 62], fill="#ef4444")
         draw.ellipse([70, 50, 82, 62], fill="#f59e0b")
         draw.ellipse([90, 50, 102, 62], fill="#10b981")
@@ -282,7 +256,6 @@ def generate_images(img, base_name, folder):
 
         webp.append((webp_name, size))
 
-        # El plugin 'pillow-avif-plugin' permite guardar nativamente en AVIF aquí
         try:
             avif_name = f"{base_name}-{size}.avif"
             avif_path = os.path.join(folder, avif_name)
@@ -373,6 +346,23 @@ async def generate_cover_if_missing(session, base_name):
     generate_images(img, name, IMG_DIR)
 
 # ========================
+# CONTROL ABSOLUTO DE IMPORTS
+# ========================
+
+def fix_imports_and_clean(content):
+    import_statement = 'import ResponsiveImage from "@components/ResponsiveImage.astro";'
+    
+    # Limpiamos duplicados antiguos o variaciones mal escritas para no ensuciar
+    content = re.sub(r'import\s+ResponsiveImage\s+from\s+["\']@components/ResponsiveImage\.astro["\'];?\n*', '', content)
+    
+    # Comprobación estricta basada en el contenido actual
+    if "<ResponsiveImage" in content:
+        # Forzamos la inyección limpia en la primerísima línea del post
+        return f"{import_statement}\n\n{content}"
+        
+    return content
+
+# ========================
 # PROCESS FILE
 # ========================
 
@@ -389,12 +379,10 @@ async def process_file(session, path):
 
     prefix = "/img"
     folder = IMG_DIR
-    used_component = False
 
     # FRONTMATTER
     if fm_image:
         fm_image = fix_broken_url(fm_image)
-        
         portada_optimizada_existe = os.path.exists(os.path.join(folder, f"{base_name}_cover-1200.webp"))
         
         if not portada_optimizada_existe:
@@ -416,24 +404,26 @@ async def process_file(session, path):
         src = fix_broken_url(original_src)
         name = f"{base_name}_{i+1}"
         
-        # Comprobación de existencia física previa para ahorrar tiempo
         rutas_resoluciones = [os.path.join(folder, f"{name}-{size}.webp") for size in SIZES]
-        if all(os.path.exists(r) for r in rutas_resoluciones):
-            used_component = True 
-            continue
+        archivos_existen = all(os.path.exists(r) for r in rutas_resoluciones)
 
-        query = alt or base_name
-        img = await load_image(session, src, query=query)
+        if not archivos_existen:
+            query = alt or base_name
+            img = await load_image(session, src, query=query)
 
-        if not img:
-            replacement = f"![{alt}]({DEFAULT_IMAGE})"
-            content = content.replace(f"![{alt}]({original_src})", replacement)
-            continue
+            if not img:
+                replacement = f"![{alt}]({DEFAULT_IMAGE})"
+                content = content.replace(f"![{alt}]({original_src})", replacement)
+                continue
 
-        if img.mode in ("RGBA", "P"):
-            img = img.convert("RGB")
+            if img.mode in ("RGBA", "P"):
+                img = img.convert("RGB")
 
-        avif, webp, blur = generate_images(img, name, folder)
+            avif, webp, blur = generate_images(img, name, folder)
+        else:
+            avif = [(f"{name}-{size}.avif", size) for size in SIZES]
+            webp = [(f"{name}-{size}.webp", size) for size in SIZES]
+            blur = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAAUABQBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA="
 
         component = f'''
 <ResponsiveImage
@@ -444,11 +434,11 @@ async def process_file(session, path):
   blur="{blur}"
 />
 '''
+        content = content.replace(f"![{alt}]({original_src})", component)
         content = content.replace(f"![{alt}]({src})", component)
-        used_component = True
 
-    content = add_import_if_needed(content, used_component)
-    content = clean_unused_import(content)
+    # ESTA ES LA CLAVE: El fix de imports se ejecuta SIEMPRE al final sobre el texto completo antes de guardar
+    content = fix_imports_and_clean(content)
 
     with open(path, "w", encoding="utf-8") as f:
         f.write(content)
