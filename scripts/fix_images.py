@@ -9,12 +9,15 @@ from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 import random
 
+# Nota: El plugin 'pillow-avif-plugin' se registra automáticamente en Pillow 
+# al ser importado por el entorno, por lo que no requiere código extra aquí.
+
 # ========================
 # CONFIG
 # ========================
 
 ACCESS_KEY = os.getenv("UNSPLASH_ACCESS_KEY")
-GEMINI_KEY = os.getenv("GEMINI_API_KEY") # Shared key for AI conceptualization
+GEMINI_KEY = os.getenv("GEMINI_API_KEY")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.dirname(BASE_DIR)
@@ -170,78 +173,77 @@ async def search_unsplash(session, query):
         print(f"⚠️ Unsplash request error: {e}")
         return None
 
+# ========================
+# GENERACIÓN DE BANNER CON PILLOW
+# ========================
 def generate_local_banner(title, theme=None):
     try:
         width, height = 1200, 630
         
-        # Default theme
-        c1 = theme.get("color1", "#1a1a2e") if theme else "#1a1a2e"
-        c2 = theme.get("color2", "#16213e") if theme else "#16213e"
+        c1 = theme.get("color1", "#0f172a") if theme else "#0f172a"
+        c2 = theme.get("color2", "#1e3a8a") if theme else "#1e3a8a"
         
-        # Create gradient background
-        base = Image.new('RGB', (width, height), c1)
-        top = Image.new('RGB', (width, height), c2)
-        mask = Image.new('L', (width, height))
-        for y in range(height):
-            for x in range(width):
-                mask.putpixel((x, y), int(255 * (x / width)))
+        img = Image.new('RGB', (width, height), c1)
+        draw = ImageDraw.Draw(img, "RGBA")
         
-        img = Image.composite(base, top, mask)
-        draw = ImageDraw.Draw(img)
-        
-        # Draw simple tech patterns (dots)
-        for _ in range(200):
-            x, y = random.randint(0, width), random.randint(0, height)
-            draw.ellipse([x, y, x+2, y+2], fill="#ffffff22")
+        # Grid técnico de fondo
+        grid_spacing = 40
+        for x in range(0, width, grid_spacing):
+            draw.line([(x, 0), (x, height)], fill=(255, 255, 255, 6))
+        for y in range(0, height, grid_spacing):
+            draw.line([(0, y), (width, y)], fill=(255, 255, 255, 6))
+            
+        # Resplandor abstracto
+        for r in range(350, 0, -8):
+            alpha = int(30 * (1 - r/350))
+            draw.ellipse([width-r, height-r, width+r, height+r], fill=(56, 189, 248, alpha))
 
-        # Text rendering
-        try:
-            # Preferred fonts on Linux
-            font_paths = [
-                "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-                "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
-                "/usr/share/fonts/TTF/DejaVuSans-Bold.ttf"
-            ]
-            font = None
-            for p in font_paths:
-                if os.path.exists(p):
-                    font = ImageFont.truetype(p, 60)
-                    break
-            if not font:
-                font = ImageFont.load_default()
-        except:
+        # Tipografías del sistema Linux
+        font_paths = [
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+            "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+            "/usr/share/fonts/TTF/DejaVuSans-Bold.ttf"
+        ]
+        font = None
+        for p in font_paths:
+            if os.path.exists(p):
+                font = ImageFont.truetype(p, 52)
+                break
+        if not font:
             font = ImageFont.load_default()
 
-        # Draw centered text
-        text = title.upper()
+        text = title.replace("_", " ").replace("-", " ").upper()
         bbox = draw.textbbox((0, 0), text, font=font)
         tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
+        
+        draw.text(((width-tw)/2 + 3, (height-th)/2 + 3), text, font=font, fill=(0, 0, 0, 100))
         draw.text(((width-tw)/2, (height-th)/2), text, font=font, fill="white")
         
-        # Add branding
-        try:
-            small_font = ImageFont.truetype(font_paths[0], 24) if os.path.exists(font_paths[0]) else font
-            draw.text((50, height-60), "BLOG RETOS", font=small_font, fill="#ffffff88")
-        except:
-            pass
+        # Botones estilo ventana IDE
+        draw.ellipse([50, 50, 62, 62], fill="#ef4444")
+        draw.ellipse([70, 50, 82, 62], fill="#f59e0b")
+        draw.ellipse([90, 50, 102, 62], fill="#10b981")
 
         return img
     except Exception as e:
-        print(f"⚠️ Error generating local banner: {e}")
-        # Final emergency fallback: open default image
-        try:
-            return Image.open(os.path.join(ROOT_DIR, "public", DEFAULT_IMAGE.lstrip("/")))
-        except:
-            return None
+        print(f"⚠️ Error generando banner en Pillow: {e}")
+        return cargar_imagen_por_defecto_segura()
+
+def cargar_imagen_por_defecto_segura():
+    try:
+        ruta_defecto = os.path.join(ROOT_DIR, "public", DEFAULT_IMAGE.lstrip("/"))
+        if os.path.exists(ruta_defecto):
+            return Image.open(ruta_defecto)
+    except:
+        pass
+    return Image.new('RGB', (1200, 630), "#1e293b")
 
 async def search_all_providers(session, query):
-    # 1. Unsplash
     photo = await search_unsplash(session, query)
     if photo:
         return {"url": photo["urls"]["raw"], "source": "unsplash", "data": photo}
 
-    # 2. Local Generation (Conceptualized by Gemini if possible)
-    print(f"🎨 Generating local creative banner for: {query}")
+    print(f"🎨 Generando banner local con Pillow para: {query}")
     theme = get_gemini_theme(query)
     
     return {
@@ -251,20 +253,17 @@ async def search_all_providers(session, query):
     }
 
 # ========================
-# IMAGE
+# IMAGE PROCESSING
 # ========================
 
 def generate_placeholder(img):
     small = img.copy()
     small.thumbnail((20, 20))
-
     buffer = BytesIO()
     small.save(buffer, format="JPEG", quality=30)
-
     return base64.b64encode(buffer.getvalue()).decode()
 
 def generate_images(img, base_name, folder):
-
     avif = []
     webp = []
     blur = generate_placeholder(img)
@@ -275,7 +274,6 @@ def generate_images(img, base_name, folder):
         copy = img.copy()
         copy.thumbnail((size, size))
 
-        # WEBP
         webp_name = f"{base_name}-{size}.webp"
         webp_path = os.path.join(folder, webp_name)
 
@@ -284,7 +282,7 @@ def generate_images(img, base_name, folder):
 
         webp.append((webp_name, size))
 
-        # AVIF (opcional)
+        # El plugin 'pillow-avif-plugin' permite guardar nativamente en AVIF aquí
         try:
             avif_name = f"{base_name}-{size}.avif"
             avif_path = os.path.join(folder, avif_name)
@@ -305,67 +303,56 @@ async def fetch_image(session, url):
     try:
         async with session.get(url, headers=headers, timeout=15) as r:
             if r.status != 200:
-                print(f"⚠️ Failed to fetch image: {url} (Status: {r.status})")
+                print(f"⚠️ Falló descarga: {url} (Status: {r.status})")
                 return None
             return await r.read()
     except Exception as e:
-        print(f"❌ Error fetching {url}: {str(e)}")
+        print(f"❌ Error descargando {url}: {str(e)}")
         return None
 
 async def load_image(session, src, query=None):
-
     if src.startswith("http"):
-
         data = await fetch_image(session, src)
-
         if data:
             try:
                 return Image.open(BytesIO(data))
             except Exception as e:
-                print(f"❌ Error decoding image from {src}: {str(e)}")
-                return None
-
-        if query:
-            result = await search_all_providers(session, query)
-
-            if result:
-                if result["source"] == "local_gen":
-                    return generate_local_banner(result["title"], result["theme"])
-                
-                img_data = await fetch_image(session, result["url"])
-
-                if img_data:
-                    try:
-                        return Image.open(BytesIO(img_data))
-                    except Exception as e:
-                        print(f"❌ Error decoding image from {result['source']}: {str(e)}")
-                        return None
-
+                print(f"❌ Error decodificando remota {src}: {str(e)}")
     else:
         full = os.path.join(ROOT_DIR, src.lstrip("/"))
         if os.path.exists(full):
             try:
                 return Image.open(full)
             except Exception as e:
-                print(f"❌ Error opening local image {full}: {str(e)}")
-                return None
+                print(f"❌ Error abriendo local {full}: {str(e)}")
 
-    return None
+    if query:
+        result = await search_all_providers(session, query)
+        if result:
+            if result["source"] == "local_gen":
+                return generate_local_banner(result["title"], result["theme"])
+            
+            img_data = await fetch_image(session, result["url"])
+            if img_data:
+                try:
+                    return Image.open(BytesIO(img_data))
+                except Exception as e:
+                    print(f"❌ Error decodificando imagen de proveedor: {str(e)}")
+
+    return cargar_imagen_por_defecto_segura()
 
 # ========================
 # COVER
 # ========================
 
 async def generate_cover_if_missing(session, base_name):
-
     name = f"{base_name}_cover"
+    
     expected = os.path.join(IMG_DIR, f"{name}-1200.webp")
-
     if os.path.exists(expected):
         return
 
     query = clean_query(base_name)
-
     result = await search_all_providers(session, query)
 
     if not result:
@@ -376,8 +363,9 @@ async def generate_cover_if_missing(session, base_name):
     else:
         img_data = await fetch_image(session, result["url"])
         if not img_data:
-            return
-        img = Image.open(BytesIO(img_data))
+            img = cargar_imagen_por_defecto_segura()
+        else:
+            img = Image.open(BytesIO(img_data))
 
     if img.mode in ("RGBA", "P"):
         img = img.convert("RGB")
@@ -389,13 +377,11 @@ async def generate_cover_if_missing(session, base_name):
 # ========================
 
 async def process_file(session, path):
-
     with open(path, "r", encoding="utf-8") as f:
         content = f.read()
 
     base_name = slugify(os.path.splitext(os.path.basename(path))[0])
     
-    # We always check the file now to ensure all images (FM and MD) exist.
     await generate_cover_if_missing(session, base_name)
 
     md_images = extract_md_images(content)
@@ -403,45 +389,49 @@ async def process_file(session, path):
 
     prefix = "/img"
     folder = IMG_DIR
-
     used_component = False
 
     # FRONTMATTER
     if fm_image:
         fm_image = fix_broken_url(fm_image)
-        img = await load_image(session, fm_image, base_name)
-
-        if img:
-            if img.mode in ("RGBA", "P"):
-                img = img.convert("RGB")
-
-            _, webp, _ = generate_images(img, f"{base_name}_cover", folder)
-
-            if webp:
-                fallback = f"{prefix}/{webp[-1][0]}"
-                content = replace_frontmatter_image(content, fallback)
+        
+        portada_optimizada_existe = os.path.exists(os.path.join(folder, f"{base_name}_cover-1200.webp"))
+        
+        if not portada_optimizada_existe:
+            img = await load_image(session, fm_image, base_name)
+            if img:
+                if img.mode in ("RGBA", "P"):
+                    img = img.convert("RGB")
+                _, webp, _ = generate_images(img, f"{base_name}_cover", folder)
+                if webp:
+                    fallback = f"{prefix}/{webp[-1][0]}"
+                    content = replace_frontmatter_image(content, fallback)
+            else:
+                content = replace_frontmatter_image(content, DEFAULT_IMAGE)
         else:
-            # Fallback for frontmatter
-            content = replace_frontmatter_image(content, DEFAULT_IMAGE)
+            content = replace_frontmatter_image(content, f"{prefix}/{base_name}_cover-1200.webp")
 
-    # MARKDOWN
+    # MARKDOWN IMAGES
     for i, (alt, original_src) in enumerate(md_images):
-
         src = fix_broken_url(original_src)
+        name = f"{base_name}_{i+1}"
+        
+        # Comprobación de existencia física previa para ahorrar tiempo
+        rutas_resoluciones = [os.path.join(folder, f"{name}-{size}.webp") for size in SIZES]
+        if all(os.path.exists(r) for r in rutas_resoluciones):
+            used_component = True 
+            continue
 
         query = alt or base_name
         img = await load_image(session, src, query=query)
 
         if not img:
-            # If we fixed a broken URL, or if it's completely missing, use the default image
             replacement = f"![{alt}]({DEFAULT_IMAGE})"
             content = content.replace(f"![{alt}]({original_src})", replacement)
             continue
 
         if img.mode in ("RGBA", "P"):
             img = img.convert("RGB")
-
-        name = f"{base_name}_{i+1}"
 
         avif, webp, blur = generate_images(img, name, folder)
 
@@ -454,7 +444,6 @@ async def process_file(session, path):
   blur="{blur}"
 />
 '''
-
         content = content.replace(f"![{alt}]({src})", component)
         used_component = True
 
@@ -469,24 +458,21 @@ async def process_file(session, path):
 # ========================
 
 async def process_posts():
-
     connector = aiohttp.TCPConnector(limit=10)
-
     async with aiohttp.ClientSession(connector=connector) as session:
-
         tasks = []
-
-        for root, _, files in os.walk(TARGET_DIR):
-            for file in files:
-                if file.endswith((".md", ".mdx")):
-                    path = os.path.join(root, file)
-                    tasks.append(process_file(session, path))
-
-        await asyncio.gather(*tasks)
+        if os.path.exists(TARGET_DIR):
+            for root, _, files in os.walk(TARGET_DIR):
+                for file in files:
+                    if file.endswith((".md", ".mdx")):
+                        path = os.path.join(root, file)
+                        tasks.append(process_file(session, path))
+            if tasks:
+                await asyncio.gather(*tasks)
+        else:
+            print(f"⚠️ El directorio no existe: {TARGET_DIR}")
 
     save_cache()
-
-# ========================
 
 if __name__ == "__main__":
     asyncio.run(process_posts())
