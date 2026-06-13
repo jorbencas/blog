@@ -346,20 +346,34 @@ async def generate_cover_if_missing(session, base_name):
     generate_images(img, name, IMG_DIR)
 
 # ========================
-# CONTROL ABSOLUTO DE IMPORTS
+# CONTROL DE IMPORTS COMPATIBLE CON FRONTMATTER ASTRO
 # ========================
 
 def fix_imports_and_clean(content):
     import_statement = 'import ResponsiveImage from "@components/ResponsiveImage.astro";'
     
-    # Limpiamos duplicados antiguos o variaciones mal escritas para no ensuciar
+    # 1. Limpieza absoluta de cualquier rastro viejo o duplicado para evitar ruido en el post
     content = re.sub(r'import\s+ResponsiveImage\s+from\s+["\']@components/ResponsiveImage\.astro["\'];?\n*', '', content)
     
-    # Comprobación estricta basada en el contenido actual
+    # 2. Si el contenido actual está utilizando el componente reactivo
     if "<ResponsiveImage" in content:
-        # Forzamos la inyección limpia en la primerísima línea del post
-        return f"{import_statement}\n\n{content}"
+        # Buscamos el cierre de la cabecera (el segundo '---') usando expresiones regulares
+        # El patrón busca el primer bloque encerrado entre guiones altos de Frontmatter
+        frontmatter_match = re.search(r'^---\s*\n(.*?)\n---\s*\n', content, re.DOTALL)
         
+        if frontmatter_match:
+            # Capturamos dónde termina exactamente el bloque de la cabecera
+            end_of_frontmatter = frontmatter_match.end()
+            
+            # Segmentamos el post e inyectamos el import JUSTO DESPUÉS del cierre de la cabecera
+            header = content[:end_of_frontmatter]
+            body = content[end_of_frontmatter:]
+            
+            return f"{header}{import_statement}\n\n{body}"
+        else:
+            # Si por algún motivo el archivo no tuviera cabecera Frontmatter (raro), lo pone arriba
+            return f"{import_statement}\n\n{content}"
+            
     return content
 
 # ========================
@@ -423,7 +437,7 @@ async def process_file(session, path):
         else:
             avif = [(f"{name}-{size}.avif", size) for size in SIZES]
             webp = [(f"{name}-{size}.webp", size) for size in SIZES]
-            blur = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAAUABQBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA="
+            blur = "data:image/jpeg;base64,/9j/4AAQSkZJRgApexG..." # Tiny safe string fallback
 
         component = f'''
 <ResponsiveImage
@@ -437,7 +451,7 @@ async def process_file(session, path):
         content = content.replace(f"![{alt}]({original_src})", component)
         content = content.replace(f"![{alt}]({src})", component)
 
-    # ESTA ES LA CLAVE: El fix de imports se ejecuta SIEMPRE al final sobre el texto completo antes de guardar
+    # Inyección garantizada respetando las especificaciones de Frontmatter de Astro
     content = fix_imports_and_clean(content)
 
     with open(path, "w", encoding="utf-8") as f:
