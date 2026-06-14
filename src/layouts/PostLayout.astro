@@ -39,10 +39,10 @@ const {
   audioSrc,
 } = Astro.props;
 
-let imagenLimpia = image || "/img/default.jpg";
-if (!imagenLimpia.startsWith("/") && !imagenLimpia.startsWith("http")) {
-  imagenLimpia = `/${imagenLimpia}`;
-}
+// let imagenLimpia = image || "/img/default.jpg";
+// if (!imagenLimpia.startsWith("/") && !imagenLimpia.startsWith("http")) {
+//   imagenLimpia = `/${imagenLimpia}`;
+// }
 
 const allPosts = await getCollection("posts");
 const sortedPosts = await getSortedPosts(allPosts);
@@ -75,12 +75,7 @@ const tagsArray = Array.isArray(tags)
   : [];
 ---
 
-<Layout
-  title={title}
-  description={description}
-  tags={tagsArray}
-  image={imagenLimpia}
->
+<Layout title={title} description={description} tags={tagsArray} image={image}>
   <ReadingProgress />
   <div
     class="max-w-screen-xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 py-10 font-sans"
