@@ -1,6 +1,5 @@
 ---
 import { getCollection, render } from "astro:content";
-import SEO from "@components/SEO.astro";
 import PostLayout from "@layouts/PostLayout.astro";
 export async function getStaticPaths() {
   const posts = await getCollection("posts");
@@ -15,7 +14,7 @@ const { Content, headings, remarkPluginFrontmatter } = await render(post);
 const { title, description, tags, author, image, pubDate, audioSrc } =
   post.data;
 
-let imagenLimpia = image || "/img/default.jpg";
+let imagenLimpia = image;
 if (!imagenLimpia.startsWith("/") && !imagenLimpia.startsWith("http")) {
   imagenLimpia = `/${imagenLimpia}`;
 }
