@@ -11,11 +11,6 @@ interface Props {
 
 const { title, description, tags = [], image, pubDate, author } = Astro.props;
 
-let imagenLimpia = image || "/img/default.jpg";
-if (!imagenLimpia.startsWith("/") && !imagenLimpia.startsWith("http")) {
-  imagenLimpia = `/${imagenLimpia}`;
-}
-
 // Obtenemos la URL de la página actual de forma nativa con Astro
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 
@@ -55,7 +50,7 @@ const jsonLD = {
 <meta property="og:url" content={canonicalURL} />
 <meta property="og:title" content={title} />
 <meta property="og:description" content={description} />
-<meta property="og:image" content={imagenLimpia} />
+<meta property="og:image" content={image} />
 
 <!-- Tus etiquetas de artículo (¡Tu lógica perfecta!) -->
 {tags.map((tag) => <meta property="article:tag" content={tag} />)}
@@ -65,7 +60,7 @@ const jsonLD = {
 <meta property="twitter:url" content={canonicalURL} />
 <meta property="twitter:title" content={title} />
 <meta property="twitter:description" content={description} />
-<meta property="twitter:image" content={imagenLimpia} />
+<meta property="twitter:image" content={image} />
 
 <!-- Insertamos el JSON-LD de forma segura en el HTML -->
 <script type="application/ld+json" set:html={JSON.stringify(jsonLD)} />
