@@ -13,11 +13,6 @@ const { post } = Astro.props;
 const { Content, headings, remarkPluginFrontmatter } = await render(post);
 const { title, description, tags, author, image, pubDate, audioSrc } =
   post.data;
-
-let imagenLimpia = image;
-if (!imagenLimpia.startsWith("/") && !imagenLimpia.startsWith("http")) {
-  imagenLimpia = `/${imagenLimpia}`;
-}
 ---
 
 <PostLayout
@@ -26,7 +21,7 @@ if (!imagenLimpia.startsWith("/") && !imagenLimpia.startsWith("http")) {
   description={description}
   tags={tags ?? []}
   author={author}
-  image={imagenLimpia}
+  image={image}
   pubDate={pubDate}
   headings={headings}
   remarkPluginFrontmatter={remarkPluginFrontmatter}
