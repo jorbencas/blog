@@ -3,7 +3,7 @@ import json
 import asyncio
 import aiohttp
 import base64
-import unicenedata
+import unicodedata
 import hashlib
 import shutil
 import subprocess
@@ -180,7 +180,7 @@ def clean_query(text):
     return " ".join([w for w in words if w.lower() not in ["guia", "tutorial", "como", "de", "para", "en"] and len(w) > 2])
 
 def slugify(text):
-    text = unicenedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('ascii')
+    text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('ascii')
     return re.sub(r'[\W_]+', '_', text.lower()).strip('_')
 
 def build_srcset(images, prefix):
