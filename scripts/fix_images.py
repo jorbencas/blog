@@ -1,53 +1,152 @@
-import os
 import re
 import json
 import asyncio
 import aiohttp
 import base64
-import unicodedata
+import unicenedata
+import hashlib
+import shutil
+import subprocess
+from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 import random
 
-# ========================
-# CONFIG
-# ========================
+# Verificación de soporte AVIF
+try:
+    import pillow_avif
+except ImportError:
+    pillow_avif = None
 
-ACCESS_KEY = os.getenv("UNSPLASH_ACCESS_KEY")
-GEMINI_KEY = os.getenv("GEMINI_API_KEY")
+# ==============================================================================
+# CONFIGURACIÓN FUSIONADA
+# ==============================================================================
+ACCESS_KEY = __import__('os').getenv("UNSPLASH_ACCESS_KEY")
+GEMINI_KEY = __import__('os').getenv("GEMINI_API_KEY")
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-ROOT_DIR = os.path.dirname(BASE_DIR)
+BASE_DIR = Path(__file__).resolve().parent
+ROOT_DIR = BASE_DIR.parent
 
-TARGET_DIR = os.path.join(ROOT_DIR, "src", "content")
-IMG_DIR = os.path.join(ROOT_DIR, "public", "img")
-
-CACHE_FILE = os.path.join(ROOT_DIR, "image_cache.json")
+TARGET_DIR = ROOT_DIR / "src" / "content"
+IMG_DIR = ROOT_DIR / "public" / "img"
+CACHE_FILE = ROOT_DIR / "image_cache.json"
 
 SIZES = [480, 768, 1200]
 DEFAULT_IMAGE = "/img/default.jpg"
 
-os.makedirs(IMG_DIR, exist_ok=True)
+# Parámetros Algorítmicos de optimize.py
+SSIM_THRESHOLD = 0.98      # Identidad perceptiva humana
+QUALITY_START = 85
+QUALITY_MIN = 50
+QUALITY_STEP = 5
+WEBP_METHOD = 6            # Máxima compresión por fuerza bruta en WebP
 
-# ========================
-# CACHE
-# ========================
+IMG_DIR.mkdir(parents=True, exist_ok=True)
 
+# ==============================================================================
+# SISTEMA DE CACHÉ
+# ==============================================================================
 try:
-    with open(CACHE_FILE, "r") as f:
+    with open(CACHE_FILE, "r", encoding="utf-8") as f:
         cache = json.load(f)
 except:
     cache = {}
 
 def save_cache():
-    with open(CACHE_FILE, "w") as f:
-        json.dump(cache, f, indent=2)
+    with open(CACHE_FILE, "w", encoding="utf-8") as f:
+        json.dump(cache, f, indent=2, ensure_ascii=False)
 
-# ========================
-# GEMINI (Optional)
-# ========================
+# ==============================================================================
+# ALGORITMO SSIM (Structural Similarity Index)
+# ==============================================================================
+def _channel_stats(pixels_a, pixels_b, width, height):
+    n = width * height
+    if n == 0: return 0, 0, 0, 0, 0
+    sum_a = sum_b = sum_aa = sum_bb = sum_ab = 0
+    for i in range(n):
+        a, b = pixels_a[i], pixels_b[i]
+        sum_a += a; sum_b += b
+        sum_aa += a*a; sum_bb += b*b
+        sum_ab += a*b
+    m_a, m_b = sum_a/n, sum_b/n
+    var_a = max((sum_aa/n) - (m_a**2), 0)
+    var_b = max((sum_bb/n) - (m_b**2), 0)
+    cov_ab = (sum_ab/n) - (m_a*m_b)
+    return m_a, m_b, var_a, var_b, cov_ab
 
-def get_gemini_theme(query):
+def compute_ssim(img1, img2):
+    C1, C2 = (0.01*255)**2, (0.03*255)**2
+    t_size = (160, 160)
+    a = img1.convert("L").resize(t_size, Image.LANCZOS)
+    b = img2.convert("L").resize(t_size, Image.LANCZOS)
+    px_a, px_b = list(a.tobytes()), list(b.tobytes())
+    m_a, m_b, v_a, v_b, c_ab = _channel_stats(px_a, px_b, 160, 160)
+    num = (2*m_a*m_b + C1) * (2*c_ab + C2)
+    den = (m_a**2 + m_b**2 + C1) * (v_a + v_b + C2)
+    return num/den if den != 0 else 1.0
+
+def find_optimal_quality(original, save_func, start=QUALITY_START, min_q=QUALITY_MIN):
+    best_q = start
+    for q in range(start, min_q - 1, -QUALITY_STEP):
+        compressed = save_func(q)
+        if compute_ssim(original, compressed) >= SSIM_THRESHOLD:
+            best_q = q
+        else:
+            break
+    return best_q
+
+# ==============================================================================
+# PREPARACIÓN DE IMAGEN (STRIP & CONSTRAIN)
+# ==============================================================================
+def strip_metadata(img):
+    clean = Image.new(img.mode, img.size)
+    clean.paste(img)
+    return clean
+
+def constrain_size(img, max_width=1200):
+    if img.width > max_width:
+        ratio = max_width / img.width
+        img = img.resize((max_width, int(img.height * ratio)), Image.LANCZOS)
+    return img
+
+# ==============================================================================
+# OPERACIONES COMPLEMENTARIAS (GIF / SVG)
+# ==============================================================================
+def process_gif_fallback(input_path, out_dir, base_name):
+    """Convierte un GIF a formatos de vídeo modernos optimizados para la web."""
+    out_mp4 = out_dir / f"{base_name}.mp4"
+    out_webm = out_dir / f"{base_name}.webm"
+    
+    if not out_mp4.exists():
+        subprocess.run([
+            "ffmpeg", "-y", "-i", str(input_path),
+            "-movflags", "faststart", "-pix_fmt", "yuv420p",
+            "-vf", "scale='trunc(iw/2)*2:trunc(ih/2)*2'",
+            "-c:v", "libx264", "-crf", "23", "-an", str(out_mp4)
+        ], capture_output=True)
+        
+    if not out_webm.exists():
+        subprocess.run([
+            "ffmpeg", "-y", "-i", str(input_path),
+            "-c:v", "libvpx-vp9", "-crf", "30", "-b:v", "0", "-an", str(out_webm)
+        ], capture_output=True)
+        
+    shutil.copy2(input_path, out_dir / f"{base_name}.gif")
+
+def process_svg_fallback(input_path, out_dir, filename):
+    """Minifica código SVG eliminando metadatos irrelevantes de diseño."""
+    out_path = out_dir / filename
+    with open(input_path, "r", encoding="utf-8", errors="ignore") as f:
+        content = f.read()
+    content = re.sub(r"", "", content, flags=re.DOTALL)
+    content = re.sub(r"\s+", " ", content).strip()
+    with open(out_path, "w", encoding="utf-8") as f:
+        f.write(content)
+
+# ==============================================================================
+# IA EDITORIAL (GEMINI CONTEXT)
+# ==============================================================================
+def get_gemini_tech_context(title, content_snippet=""):
     if not GEMINI_KEY:
         return None
     try:
@@ -56,402 +155,261 @@ def get_gemini_theme(query):
         model = genai.GenerativeModel('gemini-1.5-flash')
         
         prompt = f"""
-        Define a visual tech theme for a blog post titled "{query}".
-        Provide only a JSON with:
+        Analiza este artículo de blog tecnológico. Título: "{title}". Fragmento: "{content_snippet[:400]}"
+        Devuelve estrictamente un objeto JSON válido con la siguiente estructura:
         {{
-          "color1": "CSS Hex color (dark)",
-          "color2": "CSS Hex color (vibrant)",
-          "concept": "One word tech concept (e.g. circuit, code, neural)"
+          "color_bg": "Un color hexadecimal CSS muy oscuro adecuado para fondo de IDE (ej: #0d1117, #0f141c)",
+          "color_accent": "Un color hexadecimal vibrante neón tipo sintaxis (ej: #00f2fe, #38bdf8)",
+          "keywords": ["3 palabras clave tecnológicas"],
+          "mock_filename": "Un nombre de archivo simulado (ej: index.tsx, server.js, deploy.yaml)",
+          "tech_stack": "Nombre de la tecnología principal en mayúsculas (ej: ASTRO, REACT, DOCKER)"
         }}
         """
         response = model.generate_content(prompt)
         match = re.search(r'(\{.*\})', response.text, re.DOTALL)
-        if match:
-            return json.loads(match.group(1))
+        if match: return json.loads(match.group(1))
     except:
         pass
     return None
 
-# ========================
-# HELPERS
-# ========================
-
-STOPWORDS = ["guia", "tutorial", "como", "ejemplo", "simple", "introduccion", "png", "jpg", "jpeg", "webp"]
-
+# ==============================================================================
+# AUXILIARES DE TEXTO
+# ==============================================================================
 def clean_query(text):
-    # Reemplaza guiones y barras para limpiar nombres de archivos rotos
-    text = text.replace("/", "_").replace("\\", "_").replace("-", "_")
-    words = text.split("_")
-    words = [w for w in words if w not in STOPWORDS and len(w) > 2]
-    return " ".join(words)
+    words = text.replace("/", "_").replace("\\", "_").replace("-", "_").split("_")
+    return " ".join([w for w in words if w.lower() not in ["guia", "tutorial", "como", "de", "para", "en"] and len(w) > 2])
 
 def slugify(text):
-    text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('ascii')
+    text = unicenedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('ascii')
     return re.sub(r'[\W_]+', '_', text.lower()).strip('_')
-
-def extract_md_images(content):
-    return re.findall(r'!\[(.*?)\]\((.*?)\)', content)
-
-def extract_frontmatter_image(content):
-    match = re.search(r'image:\s*["\']?(.*?)["\']?\n', content)
-    return match.group(1).strip() if match else None
-
-def replace_frontmatter_image(content, new_value):
-    return re.sub(
-        r'image:\s*["\']?(.*?)["\']?\n',
-        f'image: "{new_value}"\n',
-        content
-    )
-
-def fix_broken_url(src):
-    if src.startswith("/img/http"):
-        return src.replace("/img/", "")
-    return src
 
 def build_srcset(images, prefix):
     return ", ".join([f"{prefix}/{n} {s}w" for n, s in images])
 
-# ========================
-# UNSPLASH
-# ========================
-
 async def search_unsplash(session, query):
-    if not ACCESS_KEY or not query.strip():
-        return None
-
-    if query in cache:
-        return cache[query]
-
+    if not ACCESS_KEY or not query.strip(): return None
+    if query in cache: return cache[query]
     url = "https://api.unsplash.com/search/photos"
-    params = {
-        "query": query,
-        "per_page": 1,
-        "orientation": "landscape"
-    }
-    headers = {
-        "Authorization": f"Client-ID {ACCESS_KEY}",
-        "User-Agent": "AstroBlogImageFixer/1.0"
-    }
-
+    params = {"query": query + " technology code abstract", "per_page": 1, "orientation": "landscape"}
+    headers = {"Authorization": f"Client-ID {ACCESS_KEY}"}
     try:
         async with session.get(url, params=params, headers=headers) as r:
-            if r.status != 200:
-                return None
+            if r.status != 200: return None
             data = await r.json()
-            if not data["results"]:
-                return None
+            if not data["results"]: return None
             photo = data["results"][0]
-            cache[query] = photo
-            save_cache()
+            cache[query] = photo; save_cache()
             return photo
-    except:
-        return None
+    except: return None
 
-# ========================
-# GENERACIÓN DE BANNER CON PILLOW
-# ========================
-def generate_local_banner(title, theme=None):
+# ==============================================================================
+# MOTOR GRÁFICO (IDE VECTOR CANVAS)
+# ==============================================================================
+def generate_local_banner(title, tech_context=None):
     try:
         width, height = 1200, 630
-        c1 = theme.get("color1", "#0f172a") if theme else "#0f172a"
+        ctx = tech_context or {}
+        bg_dark = ctx.get("color_bg", "#0f141c")
+        accent = ctx.get("color_accent", "#00f2fe")
+        mock_file = ctx.get("mock_filename", "main.tsx")
+        tech_label = ctx.get("tech_stack", "DEV WORKSPACE")
+        keywords = ctx.get("keywords", ["code", "system"])
         
-        img = Image.new('RGB', (width, height), c1)
+        img = Image.new('RGB', (width, height), bg_dark)
         draw = ImageDraw.Draw(img, "RGBA")
         
-        grid_spacing = 40
-        for x in range(0, width, grid_spacing):
-            draw.line([(x, 0), (x, height)], fill=(255, 255, 255, 6))
-        for y in range(0, height, grid_spacing):
-            draw.line([(0, y), (width, y)], fill=(255, 255, 255, 6))
-            
-        for r in range(350, 0, -8):
-            alpha = int(30 * (1 - r/350))
-            draw.ellipse([width-r, height-r, width+r, height+r], fill=(56, 189, 248, alpha))
+        for i in range(width):
+            alpha = int(40 * (i / width))
+            r_a, g_a, b_a = int(accent[1:3],16), int(accent[3:5],16), int(accent[5:7],16)
+            draw.line([(i, 0), (i, height)], fill=(r_a, g_a, b_a, alpha))
 
-        font_paths = [
-            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-            "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
-            "/usr/share/fonts/TTF/DejaVuSans-Bold.ttf"
-        ]
-        font = None
+        grid_size = 40
+        for x in range(0, width, grid_size): draw.line([(x, 0), (x, height)], fill=(255, 255, 255, 5))
+        for y in range(0, height, grid_size): draw.line([(0, y), (width, y)], fill=(255, 255, 255, 5))
+
+        random.seed(title)
+        syntax_colors = [(56, 189, 248, 25), (244, 63, 94, 25), (52, 211, 153, 25)]
+        for line_idx in range(12):
+            y_pos = 140 + (line_idx * 32)
+            indent = random.choice([60, 90, 120])
+            block_len = random.randint(80, 300)
+            draw.rounded_rectangle([indent, y_pos, indent + block_len, y_pos + 12], radius=4, fill=random.choice(syntax_colors))
+
+        draw.ellipse([45, 45, 59, 59], fill="#ff5f56")
+        draw.ellipse([67, 45, 81, 59], fill="#ffbd2e")
+        draw.ellipse([89, 45, 103, 59], fill="#27c93f")
+
+        font_paths = ["/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", "C:\\Windows\\Fonts\\arialbd.ttf"]
+        font_main = font_sub = font_tag = None
         for p in font_paths:
-            if os.path.exists(p):
-                font = ImageFont.truetype(p, 52)
+            if Path(p).exists():
+                font_main = ImageFont.truetype(p, 52); font_sub = ImageFont.truetype(p, 18); font_tag = ImageFont.truetype(p, 14)
                 break
-        if not font:
-            font = ImageFont.load_default()
+        if not font_main:
+            font_main = font_sub = font_tag = ImageFont.load_default()
 
-        text = title.replace("_", " ").replace("-", " ").upper()
-        bbox = draw.textbbox((0, 0), text, font=font)
-        tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
-        
-        draw.text(((width-tw)/2 + 3, (height-th)/2 + 3), text, font=font, fill=(0, 0, 0, 100))
-        draw.text(((width-tw)/2, (height-th)/2), text, font=font, fill="white")
-        
-        draw.ellipse([50, 50, 62, 62], fill="#ef4444")
-        draw.ellipse([70, 50, 82, 62], fill="#f59e0b")
-        draw.ellipse([90, 50, 102, 62], fill="#10b981")
+        draw.text((130, 43), f"~/projects/blog/src/content/posts/{mock_file}", font=font_sub, fill=(255, 255, 255, 90))
+        draw.rounded_rectangle([width - 250, 38, width - 60, 70], radius=6, fill=(255, 255, 255, 15), outline=accent, width=1)
+        draw.text((width - 235, 46), tech_label, font=font_tag, fill=accent)
 
+        clean_title = title.replace("_", " ").replace("-", " ").upper()
+        words = clean_title.split()
+        lines, curr_line = [], []
+        for word in words:
+            curr_line.append(word)
+            if (draw.textbbox((0, 0), " ".join(curr_line), font=font_main)[2]) > 850:
+                curr_line.pop(); lines.append(" ".join(curr_line)); curr_line = [word]
+        if curr_line: lines.append(" ".join(curr_line))
+
+        y_offset = (height - (len(lines) * 65)) / 2 + 20
+        for line in lines:
+            tw = draw.textbbox((0, 0), line, font=font_main)[2]
+            draw.text(((width - tw) / 2 + 4, y_offset + 4), line, font=font_main, fill=(0, 0, 0, 160))
+            draw.text(((width - tw) / 2, y_offset), line, font=font_main, fill="#ffffff")
+            y_offset += 70
+
+        x_tag_offset = 60
+        for kw in keywords:
+            draw.text((x_tag_offset, height - 50), f"#{kw.lower()}", font=font_sub, fill=(255, 255, 255, 120))
+            x_tag_offset += 200
+
+        draw.rectangle([0, height - 10, width, height], fill=accent)
         return img
     except Exception as e:
-        print(f"⚠️ Error generando banner en Pillow: {e}")
-        return cargar_imagen_por_defecto_segura()
+        print(f"⚠️ Error en canvas: {e}")
+        return Image.new('RGB', (1200, 630), "#0f172a")
 
-def cargar_imagen_por_defecto_segura():
-    try:
-        ruta_defecto = os.path.join(ROOT_DIR, "public", DEFAULT_IMAGE.lstrip("/"))
-        if os.path.exists(ruta_defecto):
-            return Image.open(ruta_defecto)
-    except:
-        pass
-    return Image.new('RGB', (1200, 630), "#1e293b")
-
-async def search_all_providers(session, query):
-    photo = await search_unsplash(session, query)
-    if photo:
-        return {"url": photo["urls"]["raw"], "source": "unsplash", "data": photo}
-
-    theme = get_gemini_theme(query)
-    return {
-        "source": "local_gen",
-        "title": query,
-        "theme": theme
-    }
-
-# ========================
-# IMAGE PROCESSING
-# ========================
-
-def generate_placeholder(img):
-    small = img.copy()
-    small.thumbnail((20, 20))
-    buffer = BytesIO()
-    small.save(buffer, format="JPEG", quality=30)
-    return base64.b64encode(buffer.getvalue()).decode()
-
-def generate_images(img, base_name, folder):
-    avif = []
-    webp = []
+# ==============================================================================
+# PIPELINE DE COMPRESIÓN AVANZADA CON SSIM AUTOMÁTICO
+# ==============================================================================
+def compress_and_save_adaptive(img, base_name, folder):
+    avif, webp = [], []
     blur = generate_placeholder(img)
+    folder.mkdir(parents=True, exist_ok=True)
 
-    os.makedirs(folder, exist_ok=True)
+    img = constrain_size(img)
+    img = strip_metadata(img)
 
     for size in SIZES:
         copy = img.copy()
         copy.thumbnail((size, size))
+        
+        # 1. Compresión Adaptativa WebP vía SSIM
+        w_name = f"{base_name}-{size}.webp"
+        w_path = folder / w_name
+        if not w_path.exists():
+            def save_webp_test(q):
+                copy.save(w_path, "WEBP", quality=q, method=WEBP_METHOD)
+                return Image.open(w_path)
+            opt_q = find_optimal_quality(copy, save_webp_test)
+            copy.save(w_path, "WEBP", quality=opt_q, method=WEBP_METHOD)
+        webp.append((w_name, size))
 
-        webp_name = f"{base_name}-{size}.webp"
-        webp_path = os.path.join(folder, webp_name)
-
-        if not os.path.exists(webp_path):
-            copy.save(webp_path, "WEBP", quality=80)
-
-        webp.append((webp_name, size))
-
-        try:
-            avif_name = f"{base_name}-{size}.avif"
-            avif_path = os.path.join(folder, avif_name)
-
-            if not os.path.exists(avif_path):
-                copy.save(avif_path, "AVIF", quality=50)
-
-            avif.append((avif_name, size))
-        except:
-            pass
+        # 2. Compresión Adaptativa AVIF vía SSIM (Si está disponible)
+        if pillow_avif:
+            a_name = f"{base_name}-{size}.avif"
+            a_path = folder / a_name
+            if not a_path.exists():
+                def save_avif_test(q):
+                    copy.save(a_path, "AVIF", quality=q, speed=6)
+                    return Image.open(a_path)
+                opt_a = find_optimal_quality(copy, save_avif_test)
+                copy.save(a_path, "AVIF", quality=opt_a, speed=6)
+            avif.append((a_name, size))
 
     return avif, webp, blur
 
-async def fetch_image(session, url):
-    headers = {"User-Agent": "Mozilla/5.0"}
-    try:
-        async with session.get(url, headers=headers, timeout=15) as r:
-            if r.status != 200:
-                return None
-            return await r.read()
-    except:
-        return None
-
-async def load_image(session, src, query=None):
-    # 1. Si es remota, se descarga
-    if src.startswith("http"):
-        data = await fetch_image(session, src)
-        if data:
-            try: return Image.open(BytesIO(data))
-            except: pass
-    else:
-        # 2. Si es local, se comprueba si de verdad existe el archivo en disco
-        full = os.path.join(ROOT_DIR, src.lstrip("/"))
-        if os.path.exists(full) and os.path.isfile(full):
-            try: return Image.open(full)
-            except: pass
-
-    # 3. 🚨 PLAN DE RESCATE: Si el archivo no existe o está corrupto, buscamos/generamos uno nuevo
-    print(f"🔍 Archivo ausente o roto ({src}). Activando protocolo de rescate...")
-    
-    # Intentamos buscar usando el texto alternativo (alt) o el nombre del archivo roto limpiado
-    search_term = clean_query(query or os.path.basename(src))
-    result = await search_all_providers(session, search_term)
-    
-    if result:
-        if result["source"] == "local_gen":
-            return generate_local_banner(result["title"], result["theme"])
-        
-        img_data = await fetch_image(session, result["url"])
-        if img_data:
-            try: return Image.open(BytesIO(img_data))
-            except: pass
-
-    return cargar_imagen_por_defecto_segura()
-
-# ========================
-# COVER
-# ========================
-
-async def generate_cover_if_missing(session, base_name, current_folder):
-    name = f"{base_name}_cover"
-    expected = os.path.join(current_folder, f"{name}-1200.webp")
-    if os.path.exists(expected):
-        return
-
-    query = clean_query(base_name)
-    result = await search_all_providers(session, query)
-
-    if not result:
-        return
-
-    if result["source"] == "local_gen":
-        img = generate_local_banner(result["title"], result["theme"])
-    else:
-        img_data = await fetch_image(session, result["url"])
-        if not img_data:
-            img = cargar_imagen_por_defecto_segura()
-        else:
-            img = Image.open(BytesIO(img_data))
-
-    if img.mode in ("RGBA", "P"):
-        img = img.convert("RGB")
-
-    generate_images(img, name, current_folder)
-
-# ========================
-# CONTROL DE IMPORTS
-# ========================
-
-def fix_imports_and_clean(content):
-    import_statement = 'import ResponsiveImage from "@components/ResponsiveImage.astro";'
-    content = re.sub(r'import\s+ResponsiveImage\s+from\s+["\']@components/ResponsiveImage\.astro["\'];?\n*', '', content)
-    
-    if "<ResponsiveImage" in content:
-        frontmatter_match = re.search(r'^---\s*\n(.*?)\n---\s*\n', content, re.DOTALL)
-        if frontmatter_match:
-            end_of_frontmatter = frontmatter_match.end()
-            header = content[:end_of_frontmatter]
-            body = content[end_of_frontmatter:]
-            return f"{header}{import_statement}\n\n{body}"
-        else:
-            return f"{import_statement}\n\n{content}"
-    return content
-
-# ========================
-# PROCESS FILE
-# ========================
-
+# ==============================================================================
+# PROCESAMIENTO DE ARCHIVOS INDIVIDUALES
+# ==============================================================================
 async def process_file(session, path):
     with open(path, "r", encoding="utf-8") as f:
         content = f.read()
 
-    base_name = slugify(os.path.splitext(os.path.basename(path))[0])
-    md_images = extract_md_images(content)
-    fm_image = extract_frontmatter_image(content)
+    base_name = slugify(path.stem)
+    md_images = re.findall(r'!\[(.*?)\]\((.*?)\)', content)
+    fm_image = re.search(r'image:\s*["\']?(.*?)["\']?\n', content)
+    fm_image = fm_image.group(1).strip() if fm_image else None
 
-    # Selección dinámica de carpetas según tu criterio de volumen de imágenes
-    if len(md_images) > 1:
-        current_folder = os.path.join(IMG_DIR, base_name)
-        prefix = f"/img/{base_name}"
-    else:
-        current_folder = IMG_DIR
-        prefix = "/img"
+    current_folder = (IMG_DIR / base_name) if len(md_images) > 1 else IMG_DIR
+    current_folder.mkdir(parents=True, exist_ok=True)
 
-    os.makedirs(current_folder, exist_ok=True)
-
-    await generate_cover_if_missing(session, base_name, current_folder)
-
-    # FRONTMATTER COVER
+    # Resolución adaptativa de portadas
     if fm_image:
-        fm_image = fix_broken_url(fm_image)
-        portada_optimizada_existe = os.path.exists(os.path.join(current_folder, f"{base_name}_cover-1200.webp"))
-        
-        if not portada_optimizada_existe:
-            # Aquí load_image rescatará la portada si la ruta original de la metadata está rota
-            img = await load_image(session, fm_image, query=base_name)
-            if img:
-                if img.mode in ("RGBA", "P"):
-                    img = img.convert("RGB")
-                _, webp, _ = generate_images(img, f"{base_name}_cover", current_folder)
-                if webp:
-                    fallback = f"{prefix}/{webp[-1][0]}"
-                    content = replace_frontmatter_image(content, fallback)
+        portada_existe = (current_folder / f"{base_name}_cover-1200.webp").exists()
+        if not portada_existe:
+            res = await search_all_providers(session, base_name, content)
+            if res["source"] == "local_gen":
+                img = generate_local_banner(res["title"], res["theme"])
             else:
-                content = replace_frontmatter_image(content, DEFAULT_IMAGE)
-        else:
-            content = replace_frontmatter_image(content, f"{prefix}/{base_name}_cover-1200.webp")
+                async with session.get(res["url"], headers={"User-Agent": "Mozilla"}) as r:
+                    img = Image.open(BytesIO(await r.read())) if r.status == 200 else Image.new('RGB', (1200,630), "#0f141c")
+            
+            if img.mode in ("RGBA", "P"): img = img.convert("RGB")
+            _, webp, _ = compress_and_save_adaptive(img, f"{base_name}_cover", current_folder)
+            if webp:
+                content = re.sub(r'image:\s*["\']?(.*?)["\']?\n', f'image: "{current_folder.name}/{webp[-1][0]}"\n', content)
 
-    # MARKDOWN IMAGES
+    # Inyección y mutación inteligente del cuerpo Markdown
     for i, (alt, original_src) in enumerate(md_images):
-        src = fix_broken_url(original_src)
         name = f"{base_name}_{i+1}"
+        ext = original_src.lower().split(".")[-1]
         
-        rutas_resoluciones = [os.path.join(current_folder, f"{name}-{size}.webp") for size in SIZES]
-        archivos_existen = all(os.path.exists(r) for r in rutas_resoluciones)
+        # Intercepción de formatos alternativos de optimize.py
+        if ext == "gif":
+            process_gif_fallback(ROOT_DIR / original_src.lstrip("/"), current_folder, name)
+            continue
+        elif ext == "svg":
+            process_svg_fallback(ROOT_DIR / original_src.lstrip("/"), current_folder, f"{name}.svg")
+            continue
 
+        archivos_existen = all((current_folder / f"{name}-{s}.webp").exists() for s in SIZES)
         if not archivos_existen:
-            # Mandamos el término de búsqueda 'alt' o el 'base_name' por si la ruta física del mdx está rota
-            query_fallback = alt if alt.strip() else base_name
-            img = await load_image(session, src, query=query_fallback)
+            full_local_path = ROOT_DIR / original_src.lstrip("/")
+            if full_local_path.exists() and full_local_path.is_file():
+                img = Image.open(full_local_path)
+            else:
+                res = await search_all_providers(session, alt if alt.strip() else base_name, content)
+                async with session.get(res["url"], headers={"User-Agent": "Mozilla"}) as r:
+                    img = Image.open(BytesIO(await r.read())) if r.status == 200 else Image.new('RGB', (1200,630), "#0f141c")
 
-            if img.mode in ("RGBA", "P"):
-                img = img.convert("RGB")
-
-            avif, webp, blur = generate_images(img, name, current_folder)
+            if img.mode in ("RGBA", "P"): img = img.convert("RGB")
+            avif, webp, blur = compress_and_save_adaptive(img, name, current_folder)
         else:
             avif = [(f"{name}-{size}.avif", size) for size in SIZES]
             webp = [(f"{name}-{size}.webp", size) for size in SIZES]
-            blur = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAAUABQBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA="
+            blur = "data:image/jpeg;base64,/9j/4AAQSkZJRgA="
 
-        component = f'''
-<ResponsiveImage
-  avif="{build_srcset(avif, prefix)}"
-  webp="{build_srcset(webp, prefix)}"
-  fallback="{prefix}/{webp[-1][0]}"
-  alt="{alt}"
-  blur="{blur}"
-/>
-'''
+        prefix = f"/img/{base_name}" if len(md_images) > 1 else "/img"
+        component = f'<ResponsiveImage avif="{build_srcset(avif, prefix)}" webp="{build_srcset(webp, prefix)}" fallback="{prefix}/{webp[-1][0]}" alt="{alt}" blur="{blur}" />'
         content = content.replace(f"![{alt}]({original_src})", component)
-        content = content.replace(f"![{alt}]({src})", component)
 
-    content = fix_imports_and_clean(content)
+    # Inyección limpia del componente Astro
+    import_stmt = 'import ResponsiveImage from "@components/ResponsiveImage.astro";'
+    content = re.sub(r'import\s+ResponsiveImage\s+from\s+["\']@components/ResponsiveImage\.astro["\'];?\n*', '', content)
+    if "<ResponsiveImage" in content:
+        fm_match = re.search(r'^---\s*\n(.*?)\n---\s*\n', content, re.DOTALL)
+        if fm_match: content = content[:fm_match.end()] + import_stmt + "\n\n" + content[fm_match.end():]
 
-    with open(path, "w", encoding="utf-8") as f:
-        f.write(content)
+    with open(path, "w", encoding="utf-8") as f: f.write(content)
 
-# ========================
-# MAIN
-# ========================
+async def search_all_providers(session, query, content_snippet=""):
+    photo = await search_unsplash(session, query)
+    if photo: return {"url": photo["urls"]["raw"], "source": "unsplash"}
+    return {"source": "local_gen", "title": query, "theme": get_gemini_tech_context(query, content_snippet)}
 
+# ==============================================================================
+# ORQUESTADOR (BÚSQUEDA RECURSIVA CON PATHLIB O(N))
+# ==============================================================================
 async def process_posts():
     connector = aiohttp.TCPConnector(limit=10)
     async with aiohttp.ClientSession(connector=connector) as session:
-        tasks = []
-        if os.path.exists(TARGET_DIR):
-            for root, _, files in os.walk(TARGET_DIR):
-                for file in files:
-                    if file.endswith((".md", ".mdx")):
-                        path = os.path.join(root, file)
-                        tasks.append(process_file(session, path))
-            if tasks:
-                await asyncio.gather(*tasks)
-
+        target_path = Path(TARGET_DIR)
+        if not target_path.exists(): return
+        
+        files = list(target_path.rglob("*.md")) + list(target_path.rglob("*.mdx"))
+        tasks = [process_file(session, file_path) for file_path in files]
+        if tasks: await asyncio.gather(*tasks)
     save_cache()
 
 if __name__ == "__main__":
