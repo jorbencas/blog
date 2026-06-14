@@ -50,7 +50,19 @@ const jsonLD = {
 <meta property="og:url" content={canonicalURL} />
 <meta property="og:title" content={title} />
 <meta property="og:description" content={description} />
-{image && <meta property="og:image" content={new URL(image, Astro.site)} />}
+{
+  image && (
+    <meta
+      property="og:image"
+      content={
+        new URL(
+          image.startsWith("http") ? image : `/${image.replace(/^\//, "")}`,
+          Astro.site
+        )
+      }
+    />
+  )
+}
 
 <!-- Tus etiquetas de artículo (¡Tu lógica perfecta!) -->
 {tags.map((tag) => <meta property="article:tag" content={tag} />)}
@@ -60,7 +72,13 @@ const jsonLD = {
 <meta property="twitter:url" content={canonicalURL} />
 <meta property="twitter:title" content={title} />
 <meta property="twitter:description" content={description} />
-<meta property="twitter:image" content={new URL(image, Astro.site)} />
+<meta
+  property="twitter:image"
+  content={new URL(
+    image.startsWith("http") ? image : `/${image.replace(/^\//, "")}`,
+    Astro.site
+  )}
+/>
 
 <!-- Insertamos el JSON-LD de forma segura en el HTML -->
 <script type="application/ld+json" set:html={JSON.stringify(jsonLD)} />
