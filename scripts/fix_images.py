@@ -34,7 +34,7 @@ CACHE_FILE = ROOT_DIR / "image_cache.json"
 SIZES = [480, 768, 1200]
 DEFAULT_IMAGE = "/img/default.jpg"
 
-# Parámetros Algorítmicos de optimize.py
+# Parámetros Algorítmicos de compresión SSIM
 SSIM_THRESHOLD = 0.98      # Identidad perceptiva humana
 QUALITY_START = 85
 QUALITY_MIN = 50
@@ -282,6 +282,18 @@ def generate_local_banner(title, tech_context=None):
 # ==============================================================================
 # PIPELINE DE COMPRESIÓN AVANZADA CON SSIM AUTOMÁTICO
 # ==============================================================================
+def generate_placeholder(img):
+    """Genera una miniatura de 20x20 píxeles comprimida en Base64 para el efecto blur."""
+    try:
+        small = img.copy()
+        small.thumbnail((20, 20))
+        buffer = BytesIO()
+        small.save(buffer, format="JPEG", quality=30)
+        return base64.b64encode(buffer.getvalue()).decode()
+    except Exception as e:
+        print(f"⚠️ Error al generar el placeholder blur: {e}")
+        return "data:image/jpeg;base64,/9j/4AAQSkZJRgA="
+
 def compress_and_save_adaptive(img, base_name, folder):
     avif, webp = [], []
     blur = generate_placeholder(img)
@@ -328,13 +340,15 @@ async def process_file(session, path):
 
     base_name = slugify(path.stem)
     md_images = re.findall(r'!\[(.*?)\]\((.*?)\)', content)
+    
+    # Intentamos buscar si tiene definida la portada en el frontmatter
     fm_image = re.search(r'image:\s*["\']?(.*?)["\']?\n', content)
     fm_image = fm_image.group(1).strip() if fm_image else None
 
     current_folder = (IMG_DIR / base_name) if len(md_images) > 1 else IMG_DIR
     current_folder.mkdir(parents=True, exist_ok=True)
 
-    # Resolución adaptativa de portadas
+    # Resolución adaptativa de portadas (Si no hay cover en el archivo, se salta este bloque entero)
     if fm_image:
         portada_existe = (current_folder / f"{base_name}_cover-1200.webp").exists()
         if not portada_existe:
@@ -350,12 +364,12 @@ async def process_file(session, path):
             if webp:
                 content = re.sub(r'image:\s*["\']?(.*?)["\']?\n', f'image: "{current_folder.name}/{webp[-1][0]}"\n', content)
 
-    # Inyección y mutación inteligente del cuerpo Markdown
+    # Inyección y mutación inteligente del cuerpo Markdown (Procesa imágenes internas)
     for i, (alt, original_src) in enumerate(md_images):
         name = f"{base_name}_{i+1}"
         ext = original_src.lower().split(".")[-1]
         
-        # Intercepción de formatos alternativos de optimize.py
+        # Intercepción de formatos alternativos
         if ext == "gif":
             process_gif_fallback(ROOT_DIR / original_src.lstrip("/"), current_folder, name)
             continue
@@ -384,7 +398,7 @@ async def process_file(session, path):
         component = f'<ResponsiveImage avif="{build_srcset(avif, prefix)}" webp="{build_srcset(webp, prefix)}" fallback="{prefix}/{webp[-1][0]}" alt="{alt}" blur="{blur}" />'
         content = content.replace(f"![{alt}]({original_src})", component)
 
-    # Inyección limpia del componente Astro
+    # Inyección limpia del componente Astro en la sección frontmatter
     import_stmt = 'import ResponsiveImage from "@components/ResponsiveImage.astro";'
     content = re.sub(r'import\s+ResponsiveImage\s+from\s+["\']@components/ResponsiveImage\.astro["\'];?\n*', '', content)
     if "<ResponsiveImage" in content:
