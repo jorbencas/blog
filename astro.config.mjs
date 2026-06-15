@@ -3,11 +3,14 @@ import { remarkReadingTime } from "./remark-reading-time.mjs";
 import tailwind from "@astrojs/tailwind";
 import mdx from "@astrojs/mdx";
 import sitemap from "@astrojs/sitemap";
-//import vercel from '@astrojs/vercel'
+import vercel from "@astrojs/vercel"; // 1. Se añade la importación del adaptador
 export default defineConfig({
-  // adapter: vercel(),
+  output: "static", // o 'server' dependiendo de tu configuración
+  adapter: vercel(),
   integrations: [tailwind(), mdx(), sitemap()],
-  //integrations: [tailwind()],
+  image: {
+    domains: ["images.unsplash.com"], // 🌟 Permet a Astro optimitzar les fotos d'Unsplash
+  },
   site: "https://blog-jorbencas.vercel.app/",
   markdown: {
     remarkPlugins: [remarkReadingTime],
@@ -18,12 +21,8 @@ export default defineConfig({
         dark: "one-dark-pro",
       },
     },
-    // Esto envuelve el código para que no se rompa la línea
     wrap: true,
     smartypants: true, // Mejora tipografía (comillas, guiones)
     gfm: true, // Habilita GitHub Flavored Markdown (por defecto es true)
-    image: {
-      domains: ["images.unsplash.com"], // 🌟 Permet a Astro optimitzar les fotos d'Unsplash
-    },
   },
 });
