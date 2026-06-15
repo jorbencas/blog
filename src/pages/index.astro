@@ -5,30 +5,22 @@ import ChallengeCard from "@components/ChallengeCard.astro";
 import ProjectCard from "@components/ProjectCard.astro";
 import { getSortedPosts } from "src/utils";
 import { getCollection } from "astro:content";
-import Weekly from "@components/Weekly.astro";
+//import Weekly from "@components/Weekly.astro";
 const allPosts = await getCollection("posts");
-const manualPosts = allPosts.filter((p) => !p.id.includes("auto-news"));
-const sortedPosts = await getSortedPosts(manualPosts);
+const sortedPosts = await getSortedPosts(allPosts);
 const latestPosts = sortedPosts.slice(0, 3);
 
 const allChallenges = await getCollection("challenges");
-const manualChallenges = allChallenges.filter(
-  (c) => !c.id.includes("auto-challenges")
-);
-const latestChallenges = manualChallenges
-  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
-  .slice(0, 3);
+const challengesPosts = await getSortedPosts(allChallenges);
+const latestChallenges = challengesPosts.slice(0, 3);
 
 const allProjects = await getCollection("myprojects");
-const latestProjects = allProjects
-  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
-  .slice(0, 3);
+const listProjects = await getSortedPosts(allProjects);
+const latestProjects = listProjects.slice(0, 3);
 
 // const allWeeklyPosts = await getCollection("weeklyPosts");
-// const latest6Weekly = allWeeklyPosts
-//   .filter(p => !p.data.draft)
-//   .sort((a, b) => new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime())
-//   .slice(0, 6);
+// const listWeeklyPosts = await getSortedPosts(allWeeklyPosts);
+// const latest6Weekly = listWeeklyPosts.slice(0, 6);
 
 // Clase base para los enlaces "Ver más"
 const linkBase =
