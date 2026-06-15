@@ -1,0 +1,57 @@
+name: Fix Auto-News Images
+ 
+on:
+  push:
+    paths:
+      - 'src/content/**/*.md'
+      - 'src/content/**/*.mdx'
+  workflow_dispatch:
+
+jobs:
+  fix-images:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+        
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Run Image Fixer
+        env:
+          UNSPLASH_ACCESS_KEY: ${{ secrets.UNSPLASH_ACCESS_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python scripts/fix_images.py
+      - name: Generate Blog Audio Podcasts (TTS)
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python scripts/fix_audios.py
+      - name: Debug output
+        run: |
+          echo "📂 IMG:"
+          ls -R public/img || true
+          echo "📂 CONTENT:"
+          ls -R src/content || true
+      - name: Stage generated files
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout ${{ github.ref_name }}
+          git add .
+          git diff --quiet && git diff --staged --quiet || git commit -m "[bot] update responsive images [skip ci]"
+          git push origin HEAD:${{ github.ref_name }}
