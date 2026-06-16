@@ -55,7 +55,7 @@ const jsonLD = {
 <!-- SEO Estándar -->
 <title>{cleanTitle}</title>
 <meta name="description" content={cleanDescription} />
-<link rel="canonical" href={canonicalURL} />
+<link rel="canonical" href={canonicalURL.toString()} />
 {
   pubDate && (
     <meta
@@ -78,6 +78,9 @@ const jsonLD = {
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta property="og:image:type" content="image/png" />
+<meta property="og:image:alt" content={`Portada del artículo: ${title}`} />
+<meta property="og:site_name" content="Problemas de un desarrollador Web" />
+<meta property="og:locale" content="es_ES" />
 <!-- Cambiado a image/png porque Satori/Resvg escupen un PNG, no un WebP -->
 
 <!-- [TIP] Mejoras de accesibilidad e idioma para subir score -->
@@ -92,13 +95,13 @@ const jsonLD = {
 {tags.map((tag) => <meta property="article:tag" content={tag} />)}
 
 <!-- Twitter / X -->
-<meta property="twitter:card" content="summary_large_image" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:site" content="@jorbencas" />
 <meta property="twitter:url" content={canonicalURL} />
 <meta property="twitter:title" content={cleanTitle} />
 <meta property="twitter:description" content={cleanDescription} />
 <meta property="twitter:image" content={ogImageUrl} />
 <!-- [TIP] Eliminadas las dimensiones pequeñas de Twitter que daban conflictos y forzado el @site -->
-<meta name="twitter:site" content="@jorbencas" />
 
 <!-- Insertamos el JSON-LD de forma segura en el HTML -->
 <script type="application/ld+json" set:html={JSON.stringify(jsonLD)} />
