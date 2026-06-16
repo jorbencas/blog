@@ -9,11 +9,28 @@ interface Props {
 }
 
 const { title, description, tags = [], pubDate, author } = Astro.props;
+
+// 1. SOLUCIÓN WARNINGS: Evitamos que textos muy largos trunquen las tarjetas en redes
+const cleanTitle = title.length > 60 ? `${title.substring(0, 57)}...` : title;
+const cleanDescription =
+  description.length > 155
+    ? `${description.substring(0, 152)}...`
+    : description;
+
 const titleEncoded = encodeURIComponent(title);
-const tagsEncoded = encodeURIComponent(tags ? tags.join(",") : "");
-const ogImageUrl = `${
+// 🌟 SOLUCIÓN: Ahora sí usamos los tags codificados correctamente para la URL
+const tagsEncoded = encodeURIComponent(
+  tags.length > 0 ? tags.join(",") : "default"
+);
+
+// 🌟 SOLUCIÓN: Apuntamos exactamente a la ruta /api/og.png que lee tu script de Satori
+// Usamos URL nativa para asegurar que no falten o sobren barras '/'
+const ogImageURLObj = new URL(
+  `/api/og.png?title=${titleEncoded}&tags=${tagsEncoded}`,
   Astro.site
-}api/og/og.png?title=${titleEncoded}&tags=${tags.join(",")}`;
+);
+const ogImageUrl = ogImageURLObj.toString();
+
 // Obtenemos la URL de la página actual de forma nativa con Astro
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 
@@ -24,7 +41,7 @@ const jsonLD = {
   headline: title,
   description: description,
   keywords: tags.join(", "),
-  url: canonicalURL,
+  url: canonicalURL.toString(),
   ...(pubDate && { datePublished: new Date(pubDate).toISOString() }),
   ...(author && {
     author: {
@@ -36,8 +53,8 @@ const jsonLD = {
 ---
 
 <!-- SEO Estándar -->
-<title>{title}</title>
-<meta name="description" content={description} />
+<title>{cleanTitle}</title>
+<meta name="description" content={cleanDescription} />
 <link rel="canonical" href={canonicalURL} />
 {
   pubDate && (
@@ -48,27 +65,40 @@ const jsonLD = {
   )
 }
 {author && <meta property="article:author" content={author} />}
+
+<!-- [TIP] Metas de personalización móvil y branding añadidos -->
+<meta name="theme-color" content="#06b6d4" />
+
 <!-- Open Graph / Facebook / LinkedIn -->
 <meta property="og:type" content="article" />
 <meta property="og:url" content={canonicalURL} />
-<meta property="og:title" content={title} />
-<meta property="og:description" content={description} />
+<meta property="og:title" content={cleanTitle} />
+<meta property="og:description" content={cleanDescription} />
 <meta property="og:image" content={ogImageUrl} />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
-<meta property="og:image:type" content="image/webp" />
+<meta property="og:image:type" content="image/png" />
+<!-- Cambiado a image/png porque Satori/Resvg escupen un PNG, no un WebP -->
 
-<!-- Tus etiquetas de artículo (¡Tu lógica perfecta!) -->
+<!-- [TIP] Mejoras de accesibilidad e idioma para subir score -->
+<meta
+  property="og:image:alt"
+  content={`Imagen de portada para el artículo: ${title}`}
+/>
+<meta property="og:site_name" content="Problemas de un desarrollador Web" />
+<meta property="og:locale" content="es_ES" />
+
+<!-- Tus etiquetas de artículo -->
 {tags.map((tag) => <meta property="article:tag" content={tag} />)}
 
-<!-- Twitter -->
+<!-- Twitter / X -->
 <meta property="twitter:card" content="summary_large_image" />
 <meta property="twitter:url" content={canonicalURL} />
-<meta property="twitter:title" content={title} />
-<meta property="twitter:description" content={description} />
+<meta property="twitter:title" content={cleanTitle} />
+<meta property="twitter:description" content={cleanDescription} />
 <meta property="twitter:image" content={ogImageUrl} />
-<meta property="twitter:image:width" content="120" />
-<meta property="twitter:image:height" content="90" />
-<meta property="twitter:image:type" content="image/webp" />
+<!-- [TIP] Eliminadas las dimensiones pequeñas de Twitter que daban conflictos y forzado el @site -->
+<meta name="twitter:site" content="@jorbencas" />
+
 <!-- Insertamos el JSON-LD de forma segura en el HTML -->
 <script type="application/ld+json" set:html={JSON.stringify(jsonLD)} />
