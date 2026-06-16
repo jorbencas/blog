@@ -4,173 +4,254 @@ import { Resvg } from '@resvg/resvg-js';
 import fs from 'fs';
 import path from 'path';
 
-export const prerender = false; // Se ejecuta en el servidor bajo demanda
+export const prerender = false;
+
+function getSvgAsBase64(tagName: string): string | null {
+  try {
+    const svgPath = path.join(process.cwd(), `public/icons/${tagName}.svg`);
+    if (!fs.existsSync(svgPath)) return null;
+    const svgContent = fs.readFileSync(svgPath, 'utf8');
+    const base64 = Buffer.from(svgContent).toString('base64');
+    return `data:image/svg+xml;base64,${base64}`;
+  } catch (e) {
+    console.error(`❌ Error al convertir SVG a Base64 para [${tagName}]:`, e);
+    return null;
+  }
+}
 
 export const GET: APIRoute = async ({ request }) => {
   try {
-    // 1. Extraer título y tags de la URL
     const { searchParams } = new URL(request.url);
-    const title = searchParams.get('title') ?? 'Problemas de un desarrollador Web';
-    const tagsParam = searchParams.get('tags') ?? '';
-    const tags = tagsParam.split(',').filter(Boolean).map(t => t.trim().toLowerCase());
+    const rawTitle = searchParams.get("title")?.trim() || "Problemas de un desarrollador Web";
+    const title = rawTitle
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/&/g, "&amp;");
+    
+    const tagsParam = searchParams.get("tags")?.trim() ?? "";
+    let tags = tagsParam.length > 0 
+      ? tagsParam.split(",").filter(Boolean).map((t) => t.trim().toLowerCase())
+      : [];
 
-    // 2. Cargar la fuente tipográfica (.woff) obligatoria para Satori
-    const fontPath = path.join(process.cwd(), 'public/fonts/space-grotesk-bold.woff');
-    const fontData = fs.readFileSync(fontPath).buffer as ArrayBuffer;
+    if (tags.length === 0) {
+      tags = ["default"]; 
+    }
 
-    // 3. 🌟 MAGIA: Cargar los archivos SVG de los logos locales dinámicamente
-    // Buscaremos en tu carpeta public/logos/ nombres como php.svg, astro.svg, etc.
+    const requestUrl = new URL(request.url);
+    const faviconUrl = `${requestUrl.protocol}//${requestUrl.host}/favicon.ico`;
+
+    let fontData: Uint8Array | null = null;
+    try {
+      const fontPath = path.join(process.cwd(), "public/fonts/static/SpaceGrotesk-Bold.ttf");
+      if (fs.existsSync(fontPath)) {
+        const fileBuffer = fs.readFileSync(fontPath);
+        fontData = new Uint8Array(fileBuffer);
+      }
+    } catch (fontError) {
+      console.warn("⚠️ No se pudo cargar la fuente personalizada:", fontError);
+    }
+
     const stickersJSX = [];
     
-    // Coordenadas fijas en el lienzo para que los stickers queden flotando con estilo de "colage"
+    // 🌟 POSICIONES ORIGINALES EN CASCADA (Vuelve el look desenfadado y flotante)
     const posiciones = [
-      { top: '90px', right: '120px', rotate: '6deg' },   // Sticker 1 (Arriba)
-      { top: '330px', right: '240px', rotate: '-8deg' }, // Sticker 2 (Centro-Izquierda)
-      { top: '280px', right: '50px', rotate: '12deg' }    // Sticker 3 (Abajo-Derecha)
+      { top: "60px", right: "220px", rotate: "6deg" },    // Arriba izquierda
+      { top: "140px", right: "50px", rotate: "-8deg" },   // Arriba derecha
+      { top: "250px", right: "240px", rotate: "-4deg" },  // Centro izquierda
+      { top: "330px", right: "70px", rotate: "10deg" },   // Centro derecha
+      { top: "450px", right: "200px", rotate: "-6deg" }   // Abajo centrado libre
     ];
 
-    for (let i = 0; i < Math.min(tags.length, 3); i++) {
+    let stickerContador = 0;
+
+    for (let i = 0; i < tags.length; i++) {
+      if (stickerContador >= 5) break; 
+
       const tag = tags[i];
-      const svgPath = path.join(process.cwd(), `public/logos/${tag}.svg`);
-      
-      if (fs.existsSync(svgPath)) {
-        let svgContent = fs.readFileSync(svgPath, 'utf8');
-        
-        // Limpieza rápida del SVG para que Satori lo procese sin romper las dimensiones
-        svgContent = svgContent
-          .replace(/<svg[^>]*>/, '<svg width="110" height="110" viewBox="0 0 128 128" fill="none">')
-          .replace(/<\?xml.*\?>/g, '');
+      const svgBase64 = getSvgAsBase64(tag);
 
-        const pos = posiciones[i];
+      if (!svgBase64) continue;
 
-        // Construimos la estructura del Sticker Neobrutalista (Contenedor + Sombra + SVG)
-        stickersJSX.push({
-          type: 'div',
-          props: {
-            style: {
-              position: 'absolute',
-              top: pos.top,
-              right: pos.right,
-              transform: `rotate(${pos.rotate})`,
-              display: 'flex',
-            },
-            children: [
-              // Capa de Sombra Sólida Negra (Detrás)
-              {
-                type: 'div',
-                props: {
-                  style: {
-                    position: 'absolute',
-                    top: '8px',
-                    left: '8px',
-                    width: '150px',
-                    height: '150px',
-                    backgroundColor: '#1a1a1a',
-                    borderRadius: '8px',
-                  }
-                }
-              },
-              // Capa de la Tarjeta Blanca del Sticker (Delante)
-              {
-                type: 'div',
-                props: {
-                  style: {
-                    position: 'relative',
-                    width: '150px',
-                    height: '150px',
-                    backgroundColor: '#FFFFFF',
-                    border: '4px solid #1a1a1a',
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '16px',
-                  },
-                  // Inyectamos el código SVG en bruto dentro de las propiedades de Satori
-                  children: {
-                    type: 'div',
-                    props: {
-                      style: { display: 'flex' },
-                      dangerouslySetInnerHTML: { __html: svgContent }
+      const pos = posiciones[stickerContador];
+      stickerContador++; 
+
+      stickersJSX.push({
+        type: "div",
+        props: {
+          style: {
+            position: "absolute",
+            top: pos.top,
+            right: pos.right,
+            transform: `rotate(${pos.rotate})`, 
+            display: "flex"
+          },
+          children: [
+            {
+              type: "div",
+              props: {
+                style: {
+                  width: "110px",  
+                  height: "110px",
+                  backgroundColor: "#1E293B", 
+                  border: "1px solid #06b6d4", 
+                  borderRadius: "16px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "20px"
+                },
+                children: {
+                  type: "img",
+                  props: {
+                    src: svgBase64,
+                    style: {
+                      width: "64px",
+                      height: "64px",
+                      objectFit: "contain"
                     }
                   }
                 }
               }
-            ]
-          }
-        });
-      }
+            }
+          ]
+        }
+      });
     }
 
-    // 4. Calcular tamaño de fuente adaptativo para el título
-    const fontSize = title.length > 50 ? '54px' : '68px';
+    const fontSize = title.length > 50 ? "52px" : "66px";
 
-    // 5. Estructura Completa del Lienzo Abstrato Open Graph (1200x630)
+    const satoriOptions: any = {
+      width: 1200,
+      height: 630,
+    };
+
+    if (fontData) {
+      satoriOptions.fonts = [{ name: "Space Grotesk", data: fontData, weight: 700, style: "normal" }];
+    }
+
     const svg = await satori(
       {
-        type: 'div',
+        type: "div",
         props: {
           style: {
-            width: '1200px',
-            height: '630px',
-            position: 'relative',
-            display: 'flex',
-            flexDirection: 'column',
-            fontFamily: '"Space Grotesk", sans-serif',
-            backgroundColor: '#FAFAFA', // Fondo Gris Neobrutalista muy claro
+            width: "1200px",
+            height: "630px",
+            position: "relative",
+            display: "flex",
+            flexDirection: "column",
+            fontFamily: fontData ? '"Space Grotesk", sans-serif' : 'sans-serif',
+            backgroundColor: "#131926" // El fondo gris slate que le da el toque premium
           },
           children: [
-            // 📐 FONDO: Cuadrícula Técnica de Ingeniería (Grid CSS simulado)
+            // Malla de micro-líneas de fondo
             {
-              type: 'div',
+              type: "div",
               props: {
                 style: {
-                  position: 'absolute',
+                  position: "absolute",
                   top: 0, left: 0, right: 0, bottom: 0,
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  backgroundImage: 'linear-gradient(to right, #EEEEEE 1px, transparent 1px), linear-gradient(to bottom, #EEEEEE 1px, transparent 1px)',
-                  backgroundSize: '40px 40px',
+                  display: "flex",
+                  backgroundImage: "linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px)",
+                  backgroundSize: "50px 50px"
                 }
               }
             },
-            
-            // 📝 ÁREA DEL TEXTO (Izquierda)
+
+            // Contenedor de contenido principal (Izquierda)
             {
-              type: 'div',
+              type: "div",
               props: {
                 style: {
-                  position: 'absolute',
-                  top: '140px',
-                  left: '72px',
-                  maxWidth: '640px',
-                  display: 'flex',
-                  flexDirection: 'column',
+                  position: "absolute",
+                  top: "130px",
+                  left: "80px",
+                  maxWidth: "640px", 
+                  display: "flex",
+                  flexDirection: "column"
                 },
                 children: [
-                  // Barra de acento Amarilla
+                  // Cabecera con Favicon
                   {
-                    type: 'div',
+                    type: "div",
                     props: {
                       style: {
-                        width: '64px',
-                        height: '12px',
-                        background: '#FFCC00',
-                        border: '3px solid #1a1a1a',
-                        marginBottom: '28px',
+                        display: "flex",
+                        alignItems: "center",
+                        marginBottom: "32px"
+                      },
+                      children: [
+                        {
+                          type: "div",
+                          props: {
+                            style: {
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              backgroundColor: "#1E293B", 
+                              border: "1px solid #06b6d4",
+                              borderRadius: "14px",
+                              width: "54px",
+                              height: "54px",
+                              padding: "10px",
+                              marginRight: "20px"
+                            },
+                            children: {
+                              type: "img",
+                              props: {
+                                src: faviconUrl,
+                                style: {
+                                  width: "30px",
+                                  height: "30px",
+                                  objectFit: "contain"
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          type: "span",
+                          props: {
+                            style: {
+                              fontSize: "15px",
+                              fontWeight: 700,
+                              color: "#9CA3AF", 
+                              fontFamily: "monospace",
+                              letterSpacing: "2px"
+                            },
+                            children: "JORBENCAS // ARTÍCULO"
+                          }
+                        }
+                      ]
+                    }
+                  },
+
+                  // Línea de degradado corporativa
+                  {
+                    type: "div",
+                    props: {
+                      style: {
+                        width: "120px",
+                        height: "3px",
+                        backgroundImage: "linear-gradient(to right, #075985, #06b6d4)",
+                        borderRadius: "2px",
+                        marginBottom: "36px"
                       }
                     }
                   },
+
                   // Título principal
                   {
-                    type: 'div',
+                    type: "div",
                     props: {
                       style: {
                         fontSize,
                         fontWeight: 700,
-                        color: '#1a1a1a',
+                        color: "#FFFFFF", 
                         lineHeight: 1.15,
-                        letterSpacing: '-1.5px',
+                        letterSpacing: "-1px",
+                        display: "flex",
+                        flexWrap: "wrap",
+                        wordBreak: "break-word"
                       },
                       children: title
                     }
@@ -179,66 +260,67 @@ export const GET: APIRoute = async ({ request }) => {
               }
             },
 
-            // 🌟 INYECCIÓN DE LOS STICKERS COMPILADOS ARRIBA
+            // Renderizado de los stickers asimétricos flotantes
             ...stickersJSX,
 
-            // 🏷️ BRANDING: Botón Neobrutalista Inferior Derecho (Tu Dominio)
+            // Branding inferior izquierdo
             {
-              type: 'div',
+              type: "div",
               props: {
                 style: {
-                  position: 'absolute',
-                  bottom: '48px',
-                  right: '56px',
-                  background: '#FFCC00',
-                  border: '3px solid #1a1a1a',
-                  borderRadius: '4px',
-                  padding: '10px 20px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '5px 5px 0px #1a1a1a'
+                  position: "absolute",
+                  bottom: "48px",
+                  left: "80px",
+                  display: "flex",
+                  alignItems: "center"
                 },
-                children: {
-                  type: 'span',
-                  props: {
-                    style: {
-                      fontSize: '16px',
-                      fontWeight: 700,
-                      color: '#1a1a1a',
-                      fontFamily: 'monospace'
-                    },
-                    children: 'blog-jorbencas.vercel.app'
+                children: [
+                  {
+                    type: "div",
+                    props: {
+                      style: {
+                        width: "6px",
+                        height: "6px",
+                        borderRadius: "3px",
+                        backgroundImage: "linear-gradient(to right, #075985, #06b6d4)",
+                        marginRight: "12px"
+                      }
+                    }
+                  },
+                  {
+                    type: "span",
+                    props: {
+                      style: {
+                        fontSize: "14px",
+                        fontWeight: 700,
+                        color: "#9CA3AF",
+                        fontFamily: "monospace"
+                      },
+                      children: "blog-jorbencas.vercel.app"
+                    }
                   }
-                }
+                ]
               }
             }
           ]
         }
       },
-      {
-        width: 1200,
-        height: 630,
-        fonts: [{ name: 'Space Grotesk', data: fontData, weight: 700, style: 'normal' }],
-      }
+      satoriOptions
     );
 
-    // 6. Transformar el SVG a un buffer binario PNG usando resvg
     const resvg = new Resvg(svg);
     const pngData = resvg.render();
     const pngBuffer = pngData.asPng();
 
-    // 7. Enviar la imagen resultante con caché optimizada para Redes Sociales
-    return new Response(pngBuffer, {
+    return new Response(new Uint8Array(pngBuffer), {
       status: 200,
       headers: {
-        'Content-Type': 'image/png',
-        'Cache-Control': 'public, max-age=31536000, immutable'
-      },
+        "Content-Type": "image/png",
+        "Cache-Control": "public, max-age=31536000, immutable"
+      }
     });
-
   } catch (error) {
-    console.error('❌ Error en el generador de imágenes OG:', error);
-    return new Response('Error interno al generar la imagen', { status: 500 });
+    console.error("❌ Error crítico en el generador de imágenes OG:", error);
+    return new Response("Error interno al generar la imagen", { status: 500 });
   }
 };
