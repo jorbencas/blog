@@ -6,6 +6,7 @@ import path from 'path';
 
 export const prerender = false;
 
+// Función para transformar los logos a Base64
 function getSvgAsBase64(tagName: string): string | null {
   try {
     const svgPath = path.join(process.cwd(), `public/icons/${tagName}.svg`);
@@ -15,6 +16,20 @@ function getSvgAsBase64(tagName: string): string | null {
     return `data:image/svg+xml;base64,${base64}`;
   } catch (e) {
     console.error(`❌ Error al convertir SVG a Base64 para [${tagName}]:`, e);
+    return null;
+  }
+}
+
+// 🌟 SOLUCIÓN DEFINITIVA PARA EL FAVICON: Carga local instantánea sin peticiones HTTP
+function getFaviconAsBase64(): string | null {
+  try {
+    const faviconPath = path.join(process.cwd(), 'public/favicon-96x96.png');
+    if (!fs.existsSync(faviconPath)) return null;
+    const fileBuffer = fs.readFileSync(faviconPath);
+    const base64 = Buffer.from(fileBuffer).toString('base64');
+    return `data:image/png;base64,${base64}`;
+  } catch (e) {
+    console.error("❌ Error al convertir Favicon a Base64:", e);
     return null;
   }
 }
@@ -37,8 +52,8 @@ export const GET: APIRoute = async ({ request }) => {
       tags = ["default"]; 
     }
 
-    const requestUrl = new URL(request.url);
-    const faviconUrl = `${requestUrl.protocol}//${requestUrl.host}/favicon.ico`;
+    // 🌟 Obtenemos el favicon en Base64 de forma local y segura
+    const faviconBase64 = getFaviconAsBase64() || "";
 
     let fontData: Uint8Array | null = null;
     try {
@@ -53,13 +68,13 @@ export const GET: APIRoute = async ({ request }) => {
 
     const stickersJSX = [];
     
-    // 🌟 POSICIONES ORIGINALES EN CASCADA (Vuelve el look desenfadado y flotante)
+    // Posiciones asimétricas y desenfadadas que te gustaban
     const posiciones = [
-      { top: "60px", right: "220px", rotate: "6deg" },    // Arriba izquierda
-      { top: "140px", right: "50px", rotate: "-8deg" },   // Arriba derecha
-      { top: "250px", right: "240px", rotate: "-4deg" },  // Centro izquierda
-      { top: "330px", right: "70px", rotate: "10deg" },   // Centro derecha
-      { top: "450px", right: "200px", rotate: "-6deg" }   // Abajo centrado libre
+      { top: "60px", right: "220px", rotate: "6deg" },    
+      { top: "140px", right: "50px", rotate: "-8deg" },   
+      { top: "250px", right: "240px", rotate: "-4deg" },  
+      { top: "330px", right: "70px", rotate: "10deg" },   
+      { top: "450px", right: "200px", rotate: "-6deg" }   
     ];
 
     let stickerContador = 0;
@@ -140,7 +155,7 @@ export const GET: APIRoute = async ({ request }) => {
             display: "flex",
             flexDirection: "column",
             fontFamily: fontData ? '"Space Grotesk", sans-serif' : 'sans-serif',
-            backgroundColor: "#131926" // El fondo gris slate que le da el toque premium
+            backgroundColor: "#131926" 
           },
           children: [
             // Malla de micro-líneas de fondo
@@ -198,10 +213,10 @@ export const GET: APIRoute = async ({ request }) => {
                             children: {
                               type: "img",
                               props: {
-                                src: faviconUrl,
+                                src: faviconBase64, // 🌟 Usamos la imagen local mapeada en Base64
                                 style: {
-                                  width: "30px",
-                                  height: "30px",
+                                  width: "32px",
+                                  height: "32px",
                                   objectFit: "contain"
                                 }
                               }
