@@ -18,22 +18,21 @@ const cleanDescription =
     : description;
 
 const titleEncoded = encodeURIComponent(title);
-// 🌟 SOLUCIÓN: Ahora sí usamos los tags codificados correctamente para la URL
 const tagsEncoded = encodeURIComponent(
   tags.length > 0 ? tags.join(",") : "default"
 );
 
-// 🌟 SOLUCIÓN: Apuntamos exactamente a la ruta /api/og.png que lee tu script de Satori
-// Usamos URL nativa para asegurar que no falten o sobren barras '/'
 const ogImageURLObj = new URL(
   `/api/og/og.png?title=${titleEncoded}&tags=${tagsEncoded}`,
   Astro.site
 );
 const ogImageUrl = ogImageURLObj.toString();
 
-// Obtenemos la URL de la página actual de forma nativa con Astro
-const canonicalURL = new URL(Astro.url.pathname + "/", Astro.site);
-
+const canonicalObj = new URL(Astro.url.pathname, Astro.site);
+const canonicalURL =
+  canonicalObj.toString().endsWith("/") && canonicalObj.pathname !== "/"
+    ? canonicalObj.toString().slice(0, -1)
+    : canonicalObj.toString();
 // Preparamos el objeto JSON-LD para un artículo de blog
 const jsonLD = {
   "@context": "https://schema.org",
@@ -71,7 +70,7 @@ const jsonLD = {
 
 <!-- Open Graph / Facebook / LinkedIn -->
 <meta property="og:type" content="article" />
-<meta property="og:url" content={canonicalURL} />
+<meta property="og:url" content={canonicalURL.toString()} />
 <meta property="og:title" content={cleanTitle} />
 <meta property="og:description" content={cleanDescription} />
 <meta property="og:image" content={ogImageUrl} />
@@ -97,7 +96,7 @@ const jsonLD = {
 <!-- Twitter / X -->
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:site" content="@jorbencas" />
-<meta property="twitter:url" content={canonicalURL} />
+<meta property="twitter:url" content={canonicalURL.toString()} />
 <meta property="twitter:title" content={cleanTitle} />
 <meta property="twitter:description" content={cleanDescription} />
 <meta property="twitter:image" content={ogImageUrl} />
