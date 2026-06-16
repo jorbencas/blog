@@ -11,7 +11,9 @@ interface Props {
 const { title, description, tags = [], pubDate, author } = Astro.props;
 const titleEncoded = encodeURIComponent(title);
 const tagsEncoded = encodeURIComponent(tags ? tags.join(",") : "");
-const ogImageUrl = `${Astro.site}/api/og/og.png?title=${titleEncoded}&tags=${tagsEncoded}`;
+const ogImageUrl = `${
+  Astro.site
+}api/og/og.png?title=${titleEncoded}&tags=${tags.join(",")}`;
 // Obtenemos la URL de la página actual de forma nativa con Astro
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 
