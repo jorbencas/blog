@@ -215,8 +215,8 @@ export const GET: APIRoute = async ({ request }) => {
                               props: {
                                 src: faviconBase64, // 🌟 Usamos la imagen local mapeada en Base64
                                 style: {
-                                  width: "32px",
-                                  height: "32px",
+                                  width: "72px",
+                                  height: "72px",
                                   objectFit: "contain"
                                 }
                               }
@@ -233,7 +233,7 @@ export const GET: APIRoute = async ({ request }) => {
                               fontFamily: "monospace",
                               letterSpacing: "2px"
                             },
-                            children: "JORBENCAS // ARTÍCULO"
+                            children: "jorbencas // blog-jorbencas.vercel.app"
                           }
                         }
                       ]
@@ -253,24 +253,6 @@ export const GET: APIRoute = async ({ request }) => {
                       }
                     }
                   },
-
-                  // Título principal
-                  {
-                    type: "div",
-                    props: {
-                      style: {
-                        fontSize,
-                        fontWeight: 700,
-                        color: "#FFFFFF", 
-                        lineHeight: 1.15,
-                        letterSpacing: "-1px",
-                        display: "flex",
-                        flexWrap: "wrap",
-                        wordBreak: "break-word"
-                      },
-                      children: title
-                    }
-                  }
                 ]
               }
             },
