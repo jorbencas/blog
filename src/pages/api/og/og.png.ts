@@ -259,46 +259,6 @@ export const GET: APIRoute = async ({ request }) => {
 
             // Renderizado de los stickers asimétricos flotantes
             ...stickersJSX,
-
-            // Branding inferior izquierdo
-            {
-              type: "div",
-              props: {
-                style: {
-                  position: "absolute",
-                  bottom: "48px",
-                  left: "80px",
-                  display: "flex",
-                  alignItems: "center"
-                },
-                children: [
-                  {
-                    type: "div",
-                    props: {
-                      style: {
-                        width: "6px",
-                        height: "6px",
-                        borderRadius: "3px",
-                        backgroundImage: "linear-gradient(to right, #075985, #06b6d4)",
-                        marginRight: "12px"
-                      }
-                    }
-                  },
-                  {
-                    type: "span",
-                    props: {
-                      style: {
-                        fontSize: "14px",
-                        fontWeight: 700,
-                        color: "#9CA3AF",
-                        fontFamily: "monospace"
-                      },
-                      children: "blog-jorbencas.vercel.app"
-                    }
-                  }
-                ]
-              }
-            }
           ]
         }
       },
