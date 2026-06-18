@@ -4,10 +4,11 @@ import tailwind from "@astrojs/tailwind";
 import mdx from "@astrojs/mdx";
 import sitemap from "@astrojs/sitemap";
 import vercel from "@astrojs/vercel"; // 1. Se añade la importación del adaptador
+import svelte from "@astrojs/svelte";
 export default defineConfig({
   output: "static", // o 'server' dependiendo de tu configuración
   adapter: vercel(),
-  integrations: [tailwind(), mdx(), sitemap()],
+  integrations: [tailwind(), mdx(), sitemap(), svelte()],
   image: {
     domains: ["images.unsplash.com"], // 🌟 Permet a Astro optimitzar les fotos d'Unsplash
   },

@@ -2,14 +2,11 @@
 import Layout from "@layouts/Layout.astro";
 import ChallengeCard from "@components/ChallengeCard.astro"; // El componente que me pasaste
 import { getCollection } from "astro:content";
+import { getSortedPosts } from "src/utils";
 
 // 1. Recuperamos todos los retos de la colección
 const allChallenges = await getCollection("challenges");
-
-// 2. Los ordenamos por fecha (el más reciente primero)
-const sortedChallenges = allChallenges.sort(
-  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
-);
+const sortedChallenges = await getSortedPosts(allChallenges);
 
 const totalRetos = allChallenges.length;
 ---
