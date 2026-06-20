@@ -1,0 +1,83 @@
+---
+title: "De Script a Infraestructura: Guía Completa de Integración de IA con Docker, MongoDB y Odoo"
+description: "Plan de estudios y hoja de ruta práctica para desarrolladores Fullstack que quieren dominar la IA Aplicada y la automatización B2B."
+pubDate: 2026-06-20
+author: "Jorge Beneyto Castelló"
+tags: ["IA", "Docker", "MongoDB", "Odoo", "Python", "Fullstack"]
+layout: "@layouts/PostLayout.astro"
+---
+
+El mercado de la Inteligencia Artificial está cambiando. Ya no basta con saber hacerle preguntas a ChatGPT o conectar una API básica para resumir textos. Las empresas necesitan **IA Aplicada**: sistemas capaces de leer un albarán arrugado desde WhatsApp, procesar los datos con un LLM, guardar los logs en bases de datos flexibles y actualizar el stock en un ERP real como Odoo sin intervención humana.
+
+Si tienes una base Fullstack (JavaScript, Python, bases de datos), no necesitas empezar de cero. Solo necesitas conectar las piezas. 
+
+A continuación, te presento la **hoja de ruta definitiva en 4 fases** para convertirte en un Ingeniero de Integración de IA, y un laboratorio práctico para que arranques este mismo fin de semana.
+
+---
+
+## 🗺️ La Escalera de Proyectos: De Bot a SaaS Empresarial
+
+### Fase 1: El Frontend Conversional (Los Bots)
+* **Proyecto:** Un bot interactivo de Telegram/WhatsApp que recibe URLs o imágenes, usa Gemini de forma asíncrona y devuelve resúmenes estructurados al usuario.
+* **Habilidad:** Manejo de Webhooks, APIs de mensajería y *Structured Outputs* (forzar a la IA a responder en JSON estricto).
+
+### Fase 2: Eventos e IoT en Tiempo Real
+* **Proyecto:** Un analizador de entornos físicos. Varios sensores simulan el envío de telemetría (temperatura, imágenes) a través de un **Broker MQTT**. Un backend asíncrono se suscribe, procesa el flujo con IA para detectar anomalías y dispara alertas críticas al bot de la Fase 1.
+* **Habilidad:** Arquitectura Pub/Sub y procesamiento de flujos de datos en tiempo real.
+
+### Fase 3: Contenedores y Persistencia (Proyectos Grandes)
+* **Proyecto (El Extractor de Albaranes):** Toda la infraestructura se aísla en contenedores. El bot recibe la foto de un albarán, la IA extrae los datos y el backend los almacena en una base de datos NoSQL (**MongoDB**) para auditoría y validación humana si el OCR falla.
+* **Habilidad:** Orquestación de microservicios con Docker y persistencia flexible para Big Data de IA.
+
+### Fase 4: La Integración ERP Definitiva (El Fin de Fiesta)
+* **Proyecto:** Conectar la base de datos de albaranes (Fase 3) con **Odoo ERP** a través de su API externa. El sistema busca al cliente en el ERP, genera el "Albarán de Entrada" digital y actualiza el inventario físico de la empresa automáticamente.
+* **Habilidad:** Consultoría técnica e integración de sistemas core corporativos.
+
+---
+
+## 🛠️ Tu Plan de Acción Inmediato para este Fin de Semana
+
+Para que veas que esto es súper accesible y te motives, tu primer paso con Docker y MongoDB es sencillísimo. **No te pongas a programar código de IA todavía**. Vamos a levantar tu primer entorno profesional de datos en tu máquina Linux (Ubuntu).
+
+Sigue estos tres pasos:
+
+### 1. Instala Docker y su plugin de Compose
+Abre tu terminal en Ubuntu y asegúrate de tener las herramientas de contenedores instaladas y actualizadas:
+
+```bash
+sudo apt update
+sudo apt install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+
+2. Crea tu entorno de trabajo
+
+Crea una carpeta vacía en tu directorio de proyectos y entra en ella:
+Bash
+
+mkdir laboratorio-ia && cd laboratorio-ia
+
+3. Configura el Orquestador
+
+Crea un archivo llamado docker-compose.yml e inyecta la siguiente configuración. Este archivo le dice a Docker que descargue, aísle y configure una base de datos MongoDB oficial sin ensuciar tu sistema operativo nativo:
+YAML
+
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mi_mongo_local
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:
+
+4. ¡Enciende la máquina!
+
+Para levantar tu base de datos en segundo plano, ejecuta el siguiente comando en tu terminal:
+Bash
+
+docker compose up -d
