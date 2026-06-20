@@ -1,43 +1,104 @@
 ---
-title: "Sistema de Control de Red"
-description: "Una aplicación de monitoreo en tiempo real construida con Astro y Node.js para visualizar tráfico de red."
-pubDate: "2024-05-20"
+draft: true
+title: "Mecano: Arquitectura Fullstack, WebSockets y DevOps en mi Entrenador de Mecanografía"
+description: "Cómo desarrollé una plataforma educativa escalable utilizando React, TypeScript, Express, WebSockets, PostgreSQL y pipelines de CI en GitHub Actions."
+pubDate: "2024-05-21"
+author: "Jorge Beneyto Castelló"
 image: "img/mi_primer_proyecto_cover-1200.webp"
 repository: "https://github.com/jorbencas/proyecto"
 url: "https://proyecto-demo.com"
-tags: []
+tags: ["TypeScript", "React", "Express", "WebSockets", "DevOps", "Fullstack"]
+layout: "@layouts/PostLayout.astro"
 ---
 
-# Mi Proyecto
+Como programador, tus dedos son tu principal herramienta de trabajo. Sin embargo, durante mucho tiempo sufrí una cruda realidad: **no sabía escribir con todos los dedos en el teclado**. Escribía por intuición, cometiendo errores, perdiendo velocidad y limitando mi propia productividad diaria.
 
-1. El Problema (El "Por qué")
+Al no encontrar herramientas modernas que se adaptaran al flujo real de un desarrollador (como picar código de verdad), decidí aplicar la filosofía de cualquier ingeniero: **si te duele algo, construye la solución**.
 
-    De qué hablar: Olvídate del código al principio. Explica qué problema real resuelve tu proyecto.
+Así nació **Mecano**, una plataforma educativa interactiva diseñada para dominar el teclado, aumentar las WPM (palabras por minuto) y perfeccionar la precisión. Lo que empezó como un reto personal escaló hasta convertirse en una aplicación Fullstack robusta, totalmente tipada, con comunicación bidireccional en tiempo real y blindada con flujos de integración continua.
 
-    Ejemplo para Mecano: "Aprender mecanografía suele ser aburrido y frustrante. Como programadores, nuestros dedos son nuestra herramienta de trabajo, pero la mayoría escribe mirando el teclado o sin una estructura eficiente que aumente sus WPM sin cometer errores."
+---
 
-2. La Arquitectura y Stack (El "Cómo")
+## 🏛️ Arquitectura del Sistema e Infraestructura
 
-    De qué hablar: Aquí sacas pecho con las tecnologías. Explica por qué elegiste ese stack y cómo se comunican los componentes.
+El proyecto está estructurado bajo un entorno unificado en TypeScript para asegurar la consistencia del tipado de datos entre el cliente y el servidor. El stack se compone de:
 
-    Ejemplo para Mecano: "Diseñé una arquitectura de tres capas. El frontend es una SPA con React que gestiona las métricas de WPM y precisión en tiempo real. El backend está construido con Express para servir la API de forma ligera, y los datos de progreso de los 100 niveles se guardan en PostgreSQL (Neon) mediante consultas optimizadas."
+*   **Frontend (SPA):** Desarrollado con **React 18** y **TypeScript**. La gestión de la interfaz y la experiencia visual fluida corren a cargo de **Tailwind CSS** y **Framer Motion**.
+*   **Gestión de Estado Centralizada:** Utilizo **Zustand** para controlar el estado global de la aplicación (sesiones de usuario, niveles y métricas en caliente) de forma ligera, evitando los re-renders masivos del Context API clásico.
+*   **Backend & Tiempo Real:** Una API basada en **Express 5** acoplada con **Socket.io**. Esto permite una comunicación por WebSockets bidireccional y de baja latencia para registrar métricas o interactuar en vivo.
+*   **Base de Datos y Seguridad:** Persistencia relacional en **PostgreSQL (vía Neon Database Serverless)**. La seguridad se gestiona mediante **Passport.js** (integrando autenticación OAuth 2.0 con Google), control de accesos por **JWT (JSON Web Tokens)** y hashing de contraseñas con **Bcrypt**.
 
-3. Los Retos Técnicos (Lo más valioso)
+---
 
-    De qué hablar: A los seniors nos encanta leer esto. ¿Qué te costó hacer? ¿Qué bug te explotó en la cara y cómo lo solucionaste? Esto demuestra que el proyecto lo has parido tú y que sabes resolver problemas.
+## 🎮 Características de Nivel Empresarial
 
-    Ejemplo para tu extractor de vídeo en Svelte: "El mayor reto fue manipular los buffers de vídeo en el navegador de forma fluida para permitir el recorte exacto de frames sin saturar la memoria del cliente. Lo solucioné implementando..."
+### 1. Currículo de 100 Niveles de Dificultad Progresiva
+El core de Mecano es su plan de estudios estructurado en **10 módulos temáticos**. Comienza desde la fila base del teclado y avanza suavemente hasta el uso de símbolos avanzados y tipografía de código. Los objetivos de WPM son dinámicos y van escalando desde las 15 hasta las 115 WPM.
 
-4. Siguientes Pasos (El gancho con la IA)
+### 2. Exámenes de Módulo con Tolerancia Cero
+Para validar que el usuario realmente ha dominado una técnica, cada 10 niveles se activa un **Examen de Módulo**. La exigencia aquí es máxima: **se admiten cero errores**. Si fallas una sola tecla, el examen se reinicia. Es la única forma de asegurar que la memoria muscular es perfecta.
 
-    De qué hablar: Aquí es donde conectas tus proyectos actuales con la escalera que hemos diseñado hoy. Dejas ver que el proyecto está vivo y que estás innovando.
+### 3. Analítica Visual e Insights
+Utilizo **Recharts** para pintar cuadros de mando interactivos que muestran al usuario su evolución histórica de velocidad y precisión a través de gráficas limpias. También incluye un **Modo Código** que extrae fragmentos de sintaxis real (llaves, corchetes, indentaciones), ideal para entrenar los caracteres más esquivos de nuestro día a día.
 
-    Ejemplo para tu automatización de GitHub Actions con RSS: "Actualmente, el flujo lee mi RSS de forma estática. El siguiente paso es implementar un microservicio con Docker y MongoDB para almacenar el histórico de publicaciones, y usar la API de Gemini para analizar qué tipo de posts generan más interacción."
+---
 
-✍️ Cómo puedes enfocar los posts de lo que ya tienes hecho:
+## 🛠️ Retos Técnicos y Calidad de Código (DevOps)
 
-    Post de Mecano: Enfócalo como un proyecto Enterprise-Ready. Habla de cómo gestionas la lógica de un currículo educativo de 100 niveles, cómo calculas las métricas en caliente sin retrasar el renderizado de React, y el diseño de la base de datos en Postgres.
+### El cálculo de métricas a 60 FPS sin tirones visuales
+Capturar cada pulsación de tecla (`onKeyDown`), contrastarla con el array de texto actual, pintar el feedback visual (letra correcta en verde, error en rojo) y recalcular las WPM y precisión en microsegundos puede destruir el rendimiento del navegador.
+*   **Solución:** Aislé los componentes críticos de la entrada de texto y utilicé estructuras de datos indexadas en TypeScript. El renderizado visual está optimizado con técnicas de memorización (`useCallback`), mientras que el análisis pesado de datos viaja de forma asíncrona mediante eventos de **Socket.io**, garantizando una experiencia interactiva totalmente fluida.
 
-    Post del Extractor de Clips (Svelte + Astro): Enfócalo en la Experiencia de Usuario (UX) y Rendimiento. Habla de cómo integras componentes altamente reactivos de Svelte dentro de un framework estático como Astro 6, y cómo optimizaste el SEO global del sitio.
+### Monitoreo en Producción y Git Hooks
+Un software robusto no puede depender de que el usuario te avise si la base de datos se cae o si ocurre una excepción en el cliente.
+*   **Solución:** Integré **Sentry** en el core de React para capturar excepciones en tiempo real directamente en producción. Además, el pipeline de desarrollo local está blindado: utilizo **Husky** y **Lint-Staged** para obligar al sistema a pasar los formateadores (`Prettier`) y linters (`ESLint`) en cada commit local antes de permitir empujar el código.
 
-    Post del Generador de SVG Dinámico: Enfócalo como una Solución de Infraestructura Creativa. Explica cómo creaste una API que genera imágenes al vuelo para las tarjetas de redes sociales (Open Graph) de tus posts, ahorrándote tener que diseñar una portada a mano para cada artículo.
+### Integración Continua (CI) con GitHub Actions
+Para asegurar que ningún cambio rompa la aplicación en producción, implementé una tubería de **Integración Continua** automatizada. Cada vez que realizo un `push` o una `pull_request` a las ramas `main` o `master`, un servidor en la nube (`ubuntu-latest`) ejecuta el workflow de manera hermética:
+
+```yaml
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Lint
+      run: npm run lint || echo "Lint failed but continuing"
+      
+    - name: Run tests with coverage
+      run: npm run test:coverage
+      
+    - name: Build
+      run: npm run build
+
+Este pipeline garantiza de forma determinista que las dependencias se instalen limpias (npm ci), que los tests E2E y unitarios pasen con su cobertura correspondiente (npm run test:coverage), y que el bundle final compile perfectamente (npm run build) antes de dar luz verde al despliegue.
+🔮 El Siguiente Paso: IA Adaptativa con Docker y MongoDB
+
+Mecano ya cuenta con una infraestructura de producción sólida. Mi objetivo a corto plazo es utilizar este ecosistema para dar el salto a las arquitecturas modernas de automatización e Inteligencia Artificial:
+
+    Auditoría de Fallos con MongoDB y Docker: Contenedorizar todo el stack del proyecto usando Docker Compose y añadir una base de datos NoSQL (MongoDB) para almacenar colecciones de logs masivas con los mapas de calor de las teclas exactas en las que falla cada usuario.
+
+    Generador de Prácticas Predictivas con Gemini: Conectar el backend de Express a la API de Gemini para procesar ese histórico de errores de MongoDB y generar textos de entrenamiento contextuales y personalizados al vuelo, forzando al usuario a perfeccionar de forma inteligente sus puntos débiles.
+
+Mecano me demostró que la mejor forma de aprender una tecnología (y de aprender a escribir bien en el teclado) es construyendo soluciones reales a problemas reales.
+
+👉 Explora el código completo, los tests y la configuración de Craco en mi repositorio de GitHub o ponte a prueba en la plataforma en vivo.
