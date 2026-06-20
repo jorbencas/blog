@@ -1,0 +1,88 @@
+# 🚀 PLAN DE ESTUDIOS: DE PROGRAMADOR A INGENIERO DE INTEGRACIÓN DE IA
+**Estudiante:** Jorge Beneyto Castelló  
+**Perfil:** Desarrollador backend (Python, Asyncio, Scraping)  
+**Objetivo:** Dominar la integración de Inteligencia Artificial Aplicada (LLMs, Visión, RAG) y protocolos en tiempo real (MQTT) aplicados a la automatización de procesos empresariales.
+
+---
+
+## SECTION 1: LA ESCALERA DE PROYECTOS (DE MENOS A MÁS)
+
+### 🪜 Nivel 1: El Bot Interactivo
+* **Objetivo:** Pasar de scripts síncronos/cron a servicios que escuchan eventos en tiempo real.
+* **El Proyecto:** Un Bot de Telegram interactivo. Al enviarle una URL de una noticia, el backend de Python la escanea (Scraping), llama a Gemini de forma asíncrona para resumirla y la devuelve formateada por el chat.
+* **Tecnologías clave:** `python-telegram-bot`, `google-genai`, `beautifulsoup4`, `asyncio`.
+* **Habilidad ganada:** Arquitectura dirigida por eventos de usuario y Webhooks básicos.
+
+### 🪜 Nivel 2: El Extractor Multimodal
+* **Objetivo:** Dejar de procesar solo texto y empezar a usar visión por computador con IA.
+* **El Proyecto:** Ampliación del bot de Telegram. Al enviarle una foto de un documento físico (un ticket de bar, una factura), el bot envía la imagen a Gemini y le exige una respuesta en un formato JSON estricto con los datos limpios.
+* **Tecnologías clave:** `gemini-2.5-flash` (Structured Outputs / Pydantic schemas).
+* **Habilidad ganada:** Extracción de datos estructurados de fuentes analógicas.
+
+### 🪜 Nivel 2.5: IoT + MQTT + IA (El Analista de Entornos Físicos)
+* **Objetivo:** Conectar la telemetría industrial/domótica en tiempo real con la toma de decisiones por IA.
+* **El Proyecto:** Un sistema que simula sensores de una instalación. Un script publica eventos (datos de temperatura o capturas de cámara) a un Broker MQTT. Otro servicio asíncrono se suscribe al *topic*, recibe el flujo de datos al instante y usa Gemini como motor lógico para evaluar si hay una anomalía, disparando alertas críticas.
+* **Tecnologías clave:** `paho-mqtt`, Broker Mosquitto (Local), `asyncio`.
+* **Habilidad ganada:** Arquitectura Pub/Sub, procesamiento de flujos de mensajes en tiempo real.
+
+### 🪜 Nivel 3: El Asistente con Memoria de Contexto
+* **Objetivo:** Romper la limitación "stateless" de las APIs de LLM y simular hilos de conversación reales.
+* **El Proyecto:** Una interfaz web o de terminal donde la IA recuerda los inputs anteriores del usuario gestionando de forma dinámica el histórico de la conversación.
+* **Tecnologías clave:** Streamlit, Gemini Chat Sessions API, gestión manual de tokens de contexto.
+* **Habilidad ganada:** Orquestación de memoria a corto plazo en sistemas conversacionales.
+
+### 🪜 Nivel 4: Buscador Inteligente / RAG Local (Retrieval-Augmented Generation)
+* **Objetivo:** Evitar las alucinaciones de la IA acotando sus respuestas exclusivamente a un set de datos propio.
+* **El Proyecto:** Un buscador documental al que le subes PDFs de normativas o libros. El script los trocea (*chunking*), los convierte en vectores matemáticos (*embeddings*) y los almacena localmente. Al preguntar, el sistema recupera los fragmentos correctos de la base de datos y se los inyecta a Gemini como único contexto válido.
+* **Tecnologías clave:** ChromaDB o Qdrant (Local), Embeddings API, LangChain / LlamaIndex.
+* **Habilidad ganada:** Ingeniería de bases de datos vectoriales y semánticas.
+
+### 🪜 Nivel 5: El Orquestador Autónomo (Tool Calling)
+* **Objetivo:** Darle "manos" a la IA para que ejecute acciones reales en servidores y software de terceros.
+* **El Proyecto:** Un bot que recibe órdenes en lenguaje natural (ej: *"Ponme una reunión con mi jefe mañana a las 5"*) y, en lugar de responder texto, detecta la intención y ejecuta una función de Python real que inserta el evento en una base de datos o en Google Calendar.
+* **Tecnologías clave:** Gemini Function Calling, Google Calendar API / REST APIs.
+* **Habilidad ganada:** Creación de agentes de IA autónomos y seguros.
+
+---
+
+## SECTION 2: MAPA DE NEGOCIO — EL CICLO LOGÍSTICO Y COMERCIAL
+*Esta tabla es el diccionario que traduce los procesos de una empresa real a flujos que tú, como informático, puedes automatizar con la escalera de proyectos anterior.*
+
+| # | Qué se hace | Documento principal | Objetivo del Negocio | Oportunidad de Automatización con IA |
+|---|---|---|---|---|
+| **1** | **Solicitud de información:** El cliente pide precios y condiciones. | — | Conocer las ofertas disponibles. | Clasificación automática del email de petición con IA (Nivel 1). |
+| **2** | **Presupuesto:** El proveedor informa de precios y condiciones. | Presupuesto | Proponer una oferta al cliente. | Generación automática del presupuesto desde PDF descriptivo (Nivel 2/5). |
+| **3** | **Pedido:** El cliente acepta la oferta y solicita la mercancía. | Pedido | Formalizar la compra. | Parseo del JSON del pedido para inyectarlo al sistema (Nivel 2). |
+| **4** | **Preparación del pedido (Picking):** Se buscan los productos en almacén. | Pedido | Preparar la mercancía solicitada. | Optimización de rutas de recogida mediante algoritmos de grafos. |
+| **5** | **Comprobación:** Se revisan cantidades y estado. | Pedido | Evitar errores antes del envío. | Validación cruzada automatizada entre stock físico y el pedido digital. |
+| **6** | **Embalaje (Packing):** Se empaquetan y protegen los productos. | — | Facilitar el transporte y evitar daños. | Cálculo automatizado del volumen y tipo de caja necesaria. |
+| **7** | **Expedición:** La mercancía sale del almacén. | **Albarán** | Acreditar la entrega de productos. | Emisión automatizada del documento del Albarán de salida. |
+| **8** | **Transporte:** La mercancía se envía al cliente. | **Albarán** | Llevar los productos al destino. | Monitorización vía MQTT/IoT de la ubicación del camión (Nivel 2.5). |
+| **9** | **Recepcion de mercancías:** El cliente recibe la carga. | **Albarán** | Comprobar que llegó correctamente. | Foto del repartidor al albarán firmado para confirmar recepción (Nivel 2). |
+| **10** | **Verificación:** Se compara pedido, albarán y lo recibido. | Pedido y Albarán | Detectar errores o incidencias. | **RAG Documental (Nivel 4):** IA compara el PDF del pedido vs foto del albarán. |
+| **11** | **Entrada en almacén:** Se registra la llegada. | Registro de almacén | Actualizar existencias. | Llamada automática a la API del ERP para sumar stock (Nivel 5). |
+| **12** | **Identificación:** Se etiquetan los productos. | Etiquetas | Facilitar su localización. | Generación e impresión automática de códigos QR de inventario. |
+| **13** | **Control de lotes:** Se asigna número de lote. | Lote | Garantizar la trazabilidad. | Trazabilidad del producto en caso de alertas sanitarias o de calidad. |
+| **14** | **Almacenamiento:** Se colocan en su ubicación. | — | Conservar y organizar la mercancía. | Asignación de estantería óptima en base a la rotación del producto. |
+| **15** | **Gestión del stock:** Se controlan entradas y salidas. | Software de almacén | Evitar faltas o excesos de mercancía. | Modelos predictivos que avisan cuándo comprar antes de quedarse sin stock. |
+| **16** | **Inventario:** Se cuentan físicamente los productos. | Inventario | Comprobar existencias reales. | Cuadrante automatizado de discrepancias entre el sistema y el conteo real. |
+| **17** | **Venta al cliente:** El cliente compra productos. | Pedido de venta | Iniciar una nueva operación de venta. | Entrada del trigger comercial en la base de datos central. |
+| **18** | **Preparación de pedido de venta:** Se recogen los productos vendidos. | Pedido | Preparar la salida de mercancías. | Generación de la orden de salida para el equipo de almacén. |
+| **19** | **Entrega al cliente:** Se envían los productos vendidos. | **Albarán de salida** | Justificar la entrega. | El cliente firma el albarán, cerrando la responsabilidad de la entrega. |
+| **20** | **Facturación:** Se emite el documento de cobro. | Factura | Registrar y cobrar la venta. | Transformación automática de Albaranes confirmados en Facturas legales. |
+| **21** | **Pago:** El cliente paga la factura. | Transferencia, etc. | Saldar la deuda. | Conciliación bancaria automatizada (cruzar el ingreso con la factura). |
+| **22** | **Pagaré (si existe):** Promesa de pago en fecha futura. | Pagaré | Garantizar el pago aplazado. | Agenda automática de alertas de cobro para la fecha de vencimiento. |
+| **23** | **Recibo:** El vendedor confirma que tiene el dinero. | Recibo | Justificar el pago realizado. | Envío automático por email del recibo de pago en formato PDF. |
+
+---
+
+## SECTION 3: CÓMO SE CONECTAN AMBOS MUNDOS
+
+Cuando una empresa te pida *"automatizar albaranes por foto en WhatsApp"*, ya no verás una montaña imposible. Ahora mirarás este documento y dirás:
+
+1. **El Canal:** El usuario usa WhatsApp (equivalente a tu **Nivel 1: Bot de Telegram**).
+2. **La Entrada:** Envía una foto de un **Albarán** (Punto 9 de la tabla de negocio).
+3. **El Procesamiento:** Tu código de Python recoge la foto y usa capacidades de visión (como en tu **Nivel 2: Extractor Multimodal**) para convertir ese papel arrugado en un JSON limpio con los artículos y cantidades.
+4. **La Acción:** Tu script usa funciones de integración (como en tu **Nivel 5: Tool Calling**) para subir esos datos al software de almacén del cliente, actualizando el stock (Punto 11 y 15) automáticamente y sin errores humanos.
+
+¡Tienes la hoja de ruta en tus manos, Jorge! Todo es cuestión de conectar las piezas.
