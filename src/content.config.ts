@@ -23,7 +23,7 @@ const weeklyPosts = defineCollection({
     draft: z.boolean().optional().default(false),
     title: z.string(),
     description: z.string(),
-    pubDate: z.string().or(z.date()),
+    pubDate: z.coerce.string().or(z.coerce.date()),
     tags: z.array(z.string()).default([]),
     image: z.string().optional(),
     author: z.string(),
@@ -36,7 +36,7 @@ const challenges = defineCollection({
   schema: z.object({
     title: z.string(),
     description: z.string(),
-    pubDate: z.coerce.date(),
+    pubDate: z.coerce.string().or(z.coerce.date()),
     image: z.string(),
     tags: z.array(z.string()),
     difficulty: z.enum(['Iniciación', 'Intermedio', 'Avanzado']),
@@ -49,7 +49,7 @@ const myprojects = defineCollection({
     draft: z.boolean().optional().default(false),
     title: z.string(),
     description: z.string(),
-    pubDate: z.coerce.date(),
+    pubDate: z.coerce.string().or(z.coerce.date()),
     image: z.string(),
     repository: z.string().url().optional(), // Enlace a GitHub
     url: z.string().url().optional(),        // Enlace al proyecto en vivo
