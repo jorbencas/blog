@@ -51,6 +51,7 @@ const myprojects = defineCollection({
     description: z.string(),
     pubDate: z.coerce.string().or(z.coerce.date()),
     image: z.string(),
+    author: z.string(),
     repository: z.string().url().optional(), // Enlace a GitHub
     url: z.string().url().optional(),        // Enlace al proyecto en vivo
     tags: z.array(z.string()).optional(),               // Tecnologías (React, Astro, etc.)
