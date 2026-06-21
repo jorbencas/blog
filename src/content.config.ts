@@ -51,11 +51,11 @@ const myprojects = defineCollection({
     description: z.string(),
     pubDate: z.coerce.string().or(z.coerce.date()),
     image: z.string(),
-    author: z.string(),
+    author: z.string().optional(),
     repository: z.string().url().optional(), // Enlace a GitHub
     url: z.string().url().optional(),        // Enlace al proyecto en vivo
     tags: z.array(z.string()).optional(),               // Tecnologías (React, Astro, etc.)
-    featured: z.boolean().default(false),    // Por si quieres destacar alguno
+    featured: z.boolean().optional().default(false),    // Por si quieres destacar alguno
   }),
 });
 
