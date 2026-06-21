@@ -1,10 +1,11 @@
 ---
+draft: false
 title: "Mecano: Arquitectura Fullstack, WebSockets y DevOps en mi Entrenador de Mecanografía"
 description: "Cómo desarrollé una plataforma educativa escalable utilizando React, TypeScript, Express, WebSockets, PostgreSQL y pipelines de CI en GitHub Actions."
 pubDate: "2026/05/20"
-image: "img/mi_primer_proyecto_cover-1200.webp"
-featured: false
-layout: "@layouts/PostLayout.astro"
+tags: ['web', 'ia', 'python']
+image: "img/default.webp"
+author: "Jorge Beneyto Castelló"
 ---
 
 Como programador, tus dedos son tu principal herramienta de trabajo. Sin embargo, durante mucho tiempo sufrí una cruda realidad: **no sabía escribir con todos los dedos en el teclado**. Escribía por intuición, cometiendo errores, perdiendo velocidad y limitando mi propia productividad diaria.
@@ -13,7 +14,6 @@ Al no encontrar herramientas modernas que se adaptaran al flujo real de un desar
 
 Así nació **Mecano**, una plataforma educativa interactiva diseñada para dominar el teclado, aumentar las WPM (palabras por minuto) y perfeccionar la precisión. Lo que empezó como un reto personal escaló hasta convertirse en una aplicación Fullstack robusta, totalmente tipada, con comunicación bidireccional en tiempo real y blindada con flujos de integración continua.
 
----
 
 ## 🏛️ Arquitectura del Sistema e Infraestructura
 
@@ -24,7 +24,6 @@ El proyecto está estructurado bajo un entorno unificado en TypeScript para aseg
 *   **Backend & Tiempo Real:** Una API basada en **Express 5** acoplada con **Socket.io**. Esto permite una comunicación por WebSockets bidireccional y de baja latencia para registrar métricas o interactuar en vivo.
 *   **Base de Datos y Seguridad:** Persistencia relacional en **PostgreSQL (vía Neon Database Serverless)**. La seguridad se gestiona mediante **Passport.js** (integrando autenticación OAuth 2.0 con Google), control de accesos por **JWT (JSON Web Tokens)** y hashing de contraseñas con **Bcrypt**.
 
----
 
 ## 🎮 Características de Nivel Empresarial
 
@@ -37,7 +36,6 @@ Para validar que el usuario realmente ha dominado una técnica, cada 10 niveles 
 ### 3. Analítica Visual e Insights
 Utilizo **Recharts** para pintar cuadros de mando interactivos que muestran al usuario su evolución histórica de velocidad y precisión a través de gráficas limpias. También incluye un **Modo Código** que extrae fragmentos de sintaxis real (llaves, corchetes, indentaciones), ideal para entrenar los caracteres más esquivos de nuestro día a día.
 
----
 
 ## 🛠️ Retos Técnicos y Calidad de Código (DevOps)
 
@@ -85,6 +83,7 @@ jobs:
       
     - name: Build
       run: npm run build
+```
 
 Este pipeline garantiza de forma determinista que las dependencias se instalen limpias (npm ci), que los tests E2E y unitarios pasen con su cobertura correspondiente (npm run test:coverage), y que el bundle final compile perfectamente (npm run build) antes de dar luz verde al despliegue.
 🔮 El Siguiente Paso: IA Adaptativa con Docker y MongoDB
