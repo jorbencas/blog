@@ -1,102 +1,79 @@
 ---
-draft: false
-title: "Mecano: Arquitectura Fullstack, WebSockets y DevOps en mi Entrenador de Mecanografía"
-description: "Cómo desarrollé una plataforma educativa escalable utilizando React, TypeScript, Express, WebSockets, PostgreSQL y pipelines de CI en GitHub Actions."
+draft: true
+title: "Mecano: El Entrenador de Mecanografía Definitivo para Desarrolladores"
+description: "Mejora tu velocidad y precisión escribiendo código. Descubre Mecano, una plataforma web interactiva con prácticas reales, análisis de rendimiento y minijuegos. ¡Pruébala gratis y desata tu productividad!"
 pubDate: "2026/05/20"
-tags: ['web', 'ia', 'python']
-image: "img/default.webp"
-repository: "https://github.com/jorbencas/proyecto"
+tags: ['web', 'react', 'desarrollo', 'tech', 'frontend', 'Javascript']
+image: "img/mecano_cover.webp"
+repository: "https://github.com/jorbencas/mecano_prueba_web"
 url: "https://proyecto-demo.com"
 author: "Jorge Beneyto Castelló"
 featured: false
 ---
 
-Como programador, tus dedos son tu principal herramienta de trabajo. Sin embargo, durante mucho tiempo sufrí una cruda realidad: **no sabía escribir con todos los dedos en el teclado**. Escribía por intuición, cometiendo errores, perdiendo velocidad y limitando mi propia productividad diaria.
+## 1. El Planteamiento del Problema
 
-Al no encontrar herramientas modernas que se adaptaran al flujo real de un desarrollador (como picar código de verdad), decidí aplicar la filosofía de cualquier ingeniero: **si te duele algo, construye la solución**.
+La velocidad en la interacción con el teclado es un cuello de botella latente en la productividad de cualquier desarrollador. Aunque existen plataformas de mecanografía lúdicas en el mercado, la mayoría evitan abordar la complejidad estructural de la sintaxis de programación (indentaciones, uso constante de símbolos especiales y caracteres de control) o no proveen el rigor necesario que exige a un nivel profesional evitar errores tipográficos en el código fuente. Se requería, por tanto, una plataforma técnica y robusta que penalizase activamente la imprecisión y entrenase la memoria muscular en escenarios reales de desarrollo de software complejos.
 
-Así nació **Mecano**, una plataforma educativa interactiva diseñada para dominar el teclado, aumentar las WPM (palabras por minuto) y perfeccionar la precisión. Lo que empezó como un reto personal escaló hasta convertirse en una aplicación Fullstack robusta, totalmente tipada, con comunicación bidireccional en tiempo real y blindada con flujos de integración continua.
+## 2. La Solución Arquitectónica
 
+Para resolver esta ineficiencia nace **Mecano**. La plataforma ha sido diseñada bajo una arquitectura Fullstack unificada que prioriza el rendimiento en la interfaz y la estabilidad de las comunicaciones en tiempo real. 
 
-## 🏛️ Arquitectura del Sistema e Infraestructura
+El entorno de ejecución abarca:
+*   **Capa de Presentación (Frontend):** Construida con **React 18** y fuertemente tipada con **TypeScript**, empleando **Tailwind CSS** para un sistema de diseño modular.
+*   **Manejo de Estado Global:** Se delegó el árbol del estado a **Zustand** para minimizar renderizados innecesarios, asegurando que las métricas de rendimiento del usuario operen de manera aislada sin detonar cascadas de re-renders.
+*   **Servicio de Backend y WebSockets:** La API Core está montada sobre **Express 5**. Se integra un canal bidireccional de baja latencia con **Socket.io** responsable de persistir analíticas en vivo y manejar iteraciones de sincronización entre clientes.
+*   **Capa de Persistencia y Gobernanza:** Los esquemas relacionales se ejecutan sobre una instancia Serverless de **PostgreSQL (Neon Engine)**. La autenticación es regulada mediante abstracciones OAuth 2.0 (**Passport.js**), emisiones de tokens **JWT** y cifrado persistente en base de datos con **Bcrypt**.
 
-El proyecto está estructurado bajo un entorno unificado en TypeScript para asegurar la consistencia del tipado de datos entre el cliente y el servidor. El stack se compone de:
+## 3. Retos Técnicos y Cultura DevOps
 
-*   **Frontend (SPA):** Desarrollado con **React 18** y **TypeScript**. La gestión de la interfaz y la experiencia visual fluida corren a cargo de **Tailwind CSS** y **Framer Motion**.
-*   **Gestión de Estado Centralizada:** Utilizo **Zustand** para controlar el estado global de la aplicación (sesiones de usuario, niveles y métricas en caliente) de forma ligera, evitando los re-renders masivos del Context API clásico.
-*   **Backend & Tiempo Real:** Una API basada en **Express 5** acoplada con **Socket.io**. Esto permite una comunicación por WebSockets bidireccional y de baja latencia para registrar métricas o interactuar en vivo.
-*   **Base de Datos y Seguridad:** Persistencia relacional en **PostgreSQL (vía Neon Database Serverless)**. La seguridad se gestiona mediante **Passport.js** (integrando autenticación OAuth 2.0 con Google), control de accesos por **JWT (JSON Web Tokens)** y hashing de contraseñas con **Bcrypt**.
+El desarrollo iterativo de un motor dinámico de teclado desencadena importantes problemas de rendimiento algorítmico y control de calidad sobre la arquitectura. 
 
+### El Reto del Renderizado a Alta Frecuencia (60 FPS)
+Capturar de forma interceptada los eventos de I/O (`onKeyDown`) y contrastarlos instantáneamente contra los tensores de validación puede saturar rápidamente el hilo principal del DOM.
+*   **Resolución:** Se aislaron los contextos lógicos más pesados empleando estructuras de datos indexados inter-mutables en memoria. El coste pesado de actualización analítica (Cálculo puro matemático de *Words Per Minute* y porcentajes de Error-Rates) viaja en ráfagas asíncronas, manteniendo el Event Loop de JavaScript completamente fluido.
 
-## 🎮 Características de Nivel Empresarial
+### Control de Calidad: Testing Suite Activa
+Para garantizar que cualquier refactorización preserve la fidelidad de la experiencia E2E, se inyectó de forma temprana un ecosistema completo de automatización de control de calidad:
+*   **Testing E2E Automatizado:** Los scripts de regresión integrales iteran gracias a los flujos controlados implementados con **Playwright**.
+*   **Componentes a Prueba de Fallos:** Se provee un set de unit testings estrictos utilizando de forma híbrida el runtime de **Jest** junto a React Testing Library.
+*   **Soporte Ciego de Accesibilidad:** El pipeline se blinda contra integraciones defectuosas o bloqueos de navegación mediante aserciones de estándar a11y, orquestadas y monitoreadas por las dependencias `@axe-core/react` y `jest-axe`.
 
-### 1. Currículo de 100 Niveles de Dificultad Progresiva
-El core de Mecano es su plan de estudios estructurado en **10 módulos temáticos**. Comienza desde la fila base del teclado y avanza suavemente hasta el uso de símbolos avanzados y tipografía de código. Los objetivos de WPM son dinámicos y van escalando desde las 15 hasta las 115 WPM.
+### Pipeline CI/CD: Controles en Integración Continua
+Garantizar cero defectos en la rama default (`main`) forzó diseñar flujos estrictamente condicionados en **GitHub Actions**. Ante cualquier `push` o `pull_request`, nodos efímeros de Ubuntu arrancan la copia de trabajo y auditan el software contra los linters. Además, aplicando convenciones de control local, interceden paquetes como **Husky** y `lint-staged` validando formateos semánticos pre-commit. Adicionalmente, el ecosistema transiciona sin riesgo a entornos cloud observando las fugas silenciosas o excepciones runtime con telemetría de **Sentry**.
 
-### 2. Exámenes de Módulo con Tolerancia Cero
-Para validar que el usuario realmente ha dominado una técnica, cada 10 niveles se activa un **Examen de Módulo**. La exigencia aquí es máxima: **se admiten cero errores**. Si fallas una sola tecla, el examen se reinicia. Es la única forma de asegurar que la memoria muscular es perfecta.
+## 4. Desglose del Feature Set
 
-### 3. Analítica Visual e Insights
-Utilizo **Recharts** para pintar cuadros de mando interactivos que muestran al usuario su evolución histórica de velocidad y precisión a través de gráficas limpias. También incluye un **Modo Código** que extrae fragmentos de sintaxis real (llaves, corchetes, indentaciones), ideal para entrenar los caracteres más esquivos de nuestro día a día.
+El valor principal funcional de la herramienta reside en la segmentación de su oferta formativa:
+*   **Práctica Focalizada y Entornos Custom:** Incluye librerías operativas para modos restrictivos contra errores (Modo Precisión), rutinas de sprint (Modo Velocidad), y simuladores directos de digitalización léxica en bloques (Modo Código / Símbolos). Dispone además de una factoría de "Textos Mágicos / Custom Levels".
+*   **Módulo Iterativo de Dictado:** Feature innovadora apoyada firmemente en tecnologías nativas de *Speech Recognition*, que empuja a transcribir al vuelo lo que dicta la plataforma en un proceso a tiempo real.
+*   **Sistema de Progresión Analítica:** Tracking en backend para generar dashboards analíticos renderizados mediante librerías de visualización de datos (**Recharts**). La competitividad inter-usuario se promueve con listados jerárquicos asíncronos (Leaderboards).
 
+## 5. Puesta en Marcha Local (Running the App)
 
-## 🛠️ Retos Técnicos y Calidad de Código (DevOps)
+Para desplegar localmente el workspace de la plataforma el repositorio expone una operabilidad simplificada.
 
-### El cálculo de métricas a 60 FPS sin tirones visuales
-Capturar cada pulsación de tecla (`onKeyDown`), contrastarla con el array de texto actual, pintar el feedback visual (letra correcta en verde, error en rojo) y recalcular las WPM y precisión en microsegundos puede destruir el rendimiento del navegador.
-*   **Solución:** Aislé los componentes críticos de la entrada de texto y utilicé estructuras de datos indexadas en TypeScript. El renderizado visual está optimizado con técnicas de memorización (`useCallback`), mientras que el análisis pesado de datos viaja de forma asíncrona mediante eventos de **Socket.io**, garantizando una experiencia interactiva totalmente fluida.
+```bash
+# Extraer el repositorio más actualizado
+git clone https://github.com/jorbencas/mecano_prueba_web.git
+cd mecano_prueba_web
 
-### Monitoreo en Producción y Git Hooks
-Un software robusto no puede depender de que el usuario te avise si la base de datos se cae o si ocurre una excepción en el cliente.
-*   **Solución:** Integré **Sentry** en el core de React para capturar excepciones en tiempo real directamente en producción. Además, el pipeline de desarrollo local está blindado: utilizo **Husky** y **Lint-Staged** para obligar al sistema a pasar los formateadores (`Prettier`) y linters (`ESLint`) en cada commit local antes de permitir empujar el código.
+# Ejecutar resolución de paquetería base garantizando Node 18+
+npm install
 
-### Integración Continua (CI) con GitHub Actions
-Para asegurar que ningún cambio rompa la aplicación en producción, implementé una tubería de **Integración Continua** automatizada. Cada vez que realizo un `push` o una `pull_request` a las ramas `main` o `master`, un servidor en la nube (`ubuntu-latest`) ejecuta el workflow de manera hermética:
+# Provisionar variables de entorno requeridas
+cp .env.example .env 
+# Configurar los secretos obligatorios en el .env (Neon PostgreSQL y config de Google OAuth)
 
-```yaml
-name: CI
-
-on:
-  push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v3
-    
-    - name: Use Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
-        cache: 'npm'
-        
-    - name: Install dependencies
-      run: npm ci
-      
-    - name: Lint
-      run: npm run lint || echo "Lint failed but continuing"
-      
-    - name: Run tests with coverage
-      run: npm run test:coverage
-      
-    - name: Build
-      run: npm run build
+# Levantar concurrentemente el API Backend y Web Server
+node server/index.js &
+npm start
 ```
 
-Este pipeline garantiza de forma determinista que las dependencias se instalen limpias (npm ci), que los tests E2E y unitarios pasen con su cobertura correspondiente (npm run test:coverage), y que el bundle final compile perfectamente (npm run build) antes de dar luz verde al despliegue.
-🔮 El Siguiente Paso: IA Adaptativa con Docker y MongoDB
+El servidor SPA quedará automáticamente expuesto vía HMR en `http://localhost:3000`, observando activamente el API transaccional.
 
-Mecano ya cuenta con una infraestructura de producción sólida. Mi objetivo a corto plazo es utilizar este ecosistema para dar el salto a las arquitecturas modernas de automatización e Inteligencia Artificial:
+## 6. Live Demo
 
-    Auditoría de Fallos con MongoDB y Docker: Contenedorizar todo el stack del proyecto usando Docker Compose y añadir una base de datos NoSQL (MongoDB) para almacenar colecciones de logs masivas con los mapas de calor de las teclas exactas en las que falla cada usuario.
+Para dimensionar la madurez de despliegue del proyecto recomendamos la incursión en la instancia Productiva montada. El aprovisionamiento ya está levantado.
 
-    Generador de Prácticas Predictivas con Gemini: Conectar el backend de Express a la API de Gemini para procesar ese histórico de errores de MongoDB y generar textos de entrenamiento contextuales y personalizados al vuelo, forzando al usuario a perfeccionar de forma inteligente sus puntos débiles.
-
-Mecano me demostró que la mejor forma de aprender una tecnología (y de aprender a escribir bien en el teclado) es construyendo soluciones reales a problemas reales.
-
-👉 Explora el código completo, los tests y la configuración de Craco en mi repositorio de GitHub o ponte a prueba en la plataforma en vivo.
+👉 **[Poner a prueba el código o acceder a la Demo Live de Mecano](https://proyecto-demo.com)**
