@@ -46,7 +46,26 @@ O(log n).
 ### 💻 Código de la Solución (JavaScript)
 
 ```javascript
-/* PriorityQueue en JS */
+class PriorityQueue {
+  constructor() { this.heap = []; }
+  enqueue(item, priority) {
+    this.heap.push({ item, priority });
+    this.heap.sort((a, b) => b.priority - a.priority);
+  }
+  dequeue() {
+    return this.heap.shift();
+  }
+  get size() { return this.heap.length; }
+}
+
+const pq = new PriorityQueue();
+pq.enqueue("Tarea baja", 1);
+pq.enqueue("Tarea alta", 10);
+pq.enqueue("Tarea media", 5);
+
+while (pq.size > 0) {
+  console.log("Ejecutando:", pq.dequeue().item);
+}
 ```
 
 </div>

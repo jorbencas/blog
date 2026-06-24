@@ -1,14 +1,17 @@
 import { defineConfig } from "astro/config";
 import { remarkReadingTime } from "./remark-reading-time.mjs";
-import tailwind from "@astrojs/tailwind";
+import tailwindcss from "@tailwindcss/vite";
 import mdx from "@astrojs/mdx";
 import sitemap from "@astrojs/sitemap";
-import vercel from "@astrojs/vercel"; // 1. Se añade la importación del adaptador
+import vercel from "@astrojs/vercel";
 import svelte from "@astrojs/svelte";
 export default defineConfig({
-  output: "static", // o 'server' dependiendo de tu configuración
+  output: "static",
   adapter: vercel(),
-  integrations: [tailwind(), mdx(), sitemap(), svelte()],
+  integrations: [mdx(), sitemap(), svelte()],
+  vite: {
+    plugins: [tailwindcss()],
+  },
   image: {
     domains: ["images.unsplash.com"], // 🌟 Permet a Astro optimitzar les fotos d'Unsplash
   },

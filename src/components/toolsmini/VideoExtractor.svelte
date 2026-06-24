@@ -190,9 +190,89 @@
     savedCuts = savedCuts.filter(c => c.id !== id);
   }
 
-  function processVideoCuts() {
+  function getSupportedMimeType() {
+    const types = [
+      'video/webm;codecs=vp9,opus',
+      'video/webm;codecs=vp8,opus',
+      'video/webm;codecs=vp9',
+      'video/webm;codecs=vp8',
+      'video/webm',
+      'video/mp4;codecs=h264,aac',
+      'video/mp4',
+    ];
+    for (const t of types) {
+      if (MediaRecorder.isTypeSupported(t)) return t;
+    }
+    return '';
+  }
+
+  async function processSingleCut(cut) {
+    return new Promise((resolve) => {
+      visibleVideoElement.currentTime = cut.start;
+      const onSeeked = () => {
+        visibleVideoElement.removeEventListener('seeked', onSeeked);
+        const stream = visibleVideoElement.captureStream();
+        const mimeType = getSupportedMimeType();
+        const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
+        const chunks = [];
+        recorder.ondataavailable = (e) => chunks.push(e.data);
+        recorder.onstop = () => {
+          visibleVideoElement.pause();
+          const blob = new Blob(chunks, { type: recorder.mimeType || 'video/webm' });
+          const ext = recorder.mimeType.includes('mp4') ? 'mp4' : 'webm';
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `recorte_${(currentFile?.name || 'video').replace(/\.[^.]+$/, '')}_${cut.startStr.replace(/:/g, '-')}_${cut.endStr.replace(/:/g, '-')}.${ext}`;
+          a.click();
+          URL.revokeObjectURL(url);
+          resolve();
+        };
+        recorder.onerror = () => {
+          visibleVideoElement.pause();
+          resolve();
+        };
+        const durationMs = Math.max(100, (cut.end - cut.start) * 1000);
+        recorder.start();
+        visibleVideoElement.play();
+        setTimeout(() => recorder.stop(), durationMs);
+      };
+      videoElement.addEventListener('seeked', onSeeked, { once: true });
+      setTimeout(() => { videoElement.removeEventListener('seeked', onSeeked); resolve(); }, 5000);
+    });
+  }
+
+  async function processVideoCuts() {
     if (savedCuts.length === 0) return;
-    alert(`Enviando a procesar ${savedCuts.length} tramo(s) guardado(s).`);
+    const keepCuts = savedCuts.filter(c => c.mode === 'keep');
+    if (keepCuts.length === 0) {
+      alert('No hay tramos en modo "Conservar". Cambia el modo o añade tramos.');
+      return;
+    }
+    if (!HTMLVideoElement.prototype.captureStream) {
+      alert('Tu navegador no soporta captureStream. Usa Chrome o Edge.');
+      return;
+    }
+    const isFirefox = navigator.userAgent.includes('Firefox');
+    if (isFirefox) {
+      alert('Firefox no captura audio con captureStream. Los segmentos se descargarán sin sonido. Además, la duración del procesamiento es igual a la duración real del segmento.');
+    } else {
+      const totalSeconds = keepCuts.reduce((sum, c) => sum + (c.end - c.start), 0);
+      if (totalSeconds > 30) {
+        alert(`La duración total a procesar es de ${Math.ceil(totalSeconds)}s. La grabación se hará en tiempo real, tardará al menos ese tiempo.`);
+      }
+    }
+    cancelRequested = false;
+    progress = 0;
+    isExtracting = true;
+    for (let i = 0; i < keepCuts.length; i++) {
+      if (cancelRequested) break;
+      statusText = `Procesando tramo ${i + 1} de ${keepCuts.length}: ${keepCuts[i].startStr} - ${keepCuts[i].endStr}`;
+      try { await processSingleCut(keepCuts[i]); } catch (e) { console.error(e); }
+      progress = Math.round(((i + 1) / keepCuts.length) * 100);
+    }
+    statusText = cancelRequested ? 'Procesamiento cancelado' : `¡${keepCuts.length} tramo(s) descargado(s)!`;
+    isExtracting = false;
   }
 
   // --- MANEJO DE ARCHIVOS ---
@@ -387,7 +467,7 @@
 
           <div class="tab-actions border-slate-100 dark:border-slate-800">
             <button type="button" class="btn btn-secondary bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300" onclick={reset}>Quitar Vídeo</button>
-            <button type="button" class="btn btn-success" disabled={savedCuts.length === 0} onclick={processVideoCuts}>
+            <button type="button" class="btn btn-success" disabled={savedCuts.length === 0 || isExtracting} onclick={processVideoCuts}>
               💾 Guardar Vídeo Cortado
             </button>
           </div>
@@ -415,7 +495,7 @@
   </div>
 {/if}
 
-{#if isExtracting && activeTab === 'frames'}
+{#if isExtracting}
   <div class="modal-overlay bg-black/60 backdrop-blur-xs">
     <div class="modal-content bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
       <div class="status-text text-slate-800 dark:text-slate-100">{statusText}</div>

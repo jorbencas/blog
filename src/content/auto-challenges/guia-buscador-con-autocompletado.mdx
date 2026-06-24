@@ -46,9 +46,43 @@ O(L) para búsqueda, O(N) para sugerencias.
 ### 💻 Código de la Solución (Python)
 
 ```python
-class TrieNode: 
- def __init__(self): self.c={}; self.end=False
-def sol(root, pref): pass
+class TrieNode:
+    def __init__(self):
+        self.hijos = {}
+        self.fin = False
+
+class Trie:
+    def __init__(self):
+        self.raiz = TrieNode()
+
+    def insertar(self, palabra):
+        n = self.raiz
+        for c in palabra:
+            if c not in n.hijos:
+                n.hijos[c] = TrieNode()
+            n = n.hijos[c]
+        n.fin = True
+
+    def _dfs(self, n, pref, res):
+        if n.fin:
+            res.append(pref)
+        for c, hijo in n.hijos.items():
+            self._dfs(hijo, pref + c, res)
+
+    def autocompletar(self, pref):
+        n = self.raiz
+        for c in pref:
+            if c not in n.hijos:
+                return []
+            n = n.hijos[c]
+        res = []
+        self._dfs(n, pref, res)
+        return res
+
+t = Trie()
+for p in ["hola", "holgazán", "hongo", "hoja", "hotel"]:
+    t.insertar(p)
+print(t.autocompletar("ho"))
 ```
 
 </div>

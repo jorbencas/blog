@@ -46,7 +46,39 @@ O(log exp).
 ### 💻 Código de la Solución (Python)
 
 ```python
-def sol(m, e, n): return pow(m, e, n)
+import random
+
+def es_primo(n):
+    if n < 2: return False
+    for i in range(2, int(n ** 0.5) + 1):
+        if n % i == 0: return False
+    return True
+
+def mcd(a, b):
+    return a if b == 0 else mcd(b, a % b)
+
+def generar_claves():
+    primos = [p for p in range(50, 100) if es_primo(p)]
+    p, q = random.sample(primos, 2)
+    n = p * q
+    phi = (p - 1) * (q - 1)
+    e = 3
+    while mcd(e, phi) != 1:
+        e += 2
+    d = pow(e, -1, phi)
+    return (e, n), (d, n)
+
+def cifrar(m, pub):
+    return pow(m, pub[0], pub[1])
+
+def descifrar(c, priv):
+    return pow(c, priv[0], priv[1])
+
+pub, priv = generar_claves()
+mensaje = 42
+cifrado = cifrar(mensaje, pub)
+descifrado = descifrar(cifrado, priv)
+print(f"Mensaje: {mensaje}, Cifrado: {cifrado}, Descifrado: {descifrado}")
 ```
 
 </div>

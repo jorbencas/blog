@@ -3,8 +3,9 @@ import { formatDatePost, getSortedPosts } from "src/utils.js";
 import Layout from "@layouts/Layout.astro";
 import NextPrevLiks from "@components/NextPrevLiks.astro";
 import TableOfContents from "@components/TableOfContents.astro";
-import CodeEnhancer from "@components/CodeEnhancer.astro";
+import  CodeEnhancer from "@components/CodeEnhancer.astro";
 import ReadingProgress from "@components/ReadingProgress.astro";
+import ResponsiveImage from "@components/ResponsiveImage.astro";
 import { getCollection } from "astro:content";
 import type { MarkdownHeading } from "astro";
 import AudioPlayer from "@components/AudioPlayer.astro";
@@ -39,10 +40,11 @@ const {
   audioSrc,
 } = Astro.props;
 
-let imagenLimpia = image || "/img/default.jpg";
-if (!imagenLimpia.startsWith("/") && !imagenLimpia.startsWith("http")) {
-  imagenLimpia = `/${imagenLimpia}`;
-}
+const imagenLimpia = image
+  ? image.startsWith("/") || image.startsWith("http")
+    ? image
+    : `/${image}`
+  : null;
 
 const allPosts = await getCollection("posts");
 const sortedPosts = await getSortedPosts(allPosts);
@@ -91,11 +93,23 @@ const tagsArray = Array.isArray(tags)
         <div
           class="relative w-full h-[300px] md:h-[400px] overflow-hidden bg-slate-100 dark:bg-slate-900 mb-10"
         >
-          <img
-            class="w-full h-full object-cover"
-            src={imagenLimpia}
-            alt={title}
-          />
+          {
+            imagenLimpia ? (
+              <ResponsiveImage
+                fallback={imagenLimpia}
+                alt={title}
+                fetchpriority="high"
+                loading="eager"
+                class="w-full h-full object-cover"
+              />
+            ) : (
+              <div class="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center">
+                <span class="text-slate-500 dark:text-slate-600 text-xs sm:text-sm">
+                  SIN_IMAGEN
+                </span>
+              </div>
+            )
+          }
         </div>
 
         <div class="space-y-6">
@@ -238,43 +252,81 @@ const tagsArray = Array.isArray(tags)
 
   /* --- Estenedor de Solución (Details) --- */
   details {
-    @apply p-6 pt-2;
+    padding: 1.5rem;
+    padding-top: 0.5rem;
   }
 
   details[open] {
-    @apply shadow-[0_0_30px_rgba(6,182,212,0.15)] ring-1 ring-cyan-500/20;
+    box-shadow: 0 0 30px rgba(6,182,212,0.15), 0 0 0 1px rgba(6,182,212,0.2);
   }
 
   /* --- Cabecera del desplegable --- */
   summary {
-    @apply p-5 cursor-pointer font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between select-none list-none;
+    padding: 1.25rem;
+    cursor: pointer;
+    font-weight: 700;
+    color: #334155;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    user-select: none;
+    list-style: none;
     transition: background 0.2s ease;
   }
 
+  :global(.dark) summary {
+    color: #cbd5e1;
+  }
+
   summary:hover {
-    @apply bg-slate-500/5;
+    background-color: rgba(100,116,139,0.05);
   }
 
   /* Indicador de estado personalizado */
   summary::after {
     content: "DESCIFRAR";
-    @apply text-xs font-black tracking-widest bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-slate-300 px-3 py-1 rounded-md transition-all;
+    font-size: 0.75rem;
+    font-weight: 900;
+    letter-spacing: 0.2em;
+    background-color: #e2e8f0;
+    color: #475569;
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.375rem;
+    transition: all 0.15s ease;
+  }
+
+  :global(.dark) summary::after {
+    background-color: rgba(255,255,255,0.1);
+    color: #cbd5e1;
   }
 
   details[open] summary::after {
     content: "DESCIFRADO";
-    @apply bg-cyan-500 text-white shadow-[0_0_10px_rgba(6,182,212,0.5)];
+    background-color: #06b6d4;
+    color: #fff;
+    box-shadow: 0 0 10px rgba(6,182,212,0.5);
   }
 
   /* --- Contenedor Interno de la Solución --- */
   .details-content {
-    @apply p-6 pt-2;
+    padding: 1.5rem;
+    padding-top: 0.5rem;
     animation: fadeInSlide 0.4s ease-out;
   }
 
   /* Estilos para los títulos dentro de la solución */
   .details-content h3 {
-    @apply text-cyan-600 dark:text-cyan-400 text-sm font-black uppercase tracking-widest mt-6 mb-2 !important;
+    color: #0891b2 !important;
+    font-size: 0.875rem !important;
+    font-weight: 900 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.2em !important;
+    margin-top: 1.5rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  :global(.dark) .details-content h3 {
+    color: #22d3ee !important;
   }
 
   /* Animación de apertura */
@@ -294,6 +346,7 @@ const tagsArray = Array.isArray(tags)
     height: 5px;
   }
   .details-content pre::-webkit-scrollbar-thumb {
-    @apply bg-cyan-500/30 rounded-full;
+    background-color: rgba(6,182,212,0.3);
+    border-radius: 9999px;
   }
 </style>

@@ -1,9 +1,9 @@
 ---
 draft: false
 title: "Reto Avanzado 08: Patrón Strategy en APIs"
-description: "Resuelve el siguiente reto de programación: **Reto Avanzado 08: Patrón Strategy en APIs**."
+description: "Implementa el patrón Strategy para seleccionar algoritmos de autenticación en APIs."
 pubDate: "2025-12-04"
-tags: ["kotlin", "retos", "avanzado", "guia-plus"]
+tags: ["python", "retos", "avanzado", "guia-plus"]
 slug: "guia-plus-reto-avanzado-08-patron-strategy-en-apis"
 image: "img/guia_plus_reto_avanzado_08_patron_strategy_en_apis_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
@@ -20,7 +20,7 @@ Resuelve el siguiente reto de programación: **Reto Avanzado 08: Patrón Strateg
 
 <Challenge 
   nivel="Avanzado" 
-  mision="Resuelve el siguiente reto de programación: **Reto Avanzado 08: Patrón Strategy en APIs**." 
+  mision="Implementa el patrón Strategy para seleccionar algoritmos de autenticación en APIs." 
 />
 
 ---
@@ -33,29 +33,37 @@ Resuelve el siguiente reto de programación: **Reto Avanzado 08: Patrón Strateg
 
 ### 🏗️ Paso 1: Análisis de la lógica
 
-Analizar el problema y definir casos de prueba.
+Definir interfaz Strategy con múltiples implementaciones (auth básico, token JWT, API key).
 
-### ⚙️ Paso 2: Implementación en Kotlin
+### ⚙️ Paso 2: Implementación en Python
 
-Implementar la solución en Kotlin.
+Clase base abstracta y estrategias concretas. El contexto selecciona la estrategia en tiempo de ejecución.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-Optimizar si es necesario.
+O(1) selección de estrategia, O(n) ejecución del algoritmo elegido.
 
-### 💻 Código de la Solución (Kotlin)
+### 💻 Código de la Solución (Python)
 
-```kotlin
-// Reto Avanzado 08: Patrón Strategy en APIs
-// Resuelve el siguiente reto de programación: **Reto Avanzado 08: Patrón Strategy en APIs**.
+```python
+class AuthStrategy:
+    def autenticar(self, creds): pass
 
-fun resolver(entrada: String) = entrada
+class BasicAuth(AuthStrategy):
+    def autenticar(self, creds):
+        return f"Basic {creds['user']}:{creds['pass']}"
 
-fun main() {
-    listOf("caso_1", "caso_2").forEach {
-        println("▶ $it → ${resolver(it)}")
-    }
-}
+class TokenAuth(AuthStrategy):
+    def autenticar(self, creds):
+        return f"Bearer {creds['token']}"
+
+def sol(creds, estrategia):
+    return estrategia.autenticar(creds)
+
+creds_basic = {"user": "admin", "pass": "1234"}
+creds_token = {"token": "eyJhbGciOiJIUzI1NiJ9"}
+print(sol(creds_basic, BasicAuth()))
+print(sol(creds_token, TokenAuth()))
 
 ```
 

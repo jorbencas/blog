@@ -1,9 +1,9 @@
 ---
 draft: false
 title: "Reto Avanzado 05: AsyncIO para Scrapers"
-description: "Resuelve el siguiente reto de programación: **Reto Avanzado 05: AsyncIO para Scrapers**."
+description: "Usa asyncio y aiohttp para realizar peticiones HTTP concurrentes."
 pubDate: "2025-12-08"
-tags: ["rust", "retos", "avanzado", "guia-plus"]
+tags: ["python", "retos", "avanzado", "guia-plus"]
 slug: "guia-plus-reto-avanzado-05-asyncio-para-scrapers"
 image: "img/guia_plus_reto_avanzado_05_asyncio_para_scrapers_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
@@ -20,7 +20,7 @@ Resuelve el siguiente reto de programación: **Reto Avanzado 05: AsyncIO para Sc
 
 <Challenge 
   nivel="Avanzado" 
-  mision="Resuelve el siguiente reto de programación: **Reto Avanzado 05: AsyncIO para Scrapers**." 
+  mision="Usa asyncio y aiohttp para realizar peticiones HTTP concurrentes." 
 />
 
 ---
@@ -33,32 +33,35 @@ Resuelve el siguiente reto de programación: **Reto Avanzado 05: AsyncIO para Sc
 
 ### 🏗️ Paso 1: Análisis de la lógica
 
-Analizar el problema y definir casos de prueba.
+Crear tareas asíncronas con asyncio. gather() y simular peticiones HTTP con asyncio.sleep().
 
-### ⚙️ Paso 2: Implementación en Rust
+### ⚙️ Paso 2: Implementación en Python
 
-Implementar la solución en Rust.
+Usar async/await con asyncio.gather() para ejecutar múltiples peticiones concurrentes.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-Optimizar si es necesario.
+O(n) tiempo secuencial optimizado a O(1) con concurrencia, O(n) memoria.
 
-### 💻 Código de la Solución (Rust)
+### 💻 Código de la Solución (Python)
 
-```rust
-// Reto Avanzado 05: AsyncIO para Scrapers
-// Resuelve el siguiente reto de programación: **Reto Avanzado 05: AsyncIO para Scrapers**.
+```python
+import asyncio
 
-fn resolver(entrada: &str) -> String {
-    entrada.to_string()
-}
+async def fetch(url):
+    await asyncio.sleep(0.1)
+    return f"Datos de {url}"
 
-fn main() {
-    let casos = vec!["caso_1", "caso_2"];
-    for c in casos {
-        println!("▶ {} → {}", c, resolver(c));
-    }
-}
+async def sol(urls):
+    tareas = [fetch(u) for u in urls]
+    return await asyncio.gather(*tareas)
+
+urls = ["https://api.ejemplo.com/recurso/1",
+        "https://api.ejemplo.com/recurso/2",
+        "https://api.ejemplo.com/recurso/3"]
+resultados = asyncio.run(sol(urls))
+for r in resultados:
+    print(r)
 
 ```
 

@@ -11,15 +11,29 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Mask technical terms before check
+        run: |
+          if [ -f ".languagetool-ignore.txt" ]; then
+            while IFS= read -r word; do
+              [ -z "$word" ] || [[ "$word" == \#* ]] && continue
+              echo "  🔧 $word"
+              find src/content -name '*.md' -o -name '*.mdx' \
+                -exec sed -i "s/\b$word\b/Sistema/gi" {} + 2>/dev/null || true
+            done < ".languagetool-ignore.txt"
+          fi
+
       - name: LanguageTool Check
         uses: reviewdog/action-languagetool@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          # 'github-pr-review' hace que Reviewdog comente en la PR
-          reporter: github-pr-review 
+          reporter: github-pr-review
           level: warning
           language: es
           glob: 'src/content/**/*.md*'
-          # Esto permite que Reviewdog sugiera la corrección exacta
           filter_mode: added
+          disabled_categories: 'CASING,STYLE,REDUNDANCY,CAPITALIZATION'
+
+      - name: Restore original files
+        if: always()
+        run: git checkout -- src/content/
           

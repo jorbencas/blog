@@ -3,12 +3,12 @@ const pathname = new URL(Astro.url).pathname;
 const currentPath = pathname.slice(1);
 ---
 
-<nav class="w-full lg:w-auto">
+<nav class="relative w-full lg:w-auto">
   <input type="checkbox" id="menu-toggle" class="peer hidden" />
 
   <label
     for="menu-toggle"
-    class="flex flex-col justify-center h-8 w-8 gap-1.5 cursor-pointer z-50 select-none lg:hidden absolute right-4 top-4 md:top-6
+    class="relative z-50 flex flex-col justify-center h-8 w-8 gap-1.5 cursor-pointer select-none lg:hidden mx-auto
     peer-checked:[&>span:nth-child(1)]:rotate-45 peer-checked:[&>span:nth-child(1)]:translate-y-[8px]
     peer-checked:[&>span:nth-child(2)]:opacity-0 peer-checked:[&>span:nth-child(2)]:scale-x-0
     peer-checked:[&>span:nth-child(3)]:-rotate-45 peer-checked:[&>span:nth-child(3)]:-translate-y-[8px]"
@@ -26,69 +26,72 @@ const currentPath = pathname.slice(1);
 
   <div
     id="menu-items"
-    class="hidden peer-checked:flex lg:flex flex-col lg:flex-row gap-6 lg:gap-8 w-full lg:w-auto pt-6 lg:pt-0 items-center justify-center"
+    class="hidden peer-checked:flex lg:flex flex-col lg:flex-row gap-6 lg:gap-8 w-full lg:w-auto pt-6 lg:pt-0 items-center justify-center
+    fixed lg:static inset-x-0 top-0 bottom-0 lg:inset-auto bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm lg:bg-transparent lg:dark:bg-transparent lg:backdrop-blur-none z-40"
   >
-    <a
-      href="/proyectos/1"
-      class={`group relative text-sm font-black uppercase tracking-[0.2em] italic transition-colors w-full lg:w-fit text-center lg:text-left ${
-        currentPath.startsWith("proyectos")
-          ? "text-purple-500"
-          : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-      }`}
-    >
-      Proyectos
-      <span
-        class={`absolute -bottom-1 left-0 h-0.5 bg-purple-500 transition-all duration-300 ${
+    <div class="flex flex-col lg:flex-row gap-6 lg:gap-8 items-center justify-center pt-24 lg:pt-0">
+      <a
+        href="/proyectos/1"
+        class={`group relative text-sm font-black uppercase tracking-[0.2em] italic transition-colors w-full lg:w-fit text-center lg:text-left ${
           currentPath.startsWith("proyectos")
-            ? "w-full"
-            : "w-0 group-hover:w-full"
-        }`}></span>
-    </a>
+            ? "text-purple-500"
+            : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+        }`}
+      >
+        Proyectos
+        <span
+          class={`absolute -bottom-1 left-0 h-0.5 bg-purple-500 transition-all duration-300 ${
+            currentPath.startsWith("proyectos")
+              ? "w-full"
+              : "w-0 group-hover:w-full"
+          }`}></span>
+      </a>
 
-    <a
-      href="/retos/1"
-      class={`group relative text-sm font-black uppercase tracking-[0.2em] italic transition-colors w-full lg:w-fit text-center lg:text-left ${
-        currentPath.startsWith("retos")
-          ? "text-cyan-600 dark:text-cyan-500"
-          : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-      }`}
-    >
-      Retos
-      <span
-        class={`absolute -bottom-1 left-0 h-0.5 bg-cyan-500 transition-all duration-300 ${
-          currentPath.startsWith("retos") ? "w-full" : "w-0 group-hover:w-full"
-        }`}></span>
-    </a>
+      <a
+        href="/retos/1"
+        class={`group relative text-sm font-black uppercase tracking-[0.2em] italic transition-colors w-full lg:w-fit text-center lg:text-left ${
+          currentPath.startsWith("retos")
+            ? "text-cyan-600 dark:text-cyan-500"
+            : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+        }`}
+      >
+        Retos
+        <span
+          class={`absolute -bottom-1 left-0 h-0.5 bg-cyan-500 transition-all duration-300 ${
+            currentPath.startsWith("retos") ? "w-full" : "w-0 group-hover:w-full"
+          }`}></span>
+      </a>
 
-    <a
-      href="/posts/1"
-      class={`group relative text-sm font-black uppercase tracking-[0.2em] italic transition-colors w-full lg:w-fit text-center lg:text-left ${
-        currentPath.startsWith("posts")
-          ? "text-slate-900 dark:text-slate-200"
-          : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-      }`}
-    >
-      Blog
-      <span
-        class={`absolute -bottom-1 left-0 h-0.5 bg-slate-900 dark:bg-slate-200 transition-all duration-300 ${
-          currentPath.startsWith("posts") ? "w-full" : "w-0 group-hover:w-full"
-        }`}></span>
-    </a>
-    <a
-      href="/toolsmini/extractor-frames"
-      class={`group relative text-sm font-black uppercase tracking-[0.2em] italic transition-colors w-full lg:w-fit text-center lg:text-left ${
-        currentPath.startsWith("toolsmini")
-          ? "text-slate-900 dark:text-slate-200"
-          : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-      }`}
-    >
-      Mini Herramientas
-      <span
-        class={`absolute -bottom-1 left-0 h-0.5 bg-slate-900 dark:bg-slate-200 transition-all duration-300 ${
+      <a
+        href="/posts/1"
+        class={`group relative text-sm font-black uppercase tracking-[0.2em] italic transition-colors w-full lg:w-fit text-center lg:text-left ${
+          currentPath.startsWith("posts")
+            ? "text-slate-900 dark:text-slate-200"
+            : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+        }`}
+      >
+        Blog
+        <span
+          class={`absolute -bottom-1 left-0 h-0.5 bg-slate-900 dark:bg-slate-200 transition-all duration-300 ${
+            currentPath.startsWith("posts") ? "w-full" : "w-0 group-hover:w-full"
+          }`}></span>
+      </a>
+      <a
+        href="/toolsmini/extractor-frames"
+        class={`group relative text-sm font-black uppercase tracking-[0.2em] italic transition-colors w-full lg:w-fit text-center lg:text-left ${
           currentPath.startsWith("toolsmini")
-            ? "w-full"
-            : "w-0 group-hover:w-full"
-        }`}></span>
-    </a>
+            ? "text-slate-900 dark:text-slate-200"
+            : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+        }`}
+      >
+        Mini Herramientas
+        <span
+          class={`absolute -bottom-1 left-0 h-0.5 bg-slate-900 dark:bg-slate-200 transition-all duration-300 ${
+            currentPath.startsWith("toolsmini")
+              ? "w-full"
+              : "w-0 group-hover:w-full"
+          }`}></span>
+      </a>
+    </div>
   </div>
 </nav>

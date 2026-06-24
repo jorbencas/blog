@@ -1,9 +1,9 @@
 ---
 draft: false
 title: "Reto Avanzado 10: Validador de Esquema JSON"
-description: "Resuelve el siguiente reto de programación: **Reto Avanzado 10: Validador de Esquema JSON**."
+description: "Valida un JSON contra un esquema definido con tipos y campos requeridos."
 pubDate: "2025-12-01"
-tags: ["php", "retos", "avanzado", "guia-plus"]
+tags: ["python", "retos", "avanzado", "guia-plus"]
 slug: "guia-plus-reto-avanzado-10-validador-de-esquema-json"
 image: "img/guia_plus_reto_avanzado_10_validador_de_esquema_json_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
@@ -20,7 +20,7 @@ Resuelve el siguiente reto de programación: **Reto Avanzado 10: Validador de Es
 
 <Challenge 
   nivel="Avanzado" 
-  mision="Resuelve el siguiente reto de programación: **Reto Avanzado 10: Validador de Esquema JSON**." 
+  mision="Valida un JSON contra un esquema definido con tipos y campos requeridos." 
 />
 
 ---
@@ -33,31 +33,31 @@ Resuelve el siguiente reto de programación: **Reto Avanzado 10: Validador de Es
 
 ### 🏗️ Paso 1: Análisis de la lógica
 
-Analizar el problema y definir casos de prueba.
+Definir esquema como dict de campo → tipo. Verificar cada campo del JSON contra el esquema.
 
-### ⚙️ Paso 2: Implementación en PHP
+### ⚙️ Paso 2: Implementación en Python
 
-Implementar la solución en PHP.
+Recorrer el esquema, validar existencia del campo y tipo con isinstance().
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-Optimizar si es necesario.
+O(n) tiempo, O(1) espacio, donde n es el número de campos en el esquema.
 
-### 💻 Código de la Solución (PHP)
+### 💻 Código de la Solución (Python)
 
-```php
-<?php
-// Reto Avanzado 10: Validador de Esquema JSON
-// Resuelve el siguiente reto de programación: **Reto Avanzado 10: Validador de Esquema JSON**.
+```python
+def sol(datos, esquema):
+    errores = []
+    for campo, tipo in esquema.items():
+        if campo not in datos:
+            errores.append(f"Falta '{campo}'")
+        elif not isinstance(datos[campo], tipo):
+            errores.append(f"'{campo}' debe ser {tipo.__name__}")
+    return errores if errores else "Válido"
 
-function resolver(string $entrada): string {
-    return $entrada;
-}
-
-$casos = ["caso_1", "caso_2"];
-foreach ($casos as $c) {
-    echo "▶ $c → " . resolver($c) . "\n";
-}
+esquema = {"nombre": str, "edad": int, "activo": bool}
+datos = {"nombre": "Ana", "edad": 30, "activo": True}
+print(sol(datos, esquema))
 
 ```
 

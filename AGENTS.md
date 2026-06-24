@@ -1,0 +1,42 @@
+# Blog — Agent Guide
+
+## Commands
+- `npm run dev` — dev server (localhost:4321)
+- `npm run build` — `astro build && npx pagefind --site dist` (build + search index)
+- `npm run cleaner` — rm node_modules + reinstall (use if deps are broken)
+- `npm run preview` — preview production build locally
+
+## Stack
+- Astro 6.4 + Svelte 5 + Tailwind CSS 4.3 (dark mode via `class`)
+- Vercel adapter, static output, deployed at `https://blog-jorbencas.vercel.app/`
+- Node >= 18
+
+## Content (all in Spanish)
+4 collections in `src/content/` — `posts/`, `auto-news/`, `auto-challenges/`, `myprojects/`
+Content is MDX. Frontmatter includes `draft` (filtered by `getSortedPosts` in `src/utils.js`).
+Schemas in `src/content.config.ts` using `astro/loaders` (glob) + `astro/zod`.
+
+## Path aliases
+`@components/*`, `@layouts/*`, `@pages/*`, `@styles/*`, `@audios/*`, `@data/*`
+
+## Non-obvious tooling
+- **Image pipeline**: `scripts/fix_images.py` (Python) fetches Unsplash images + generates banners via Gemini. Requires `UNSPLASH_ACCESS_KEY` and `GEMINI_API_KEY` env vars. Converts to WebP/AVIF with SSIM-based adaptive compression. Cached in `image_cache.json`.
+- **Search**: Pagefind indexes `dist/` — runs automatically during build.
+- **OG images**: Custom endpoint `src/pages/api/og/og.png.ts` using satori + resvg.
+- **Reading time**: Custom remark plugin `remark-reading-time.mjs` adds `minutesRead` to frontmatter.
+- **Python deps**: `requirements.txt` (Pillow, aiohttp, google-genai) — needed to run image fixer.
+- **Svelte components**: live alongside `.astro` files in `src/components/` (e.g., `VideoExtractor.svelte`).
+- **CI**: GitHub Actions — image fixing on push to main (content changes), spelling check (LanguageTool, Spanish) on PRs to content, feedback wall issue handler.
+
+## Workflow
+0. **Read `docs/contexto.md` first** — always start by reading the full context file to understand project state.
+   - If running `fix_images.py`, `image_cache.json` is pruned automatically (max 200 entries, descarta >365 días).
+1. **Always run `npm run build` after any change** to verify no errors.
+2. **Save project context** in `docs/contexto.md` — update it with each change. Load the `update-context` skill for the exact format.
+3. **Tailwind v4 note**: `@apply` is NOT supported in component `<style>` blocks. Use plain CSS instead.
+4. **Dark mode**: Always pair light/dark classes explicitly (e.g. `text-slate-900 dark:text-white`). Never stack conflicting classes without `dark:` prefix.
+
+## Notes
+- `image_cache.json` is auto-generated; treat as cache.
+- Posts with `draft: true` are filtered out at runtime.
+- Content is in Spanish — prefer Spanish in new content.

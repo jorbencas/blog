@@ -51,12 +51,42 @@ IMG_DIR.mkdir(parents=True, exist_ok=True)
 # ==============================================================================
 # SISTEMA DE CACHÉ
 # ==============================================================================
+MAX_CACHE_ENTRIES: int = 200
+
+def _parse_date(date_str: str) -> Optional[Any]:
+    try:
+        from datetime import datetime
+        return datetime.strptime(date_str.split("T")[0], "%Y-%m-%d")
+    except Exception:
+        return None
+
+def prune_cache(cache_data: Dict[str, Any]) -> Dict[str, Any]:
+    from datetime import datetime, timezone
+    now: Any = datetime.now(timezone.utc)
+    pruned: Dict[str, Any] = {}
+    for key, val in cache_data.items():
+        if not isinstance(val, dict):
+            continue
+        created = val.get("created_at", "")
+        dt = _parse_date(created)
+        # Descarta entradas con más de 365 días
+        if dt and (now - dt).days > 365:
+            continue
+        pruned[key] = val
+    # Si aún excede el límite, conserva las más recientes por updated_at
+    if len(pruned) > MAX_CACHE_ENTRIES:
+        pruned = dict(
+            sorted(pruned.items(), key=lambda kv: kv[1].get("updated_at", ""), reverse=True)[:MAX_CACHE_ENTRIES]
+        )
+    return pruned
+
 cache: Dict[str, Any] = {}
 try:
     with open(CACHE_FILE, "r", encoding="utf-8") as f:
         cache = json.load(f)
 except Exception:
     cache = {}
+cache = prune_cache(cache)
 
 def save_cache() -> None:
     with open(CACHE_FILE, "w", encoding="utf-8") as f:
@@ -159,7 +189,8 @@ def process_svg_fallback(input_path: Path, out_dir: Path, filename: str) -> None
     out_path: Path = out_dir / filename
     with open(input_path, "r", encoding="utf-8", errors="ignore") as f:
         content: str = f.read()
-    content = re.sub(r"", "", content, flags=re.DOTALL)
+    content = re.sub(r"<metadata>.*?</metadata>", "", content, flags=re.DOTALL)
+    content = re.sub(r"<!--.*?-->", "", content, flags=re.DOTALL)
     content = re.sub(r"\s+", " ", content).strip()
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(content)

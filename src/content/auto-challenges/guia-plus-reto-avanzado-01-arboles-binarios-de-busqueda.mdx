@@ -47,12 +47,30 @@ O(log n) promedio, O(n) peor caso.
 
 ```python
 class Node:
- def __init__(self,v): self.v=v; self.l=None; self.r=None
-def ins(root,v):
- if not root: return Node(v)
- if v<root.v: root.l=ins(root.l,v)
- else: root.r=ins(root.r,v)
- return root
+    def __init__(self, v):
+        self.val = v
+        self.izq = None
+        self.der = None
+
+def insertar(root, v):
+    if not root: return Node(v)
+    if v < root.val:
+        root.izq = insertar(root.izq, v)
+    else:
+        root.der = insertar(root.der, v)
+    return root
+
+def buscar(root, v):
+    if not root: return False
+    if root.val == v: return True
+    if v < root.val: return buscar(root.izq, v)
+    return buscar(root.der, v)
+
+root = None
+for v in [5, 3, 7, 2, 8]:
+    root = insertar(root, v)
+print(buscar(root, 7))
+print(buscar(root, 4))
 ```
 
 </div>

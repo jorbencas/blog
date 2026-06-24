@@ -67,19 +67,17 @@ const id = src ? Math.random().toString(36).substring(2, 9) : "";
 }
 
 <script>
-  const { default: WaveSurfer } = await import(
-    "https://unpkg.com/wavesurfer.js@7/dist/wavesurfer.esm.js"
-  );
+  function initPlayer(player) {
+    const id = player.getAttribute("data-id");
+    const src = player.getAttribute("data-src");
+    if (!id || !src) return;
 
-  function setupAudioPlayers() {
-    document.querySelectorAll(".audio-player").forEach((player) => {
-      const id = player.getAttribute("data-id");
-      const src = player.getAttribute("data-src");
-      if (!id || !src) return;
+    if (player.classList.contains("wavesurfer-initialized")) return;
+    player.classList.add("wavesurfer-initialized");
 
-      if (player.classList.contains("wavesurfer-initialized")) return;
-      player.classList.add("wavesurfer-initialized");
-
+    import(
+      "https://unpkg.com/wavesurfer.js@7/dist/wavesurfer.esm.js"
+    ).then(({ default: WaveSurfer }) => {
       const playBtn = document.getElementById(`playBtn-${id}`);
       const iconPlay = document.getElementById(`iconPlay-${id}`);
       const iconPause = document.getElementById(`iconPause-${id}`);
@@ -105,7 +103,7 @@ const id = src ? Math.random().toString(36).substring(2, 9) : "";
         responsive: true,
       });
 
-      const formatTime = (time: number) => {
+      const formatTime = (time) => {
         if (isNaN(time) || !isFinite(time)) return "0:00";
         const min = Math.floor(time / 60);
         const sec = Math.floor(time % 60)
@@ -155,14 +153,33 @@ const id = src ? Math.random().toString(36).substring(2, 9) : "";
     });
   }
 
-  // 1. Carga inicial de la web
+  function setupAudioPlayers() {
+    document.querySelectorAll(".audio-player:not(.wavesurfer-initialized)").forEach((player) => {
+      if ("IntersectionObserver" in window) {
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                observer.unobserve(entry.target);
+                initPlayer(entry.target);
+              }
+            });
+          },
+          { rootMargin: "200px" }
+        );
+        observer.observe(player);
+      } else {
+        initPlayer(player);
+      }
+    });
+  }
+
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", setupAudioPlayers);
   } else {
     setupAudioPlayers();
   }
 
-  // 2. Evento NATIVO para capturar cuando el usuario navega (atrás/adelante o enlaces)
   window.addEventListener("popstate", () => {
     setTimeout(setupAudioPlayers, 50);
   });

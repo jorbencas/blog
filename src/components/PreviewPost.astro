@@ -1,4 +1,5 @@
 ---
+import ResponsiveImage from "@components/ResponsiveImage.astro";
 const { post } = Astro.props;
 const { title, description, pubDate, image } = post.data;
 
@@ -9,6 +10,9 @@ const date = new Date(pubDate).toLocaleDateString("es-ES", {
 });
 
 const tags = post.data.tags || [];
+const imagenCard = image
+  ? image.startsWith("http") ? image : `/${image.replace(/^\//, "")}`
+  : null;
 ---
 
 <a href={`/posts/${post.id}`} class="group block h-full">
@@ -25,13 +29,11 @@ const tags = post.data.tags || [];
       </div>
 
       {
-        image ? (
-          <img
-            src={
-              image.startsWith("http") ? image : `/${image.replace(/^\//, "")}`
-            }
+        imagenCard ? (
+          <ResponsiveImage
+            fallback={imagenCard}
             alt={title}
-            class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-80 group-hover:opacity-100"
+            imgClass="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-80 group-hover:opacity-100"
           />
         ) : (
           <div class="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center">

@@ -46,12 +46,27 @@ O(1) overhead.
 ### 💻 Código de la Solución (Python)
 
 ```python
+import time
+
 stats = {}
 def profile(f):
- def w(*a,**kw):
-  s=stats.setdefault(f.__name__,{'c':0,'t':0}); s['c']+=1
-  return f(*a,**kw)
- return w
+    def w(*a, **kw):
+        inicio = time.perf_counter()
+        res = f(*a, **kw)
+        duracion = time.perf_counter() - inicio
+        s = stats.setdefault(f.__name__, {'c': 0, 't': 0.0})
+        s['c'] += 1
+        s['t'] += duracion
+        return res
+    return w
+
+@profile
+def suma(n):
+    return sum(range(n))
+
+for _ in range(5):
+    suma(10_000_000)
+print(stats['suma'])
 ```
 
 </div>

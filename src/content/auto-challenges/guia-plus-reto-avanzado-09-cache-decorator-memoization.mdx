@@ -1,9 +1,9 @@
 ---
 draft: false
 title: "Reto Avanzado 09: Cache Decorator (Memoization)"
-description: "Resuelve el siguiente reto de programación: **Reto Avanzado 09: Cache Decorator (Memoization)**."
+description: "Implementa un decorador de memoización que cachea resultados de funciones."
 pubDate: "2025-12-02"
-tags: ["swift", "retos", "avanzado", "guia-plus"]
+tags: ["python", "retos", "avanzado", "guia-plus"]
 slug: "guia-plus-reto-avanzado-09-cache-decorator-memoization"
 image: "img/guia_plus_reto_avanzado_09_cache_decorator_memoization_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
@@ -20,7 +20,7 @@ Resuelve el siguiente reto de programación: **Reto Avanzado 09: Cache Decorator
 
 <Challenge 
   nivel="Avanzado" 
-  mision="Resuelve el siguiente reto de programación: **Reto Avanzado 09: Cache Decorator (Memoization)**." 
+  mision="Implementa un decorador de memoización que cachea resultados de funciones." 
 />
 
 ---
@@ -33,28 +33,33 @@ Resuelve el siguiente reto de programación: **Reto Avanzado 09: Cache Decorator
 
 ### 🏗️ Paso 1: Análisis de la lógica
 
-Analizar el problema y definir casos de prueba.
+Wrapper que almacena resultados previos en un dict y los reutiliza si la entrada se repite.
 
-### ⚙️ Paso 2: Implementación en Swift
+### ⚙️ Paso 2: Implementación en Python
 
-Implementar la solución en Swift.
+Decorador que envuelve la función, consulta cache antes de ejecutar, guarda después.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-Optimizar si es necesario.
+O(1) amortizado para llamadas repetidas, O(n) espacio en cache.
 
-### 💻 Código de la Solución (Swift)
+### 💻 Código de la Solución (Python)
 
-```swift
-// Reto Avanzado 09: Cache Decorator (Memoization)
-// Resuelve el siguiente reto de programación: **Reto Avanzado 09: Cache Decorator (Memoization)**.
+```python
+def memoize(f):
+    cache = {}
+    def w(*args):
+        if args not in cache:
+            cache[args] = f(*args)
+        return cache[args]
+    return w
 
-func resolver(_ entrada: String) -> String { entrada }
+@memoize
+def fib(n):
+    if n <= 1: return n
+    return fib(n - 1) + fib(n - 2)
 
-let casos = ["caso_1", "caso_2"]
-for c in casos {
-    print("▶ \(c) → \(resolver(c))")
-}
+print(fib(50))
 
 ```
 

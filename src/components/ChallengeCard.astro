@@ -1,10 +1,11 @@
 ---
+import ResponsiveImage from "@components/ResponsiveImage.astro";
 const { href, title, description, image, difficulty } = Astro.props;
-import { Image } from "astro:assets";
-let imagenLimpia = image || "/img/default.jpg";
-if (!imagenLimpia.startsWith("/") && !imagenLimpia.startsWith("http")) {
-  imagenLimpia = `/${imagenLimpia}`;
-}
+const imagenLimpia = image
+  ? image.startsWith("/") || image.startsWith("http")
+    ? image
+    : `/${image}`
+  : null;
 // Definimos los colores según la dificultad
 const diffStyles = {
   Iniciación: "text-white bg-emerald-500 shadow-emerald-500",
@@ -29,11 +30,21 @@ const currentStyle =
     >
     </div>
 
-    <img
-      src={imagenLimpia}
-      alt={title}
-      class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-60 group-hover:opacity-100"
-    />
+    {
+      imagenLimpia ? (
+        <ResponsiveImage
+          fallback={imagenLimpia}
+          alt={title}
+          imgClass="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-60 group-hover:opacity-100"
+        />
+      ) : (
+        <div class="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center">
+          <span class="text-slate-500 dark:text-slate-600 text-xs sm:text-sm">
+            SIN_IMAGEN
+          </span>
+        </div>
+      )
+    }
 
     <!-- Badge de Dificultad -->
     <div

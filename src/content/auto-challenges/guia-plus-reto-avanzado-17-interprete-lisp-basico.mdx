@@ -46,11 +46,36 @@ O(n).
 ### 💻 Código de la Solución (Python)
 
 ```python
-def eval_L(exp, env): 
- if isinstance(exp, int): return exp
- op, *args = exp; vals = [eval_L(a, env) for a in args]
- if op == '+': return sum(vals)
- return 0
+import re
+
+def tokenizar(s):
+    return re.findall(r'[+\-*()]|\d+', s)
+
+def parsear(toks):
+    t = toks.pop(0)
+    if t == '(':
+        op = toks.pop(0)
+        args = []
+        while toks[0] != ')':
+            args.append(parsear(toks))
+        toks.pop(0)
+        return [op] + args
+    return int(t)
+
+def evaluar(exp):
+    if isinstance(exp, int): return exp
+    op, *args = exp
+    vals = [evaluar(a) for a in args]
+    if op == '+': return sum(vals)
+    if op == '-': return vals[0] - sum(vals[1:])
+    if op == '*':
+        r = 1
+        for v in vals: r *= v
+        return r
+    raise ValueError(f"Operador '{op}' no soportado")
+
+expr = "(+ 1 (* 2 3))"
+print(evaluar(parsear(tokenizar(expr))))
 ```
 
 </div>

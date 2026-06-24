@@ -1,9 +1,9 @@
 ---
 draft: false
 title: "Reto Avanzado 07: Inyector de Dependencias"
-description: "Resuelve el siguiente reto de programación: **Reto Avanzado 07: Inyector de Dependencias**."
+description: "Implementa un contenedor básico de inyección de dependencias."
 pubDate: "2025-12-05"
-tags: ["csharp", "retos", "avanzado", "guia-plus"]
+tags: ["python", "retos", "avanzado", "guia-plus"]
 slug: "guia-plus-reto-avanzado-07-inyector-de-dependencias"
 image: "img/guia_plus_reto_avanzado_07_inyector_de_dependencias_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
@@ -20,7 +20,7 @@ Resuelve el siguiente reto de programación: **Reto Avanzado 07: Inyector de Dep
 
 <Challenge 
   nivel="Avanzado" 
-  mision="Resuelve el siguiente reto de programación: **Reto Avanzado 07: Inyector de Dependencias**." 
+  mision="Implementa un contenedor básico de inyección de dependencias." 
 />
 
 ---
@@ -33,33 +33,35 @@ Resuelve el siguiente reto de programación: **Reto Avanzado 07: Inyector de Dep
 
 ### 🏗️ Paso 1: Análisis de la lógica
 
-Analizar el problema y definir casos de prueba.
+Registrar clases en un contenedor que resuelve automáticamente las dependencias al instanciar.
 
-### ⚙️ Paso 2: Implementación en C#
+### ⚙️ Paso 2: Implementación en Python
 
-Implementar la solución en C#.
+Usar un diccionario como contenedor: registrar interfaz → implementación, resolver por tipo.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-Optimizar si es necesario.
+O(1) registro, O(n) resolución de dependencias encadenadas.
 
-### 💻 Código de la Solución (C#)
+### 💻 Código de la Solución (Python)
 
-```csharp
-// Reto Avanzado 07: Inyector de Dependencias
-// Resuelve el siguiente reto de programación: **Reto Avanzado 07: Inyector de Dependencias**.
+```python
+class DI:
+    def __init__(self): self._reg = {}
 
-using System;
+    def registrar(self, interfaz, impl):
+        self._reg[interfaz] = impl
 
-class Reto {
-    static string Resolver(string entrada) => entrada;
+    def resolver(self, interfaz):
+        return self._reg[interfaz]()
 
-    static void Main() {
-        string[] casos = {"caso_1", "caso_2"};
-        foreach (var c in casos)
-            Console.WriteLine($"▶ {c} → {Resolver(c)}");
-    }
-}
+class Saludo:
+    def ejecutar(self): return "Hola desde DI"
+
+di = DI()
+di.registrar(Saludo, lambda: Saludo())
+s = di.resolver(Saludo)
+print(s.ejecutar())
 
 ```
 

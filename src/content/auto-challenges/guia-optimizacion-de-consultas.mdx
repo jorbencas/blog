@@ -1,9 +1,9 @@
 ---
 draft: false
 title: "Optimización de Consultas"
-description: "Resuelve el siguiente reto de programación: **Optimización de Consultas**."
+description: "Filtra registros por rango de valores simulando consultas optimizadas."
 pubDate: "2026-03-24"
-tags: ["php", "retos", "avanzado", "guia-plus"]
+tags: ["python", "retos", "avanzado", "guia-plus"]
 slug: "guia-optimizacion-de-consultas"
 image: "img/guia_optimizacion_de_consultas_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
@@ -20,7 +20,7 @@ Resuelve el siguiente reto de programación: **Optimización de Consultas**.
 
 <Challenge 
   nivel="Avanzado" 
-  mision="Resuelve el siguiente reto de programación: **Optimización de Consultas**." 
+  mision="Filtra registros por rango de valores simulando consultas optimizadas." 
 />
 
 ---
@@ -33,31 +33,25 @@ Resuelve el siguiente reto de programación: **Optimización de Consultas**.
 
 ### 🏗️ Paso 1: Análisis de la lógica
 
-Analizar el problema y definir casos de prueba.
+Dada una lista de registros con id y valor, filtrar los que están dentro de un rango [min, max].
 
-### ⚙️ Paso 2: Implementación en PHP
+### ⚙️ Paso 2: Implementación en Python
 
-Implementar la solución en PHP.
+Recorrer la lista con una comprensión y aplicar el filtro por rango.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-Optimizar si es necesario.
+O(n) tiempo, O(k) espacio (k = resultados filtrados).
 
-### 💻 Código de la Solución (PHP)
+### 💻 Código de la Solución (Python)
 
-```php
-<?php
-// Optimización de Consultas
-// Resuelve el siguiente reto de programación: **Optimización de Consultas**.
+```python
+def sol(datos, min_v, max_v):
+    return [d for d in datos if min_v <= d["valor"] <= max_v]
 
-function resolver(string $entrada): string {
-    return $entrada;
-}
-
-$casos = ["caso_1", "caso_2"];
-foreach ($casos as $c) {
-    echo "▶ $c → " . resolver($c) . "\n";
-}
+datos = [{"id": i, "valor": i * 5} for i in range(200)]
+resultado = sol(datos, 50, 150)
+print(f"Registros en rango: {len(resultado)}")
 
 ```
 
