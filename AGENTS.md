@@ -55,5 +55,8 @@ Schemas in `src/content.config.ts` using `astro/loaders` (glob) + `astro/zod`.
 - Prefijo del ámbito: `[blog]`, `[retos]`, `[herramientas]`, `[estilos]`, `[infra]`, etc.
 - Formato: `[ámbito] Descripción breve del cambio`
 
+## Git restrictions
+- NEVER run `git push`, `git pull`, or `git fetch`. These operations must be done manually by the user.
+
 ## npm package use restrictions
 1. **Astro files** don't use any npm package of node enviroment.
