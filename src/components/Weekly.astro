@@ -6,34 +6,18 @@ const { post } = Astro.props;
 const tags = post.data.tags || [];
 const postUrl = `/weekly/${post.id}`;
 const imagenCard = resolveImagePath(post.data.image);
-const isWeekly = tags.some(
-  (tag) => tag.toLowerCase() === "weekly" || tag.toLowerCase() === "recap"
-);
 ---
 
   <li
-    class={`group list-none flex font-sans min-h-[320px] sm:h-[440px] ${
-      isWeekly
-        ? "relative p-[2px] bg-gradient-to-br from-cyan-500 via-purple-500 to-blue-500 rounded-lg"
-        : ""
-    }`}
+    class="group list-none flex font-sans min-h-[320px] sm:h-[440px] relative p-[2px] bg-gradient-to-br from-cyan-500 via-purple-500 to-blue-500 rounded-lg transition-all duration-500 hover:shadow-[0_0_40px_rgba(6,182,212,0.25)]"
   >
-    {
-      isWeekly && (
-        <div class="absolute -top-2 -right-2 sm:-top-3 sm:-right-3 z-20 bg-yellow-400 text-black font-black px-2 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-xs uppercase italic shadow-lg rotate-12 border-2 border-black">
-          RESUMEN_SEMANAL
-        </div>
-      )
-    }
-
+    <div class="absolute -top-2 -right-2 sm:-top-3 sm:-right-3 z-20 bg-yellow-400 text-black font-black px-2 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-xs uppercase italic shadow-lg rotate-12 border-2 border-black">
+      RESUMEN_SEMANAL
+    </div>
 
   <a
     href={postUrl}
-    class={`relative w-full h-full overflow-hidden flex flex-col justify-end transition-all duration-500 ${
-      isWeekly
-        ? "bg-slate-950 rounded-md"
-        : "border border-slate-200 dark:border-white/5 bg-white dark:bg-slate-950 shadow-xl"
-    }`}
+    class="relative w-full h-full overflow-hidden flex flex-col justify-end transition-all duration-500 bg-slate-950 rounded-md shadow-xl"
   >
     <div class="absolute inset-0 z-0">
       {
@@ -41,7 +25,7 @@ const isWeekly = tags.some(
           <ResponsiveImage
             fallback={imagenCard}
             alt={post.data.title}
-            imgClass="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-110 opacity-80 dark:opacity-40"
+            imgClass="h-full w-full object-cover transition-all duration-1000 group-hover:scale-110 opacity-70 dark:opacity-40 group-hover:opacity-100"
           />
         ) : (
           <div class="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center">
@@ -52,7 +36,7 @@ const isWeekly = tags.some(
         )
       }
       <div
-        class="absolute inset-0 bg-gradient-to-b from-white dark:from-slate-950 via-white/90 dark:via-slate-950/90 to-transparent"
+        class="absolute inset-0 bg-gradient-to-b from-white dark:from-slate-950 via-white/90 dark:via-slate-950/90 to-transparent transition-opacity duration-500 group-hover:opacity-80"
       >
       </div>
     </div>
@@ -60,9 +44,7 @@ const isWeekly = tags.some(
     <div class="relative z-10 p-4 sm:p-8">
       <div class="mb-4 flex items-center gap-3">
         <span
-          class={`h-[2px] transition-all group-hover:w-16 ${
-            isWeekly ? "w-12 bg-yellow-400" : "w-8 bg-cyan-500"
-          }`}></span>
+          class="h-[2px] w-12 bg-yellow-400 transition-all group-hover:w-16"></span>
         <span
           class="text-xs sm:text-xs font-black tracking-[0.2em] text-cyan-600 dark:text-cyan-400 uppercase"
         >

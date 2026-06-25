@@ -50,5 +50,10 @@ Schemas in `src/content.config.ts` using `astro/loaders` (glob) + `astro/zod`.
 - Title format: [<project_name>] <Title>
 - Always run `npm lint` and `npm test` before committing.
 
+## Git conventions
+- Commits en castellano (español).
+- Prefijo del ámbito: `[blog]`, `[retos]`, `[herramientas]`, `[estilos]`, `[infra]`, etc.
+- Formato: `[ámbito] Descripción breve del cambio`
+
 ## npm package use restrictions
 1. **Astro files** don't use any npm package of node enviroment.

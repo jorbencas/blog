@@ -1,6 +1,6 @@
 # Contexto del proyecto — Blog
 
-**Última actualización**: 2026-06-26
+**Última actualización**: 2026-06-26 (sesión: hover cards, markdown light theme, solution.css)
 **Stack**: Astro 6.4 + Svelte 5 + Tailwind CSS 4.3
 **Deploy**: Vercel (`blog-jorbencas.vercel.app`)
 **Idioma**: Español
@@ -62,6 +62,17 @@ Props: `fallback`, `avif`, `webp`, `blur` (LQIP), `fetchpriority`, `loading`, `a
 
 ### Weekly (`src/components/Weekly.astro`)
 - Card para resúmenes semanales con fecha y extracto
+- Siempre con borde degradado `from-cyan-500 via-purple-500 to-blue-500` + badge "RESUMEN_SEMANAL"
+- Hover: glow sobre el wrapper + imagen más brillante
+
+### PreviewPost (`src/components/PreviewPost.astro`)
+- Card para posts del blog
+- Hover: `hover:border-cyan-500/50`
+
+### ChallengeCard (`src/components/ChallengeCard.astro`)
+- Card para retos de programación
+- Dificultad con badge de color (Iniciación=emerald, Intermedio=cyan, Avanzado=rose)
+- Hover: `hover:border-cyan-500/50`
 
 ### SEO (`src/components/SEO.astro`)
 - JSON-LD `BlogPosting`, OG tags, Twitter Cards, meta tags
@@ -100,6 +111,25 @@ Props: `fallback`, `avif`, `webp`, `blur` (LQIP), `fetchpriority`, `loading`, `a
 
 ### Contenido y estilos
 - `src/content.config.ts`, `src/styles/global.css`, `src/styles/solution.css`, `src/utils.js`
+
+### Cards hover pattern (unificado)
+Todas las cards usan el mismo hover: `hover:border-<color>-500/50` (el borde cambia al color de acento en hover):
+- **ProjectCard** → `hover:border-purple-500/50`
+- **ToolCard** → `hover:border-emerald-500/50`
+- **PreviewPost** → `hover:border-cyan-500/50`
+- **ChallengeCard** → `hover:border-cyan-500/50`
+- **Weekly** → wrapper gradient con `hover:shadow-[0_0_40px_rgba(6,182,212,0.25)]`
+
+Además: overlay de imagen se desvanece (`opacity-70 → opacity-40`) y la imagen gana opacidad (`opacity-80 → opacity-100`) en hover en todas las cards.
+
+### Temas claro/oscuro
+- `.astro-code` tiene `border` + `padding` en tema claro (además del dark existente)
+- `prose-code` tiene `background` + `padding` + `rounded` + `font-semibold` en todos los layouts
+- `prose-pre` tiene `border` en tema claro en todos los layouts
+
+### solution.css
+- `details` sin padding propio; solo `summary` (1rem) y `.details-content` (izq/der/abajo) manejan espaciado
+- Botón DESCIFRAR con gradient en lugar de color sólido
 
 ### Scripts y datos
 - `scripts/fix_images.py`, `scripts/generate_resources.py`, `image_cache.json`
