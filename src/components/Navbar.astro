@@ -10,9 +10,9 @@ const currentPath = pathname.slice(1);
     for="menu-toggle"
     aria-label="Abrir menú"
     class="relative z-50 flex items-center justify-center h-10 w-10 gap-[5px] cursor-pointer select-none lg:hidden mx-auto rounded-lg border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm
-    peer-checked:[&>span:nth-child(1)]:rotate-45 peer-checked:[&>span:nth-child(1)]:translate-y-[8.5px]
+    peer-checked:[&>span:nth-child(1)]:rotate-45 peer-checked:[&>span:nth-child(1)]:translate-y-[7.5px]
     peer-checked:[&>span:nth-child(2)]:opacity-0 peer-checked:[&>span:nth-child(2)]:scale-x-0
-    peer-checked:[&>span:nth-child(3)]:-rotate-45 peer-checked:[&>span:nth-child(3)]:-translate-y-[8.5px]"
+    peer-checked:[&>span:nth-child(3)]:-rotate-45 peer-checked:[&>span:nth-child(3)]:-translate-y-[7.5px]"
   >
     <span
       class="w-5 h-[2.5px] bg-slate-900 dark:bg-slate-200 transition-all duration-300 origin-center rounded-full"
@@ -109,20 +109,34 @@ const currentPath = pathname.slice(1);
   const toggle = document.getElementById("menu-toggle");
   if (toggle) {
     toggle.addEventListener("change", () => {
-      document.body.style.overflow = toggle.checked ? "hidden" : "";
+      if (toggle.checked) {
+        const scrollY = window.scrollY;
+        document.body.dataset.scrollY = String(scrollY);
+        document.body.style.position = "fixed";
+        document.body.style.top = `-${scrollY}px`;
+        document.body.style.left = "0";
+        document.body.style.right = "0";
+      } else {
+        const scrollY = parseInt(document.body.dataset.scrollY || "0", 10);
+        document.body.style.position = "";
+        document.body.style.top = "";
+        document.body.style.left = "";
+        document.body.style.right = "";
+        window.scrollTo(0, scrollY);
+      }
     });
 
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && toggle.checked) {
         toggle.checked = false;
-        document.body.style.overflow = "";
+        toggle.dispatchEvent(new Event("change"));
       }
     });
 
     window.addEventListener("resize", () => {
       if (window.innerWidth >= 1024 && toggle.checked) {
         toggle.checked = false;
-        document.body.style.overflow = "";
+        toggle.dispatchEvent(new Event("change"));
       }
     });
   }
