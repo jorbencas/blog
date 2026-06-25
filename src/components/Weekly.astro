@@ -1,15 +1,11 @@
 ---
 import ResponsiveImage from "@components/ResponsiveImage.astro";
-import { formatDatePost } from "src/utils.js";
+import { formatDatePost, resolveImagePath } from "src/utils.js";
 
 const { post } = Astro.props;
 const tags = post.data.tags || [];
 const postUrl = `/weekly/${post.id}`;
-const imagenCard = post.data.image
-  ? post.data.image.startsWith("/") || post.data.image.startsWith("http")
-    ? post.data.image
-    : `/${post.data.image}`
-  : null;
+const imagenCard = resolveImagePath(post.data.image);
 const isWeekly = tags.some(
   (tag) => tag.toLowerCase() === "weekly" || tag.toLowerCase() === "recap"
 );

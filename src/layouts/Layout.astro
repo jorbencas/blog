@@ -1,5 +1,6 @@
 ---
-import Footer from "@components/footer.astro";
+import ScrollToTop from "@components/ScrollToTop.astro";
+import Footer from "@components/Footer.astro";
 import Header from "@components/header.astro";
 import SpeedInsights from "@vercel/speed-insights/astro";
 import SEO from "@components/SEO.astro";
@@ -27,7 +28,7 @@ const finalDescription =
 ---
 
 <!doctype html>
-<html lang="ew" class="scroll-smooth">
+<html lang="es" class="scroll-smooth">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
@@ -55,18 +56,17 @@ const finalDescription =
 
     <script is:inline>
       const theme = (() => {
-        let storedThewmw = localStorage.getItem("color-theme");
+        let storedTheme = localStorage.getItem("color-theme");
         if (
-          storedThewmw ??
-          window.matchMedia("(prefers-color-scheme: dark)").matches
+          storedTheme === "dark" ||
+          (!storedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches)
         ) {
           return "dark";
-        } else {
-          return "light";
         }
+        return "light";
       })();
 
-      document.documentElement.classList.toggle("dark",theme === "dark");
+      document.documentElement.classList.toggle("dark", theme === "dark");
     </script>
   </head>
   <body
@@ -84,6 +84,7 @@ const finalDescription =
       <slot />
     </main>
 
+    <ScrollToTop />
     <Footer />
     <SpeedInsights />
 
@@ -124,11 +125,8 @@ const finalDescription =
         background-color: #06b6d4;
       }
 
-      :root {
-        --font-sans: "Inter", sans-serif;
-      }
       body {
-        font-family: var(--font-sans);
+        font-family: var(--font-main);
       }
     </style>
   </body>

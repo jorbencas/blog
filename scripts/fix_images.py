@@ -55,8 +55,8 @@ MAX_CACHE_ENTRIES: int = 200
 
 def _parse_date(date_str: str) -> Optional[Any]:
     try:
-        from datetime import datetime
-        return datetime.strptime(date_str.split("T")[0], "%Y-%m-%d")
+        from datetime import datetime, timezone
+        return datetime.strptime(date_str.split("T")[0], "%Y-%m-%d").replace(tzinfo=timezone.utc)
     except Exception:
         return None
 

@@ -5,7 +5,7 @@ import ChallengeCard from "@components/ChallengeCard.astro";
 import ProjectCard from "@components/ProjectCard.astro";
 import { getSortedPosts } from "src/utils";
 import { getCollection } from "astro:content";
-//import Weekly from "@components/Weekly.astro";
+import Weekly from "@components/Weekly.astro";
 const allPosts = await getCollection("posts");
 const sortedPosts = await getSortedPosts(allPosts);
 const latestPosts = sortedPosts.slice(0, 3);
@@ -18,9 +18,9 @@ const allProjects = await getCollection("myprojects");
 const listProjects = await getSortedPosts(allProjects);
 const latestProjects = listProjects.slice(0, 3);
 
-// const allWeeklyPosts = await getCollection("weeklyPosts");
-// const listWeeklyPosts = await getSortedPosts(allWeeklyPosts);
-// const latest6Weekly = listWeeklyPosts.slice(0, 6);
+const allWeeklyPosts = await getCollection("weeklyPosts");
+const listWeeklyPosts = await getSortedPosts(allWeeklyPosts);
+const latest6Weekly = listWeeklyPosts.slice(0, 6);
 
 // Clase base para los enlaces "Ver más"
 const linkBase =
@@ -32,7 +32,7 @@ const linkBase =
     <div class="space-y-24 md:space-y-32 mb-20">
       <!-- SECCIÓN: PROYECTOS -->
       <section class="space-y-10">
-        <div class="flex items-end justify-between pb-6">
+        <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-1 sm:gap-0 pb-6">
           <h2
             class="text-3xl md:text-4xl font-black italic uppercase tracking-tighter text-slate-900 dark:text-white"
           >
@@ -65,7 +65,7 @@ const linkBase =
 
       <!-- SECCIÓN: RETOS -->
       <section class="space-y-10">
-        <div class="flex items-end justify-between pb-6">
+        <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-1 sm:gap-0 pb-6">
           <h2
             class="text-3xl md:text-4xl font-black italic uppercase tracking-tighter text-slate-900 dark:text-white"
           >
@@ -98,7 +98,7 @@ const linkBase =
 
       <!-- SECCIÓN: BLOG -->
       <section class="space-y-10">
-        <div class="flex items-end justify-between pb-6">
+        <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-1 sm:gap-0 pb-6">
           <h2
             class="text-3xl md:text-4xl font-black italic uppercase tracking-tighter text-slate-900 dark:text-white"
           >
@@ -123,7 +123,7 @@ const linkBase =
       </section>
 
       <!--SECCIÓN WEEKLY-->
-      <!-- {latest6Weekly.length > 0 && (
+      {latest6Weekly.length > 0 && (
         <section class="space-y-10">
           <div class="flex items-end justify-between pb-6 border-b border-slate-100 dark:border-white/5">
             <h2 class="text-3xl md:text-4xl font-black italic uppercase tracking-tighter text-slate-900 dark:text-white">
@@ -142,7 +142,7 @@ const linkBase =
             ))}
           </div>
         </section>
-      )} -->
+      )}
     </div>
   </div>
 </Layout>

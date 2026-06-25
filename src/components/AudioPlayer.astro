@@ -5,7 +5,7 @@ interface Props {
 }
 
 const { src } = Astro.props;
-const id = src ? Math.random().toString(36).substring(2, 9) : "";
+const id = src ? `ap-${src.replace(/[^a-zA-Z0-9]/g, "-")}` : "";
 ---
 
 {
@@ -22,6 +22,7 @@ const id = src ? Math.random().toString(36).substring(2, 9) : "";
         <span
           id={`statusIcon-${id}`}
           class="flex items-center justify-center w-5 h-5 text-base"
+          aria-hidden="true"
         >
           🎧
         </span>
@@ -133,6 +134,7 @@ const id = src ? Math.random().toString(36).substring(2, 9) : "";
         iconPause.classList.remove("hidden");
         playBtn.classList.add("is-playing");
         statusIcon.textContent = "🔊";
+        statusIcon.setAttribute("aria-label", "reproduciendo");
         statusLabel.textContent = "Reproduciendo...";
       });
 
@@ -141,13 +143,17 @@ const id = src ? Math.random().toString(36).substring(2, 9) : "";
         iconPause.classList.add("hidden");
         playBtn.classList.remove("is-playing");
         statusIcon.textContent = "🎧";
+        statusIcon.setAttribute("aria-label", "audio disponible");
         statusLabel.textContent = "¿Prefieres escuchar este artículo?";
       });
 
       wavesurfer.on("finish", () => {
+        iconPlay.classList.remove("hidden");
+        iconPause.classList.add("hidden");
         currentTimeText.innerText = "0:00";
         playBtn.classList.remove("is-playing");
         statusIcon.textContent = "🎧";
+        statusIcon.setAttribute("aria-label", "audio disponible");
         statusLabel.textContent = "¿Prefieres escuchar este artículo?";
       });
     });

@@ -1,4 +1,6 @@
 ---
+import ResponsiveImage from "@components/ResponsiveImage.astro";
+import { resolveImagePath } from "src/utils.js";
 interface Props {
   title: string;
   description: string;
@@ -6,67 +8,84 @@ interface Props {
   tags: string[];
   id: string;
   repository?: string;
+  pubDate?: string;
 }
 
-const { title, description, image, tags, id, repository } = Astro.props;
-let imagenLimpia = image || "/img/default.jpg";
-if (!imagenLimpia.startsWith("/") && !imagenLimpia.startsWith("http")) {
-  imagenLimpia = `/${imagenLimpia}`;
-}
+const { title, description, image, tags, id, repository, pubDate } = Astro.props;
+
+const imagenLimpia = resolveImagePath(image);
+
+const date = pubDate
+  ? new Date(pubDate).toLocaleDateString("es-ES", {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+    })
+  : null;
 ---
 
 <div
   class="group relative bg-white dark:bg-slate-900/50 overflow-hidden hover:border-purple-500/50 border border-slate-200 dark:border-transparent h-full flex flex-col"
 >
-  <!-- Imagen con Overlay Dinámico -->
   <div class="relative aspect-video overflow-hidden">
     <div
       class="absolute inset-0 from-white dark:from-slate-950 via-transparent to-transparent z-10 opacity-80 transition-opacity group-hover:opacity-40"
     >
     </div>
-    <img
-      src={imagenLimpia}
-      alt={title}
-      class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-70 group-hover:opacity-100"
-    />
+    {
+      imagenLimpia ? (
+        <ResponsiveImage
+          fallback={imagenLimpia}
+          alt={title}
+          imgClass="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-70 group-hover:opacity-100"
+        />
+      ) : (
+        <div class="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center">
+          <span class="text-slate-500 dark:text-slate-600 text-xs sm:text-sm">
+            SIN_IMAGEN
+          </span>
+        </div>
+      )
+    }
 
-    <!-- Badge de Categoría (Opcional decorativo) -->
-    <div class="absolute top-4 left-4 z-20">
-      <span
-        class="text-xs sm:text-sm font-black uppercase tracking-[0.3em] bg-purple-500 text-white px-2 py-0.5 rounded-sm shadow-lg shadow-purple-500/20"
-      >
-        Archivo_Proyecto
-      </span>
-    </div>
+    {
+      date && (
+        <div class="absolute bottom-3 left-4 z-20 bg-white dark:bg-slate-900">
+          <time
+            class="text-xs sm:text-sm text-purple-500 dark:text-purple-400 uppercase tracking-[0.2em] font-black bg-white dark:bg-slate-950 px-2 py-1 rounded-sm border border-purple-500"
+          >
+            {date}
+          </time>
+        </div>
+      )
+    }
   </div>
 
-  <div class="p-6 space-y-5 flex-1 flex flex-col bg-white dark:bg-slate-900">
-    <!-- Tags Estilo Consola -->
+  <div class="p-5 flex-1 flex flex-col space-y-3 bg-white dark:bg-slate-900">
     <div class="flex gap-2 flex-wrap">
       {
         tags?.length > 0 &&
           tags.map((tag) => (
-            <span class="text-xs sm:text-sm font-black px-2 py-0.5 bg-purple-500/5 text-purple-600 dark:text-purple-400 border border-purple-500/20 uppercase tracking-widest rounded-sm transition-colors group-hover:bg-purple-500/10">
+            <div class="bg-gradient-to-r from-purple-800 to-purple-500 px-3 py-1 text-xs sm:text-sm font-bold uppercase tracking-wider text-white">
               {tag}
-            </span>
+            </div>
           ))
       }
     </div>
 
     <div class="flex-1">
       <h3
-        class="text-xl font-black italic uppercase tracking-tighter text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors duration-300"
+        class="text-lg font-black uppercase italic tracking-tighter text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors leading-tight"
       >
         {title}
       </h3>
       <p
-        class="text-base text-slate-600 dark:text-slate-400 line-clamp-2 mt-2 leading-relaxed font-medium italic opacity-80"
+        class="text-sm sm:text-base text-slate-500 dark:text-slate-400 line-clamp-2 mt-2 leading-relaxed font-medium italic opacity-80"
       >
         "{description}"
       </p>
     </div>
 
-    <!-- Enlaces de Acción -->
     <div class="flex items-center justify-between pt-4 mt-auto">
       <a
         href={`/proyectos/${id}`}

@@ -31,18 +31,14 @@ const darkIcon = document.getElementById("theme-toggle-dark-icon");
 const lightIcon = document.getElementById("theme-toggle-light-icon");
 const toggleBtn = document.getElementById("theme-toggle");
 let selectedTheme = localStorage.getItem("color-theme");
-let newTheme = selectedTheme === "dark";
+let isDark = selectedTheme === "dark";
 
-darkIcon.classList.toggle("hidden", newTheme);
-lightIcon.classList.toggle("hidden", !newTheme);
+darkIcon.classList.toggle("hidden", !isDark);
+lightIcon.classList.toggle("hidden", isDark);
 toggleBtn.addEventListener("click", () => {
-  const isDark = document.documentElement.classList.toggle("dark");
-  let newTheme = isDark ? "light" : "dark";
-
-  document.documentElement.classList.toggle("dark", isDark);
-
-  darkIcon.classList.toggle("hidden", isDark);
-  lightIcon.classList.toggle("hidden", !isDark);
-  localStorage.setItem("color-theme", newTheme);
+  isDark = document.documentElement.classList.toggle("dark");
+  darkIcon.classList.toggle("hidden", !isDark);
+  lightIcon.classList.toggle("hidden", isDark);
+  localStorage.setItem("color-theme", isDark ? "dark" : "light");
 });
 </script>

@@ -4,10 +4,11 @@ const currentPath = pathname.slice(1);
 ---
 
 <nav class="relative w-full lg:w-auto">
-  <input type="checkbox" id="menu-toggle" class="peer hidden" />
+  <input type="checkbox" id="menu-toggle" class="peer hidden" aria-label="Abrir menú de navegación" />
 
   <label
     for="menu-toggle"
+    aria-label="Abrir menú"
     class="relative z-50 flex flex-col justify-center h-8 w-8 gap-1.5 cursor-pointer select-none lg:hidden mx-auto
     peer-checked:[&>span:nth-child(1)]:rotate-45 peer-checked:[&>span:nth-child(1)]:translate-y-[8px]
     peer-checked:[&>span:nth-child(2)]:opacity-0 peer-checked:[&>span:nth-child(2)]:scale-x-0
@@ -26,12 +27,17 @@ const currentPath = pathname.slice(1);
 
   <div
     id="menu-items"
-    class="hidden peer-checked:flex lg:flex flex-col lg:flex-row gap-6 lg:gap-8 w-full lg:w-auto pt-6 lg:pt-0 items-center justify-center
-    fixed lg:static inset-x-0 top-0 bottom-0 lg:inset-auto bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm lg:bg-transparent lg:dark:bg-transparent lg:backdrop-blur-none z-40"
+    class="flex-col lg:flex-row gap-6 lg:gap-8 w-full lg:w-auto pt-6 lg:pt-0 items-center justify-center
+    fixed lg:static inset-x-0 top-0 bottom-0 lg:inset-auto bg-white/95 dark:bg-slate-900/95 lg:bg-transparent lg:dark:bg-transparent z-40 overflow-y-auto
+    transition-all duration-300 ease-out
+    peer-checked:opacity-100 peer-checked:pointer-events-auto peer-checked:translate-y-0
+    opacity-0 pointer-events-none -translate-y-2
+    lg:opacity-100 lg:pointer-events-auto lg:translate-y-0"
   >
-    <div class="flex flex-col lg:flex-row gap-6 lg:gap-8 items-center justify-center pt-24 lg:pt-0">
+    <div class="flex flex-col lg:flex-row gap-6 lg:gap-8 items-center justify-center pt-16 lg:pt-0">
       <a
         href="/proyectos/1"
+        aria-current={currentPath.startsWith("proyectos") ? "page" : undefined}
         class={`group relative text-sm font-black uppercase tracking-[0.2em] italic transition-colors w-full lg:w-fit text-center lg:text-left ${
           currentPath.startsWith("proyectos")
             ? "text-purple-500"
@@ -49,6 +55,7 @@ const currentPath = pathname.slice(1);
 
       <a
         href="/retos/1"
+        aria-current={currentPath.startsWith("retos") ? "page" : undefined}
         class={`group relative text-sm font-black uppercase tracking-[0.2em] italic transition-colors w-full lg:w-fit text-center lg:text-left ${
           currentPath.startsWith("retos")
             ? "text-cyan-600 dark:text-cyan-500"
@@ -64,6 +71,7 @@ const currentPath = pathname.slice(1);
 
       <a
         href="/posts/1"
+        aria-current={currentPath.startsWith("posts") ? "page" : undefined}
         class={`group relative text-sm font-black uppercase tracking-[0.2em] italic transition-colors w-full lg:w-fit text-center lg:text-left ${
           currentPath.startsWith("posts")
             ? "text-slate-900 dark:text-slate-200"
@@ -78,6 +86,7 @@ const currentPath = pathname.slice(1);
       </a>
       <a
         href="/toolsmini/extractor-frames"
+        aria-current={currentPath.startsWith("toolsmini") ? "page" : undefined}
         class={`group relative text-sm font-black uppercase tracking-[0.2em] italic transition-colors w-full lg:w-fit text-center lg:text-left ${
           currentPath.startsWith("toolsmini")
             ? "text-slate-900 dark:text-slate-200"
@@ -95,3 +104,26 @@ const currentPath = pathname.slice(1);
     </div>
   </div>
 </nav>
+
+<script>
+  const toggle = document.getElementById("menu-toggle");
+  if (toggle) {
+    toggle.addEventListener("change", () => {
+      document.body.style.overflow = toggle.checked ? "hidden" : "";
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && toggle.checked) {
+        toggle.checked = false;
+        document.body.style.overflow = "";
+      }
+    });
+
+    window.addEventListener("resize", () => {
+      if (window.innerWidth >= 1024 && toggle.checked) {
+        toggle.checked = false;
+        document.body.style.overflow = "";
+      }
+    });
+  }
+</script>

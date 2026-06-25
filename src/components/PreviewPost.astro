@@ -1,5 +1,6 @@
 ---
 import ResponsiveImage from "@components/ResponsiveImage.astro";
+import { resolveImagePath } from "src/utils.js";
 const { post } = Astro.props;
 const { title, description, pubDate, image } = post.data;
 
@@ -10,9 +11,7 @@ const date = new Date(pubDate).toLocaleDateString("es-ES", {
 });
 
 const tags = post.data.tags || [];
-const imagenCard = image
-  ? image.startsWith("http") ? image : `/${image.replace(/^\//, "")}`
-  : null;
+const imagenCard = resolveImagePath(image);
 ---
 
 <a href={`/posts/${post.id}`} class="group block h-full">

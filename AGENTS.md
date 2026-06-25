@@ -40,3 +40,10 @@ Schemas in `src/content.config.ts` using `astro/loaders` (glob) + `astro/zod`.
 - `image_cache.json` is auto-generated; treat as cache.
 - Posts with `draft: true` are filtered out at runtime.
 - Content is in Spanish — prefer Spanish in new content.
+
+## PR instructions
+- Title format: [<project_name>] <Title>
+- Always run `npm lint` and `npm test` before committing.
+
+## npm package use restrictions
+1. **Astro files** don't use any npm package of node enviroment.

@@ -1,7 +1,8 @@
 ---
-import { formatDatePost, getSortedPosts } from "src/utils.js";
+import { formatDatePost, getSortedPosts, resolveImagePath } from "src/utils.js";
+import "@styles/solution.css";
 import Layout from "@layouts/Layout.astro";
-import NextPrevLiks from "@components/NextPrevLiks.astro";
+import NextPrevLinks from "@components/NextPrevLinks.astro";
 import TableOfContents from "@components/TableOfContents.astro";
 import  CodeEnhancer from "@components/CodeEnhancer.astro";
 import ReadingProgress from "@components/ReadingProgress.astro";
@@ -9,7 +10,7 @@ import ResponsiveImage from "@components/ResponsiveImage.astro";
 import { getCollection } from "astro:content";
 import type { MarkdownHeading } from "astro";
 import AudioPlayer from "@components/AudioPlayer.astro";
-let bar = {
+const bar = {
   prevElement: { url: undefined, title: undefined, image: "prev.svg" },
   nextElement: { url: undefined, title: undefined, image: "next.svg" },
 };
@@ -40,11 +41,7 @@ const {
   audioSrc,
 } = Astro.props;
 
-const imagenLimpia = image
-  ? image.startsWith("/") || image.startsWith("http")
-    ? image
-    : `/${image}`
-  : null;
+const imagenLimpia = resolveImagePath(image);
 
 const allPosts = await getCollection("posts");
 const sortedPosts = await getSortedPosts(allPosts);
@@ -86,9 +83,9 @@ const tagsArray = Array.isArray(tags)
 >
   <ReadingProgress />
   <div
-    class="max-w-screen-xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 py-10 font-sans"
+    class="max-w-screen-xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 py-10 px-4 lg:px-0 font-sans"
   >
-    <main class="lg:col-span-8 px-4 lg:px-0">
+    <main class="lg:col-span-8">
       <header class="mb-12">
         <div
           class="relative w-full h-[300px] md:h-[400px] overflow-hidden bg-slate-100 dark:bg-slate-900 mb-10"
@@ -114,13 +111,13 @@ const tagsArray = Array.isArray(tags)
 
         <div class="space-y-6">
           <h1
-            class="text-3xl md:text-5xl font-black uppercase italic tracking-tighter leading-tight text-slate-900 dark:text-white"
+            class="text-2xl sm:text-3xl md:text-5xl font-black uppercase italic tracking-tighter leading-tight text-slate-900 dark:text-white"
           >
             {title}
           </h1>
 
           <p
-            class="text-xl text-white leading-relaxed max-w-3xl pl-6 from-sky-900 to-cyan-500 bg-gradient-to-r"
+            class="text-base sm:text-xl text-white leading-relaxed max-w-3xl pl-4 sm:pl-6 from-sky-900 to-cyan-500 bg-gradient-to-r"
           >
             {description}
           </p>
@@ -159,14 +156,14 @@ const tagsArray = Array.isArray(tags)
 
       <article
         id="contenido"
-        class="prose prose-xl max-w-none
+        class="prose sm:prose-lg lg:prose-xl max-w-none
  prose-slate dark:prose-invert
  dark:prose-p:text-slate-300 prose-p:leading-[1.8]
  prose-headings:uppercase prose-headings:italic prose-headings:tracking-tighter prose-headings:font-black
  prose-a:text-cyan-600 dark:prose-a:text-cyan-400 prose-a:no-underline hover:prose-a:underline
  prose-strong:text-cyan-600 dark:prose-strong:text-cyan-400
  prose-code:text-cyan-600 dark:prose-code:text-cyan-300
-   prose-img:shadow-2xl prose-img:rounded-sm"
+   prose-img:shadow-2xl prose-img:rounded-sm prose-img:max-w-full prose-img:h-auto"
       >
         <slot />
       </article>
@@ -192,11 +189,9 @@ const tagsArray = Array.isArray(tags)
           )
         }
 
-        <NextPrevLiks
-          imageNext={bar.nextElement?.image}
+        <NextPrevLinks
           nextURL={bar.nextElement?.url}
           prevURL={bar.prevElement?.url}
-          imagePrev={bar.prevElement?.image}
           textNext={bar.nextElement?.title}
           textPrev={bar.prevElement?.title}
         />
@@ -214,139 +209,24 @@ const tagsArray = Array.isArray(tags)
 </Layout>
 
 <style is:global>
-  /* Selección de texto personalizada */
   ::selection {
     background-color: rgba(6, 182, 212, 0.3);
     color: inherit;
   }
 
-  /* Scroll suave para la página */
   html {
     scroll-behavior: smooth;
   }
 
-  /* Animación para el bloque de solución */
   details .details-content {
     animation: slideDown 0.4s ease-out;
   }
 
-  @keyframes slideDown {
-    from {
-      opacity: 0;
-      transform: translateY(-10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  /* Personalización del scrollbar dentro del código si es muy largo */
   .details-content pre::-webkit-scrollbar {
     height: 4px;
   }
   .details-content pre::-webkit-scrollbar-thumb {
     background: rgba(6, 182, 212, 0.3);
     border-radius: 10px;
-  }
-
-  /* --- Estenedor de Solución (Details) --- */
-  details {
-    padding: 1.5rem;
-    padding-top: 0.5rem;
-  }
-
-  details[open] {
-    box-shadow: 0 0 30px rgba(6,182,212,0.15), 0 0 0 1px rgba(6,182,212,0.2);
-  }
-
-  /* --- Cabecera del desplegable --- */
-  summary {
-    padding: 1.25rem;
-    cursor: pointer;
-    font-weight: 700;
-    color: #334155;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    user-select: none;
-    list-style: none;
-    transition: background 0.2s ease;
-  }
-
-  :global(.dark) summary {
-    color: #cbd5e1;
-  }
-
-  summary:hover {
-    background-color: rgba(100,116,139,0.05);
-  }
-
-  /* Indicador de estado personalizado */
-  summary::after {
-    content: "DESCIFRAR";
-    font-size: 0.75rem;
-    font-weight: 900;
-    letter-spacing: 0.2em;
-    background-color: #e2e8f0;
-    color: #475569;
-    padding: 0.25rem 0.75rem;
-    border-radius: 0.375rem;
-    transition: all 0.15s ease;
-  }
-
-  :global(.dark) summary::after {
-    background-color: rgba(255,255,255,0.1);
-    color: #cbd5e1;
-  }
-
-  details[open] summary::after {
-    content: "DESCIFRADO";
-    background-color: #06b6d4;
-    color: #fff;
-    box-shadow: 0 0 10px rgba(6,182,212,0.5);
-  }
-
-  /* --- Contenedor Interno de la Solución --- */
-  .details-content {
-    padding: 1.5rem;
-    padding-top: 0.5rem;
-    animation: fadeInSlide 0.4s ease-out;
-  }
-
-  /* Estilos para los títulos dentro de la solución */
-  .details-content h3 {
-    color: #0891b2 !important;
-    font-size: 0.875rem !important;
-    font-weight: 900 !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.2em !important;
-    margin-top: 1.5rem !important;
-    margin-bottom: 0.5rem !important;
-  }
-
-  :global(.dark) .details-content h3 {
-    color: #22d3ee !important;
-  }
-
-  /* Animación de apertura */
-  @keyframes fadeInSlide {
-    from {
-      opacity: 0;
-      transform: translateY(-10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  /* --- Scrollbar para bloques de código --- */
-  .details-content pre::-webkit-scrollbar {
-    height: 5px;
-  }
-  .details-content pre::-webkit-scrollbar-thumb {
-    background-color: rgba(6,182,212,0.3);
-    border-radius: 9999px;
   }
 </style>
