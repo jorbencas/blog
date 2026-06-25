@@ -1,0 +1,71 @@
+---
+title: "Extractor de Frames — Video Tool"
+description: "Extrae fotogramas de cualquier vídeo directamente en tu navegador, sin subir archivos a ningún servidor. 100% local y privado."
+pubDate: 2026-06-20
+tags: ["video", "frames", "herramienta", "navegador"]
+image: "/img/extractor-frames-banner.svg"
+author: "Jorge Beneyto Castelló"
+---
+
+## ¿Qué es?
+
+Una herramienta 100% del lado del cliente que te permite **extraer fotogramas de cualquier vídeo** directamente en tu navegador. No necesita instalación, no sube archivos a ningún servidor y respeta tu privacidad: todo el procesamiento ocurre localmente en tu máquina.
+
+## Características principales
+
+- **Extracción de frames**: Selecciona un intervalo y extrae todos los fotogramas en ese rango.
+- **Cortador de vídeo**: Recorta segmentos de vídeo sin pérdida de calidad.
+- **Exportación en lote**: Descarga los frames individualmente o en un archivo ZIP.
+- **Formatos compatibles**: MP4, WebM, MOV, AVI y la mayoría de formatos de navegador.
+- **Sin límites**: No hay restricciones de duración, tamaño o número de frames.
+
+## ¿Por qué la creé?
+
+Trabajando con contenido multimedia, necesitaba una forma rápida de extraer frames de vídeos para documentación técnica, miniaturas, o simplemente para analizar momentos concretos. Las herramientas existentes requerían instalar software pesado o dependían de servicios externos con límites arbitrarios.
+
+Esta herramienta resuelve ese problema con un enfoque radicalmente simple: usa las APIs nativas del navegador (`<video>`, `<canvas>`, `captureStream()`, `MediaRecorder`) para hacer todo el trabajo pesado.
+
+## Tecnología
+
+| Aspecto | Detalle |
+|---|---|
+| Framework | Svelte 5 (runes `$state`) |
+| APIs del navegador | HTMLVideoElement, Canvas, MediaRecorder, File API |
+| Procesamiento | 100% cliente, sin backend |
+| Empaquetado | ZIP con `JSZip` (CDN) |
+| Estilo | Tailwind CSS con soporte dark mode |
+
+## Cómo usarla
+
+La interfaz está dividida en dos pestañas:
+
+### Extracción de frames
+
+1. Arrastra o selecciona un archivo de vídeo.
+2. Usa el reproductor para navegar hasta el momento deseado.
+3. Ajusta los controles de intervalo (frame inicial y final).
+4. Haz clic en "Extraer frames seleccionados".
+5. Descarga los frames individualmente o todos juntos en un ZIP.
+
+### Cortador de vídeo
+
+1. Carga un vídeo en la pestaña "Video cutter".
+2. Marca los puntos de inicio y fin del segmento.
+3. Ajusta la calidad del vídeo de salida.
+4. Haz clic en "Cortar vídeo" para generar el fragmento.
+5. Descarga el resultado.
+
+## Privacidad y seguridad
+
+Todo el procesamiento ocurre **exclusivamente en tu navegador**. Los archivos de vídeo nunca abandonan tu dispositivo. No hay llamadas a APIs externas, no hay almacenamiento en servidores, no hay seguimiento.
+
+## Casos de uso
+
+- **Creadores de contenido**: Extraer thumbnails, crear GIFs, preparar storyboards.
+- **Desarrolladores**: Generar screenshots de vídeos para documentación técnica.
+- **Educación**: Capturar momentos clave de vídeos educativos para material de estudio.
+- **Análisis**: Examinar vídeos frame a frame para detección de objetos o movimiento.
+
+## Prueba la herramienta
+
+El panel interactivo aparece justo debajo de este párrafo en la página de la herramienta.

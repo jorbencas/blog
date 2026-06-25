@@ -1,0 +1,135 @@
+---
+draft: false
+title: "Tech Pulse: Dashboard Automatizado de Noticias Tech con IA"
+description: "Scraper inteligente que recolecta 30+ fuentes tech, genera resúmenes con Gemini IA, filtra por canales y fechas, y despliega un dashboard dinámico + newsletter diaria."
+pubDate: "2026/06/25"
+tags: ['python', 'ia', 'web-scraping', 'devops', 'automation', 'github-actions']
+image: "https://jorbencasdownloaderdocument.surge.sh/optimizado/Image.webp"
+repository: "https://github.com/jorbencas/test_githubActions"
+url: "https://jorbencasdownloaderdocument.surge.sh"
+author: "Jorge Beneyto Castelló"
+featured: false
+---
+
+## 1. El Planteamiento del Problema
+
+El ecosistema tecnológico publica decenas de noticias, vídeos y recursos cada día. Seguir el ritmo manualmente es imposible. Herramientas como Feedly o Google News son genéricas, no filtran por relevancia técnica real ni ofrecen resúmenes inteligentes.
+
+Se necesitaba un sistema que:
+- Recolectara automáticamente contenido de 30+ fuentes (YouTube, blogs tech, RSS)
+- Clasificara y deduplicara el contenido en tiempo real
+- Generara un resumen semanal con IA tipo "editor senior de tecnología"
+- Desplegara un dashboard interactivo con filtros por canal y fecha
+- Enviara una newsletter diaria con diseño curado
+
+## 2. La Solución Arquitectónica
+
+**Tech Pulse** nace como un pipeline completo de automatización orquestado por GitHub Actions, construido en Python asíncrono.
+
+### Capas del Sistema
+
+- **Capa de Extracción (Scraping):** Arquitectura de extractores especializados con `YouTubeExtractor` (parsea JSON `ytInitialData` directamente) y `WebExtractor` (BeautifulSoup con selectores CSS personalizados por fuente). Usa un `ScraperPro` facade que centraliza las operaciones con semáforo de concurrencia (5 peticiones simultáneas).
+
+- **Capa de Procesamiento IA:** Integración con Gemini API (`google-genai`) para:
+  - Resumen semanal con análisis de tendencias
+  - Soluciones técnicas a retos de programación con Big-O notation
+  - Generación de imágenes para posts con Imagen
+  - Traducción de títulos al español
+
+- **Capa de Persistencia:** Historial JSON con control de duplicados por enlace e ID de vídeo, truncado a 900 entradas.
+
+- **Capa de Distribución:**
+  - Dashboard HTML estático desplegado en Surge.sh
+  - Newsletter HTML con diseño responsive vía Mailgun
+  - Posts en markdown para blog Astro vía PR automático
+  - Resumen por Telegram con TTS (edge-tts, voz española)
+
+### Pipeline de Contenido
+
+El flujo semanal está definido por dos workflows de GitHub Actions:
+1. **Sábado (scraper_workflow.yml):** Optimiza imágenes → scrapea fuentes → genera resumen IA → PR al blog → despliega dashboard
+2. **Domingo (hunt_challenges.yml):** Busca retos de programación → genera soluciones con IA → PR al blog
+
+## 3. Retos Técnicos y Decisiones de Diseño
+
+### Gestión de APIs con Rate Limiting
+
+Las APIs de Gemini tienen cuotas estrictas. Se implementó un sistema de **failover con reintentos** que prueba 3 modelos distintos (gemini-2.5-flash → gemini-2.5-pro) con backoff exponencial de 5 segundos. Si todos fallan, se usa una base de datos local de soluciones hardcoded (`solutions_db.py`) como plan C.
+
+```python
+for modelo in modelos:
+    for intento in range(2):
+        try:
+            response = client.models.generate_content(model=modelo, contents=prompt)
+            match = re.search(r'(\{.*\})', response.text.strip(), re.DOTALL)
+            if match:
+                data = json.loads(match.group(1))
+                if data.get('codigo') and len(data['codigo']) > 80:
+                    return data
+        except Exception as e:
+            if "429" in str(e) or "QUOTA" in str(e):
+                await asyncio.sleep(5)  # backoff
+```
+
+### Renderizado Client-Side del Dashboard
+
+Originalmente Python generaba todo el HTML con decenas de miles de líneas inline. Se refactorizó a una arquitectura **SPA ligera**:
+
+- Python solo genera un `index.html` shell (~2KB) + `data.json` con el historial completo
+- JavaScript (`script.js`) carga el JSON, construye filtros dinámicos por canal/fecha, renderiza vídeos y noticias
+- Los filtros operan sobre el dataset completo (900+ registros), no solo un subconjunto
+
+### Extracción Robusta de YouTube
+
+YouTube no ofrece API pública gratuita para scraping. Se implementó un parser que extrae el objeto `ytInitialData` del HTML, con fallback a regex cuando el JSON no está disponible. Soporta vídeos, shorts y livestreams con detección de estado "EN DIRECTO".
+
+## 4. Desglose del Feature Set
+
+- **30+ fuentes monitorizadas:** YouTube (15 canales), blogs tech (Xataka, Genbeta, TechCrunch, The Verge, Wired, HackerNews, etc.), fuentes de becas
+- **Clasificación inteligente:** Filtrado por keywords tech vs becas con badges visuales
+- **Dashboard interactivo:** Filtros combinados por canal + fecha, selector por semanas agrupado por meses, tarjetas de vídeo con miniaturas
+- **Newsletter diaria:**
+  - Dark mode support (`prefers-color-scheme`)
+  - Estadísticas rápidas (tech, becas, multimedia)
+  - Resumen generado por Gemini con badge "generado con IA"
+  - Lista curada de enlaces con iconos por tipo
+- **Generación de retos:** Cacería semanal en Codewars + retosdeprogramacion.com, con soluciones en 12 lenguajes
+- **Dashboard SEO:** Meta tags Open Graph, Twitter Cards, meta description, canonical URL
+
+## 5. Puesta en Marcha Local
+
+```bash
+# Clonar el repositorio
+git clone https://github.com/jorbencas/test_githubActions.git
+cd test_githubActions
+
+# Crear entorno virtual e instalar dependencias
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# Configurar variables de entorno
+cp .env.example .env
+# Editar .env con GEMINI_API_KEY, MAILGUN_API_KEY, etc.
+
+# Ejecutar el scraper completo
+python downloadFile.py
+
+# O solo la cacería de retos
+python hunt_challenges.py
+
+# En modo offline (sin IA)
+python hunt_challenges.py --offline
+```
+
+El dashboard se genera en `public/index.html` y se puede previsualizar localmente abriendo el archivo en el navegador o sirviéndolo con `python -m http.server -d public`.
+
+## 6. Live Demo
+
+El dashboard está desplegado y accesible públicamente, con actualización automática cada semana.
+
+👉 **[Abrir Tech Pulse Dashboard](https://jorbencasdownloaderdocument.surge.sh)**
+
+---
+
+*Este proyecto es el motor de contenido automatizado detrás de las secciones de noticias y retos del blog.*

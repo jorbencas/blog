@@ -1,0 +1,40 @@
+---
+import { getCollection, render } from "astro:content";
+import ToolLayout from "@layouts/ToolLayout.astro";
+import VideoExtractor from "@components/VideoExtractor.svelte";
+
+export async function getStaticPaths() {
+  const allTools = await getCollection("tools");
+  return allTools.map((tool) => ({
+    params: { slug: tool.id.replace(/\.[^/.]+$/, "") },
+    props: { tool },
+  }));
+}
+
+const { tool } = Astro.props;
+const { Content } = await render(tool);
+const { title, description, tags, author, image, pubDate } = tool.data;
+const slug = tool.id.replace(/\.[^/.]+$/, "");
+---
+
+<ToolLayout
+  title={title}
+  description={description}
+  tags={tags ?? []}
+  author={author}
+  image={image}
+  pubDate={pubDate}
+>
+  <Content />
+</ToolLayout>
+
+{
+  slug === "extractor-frames" && (
+    <div class="max-w-3xl mx-auto px-4 pb-16">
+      <h2 class="text-xl sm:text-2xl font-black uppercase italic tracking-tighter text-slate-900 dark:text-white mb-6">
+        Pruébalo ahora
+      </h2>
+      <VideoExtractor client:load />
+    </div>
+  )
+}

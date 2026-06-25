@@ -72,4 +72,17 @@ const myprojects = defineCollection({
   }),
 });
 
-export const collections = { posts, "auto-news": autoNews, "weeklyPosts": weeklyPosts, "auto-challenges": autoChallenges, myprojects };
+const tools = defineCollection({
+  loader: glob({ pattern: "**/*.mdx", base: "./src/content/tools" }),
+  schema: z.object({
+    draft: z.boolean().optional().default(false),
+    title: z.string(),
+    description: z.string(),
+    pubDate: z.string().or(z.date()).transform((v) => new Date(v)),
+    tags: z.array(z.string()).default([]),
+    image: z.string().optional(),
+    author: z.string().default("Jorge Beneyto Castelló"),
+  }),
+});
+
+export const collections = { posts, "auto-news": autoNews, "weeklyPosts": weeklyPosts, "auto-challenges": autoChallenges, myprojects, tools };

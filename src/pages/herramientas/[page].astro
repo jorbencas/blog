@@ -1,19 +1,18 @@
 ---
 import Layout from "@layouts/Layout.astro";
-import ProjectCard from "@components/ProjectCard.astro";
+import ToolCard from "@components/ToolCard.astro";
 import NextPrevLinks from "@components/NextPrevLinks.astro";
 import Information from "@components/Information.astro";
 import { getCollection } from "astro:content";
 
 export async function getStaticPaths({ paginate }) {
-  const allProjects = await getCollection("myprojects");
-  // Ordenamos por fecha descendente
-  const sortedProjects = allProjects.sort(
+  const allTools = await getCollection("tools");
+  const sortedTools = allTools.sort(
     (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
   );
 
-  return paginate(sortedProjects, {
-    pageSize: 12, // Mantenemos tu estándar de 12 elementos por página
+  return paginate(sortedTools, {
+    pageSize: 12,
   });
 }
 
@@ -23,20 +22,20 @@ const { prev, next } = url;
 ---
 
 <Layout
-  title={`Portafolio de Proyectos - Página ${currentPage}`}
-  description="Galería de proyectos de desarrollo, software y experimentación técnica."
+  title={`Mini Herramientas - Página ${currentPage}`}
+  description="Utilidades ligeras del lado del cliente, sin servidor."
 >
   <div class="max-w-6xl mx-auto mt-10 flex justify-around items-start">
     <section class="space-y-12" data-pagefind-ignore>
       <div class="text-center space-y-2">
         <h1
-          class="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tighter text-slate-900 dark:text-white transition-colors"
+          class="text-3xl sm:text-4xl font-black uppercase tracking-tighter text-slate-900 dark:text-white transition-colors"
         >
-          Proyectos <span class="text-purple-500 text-xl sm:text-2xl align-top"
+          Mini Herramientas <span class="text-emerald-500 text-xl sm:text-2xl align-top"
             >Pg.{currentPage}</span
           >
         </h1>
-        <div class="h-1 w-24 bg-purple-500 mx-auto"></div>
+        <div class="h-1 w-24 bg-emerald-500 mx-auto"></div>
       </div>
 
       <div class="flow-root">
@@ -46,11 +45,11 @@ const { prev, next } = url;
         >
           {
             data.length > 0 ? (
-              data.map((project) => (
+              data.map((tool) => (
                 <li class="list-none">
-                  <ProjectCard
-                    {...project.data}
-                    id={project.id.replace(/\.[^/.]+$/, "")}
+                  <ToolCard
+                    {...tool.data}
+                    id={tool.id.replace(/\.[^/.]+$/, "")}
                   />
                 </li>
               ))
@@ -67,8 +66,8 @@ const { prev, next } = url;
         <NextPrevLinks
           nextURL={next}
           prevURL={prev}
-          textNext="Proyectos antiguos"
-          textPrev="Proyectos recientes"
+          textNext="Herramientas antiguas"
+          textPrev="Herramientas recientes"
         />
       </div>
     </section>

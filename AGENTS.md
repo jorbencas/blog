@@ -12,9 +12,14 @@
 - Node >= 18
 
 ## Content (all in Spanish)
-4 collections in `src/content/` — `posts/`, `auto-news/`, `auto-challenges/`, `myprojects/`
+5 collections in `src/content/` — `posts/`, `auto-news/`, `auto-challenges/`, `myprojects/`, `tools/`
 Content is MDX. Frontmatter includes `draft` (filtered by `getSortedPosts` in `src/utils.js`).
 Schemas in `src/content.config.ts` using `astro/loaders` (glob) + `astro/zod`.
+
+## Tools collection (`src/content/tools/`)
+- Listings at `/herramientas` with pagination (page size 12), cards via `ToolCard.astro`, layout via `ToolLayout.astro`.
+- Interactive Svelte components live at `src/components/` and are embedded in `[slug].astro` via slug-based conditional.
+- Adding a new tool: (1) create MDX in `src/content/tools/`, (2) if it needs an interactive component, create it in `src/components/` and add the import + conditional in `src/pages/herramientas/[slug].astro`, (3) add a banner image to `public/img/`.
 
 ## Path aliases
 `@components/*`, `@layouts/*`, `@pages/*`, `@styles/*`, `@audios/*`, `@data/*`

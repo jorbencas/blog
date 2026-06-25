@@ -1,0 +1,278 @@
+#!/usr/bin/env python3
+"""Generate enhanced resources.mdx with categories, favicons, names, and descriptions.
+
+Idempotent: skips already-known favicon URLs and doesn't re-process own output.
+"""
+
+import re
+from pathlib import Path
+from urllib.parse import urlparse
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+RESOURCES_FILE = BASE_DIR / "src" / "content" / "posts" / "resources.mdx"
+BACKUP_FILE = BASE_DIR / "src" / "content" / "posts" / "resources.mdx.bak"
+
+FAVICON_BASE = "https://www.google.com/s2/favicons?domain={domain}&sz=32"
+
+ENTRIES = {
+    "10minutemail.com":              {"name": "10 Minute Mail",      "cat": "Utilidades Dev",     "desc": "Email temporal desechable para tests y registros."},
+    "adventjs.dev":                  {"name": "AdventJS",            "cat": "Aprendizaje",        "desc": "Retos diarios de JS/TS en calendario de adviento."},
+    "apollographql.com":             {"name": "Apollo GraphQL",      "cat": "APIs",               "desc": "Plataforma GraphQL con cliente, servidor y herramientas."},
+    "astro.build":                   {"name": "Astro",               "cat": "Frameworks",         "desc": "Framework web con islas de interactividad, cero JS por defecto."},
+    "bennettfeely.com":              {"name": "Clippy",              "cat": "Diseño",             "desc": "Generador visual de clip-path CSS."},
+    "bundlephobia.com":              {"name": "Bundle Phobia",       "cat": "Rendimiento",        "desc": "Analiza el tamaño de paquetes npm y su impacto en el bundle."},
+    "c-sharpcorner.com":             {"name": "C# Corner",           "cat": "Aprendizaje",        "desc": "Comunidad y tutoriales sobre .NET, C#, Azure."},
+    "ccnadesdecero.es":              {"name": "CCNA Desde Cero",     "cat": "Aprendizaje",        "desc": "Curso gratuito de redes Cisco CCNA en español."},
+    "chat.forefront.ai":             {"name": "Forefront",           "cat": "AI",                 "desc": "Chat con múltiples modelos de lenguaje."},
+    "chat.openai.com":               {"name": "ChatGPT",             "cat": "AI",                 "desc": "Asistente conversacional de OpenAI."},
+    "chrome.google.com":             {"name": "Chrome Web Store",    "cat": "Extensiones",        "desc": "Tienda de extensiones y apps para Chrome."},
+    "cloudinary.com":                {"name": "Cloudinary",          "cat": "APIs",               "desc": "Gestión y optimización de imágenes/vídeo en la nube."},
+    "codely.com":                    {"name": "Codely",              "cat": "Aprendizaje",        "desc": "Cursos sobre DDD, arquitectura hexagonal y buenas prácticas."},
+    "codesignal.com":                {"name": "CodeSignal",          "cat": "Aprendizaje",        "desc": "Challenges de programación y preparación técnica."},
+    "component-party.dev":           {"name": "Component Party",     "cat": "Aprendizaje",        "desc": "Comparativa de sintaxis de componentes entre frameworks JS."},
+    "crontab.guru":                  {"name": "Crontab Guru",        "cat": "Utilidades Dev",     "desc": "Editor y validador de expresiones cron."},
+    "css-tricks.com":                {"name": "CSS-Tricks",          "cat": "Diseño",             "desc": "Artículos y guías sobre CSS, HTML y frontend."},
+    "cypress.io":                    {"name": "Cypress",             "cat": "Testing",            "desc": "Framework E2E con time-travel y debugging visual."},
+    "daisyui.com":                   {"name": "DaisyUI",             "cat": "Componentes UI",     "desc": "Componentes Tailwind CSS con múltiples temas."},
+    "deelay.me":                     {"name": "Deelay",              "cat": "Utilidades Dev",     "desc": "Simula latencia HTTP para testing de UI."},
+    "devblogs.microsoft.com":        {"name": "Microsoft Dev Blog",  "cat": "Aprendizaje",        "desc": "Blog oficial de .NET, Azure y herramientas."},
+    "devdocs.io":                    {"name": "DevDocs",             "cat": "Documentación",      "desc": "Documentación multi-tecnología offline."},
+    "developer.mozilla.org":         {"name": "MDN Web Docs",        "cat": "Documentación",      "desc": "Documentación completa de HTML, CSS, JS y APIs web."},
+    "devicon.dev":                   {"name": "Devicon",             "cat": "Iconos",             "desc": "Iconos SVG de lenguajes y herramientas dev."},
+    "dotnettutorials.net":           {"name": "Dot Net Tutorials",   "cat": "Aprendizaje",        "desc": "Tutoriales de .NET, C#, ASP.NET Core."},
+    "dev.to":                        {"name": "Dev.to",              "cat": "Aprendizaje",        "desc": "Comunidad de desarrolladores con artículos técnicos."},
+    "dominioshdfull.com":            {"name": "Dominios HD Full",    "cat": "Utilidades Dev",     "desc": "Búsqueda y registro de dominios."},
+    "dribbble.com":                  {"name": "Dribbble",            "cat": "Diseño",             "desc": "Comunidad de diseño y portafolios creativos."},
+    "es.redux.js.org":               {"name": "Redux",               "cat": "State Management",   "desc": "Contenedor de estado predecible para apps JS."},
+    "fakerjs.dev":                   {"name": "Faker.js",            "cat": "Utilidades Dev",     "desc": "Genera datos falsos realistas para tests."},
+    "flask.palletsprojects.com":     {"name": "Flask",               "cat": "Frameworks",         "desc": "Microframework Python para webs ligeras y APIs."},
+    "flowbite.com":                  {"name": "Flowbite",            "cat": "Componentes UI",     "desc": "Componentes interactivos con Tailwind + Alpine.js."},
+    "fly.io":                        {"name": "Fly.io",              "cat": "Hosting / Nube",     "desc": "Despliegue near-edge con base de datos."},
+    "fortnitetracker.com":           {"name": "Fortnite Tracker",    "cat": "Juegos",             "desc": "Estadísticas y ranking de Fortnite."},
+    "getwaves.io":                   {"name": "Get Waves",           "cat": "Diseño",             "desc": "Generador de ondas SVG para backgrounds."},
+    "gist.github.com":               {"name": "GitHub Gist",         "cat": "Utilidades Dev",     "desc": "Fragmentos de código y configuraciones compartibles."},
+    "gitbook.com":                   {"name": "GitBook",             "cat": "Documentación",      "desc": "Plataforma de documentación técnica."},
+    "gitexplorer.com":               {"name": "Git Explorer",        "cat": "Aprendizaje",        "desc": "Encuentra comandos Git según la acción."},
+    "github.com/CKGrafico/papanasi": {"name": "Papanasi",            "cat": "Componentes UI",    "desc": "Componentes UI framework-agnostic."},
+    "github.com/pmndrs/zustand":     {"name": "Zustand",             "cat": "State Management",   "desc": "Estado minimalista y rápido para React."},
+    "github.com/safak/youtube":      {"name": "Safak (YouTube)",     "cat": "Aprendizaje",        "desc": "Ejemplos y proyectos del canal de YouTube de Safak."},
+    "grammarly.com":                 {"name": "Grammarly",           "cat": "Productividad",      "desc": "Asistente de escritura con corrección gramatical."},
+    "hackerrank.com":                {"name": "HackerRank",          "cat": "Aprendizaje",        "desc": "Ejercicios y challenges de programación."},
+    "inversify.io":                  {"name": "InversifyJS",         "cat": "Frameworks",         "desc": "Contenedor IoC para TypeScript."},
+    "jakearchibald.github.io":       {"name": "SVGOMG",             "cat": "Diseño",             "desc": "Optimizador de SVGs con interfaz visual."},
+    "joanleon.dev":                  {"name": "Joan León",           "cat": "Blogs / Referencias","desc": "Blog de desarrollo web y tecnología."},
+    "jotai.org":                     {"name": "Jotai",               "cat": "State Management",   "desc": "Estado atómico y flexible para React."},
+    "jsoncrack.com":                 {"name": "JSON Crack",          "cat": "Utilidades Dev",     "desc": "Visualizador de JSON como grafo."},
+    "kenwheeler.github.io":          {"name": "Slick Carousel",      "cat": "Componentes UI",     "desc": "Carrusel responsive jQuery."},
+    "kitwind.io":                    {"name": "Kometa UI",           "cat": "Componentes UI",     "desc": "Componentes y templates Tailwind CSS."},
+    "lordicon.com":                  {"name": "Lordicon",            "cat": "Iconos",             "desc": "Iconos animados SVG."},
+    "material-tailwind.com":         {"name": "Material Tailwind",   "cat": "Componentes UI",     "desc": "Componentes Material Design + Tailwind CSS."},
+    "media.io":                      {"name": "Media.io",            "cat": "Herramientas Multimedia", "desc": "Convertidor y editor de vídeo/audio online."},
+    "merakiui.com":                  {"name": "Meraki UI",           "cat": "Componentes UI",     "desc": "Componentes Tailwind CSS con dark mode."},
+    "millionjs.org":                 {"name": "Million.js",          "cat": "Rendimiento",        "desc": "Compilador virtual de DOM que optimiza React."},
+    "netlify.com":                   {"name": "Netlify",             "cat": "Hosting / Nube",     "desc": "Deploy con edge functions, forms y CI/CD."},
+    "node-postgres.com":             {"name": "node-postgres",       "cat": "APIs",               "desc": "Cliente PostgreSQL para Node.js."},
+    "npmjs.com":                     {"name": "npm",                 "cat": "Utilidades Dev",     "desc": "Registro de paquetes JavaScript con más de 2 millones de librerías."},
+    "nx.dev":                        {"name": "Nx",                  "cat": "Monorepos",          "desc": "Build inteligente para monorepos."},
+    "opengraph.xyz":                 {"name": "OpenGraph XYZ",       "cat": "Herramientas Dev",   "desc": "Generador de imágenes Open Graph."},
+    "openmoji.org":                  {"name": "OpenMoji",            "cat": "Iconos",             "desc": "Emojis e iconos SVG open-source."},
+    "packagephobia.com":             {"name": "Package Phobia",      "cat": "Rendimiento",        "desc": "Mide el coste de añadir una dependencia npm."},
+    "payloadcms.com":                {"name": "Payload CMS",         "cat": "CMS",                "desc": "Headless CMS TypeScript con panel REST/GraphQL."},
+    "perplexity.ai":                 {"name": "Perplexity",          "cat": "AI",                 "desc": "Buscador conversacional con respuestas citadas."},
+    "playwright.dev":                {"name": "Playwright",          "cat": "Testing",            "desc": "Testing E2E multi-navegador de Microsoft."},
+    "pokeapi.co":                    {"name": "PokéAPI",             "cat": "APIs",               "desc": "API REST gratuita de datos Pokémon."},
+    "pomofocus.io":                  {"name": "Pomofocus",           "cat": "Productividad",      "desc": "Temporizador Pomodoro online."},
+    "popsy.co":                      {"name": "Popsy",               "cat": "Diseño",             "desc": "Templates y recursos de diseño."},
+    "primefaces.org":                {"name": "Prime UI",            "cat": "Componentes UI",     "desc": "Componentes UI para React, Angular, Vue."},
+    "railway.app":                   {"name": "Railway",             "cat": "Hosting / Nube",     "desc": "Despliegue rápido con bases de datos y CI/CD."},
+    "reactbricks.com":               {"name": "React Bricks",        "cat": "CMS",                "desc": "CMS visual con componentes React."},
+    "regexr.com":                    {"name": "RegExr",              "cat": "Utilidades Dev",     "desc": "Editor y tester de expresiones regulares."},
+    "relay.dev":                     {"name": "Relay",               "cat": "Frameworks",         "desc": "Cliente GraphQL de Meta con fetching declarativo."},
+    "remix.run":                     {"name": "Remix",               "cat": "Frameworks",         "desc": "Framework web full-stack con nested routes."},
+    "render.com":                    {"name": "Render",              "cat": "Hosting / Nube",     "desc": "Cloud con PostgreSQL, CRONs y servicios web."},
+    "retos.dev":                     {"name": "Retos.dev",           "cat": "Aprendizaje",        "desc": "Retos de programación semanales."},
+    "rxjs.dev":                      {"name": "RxJS",                "cat": "Programación Reactiva", "desc": "Programación reactiva con observables."},
+    "sanity.io":                     {"name": "Sanity",              "cat": "CMS",                "desc": "Headless CMS con editor en tiempo real."},
+    "sendinblue.com":                {"name": "SendinBlue",          "cat": "APIs",               "desc": "API de email marketing y automatización."},
+    "simpleicons.org":               {"name": "Simple Icons",        "cat": "Iconos",             "desc": "Iconos SVG de marcas populares."},
+    "squoosh.app":                   {"name": "Squoosh",             "cat": "Diseño",             "desc": "Optimizador de imágenes online."},
+    "stackoverflow.com":             {"name": "Stack Overflow",      "cat": "Comunidad",          "desc": "Comunidad de preguntas y respuestas."},
+    "storybook.js.org":              {"name": "Storybook",           "cat": "Desarrollo UI",      "desc": "Entorno de desarrollo de componentes UI."},
+    "superstate.dev":                {"name": "Superstate",          "cat": "State Management",   "desc": "State management reactivo minimalista."},
+    "surge.sh":                      {"name": "Surge",               "cat": "Hosting / Nube",     "desc": "Publica sites estáticos con un comando."},
+    "svgrepo.com":                   {"name": "SVG Repo",            "cat": "Iconos",             "desc": "Iconos SVG gratuitos licencia MIT."},
+    "swagger.io":                    {"name": "Swagger",             "cat": "APIs",               "desc": "Framework para diseñar y documentar APIs REST."},
+    "tabler-icons.io":               {"name": "Tabler Icons",        "cat": "Iconos",             "desc": "+5000 iconos SVG libres y personalizables."},
+    "tailblocks.cc":                 {"name": "Tailblocks",          "cat": "Componentes UI",     "desc": "Bloques Tailwind CSS listos para copiar."},
+    "thedotnetguide.com":            {"name": "The .NET Guide",      "cat": "Aprendizaje",        "desc": "Guía de tutoriales .NET y C#."},
+    "toptal.com":                    {"name": "Toptal Blog",         "cat": "Aprendizaje",        "desc": "Artículos técnicos de desarrolladores expertos."},
+    "toys.lerdorf.com":              {"name": "Toys.Lerdorf",        "cat": "Aprendizaje",        "desc": "Blog de Rasmus Lerdorf sobre sistemas."},
+    "trpc.io":                       {"name": "tRPC",                "cat": "Frameworks",         "desc": "APIs end-to-end type-safe sin schema."},
+    "twitter.com/midudev":           {"name": "Midudev (Twitter)",   "cat": "Aprendizaje",        "desc": "Referencia de desarrollo web en español."},
+    "useblackbox.io":                {"name": "Blackbox AI",         "cat": "AI",                 "desc": "Asistente AI para código."},
+    "vercel.com":                    {"name": "Vercel",              "cat": "Hosting / Nube",     "desc": "Deploy frontend con edge functions."},
+    "warp.dev":                      {"name": "Warp",                "cat": "Herramientas Terminal", "desc": "Terminal moderno con IDE y AI."},
+    "wikipedia.org":                 {"name": "Wikipedia",           "cat": "Aprendizaje",        "desc": "Enciclopedia libre, artículos técnicos."},
+    "workspaces.xyz":                {"name": "Workspaces",          "cat": "Herramientas Dev",   "desc": "Entornos de desarrollo remotos."},
+    "you.com":                       {"name": "You.com",             "cat": "AI",                 "desc": "Buscador web con chat AI integrado."},
+    "youtube.com":                   {"name": "YouTube (canales)",   "cat": "Aprendizaje",        "desc": "Vídeos y tutoriales de programación."},
+    "zetcode.com":                   {"name": "ZetCode",             "cat": "Aprendizaje",        "desc": "Tutoriales de C#, Python, Go, Java, Rust."},
+}
+
+CATEGORY_ORDER = [
+    "Componentes UI", "Iconos", "Frameworks", "State Management",
+    "Hosting / Nube", "APIs", "CMS", "Testing", "Rendimiento", "Monorepos",
+    "Utilidades Dev", "Herramientas Dev", "Herramientas Terminal",
+    "Herramientas Multimedia", "Extensiones",
+    "Aprendizaje", "Documentación", "Comunidad", "Blogs / Referencias",
+    "Diseño", "Programación Reactiva",
+    "AI", "Productividad", "Desarrollo UI", "Juegos",
+]
+
+CAT_ICON = {
+    "Iconos": "🎨", "Componentes UI": "🧩", "Utilidades Dev": "🛠️",
+    "Aprendizaje": "📚", "APIs": "🔌", "Diseño": "✨",
+    "CMS": "📝", "Herramientas Multimedia": "🎬",
+    "Comunidad": "💬", "Documentación": "📖",
+    "Frameworks": "⚙️", "Herramientas Terminal": "💻",
+    "Hosting / Nube": "☁️", "Herramientas Dev": "🔧",
+    "State Management": "📦", "Rendimiento": "⚡",
+    "Monorepos": "🏗️", "Testing": "🧪",
+    "Desarrollo UI": "🎯", "Programación Reactiva": "🔄",
+    "Blogs / Referencias": "📝", "Productividad": "⏱️",
+    "AI": "🤖", "Juegos": "🎮", "Extensiones": "🧩",
+}
+
+FM = """\
+---
+draft: false
+title: "Recursos para desarrolladores"
+description: "Colección curada de herramientas, librerías, plataformas, APIs y referencias para el desarrollo web y de software."
+pubDate: "2025-04-01"
+tags: ['recursos', 'herramientas', 'desarrollo-web', 'ui', 'hosting', 'aprendizaje', 'referencias', 'api']
+image: "img/resources_cover-1200.webp"
+author: "Jorge Beneyto Castelló"
+---"""
+
+
+def domain_from(url: str) -> str:
+    return urlparse(url).netloc.replace('www.', '')
+
+
+def classify(url: str) -> dict | None:
+    domain = domain_from(url)
+    # path-specific first (e.g. github.com/pmndrs/zustand before github.com)
+    for key, entry in ENTRIES.items():
+        if '/' in key and key in url:
+            return entry
+    # exact domain
+    if domain in ENTRIES:
+        return ENTRIES[domain]
+    # base domain (last 2 parts)
+    parts = domain.split('.')
+    if len(parts) >= 2:
+        base = '.'.join(parts[-2:])
+        if base in ENTRIES:
+            return ENTRIES[base]
+    # substring fallback (only for keys without '/')
+    for key, entry in ENTRIES.items():
+        if '/' not in key and key in url:
+            return entry
+    return None
+
+
+def extract_clean_urls(text: str) -> list[str]:
+    """Extract URLs, excluding favicon URLs and already-generated content."""
+    seen = set()
+    result = []
+    for u in re.findall(r'https?://[^\s\n<>"\'\)]+', text):
+        u = u.rstrip('.,;:)!?')
+        # Skip favicon URLs / google services
+        if 'google.com/s2/favicons' in u or 'googleusercontent.com' in u:
+            continue
+        if u in seen:
+            continue
+        seen.add(u)
+        result.append(u)
+    return result
+
+
+def build_new_content(all_urls: list[str]) -> str:
+    """Build the full MDX content from a clean list of URLs."""
+    seen_entry = set()
+    by_cat: dict[str, list[tuple[str, str, str, str]]] = {}  # cat → [(name, url, desc, domain)]
+
+    for url in all_urls:
+        cls = classify(url)
+        if cls:
+            key = (cls["name"], cls["cat"])
+            if key not in seen_entry:
+                seen_entry.add(key)
+                dom = domain_from(url)
+                by_cat.setdefault(cls["cat"], []).append((cls["name"], url, cls["desc"], dom))
+        else:
+            dom = domain_from(url)
+            by_cat.setdefault("_uncat", []).append((url, dom))
+
+    lines = [
+        "¡Bienvenido a mi colección curada de recursos! Aquí encontrarás herramientas, librerías, plataformas y referencias",
+        "que uso o he usado en mi día a día como desarrollador. Cada recurso incluye una breve descripción y posibles",
+        "casos de uso para que sepas cuándo puede serte útil.\n",
+    ]
+
+    # Categorised
+    for cat in sorted((c for c in by_cat if c != "_uncat"), key=lambda c: CATEGORY_ORDER.index(c) if c in CATEGORY_ORDER else 999):
+        items = sorted(by_cat[cat], key=lambda x: x[0].lower())
+        icon = CAT_ICON.get(cat, "📌")
+        lines.append(f"## {icon} {cat}\n")
+        for name, url, desc, dom in items:
+            fv = FAVICON_BASE.format(domain=dom)
+            lines.append(
+                f'- <img src="{fv}" width="16" height="16" '
+                f'style="vertical-align:middle;margin-right:6px" alt="{name}" /> '
+                f'**[{name}]({url})** — {desc}'
+            )
+        lines.append("")
+
+    # Uncategorised
+    if "_uncat" in by_cat:
+        lines.append("## 📌 Sin categorizar\n")
+        for url, dom in sorted(set(by_cat["_uncat"])):
+            fv = FAVICON_BASE.format(domain=dom)
+            lines.append(f'- <img src="{fv}" width="16" height="16" style="vertical-align:middle;margin-right:6px" /> {url}')
+        lines.append("")
+
+    return FM + "\n\n" + "\n".join(lines) + "\n"
+
+
+def main():
+    raw = RESOURCES_FILE.read_text(encoding='utf-8').lstrip('\n\r ')
+
+    # Strip frontmatter
+    body = re.sub(r'^---\n.*?\n---\n*', '', raw, count=1, flags=re.DOTALL).strip()
+
+    urls = extract_clean_urls(body)
+    new_content = build_new_content(urls)
+
+    # Backup original
+    BACKUP_FILE.write_text(raw, encoding='utf-8')
+
+    RESOURCES_FILE.write_text(new_content, encoding='utf-8')
+    # Stats
+    cats = set()
+    uncat = 0
+    for url in urls:
+        cls = classify(url)
+        if cls:
+            cats.add(cls["cat"])
+        else:
+            uncat += 1
+    print(f"✅ {RESOURCES_FILE} actualizado")
+    print(f"   Categorías: {len(cats)}")
+    print(f"   Recursos listados: {len(set((classify(u)['name'], classify(u)['cat']) for u in urls if classify(u)))}")
+    print(f"   Sin clasificar: {uncat}")
+    print(f"   Backup guardado en {BACKUP_FILE}")
+
+
+if __name__ == "__main__":
+    main()

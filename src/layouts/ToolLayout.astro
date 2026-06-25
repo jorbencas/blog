@@ -1,0 +1,140 @@
+---
+import { formatDatePost, resolveImagePath } from "src/utils.js";
+import Layout from "@layouts/Layout.astro";
+import CodeEnhancer from "@components/CodeEnhancer.astro";
+import ResponsiveImage from "@components/ResponsiveImage.astro";
+import "@styles/solution.css";
+
+interface Props {
+  title: string;
+  description: string;
+  tags: string | string[];
+  author: string;
+  image: string;
+  pubDate: string | Date;
+}
+
+const {
+  title,
+  description,
+  tags,
+  author,
+  image,
+  pubDate,
+} = Astro.props;
+
+const imagenLimpia = resolveImagePath(image);
+
+const tagsArray = Array.isArray(tags)
+  ? tags
+  : typeof tags === "string"
+  ? tags.split(",").map((t) => t.trim())
+  : [];
+---
+
+<Layout
+  title={title}
+  description={description}
+  tags={tagsArray}
+  pubDate={pubDate}
+  author={author}
+>
+  <div
+    class="max-w-screen-xl mx-auto px-4 lg:px-0 py-10 font-sans"
+  >
+    <main class="max-w-3xl mx-auto">
+      <header class="mb-12">
+        <div
+          class="relative w-full h-[200px] sm:h-[300px] md:h-[400px] overflow-hidden bg-slate-100 dark:bg-slate-900 mb-8 sm:mb-10"
+        >
+          {
+            imagenLimpia ? (
+              <ResponsiveImage
+                fallback={imagenLimpia}
+                alt={title}
+                fetchpriority="high"
+                loading="eager"
+                class="w-full h-full object-cover"
+              />
+            ) : (
+              <div class="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center">
+                <span class="text-slate-500 dark:text-slate-600 text-xs sm:text-sm">
+                  SIN_IMAGEN
+                </span>
+              </div>
+            )
+          }
+        </div>
+
+        <div class="space-y-4 sm:space-y-6">
+          <h1
+            class="text-2xl sm:text-3xl md:text-5xl font-black uppercase italic tracking-tighter leading-tight text-slate-900 dark:text-white"
+          >
+            {title}
+          </h1>
+
+          <p
+            class="text-base sm:text-xl text-white leading-relaxed max-w-3xl pl-4 sm:pl-6 from-emerald-900 to-emerald-500 bg-gradient-to-r"
+          >
+            {description}
+          </p>
+
+          <div
+            class="flex flex-wrap items-center gap-8 pt-6 text-xs sm:text-sm uppercase tracking-[0.2em]"
+          >
+            <div class="flex items-center gap-2">
+              <span class="text-slate-500 dark:text-slate-400">FECHA:</span>
+              <time class="text-slate-900 dark:text-white font-bold"
+                >{formatDatePost(pubDate)}</time
+              >
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-slate-500 dark:text-slate-400">AUTOR:</span>
+              <span class="text-slate-900 dark:text-white font-bold"
+                >{author}</span
+              >
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <article
+        class="prose sm:prose-lg lg:prose-xl max-w-none
+ prose-slate dark:prose-invert
+ dark:prose-p:text-slate-300 prose-p:leading-[1.8]
+ prose-headings:uppercase prose-headings:italic prose-headings:tracking-tighter prose-headings:font-black
+ prose-a:text-emerald-600 dark:prose-a:text-emerald-400 prose-a:no-underline hover:prose-a:underline
+ prose-strong:text-emerald-600 dark:prose-strong:text-emerald-400
+ prose-code:text-emerald-600 dark:prose-code:text-emerald-300
+   prose-img:shadow-2xl prose-img:rounded-sm prose-img:max-w-full prose-img:h-auto"
+      >
+        <slot />
+      </article>
+    </main>
+  </div>
+
+  <CodeEnhancer />
+</Layout>
+
+<style is:global>
+  ::selection {
+    background-color: rgba(16, 185, 129, 0.3);
+    color: inherit;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  details .details-content {
+    animation: slideDown 0.4s ease-out;
+  }
+
+  .details-content pre::-webkit-scrollbar {
+    height: 4px;
+  }
+  .details-content pre::-webkit-scrollbar-thumb {
+    background: rgba(16, 185, 129, 0.3);
+    border-radius: 10px;
+  }
+</style>

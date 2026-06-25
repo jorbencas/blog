@@ -3,6 +3,7 @@ import Layout from "@layouts/Layout.astro";
 import PreviewPost from "@components/PreviewPost.astro";
 import ChallengeCard from "@components/ChallengeCard.astro";
 import ProjectCard from "@components/ProjectCard.astro";
+import ToolCard from "@components/ToolCard.astro";
 import { getSortedPosts } from "src/utils";
 import { getCollection } from "astro:content";
 import Weekly from "@components/Weekly.astro";
@@ -17,6 +18,10 @@ const latestChallenges = challengesPosts.slice(0, 3);
 const allProjects = await getCollection("myprojects");
 const listProjects = await getSortedPosts(allProjects);
 const latestProjects = listProjects.slice(0, 3);
+
+const allTools = await getCollection("tools");
+const listTools = await getSortedPosts(allTools);
+const latestTools = listTools.slice(0, 3);
 
 const allWeeklyPosts = await getCollection("weeklyPosts");
 const listWeeklyPosts = await getSortedPosts(allWeeklyPosts);
@@ -62,6 +67,41 @@ const linkBase =
           }
         </div>
       </section>
+
+      <!-- SECCIÓN: HERRAMIENTAS -->
+      {latestTools.length > 0 && (
+        <section class="space-y-10">
+          <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-1 sm:gap-0 pb-6">
+            <h2
+              class="text-3xl md:text-4xl font-black italic uppercase tracking-tighter text-slate-900 dark:text-white"
+            >
+              Mini_Herramientas
+            </h2>
+            <a
+              href="/herramientas/1"
+              class={`${linkBase} text-slate-400 hover:text-emerald-500`}
+            >
+              Ver herramientas <span
+                class="inline-block transition-transform group-hover:translate-x-1"
+                >→</span
+              >
+              <span
+                class="absolute bottom-0 left-0 w-0 h-0.5 bg-emerald-500 transition-all duration-300 group-hover:w-full"
+              ></span>
+            </a>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {
+              latestTools.map((tool) => (
+                <ToolCard
+                  {...tool.data}
+                  id={tool.id.replace(/\.[^/.]+$/, "")}
+                />
+              ))
+            }
+          </div>
+        </section>
+      )}
 
       <!-- SECCIÓN: RETOS -->
       <section class="space-y-10">
@@ -127,7 +167,7 @@ const linkBase =
         <section class="space-y-10">
           <div class="flex items-end justify-between pb-6 border-b border-slate-100 dark:border-white/5">
             <h2 class="text-3xl md:text-4xl font-black italic uppercase tracking-tighter text-slate-900 dark:text-white">
-              Resúmenes_Semanales <span class="text-cyan-500 text-base align-top">ARCHIVO</span>
+              Resúmenes_Semanales <span class="text-cyan-500 text-xs sm:text-base align-top">ARCHIVO</span>
             </h2>
             <a href="/weekly/1" class="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-cyan-500 transition-colors">
               Ver todo el archivo →
