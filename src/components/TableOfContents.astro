@@ -47,60 +47,66 @@ const hasContent = headings?.length > 1;
 </style>
 
 <script>
-  function initTOC() {
-    const links = document.querySelectorAll(".toc-link");
-    // Buscamos los encabezados dentro del artículo principal
-    const headings = Array.from(
-      document.querySelectorAll("article h2[id], article h3[id]")
-    );
+  (function() {
+    let observer = null;
 
-    if (links.length === 0 || headings.length === 0) return;
+    function initTOC() {
+      if (observer) observer.disconnect();
 
-    const activeClasses = [
-      "!text-cyan-500", "!border-l-cyan-500",
-      "bg-gradient-to-r", "from-cyan-500/10", "to-transparent",
-      "!font-bold", "text-[15px]",
-    ];
+      const links = document.querySelectorAll(".toc-link");
+      const headingElements = Array.from(
+        document.querySelectorAll("article h2[id], article h3[id]")
+      );
 
-    const removeAllActive = () => {
-      links.forEach((link) => link.classList.remove(...activeClasses));
-    };
+      if (links.length === 0 || headingElements.length === 0) return;
 
-    const activateFirst = () => {
-      removeAllActive();
-      links[0].classList.add(...activeClasses);
-    };
+      const activeClasses = [
+        "!text-cyan-500", "!border-l-cyan-500",
+        "bg-gradient-to-r", "from-cyan-500/10", "to-transparent",
+        "!font-bold", "text-[15px]",
+      ];
 
-    const observerOptions = {
-      root: null,
-      rootMargin: "-100px 0px -70% 0px", // Detecta cuando están en la parte superior
-      threshold: 0,
-    };
+      const removeAllActive = () => {
+        links.forEach((link) => link.classList.remove(...activeClasses));
+      };
 
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          const id = entry.target.getAttribute("id");
-          const activeLink = document.querySelector(`.toc-link[href="#${id}"]`);
-
-          if (activeLink) {
+      const activateLink = (id) => {
+        for (const link of links) {
+          if (link.getAttribute("href") === `#${id}`) {
             removeAllActive();
-            activeLink.classList.add(...activeClasses);
+            link.classList.add(...activeClasses);
+            return true;
           }
         }
+        return false;
+      };
+
+      observer = new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            activateLink(entry.target.getAttribute("id"));
+          }
+        }
+      }, {
+        root: null,
+        rootMargin: "-120px 0px -60% 0px",
+        threshold: 0,
       });
-    }, observerOptions);
 
-    headings.forEach((h) => observer.observe(h));
+      headingElements.forEach((h) => observer.observe(h));
 
-    // Si estamos al inicio de la página, activar el primero
-    if (window.scrollY < 100) {
-      activateFirst();
+      // Activar primer heading por defecto
+      if (links.length > 0) {
+        removeAllActive();
+        links[0].classList.add(...activeClasses);
+      }
     }
-  }
 
-  // Ejecutar en carga inicial y en cambios de página de Astro
-  document.addEventListener("astro:page-load", initTOC);
-  // Por si acaso no usas View Transitions, ejecutar también en DOMContentLoaded
-  document.addEventListener("DOMContentLoaded", initTOC);
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initTOC);
+    } else {
+      initTOC();
+    }
+    document.addEventListener("astro:page-load", initTOC);
+  })();
 </script>
