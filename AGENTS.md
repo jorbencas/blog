@@ -38,15 +38,9 @@ Schemas in `src/content.config.ts` using `astro/loaders` (glob) + `astro/zod`.
    - If running `fix_images.py`, `image_cache.json` is pruned automatically (max 200 entries, discards >365 days).
 1. **Always run `npm run build` after any change** to verify no errors.
 2. **Save project context** in `docs/contexto.md` — update it with each change. Load the `update-context` skill for the exact format.
-3. **Tailwind v4 note**: `@apply` is NOT supported in component `<style>` blocks. Use plain CSS instead.
-4. **Dark mode**: Always pair light/dark classes explicitly (e.g. `text-slate-900 dark:text-white`). Never stack conflicting classes without `dark:` prefix.
-
-## Timeline post
-- `src/content/posts/linea_temporal_blog.mdx` is a post documenting the blog's evolution month by month.
-- **Update it** whenever you make a significant change (new component, migration, refactor, workflow, library, theme/CSS change).
-- Add an entry in the corresponding month explaining the change and why.
-- Do NOT include changes from the `test_githubActions` project — blog only.
-- The post and all new entries must be **in Spanish (castellano)**.
+3. **Update timeline post** after significant changes — load the `update-timeline` skill.
+4. **Tailwind v4 note**: `@apply` is NOT supported in component `<style>` blocks. Use plain CSS instead.
+5. **Dark mode**: Always pair light/dark classes explicitly (e.g. `text-slate-900 dark:text-white`). Never stack conflicting classes without `dark:` prefix.
 
 ## Notes
 - `image_cache.json` is auto-generated; treat as cache.

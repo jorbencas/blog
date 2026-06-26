@@ -155,6 +155,15 @@ const tagsArray = Array.isArray(tags)
           </div>
         </div>
         {audioSrc && <AudioPlayer src={audioSrc} />}
+        <div class="flex flex-wrap gap-4 pt-6">
+          <CopyPost
+            rawContent={rawContent}
+            title={title}
+            description={description}
+            pubDate={pubDate instanceof Date ? pubDate.toISOString() : String(pubDate)}
+            author={author}
+          />
+        </div>
       </header>
 
       <article
@@ -192,16 +201,6 @@ const tagsArray = Array.isArray(tags)
             </div>
           )
         }
-
-        <div class="flex justify-center">
-          <CopyPost
-            rawContent={rawContent}
-            title={title}
-            description={description}
-            pubDate={pubDate instanceof Date ? pubDate.toISOString() : String(pubDate)}
-            author={author}
-          />
-        </div>
 
         <NextPrevLinks
           nextURL={bar.nextElement?.url}

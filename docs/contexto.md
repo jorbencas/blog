@@ -1,6 +1,6 @@
 # Contexto del proyecto — Blog
 
-**Última actualización**: 2026-06-26 (sesión: hover cards, markdown light theme, solution.css)
+**Última actualización**: 2026-06-26 (sesión: CopyPost, update-timeline skill, navbar close button)
 **Stack**: Astro 6.4 + Svelte 5 + Tailwind CSS 4.3
 **Deploy**: Vercel (`blog-jorbencas.vercel.app`)
 **Idioma**: Español
@@ -32,6 +32,7 @@ Secciones en orden:
 ### Navbar (`src/components/Navbar.astro`)
 - Menú responsive: hamburguesa → X animado en móvil, horizontal en lg+
 - Body scroll lock con `position: fixed` + `scrollY` para evitar salto por scrollbar
+- Botón hamburguesa/X en móvil: `fixed top-3 right-3 z-50` (esquina superior derecha)
 - Escape cierra menú; resize >1024px lo cierra automáticamente
 - 4 links: Proyectos, Retos, Blog, Mini Herramientas (cada uno con color de acento propio)
 
@@ -65,6 +66,12 @@ Props: `fallback`, `avif`, `webp`, `blur` (LQIP), `fetchpriority`, `loading`, `a
 - Siempre con borde degradado `from-cyan-500 via-purple-500 to-blue-500` + badge "RESUMEN_SEMANAL"
 - Hover: glow sobre el wrapper + imagen más brillante
 
+### CopyPost (`src/components/CopyPost.astro`)
+- Botón "COPIAR" con dropdown: Markdown, Texto plano (strip MD), Para IA (con metadatos)
+- Datos pasados via `<script type="application/json">` para evitar HTML-escape de Astro
+- Estilo: `border-2 sky-500`, uppercase, tracking-widest, hover/active effects (mismo estilo que botones proyecto)
+- Ubicado en el header de PostLayout, tras AudioPlayer
+
 ### PreviewPost (`src/components/PreviewPost.astro`)
 - Card para posts del blog
 - Hover: `hover:border-cyan-500/50`
@@ -91,6 +98,7 @@ Props: `fallback`, `avif`, `webp`, `blur` (LQIP), `fetchpriority`, `loading`, `a
 ### Config
 - `astro.config.mjs`, `tsconfig.json`, `AGENTS.md`, `README.md`
 - `.opencode/skills/update-context/SKILL.md`
+- `.opencode/skills/update-timeline/SKILL.md` — instrucciones para actualizar `linea_temporal_blog.mdx` tras cambios significativos
 
 ### CI/CD
 - `.github/workflows/spelling.yml`, `fixing_img.yml`, `issues_handel.yml`
@@ -101,7 +109,7 @@ Props: `fallback`, `avif`, `webp`, `blur` (LQIP), `fetchpriority`, `loading`, `a
 - `src/layouts/PostLayout.astro`, `src/layouts/Layout.astro`, `src/layouts/ProjectLayout.astro`
 
 ### Componentes
-- `src/components/Navbar.astro`, `ResponsiveImage.astro`, `SEO.astro`, `AudioPlayer.astro`, `TableOfContents.astro`, `PreviewPost.astro`, `Weekly.astro`
+- `src/components/Navbar.astro`, `ResponsiveImage.astro`, `SEO.astro`, `AudioPlayer.astro`, `TableOfContents.astro`, `PreviewPost.astro`, `CopyPost.astro`, `Weekly.astro`
 - `src/components/ChallengeCard.astro`, `ProjectCard.astro`, `ToolCard.astro`, `Information.astro`
 - `src/components/ToggleButton.astro`, `NextPrevLinks.astro`, `Footer.astro`, `Buscador.astro`
 - `src/components/toolsmini/VideoExtractor.svelte`
