@@ -16,18 +16,13 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install Python deps
-        run: |
-          pip install --break-system-packages pytest 'Pillow>=10.0.0' aiohttp requests beautifulsoup4 python-slugify pillow-avif-plugin
+        run: pip install --break-system-packages -r requirements.txt
       - name: Run Python tests
-        working-directory: ./blog
         run: python3 -m pytest tests/python/ -v
 
   playwright-tests:
     name: Playwright E2E
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./blog
     steps:
       - uses: actions/checkout@v4
       - name: Set up Node
@@ -47,4 +42,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-results
-          path: blog/test-results/
+          path: test-results/

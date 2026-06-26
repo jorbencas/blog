@@ -100,5 +100,12 @@ Before deleting, changing permissions, or modifying any file, you must:
 ## Git restrictions
 - NEVER run `git push`, `git pull`, or `git fetch`. These operations must be done manually by the user.
 
+## Python dependency rules
+1. All Python libraries must be listed in `requirements.txt`, never hardcoded in workflow files.
+2. When adding a new Python library to `requirements.txt`, you must:
+   - Ask the user what the library is for and why it's needed
+   - If the user doesn't know what the library does, provide a brief explanation of its purpose
+   - Wait for explicit confirmation before adding it
+
 ## npm package use restrictions
 1. **Astro files** don't use any npm package of node enviroment.
