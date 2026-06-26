@@ -10,6 +10,7 @@ import ResponsiveImage from "@components/ResponsiveImage.astro";
 import { getCollection } from "astro:content";
 import type { MarkdownHeading } from "astro";
 import AudioPlayer from "@components/AudioPlayer.astro";
+import CopyPost from "@components/CopyPost.astro";
 const bar = {
   prevElement: { url: undefined, title: undefined, image: "prev.svg" },
   nextElement: { url: undefined, title: undefined, image: "next.svg" },
@@ -26,6 +27,7 @@ interface Props {
   headings?: MarkdownHeading[];
   remarkPluginFrontmatter?: Record<string, any>;
   audioSrc?: string;
+  rawContent?: string;
 }
 
 const {
@@ -39,6 +41,7 @@ const {
   headings = [],
   remarkPluginFrontmatter,
   audioSrc,
+  rawContent = "",
 } = Astro.props;
 
 const imagenLimpia = resolveImagePath(image);
@@ -189,6 +192,16 @@ const tagsArray = Array.isArray(tags)
             </div>
           )
         }
+
+        <div class="flex justify-center">
+          <CopyPost
+            rawContent={rawContent}
+            title={title}
+            description={description}
+            pubDate={pubDate instanceof Date ? pubDate.toISOString() : String(pubDate)}
+            author={author}
+          />
+        </div>
 
         <NextPrevLinks
           nextURL={bar.nextElement?.url}

@@ -13,7 +13,7 @@ export async function getStaticPaths() {
 
 const { tool } = Astro.props;
 const { Content } = await render(tool);
-const { title, description, tags, author, image, pubDate } = tool.data;
+const { title, description, tags, author, image, pubDate, component } = tool.data;
 const slug = tool.id.replace(/\.[^/.]+$/, "");
 ---
 
@@ -26,15 +26,14 @@ const slug = tool.id.replace(/\.[^/.]+$/, "");
   pubDate={pubDate}
 >
   <Content />
+  {
+    component === "VideoExtractor" && (
+      <div class="not-prose max-w-3xl mx-auto mt-12">
+        <h2 class="text-xl sm:text-2xl font-black uppercase italic tracking-tighter text-slate-900 dark:text-white mb-6">
+          Pruébalo ahora
+        </h2>
+        <VideoExtractor client:load />
+      </div>
+    )
+  }
 </ToolLayout>
-
-{
-  slug === "extractor-frames" && (
-    <div class="max-w-3xl mx-auto px-4 pb-16">
-      <h2 class="text-xl sm:text-2xl font-black uppercase italic tracking-tighter text-slate-900 dark:text-white mb-6">
-        Pruébalo ahora
-      </h2>
-      <VideoExtractor client:load />
-    </div>
-  )
-}

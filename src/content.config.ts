@@ -82,6 +82,7 @@ const tools = defineCollection({
     tags: z.array(z.string()).default([]),
     image: z.string().optional(),
     author: z.string().default("Jorge Beneyto Castelló"),
+    component: z.string().optional(),
   }),
 });
 

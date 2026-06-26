@@ -604,7 +604,7 @@
   .btn-delete-tag:hover { color: #ef4444 !important; }
 
   /* Acciones generales */
-  .tab-actions { display: flex; justify-content: space-between; margin-top: 20px; border-top: 1px solid; padding-top: 16px; gap: 10px; }
+  .tab-actions { display: flex; justify-content: space-between; margin-top: 20px; border-top: 1px solid; padding-top: 16px; gap: 10px; flex-wrap: wrap; }
   .btn { padding: 10px 18px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.88rem; transition: background 0.15s ease, opacity 0.15s; }
   .btn-primary { background: #3498db; color: white; }
   .btn-primary:hover { background: #2980b9; }
@@ -635,6 +635,23 @@
   .status-text { font-weight: 600; margin-bottom: 12px; font-size: 0.95rem; }
   .progress-container { height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 16px; }
   .progress-bar { height: 100%; transition: width 0.1s linear; }
+
+  /* Responsive: móvil */
+  @media (max-width: 640px) {
+    .precision-controls-panel-v2 { flex-direction: column; align-items: stretch; }
+    .central-action-wrapper { min-width: unset; padding: 8px 0; }
+    .control-group { min-width: unset; }
+    .group-range-picker { min-width: unset; }
+    .tab-content-card { padding: 12px; }
+    .dropzone { padding: 16px; }
+    .lightbox-caption { flex-direction: column; gap: 4px; align-items: flex-start; }
+    .lightbox-nav { width: 36px; height: 36px; font-size: 1rem; }
+    .lightbox-prev { left: 8px; }
+    .lightbox-next { right: 8px; }
+    .btn { font-size: 0.82rem; padding: 8px 14px; }
+    .btn-add-cut-central-v2 { font-size: 0.78rem; padding: 6px 12px; }
+    .precise-input-v2 { width: 90px; }
+  }
 
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 </style>
