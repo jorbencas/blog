@@ -100,6 +100,13 @@ Before deleting, changing permissions, or modifying any file, you must:
 ## Git restrictions
 - NEVER run `git push`, `git pull`, or `git fetch`. These operations must be done manually by the user.
 
+## Dependency change evaluation
+When changing a dependency version (Node, Python, npm packages, pip packages, or any tool version), you must:
+1. Search for all references to that dependency across the project (workflows, configs, docs, README)
+2. Report the findings: where each reference is, what version it uses, and whether it needs updating
+3. Summarize what impact the change has (e.g., "subir Node de 20 a 22 es necesario para Astro 6, pero los otros workflows con Python 3.11 no se ven afectados")
+4. Wait for explicit confirmation before upgrading or downgrading any dependency version
+
 ## Python dependency rules
 1. All Python libraries must be listed in `requirements.txt`, never hardcoded in workflow files.
 2. When adding a new Python library to `requirements.txt`, you must:

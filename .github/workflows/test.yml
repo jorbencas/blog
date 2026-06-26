@@ -6,8 +6,36 @@ on:
     branches: [main]
 
 jobs:
+  filter:
+    name: Detect changed files
+    runs-on: ubuntu-latest
+    outputs:
+      python: ${{ steps.filter.outputs.python }}
+      node: ${{ steps.filter.outputs.node }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            python:
+              - '**/*.py'
+              - 'requirements.txt'
+              - 'pyproject.toml'
+            node:
+              - 'src/**'
+              - 'tests/specs/**'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'playwright.config.js'
+              - 'astro.config.mjs'
+              - 'svelte.config.ts'
+              - 'tsconfig.json'
+
   python-tests:
     name: Python tests
+    needs: filter
+    if: needs.filter.outputs.python == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,13 +50,15 @@ jobs:
 
   playwright-tests:
     name: Playwright E2E
+    needs: filter
+    if: needs.filter.outputs.node == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
       - name: Install Node deps
         run: npm ci
       - name: Build site
