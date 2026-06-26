@@ -11,6 +11,11 @@ export default defineConfig({
   integrations: [mdx(), sitemap(), svelte()],
   vite: {
     plugins: [tailwindcss()],
+    build: {
+      rollupOptions: {
+        external: (id) => id === "/pagefind/pagefind.js",
+      },
+    },
   },
   image: {
     domains: ["images.unsplash.com"], // 🌟 Permet a Astro optimitzar les fotos d'Unsplash

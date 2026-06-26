@@ -21,7 +21,7 @@ const hasContent = headings?.length > 1;
               <a
                 href={`#${h.slug}`}
                 class:list={[
-                  "toc-link block py-2 pl-4 -ml-[1px] transition-all duration-300",
+                  "toc-link block py-2 pl-4 -ml-[1px] border-l-2 border-l-transparent transition-all duration-300",
                   "text-sm font-medium hover:text-cyan-500",
                   h.depth === 2
                     ? "text-slate-600 dark:text-slate-400"
@@ -39,20 +39,6 @@ const hasContent = headings?.length > 1;
 }
 
 <style is:global>
-  /* EL ESTADO ACTIVO: Ahora con más presencia */
-  .toc-link-active {
-    color: #06b6d4 !important; /* Cyan 500 */
-    border-left-color: #06b6d4 !important;
-    background: linear-gradient(
-      90deg,
-      rgba(6, 182, 212, 0.1) 0%,
-      transparent 100%
-    );
-    font-weight: 700 !important;
-    font-size: 15px !important; /* Texto un poco más grande al estar activo */
-  }
-
-  /* Ajuste de scroll para no tapar títulos */
   h1[id],
   h2[id],
   h3[id] {
@@ -70,15 +56,19 @@ const hasContent = headings?.length > 1;
 
     if (links.length === 0 || headings.length === 0) return;
 
-    // Función para limpiar activos
+    const activeClasses = [
+      "!text-cyan-500", "!border-l-cyan-500",
+      "bg-gradient-to-r", "from-cyan-500/10", "to-transparent",
+      "!font-bold", "text-[15px]",
+    ];
+
     const removeAllActive = () => {
-      links.forEach((link) => link.classList.remove("toc-link-active"));
+      links.forEach((link) => link.classList.remove(...activeClasses));
     };
 
-    // FUNCIÓN PARA ACTIVAR EL PRIMERO POR DEFECTO
     const activateFirst = () => {
       removeAllActive();
-      links[0].classList.add("toc-link-active");
+      links[0].classList.add(...activeClasses);
     };
 
     const observerOptions = {
@@ -95,7 +85,7 @@ const hasContent = headings?.length > 1;
 
           if (activeLink) {
             removeAllActive();
-            activeLink.classList.add("toc-link-active");
+            activeLink.classList.add(...activeClasses);
           }
         }
       });

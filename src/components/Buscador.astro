@@ -61,8 +61,8 @@
   }
 </style>
 
-<script is-inline>
-window.addEventListener("DOMContentLoaded", async () => {
+<script>
+document.addEventListener("astro:page-load", async () => {
   const input = document.querySelector("#search-input");
   const container = document.querySelector("#search-results");
   let pagefind;
@@ -89,10 +89,17 @@ Buscando...
   };
 
   try {
-    pagefind = await import("/pagefind/pagefind.js");
+    pagefind = await import(/* @vite-ignore */ "/pagefind/pagefind.js");
     await pagefind.options({ highlightParam: "highlight" });
   } catch (e) {
-    console.error("Pagefind no encontrado. Ejecuta 'npm run build' para generarlo.");
+    container.innerHTML = `
+<div class="p-6 text-center">
+<p class="text-xs font-black uppercase tracking-[0.3em] text-amber-500">
+El índice de búsqueda solo está disponible tras <code class="font-mono">npm run build &amp;&amp; npm run preview</code>
+</p>
+</div>`;
+    container.classList.remove("hidden");
+    console.error("Pagefind no encontrado. Haz 'npm run build' para generarlo.");
   }
 
   let debounceTimer;
@@ -122,11 +129,19 @@ Buscando...
             div.setAttribute("role", "option");
             div.setAttribute("id", `search-result-${index}`);
 
-            const isChallenge = item.url.includes("/retos/");
-            const label = isChallenge ? "CHALLENGE_FILE" : "BLOG_POST";
-            const labelColor = isChallenge
-              ? "text-cyan-600 dark:text-cyan-500"
-              : "text-slate-500 dark:text-slate-400";
+            const urlType =
+              item.url.includes("/proyectos/") ? "proyecto" :
+              item.url.includes("/herramientas/") ? "herramienta" :
+              item.url.includes("/retos/") ? "reto" : "post";
+
+            const typeConfig = {
+              proyecto: { label: "PROYECTO", color: "text-purple-500" },
+              herramienta: { label: "HERRAMIENTA", color: "text-emerald-500" },
+              reto: { label: "CHALLENGE", color: "text-cyan-500" },
+              post: { label: "BLOG_POST", color: "text-slate-500 dark:text-slate-400" },
+            };
+
+            const { label, color: labelColor } = typeConfig[urlType];
 
             div.innerHTML = `
 <a href="${item.url}" class="block p-5 sm:p-6">

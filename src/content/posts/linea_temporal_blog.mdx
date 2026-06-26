@@ -1,0 +1,136 @@
+---
+draft: false
+title: "Línea temporal: evolución del blog"
+description: "Un recorrido desde 2022 hasta hoy por todos los cambios, decisiones técnicas y automatizaciones que han dado forma al blog."
+pubDate: "2022/07/22"
+tags: ['desarrollo', 'blog', 'reflexion']
+image: "img/default.jpg"
+author: "Jorge Beneyto Castelló"
+---
+
+# Línea temporal: evolución del blog
+
+Este post recoge la historia completa del blog. Desde la primera línea de código hasta las optimizaciones más recientes. Cada cambio tiene un porqué, y aquí está todo. Se actualiza con cada cambio significativo.
+
+---
+
+## 2022 — Los cimientos
+
+### Julio
+El blog ve su primer commit. HTML y CSS artesanal, footer con iconos sociales, pruebas de deploy. La estructura es básica, pero funcional: un blog personal desde cero, sin frameworks.
+
+### Agosto
+Llegan los primeros estilos CSS con estructura sólida. Se añade un contador regresivo, el primer componente interactivo del blog.
+
+### Septiembre
+Aparece el archivador de posts. Se optimizan etiquetas y listas. El contenido empieza a organizarse.
+
+### Octubre
+**Integración de Tailwind CSS** — el blog da el salto a un framework de utilidades que marca su identidad visual hasta hoy. Llega la navegación post→next y la configuración del sitio vía `astro.config.mjs`.
+
+### Noviembre
+Implementación de navegación prev/next y **RSS feed**. Refactor de `sortPosts`.
+
+### Diciembre
+Página de recursos. Se empiezan a catalogar herramientas y enlaces útiles.
+
+---
+
+## 2023 — Mantenimiento ligero
+
+El año más tranquilo. El blog recibe contenido nuevo (enero, junio, agosto), se actualiza `resources.md`. En diciembre se introducen scripts de post-procesado.
+
+---
+
+## 2024 — Reactivación
+
+### Marzo
+Actualización de contenido existente.
+
+### Noviembre
+**Índice de contenido y explorador de posts**. Llega una página que lista y filtra todo el contenido disponible, mejorando la navegación y el descubrimiento de artículos antiguos.
+
+---
+
+## 2025 — Precalentamiento
+
+### Octubre
+El blog recibe **SpeedInsights de Vercel**, monitorizando el rendimiento. Se limpia código legacy.
+
+---
+
+## 2026 — Explosión de desarrollo
+
+### Enero
+El blog se adapta para recibir auto-news: primeros posts generados automáticamente desde el pipeline de scraping. Se corrigen el RSS, los slugs, los alias de layouts, la versión de Node, y se añade el plugin de tiempo de lectura.
+
+### Marzo
+El mes más intenso para el blog:
+
+- **Guía interactiva de git** con copy button vía Astro Island
+- **Pagefind**: buscador full-text para todo el contenido
+- **Migración a Astro 6**: refactor completo de la configuración, colecciones de contenido, slugs
+- **CodeEnhancer**: componente para bloques de código con resaltado de sintaxis y botón de copia
+- **ChallengeCard**: componente visual para los retos de programación
+- **Dark mode**: fixes para que funcione correctamente con Tailwind
+- **Content collections**: tipado Zod para todo el contenido
+- **Workflows**: fixing_img para imágenes Unsplash automáticas, spelling check con LanguageTool
+
+### Abril
+- Refinamiento del workflow `fixing_img`
+- Conversión de HTML a MDX
+- Temática dark como predeterminada en el layout
+
+### Junio — El mes de la consolidación
+
+El blog alcanza madurez técnica:
+
+**Infraestructura y rendimiento**
+- Fix en `astro.config.mjs` que rompía el deploy
+- URL canónica corregida en RSS
+- Conflictos CSS/imagen resueltos
+- **OG images**: endpoint personalizado con satori + resvg
+- Favicons optimizados
+- **Self-hosted fonts**: Space Grotesk servido localmente (eliminado Google Fonts CDN y su render-blocking)
+- **Pagefind JS**: externalizado en build para no bloquear el bundle
+- **WaveSurfer**: migrado de unpkg a jsdelivr (mejor CDN worldwide)
+- SpeedScore mejorado
+
+**Audio**
+- **Reproductor de audio con Wavesurfer.js**
+- Post sobre generación de XML con Python
+- Workflow de audio en GitHub Actions
+
+**CSS y theming**
+- **Unificación de colores y temas**: paleta consistente en light/dark mode
+- Migración completa a Tailwind eliminando CSS legacy
+- **ReadingProgress**: barra de progreso de lectura con solo Tailwind
+- **Archive.astro**: ahora reutiliza keyframes de `global.css`
+- Scrollbar estilizado por layout con colores específicos
+- **Hover de cards unificado**: todas las cards (PreviewPost, ChallengeCard, Weekly) usan `hover:border-<color>-500/50`
+
+**Componentes**
+- **CodeEnhancer migrado a Tailwind**: eliminado `is:global`, copy button con checkmark SVG
+- **Hamburguesa**: corregido el menú mobile con `flex-col`
+- **Pagefind**: fix crítico `is:inline`, migrado a `astro:page-load`
+- **Weekly.astro**: reescrito al mismo patrón visual que PreviewPost
+
+**Proyectos**
+- **Colección `myprojects`**: schema Zod completo con metadata (repo, URL, draft)
+- Proyecto Mecano publicado
+- Post de portafolio
+- Rename Portfolio → Blog en el título
+
+---
+
+## Lo que viene
+
+Este proyecto no se detiene. Los próximos pasos incluyen:
+
+- PWA para el blog
+- Feed personalizado de noticias según intereses
+- Más automatizaciones en el pipeline de contenido
+
+---
+
+*Este post se actualiza con cada cambio significativo. La línea de tiempo refleja el trabajo real reflejado en los commits del blog.*

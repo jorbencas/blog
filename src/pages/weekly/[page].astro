@@ -1,6 +1,8 @@
 ---
 import Layout from "@layouts/Layout.astro";
 import PreviewPost from "@components/PreviewPost.astro";
+import NextPrevLinks from "@components/NextPrevLinks.astro";
+import Information from "@components/Information.astro";
 import { getCollection } from "astro:content";
 
 export async function getStaticPaths({ paginate }) {
@@ -13,18 +15,38 @@ export async function getStaticPaths({ paginate }) {
 }
 
 const { page } = Astro.props;
+const { data, url, currentPage } = page;
+const { prev, next } = url;
 ---
 
-<Layout title={`Noticias - Página ${page.currentPage}`}>
-  <main class="max-w-6xl mx-auto px-4 py-20">
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      {page.data.map((post) => <PreviewPost post={post} />)}
-    </div>
+<Layout title={`Noticias Semanales - Página ${currentPage}`}>
+  <div class="max-w-6xl mx-auto mt-10 flex justify-around items-start">
+    <section class="space-y-12" data-pagefind-ignore>
+      <div class="text-center space-y-2">
+        <h1 class="text-3xl md:text-4xl font-black uppercase tracking-tighter text-slate-900 dark:text-white transition-colors">
+          Noticias_Semanales <span class="text-cyan-500 text-xl sm:text-2xl align-top">Pg.{currentPage}</span>
+        </h1>
+        <div class="h-1 w-24 bg-cyan-500 mx-auto"></div>
+      </div>
 
-    <nav class="flex justify-center gap-4 mt-16 text-sm">
-      {page.url.prev ? <a href={page.url.prev} class="text-cyan-500">← Anterior</a> : <span class="text-slate-400 dark:text-slate-600">← Anterior</span>}
-      <span class="text-slate-900 dark:text-white">{page.currentPage} / {page.lastPage}</span>
-      {page.url.next ? <a href={page.url.next} class="text-cyan-500">Siguiente →</a> : <span class="text-slate-400 dark:text-slate-600">Siguiente →</span>}
-    </nav>
-  </main>
+      {
+        data.length > 0 ? (
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {data.map((post) => <PreviewPost post={post} />)}
+          </div>
+        ) : (
+          <Information />
+        )
+      }
+
+      <div class="pt-12">
+        <NextPrevLinks
+          nextURL={next}
+          prevURL={prev}
+          textNext="Anteriores"
+          textPrev="Posteriores"
+        />
+      </div>
+    </section>
+  </div>
 </Layout>

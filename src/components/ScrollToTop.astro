@@ -9,25 +9,13 @@
     text-white
     transition-all duration-300 ease-out
     hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:-translate-y-1 hover:scale-105 active:scale-95
-    cursor-pointer"
+    cursor-pointer
+    opacity-0 translate-y-4 pointer-events-none"
 >
   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
     <path d="M18 15l-6-6-6 6"/>
   </svg>
 </button>
-
-<style>
-  #scroll-top {
-    opacity: 0;
-    transform: translateY(1rem);
-    pointer-events: none;
-  }
-  #scroll-top.is-visible {
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
-  }
-</style>
 
 <script>
   const btn = document.getElementById("scroll-top");
@@ -36,7 +24,13 @@
     window.addEventListener("scroll", () => {
       if (!ticking) {
         requestAnimationFrame(() => {
-          btn.classList.toggle("is-visible", window.scrollY > 400);
+          const visible = window.scrollY > 400;
+          btn.classList.toggle("opacity-100", visible);
+          btn.classList.toggle("translate-y-0", visible);
+          btn.classList.toggle("pointer-events-auto", visible);
+          btn.classList.toggle("opacity-0", !visible);
+          btn.classList.toggle("translate-y-4", !visible);
+          btn.classList.toggle("pointer-events-none", !visible);
           ticking = false;
         });
         ticking = true;

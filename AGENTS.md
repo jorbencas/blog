@@ -35,11 +35,18 @@ Schemas in `src/content.config.ts` using `astro/loaders` (glob) + `astro/zod`.
 
 ## Workflow
 0. **Read `docs/contexto.md` first** — always start by reading the full context file to understand project state.
-   - If running `fix_images.py`, `image_cache.json` is pruned automatically (max 200 entries, descarta >365 días).
+   - If running `fix_images.py`, `image_cache.json` is pruned automatically (max 200 entries, discards >365 days).
 1. **Always run `npm run build` after any change** to verify no errors.
 2. **Save project context** in `docs/contexto.md` — update it with each change. Load the `update-context` skill for the exact format.
 3. **Tailwind v4 note**: `@apply` is NOT supported in component `<style>` blocks. Use plain CSS instead.
 4. **Dark mode**: Always pair light/dark classes explicitly (e.g. `text-slate-900 dark:text-white`). Never stack conflicting classes without `dark:` prefix.
+
+## Timeline post
+- `src/content/posts/linea_temporal_blog.mdx` is a post documenting the blog's evolution month by month.
+- **Update it** whenever you make a significant change (new component, migration, refactor, workflow, library, theme/CSS change).
+- Add an entry in the corresponding month explaining the change and why.
+- Do NOT include changes from the `test_githubActions` project — blog only.
+- The post and all new entries must be **in Spanish (castellano)**.
 
 ## Notes
 - `image_cache.json` is auto-generated; treat as cache.
@@ -51,9 +58,9 @@ Schemas in `src/content.config.ts` using `astro/loaders` (glob) + `astro/zod`.
 - Always run `npm lint` and `npm test` before committing.
 
 ## Git conventions
-- Commits en castellano (español).
-- Prefijo del ámbito: `[blog]`, `[retos]`, `[herramientas]`, `[estilos]`, `[infra]`, etc.
-- Formato: `[ámbito] Descripción breve del cambio`
+- Commits in Spanish (castellano).
+- Scope prefix: `[blog]`, `[retos]`, `[herramientas]`, `[estilos]`, `[infra]`, etc.
+- Format: `[scope] Short description in Spanish`
 
 ## Git restrictions
 - NEVER run `git push`, `git pull`, or `git fetch`. These operations must be done manually by the user.

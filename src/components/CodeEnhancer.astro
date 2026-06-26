@@ -94,25 +94,25 @@
       const imgHtml =
         info.icon === "code"
           ? `<span class="text-slate-400">⚡</span>`
-          : `<img src="https://cdn.simpleicons.org/${info.icon}/${info.color}" class="w-4 h-4 opacity-80 dark:opacity-100" alt="${langKey}" onerror="this.style.display='none'"/>`;
+          : `<img src="https://cdn.simpleicons.org/${info.icon}/${info.color}" class="w-5 h-5 opacity-80 dark:opacity-100" alt="${langKey}" onerror="this.style.display='none'"/>`;
 
       // 1. Crear el Wrapper (Adaptable a Temas)
       const wrapper = document.createElement("div");
       wrapper.className =
-        "bloque-codigo-wrapper my-10 bg-white dark:bg-[#0d1117] shadow-sm border border-slate-200 dark:border-transparent overflow-hidden transition-all rounded-lg";
+        "bloque-codigo-wrapper my-8 bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden transition-all rounded-lg";
 
       // 2. Cabecera con Icono Dinámico
       const header = document.createElement("div");
       header.className =
-        "flex justify-between items-center px-4 py-2 bg-slate-50 dark:bg-white/[0.03] border-b border-slate-200 dark:border-[#30363d] text-xs sm:text-sm font-bold tracking-widest";
+        "flex justify-between items-center px-4 py-2 bg-slate-100 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-bold tracking-widest";
 
       header.innerHTML = `
         <div class="flex items-center gap-2">
           ${imgHtml}
           <span class="text-slate-600 dark:text-slate-300 uppercase tracking-wider">${langKey}</span>
         </div>
-        <button class="boton-copiar p-1 text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors uppercase text-xs">
-          [ COPIAR ]
+        <button class="boton-copiar flex items-center gap-1.5 p-1 text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 transition-all uppercase text-xs">
+          <span class="copy-text">[ COPIAR ]</span>
         </button>
       `;
 
@@ -120,6 +120,22 @@
       const divContenido = document.createElement("div");
       divContenido.className =
         "p-4 overflow-x-auto selection:bg-cyan-500/30 text-sm";
+
+      pre.classList.add("!font-['JetBrains_Mono',monospace]", "!text-sm", "!leading-[1.6]");
+      const codeEl = pre.querySelector("code");
+      if (codeEl) {
+        codeEl.classList.add("!font-['JetBrains_Mono',monospace]", "!text-sm", "!leading-[1.6]");
+      }
+
+      pre.querySelectorAll(".comment").forEach((el) => {
+        el.classList.add("italic", "opacity-70");
+      });
+
+      // Eliminar borde y padding del .astro-code original (los provee el wrapper)
+      if (pre.classList.contains("astro-code")) {
+        pre.style.setProperty("border", "none", "important");
+        pre.style.setProperty("padding", "0", "important");
+      }
 
       pre.parentNode.insertBefore(wrapper, pre);
       wrapper.appendChild(header);
@@ -130,11 +146,16 @@
       const btn = header.querySelector(".boton-copiar");
       btn.addEventListener("click", async () => {
         await navigator.clipboard.writeText(pre.innerText);
-        btn.innerText = "¡LISTO!";
-        btn.classList.add("text-cyan-600", "dark:text-cyan-400");
+        btn.innerHTML = `
+          <svg class="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          <span class="text-cyan-600 dark:text-cyan-400 font-bold">LISTO</span>
+        `;
+        btn.classList.add("scale-105");
         setTimeout(() => {
-          btn.innerText = "[ COPIAR ]";
-          btn.classList.remove("text-cyan-600", "dark:text-cyan-400");
+          btn.innerHTML = `<span class="copy-text">[ COPIAR ]</span>`;
+          btn.classList.remove("scale-105", "text-cyan-600", "dark:text-cyan-400");
         }, 2000);
       });
     });
@@ -143,16 +164,4 @@
   document.addEventListener("astro:page-load", mejorarBloquesCodigo);
   document.addEventListener("DOMContentLoaded", mejorarBloquesCodigo);
 </script>
-<style is:global>
-  .bloque-codigo-wrapper pre,
-  .bloque-codigo-wrapper code {
-    font-family: "JetBrains Mono", monospace !important;
-    font-size: 14px !important;
-    line-height: 1.6 !important;
-  }
 
-  .shiki .comment {
-    font-style: italic;
-    opacity: 0.7;
-  }
-</style>
