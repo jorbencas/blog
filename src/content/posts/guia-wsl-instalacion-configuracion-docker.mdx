@@ -1,0 +1,321 @@
+---
+title: "WSL: Instalación, configuración symlink y Docker Desktop"
+description: "Guía completa de WSL en Windows: instalación, creación de enlace directo a tus carpetas de Windows, persistencia al iniciar WSL, instalación de Ubuntu, primeros pasos e integración con Docker Desktop."
+pubDate: "2026/06/27"
+tags: ["wsl", "linux", "docker", "windows", "desarrollo"]
+author: "Jorge Beneyto Castelló"
+---
+
+## ¿Qué es WSL?
+
+WSL (Windows Subsystem for Linux) es una capa de compatibilidad que permite ejecutar binarios de Linux directamente en Windows. A diferencia de una máquina virtual tradicional, WSL no emula hardware ni arranca un kernel separado — en WSL 2 usa un kernel Linux real dentro de una VM ligera gestionada por Hyper-V, pero la integración con el sistema anfitrión es tan fluida que apenas notas la diferencia.
+
+### WSL 1 vs WSL 2
+
+| Característica | WSL 1 | WSL 2 |
+|---|---|---|
+| Kernel | Traducción de llamadas al sistema de Windows | Kernel Linux real en VM |
+| Rendimiento I/O | Rápido en sistema de archivos de Windows | Lento en `//mnt/` (travesía de frontera) |
+| Compatibilidad syscalls | Parcial | Completa |
+| Docker | No funciona nativamente | Funciona con Docker Desktop |
+
+Para desarrollo, WSL 2 es la opción recomendada. La única pega es el rendimiento de archivos al cruzar la frontera Windows -> WSL, justo lo que solucionaremos con el symlink.
+
+---
+
+## Instalación de WSL
+
+### Requisitos
+
+- Windows 10 versión 2004 o superior, o Windows 11
+- Virtualización habilitada en la BIOS
+
+### Instalación
+
+Abre PowerShell o CMD como administrador y ejecuta:
+
+```powershell
+wsl --install
+```
+
+Este comando:
+
+1. Habilita los componentes opcionales de WSL y Virtual Machine Platform
+2. Descarga e instala el kernel de Linux de WSL 2
+3. Establece WSL 2 como versión por defecto
+4. Instala Ubuntu como distribución por defecto
+
+Al terminar, se te pedirá reiniciar el equipo. Tras el reinicio, Ubuntu se abrirá automáticamente para completar la configuración inicial (crear usuario y contraseña).
+
+### Comandos útiles de `wsl.exe`
+
+```powershell
+# Ver distribuciones instaladas
+wsl --list --verbose
+# o en versión corta
+wsl -l -v
+
+# Establecer WSL 2 como versión por defecto
+wsl --set-default-version 2
+
+# Cambiar una distribución existente de WSL 1 a WSL 2
+wsl --set-version Ubuntu 2
+
+# Apagar WSL (libera recursos)
+wsl --shutdown
+
+# Ejecutar un comando sin entrar en la shell
+wsl ls -la
+
+# Cambiar la distribución por defecto
+wsl --set-default Ubuntu
+```
+
+---
+
+## Enlace directo a carpetas de Windows
+
+El problema clásico de WSL 2: trabajar con archivos en `/mnt/c/...` es **lento**. La solución es mantener tus proyectos en una ubicación dentro del sistema de archivos nativo de Linux (ej. `~/proyectos`) y crear un **symlink** desde Windows hacia WSL.
+
+### Crear el symlink desde Windows a WSL
+
+Así tus proyectos dentro de WSL aparecen como una carpeta normal en Windows:
+
+```powershell
+# Crea un enlace simbólico en Windows que apunta a ~/proyectos dentro de WSL
+# Ejecuta esto en CMD como administrador
+mklink /D C:\Users\tu_usuario\wsl-home \\wsl.localhost\Ubuntu\home\tu_usuario\proyectos
+```
+
+Ahora en Windows verás `C:\Users\tu_usuario\wsl-home` que apunta directamente a `~/proyectos/` dentro de Ubuntu.
+
+Puedes acceder desde cualquier programa de Windows y los archivos se almacenan realmente en el sistema de archivos de Linux (más rápido).
+
+### Hacer que se mantenga al iniciar WSL
+
+El symlink de Windows persiste siempre (es un objeto del sistema de archivos NTFS), pero también puedes querer tener symlinks **dentro de WSL** que apunten a tus carpetas de Windows. Por ejemplo, tener `~/Documentos` que apunte a `C:\Users\tu_usuario\Documents`.
+
+Para que se creen automáticamente cada vez que inicies sesión en WSL, añade esto a tu `~/.bashrc` (o `~/.zshrc` si usas Zsh):
+
+```bash
+# Crear symlinks a carpetas de Windows si no existen
+LINKS_CREADOS="$HOME/.wsl_links_creados"
+
+if [ ! -f "$LINKS_CREADOS" ]; then
+    # Documentos
+    [ ! -L "$HOME/Documentos" ] && ln -s /mnt/c/Users/jorge/Documents "$HOME/Documentos"
+    # Descargas
+    [ ! -L "$HOME/Descargas" ] && ln -s /mnt/c/Users/jorge/Downloads "$HOME/Descargas"
+    # Escritorio
+    [ ! -L "$HOME/Escritorio" ] && ln -s /mnt/c/Users/jorge/Desktop "$HOME/Escritorio"
+
+    touch "$LINKS_CREADOS"
+fi
+```
+
+El archivo `~/.wsl_links_creados` evita que se ejecute el bloque en cada login — los symlinks persisten entre sesiones, no necesitas recrearlos siempre.
+
+### Alternativa: montar automáticamente con `/etc/wsl.conf`
+
+Puedes configurar WSL para que monte unidades con opciones personalizadas creando `/etc/wsl.conf`:
+
+```ini
+[automount]
+enabled = true
+root = /mnt/
+options = "metadata,umask=22,fmask=11"
+mountFsTab = true
+```
+
+La opción `metadata` habilita los permisos de Linux sobre los archivos NTFS, permitiendo usar `chmod` y `chown` en `//mnt/c/`.
+
+```bash
+sudo nano /etc/wsl.conf
+# pega el contenido de arriba, guarda y cierra
+# luego en PowerShell: wsl --shutdown
+# al reiniciar WSL se aplicarán los cambios
+```
+
+---
+
+## Instalación de Ubuntu (si no se instaló por defecto)
+
+Si durante `wsl --install` no se instaló Ubuntu, o quieres instalar otra distribución:
+
+```powershell
+# Ver distribuciones disponibles
+wsl --list --online
+
+# Instalar una específica
+wsl --install -d Ubuntu-24.04
+
+# O desde la Microsoft Store
+# Simplemente busca "Ubuntu" en la Store y haz clic en Instalar
+```
+
+### Múltiples distribuciones
+
+WSL permite tener varias distribuciones instaladas simultáneamente:
+
+```powershell
+wsl --install -d Debian
+wsl --install -d kali-linux
+```
+
+Para cambiar entre ellas, usa `wsl ~ -d Ubuntu` (inicia sesión en Ubuntu) o configura la distribución por defecto.
+
+---
+
+## Primeros pasos en WSL
+
+### Actualizar el sistema
+
+```bash
+# Actualizar lista de paquetes
+sudo apt update && sudo apt upgrade -y
+
+# Instalar herramientas básicas
+sudo apt install -y curl wget git build-essential
+```
+
+### Configurar Git (si no lo tienes ya)
+
+```bash
+git config --global user.name "Tu Nombre"
+git config --global user.email "tu@email.com"
+git config --global init.defaultBranch main
+```
+
+### Acceso a archivos de Windows
+
+Tus discos de Windows están montados en `/mnt/c/`, `/mnt/d/`, etc.
+
+```bash
+# Listar el contenido de tu carpeta de usuario de Windows
+ls /mnt/c/Users/tu_usuario/
+```
+
+### Acceso a WSL desde Windows
+
+En el explorador de archivos de Windows, escribe:
+
+```
+\\wsl.localhost\Ubuntu\
+```
+
+Verás todo el sistema de archivos de tu distribución WSL. Puedes crear un acceso directo en el escritorio para llegar rápido.
+
+### Editor de código
+
+VS Code se integra perfectamente con WSL. Instala la extensión **Remote - WSL** y luego, desde WSL:
+
+```bash
+code .
+```
+
+Esto abre VS Code conectado directamente al entorno WSL, con acceso completo al terminal integrado de Linux, el sistema de archivos, y las extensiones.
+
+---
+
+## Instalación e integración con Docker Desktop
+
+### Requisito: WSL 2
+
+Asegúrate de tener WSL 2, no WSL 1:
+
+```powershell
+wsl -l -v
+# Si ves Ubuntu versión 1, conviértelo:
+wsl --set-version Ubuntu 2
+```
+
+### Instalar Docker Desktop
+
+1. Descarga Docker Desktop desde [docker.com](https://www.docker.com/products/docker-desktop/)
+2. Ejecuta el instalador
+3. En la pantalla de configuración, asegúrate de que **"Use WSL 2 based engine"** está marcado
+4. Completa la instalación y reinicia si es necesario
+
+### Configurar integración con WSL
+
+Una vez instalado Docker Desktop:
+
+1. Abre Docker Desktop
+2. Ve a **Settings** → **Resources** → **WSL Integration**
+3. Activa **"Enable integration with my default WSL distro"**
+4. También puedes seleccionar distribuciones específicas en la lista
+5. Aplica y reinicia
+
+### Verificar la integración
+
+Desde tu terminal WSL:
+
+```bash
+# Verificar que Docker está disponible
+docker --version
+
+# Probar que funciona
+docker run hello-world
+
+# Ver contenedores activos
+docker ps
+```
+
+Si ves el mensaje de hello-world, Docker está funcionando dentro de WSL sin necesidad de instalar Docker Engine dentro de Linux — Docker Desktop gestiona el daemon y tu CLI de Docker dentro de WSL se comunica con él.
+
+### docker-compose
+
+Docker Desktop para Windows ya incluye Docker Compose. Verifica:
+
+```bash
+docker compose version
+```
+
+### Usar Docker sin Docker Desktop (Docker Engine nativo en WSL)
+
+Si prefieres no usar Docker Desktop (por licencias o recursos), puedes instalar Docker Engine directamente en WSL:
+
+```bash
+# Eliminar versiones anteriores si las hay
+sudo apt remove docker docker-engine docker.io containerd runc
+
+# Instalar dependencias
+sudo apt update && sudo apt install -y ca-certificates curl
+
+# Añadir repositorio oficial de Docker
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Instalar Docker Engine
+sudo apt update && sudo apt install -y docker-ce docker-ce-cli containerd.io
+
+# Añadir tu usuario al grupo docker (evita usar sudo)
+sudo usermod -aG docker $USER
+
+# Salir de la sesión y volver a entrar
+exit
+# Luego wsl ~ -d Ubuntu
+
+# Verificar
+docker --version
+docker run hello-world
+```
+
+Con Docker Engine nativo, el daemon se inicia manualmente con `sudo service docker start` (o lo automatizas en `~/.bashrc`).
+
+---
+
+## Resumen
+
+```
+wsl --install                    # Instala WSL 2 + Ubuntu
+mklink /D ruta destino           # Symlink desde Windows a WSL
+wsl.conf [automount] metadata    # Permisos Linux en NTFS
+docker dekstop                   # Integración WSL en settings
+docker run hello-world           # Verificar que funciona
+```
+
+WSL te da un terminal Linux completo sin salir de Windows, con acceso a Docker, VS Code, y sin los overheads de una VM tradicional. La integración es tan buena que una vez configurada, apenas notas la frontera entre ambos sistemas.

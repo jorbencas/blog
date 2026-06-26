@@ -1,10 +1,19 @@
 # Contexto del proyecto — Blog
 
-**Última actualización**: 2026-06-26 (sesión: n8n post, MoreProjects sidebar, logs/HTML node sections)
+**Última actualización**: 2026-06-27 (sesión: grid proyectos, navbar aportaciones)
 **Stack**: Astro 6.4 + Svelte 5 + Tailwind CSS 4.3
 **Deploy**: Vercel (`blog-jorbencas.vercel.app`)
 **Idioma**: Español
 **Node**: >= 18
+
+## Mejoras implementadas
+
+### 1. Grid de proyectos rediseñado + navbar Aportaciones/Bugs ✅
+- **`src/pages/proyectos/index.astro`**: grid cambiado a 2 columnas con primer proyecto destacado (md:col-span-2)
+- **`src/components/Navbar.astro`**: añadido enlace "Aportaciones/Bugs" con color ámbar, apunta a GitHub Issues
+- **`src/components/Buscador.astro`**: pagefind.js cargado dinámicamente via `<script>` en lugar de `import()` para evitar error de Vite en dev
+- **`package.json`**: build script cross-platform (Node.js fs en vez de rm/cp)
+- Build verificado sin errores
 
 ## Contenido
 
@@ -23,7 +32,7 @@ Configuradas con Zod schemas en `src/content.config.ts` usando `astro/loaders` (
 ## Página de inicio (`src/pages/index.astro`)
 
 Secciones en orden:
-1. **Mis_Proyectos** — grid de ProjectCard (3 últimos)
+1. **Mis_Proyectos** — grid de ProjectCard (3 últimos, primero abarca 2 cols en md+)
 2. **Mini_Herramientas** — grid de ToolCard (3 últimas, oculto si vacío)
 3. **Retos** — grid de ChallengeCard (3 últimos)
 4. **Últimos_Posts** — grid de PreviewPost (3 últimos)
@@ -34,7 +43,7 @@ Secciones en orden:
 - Body scroll lock con `position: fixed` + `scrollY` para evitar salto por scrollbar
 - Botón hamburguesa/X en móvil: `fixed top-3 right-3 z-50` (esquina superior derecha)
 - Escape cierra menú; resize >1024px lo cierra automáticamente
-- 4 links: Proyectos, Retos, Blog, Mini Herramientas (cada uno con color de acento propio)
+- 5 links: Proyectos, Retos, Blog, Mini Herramientas, Aportaciones/Bugs (cada uno con color de acento propio; Aportaciones/Bugs usa ámbar y apunta a GitHub Issues)
 
 ## Pipeline de imágenes
 
@@ -109,7 +118,7 @@ Props: `fallback`, `avif`, `webp`, `blur` (LQIP), `fetchpriority`, `loading`, `a
 - `src/layouts/PostLayout.astro`, `src/layouts/Layout.astro`, `src/layouts/ProjectLayout.astro` (grid 8+4 con sidebar MoreProjects)
 
 ### Componentes
-- `src/components/Navbar.astro`, `ResponsiveImage.astro`, `SEO.astro`, `AudioPlayer.astro`, `TableOfContents.astro`, `PreviewPost.astro`, `CopyPost.astro`, `Weekly.astro`, `MoreProjects.astro`
+- `src/components/Navbar.astro` (5 links: Proyectos, Retos, Blog, Mini Herramientas, Aportaciones/Bugs), `ResponsiveImage.astro`, `SEO.astro`, `AudioPlayer.astro`, `TableOfContents.astro`, `PreviewPost.astro`, `CopyPost.astro`, `Weekly.astro`, `MoreProjects.astro`
 - `src/components/ChallengeCard.astro`, `ProjectCard.astro`, `ToolCard.astro`, `Information.astro`
 - `src/components/ToggleButton.astro`, `NextPrevLinks.astro`, `Footer.astro`, `Buscador.astro`
 - `src/components/toolsmini/VideoExtractor.svelte`
