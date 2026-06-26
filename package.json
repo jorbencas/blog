@@ -11,10 +11,16 @@
     "start": "astro dev",
     "cleaner": "rm -rf node_modules package-lock.json && npm cache clean --force && npm install --force",
     "build": "astro build && npx pagefind --site dist && rm -rf public/pagefind && cp -r dist/pagefind public/",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "test": "playwright test",
+    "test:build": "npm run build && playwright test",
+    "test:update": "playwright test --update-snapshots",
+    "test:ui": "playwright test --ui"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@tailwindcss/typography": "^0.5.20",
+    "playwright": "^1.61.1",
     "postcss": "^8.4.49",
     "tailwindcss": "^4.3.1"
   },

@@ -10,7 +10,7 @@ interface Props {
 const { rawContent, title, description, pubDate, author } = Astro.props;
 ---
 
-<div class="copy-post relative inline-block">
+<div class="copy-post relative inline-block" data-payload={JSON.stringify({ rawContent, title, description, pubDate, author })}>
   <button
     class="copy-trigger inline-flex items-center gap-2 border-2 border-sky-500 bg-sky-500 px-6 py-3 text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-white hover:text-sky-500 active:translate-y-0.5 cursor-pointer"
     aria-haspopup="true"
@@ -57,16 +57,12 @@ const { rawContent, title, description, pubDate, author } = Astro.props;
   </div>
 </div>
 
-<script type="application/json" id="copy-payload">{JSON.stringify({ rawContent, title, description, pubDate, author })}</script>
-
 <script is:inline>
   (() => {
     const container = document.querySelector(".copy-post");
     if (!container) return;
-
-    const payload = document.getElementById("copy-payload");
-    if (!payload) return;
-    const data = JSON.parse(payload.textContent);
+    const data = JSON.parse(container.dataset.payload);
+    if (!data) return;
 
     const trigger = container.querySelector(".copy-trigger");
     const menu = container.querySelector(".copy-menu");

@@ -42,6 +42,41 @@ Schemas in `src/content.config.ts` using `astro/loaders` (glob) + `astro/zod`.
 4. **Tailwind v4 note**: `@apply` is NOT supported in component `<style>` blocks. Use plain CSS instead.
 5. **Dark mode**: Always pair light/dark classes explicitly (e.g. `text-slate-900 dark:text-white`). Never stack conflicting classes without `dark:` prefix.
 
+## Testing rules
+Before writing a test, evaluate the following checklist. If a term is unclear at any point, ask the user if they want an explanation from official sources before proceeding.
+
+### 1. Execution context
+- Does the function have side effects (API calls, disk writes, global state mutation)?
+- Does it depend on environment variables or external files?
+- Does it run on the client (browser) or server (Node/Python)?
+- Are there dependencies that need mocking to isolate the test?
+
+### 2. Test type
+- Pure function (same input → same output)? → *Unit test*
+- Requires DOM interaction, user events, or browser APIs? → *E2E with Playwright*
+- Renders UI and needs visual regression protection? → *Visual regression*
+- Integrates multiple modules/systems (e.g. scraper + AI + local DB)? → *Integration test*
+
+### 3. Functional coverage
+- What edge cases are covered? (empty input, wrong types, boundary values, null/undefined)
+- Does the test verify the expected output or just that no exception is thrown?
+- Is there async behavior (promises, callbacks, streams) that needs `await` or `waitFor`?
+- Would the test fail if someone changes the implementation but not the behavior? (i.e. it's a good test)
+
+### 4. Code design
+- Does the function do too many things (more than 3 clear responsibilities)?
+- Does it have invisible side effects (mutates parameters, closes resources)?
+- Would it be more testable if refactored into smaller functions?
+
+### 5. Questions for the user
+- What expected behavior do you have for this specific case?
+- Does this test replace or complement existing tests?
+- Is there documentation or usage examples that can serve as reference for the expected behavior?
+
+### 6. Test file locations
+- Python scripts → `tests/python/`
+- Playwright E2E tests → `tests/specs/`
+
 ## Notes
 - `image_cache.json` is auto-generated; treat as cache.
 - Posts with `draft: true` are filtered out at runtime.
@@ -55,6 +90,12 @@ Schemas in `src/content.config.ts` using `astro/loaders` (glob) + `astro/zod`.
 - Commits in Spanish (castellano).
 - Scope prefix: `[blog]`, `[retos]`, `[herramientas]`, `[estilos]`, `[infra]`, etc.
 - Format: `[scope] Short description in Spanish`
+
+## File modification restrictions
+Before deleting, changing permissions, or modifying any file, you must:
+1. Explain exactly what you are going to do and why
+2. Mention if there is a better alternative approach
+3. Wait for explicit user confirmation before proceeding
 
 ## Git restrictions
 - NEVER run `git push`, `git pull`, or `git fetch`. These operations must be done manually by the user.
