@@ -44,6 +44,7 @@ const {
   rawContent = "",
 } = Astro.props;
 
+const postUrl = Astro.url.href;
 const imagenLimpia = resolveImagePath(image);
 
 const allPosts = await getCollection("posts");
@@ -162,6 +163,8 @@ const tagsArray = Array.isArray(tags)
             description={description}
             pubDate={pubDate instanceof Date ? pubDate.toISOString() : String(pubDate)}
             author={author}
+            url={postUrl}
+            tags={Array.isArray(tags) ? tags : []}
           />
         </div>
       </header>

@@ -5,12 +5,14 @@ interface Props {
   description: string;
   pubDate: string;
   author: string;
+  url: string;
+  tags: string[];
 }
 
-const { rawContent, title, description, pubDate, author } = Astro.props;
+const { rawContent, title, description, pubDate, author, url, tags } = Astro.props;
 ---
 
-<div class="copy-post relative inline-block" data-payload={JSON.stringify({ rawContent, title, description, pubDate, author })}>
+<div class="copy-post relative inline-block" data-payload={JSON.stringify({ rawContent, title, description, pubDate, author, url, tags })}>
   <button
     class="copy-trigger inline-flex items-center gap-2 border-2 border-sky-500 bg-sky-500 px-6 py-3 text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-white hover:text-sky-500 active:translate-y-0.5 cursor-pointer"
     aria-haspopup="true"
@@ -114,16 +116,17 @@ const { rawContent, title, description, pubDate, author } = Astro.props;
         } else if (type === "text") {
           text = stripMarkdown(data.rawContent);
         } else if (type === "ai") {
-          const header = [
+          const meta = [
             `Título: ${data.title}`,
             `Descripción: ${data.description}`,
             `Fecha: ${data.pubDate}`,
             `Autor: ${data.author}`,
-            "",
-            "---",
-            "",
-          ].join("\n");
-          text = header + data.rawContent;
+            `URL: ${data.url}`,
+          ];
+          if (data.tags?.length) {
+            meta.push(`Etiquetas: ${data.tags.join(", ")}`);
+          }
+          text = meta.join("\n") + "\n\n" + data.rawContent;
         }
 
         try {

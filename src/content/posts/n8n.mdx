@@ -1,0 +1,549 @@
+---
+draft: false
+title: "n8n: Automatización Visual para Integraciones Técnicas"
+description: "Descubre n8n, la herramienta de automatización open-source que conecta APIs, servicios y herramientas sin límites. Instalación, casos de uso, integraciones con proyectos reales y recursos para empezar."
+pubDate: "2026/06/26"
+tags: ["web", "ia", "python", "backend", "desarrollo"]
+image: "img/n8n_cover-1200.webp"
+author: "Jorge Beneyto Castelló"
+---
+
+# 🚀 n8n: Automatización Visual para Integraciones Técnicas
+
+**n8n** (n-eight-n) es una plataforma de automatización de flujos de trabajo (workflows) de código abierto. Permite conectar servicios, APIs y bases de datos mediante una interfaz visual de nodos, donde cada nodo representa una acción o un servicio.
+
+A diferencia de herramientas como Zapier o Make, n8n es **self-hosted**: tú controlas los datos, los servidores y los límites. Esto lo convierte en una opción ideal para desarrolladores que necesitan integraciones complejas sin depender de terceros ni pagar por volumen de ejecuciones.
+
+<nav class="not-prose my-8 p-4 bg-slate-100 dark:bg-slate-900 rounded-lg">
+  <h2 class="text-xs font-black uppercase tracking-[0.3em] text-slate-600 dark:text-slate-500 mb-4">Contenido</h2>
+  <ul class="space-y-1.5 text-sm">
+    <li><a href="#necesito-un-servidor" class="text-cyan-600 dark:text-cyan-400 hover:underline">1. ¿Necesito un Servidor?</a></li>
+    <li><a href="#local-vs-cloud" class="text-cyan-600 dark:text-cyan-400 hover:underline">2. Local vs Cloud</a></li>
+    <li><a href="#precios-free-vs-pago" class="text-cyan-600 dark:text-cyan-400 hover:underline">3. Precios</a></li>
+    <li><a href="#ejemplo-practico-paso-a-paso" class="text-cyan-600 dark:text-cyan-400 hover:underline">4. Ejemplo Práctico Paso a Paso</a></li>
+    <li><a href="#integraciones-con-proyectos-actuales" class="text-cyan-600 dark:text-cyan-400 hover:underline">5. Integraciones con Proyectos Actuales</a></li>
+    <li><a href="#integraciones-futuras-posibles" class="text-cyan-600 dark:text-cyan-400 hover:underline">6. Integraciones Futuras Posibles</a></li>
+    <li><a href="#ejemplos-comunes-de-integracion" class="text-cyan-600 dark:text-cyan-400 hover:underline">7. Ejemplos Comunes de Integración</a></li>
+    <li><a href="#herramientas-externas-que-puedes-integrar" class="text-cyan-600 dark:text-cyan-400 hover:underline">8. Herramientas Externas</a></li>
+    <li><a href="#como-explotar-n8n-al-maximo" class="text-cyan-600 dark:text-cyan-400 hover:underline">9. Cómo Explotar n8n al Máximo</a></li>
+    <li><a href="#ejemplo-avanzado-bot-de-telegram-con-ia" class="text-cyan-600 dark:text-cyan-400 hover:underline">10. Ejemplo Avanzado: Bot Telegram + IA</a></li>
+    <li><a href="#seguridad-en-produccion" class="text-cyan-600 dark:text-cyan-400 hover:underline">11. Seguridad en Producción</a></li>
+    <li><a href="#logs-eventos-y-monitorizacion" class="text-cyan-600 dark:text-cyan-400 hover:underline">12. Logs, Eventos y Monitorización</a></li>
+    <li><a href="#nodo-html-contenido-dinamico" class="text-cyan-600 dark:text-cyan-400 hover:underline">13. Nodo HTML / Contenido Dinámico</a></li>
+    <li><a href="#errores-comunes-y-como-evitarlos" class="text-cyan-600 dark:text-cyan-400 hover:underline">14. Errores Comunes</a></li>
+    <li><a href="#comparativa-rapida-n8n-vs-zapier-vs-make" class="text-cyan-600 dark:text-cyan-400 hover:underline">15. Comparativa: n8n vs Zapier vs Make</a></li>
+    <li><a href="#tips-y-hacks" class="text-cyan-600 dark:text-cyan-400 hover:underline">16. Tips y Hacks</a></li>
+    <li><a href="#enlaces-para-mas-informacion" class="text-cyan-600 dark:text-cyan-400 hover:underline">17. Enlaces</a></li>
+  </ul>
+</nav>
+
+---
+
+## 🖥️ ¿Necesito un Servidor?
+
+Depende de cómo quieras usarlo:
+
+* **Uso local (tu PC):** No necesitas servidor. n8n se ejecuta en tu máquina. Perfecto para pruebas, desarrollo y automatizaciones que solo funcionan mientras tu PC está encendido.
+* **Uso 24/7 (producción):** Necesitas un servidor o VPS (mínimo 1 GB RAM, 1 CPU). n8n se ejecuta como un servicio más y tus workflows se mantienen activos todo el día.
+* **n8n Cloud (sin servidor):** Ellos gestionan el servidor. No necesitas instalar nada, solo registrarte y empezar.
+
+---
+
+## 🏠 Local vs ☁️ Cloud
+
+### En Local (Self-hosted)
+
+| Aspecto | Detalle |
+|---------|---------|
+| **Coste** | Gratuito (solo pagas el hardware) |
+| **Control** | Total — datos, logs, versión, seguridad |
+| **Instalación** | Docker, npm o binario |
+| **Mantenimiento** | Tú gestionas updates, backups, uptime |
+| **Ideal para** | Proyectos personales, datos sensibles, experimentar sin límites |
+
+**Opciones de instalación local:**
+- **Docker** — recomendada, aislada y reproducible ([guía oficial](https://docs.n8n.io/hosting/installation/docker/))
+- **npm** — `npm install n8n -g && n8n start` ([docs](https://docs.n8n.io/hosting/installation/npm/))
+- **Binario** — descargar desde [releases](https://github.com/n8n-io/n8n/releases), sin dependencias
+
+**Ejemplo con Docker:**
+```bash
+docker run -it --rm \
+  --name n8n \
+  -p 5678:5678 \
+  -v ~/.n8n:/home/node/.n8n \
+  n8nio/n8n
+```
+
+### En Cloud (n8n Cloud)
+
+| Aspecto | Detalle |
+|---------|---------|
+| **Coste** | Free tier (hasta 20 workflows, 5 ejecuciones/día) |
+| **Control** | Limitado — no accedes al servidor |
+| **Setup** | 5 minutos, solo registro web |
+| **Mantenimiento** | Ellos gestionan todo |
+| **Ideal para** | Empezar rápido, equipos pequeños, pruebas |
+
+**Registro:** [n8n.cloud](https://n8n.cloud)
+
+---
+
+## 💰 Precios (Free vs Pago)
+
+### Self-hosted (local o VPS)
+
+| Componente | Precio |
+|------------|--------|
+| **n8n** (software) | **Gratuito** — código abierto (Sustainable Use License) |
+| **Servidor/VPS** | Desde ~5 €/mes (ej: Oracle Cloud free tier, Hetzner, DigitalOcean) |
+| **Redis** (cola, opcional) | Gratuito si lo instalas tú |
+| **Total** | **0 € software + coste servidor** |
+
+Sin límites de workflows, ejecuciones o usuarios. Tú pones el hardware.
+
+### n8n Cloud
+
+| Plan | Precio | Workflows | Ejecuciones/día | Usuarios |
+|------|--------|-----------|-----------------|----------|
+| **Free** | **0 €/mes** | 20 | 5 | 1 |
+| **Pro** | ~20 €/mes ([ver precios](https://n8n.cloud/pricing)) | Ilimitados | 10.000 | 5 |
+| **Enterprise** | Personalizado | Ilimitados | Personalizado | Ilimitado |
+
+---
+
+## 🎯 Ejemplo Práctico Paso a Paso
+
+Vamos a crear un workflow real desde cero: **monitorizar el precio de un producto en una web y recibir un email si baja de X euros**.
+
+### Paso 1: Crear el workflow
+Dentro de n8n, creas un nuevo workflow en blanco.
+
+### Paso 2: Añadir Schedule Trigger (cada 6h)
+```
+Schedule Trigger → HTTP Request → Code → Email
+```
+- **Schedule Trigger:** intervalo cada 6 horas
+- **HTTP Request:** GET a la URL del producto (o a una API)
+- **Code:** extrae el precio, compara con el umbral
+- **Email:** envía alerta si corresponde
+
+### Paso 3: Configurar nodo HTTP Request
+```
+Method: GET
+URL: https://api.ejemplo.com/producto/123
+```
+
+### Paso 4: Nodo Code (JavaScript)
+```javascript
+const precio = $json.price;
+const umbral = 50;
+
+if (precio < umbral) {
+  return [{ ...$json, alerta: true, precio, umbral }];
+}
+return [{ alerta: false }];
+```
+
+### Paso 5: Nodo Email (solo si `alerta === true`)
+Conectas el nodo Email y usas la condición. Si el precio baja, recibes el correo.
+
+### Resultado:
+Cada 6 horas n8n consulta el precio. Si baja de 50 €, te llega un email automático. Sin tocar código, sin servidor dedicado (si usas su cloud gratuito).
+
+---
+
+## 🔗 Integraciones con Proyectos Actuales
+
+n8n puede conectarse directamente con varios de mis proyectos existentes:
+
+* **Blog (Astro + GitHub):** Automatizar la publicación de posts. Un workflow que escucha un webhook, genera el markdown, hace commit al repo y dispara el build en Vercel.
+* **Retos de código (`auto-challenges`):** Un workflow que cada semana lanza un nuevo reto, lo escribe en el repo y notifica por Telegram o correo.
+* **Scrapers Python:** n8n puede ejecutar scripts Python directamente con el nodo `Execute Command`, consumiendo los mismos scrapers que ya tengo en `scripts/`.
+* **Pipeline de imágenes (`fix_images.py`):** Disparar el fixer de imágenes cuando se detecta contenido nuevo, todo desde un workflow.
+
+---
+
+## 🔮 Integraciones Futuras Posibles
+
+* **Telegram Bot + IA:** Un bot que recibe consultas, las procesa con Gemini (vía nodo HTTP) y responde con markdown formateado.
+* **Dashboard técnico semanal:** Cada viernes, n8n recopila métricas del blog (Vercel analytics, GitHub stars, Pagefind searches) y genera el post del weekly recap automáticamente.
+* **Sincronización multi-plataforma:** Publicar el mismo contenido en blog, dev.to y LinkedIn con un solo workflow.
+* **Monitor de certificados SSL:** Workflow que verifica dominios cada 24h y alerta antes de que expiren.
+* **Backup automático del blog:** Workflow que cada noche clona el repo, comprime imágenes y sube a un bucket S3 o similar.
+
+---
+
+## ⚡ Ejemplos Comunes de Integración
+
+### Webhook → Slack
+
+```json
+{
+  "nodes": [
+    {
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "parameters": { "path": "alerta" }
+    },
+    {
+      "name": "Slack",
+      "type": "n8n-nodes-base.slack",
+      "parameters": {
+        "channel": "C01ABCDEF",
+        "text": "={{$json.message}}"
+      }
+    }
+  ]
+}
+```
+
+### Email → Google Sheets
+
+Un workflow que lee emails entrantes con adjuntos, extrae los datos y los guarda fila por fila en una planilla de Google Sheets.
+
+### HTTP Request → Base de datos
+
+Consultas a APIs externas cada cierto intervalo, transformación de datos con el nodo `Code` (JavaScript) e inserción en PostgreSQL / SQLite.
+
+---
+
+## 🛠️ Herramientas Externas que Puedes Integrar
+
+n8n viene con **+400 nodos** preconstruidos. Algunos destacados:
+
+* **Comunicación:** Slack, Discord, Telegram, Email (SMTP/IMAP)
+* **Almacenamiento:** Google Drive, Dropbox, S3, FTP
+* **Bases de datos:** PostgreSQL, MySQL, MongoDB, Redis, SQLite
+* **IA / ML:** OpenAI, Hugging Face, Anthropic, y cualquier API HTTP
+* **DevOps:** GitHub, GitLab, Docker, Jenkins, Jira
+* **Cloud:** AWS, GCP, Azure, Vercel, Netlify
+* **Social:** Twitter/X, LinkedIn, YouTube, Instagram
+
+Si un servicio no tiene nodo dedicado, puedes usar los nodos **HTTP Request** y **Webhook** para conectar con cualquier API REST.
+
+---
+
+## 🚀 Cómo Explotar n8n al Máximo
+
+* **Workflows reutilizables:** n8n permite exportar e importar flujos como JSON. Puedes tener una plantilla base para cada tipo de automatización.
+* **Sub-workflows:** Llamar a un workflow desde otro. Útil para tener lógica compartida (ej: autenticación, logging).
+* **Nodo Code:** Ejecuta JavaScript directamente dentro del flujo. No necesitas un servicio externo para transformar datos.
+* **Execution hooks:** Dispara notificaciones cuando un workflow falla o se completa.
+* **Versión con cola (Queue mode):** Para producción, n8n puede ejecutarse con Redis como backend de cola, soportando miles de ejecuciones diarias sin bloqueo.
+
+---
+
+## 🧠 Ejemplo Avanzado: Bot de Telegram con IA
+
+Un asistente que recibe preguntas por Telegram, las procesa con Gemini y responde automáticamente.
+
+### Workflow
+```
+Telegram Trigger → HTTP Request (Gemini) → Telegram Send
+```
+
+### Paso 1: Nodo Telegram Trigger
+Configuras un bot de Telegram con [@BotFather](https://t.me/botfather) y pegas el token. El nodo escucha mensajes entrantes.
+
+### Paso 2: Nodo HTTP Request a Gemini API
+```
+Method: POST
+URL: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=TU_API_KEY
+Body (JSON):
+```
+```json
+{
+  "contents": [{
+    "parts": [{
+      "text": "={{$json.message.text}}"
+    }]
+  }]
+}
+```
+
+### Paso 3: Nodo Code (extraer respuesta)
+```javascript
+const respuesta = $json.candidates[0].content.parts[0].text;
+return [{ respuesta }];
+```
+
+### Paso 4: Nodo Telegram Send
+```
+Chat ID: {{$json.chat.id}}
+Text: {{$json.respuesta}}
+```
+
+**Resultado:** Bot de Telegram con inteligencia artificial, corriendo 24/7 en tu VPS, usando el plan gratuito de Gemini.
+
+---
+
+## 🔒 Seguridad en Producción
+
+Si despliegas n8n en un servidor público, aplica estas medidas:
+
+* **HTTPS obligatorio:** Usa Caddy o Nginx como reverse proxy con Let's Encrypt. n8n no tiene TLS nativo.
+* **Autenticación básica:** n8n trae un login por defecto. En producción, actívalo con `N8N_SECURE_COOKIE=true` (por defecto desde v1.0).
+* **Firewall de puertos:** Solo expón el puerto 5678 si usas reverse proxy. Bloquea el acceso directo desde Internet.
+* **CORS restrictivo:** Configura `N8N_CORS_ORIGIN` con tu dominio, nunca en `*`.
+* **Backups periódicos:** La base de datos de n8n (SQLite por defecto) está en `~/.n8n/database.sqlite`. Haz copias diarias con un workflow de n8n.
+* **Versiones actualizadas:** n8n publica releases frecuentes. Usa el tag `:latest` con pull semanal o fija una versión estable.
+* **Rate limiting:** Si expones webhooks al público, usa `N8N_RATE_LIMIT_ENABLED=true` para evitar abusos.
+
+### Nginx reverse proxy (mínimo)
+```nginx
+server {
+    listen 443 ssl;
+    server_name n8n.tudominio.com;
+
+    ssl_certificate /etc/letsencrypt/live/n8n.tudominio.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/n8n.tudominio.com/privkey.pem;
+
+    location / {
+        proxy_pass http://localhost:5678;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+---
+
+## 📊 Logs, Eventos y Monitorización
+
+n8n guarda un historial completo de cada ejecución. Accedes desde el panel **Executions** de cada workflow.
+
+### Tipos de log
+
+| Log | Dónde verlo | Qué muestra |
+|-----|-------------|-------------|
+| **Execution Log** | Panel del workflow | Cada ejecución: fecha, duración, estado, datos de entrada/salida por nodo |
+| **Event Bus** | Settings > Event Bus | Eventos del sistema (workflow activado/desactivado, errores críticos) |
+| **Audit Log** | Settings > Audit Log (solo Enterprise) | Quién hizo qué y cuándo |
+| **Logs del contenedor** | `docker logs n8n` | Salida estándar de n8n, errores de arranque, conexiones |
+
+### Cómo inspeccionar una ejecución fallida
+
+1. Ve al workflow y haz clic en **Executions** (barra izquierda)
+2. Busca la ejecución con estado **Error** (rojo)
+3. Haz clic para abrir el detalle
+4. Cada nodo muestra si ejecutó bien (verde) o falló (rojo)
+5. En el nodo fallido, ves el error exacto y los datos que llegaron
+
+### Exportar logs a un servicio externo
+
+n8n puede enviar sus logs a sistemas externos para monitorización centralizada:
+
+* **Configuración con Docker:** Monta un volumen y usa un sidecar (Fluentd, Logstash) para reenviar los logs.
+* **Nodo HTTP Request:** Crea un workflow que cada hora recoja ejecuciones fallidas con el nodo `n8n` y las envíe a un webhook de Slack, Telegram o tu propio backend.
+* **Métricas con Prometheus:** n8n expone métricas en `/metrics` si activas `N8N_METRICS=true`. Puedes consumirlas con Prometheus + Grafana para ver gráficas de ejecuciones, errores y tiempos de respuesta.
+
+### Eventos que disparan workflows
+
+Además del Schedule Trigger, n8n reacciona a eventos en tiempo real:
+
+* **Webhook:** Llamadas HTTP entrantes (POST, GET, etc.)
+* **Form Trigger:** Envía un formulario embebido y captura la respuesta
+* **Telegram Trigger:** Escucha mensajes de un bot
+* **Email Trigger (IMAP):** Reacciona a emails nuevos en una bandeja
+* **RSS Feed Trigger:** Detecta nuevas entradas en un feed RSS
+* **n8n Trigger:** Escucha eventos internos de n8n (workflow creado, ejecución completada, error)
+
+### Ejemplo: Logging centralizado con un Error Workflow
+
+1. Crea un workflow con **n8n Trigger** tipo "Workflow execution error"
+2. Conéctalo a un nodo **Code** que formatee el error:
+```javascript
+const error = $json.executionData.error;
+return [{
+  workflow: $json.workflowName,
+  error: error.message,
+  timestamp: new Date().toISOString(),
+  node: error.nodeName
+}];
+```
+3. Añade nodos de salida: **Slack** (notificar al equipo), **Spreadsheet** (registrar en Google Sheets), **Email** (alerta al administrador)
+4. En Settings > Error Workflow, selecciona este workflow
+
+A partir de ahí, cada error de cualquier workflow se loguea automáticamente en los tres destinos.
+
+---
+
+## 🧩 Nodo HTML / Contenido Dinámico
+
+El **nodo HTML** (HTML Content / HTML Extract) permite trabajar con contenido web y plantillas HTML directamente desde n8n.
+
+### HTML Extract — extraer datos de páginas web
+
+Usa selectores CSS para extraer información sin escribir regex:
+
+```
+URL: https://ejemplo.com/producto
+Selector: .precio-actual
+Output: texto del elemento
+```
+
+Configuración en el nodo:
+```
+Source: HTML (pegas el HTML o usas el output de un nodo previo)
+Extraction Values:
+  - Key: precio
+    Selector: span.price-value
+    Return Value: Text
+  - Key: titulo
+    Selector: h1.product-title
+    Return Value: Text
+```
+
+### HTML Content — generar plantillas HTML
+
+Ideal para crear contenido dinámico: emails con estilo, informes HTML, páginas web generadas:
+
+```
+Source: JSON (datos de entrada)
+Template: HTML plano con {{expresiones}}
+```
+
+**Ejemplo: Generar un informe HTML desde datos JSON**
+
+```html
+<h1>Informe de {{$json.titulo}}</h1>
+<table>
+  <tr>
+    <th>Métrica</th><th>Valor</th>
+  </tr>
+  {{#each $json.datos}}
+  <tr>
+    <td>{{this.metrica}}</td>
+    <td>{{this.valor}}</td>
+  </tr>
+  {{/each}}
+</table>
+<p>Generado el {{new Date().toLocaleDateString("es-ES")}}</p>
+```
+
+**Casos de uso del nodo HTML:**
+
+* **Email con diseño:** Genera un email HTML con estilos en línea desde datos dinámicos, compatible con clientes de correo (Gmail, Outlook).
+* **Scraping sin API:** Extrae datos de webs que no tienen API pública usando selectores CSS. No necesitas Python ni Puppeteer.
+* **Informes periódicos:** Cada semana, n8n recopila datos de varias fuentes y genera un informe HTML que se envía por email o se guarda en Google Drive.
+* **Transformación de contenido:** Convierte JSON a HTML estructurado para publicarlo en un CMS o como snippet de webhook.
+* **Generación de PDF:** Combina HTML Content + HTML to PDF (o una API externa) para crear facturas, certificados o reportes desde flujos automatizados.
+
+### Ejemplo: Scraping con HTML Extract
+
+```
+Schedule Trigger → HTTP Request (GET web) → HTML Extract → Code → Email
+```
+
+El nodo HTML Extract obtiene el precio y la disponibilidad del producto usando selectores CSS. El nodo Code decide si enviar alerta. El Email envía el resultado formateado.
+
+---
+
+### El workflow no se ejecuta cuando toca
+**Causa:** El workflow no está en estado **Active**. Los workflows se crean desactivados.
+**Solución:** Dale al toggle "Active" en la parte superior del editor.
+
+### El nodo HTTP Request devuelve error 401/403
+**Causa:** Falta autenticación o las credenciales expiraron.
+**Solución:** Revisa las **Credentials** asociadas al nodo. Si es API Key, asegúrate de que está incluida en el header.
+
+### El Schedule Trigger no respeta la zona horaria
+**Causa:** n8n usa UTC por defecto.
+**Solución:** Configura `GENERIC_TIMEZONE=Europe/Madrid` en las variables de entorno del servidor.
+
+### Webhook responde 404
+**Causa:** El workflow debe estar **Active** para que el webhook funcione.
+**Solución:** Activa el workflow y vuelve a probar la URL.
+
+### Los datos de un nodo no llegan al siguiente
+**Causa:** El nodo anterior no devuelve datos o devuelve un array vacío.
+**Solución:** Añade un nodo Code con `return [{ ...$json }]` justo después para inspeccionar la salida.
+
+### n8n se queda sin memoria en el VPS
+**Causa:** Workflows con muchas ejecuciones simultáneas o datos grandes en memoria.
+**Solución:** Limita ejecuciones concurrentes (`EXECUTIONS_TIMEOUT=300`), programa los workflows espaciados, o añade Redis como cola.
+
+### El nodo Email no envía correos
+**Causa:** Configuración SMTP incorrecta o el servidor bloquea el puerto.
+**Solución:** Verifica que el puerto SMTP (587 para TLS, 465 para SSL) no está bloqueado por tu proveedor de VPS. Usa credenciales de aplicación si tienes 2FA.
+
+---
+
+## ⚡ Comparativa Rápida: n8n vs Zapier vs Make
+
+| Aspecto | n8n | Zapier | Make |
+|---------|-----|--------|------|
+| **Precio** | Gratuito (self-hosted) | Desde 20 €/mes | Desde 9 €/mes |
+| **Límites** | Los que ponga tu hardware | 100 tareas/mes en gratis | 1000 ops/mes en gratis |
+| **Datos** | Tú los controlas | En servidores de Zapier | En servidores de Make |
+| **Nodos** | 400+ | 5000+ apps | 2000+ apps |
+| **Código personalizado** | JavaScript nativo | Python/JS (plan de pago) | Solo en plan Pro |
+| **Webhooks** | Ilimitados | Limitados por plan | Limitados por plan |
+| **Open source** | Sí | No | No |
+| **Self-hosted** | Sí | No | No |
+| **Curva aprendizaje** | Media | Baja | Baja-Media |
+
+**Veredicto:** Si necesitas control total, datos privados o automatizaciones complejas con lógica programática, n8n gana. Si solo necesitas conectar apps populares rápido y sin pensar en infraestructura, Zapier o Make son más directos.
+
+---
+
+## 💡 Tips y Hacks
+
+### Usa `$json` para depurar rápido
+En cualquier nodo `Code`, pon `return [{ ...$json }]` para ver exactamente qué datos llegan. Así depuras el flujo sin tener que revisar cada ejecución manualmente.
+
+### Pegatinas (Sticky Notes) como documentación viva
+Añade nodos `Sticky Note` entre secciones del workflow para documentar qué hace cada parte. Se exportan con el JSON del workflow — ideal para compartir con el equipo o contigo mismo meses después.
+
+### Variables de entorno para secrets
+Nunca hardcodees API keys o tokens. En self-hosted usa variables de entorno (`N8N_VARIABLE_*`) y en cloud usa el panel de **Variables** de n8n. Se referencian con `{{$vars.clave}}`.
+
+### HTTP Request con autenticación reutilizable
+Configura **Credentials** reutilizables (OAuth2, API Key, Basic Auth) en el panel de credenciales. Así usas la misma auth en múltiples nodos sin repetirla y si cambia un token, lo actualizas en un solo sitio.
+
+### Webhook como API temporal
+Cada workflow con un nodo `Webhook` genera una URL pública única. Úsala como endpoint temporal para recibir datos de cualquier servicio sin necesidad de desplegar un servidor.
+
+### Date expresiones para programar tareas
+En el nodo `Schedule Trigger` puedes usar expresiones cron avanzadas. Ejemplo útil: ejecutar solo en días laborables:
+```
+0 9 * * 1-5
+```
+(Lunes a viernes a las 09:00)
+
+### Clona workflows de producción a prueba
+Exporta un workflow como JSON (botón derecho → Export), impórtalo limpiando conexiones, modifica y prueba sin miedo a romper el original.
+
+### Formatea fechas al vuelo con Luxon
+n8n incluye Luxon integrado en las expresiones. Transforma fechas directamente:
+```
+{{new Date($json.timestamp).toLocaleDateString("es-ES")}}
+```
+
+### Error Workflow como manejador global
+Configura un workflow como **Error Workflow** y se ejecutará automáticamente cuando cualquier otro workflow falle. Útil para logging centralizado, notificaciones a Slack o reinicios automáticos.
+
+### Etiquetas (Tags) para organizar
+A medida que acumulas workflows, usa etiquetas de colores para clasificarlos por tipo (producción, pruebas, temporales), proyecto o prioridad.
+
+### Ejecuciones condicionales con IF
+El nodo `IF` permite bifurcar el flujo. Combinado con `Merge`, crea ramas paralelas que luego se unen — ideal para workflows complejos sin duplicar nodos.
+
+### npm i -g n8n en un VPS mínimo
+Un VPS de 1 GB RAM y 1 CPU corre n8n sin problemas para uso personal (hasta ~10 workflows activos). Si escalas, añade Redis como cola y duplica la RAM.
+
+---
+
+## 📚 Enlaces para Más Información
+
+* [Web oficial de n8n](https://n8n.io) — Documentación, precios y casos de uso
+* [GitHub de n8n](https://github.com/n8n-io/n8n) — Código fuente, issues y releases
+* [n8n Cloud Pricing](https://n8n.cloud/pricing) — Planes y precios actualizados
+* [n8n Templates](https://n8n.io/workflows) — Plantillas de workflows listas para importar
+* [Documentación de instalación](https://docs.n8n.io/hosting/installation/) — Docker, npm, binario
+* [Documentación de nodos](https://docs.n8n.io/integrations/) — Lista completa de integraciones disponibles
+* [n8n Community](https://community.n8n.io) — Foro oficial con ejemplos y soporte
+* [n8n Blog](https://blog.n8n.io) — Artículos técnicos, novedades y tutoriales avanzados

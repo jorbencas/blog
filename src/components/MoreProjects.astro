@@ -1,0 +1,52 @@
+---
+import { getCollection } from "astro:content";
+import { getSortedPosts } from "src/utils";
+
+interface Props {
+  currentSlug: string;
+}
+
+const { currentSlug } = Astro.props;
+const allProjects = await getCollection("myprojects");
+const sortedProjects = await getSortedPosts(allProjects);
+
+const sidebarProjects = sortedProjects
+  .filter((p) => p.id.replace(/\.[^/.]+$/, "") !== currentSlug)
+  .slice(0, 5);
+---
+
+<aside class="lg:col-span-4 space-y-8">
+  <div class="sticky top-24 p-6 bg-slate-100 dark:bg-slate-900/50 rounded-lg">
+    <h2 class="text-xs font-black uppercase tracking-[0.3em] text-slate-600 dark:text-slate-500 mb-6 pb-2">
+      Más_Proyectos
+    </h2>
+
+    <nav class="space-y-4">
+      {
+        sidebarProjects.map((p) => (
+          <a
+            href={`/proyectos/${p.id.replace(/\.[^/.]+$/, "")}`}
+            class="group block"
+          >
+            <div class="flex items-baseline gap-2 mb-1">
+              <span class="text-xs text-purple-600/60 dark:text-purple-400/50 block uppercase font-bold">
+                [{p.data.tags?.[0] || "general"}]
+              </span>
+            </div>
+            <p class="text-sm font-bold text-slate-700 dark:text-slate-300 group-hover:text-purple-500 dark:group-hover:text-purple-400 transition-colors line-clamp-2 italic uppercase tracking-tighter">
+              {p.data.title}
+            </p>
+            <div class="h-[1px] w-0 group-hover:w-full bg-purple-500/30 transition-all duration-500 mt-2" />
+          </a>
+        ))
+      }
+    </nav>
+
+    <a
+      href="/proyectos"
+      class="block text-center mt-8 py-3 border border-purple-500/30 rounded text-xs font-black uppercase tracking-widest text-purple-700 dark:text-purple-500 hover:bg-purple-500/10 transition-all"
+    >
+      Ver más proyectos
+    </a>
+  </div>
+</aside>

@@ -1,6 +1,6 @@
 # Contexto del proyecto — Blog
 
-**Última actualización**: 2026-06-26 (sesión: CopyPost, update-timeline skill, navbar close button)
+**Última actualización**: 2026-06-26 (sesión: n8n post, MoreProjects sidebar, logs/HTML node sections)
 **Stack**: Astro 6.4 + Svelte 5 + Tailwind CSS 4.3
 **Deploy**: Vercel (`blog-jorbencas.vercel.app`)
 **Idioma**: Español
@@ -9,7 +9,7 @@
 ## Contenido
 
 5 colecciones MDX en `src/content/`:
-- `posts/` — posts del blog
+- `posts/` — posts del blog (incluye `n8n.mdx` con guía completa: servidor, cloud, precios, ejemplos prácticos, seguridad, logs, HTML node, errores comunes, comparativa Zapier/Make, tips)
 - `auto-news/` — noticias automáticas (weekly reports)
 - `auto-challenges/` — retos de programación (+140 guías)
 - `myprojects/` — proyectos personales
@@ -106,10 +106,10 @@ Props: `fallback`, `avif`, `webp`, `blur` (LQIP), `fetchpriority`, `loading`, `a
 - `docs/ci-cd.md`
 
 ### Layouts
-- `src/layouts/PostLayout.astro`, `src/layouts/Layout.astro`, `src/layouts/ProjectLayout.astro`
+- `src/layouts/PostLayout.astro`, `src/layouts/Layout.astro`, `src/layouts/ProjectLayout.astro` (grid 8+4 con sidebar MoreProjects)
 
 ### Componentes
-- `src/components/Navbar.astro`, `ResponsiveImage.astro`, `SEO.astro`, `AudioPlayer.astro`, `TableOfContents.astro`, `PreviewPost.astro`, `CopyPost.astro`, `Weekly.astro`
+- `src/components/Navbar.astro`, `ResponsiveImage.astro`, `SEO.astro`, `AudioPlayer.astro`, `TableOfContents.astro`, `PreviewPost.astro`, `CopyPost.astro`, `Weekly.astro`, `MoreProjects.astro`
 - `src/components/ChallengeCard.astro`, `ProjectCard.astro`, `ToolCard.astro`, `Information.astro`
 - `src/components/ToggleButton.astro`, `NextPrevLinks.astro`, `Footer.astro`, `Buscador.astro`
 - `src/components/toolsmini/VideoExtractor.svelte`
