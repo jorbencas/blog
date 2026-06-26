@@ -108,4 +108,8 @@ Before deleting, changing permissions, or modifying any file, you must:
    - Wait for explicit confirmation before adding it
 
 ## npm package use restrictions
-1. **Astro files** don't use any npm package of node enviroment.
+1. Astro files don't use any npm package of node enviroment.
+2. When adding a new npm package, you must:
+   - Ask the user what the library is for and why it's needed
+   - If the user doesn't know what the library does, provide a brief explanation of its purpose
+   - Wait for explicit confirmation before adding it
