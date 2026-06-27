@@ -71,8 +71,8 @@ Schemas in `src/content.config.ts` using `astro/loaders` (glob) + `astro/zod`.
 - **Image overlays**: `opacity-70 → opacity-40`, image `opacity-80 → opacity-100`
 
 ### Gradient badge (section headers h2/h3)
-- **h2**: `inline-flex items-center gap-2 bg-gradient-to-r from-sky-800 to-cyan-500 dark:from-sky-600 dark:to-cyan-400 px-5 py-2.5 text-xs sm:text-sm font-black uppercase tracking-[0.25em] text-white dark:text-slate-900 shadow-[4px_4px_0px_0px_rgba(6,182,212,0.3)]` — always use **inline-flex** so emoji+text stay on one line.
-- **h3**: same but smaller: `px-4 py-2 text-[10px] sm:text-xs`.
+- **h2**: `<h2 class="inline-flex items-center gap-2 bg-gradient-to-r from-sky-800 to-cyan-500 dark:from-sky-600 dark:to-cyan-400 px-5 py-2.5 text-xs sm:text-sm font-black uppercase tracking-[0.25em] text-white dark:text-slate-900 shadow-[4px_4px_0px_0px_rgba(6,182,212,0.3)]">` — always use **actual `<h2>` element** (not `<span>`) so Astro extracts it for TableOfContents.
+- **h3**: same but smaller: `<h3 class="...from-sky-700 to-cyan-600... px-4 py-2 text-[11px] sm:text-xs ...">` — use actual `<h3>` element.
 
 ### Resource cards (resources.mdx)
 - `rounded-xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-5 hover:shadow-xl hover:-translate-y-1 transition-all`

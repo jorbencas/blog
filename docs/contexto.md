@@ -45,8 +45,10 @@
 - **Navbar**: clases `peer-checked:[&>span]:rotate-45` movidas de atributos HTML separados a un solo `class` con template literal — arreglada "ventanita de CSS" en menú móvil
 - **Summary box resources.mdx**: `from-sky-50→from-sky-100`, `slate-750→slate-700`, borde `border-2`, `font-semibold` en descripción
 - **PostLayout description**: añadidos `px-5 sm:px-6 py-3 sm:py-4` + dark mode variants
-- **TOC móvil**: añadido `<TableOfContents headings={headings} />` dentro del article, visible solo en móvil (`lg:hidden`)
+- **TOC móvil**: eliminado (el usuario no quiere que resources.mdx sea especial)
 - **pubDate resources.mdx**: restaurado a `"2025-04-01"` (era el original)
+- **Section headers a `<h2>`/`<h3>` reales**: los 36 + 5 headers usaban `<span>` con `id` — Astro solo extrae headings reales para el TOC. Cambiados a `<h2>`/`<h3>` manteniendo el mismo estilo visual.
+- **AGENTS.md Design System**: actualizado para especificar que los badges de sección deben usar `<h2>`/`<h3>` reales, no `<span>`
 
 ## Contenido
 
