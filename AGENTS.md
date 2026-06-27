@@ -18,7 +18,9 @@ When adding or changing a dependency:
 
 **New Astro/Svelte components**: before implementing a new component, review how existing ones are developed to follow the same pattern and maximize consistency. If there are doubts about the implementation, prepare a set of questions for the user before writing code.
 
-**Git**: NEVER run `git push`, `git pull` or `git fetch`. These must be done manually.
+**Git — allowed commands only**: `git pull`, `git add`, `git rm`, `git commit`. Everything else (push, fetch, merge, rebase, stash, branch, checkout, reset, revert, etc.) must be done manually by the user. For `git rm`, always explain what is being removed and why, then wait for explicit confirmation before executing.
+
+**Commit ordering**: If told to commit and then asked to change something, postpone the commit until all requested changes are done. Commit is always the last step.
 
 ## Workflow
 0. **Read `docs/contexto.md` first** — always start by reading the full context.

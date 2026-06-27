@@ -1,6 +1,6 @@
 # Contexto del proyecto — Blog
 
-**Última actualización**: 2026-06-27 (sesión: fix navbar CSS, TOC móvil, colores resources, design system en AGENTS.md)
+**Última actualización**: 2026-06-27 (sesión: n8n + recursos, TOC con fallback DOM, iconos SVG, build pagefind)
 **Stack**: Astro 6.4 + Svelte 5 + Tailwind CSS 4.3
 **Deploy**: Vercel (`blog-jorbencas.vercel.app`)
 **Idioma**: Español
@@ -41,7 +41,19 @@
 - Nueva regla: investigar componentes existentes antes de crear uno nuevo
 - Añadida sección **Design System** completa: colores por tipo de card, patrones de badges, cards, nav links, tipografía, iconos, layout y prose overrides
 
-### 8. Fixes post-sesión ✅
+### 9. n8n + recursos del blog ✅
+- **`n8n.mdx`**: añadida sección "Más Automatizaciones con los Recursos del Blog" que conecta herramientas de `resources.mdx` (IA, productividad, comunidad, devops, multimedia, seguridad) con workflows concretos de n8n. Incluye mini proyecto completo "Bot de Estudio Semanal" que combina 5+ servicios en un solo workflow.
+
+### 10. TOC con fallback DOM ✅
+- **`TableOfContents.astro`**: ahora siempre se renderiza (sin depender de `headings.length > 1`). Si Astro no extrajo headings (como en páginas con HTML directo), el script los construye desde el DOM al cargar la página.
+
+### 11. Iconos SVG sin CDN ✅
+- **`CodeEnhancer.astro`**: reemplazadas imágenes cargadas desde `simpleicons.org` por SVGs inline con el color del lenguaje. Ya no dependen de CDN externa ni fallan si hay problemas de red.
+
+### 12. Build pagefind ✅
+- **`package.json`**: comando `pagefind --site .vercel/output/static` en vez de `dist`. Copia de salida a `dist/pagefind/` y `public/pagefind/`.
+
+### 13. Fixes post-sesión ✅
 - **Navbar**: clases `peer-checked:[&>span]:rotate-45` movidas de atributos HTML separados a un solo `class` con template literal — arreglada "ventanita de CSS" en menú móvil
 - **Summary box resources.mdx**: `from-sky-50→from-sky-100`, `slate-750→slate-700`, borde `border-2`, `font-semibold` en descripción
 - **PostLayout description**: añadidos `px-5 sm:px-6 py-3 sm:py-4` + dark mode variants
