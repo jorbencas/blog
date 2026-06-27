@@ -141,13 +141,47 @@ n8n puede conectarse directamente con varios de mis proyectos existentes:
 
 ---
 
-## 🔮 Integraciones Futuras Posibles
+## 🎯 Más Automatizaciones con los Recursos del Blog
 
-* **Telegram Bot + IA:** Un bot que recibe consultas, las procesa con Gemini (vía nodo HTTP) y responde con markdown formateado.
-* **Dashboard técnico semanal:** Cada viernes, n8n recopila métricas del blog (Vercel analytics, GitHub stars, Pagefind searches) y genera el post del weekly recap automáticamente.
-* **Sincronización multi-plataforma:** Publicar el mismo contenido en blog, dev.to y LinkedIn con un solo workflow.
-* **Monitor de certificados SSL:** Workflow que verifica dominios cada 24h y alerta antes de que expiren.
-* **Backup automático del blog:** Workflow que cada noche clona el repo, comprime imágenes y sube a un bucket S3 o similar.
+En la [página de recursos](/posts/resources) del blog hay decenas de herramientas que n8n puede conectar. Aquí tienes ideas organizadas por categoría.
+
+### 🤖 Con IA (Gemini, ChatGPT, Claude, Hugging Face)
+* **Auto-resumen de posts:** Workflow que al publicar un post (webhook de GitHub o Vercel), lo envía a la API de Gemini o Claude y genera un resumen listo para redes sociales.
+* **Chatbot multicanal:** Un solo workflow recibe consultas desde Telegram, Discord y Slack, las procesa con IA y responde en el mismo canal. Es la evolución natural del bot de Telegram que tienes más arriba.
+* **Traductor de contenido:** Workflow que toma el markdown de un post, lo traduce con IA y guarda una versión en otro idioma en el mismo repositorio.
+
+### 📋 Con Productividad (Notion, Obsidian, Todoist, Linear, Jira, Trello, Asana, Clockify)
+* **Obsidian → Blog:** Workflow que detecta cambios en una nota de Obsidian, convierte el markdown a formato MDX y hace commit al repo del blog. Publicas desde tus notas sin tocar el editor.
+* **Notion ↔ GitHub Issues:** Sincronización bidireccional: cuando creas una issue en GitHub, aparece en una base de datos de Notion y viceversa. Trackeas bugs sin cambiar de herramienta.
+* **Resumen semanal:** Cada viernes, n8n recopila tareas completadas de Todoist, tiempo registrado en Clockify y PRs mergeados de GitHub, y genera un informe HTML con diseño para tu correo o el weekly recap del blog.
+
+### 💬 Con Comunidad (Discord, Telegram, Twitter/X, LinkedIn, DEV, Hashnode, Reddit)
+* **Cross-publishing:** Workflow que al publicar un post, lo republica automáticamente en DEV, Hashnode y LinkedIn con el formato adecuado para cada plataforma.
+* **Reddit monitor:** Workflow que cada hora busca palabras clave en subreddits técnicos y notifica por Telegram cuando alguien pregunta algo que ya tienes cubierto en el blog.
+
+### 🖥️ Con DevOps y Terminal (Docker, npm, GitHub, tmux, ngrok)
+* **Docker cleanup automático:** Workflow programado que ejecuta `docker system prune` en tu VPS vía nodo SSH y reporta el espacio liberado en una planilla de Google Sheets.
+* **Monitor de dependencias:** Workflow semanal que ejecuta `npm outdated`, parsea la salida y abre un issue en GitHub con las dependencias que necesitan actualización.
+* **Backup automático del blog:** Workflow que cada noche clona el repo, comprime imágenes y sube a un bucket S3 (nodo AWS S3 nativo), Google Drive o FTP.
+
+### 🎬 Con Multimedia (FFmpeg, OBS, HandBrake, DaVinci Resolve, Audacity)
+* **Pipeline de video:** Workflow que cuando subes un video raw, lo comprime con FFmpeg (vía `Execute Command`), sube a YouTube con metadatos generados por IA y actualiza el post del blog automáticamente.
+* **Transcripción de audio:** Workflow que toma archivos de audio, los transcribe con Whisper/OpenAI y guarda el texto como nota en Obsidian o Notion.
+
+### 📡 Con Seguridad (OWASP, Hack The Box, PortSwigger, monitor SSL)
+* **Monitor SSL:** Workflow que cada 24h verifica los certificados SSL de tus dominios, alerta por Telegram si quedan menos de 14 días y registra el histórico en SQLite.
+* **Auto-enrolamiento en retos:** Workflow que consulta APIs de Hack The Box o TryHackMe, detecta nuevas máquinas y te notifica con los detalles para no perderte ninguna.
+
+### 🧪 Mini Proyecto Completo: Bot de Estudio Semanal
+
+Un workflow que cada lunes:
+1. Recoge los 3 posts más populares del blog (puedes usar conteo de visitas o Vercel Analytics vía API)
+2. Envía cada post a Gemini para generar un resumen ejecutivo y 5 preguntas tipo test
+3. Guarda los resúmenes en una base de datos de Notion
+4. Genera un email con diseño HTML y lo envía a tu lista de suscriptores
+5. Publica un tweet con el resumen del post más leído
+
+Todo en un solo workflow, conectando más de 5 servicios distintos del ecosistema del blog.
 
 ---
 

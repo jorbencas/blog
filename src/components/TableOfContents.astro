@@ -1,42 +1,37 @@
 ---
 const { headings = [] } = Astro.props;
-const hasContent = headings?.length > 1;
+const hasServerHeadings = headings?.length > 1;
 ---
 
-{
-  hasContent && (
-    <nav id="toc-container" class="relative h-full font-sans">
-      <div class="sticky top-32 max-h-[calc(100vh-8rem)] overflow-y-auto flex flex-col py-4 px-2">
-        {/* Header del Índice */}
-        <div class="flex items-center gap-2 mb-6 opacity-40">
-          <span class="text-sm font-bold uppercase tracking-[0.2em] text-slate-900 dark:text-white">
-            Contenido
-          </span>
-          <div class="h-[1px] flex-grow bg-slate-200" />
-        </div>
+<nav id="toc-container" class="relative h-full font-sans">
+  <div class="sticky top-32 max-h-[calc(100vh-8rem)] overflow-y-auto flex flex-col py-4 px-2">
+    <div class="flex items-center gap-2 mb-6 opacity-40">
+      <span class="text-sm font-bold uppercase tracking-[0.2em] text-slate-900 dark:text-white">
+        Contenido
+      </span>
+      <div class="h-[1px] flex-grow bg-slate-200" />
+    </div>
 
-        <ul class="space-y-1">
-          {headings.map((h) => (
-            <li>
-              <a
-                href={`#${h.slug}`}
-                class:list={[
-                  "toc-link block py-2 pl-4 -ml-[1px] border-l-2 border-l-transparent transition-all duration-300",
-                  "text-sm font-medium hover:text-cyan-500",
-                  h.depth === 2
-                    ? "text-slate-600 dark:text-slate-400"
-                    : "text-slate-500 dark:text-slate-400 text-xs ml-2",
-                ]}
-              >
-                {h.text}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </nav>
-  )
-}
+    <ul id="toc-list" class="space-y-1">
+      {hasServerHeadings && headings.map((h) => (
+        <li>
+          <a
+            href={`#${h.slug}`}
+            class:list={[
+              "toc-link block py-2 pl-4 -ml-[1px] border-l-2 border-l-transparent transition-all duration-300",
+              "text-sm font-medium hover:text-cyan-500",
+              h.depth === 2
+                ? "text-slate-600 dark:text-slate-400"
+                : "text-slate-500 dark:text-slate-400 text-xs ml-2",
+            ]}
+          >
+            {h.text}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+</nav>
 
 <style is:global>
   h1[id],
@@ -50,15 +45,47 @@ const hasContent = headings?.length > 1;
   (function() {
     let observer = null;
 
+    function buildTOCFromDOM() {
+      const list = document.getElementById("toc-list");
+      if (!list) return;
+      const headingElements = document.querySelectorAll("article h2[id], article h3[id]");
+      if (headingElements.length === 0) {
+        const container = document.getElementById("toc-container");
+        if (container) container.style.display = "none";
+        return;
+      }
+      list.innerHTML = "";
+      headingElements.forEach((h) => {
+        const li = document.createElement("li");
+        const a = document.createElement("a");
+        a.href = `#${h.id}`;
+        a.className =
+          "toc-link block py-2 pl-4 -ml-[1px] border-l-2 border-l-transparent transition-all duration-300 text-sm font-medium hover:text-cyan-500" +
+          (h.tagName === "H3"
+            ? " text-slate-500 dark:text-slate-400 text-xs ml-2"
+            : " text-slate-600 dark:text-slate-400");
+        a.textContent = h.textContent;
+        li.appendChild(a);
+        list.appendChild(li);
+      });
+    }
+
     function initTOC() {
       if (observer) observer.disconnect();
 
-      const links = document.querySelectorAll(".toc-link");
+      let links = document.querySelectorAll(".toc-link");
       const headingElements = Array.from(
         document.querySelectorAll("article h2[id], article h3[id]")
       );
 
-      if (links.length === 0 || headingElements.length === 0) return;
+      if (headingElements.length === 0) return;
+
+      // Build TOC from DOM if no server-rendered links exist
+      if (links.length === 0) {
+        buildTOCFromDOM();
+        links = document.querySelectorAll(".toc-link");
+        if (links.length === 0) return;
+      }
 
       const activeClasses = [
         "!text-cyan-500", "!border-l-cyan-500",

@@ -90,11 +90,13 @@
 
       const info = configLang[langKey] || { icon: "code", color: "64748b" };
 
-      // Si el icono es code, fallamos seguro en simpleicons, usemos codepen o gnubash o escondemos la imagen
-      const imgHtml =
-        info.icon === "code"
-          ? `<span class="text-slate-400">⚡</span>`
-          : `<img src="https://cdn.simpleicons.org/${info.icon}/${info.color}" class="w-5 h-5 opacity-80 dark:opacity-100" alt="${langKey}" onerror="this.style.display='none'"/>`;
+      // SVG inline con color del lenguaje — sin dependencia de CDN
+      const svgIcon = () => {
+        if (info.icon === "code") return `<span class="text-slate-400">⚡</span>`;
+        const darkClass = 'class="w-5 h-5 shrink-0"';
+        return `<svg width="20" height="20" viewBox="0 0 20 20" ${darkClass}><rect width="20" height="20" rx="4" fill="#${info.color}" opacity="0.8"/></svg>`;
+      };
+      const imgHtml = svgIcon();
 
       // 1. Crear el Wrapper (Adaptable a Temas)
       const wrapper = document.createElement("div");
