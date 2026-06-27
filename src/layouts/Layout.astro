@@ -30,6 +30,18 @@ const finalDescription =
 <!doctype html>
 <html lang="es" class="scroll-smooth">
   <head>
+    <script is:inline>
+      (() => {
+        const stored = localStorage.getItem("color-theme");
+        const isDark = stored === "dark" || (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches);
+        if (isDark) document.documentElement.classList.add("dark");
+      })();
+    </script>
+    <style>
+      html { background-color: #f1f5f9; }
+      html.dark { background-color: #020617; }
+    </style>
+
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
@@ -46,25 +58,9 @@ const finalDescription =
       pubDate={pubDate}
       author={author}
     />
-
-
-    <script is:inline>
-      const theme = (() => {
-        let storedTheme = localStorage.getItem("color-theme");
-        if (
-          storedTheme === "dark" ||
-          (!storedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches)
-        ) {
-          return "dark";
-        }
-        return "light";
-      })();
-
-      document.documentElement.classList.toggle("dark", theme === "dark");
-    </script>
   </head>
   <body
-    class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-500 min-h-screen flex flex-col font-['Space_Grotesk',sans-serif]"
+    class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col font-['Space_Grotesk',sans-serif]"
   >
     <Header />
 

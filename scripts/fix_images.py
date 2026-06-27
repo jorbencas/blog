@@ -235,7 +235,29 @@ def get_gemini_tech_context(title: str, content_snippet: str = "") -> Optional[D
 # ==============================================================================
 def clean_query(text: str) -> str:
     words: List[str] = text.replace("/", "_").replace("\\", "_").replace("-", "_").split("_")
-    return " ".join([w for w in words if w.lower() not in ["guia", "tutorial", "como", "de", "para", "en"] and len(w) > 2])
+    keep: List[str] = []
+    for w in words:
+        wl = w.lower()
+        if len(w) <= 2 and wl in ("de", "en", "la", "el", "un", "una", "y", "e", "o", "a", "su", "lo"):
+            continue
+        if wl in ("guia", "tutorial", "como"):
+            continue
+        keep.append(w)
+    return " ".join(keep)
+
+def build_unsplash_query(title: str, tags: List[str], content_snippet: str = "") -> str:
+    parts: List[str] = []
+    parts.extend(tags[:3])
+    parts.append(clean_query(title))
+    tech_hints: List[str] = ["technology", "code", "digital", "abstract"]
+    if any(kw in content_snippet.lower() for kw in ["python", "javascript", "typescript", "rust", "go", "java"]):
+        tech_hints = ["programming", "code", "developer", "technology"]
+    elif any(kw in content_snippet.lower() for kw in ["docker", "deploy", "devops", "ci/cd"]):
+        tech_hints = ["devops", "infrastructure", "server", "cloud"]
+    elif any(kw in content_snippet.lower() for kw in ["design", "ux", "ui", "css", "tailwind"]):
+        tech_hints = ["design", "interface", "minimal", "creative"]
+    parts.extend(tech_hints)
+    return " ".join(p for p in parts if p)
 
 def slugify(text: str) -> str:
     text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('ascii')
@@ -431,6 +453,14 @@ async def process_file(session: aiohttp.ClientSession, path: Path, semaphore: as
             fm_image_match = re.search(r'image:\s*["\']?(.*?)["\']?\n', content)
             fm_image: Optional[str] = fm_image_match.group(1).strip() if fm_image_match else None
 
+            # Extraer tags y título del frontmatter para mejorar búsquedas
+            fm_title_match = re.search(r'title:\s*["\'](.+?)["\']', content)
+            fm_title: str = fm_title_match.group(1) if fm_title_match else base_name
+            fm_tags_match = re.findall(r'tags:\s*\[(.*?)\]', content, re.DOTALL)
+            fm_tags: List[str] = []
+            if fm_tags_match:
+                fm_tags = [t.strip().strip('"').strip("'") for t in fm_tags_match[0].split(",") if t.strip()]
+
             current_folder: Path = (IMG_DIR / base_name) if len(md_images) > 1 else IMG_DIR
             current_folder.mkdir(parents=True, exist_ok=True)
 
@@ -438,7 +468,7 @@ async def process_file(session: aiohttp.ClientSession, path: Path, semaphore: as
             if fm_image:
                 portada_existe: bool = (current_folder / f"{base_name}_cover-1200.webp").exists()
                 if not portada_existe:
-                    res: Dict[str, Any] = await search_all_providers(session, base_name, content)
+                    res: Dict[str, Any] = await search_all_providers(session, fm_title, content, fm_tags)
                     if res["source"] == "local_gen":
                         img: Image.Image = generate_local_banner(res["title"], res["theme"])
                     else:
@@ -469,7 +499,7 @@ async def process_file(session: aiohttp.ClientSession, path: Path, semaphore: as
                     if full_local_path.exists() and full_local_path.is_file():
                         img = Image.open(full_local_path)
                     else:
-                        res = await search_all_providers(session, alt if alt.strip() else base_name, content)
+                        res = await search_all_providers(session, alt if alt.strip() else fm_title, content, fm_tags)
                         async with session.get(res["url"], headers={"User-Agent": "Mozilla"}, timeout=15) as r:
                             img = Image.open(BytesIO(await r.read())) if r.status == 200 else Image.new('RGB', (1200,630), "#0f141c")
 
@@ -498,11 +528,12 @@ async def process_file(session: aiohttp.ClientSession, path: Path, semaphore: as
         except Exception as e:
             print(f"❌ Error al procesar el archivo {path.name}: {e}")
 
-async def search_all_providers(session: aiohttp.ClientSession, query: str, content_snippet: str = "") -> Dict[str, Any]:
+async def search_all_providers(session: aiohttp.ClientSession, title: str, content_snippet: str = "", tags: Optional[List[str]] = None) -> Dict[str, Any]:
+    query: str = build_unsplash_query(title, tags or [], content_snippet)
     photo: Optional[Dict[str, Any]] = await search_unsplash(session, query)
     if photo: 
         return {"url": photo["urls"]["raw"], "source": "unsplash"}
-    return {"source": "local_gen", "title": query, "theme": get_gemini_tech_context(query, content_snippet)}
+    return {"source": "local_gen", "title": title, "theme": get_gemini_tech_context(title, content_snippet)}
 
 # ==============================================================================
 # ORQUESTADOR (BÚSQUEDA RECURSIVA CONTROLADA POR SEMÁFORO)
