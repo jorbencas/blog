@@ -16,6 +16,8 @@ When adding or changing a dependency:
 3. If changing a version: search for all references across the project, report findings, and summarize impact
 4. Wait for explicit confirmation before proceeding
 
+**New Astro/Svelte components**: before implementing a new component, review how existing ones are developed to follow the same pattern and maximize consistency. If there are doubts about the implementation, prepare a set of questions for the user before writing code.
+
 **Git**: NEVER run `git push`, `git pull` or `git fetch`. These must be done manually.
 
 ## Workflow
@@ -58,6 +60,60 @@ Schemas in `src/content.config.ts` using `astro/loaders` (glob) + `astro/zod`.
 - **CI**: GitHub Actions — image fixing on push to main (content changes), spelling check (LanguageTool, Spanish) on PRs to content, feedback wall issue handler.
 - **Tailwind v4**: `@apply` is NOT supported in component `<style>` blocks. Use plain CSS instead.
 - **Dark mode**: Always pair light/dark classes explicitly (e.g. `text-slate-900 dark:text-white`).
+
+## Design System — do not deviate from these patterns
+
+### Colors by card/section type
+- **Projects**: purple accent (`purple-500/50` border hover)
+- **Tools**: emerald accent (`emerald-500/50` border hover)
+- **Blog posts / Challenges / Retos**: cyan accent (`cyan-500/50`)
+- **Weekly**: cyan gradient glow (`hover:shadow-[0_0_40px_rgba(6,182,212,0.25)]`)
+- **Image overlays**: `opacity-70 → opacity-40`, image `opacity-80 → opacity-100`
+
+### Gradient badge (section headers h2/h3)
+- **h2**: `inline-flex items-center gap-2 bg-gradient-to-r from-sky-800 to-cyan-500 dark:from-sky-600 dark:to-cyan-400 px-5 py-2.5 text-xs sm:text-sm font-black uppercase tracking-[0.25em] text-white dark:text-slate-900 shadow-[4px_4px_0px_0px_rgba(6,182,212,0.3)]` — always use **inline-flex** so emoji+text stay on one line.
+- **h3**: same but smaller: `px-4 py-2 text-[10px] sm:text-xs`.
+
+### Resource cards (resources.mdx)
+- `rounded-xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-5 hover:shadow-xl hover:-translate-y-1 transition-all`
+- Favicon: `<img class="rounded bg-slate-100 dark:bg-slate-800 p-0.5 w-5 h-5" />`
+- Title: `font-bold text-slate-900 dark:text-white`
+- Description: `text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-snug`
+
+### Navigation links (link grid at top of resources.mdx)
+- `inline-flex items-center gap-2.5 px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-cyan-400 hover:shadow-lg hover:-translate-y-0.5 transition-all no-underline text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400`
+- Always `font-black uppercase tracking-wider`, 2-column grid on mobile, 4-column on md+.
+
+### Typography
+- **Body headings (prose)**: `uppercase italic tracking-tighter font-black` — applied globally via prose config in PostLayout.
+- **Navbar links**: `text-sm font-black uppercase tracking-[0.2em] italic`
+- **Body text**: `leading-[1.8]` in prose.
+- **Card titles**: `font-bold` (not `font-semibold` or `font-medium`).
+- **Numbers / counts**: cyan accent `text-cyan-600 dark:text-cyan-400`.
+
+### Icons / Emojis
+- Every section header starts with an emoji: 🔒 Hacking, 🎓 Certificaciones, 🤖 IA, etc.
+- Resource cards use favicons from Google S2 (`https://www.google.com/s2/favicons?domain=...`).
+- Navigation links use emojis.
+- Always place emoji first in the text, no extra space before it.
+
+### Cards with lists inside (grid of items)
+- Always use `not-prose` wrapper div to prevent prose list styling.
+- Grid: `grid grid-cols-1 sm:grid-cols-2 gap-4` for resource cards (2 columns on sm+, 1 on mobile).
+- For dense sections, `gap-3` instead of `gap-4`.
+
+### Prose overrides (PostLayout article)
+- Headings: `uppercase italic tracking-tighter font-black`
+- Links: `text-cyan-600 dark:text-cyan-400 no-underline hover:underline`
+- Strong: `text-cyan-600 dark:text-cyan-400`
+- Code: `text-cyan-700 dark:text-cyan-300`
+- Pre/code blocks: `border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-transparent rounded-lg`
+- Images: `shadow-2xl rounded-sm max-w-full h-auto`
+
+### Layout
+- Post pages: 12-column grid, `lg:col-span-8` main + `lg:col-span-4` sidebar (TOC).
+- Sidebar TOC: `hidden lg:block` on desktop, `lg:hidden` collapsible above article on mobile.
+- Max widths: `max-w-screen-xl` for post layout, `max-w-3xl` for description text.
 
 ## Notes
 - `image_cache.json` is auto-generated; treat as cache.

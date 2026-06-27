@@ -1,6 +1,6 @@
 # Contexto del proyecto — Blog
 
-**Última actualización**: 2026-06-27 (sesión: gitignore, vercelignore, reglas AGENTS.md unificadas)
+**Última actualización**: 2026-06-27 (sesión: fix navbar CSS, TOC móvil, colores resources, design system en AGENTS.md)
 **Stack**: Astro 6.4 + Svelte 5 + Tailwind CSS 4.3
 **Deploy**: Vercel (`blog-jorbencas.vercel.app`)
 **Idioma**: Español
@@ -34,10 +34,19 @@
 - **`.gitignore`**: añadidos `__pycache__/`, `*.pyc`, `.venv/`, `venv/`, `.env.local`, `.env.*.local`
 - **`.vercelignore`**: añadidos `tests/`, `node_modules/`, `.git/`, `.env`, `.env.production` (sin eliminar nada existente)
 
-### 7. AGENTS.md — reglas unificadas ✅
+### 7. AGENTS.md — reglas unificadas + design system ✅
 - Reglas de modificar/borrar archivos, carpetas y configs fusionadas en un solo bloque
 - Reglas de añadir dependencias (npm + Python) fusionadas en una sola
 - Nueva regla: nunca borrar carpetas sin explicación + confirmación
+- Nueva regla: investigar componentes existentes antes de crear uno nuevo
+- Añadida sección **Design System** completa: colores por tipo de card, patrones de badges, cards, nav links, tipografía, iconos, layout y prose overrides
+
+### 8. Fixes post-sesión ✅
+- **Navbar**: clases `peer-checked:[&>span]:rotate-45` movidas de atributos HTML separados a un solo `class` con template literal — arreglada "ventanita de CSS" en menú móvil
+- **Summary box resources.mdx**: `from-sky-50→from-sky-100`, `slate-750→slate-700`, borde `border-2`, `font-semibold` en descripción
+- **PostLayout description**: añadidos `px-5 sm:px-6 py-3 sm:py-4` + dark mode variants
+- **TOC móvil**: añadido `<TableOfContents headings={headings} />` dentro del article, visible solo en móvil (`lg:hidden`)
+- **pubDate resources.mdx**: restaurado a `"2025-04-01"` (era el original)
 
 ## Contenido
 
