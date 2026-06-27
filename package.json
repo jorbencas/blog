@@ -10,7 +10,7 @@
     "dev": "astro dev",
     "start": "astro dev",
     "cleaner": "rm -rf node_modules package-lock.json && npm cache clean --force && npm install --force",
-    "build": "astro build && npx pagefind --site dist && node -e \"const fs=require('fs');fs.rmSync('public/pagefind',{recursive:true,force:true});fs.cpSync('dist/pagefind','public/pagefind',{recursive:true});\"",
+    "build": "astro build && npx pagefind --site .vercel/output/static && node -e \"const fs=require('fs');const src='.vercel/output/static/pagefind';['dist/pagefind','public/pagefind'].forEach(d=>{fs.rmSync(d,{recursive:true,force:true});fs.cpSync(src,d,{recursive:true});});\"",
     "preview": "astro preview",
     "test": "playwright test",
     "test:build": "npm run build && playwright test",
