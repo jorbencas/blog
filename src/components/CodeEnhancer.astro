@@ -90,15 +90,32 @@
 
       const info = configLang[langKey] || { icon: "code", color: "64748b" };
 
-      // SVG inline con color del lenguaje — sin dependencia de CDN
-      const svgIcon = () => {
-        if (info.icon === "code") return `<span class="text-slate-400">⚡</span>`;
-        const darkClass = 'class="w-5 h-5 shrink-0"';
-        return `<svg width="20" height="20" viewBox="0 0 20 20" ${darkClass}><rect width="20" height="20" rx="4" fill="#${info.color}" opacity="0.8"/></svg>`;
+      // Icono: CDN simpleicons + fallback SVG si falla la red
+      const createIcon = () => {
+        if (info.icon === "code") return null;
+        const img = document.createElement("img");
+        img.src = `https://cdn.simpleicons.org/${info.icon}/${info.color}`;
+        img.className = "w-5 h-5 shrink-0";
+        img.alt = langKey;
+        img.onerror = function () {
+          const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+          svg.setAttribute("width", "20");
+          svg.setAttribute("height", "20");
+          svg.setAttribute("viewBox", "0 0 20 20");
+          svg.classList.add("w-5", "h-5", "shrink-0");
+          const r = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+          r.setAttribute("width", "20");
+          r.setAttribute("height", "20");
+          r.setAttribute("rx", "4");
+          r.setAttribute("fill", `#${info.color}`);
+          r.setAttribute("opacity", "0.8");
+          svg.appendChild(r);
+          this.replaceWith(svg);
+        };
+        return img;
       };
-      const imgHtml = svgIcon();
 
-      // 1. Crear el Wrapper (Adaptable a Temas)
+      // 1. Crear el Wrapper
       const wrapper = document.createElement("div");
       wrapper.className =
         "bloque-codigo-wrapper my-6 bg-white dark:bg-slate-900 shadow-sm border-2 border-slate-200 dark:border-slate-800 overflow-hidden transition-all rounded-xl";
@@ -109,14 +126,24 @@
         "flex justify-between items-center px-4 py-2 bg-slate-50 dark:bg-slate-800/40 border-b-2 border-slate-200 dark:border-slate-800";
 
       header.innerHTML = `
-        <div class="flex items-center gap-2">
-          ${imgHtml}
+        <div class="flex items-center gap-2 icon-area">
           <span class="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">${langKey}</span>
         </div>
         <button class="boton-copiar flex items-center gap-1.5 text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 transition-all text-xs font-black uppercase tracking-wider">
           <span class="copy-text">[ COPIAR ]</span>
         </button>
       `;
+
+      const iconEl = createIcon();
+      const iconArea = header.querySelector(".icon-area");
+      if (iconEl) {
+        iconArea.insertBefore(iconEl, iconArea.firstChild);
+      } else {
+        const fallback = document.createElement("span");
+        fallback.className = "text-slate-400";
+        fallback.textContent = "⚡";
+        iconArea.insertBefore(fallback, iconArea.firstChild);
+      }
 
       // 3. Estructura de contenido
       const divContenido = document.createElement("div");

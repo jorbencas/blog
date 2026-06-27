@@ -1,5 +1,13 @@
 # Blog — Agent Guide
 
+## Engineering Principles
+
+- **Clean & Readable**: Write code for humans first, computers second. Deep believer in KISS and SOLID.
+- **Automation First**: If a manual task has to be done more than thrice, it deserves a script or a GitHub Action.
+- **Architecture Mindset**: Focus on decoupled systems, scalability, and predictable state management.
+
+Apply these principles when writing code. First make it work correctly, then improve the design.
+
 ## ⚠️ Critical Rules (Priority Order)
 
 **Files, folders, and config files (`.gitignore`, `.vercelignore`)**
