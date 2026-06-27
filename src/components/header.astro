@@ -43,3 +43,33 @@ import ToggleButton from "./ToggleButton.astro";
     </div>
   </div>
 </header>
+
+<script>
+  (function() {
+    const header = document.currentScript.parentElement;
+    let lastScrollY = 0;
+    let ticking = false;
+
+    function handleScroll() {
+      const currentScrollY = window.scrollY;
+      if (window.innerWidth < 1024 && currentScrollY > 80) {
+        if (currentScrollY > lastScrollY) {
+          header.style.transform = "translateY(-100%)";
+        } else {
+          header.style.transform = "translateY(0)";
+        }
+      } else {
+        header.style.transform = "translateY(0)";
+      }
+      lastScrollY = currentScrollY;
+      ticking = false;
+    }
+
+    window.addEventListener("scroll", () => {
+      if (!ticking) {
+        requestAnimationFrame(handleScroll);
+        ticking = true;
+      }
+    });
+  })();
+</script>
