@@ -1,7 +1,8 @@
 import { createStaticServer } from "./server.mjs";
+import { fileURLToPath } from "node:url";
 
 const PORT = parseInt(process.argv[2] || "3457", 10);
-const DIST = new URL("../../dist/client", import.meta.url).pathname;
+const DIST = fileURLToPath(new URL("../../dist/client", import.meta.url));
 
 const server = createStaticServer(DIST, PORT);
 await server.start();

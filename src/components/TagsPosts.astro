@@ -1,25 +1,17 @@
 ---
-import tagsListation from "@data/tags.json";
-let tags = tagsListation;
 const { tagsList } = Astro.props;
-let tagsLists = JSON.parse(tagsList);
-tags = tagsLists.filter((tag) => {
-  tags.includes(tag.toLowerCase().trim());
-  return tag;
-});
+const tags = JSON.parse(tagsList);
 ---
 
 <ul class="flex flex-row flex-wrap justify-start space-x-2 w-full max-w-md">
   {
-    tags.flatMap((tag) => {
-      return (
-        <a
-          class="bg-gradient-to-r from-sky-800 to-cyan-600 px-3 py-1 text-xs font-black uppercase tracking-wider text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)] hover:scale-105 transition-transform cursor-default"
-          href={"/tags/" + tag + "/1"}
-        >
-          {tag}
-        </a>
-      );
-    })
+    tags.map((tag) => (
+      <a
+        class="bg-gradient-to-r from-sky-800 to-cyan-600 px-3 py-1 text-xs font-black uppercase tracking-wider text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)] hover:scale-105 transition-transform cursor-default"
+        href={"/tags/" + encodeURIComponent(tag) + "/1"}
+      >
+        {tag}
+      </a>
+    ))
   }
 </ul>

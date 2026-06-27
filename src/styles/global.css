@@ -86,9 +86,67 @@ details .details-content {
   font-style: var(--shiki-dark-font-style) !important;
 }
 
+article.prose {
+  overflow-wrap: break-word;
+}
 article.prose img {
   max-width: 100%;
   height: auto;
+}
+article.prose iframe,
+article.prose video,
+article.prose embed,
+article.prose object {
+  max-width: 100%;
+  height: auto;
+}
+article.prose pre {
+  overflow-x: auto;
+  white-space: pre;
+  word-wrap: normal;
+}
+article.prose table {
+  display: block;
+  overflow-x: auto;
+}
+article.prose p,
+article.prose li,
+article.prose blockquote,
+article.prose td,
+article.prose th {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* Responsive video wrapper for MDX embeds */
+.video-wrapper {
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%;
+  height: 0;
+  overflow: hidden;
+  max-width: 100%;
+}
+.video-wrapper iframe,
+.video-wrapper video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* Scrollbar para wrappers de código */
+.bloque-codigo-wrapper .overflow-x-auto::-webkit-scrollbar {
+  height: 4px;
+}
+.bloque-codigo-wrapper .overflow-x-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+.bloque-codigo-wrapper .overflow-x-auto::-webkit-scrollbar-thumb {
+  background: #06b6d4;
+  border-radius: 10px;
 }
 
 @media (max-width: 640px) {

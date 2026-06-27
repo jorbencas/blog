@@ -9,7 +9,7 @@ const currentPath = pathname.slice(1);
   <label
     for="menu-toggle"
     aria-label="Abrir menú"
-    class="fixed top-3 right-3 z-50 flex flex-col items-center justify-center h-10 w-10 gap-[5px] cursor-pointer select-none lg:hidden rounded-lg border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm
+    class="fixed top-3 right-3 z-50 flex flex-col items-center justify-center h-10 w-10 gap-[5px] cursor-pointer select-none lg:hidden rounded-lg border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm transition-all duration-300"
     peer-checked:[&>span:nth-child(1)]:rotate-45 peer-checked:[&>span:nth-child(1)]:translate-y-[7.5px]
     peer-checked:[&>span:nth-child(2)]:opacity-0 peer-checked:[&>span:nth-child(2)]:scale-x-0
     peer-checked:[&>span:nth-child(3)]:-rotate-45 peer-checked:[&>span:nth-child(3)]:-translate-y-[7.5px]"
@@ -119,9 +119,39 @@ const currentPath = pathname.slice(1);
 
 <script>
   const toggle = document.getElementById("menu-toggle");
+  const hamburger = document.querySelector('label[for="menu-toggle"]');
+
+  // Scroll hide/show for mobile hamburger
+  let lastScrollY = 0;
+  let ticking = false;
+
+  function handleScroll() {
+    const currentScrollY = window.scrollY;
+
+    if (window.innerWidth < 1024 && !toggle.checked) {
+      if (currentScrollY > lastScrollY && currentScrollY > 50) {
+        hamburger.classList.add("-translate-y-20", "opacity-0");
+      } else {
+        hamburger.classList.remove("-translate-y-20", "opacity-0");
+      }
+    }
+
+    lastScrollY = currentScrollY;
+    ticking = false;
+  }
+
+  window.addEventListener("scroll", () => {
+    if (!ticking) {
+      requestAnimationFrame(handleScroll);
+      ticking = true;
+    }
+  });
+
+  // Show hamburger when menu opens regardless of scroll
   if (toggle) {
     toggle.addEventListener("change", () => {
       if (toggle.checked) {
+        hamburger.classList.remove("-translate-y-20", "opacity-0");
         const scrollY = window.scrollY;
         document.body.dataset.scrollY = String(scrollY);
         document.body.style.position = "fixed";

@@ -62,7 +62,7 @@
 </style>
 
 <script>
-document.addEventListener("astro:page-load", async () => {
+const initSearch = async () => {
   const input = document.querySelector("#search-input");
   const container = document.querySelector("#search-results");
   let pagefind;
@@ -89,14 +89,7 @@ Buscando...
   };
 
   try {
-    await new Promise((resolve, reject) => {
-      const script = document.createElement("script");
-      script.src = "/pagefind/pagefind.js";
-      script.onload = resolve;
-      script.onerror = reject;
-      document.head.appendChild(script);
-    });
-    pagefind = window.pagefind;
+    pagefind = await import("/pagefind/pagefind.js");
     await pagefind.options({ highlightParam: "highlight" });
   } catch (e) {
     container.innerHTML = `
@@ -208,5 +201,8 @@ ${item.excerpt}
       }
     }
   });
-});
+};
+
+initSearch();
+document.addEventListener("astro:page-load", initSearch);
 </script>

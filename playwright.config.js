@@ -16,7 +16,7 @@ export default defineConfig({
   webServer: {
     command: "node tests/helpers/start-server.mjs 3457",
     port: 3457,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 10000,
   },
 });
