@@ -10,40 +10,79 @@ author: "Jorge Beneyto Castelló"
 
 # Guía de C# y .NET: De 0 a 100
 
-C# es el lenguaje principal de Microsoft, diseñado para la plataforma .NET moderna.
-
 ## 🛠️ Requisitos e Instalación
 
-1. Instalar el SDK de .NET desde dotnet.microsoft.com.
+**Todas las plataformas:** Descarga .NET SDK desde [dotnet.microsoft.com](https://dotnet.microsoft.com/download). Incluye runtime, compilador y CLI (`dotnet`).
+**Linux (apt):** `sudo apt install dotnet-sdk-8.0` — añade repo Microsoft primero.
+**Verificación:** `dotnet` y prueba con un `"Hola Mundo"`.
+**Herramientas recomendadas:** **Visual Studio** (Windows) o **VS Code** + C# Dev Kit. **NuGet** para paquetes. **dotnet format** para estilo.
 
 ## 🚀 Hola Mundo y Sintaxis Básica
 
-```csharp
-System.Console.WriteLine("Hola Mundo");
-```
+**Conceptos clave:**
 
-Similar a Java pero con características modernas como LINQ y async/await nativo.
+- **Programa Principal:** `Console.WriteLine("Hola Mundo");` — top-level statements desde C# 9 (sin `class Program`). Namespaces con `using System;`.
+- **Tipos y Records:** Primitivos: `int`, `long`, `double`, `decimal`, `bool`, `string`. `var` para inferencia. Nullable: `int? edad = null`. `record Persona(string Nombre, int Edad)`.
+- **LINQ:** `numeros.Where(n => n > 5).OrderBy(n => n).Select(n => n * 2)`. Sintaxis query: `from n in numeros where n > 5 select n`. Lazy evaluation.
+- **Async/Await:** `async Task<int> FetchAsync() { var data = await http.GetStringAsync(url); ... }`. `Task<T>` para operaciones asíncronas. Evita `.Result`.
+- **POO Moderno:** Propiedades: `public string Nombre { get; set; }`. Primary constructors (C# 12). Pattern matching: `if (p is Persona { Edad: >= 18 })`.
 
 ## 🏗️ Frameworks Populares
 
 ### ASP.NET Core
+**Instalación:** `dotnet new webapi -o MiApi`
+Framework web multiplataforma. Minimal APIs (C# 6+) y controladores. Incluye DI, middleware, autenticación y OpenAPI.
+```csharp
+var builder = WebApplication.CreateBuilder(args);
+var app = builder.Build();
 
-**Instalación:**
-```bash
-dotnet new webapi
+app.MapGet("/", () => "Hola Mundo");
+
+app.Run();
 ```
+### Entity Framework Core
+**Instalación:** `dotnet add package Microsoft.EntityFrameworkCore.Sqlite`
+ORM moderno. Code-first, migraciones, lazy loading. Soporta SQL Server, SQLite, PostgreSQL, MySQL.
+```csharp
+public class BlogContext : DbContext {
+    public DbSet<Post> Posts => Set<Post>();
+}
 
-**Estructura Principal:**
-Sistema de inyección de dependencias integrado y middleware HTTP.
+public record Post(int Id, string Titulo, string Contenido);
+```
 
 ## 📝 Ejercicios Prácticos
 
-1. **LINQ**: Realiza una consulta sobre una lista de objetos usando sintaxis fluida.
-2. **Enums**: Usa enumeraciones para definir estados de un pedido.
-3. **Dapper**: Acceso básico a base de datos usando este Micro-ORM.
+1. **LINQ** 🟢 `[Fácil]` — Filtra pares de una lista, ordénalos descendente, toma los 5 primeros. Hazlo con method y query syntax.
+2. **Minimal API** 🟡 `[Intermedio]` — CRUD de productos con endpoints GET/POST/PUT/DELETE usando List&lt;Producto&gt; estática.
+3. **Async I/O** 🟡 `[Intermedio]` — Lee archivo grande asincrónicamente con StreamReader, procesa línea por línea, escribe resultados.
+4. **EF Core + SQLite** 🔴 `[Avanzado]` — Configura BD SQLite con EF Core, migraciones, CRUD completo con ASP.NET Core.
+
+## ⚡ Buenas Prácticas y Complejidad
+
+**Buenas prácticas:**
+
+- Usa `record` para modelos de datos inmutables.
+- Prefiere `async Task` sobre `async void` (excepto event handlers).
+- Configura nullable reference types (`<Nullable>enable</Nullable>`) desde el inicio.
+- Usa `StringBuilder` para concatenaciones en bucles grandes.
+- Implementa `IEquatable<T>` para comparaciones personalizadas.
+
+**Complejidad algorítmica (Big O):**
+
+List&lt;T&gt;: acceso O(1), inserción O(n). Dictionary&lt;K,V&gt;: O(1) promedio. HashSet&lt;T&gt;: O(1). LINQ Where/Select: O(n). OrderBy: O(n log n). GroupBy: O(n).
 
 ## 📚 Recursos y Documentación
 
-- [Documentación Oficial](https://docs.microsoft.com/en-us/dotnet/csharp/)
-- [Repositorio en GitHub](https://github.com/dotnet/csharplang)
-- [Recurso Adicional](https://dotnet.microsoft.com/learn)
+- 📖 [Microsoft .NET Docs](https://learn.microsoft.com/en-us/dotnet/)
+- 📖 [ASP.NET Core Docs](https://learn.microsoft.com/en-us/aspnet/core/)
+- 📖 [C# en GitHub](https://github.com/dotnet/csharplang)
+- 📖 [.NET Blog](https://devblogs.microsoft.com/dotnet/)
+- 📖 [Entity Framework Docs](https://learn.microsoft.com/en-us/ef/)
+
+### 🏆 Retos Relacionados
+
+Pon a prueba lo aprendido con estos desafíos:
+- [Cifrado Cesar Basico](/retos/guia-cifrado-cesar-basico)
+- [El Contador De Pasos](/retos/guia-el-contador-de-pasos)
+- [Manejador De Contexto Files](/retos/guia-manejador-de-contexto-files)

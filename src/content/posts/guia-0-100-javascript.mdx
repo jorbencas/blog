@@ -10,45 +10,87 @@ author: "Jorge Beneyto Castelló"
 
 # Guía de JavaScript: De 0 a 100
 
-JavaScript es el lenguaje esencial para la interactividad en la web y mucho más con Node.js.
-
 ## 🛠️ Requisitos e Instalación
 
-1. Instalar Node.js desde nodejs.org.
-2. Incluir etiquetas \<script> en HTML o ejecutar archivos .js con `node`.
+**Windows/macOS:** Descarga [Node.js](https://nodejs.org/) (LTS). Incluye `npm`.
+**Linux:** `curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash - && sudo apt install nodejs`
+**Verificación:** `npm` y prueba con un `"Hola Mundo"`.
+**Herramientas recomendadas:** **npm** para paquetes, **npx** para ejecutar binarios. Alternativa: **bun** o **pnpm**. Editores: VSCode, WebStorm.
 
 ## 🚀 Hola Mundo y Sintaxis Básica
 
-```javascript
-console.log("Hola Mundo");
-```
+**Conceptos clave:**
 
-Sintaxis basada en C. Usa `let` y `const` para variables.
+- **Variables y Tipos:** `let` (mutable) y `const` (inmutable). Evita `var`. Primitivos: string, number, boolean, null, undefined, symbol, bigint. Usa `===` para comparación estricta.
+- **Funciones:** Función clásica: `function suma(a, b) { return a + b; }`. Arrow: `const suma = (a, b) => a + b;`. Las funciones son ciudadanos de primera clase.
+- **Objetos y Arrays:** Objetos: `const user = { nombre: "Ana", edad: 30 }`. Arrays: `const nums = [1, 2, 3]`. Métodos: `.map()`, `.filter()`, `.reduce()`. Spread: `[...arr]`, `{...obj}`.
+- **Asincronía:** Callbacks → Promesas (`fetch(url).then(r => r.json())`) → Async/await (`const data = await fetch(url)`). El event loop gestiona la concurrencia en un solo hilo.
+- **Módulos:** ES Modules: `export` / `import`. CommonJS (legacy Node): `module.exports` / `require()`. Usa ES modules en proyectos modernos (`"type": "module"` en package.json).
 
 ## 🏗️ Frameworks Populares
 
 ### React
+**Instalación:** `npx create-react-app mi-app  # o: npm create vite@latest mi-app -- --template react`
+Biblioteca para UI basada en componentes. Virtual DOM para renderizado eficiente. Hooks (`useState`, `useEffect`) para estado y efectos secundarios.
+```javascript
+function Saludo({ nombre }) {
+  return <h1>Hola, {nombre}!</h1>;
+}
 
-**Instalación:**
-```bash
-npx create-react-app my-app
+export default function App() {
+  return <Saludo nombre="Mundo" />;
+}
 ```
+### Express
+**Instalación:** `npm init -y && npm install express`
+Framework web minimalista para Node.js. Middleware-based, gran ecosistema. Alternativas modernas: Fastify, Hono.
+```javascript
+const express = require('express');
+const app = express();
 
-**Estructura Principal:**
-Arquitectura basada en componentes funcionales y Hooks.
+app.get('/', (req, res) => {
+  res.json({ mensaje: 'Hola Mundo' });
+});
+
+app.listen(3000);
+```
 
 ## 📝 Ejercicios Prácticos
 
-1. **Contador**: Haz un script que cuente hasta 100 en consola.
-2. **DOM**: Cambia el color de un botón al hacer click.
-3. **Fetch API**: Obtén datos de una API pública y muéstralos.
+1. **Contador interactivo** 🟢 `[Fácil]` — Crea un contador HTML+JS con botones +1, -1 y reset. Muestra el valor actualizado.
+2. **Lista de Tareas (Todo List)** 🟡 `[Intermedio]` — Añadir, completar y eliminar tareas. Persiste con localStorage.
+3. **API REST con Express** 🟡 `[Intermedio]` — CRUD de productos con Express. Usa un array en memoria.
+4. **Consumo de API** 🟡 `[Intermedio]` — Usa `fetch` para obtener datos de JSONPlaceholder/GitHub API. Muestra en tabla HTML.
+5. **Juego de Memoria** 🔴 `[Avanzado]` — Emparejar cartas en el navegador con HTML, CSS y JS vanilla. Temporizador y contador de movimientos.
 
-### 🏆 Retos Recomendados
-- [Reto Avanzado: Grafos (BFS/DFS)](/challenges/guia-plus-reto-avanzado-02-grafos-bfs-dfs)
-- [Reto Intermedio: Gestión de Inventario (OOP)](/challenges/guia-gestion-de-inventario-oop)
+## ⚡ Buenas Prácticas y Complejidad
+
+**Buenas prácticas:**
+
+- Usa `===` en lugar de `==` para comparaciones estrictas.
+- Mantén las funciones puras cuando sea posible (misma entrada → misma salida).
+- Usa `const` por defecto, `let` solo cuando necesites reasignar.
+- Evita modificar el DOM directamente — usa frameworks o `innerHTML` con precaución.
+- Usa `try/catch` con async/await para manejo de errores.
+- Implementa debounce/throttle para eventos frecuentes (scroll, input).
+
+**Complejidad algorítmica (Big O):**
+
+Arrays: acceso O(1), búsqueda O(n), push/pop O(1), shift/unshift O(n). Objetos/Map: O(1) promedio. `sort()` O(n log n).
 
 ## 📚 Recursos y Documentación
 
-- [Documentación Oficial](https://developer.mozilla.org/es/docs/Web/JavaScript)
-- [Repositorio en GitHub](https://github.com/v8/v8)
-- [Recurso Adicional](https://javascript.info/)
+- 📖 [MDN Web Docs — JavaScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+- 📖 [Node.js Documentación](https://nodejs.org/docs/latest/api/)
+- 🌐 [JavaScript Info](https://javascript.info/)
+- 📖 [React Documentación](https://react.dev/)
+- 📖 [V8 JavaScript Engine GitHub](https://github.com/v8/v8)
+
+### 🏆 Retos Relacionados
+
+Pon a prueba lo aprendido con estos desafíos:
+- [Analizador De Frecuencia](/retos/guia-analizador-de-frecuencia)
+- [Gestion De Inventario Oop](/retos/guia-gestion-de-inventario-oop)
+- [Plus Reto Avanzado 02 Grafos Bfs Dfs](/retos/guia-plus-reto-avanzado-02-grafos-bfs-dfs)
+- [Plus Reto Intermedio 02 Frecuencia De Elementos](/retos/guia-plus-reto-intermedio-02-frecuencia-de-elementos)
+- [Plus Reto Intermedio 14 Busqueda Lineal Optimizada](/retos/guia-plus-reto-intermedio-14-busqueda-lineal-optimizada)

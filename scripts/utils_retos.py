@@ -20,26 +20,26 @@ async def obtener_solucion_ia(titulo: str, fuente: str, client, lang: str = "Pyt
     NORMAS DE CÓDIGO:
     - Código COMPLETO y funcional, con imports al inicio y bloque `if __name__ == "__main__"` (si aplica)
     - Maneja edge cases: entrada vacía, tipos incorrectos, valores límite
-    - Comentarios breves solo en partes no obvias (no comentes cada línea)
+    - Incluye comentarios explicativos en las partes clave del código
     - Sin placeholders, sin TODOs, sin "..." — debe ejecutarse sin errores
 
-    NORMAS DE EXPLICACIÓN:
-    - Explica como si el lector supiera lo básico del lenguaje pero nunca hubiera visto este problema
-    - Paso 1: empieza con un ejemplo concreto entrada→salida, luego analiza restricciones
-    - Paso 2: explica el algoritmo y estructuras de datos usadas, por qué se eligieron
-    - Paso 3: optimizaciones viables, variantes, y en qué casos reales se aplica
+    NORMAS DE EXPLICACIÓN — EXTENSAS Y DETALLADAS:
+    - Explica como si el lector fuera un estudiante: con contexto, ejemplos prácticos y justificación de cada decisión técnica
+    - Paso 1: Análisis del problema — describe un ejemplo concreto entrada→salida, analiza restricciones, identifica edge cases y explica por qué el enfoque elegido es el adecuado (mínimo 800 caracteres)
+    - Paso 2: Implementación — desglosa el código paso a paso, explica cada estructura de datos y algoritmo por qué se eligió y cómo contribuye a la solución (mínimo 800 caracteres)
+    - Paso 3: Optimización y variantes — analiza complejidad temporal/espacial en detalle, propone variantes del algoritmo, menciona aplicaciones en proyectos reales y alternativas más avanzadas (mínimo 700 caracteres)
 
     RESPONDE EXCLUSIVAMENTE UN JSON VÁLIDO (sin markdown, sin comentarios):
     {{
-      "titulo": "Título del reto en español (max 80 chars)",
-      "descripcion": "Explicación clara: qué pide el problema + ejemplo entrada/salida (max 300 chars)",
-      "paso1": "Análisis: ejemplo concreto, restricciones, casos límite (max 500 chars)",
-      "paso2": "Implementación en {lang}: algoritmo, estructuras, por qué funcionan (max 500 chars)",
-      "paso3": "Optimizaciones, variantes, aplicaciones reales (max 400 chars)",
-      "big_o_time": "Big-O temporal (ej: O(n log n), O(n²))",
-      "big_o_space": "Big-O espacial (ej: O(n), O(1))",
-      "test_cases": "3 casos de prueba: entrada | salida_esperada (separados por ;)",
-      "codigo": "Código completo, ejecutable, con imports y ejemplo de uso al final",
+      "titulo": "Título del reto en español (max 100 chars)",
+      "descripcion": "Explicación detallada del problema con contexto, ejemplo de entrada/salida y casos de uso real (mínimo 500 caracteres, máximo 1200)",
+      "paso1": "Análisis exhaustivo: ejemplo concreto, desglose del problema, restricciones, edge cases (mínimo 800 caracteres, máximo 1800)",
+      "paso2": "Implementación detallada en {lang}: algoritmo explicado paso a paso, por qué se elige cada estructura, cómo maneja edge cases (mínimo 800 caracteres, máximo 1800)",
+      "paso3": "Optimizaciones, complejidad detallada, variantes del algoritmo y aplicaciones en el mundo real (mínimo 700 caracteres, máximo 1500)",
+      "big_o_time": "Big-O temporal detallado (ej: O(n log n) por el ordenamiento, O(n) para la búsqueda)",
+      "big_o_space": "Big-O espacial detallado (ej: O(n) por el almacenamiento del hash map)",
+      "test_cases": "4-5 casos de prueba: entrada | salida_esperada (separados por ;)",
+      "codigo": "Código completo, ejecutable, con imports, comentarios explicativos y ejemplo de uso al final",
       "dificultad": "Fácil | Intermedio | Difícil"
     }}
     """

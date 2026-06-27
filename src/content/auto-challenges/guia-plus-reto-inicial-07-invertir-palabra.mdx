@@ -1,27 +1,38 @@
 ---
 draft: false
-title: "Reto Inicial 07: Invertir Palabra"
+title: "🏆 RETO: Reto Inicial 07: Invertir Palabra"
 description: "Invierte una cadena de texto."
 pubDate: "2026-03-20"
-tags: ["python", "retos", "iniciación", "guia-plus"]
+tags: ["python", "retos", "iniciaci\u00f3n", "guia-plus"]
 slug: "guia-plus-reto-inicial-07-invertir-palabra"
 image: "img/guia_plus_reto_inicial_07_invertir_palabra_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 difficulty: "Iniciación"
 ---
 
-import Challenge from '../../components/Challenge.astro';
+import Challenge from '@components/Challenge.astro';
 
-# 🎯 Reto Inicial 07: Invertir Palabra
+# 🎯 Desafío: Reto Inicial 07: Invertir Palabra
 
 ### 📝 Descripción del Reto
-
-Invierte una cadena de texto.
+Dada una cadena de texto, devuélvela escrita al revés. Por ejemplo, si la entrada es "hola", la salida debe ser "aloh". Este problema clásico de manipulación de strings aparece constantemente en entrevistas técnicas y pruebas de lógica básica. Trabaja la comprensión de cómo los lenguajes manejan las cadenas como secuencias inmutables de caracteres y familiariza con los métodos de slicing y transformación de colecciones.
 
 <Challenge 
   nivel="Iniciación" 
   mision="Invierte una cadena de texto." 
 />
+
+---
+
+### 🧪 Casos de Prueba
+
+| Entrada | Salida esperada |
+|---------|-----------------|
+| `hola` | `aloh` |
+| `Python` | `nohtyP` |
+| `abcba` | `abcba` |
+| `` | `` |
+| `a` | `a` |
 
 ---
 
@@ -32,22 +43,26 @@ Invierte una cadena de texto.
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-
-Recorrer la cadena de atrás hacia adelante.
+**Análisis del problema:** Invertir una cadena significa recorrer sus caracteres en orden inverso. La mayoría de lenguajes ofrecen mecanismos nativos para esto. **Ejemplo concreto:** "Python" → [P,y,t,h,o,n] → inverso: [n,o,h,t,y,P] → "nohtyP". **Edge cases:** cadena vacía (debe devolver cadena vacía), palíndromo ("abcba" → "abcba", igual), un solo carácter ("a" → "a"), caracteres Unicode/emojis (importante usar métodos aware de Unicode, no bytes). **Restricciones:** algunas implementaciones pueden tener problemas con caracteres multi-byte (como emojis) si no se usa el método correcto.
 
 ### ⚙️ Paso 2: Implementación en Python
-
-Usar slicing s[::-1] en Python.
+**Implementación:** En Python, la forma más directa es `s[::-1]`, que usa slicing con paso negativo para recorrer la cadena de derecha a izquierda. Es concisa y eficiente. En lenguajes como JavaScript, se convierte a array con `split('')`, se invierte con `reverse()` y se vuelve a unir con `join('')`. En Go y otros lenguajes sin método nativo de inversión, se recorre la cadena desde ambos extremos intercambiando posiciones, que es más verboso pero igual de eficiente. **Enfoque manual:** Se puede hacer con un bucle que recorra desde el último índice hasta el primero, añadiendo cada carácter a una nueva cadena. Esto ayuda a entender el proceso subyacente aunque en producción se prefiera la versión nativa.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-O(n).
+**Complejidad temporal:** O(n)  
+**Complejidad espacial:** O(n)  
+
+**Complejidad:** O(n) tiempo y O(n) espacio, donde n es la longitud de la cadena. En Python, `s[::-1]` crea una nueva cadena en O(n). **Variantes:** 1) Invertir palabras de una frase sin invertir las palabras individuales. 2) Invertir solo vocales o solo consonantes. 3) Invertir bits de un número como variante bitwise. **Aplicaciones reales:** procesamiento de texto, algoritmos de compresión (LZW), verificación de palíndromos, procesamiento de ADN (las cadenas genéticas se leen en direcciones específicas), serialización y ordenamiento inverso de datos en sistemas.
 
 ### 💻 Código de la Solución (Python)
 
 ```python
-def sol(s): return s[::-1]
-print(sol('python'))
+def invertir(s):
+    return s[::-1]
+
+print(invertir('hola'))    # aloh
+print(invertir('Python'))  # nohtyP
 ```
 
 </div>

@@ -26,7 +26,11 @@ def clean_challenges(folder="./auto-challenges"):
     print(f"Limpiando {folder}...")
     if not os.path.exists(folder): return
 
-    archivos = [f for f in os.listdir(folder) if f.endswith(('.md', '.mdx'))]
+    archivos = sorted(
+        [f for f in os.listdir(folder) if f.endswith(('.md', '.mdx'))],
+        key=lambda f: os.path.getmtime(os.path.join(folder, f)),
+        reverse=True
+    )
     borrados = 0
     titulos_vistos = set()
 
@@ -79,6 +83,7 @@ async def generar_retos_ia_puros(client, folder):
             - El título debe ser descriptivo pero conciso (max 10 palabras)
             - Evita: "Calculadora de...", "Hola Mundo", ejercicios de clase repetidos
             - Prefiere: procesamiento de datos, APIs, automatización, parsing, optimización
+            - El reto debe ser sustancioso: con una descripción detallada del problema, múltiples casos de prueba y una solución bien explicada paso a paso
 
             Responde SOLO el título, sin explicaciones ni formato.
             """
@@ -154,27 +159,30 @@ async def solve_and_save(titulo, fuente, client, folder, difficulty_override=Non
         dificultad_blog = taxonomia.get(dificultad, "Intermedio")
         tags_seo = json.dumps([lang_id, 'retos', dificultad_blog.lower()])
 
+        def esc(s: str) -> str:
+            return s.replace('{', '&#123;').replace('}', '&#125;').replace('<', '&lt;').replace('>', '&gt;')
+
         try:
             test_cases = sol.get('test_cases', 'entrada_ejemplo | salida_ejemplo')
             tabla_casos = '\n'.join(
-                f'| `{c.split("|")[0].strip()}` | `{c.split("|")[1].strip()}` |'
+                f'| `{esc(c.split("|")[0].strip())}` | `{esc(c.split("|")[1].strip())}` |'
                 for c in test_cases.split(';') if '|' in c
             ) or '| `ejemplo` | `resultado` |'
 
             res = RETO_MD_TEMPLATE.format(
-                titulo=titulo_es.replace('"', "'"),
-                resumen_corto=sol.get('descripcion', '')[:140].replace('"', "'"),
+                titulo=esc(titulo_es.replace('"', "'")),
+                resumen_corto=esc(sol.get('descripcion', '')[:140].replace('"', "'")),
                 fecha_pub=datetime.now().strftime("%Y-%m-%d"),
                 slug_name=slug,
                 tags_seo=tags_seo,
-                descripcion_ia=sol.get('descripcion', ''),
+                descripcion_ia=esc(sol.get('descripcion', '')),
                 ruta_imagen=img_url,
                 dificultad=dificultad_blog,
-                paso_1=sol.get('paso1', ''),
-                paso_2=sol.get('paso2', ''),
-                paso_3=sol.get('paso3', ''),
-                big_o_time=sol.get('big_o_time', 'O(n)'),
-                big_o_space=sol.get('big_o_space', 'O(n)'),
+                paso_1=esc(sol.get('paso1', '')),
+                paso_2=esc(sol.get('paso2', '')),
+                paso_3=esc(sol.get('paso3', '')),
+                big_o_time=esc(sol.get('big_o_time', 'O(n)')),
+                big_o_space=esc(sol.get('big_o_space', 'O(n)')),
                 tabla_casos=tabla_casos,
                 lenguaje_lower=lang_id,
                 lenguaje_display=lang_display,
@@ -190,7 +198,8 @@ async def solve_and_save(titulo, fuente, client, folder, difficulty_override=Non
 
 
 async def hunt(offline=False):
-    folder = CONFIG.get("CHALLENGES_DIR", "../src/content/auto-challenges")
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    folder = os.path.join(base_dir, CONFIG.get("CHALLENGES_DIR", "../src/content/auto-challenges"))
     os.makedirs(folder, exist_ok=True)
 
     api_key = CONFIG.get("GEMINI_KEY")

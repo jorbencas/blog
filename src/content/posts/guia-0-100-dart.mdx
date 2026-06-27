@@ -10,42 +10,96 @@ author: "Jorge Beneyto Castelló"
 
 # Guía de Dart: De 0 a 100
 
-Dart es un lenguaje centrado en el cliente para aplicaciones rápidas en cualquier plataforma.
-
 ## 🛠️ Requisitos e Instalación
 
-1. Descargar el SDK de Dart desde dart.dev.
+**Todas las plataformas:** Descarga Dart SDK desde [dart.dev](https://dart.dev/get-dart). O instala Flutter (incluye Dart).
+**Windows/macOS/Linux:** Con Flutter: `git clone https://github.com/flutter/flutter.git -b stable && export PATH="$PATH:`pwd`/flutter/bin"`.
+**Verificación:** `--version` y prueba con un `"Hola Mundo"`.
+**Herramientas recomendadas:** **Flutter SDK** para desarrollo móvil. **DartPad** online. **VSCode** o **Android Studio** con extensiones Dart/Flutter.
 
 ## 🚀 Hola Mundo y Sintaxis Básica
 
-```dart
-void main() {
-  print("Hola Mundo");
-}
-```
+**Conceptos clave:**
 
-AOT y JIT. Soporta clases, mixins y tipado fuerte opcional.
+- **Variables y Tipos:** Tipado fuerte con inferencia: `var nombre = "Ana"`. `dynamic` desactiva verificación. `final` (una asignación) y `const` (compile-time). Null safety: `String?`.
+- **Funciones:** `int suma(int a, int b) => a + b;` (flecha para una línea). Parámetros posicionales `[]`, nombrados `{}`, y con `required`. Funciones como objetos.
+- **POO y Mixins:** Clases con constructor simplificado: `class Punto(this.x, this.y)`. Mixins con `mixin` y `with`. `extends`, `implements`, `with`. `@override` explícito.
+- **Async y Streams:** `Future<T>` para operaciones asíncronas. `async`/`await`. `Stream<T>` para flujos de datos. `await for` y `listen()`. `StreamController` para crear streams.
+- **Colecciones:** Listas: `[1, 2, 3]`. Maps: `{"key": value}`. Sets: `{1, 2, 3}`. Collection if/for: `[for (var i in items) i * 2]`. Spread: `[...list]`.
 
 ## 🏗️ Frameworks Populares
 
 ### Flutter
+**Instalación:** `flutter create mi_app`
+Framework de UI multiplataforma (iOS, Android, Web, Desktop). Todo son Widgets, hot reload, alto rendimiento (compila a nativo).
+```dart
+import 'package:flutter/material.dart';
 
-**Instalación:**
-```bash
-Descargar Flutter SDK
+void main() => runApp(const App());
+
+class App extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: Text('Hola Mundo'),
+        ),
+      ),
+    );
+  }
+}
 ```
+### Aqueduct (Server)
+**Instalación:** `dart create -t server-shelf mi_servidor  # o usa shelf directamente`
+Shelf es un middleware web para Dart. Aqueduct (ahora parte de conduit) fue el framework más popular para APIs backend en Dart.
+```dart
+import 'package:shelf/shelf.dart';
+import 'package:shelf/shelf_io.dart' as io;
 
-**Estructura Principal:**
-Usa Widgets para todo. Arquitectura reactiva y árbol de renderizado rápido.
+Response handler(Request req) {
+  return Response.ok('Hola Mundo');
+}
+
+void main() async {
+  var server = await io.serve(handler, 'localhost', 8080);
+  print('Servidor en ${server.address}:${server.port}');
+}
+```
 
 ## 📝 Ejercicios Prácticos
 
-1. **Asincronía**: Usa Future y await para simular una carga de datos.
-2. **Mixins**: Añade funcionalidad a una clase sin usar herencia múltiple.
-3. **Widget Básico**: Crea un botón personalizado en Flutter.
+1. **Null Safety** 🟢 `[Fácil]` — Función que recibe `int?` y devuelve su cuadrado (0 si null). Demuestra `??` y `?.`
+2. **Clases y Mixins** 🟢 `[Fácil]` — Define clase `Vehiculo` con mixin `Volador`. Crea `Avion` que herede ambos.
+3. **App Flutter básica** 🟡 `[Intermedio]` — Lista de tareas con Flutter: añadir, completar, eliminar. Usa StatefulWidget.
+4. **API con Shelf** 🟡 `[Intermedio]` — Servidor Shelf con rutas CRUD para productos. Almacenamiento en Map.
+
+## ⚡ Buenas Prácticas y Complejidad
+
+**Buenas prácticas:**
+
+- Habilita `strict-casts` y `strict-inference` en analysis_options.yaml.
+- Usa `const` constructor siempre que sea posible — mejora rendimiento.
+- Organiza widgets en archivos separados con responsabilidad única.
+- Usa `freezed` para data classes inmutables con copyWith.
+- Escribe tests con `flutter test` y paquete `mockito`.
+
+**Complejidad algorítmica (Big O):**
+
+Listas: acceso O(1), inserción O(n). Maps: O(1) promedio. Sets: O(1). Queues: add/remove O(1). `sort()` O(n log n). Dart compila a nativo (AOT) y a JS.
 
 ## 📚 Recursos y Documentación
 
-- [Documentación Oficial](https://dart.dev/guides)
-- [Repositorio en GitHub](https://github.com/dart-lang/sdk)
-- [Recurso Adicional](https://dartpad.dev/)
+- 📖 [Dart Documentación](https://dart.dev/guides)
+- 🔧 [DartPad](https://dartpad.dev/)
+- 📖 [Flutter Documentación](https://docs.flutter.dev/)
+- 📖 [Dart en GitHub](https://github.com/dart-lang)
+- 📖 [Dart API Reference](https://api.dart.dev/)
+
+### 🏆 Retos Relacionados
+
+Pon a prueba lo aprendido con estos desafíos:
+- [Conversion De Monedas](/retos/guia-conversion-de-monedas)
+- [Generador De Nicknames](/retos/guia-generador-de-nicknames)
+- [Patron Singleton Logger](/retos/guia-patron-singleton-logger)
+- [Tabla De Multiplicar](/retos/guia-tabla-de-multiplicar)

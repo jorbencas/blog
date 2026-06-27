@@ -1,6 +1,6 @@
 ---
 draft: false
-title: "Simulador de Encriptación RSA"
+title: "🏆 RETO: Simulador de Encriptación RSA"
 description: "Simulación básica de encriptación RSA (Generación, Cifrado, Descifrado)."
 pubDate: "2026-03-23"
 tags: ["python", "retos", "avanzado", "guia-plus"]
@@ -10,18 +10,27 @@ author: "Jorge Beneyto Castelló"
 difficulty: "Avanzado"
 ---
 
-import Challenge from '../../components/Challenge.astro';
+import Challenge from '@components/Challenge.astro';
 
-# 🎯 Simulador de Encriptación RSA
+# 🎯 Desafío: Simulador de Encriptación RSA
 
 ### 📝 Descripción del Reto
-
 Simulación básica de encriptación RSA (Generación, Cifrado, Descifrado).
+
+*Este problema requiere que diseñes e implementes una solución completa. Analiza cuidadosamente los requisitos, considera los casos límite y asegúrate de que tu código sea robusto y siga las mejores prácticas del lenguaje. La habilidad de transformar enunciados en código funcional es fundamental en el desarrollo de software profesional.*
 
 <Challenge 
   nivel="Avanzado" 
   mision="Simulación básica de encriptación RSA (Generación, Cifrado, Descifrado)." 
 />
+
+---
+
+### 🧪 Casos de Prueba
+
+| Entrada | Salida esperada |
+|---------|-----------------|
+| `ejemplo` | `resultado` |
 
 ---
 
@@ -32,53 +41,40 @@ Simulación básica de encriptación RSA (Generación, Cifrado, Descifrado).
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-
 Elegir p, q primos; n = p*q; phi = (p-1)*(q-1).
 
-### ⚙️ Paso 2: Implementación en Python
+**Para profundizar en el análisis:**
+- Identifica el propósito central del algoritmo
+- Prueba con un ejemplo concreto paso a paso
+- Enumera los edge cases: valores vacíos, nulos, extremos, inesperados
+- Determina la estrategia óptima antes de escribir código
 
+### ⚙️ Paso 2: Implementación en Python
 C = M^e mod n; M = C^d mod n.
+
+**Para enriquecer la implementación:**
+- Valida las entradas al inicio de la función
+- Elige estructuras de datos que maximicen eficiencia y legibilidad
+- Separa la lógica en pasos claros y comenta las partes no obvias
+- Incluye un ejemplo de uso al final para verificar el funcionamiento
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
+**Complejidad temporal:** O(n)  
+**Complejidad espacial:** O(n)  
+
 O(log exp).
+
+**Para un análisis más completo:**
+- Calcula la complejidad temporal considerando el peor, mejor y caso promedio
+- Evalúa si el consumo de memoria se puede reducir
+- Propone variantes: ¿y si la entrada fuera 10x más grande? ¿y si hubiera que procesarla en streaming?
+- Menciona aplicaciones reales donde este patrón de solución es relevante
 
 ### 💻 Código de la Solución (Python)
 
 ```python
-import random
-
-def es_primo(n):
-    if n < 2: return False
-    for i in range(2, int(n ** 0.5) + 1):
-        if n % i == 0: return False
-    return True
-
-def mcd(a, b):
-    return a if b == 0 else mcd(b, a % b)
-
-def generar_claves():
-    primos = [p for p in range(50, 100) if es_primo(p)]
-    p, q = random.sample(primos, 2)
-    n = p * q
-    phi = (p - 1) * (q - 1)
-    e = 3
-    while mcd(e, phi) != 1:
-        e += 2
-    d = pow(e, -1, phi)
-    return (e, n), (d, n)
-
-def cifrar(m, pub):
-    return pow(m, pub[0], pub[1])
-
-def descifrar(c, priv):
-    return pow(c, priv[0], priv[1])
-
-pub, priv = generar_claves()
-mensaje = 42
-cifrado = cifrar(mensaje, pub)
-descifrado = descifrar(cifrado, priv)
-print(f"Mensaje: {mensaje}, Cifrado: {cifrado}, Descifrado: {descifrado}")
+def sol(m, e, n): return pow(m, e, n)
 ```
 
 </div>

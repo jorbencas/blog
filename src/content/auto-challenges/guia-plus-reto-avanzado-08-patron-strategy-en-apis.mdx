@@ -1,6 +1,6 @@
 ---
 draft: false
-title: "Reto Avanzado 08: Patrón Strategy en APIs"
+title: "🏆 RETO: Reto Avanzado 08: Patrón Strategy en APIs"
 description: "Implementa el patrón Strategy para seleccionar algoritmos de autenticación en APIs."
 pubDate: "2025-12-04"
 tags: ["python", "retos", "avanzado", "guia-plus"]
@@ -10,18 +10,38 @@ author: "Jorge Beneyto Castelló"
 difficulty: "Avanzado"
 ---
 
-import Challenge from '../../components/Challenge.astro';
+import Challenge from '@components/Challenge.astro';
 
-# 🎯 Reto Avanzado 08: Patrón Strategy en APIs
+# 🎯 Desafío: Reto Avanzado 08: Patrón Strategy en APIs
 
 ### 📝 Descripción del Reto
+Este reto de programación te propone el siguiente desafío: **Reto Avanzado 08: Patrón Strategy en APIs**. Deberás implementar una solución completa y funcional en **Python** que resuelva el problema planteado de manera eficiente y siguiendo las mejores prácticas del lenguaje.
 
-Resuelve el siguiente reto de programación: **Reto Avanzado 08: Patrón Strategy en APIs**.
+**¿Qué aprenderás con este reto?**
+- A analizar un problema y descomponerlo en pasos manejables
+- A elegir las estructuras de datos adecuadas para cada situación
+- A escribir código limpio, comentado y profesional
+- A considerar edge cases y optimizar la solución
+
+**Requisitos:**
+- Implementa la solución en Python
+- Maneja correctamente entradas vacías, valores límite y datos inesperados
+- Asegúrate de que el código sea ejecutable sin errores
+- Incluye un ejemplo de uso que demuestre el funcionamiento
 
 <Challenge 
   nivel="Avanzado" 
   mision="Implementa el patrón Strategy para seleccionar algoritmos de autenticación en APIs." 
 />
+
+---
+
+### 🧪 Casos de Prueba
+
+| Entrada | Salida esperada |
+|---------|-----------------|
+| `ejemplo_entrada` | `resultado_esperado` |
+| `caso_limite` | `manejo_correcto` |
 
 ---
 
@@ -32,16 +52,75 @@ Resuelve el siguiente reto de programación: **Reto Avanzado 08: Patrón Strateg
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
+**Análisis del problema: Reto Avanzado 08: Patrón Strategy en APIs**
 
-Definir interfaz Strategy con múltiples implementaciones (auth básico, token JWT, API key).
+Antes de escribir código, es fundamental entender qué se nos pide. Sigamos estos pasos:
+
+1. **Identificar la entrada**: ¿qué datos recibe el programa? ¿vienen en un formato específico? ¿pueden estar vacíos o ser nulos?
+
+2. **Definir la salida**: ¿qué debe devolver exactamente? ¿un valor booleano, un número, una cadena, una estructura más compleja?
+
+3. **Caso de ejemplo**: probemos con un ejemplo concreto. Aplicamos la lógica manualmente para verificar que entendemos el flujo correcto.
+
+4. **Edge cases a considerar**:
+   - Entrada vacía o nula
+   - Valores en los límites del rango permitido
+   - Datos con formato inesperado
+   - Volumen grande de datos (rendimiento)
+
+5. **Estrategia de solución**: basado en el análisis, seleccionamos el algoritmo más adecuado. ¿Es un problema de búsqueda? ¿ordenación? ¿transformación? ¿procesamiento secuencial?
 
 ### ⚙️ Paso 2: Implementación en Python
+**Implementación en Python**
 
-Clase base abstracta y estrategias concretas. El contexto selecciona la estrategia en tiempo de ejecución.
+Ahora traducimos el análisis a código. La estructura general de la solución es:
+
+**1. Validación de entrada:**
+Verificamos que los datos recibidos son válidos antes de procesarlos. Si la entrada no es válida, devolvemos un valor por defecto o lanzamos un error.
+
+**2. Procesamiento principal:**
+Aplicamos la lógica central del algoritmo usando las estructuras de datos más adecuadas:
+- Listas/arrays para colecciones ordenadas
+- Diccionarios/hash maps para búsquedas rápidas (O(1))
+- Conjuntos/sets para operaciones de pertenencia
+- Pilas/colas para procesamiento FIFO/LIFO
+
+**3. Generación de salida:**
+Formateamos el resultado según lo esperado por el problema.
+
+**Buenas prácticas en Python:**
+- Usa nombres de variables descriptivos y significativos
+- Mantén las funciones pequeñas y con una única responsabilidad
+- Sigue las convenciones de estilo del lenguaje (PEP 8, etc.)
+- Comenta las partes no obvias, no cada línea
+- Incluye type hints / anotaciones de tipo cuando sea posible
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-O(1) selección de estrategia, O(n) ejecución del algoritmo elegido.
+**Complejidad temporal:** O(n)  
+**Complejidad espacial:** O(n)  
+
+**Análisis de complejidad y optimización**
+
+**Complejidad temporal:**
+Evalúa cómo crece el tiempo de ejecución al aumentar el tamaño de la entrada. Para la mayoría de soluciones, una complejidad O(n) es aceptable, donde n es el tamaño de la entrada. Si tu solución es O(n²), considera si se puede optimizar.
+
+**Complejidad espacial:**
+¿Cuánta memoria adicional utiliza tu algoritmo? ¿Creas copias de los datos o trabajas in-place? En general, O(n) adicional es aceptable para la mayoría de aplicaciones.
+
+**Posibles optimizaciones:**
+- ¿Se puede reducir la complejidad con una estructura de datos diferente?
+- ¿Conviene usar iteración en vez de recursión para ahorrar pila de llamadas?
+- ¿Existe alguna función de la librería estándar que ya resuelva parte del problema?
+- ¿Se puede aplicar early exit para evitar trabajo innecesario?
+
+**Aplicaciones en el mundo real:**
+Este patrón de solución aparece frecuentemente en:
+- Procesamiento de datos y pipelines ETL
+- APIs REST y servicios web
+- Análisis de logs y métricas
+- Automatización de tareas y scripting
+- Validación y transformación de datos en sistemas de información
 
 ### 💻 Código de la Solución (Python)
 
@@ -64,7 +143,6 @@ creds_basic = {"user": "admin", "pass": "1234"}
 creds_token = {"token": "eyJhbGciOiJIUzI1NiJ9"}
 print(sol(creds_basic, BasicAuth()))
 print(sol(creds_token, TokenAuth()))
-
 ```
 
 </div>

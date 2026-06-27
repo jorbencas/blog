@@ -1,0 +1,108 @@
+---
+draft: false
+title: "Guía de Markdown y MDX: De 0 a 100"
+description: "Domina la escritura de contenido con Markdown y MDX en Astro."
+pubDate: "2017-06-11"
+tags: ["markdown", "guia", "contenido"]
+image: "img/guia_0_100_markdown_cover-1200.webp"
+author: "Jorge Beneyto Castelló"
+---
+
+# Guía de Markdown y MDX: De 0 a 100
+
+## 🛠️ Requisitos e Instalación
+
+**Cero instalación:** Markdown se escribe en cualquier editor de texto. Usa VSCode, Sublime Text, o incluso Notepad.
+**Previsualización:** VSCode: `Ctrl+K V` abre vista previa. También: `npm install -g markdownlint-cli` para linting.
+**MDX en Astro:** Astro incluye soporte MDX nativo. Crea archivos `.mdx` en `src/content/` y se renderizan automáticamente como páginas.
+**Verificación:** `--version` y prueba con un `"Hola Mundo"`.
+**Herramientas recomendadas:** **VSCode** con extensiones: Markdown All in One, markdownlint, MDX. **Typora** (editor WYSIWYG). **mdx-js/mdx** compila MDX a JSX. **remark** y **rehype** para pipelines de transformación.
+
+## 🚀 Hola Mundo y Sintaxis Básica
+
+**Conceptos clave:**
+
+- **Encabezados:** `# H1`, `## H2`, `### H3` hasta `###### H6`. Usa un espacio después de `#`. En MDX, Astro extrae los headings para tablas de contenido automáticamente.
+- **Énfasis y Estilos:** `**negrita**` o `__negrita__`. `*cursiva*` o `_cursiva_`. `~~tachado~~`. `==resaltado==` (no universal). Combinables: `**texto *importante***`.
+- **Listas:** Ordenadas: `1. Item`, `2. Item`. No ordenadas: `- Item` o `* Item`. Anidadas con 2 espacios de indentación. Listas de tareas: `- [x] Hecho` y `- [ ] Pendiente`.
+- **Enlaces e Imágenes:** Enlaces: `[texto](url)` o `[texto][ref]` con referencia al pie. Imágenes: `![alt](url)`. En MDX puedes importar componentes como `Image` de Astro para optimización.
+- **Bloques de Código:** Inline con `` `código` ``. Bloque con triple backtick y lenguaje: ````js\nconsole.log('hola')\n`````. En MDX, los bloques de código se renderizan con syntax highlighting automático.
+- **Frontmatter:** Metadatos YAML entre `---`: título, descripción, fecha, tags. Astro los expone como `Astro.props` en layouts. En colecciones, se validan con esquemas Zod.
+
+## 🏗️ Frameworks Populares
+
+### MDX (mdx-js/mdx)
+**Instalación:** `Incluido en Astro via `@astrojs/mdx`. No requiere instalación adicional.`
+MDX permite importar y usar componentes JSX dentro de Markdown. Combina la facilidad de escritura de Markdown con el poder de los componentes de Astro/React/Svelte. Los archivos `.mdx` pueden incluir frontmatter, imports y expresiones JS.
+```markdown
+---
+title: Mi Post
+pubDate: 2024-01-01
+---
+
+import Componente from '../Componente.astro';
+
+# {frontmatter.title}
+
+Este es **Markdown** con componentes JSX embebidos.
+
+<Componente mensaje="Hola desde MDX" />
+
+- Los componentes importados se usan como etiquetas HTML
+- Las expresiones `{ }` ejecutan JavaScript
+- El frontmatter es opcional pero recomendado
+```
+### remark y rehype
+**Instalación:** `npm install remark-gfm rehype-pretty-code  # plugins para Astro MDX`
+remark procesa el AST de Markdown (transformaciones), rehype procesa el AST de HTML (renderizado). Plugins comunes: `remark-gfm` (tablas, tachado), `rehype-pretty-code` (syntax highlighting), `remark-math` (LaTeX).
+```markdown
+// astro.config.mjs
+import { defineConfig } from 'astro/config';
+import mdx from '@astrojs/mdx';
+import remarkGfm from 'remark-gfm';
+
+export default defineConfig({
+  integrations: [mdx()],
+  markdown: {
+    remarkPlugins: [remarkGfm],
+    rehypePlugins: [],
+  },
+});
+```
+
+## 📝 Ejercicios Prácticos
+
+1. **Post básico** 🟢 `[Fácil]` — Crea un archivo `.mdx` con frontmatter (título, fecha, tags), encabezados, listas, enlaces y un bloque de código. Visualízalo en Astro.
+2. **Tabla y GFM** 🟢 `[Fácil]` — Escribe un post con tabla, lista de tareas, footnote, y tachado. Verifica que `remark-gfm` está activado.
+3. **Componente embebido** 🟡 `[Intermedio]` — Crea un componente Astro `Cita.astro` que muestre una cita con autor. Impórtalo en un archivo MDX y pásale props.
+4. **Plugin remark personalizado** 🔴 `[Avanzado]` — Implementa un plugin remark que añada una nota al pie automática al final de cada post con la fecha de publicación.
+5. **Blog completo MDX** 🔴 `[Avanzado]` — Configura colecciones de contenido, schema Zod, layout tipográfico, y un listado con paginación. Mide tiempos de build.
+
+## ⚡ Buenas Prácticas y Complejidad
+
+**Buenas prácticas:**
+
+- Usa `---` para frontmatter, nunca para separadores horizontales dentro del contenido (confunde al parser).
+- Mantén una línea en blanco después de encabezados y antes de listas para evitar problemas de parseo.
+- Usa alt text descriptivo en imágenes (`![descripción](url)`) — mejora accesibilidad y SEO.
+- En MDX, evita `{` y `}` literales fuera de bloques de código — escápalos como `&#123;` y `&#125;`.
+- Configura `markdownlint` para mantener consistencia en equipos grandes.
+- Organiza los archivos MDX en colecciones con schemas Zod — validación automática y TypeScript.
+
+**Complejidad algorítmica (Big O):**
+
+El parseo de Markdown/MDX es O(n) respecto a la longitud del archivo. La compilación MDX añade overhead O(n) para transformar el AST a JSX. Los plugins remark/rehype pueden añadir complejidad adicional O(n log n) en el peor caso (transformaciones con búsquedas).
+
+## 📚 Recursos y Documentación
+
+- 📖 [Markdown Guide](https://www.markdownguide.org/)
+- 📖 [MDX Documentación](https://mdxjs.com/)
+- 📖 [remark plugins](https://github.com/remarkjs/remark/blob/main/doc/plugins.md)
+- 📖 [CommonMark Spec](https://spec.commonmark.org/)
+- 📖 [Astro MDX Integration](https://docs.astro.build/en/guides/integrations-guide/mdx/)
+
+### 🏆 Retos Relacionados
+
+Pon a prueba lo aprendido con estos desafíos:
+- [Plus Reto Intermedio 13 Contador De Palabras Unicas](/retos/guia-plus-reto-intermedio-13-contador-de-palabras-unicas)
+- [Plus Reto Intermedio 16 Normalizador De Titulos](/retos/guia-plus-reto-intermedio-16-normalizador-de-titulos)

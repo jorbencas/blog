@@ -10,45 +10,86 @@ author: "Jorge Beneyto Castelló"
 
 # Guía de TypeScript: De 0 a 100
 
-TypeScript añade tipado estático a JavaScript, permitiendo detectar errores antes de ejecutar el código.
-
 ## 🛠️ Requisitos e Instalación
 
-1. Instalar Node.js.
-2. Ejecutar `npm install -g typescript`.
-3. Compilar con `tsc`.
+**Global:** `npm install -g typescript` — instala el compilador `tsc` globalmente.
+**Proyecto:** `npm init -y && npm install --save-dev typescript @types/node && npx tsc --init`
+**Online:** [TypeScript Playground](https://www.typescriptlang.org/play/) para probar sin instalar.
+**Verificación:** `npm install -g typescript` y prueba con un `"Hola Mundo"`.
+**Herramientas recomendadas:** **tsconfig.json** controla la compilación. Opciones clave: `strict: true`, `target: ES2022`. VSCode tiene soporte nativo excelente.
 
 ## 🚀 Hola Mundo y Sintaxis Básica
 
-```typescript
-let msg: string = "Hola Mundo"; console.log(msg);
-```
+**Conceptos clave:**
 
-Define tipos con interfaces y tipos. Soporta clases modernas.
+- **Tipos Básicos:** `: string`, `: number`, `: boolean`. Arrays: `number[]` o `Array<number>`. Tuplas: `[string, number]`. `any` desactiva el chequeo (evítalo). `unknown` es seguro.
+- **Interfaces y Types:** `interface Usuario { nombre: string; edad?: number; }`. `type Id = string | number`. Prefiere `interface` para objetos extensibles, `type` para uniones.
+- **Funciones Tipadas:** `function suma(a: number, b: number): number { return a + b; }`. Parámetros opcionales con `?`. Sobrecarga con múltiples firmas.
+- **Genéricos:** `function identidad<T>(arg: T): T { return arg; }`. Restricciones: `<T extends Lengthwise>`. Permite código reusable tipo-seguro.
+- **Enums y Union Types:** `enum Color { Rojo, Verde, Azul }`. Union: `type Estado = "activo" | "inactivo"`. Discriminated unions para pattern matching con switch.
 
 ## 🏗️ Frameworks Populares
 
 ### NestJS
+**Instalación:** `npm i -g @nestjs/cli && nest new mi-app`
+Framework backend progresivo con arquitectura modular. Decoradores, DI, MVC. Soporta GraphQL, WebSockets y microservicios.
+```typescript
+import { Module, Controller, Get } from '@nestjs/common';
 
-**Instalación:**
-```bash
-npm i -g @nestjs/cli && nest new project-name
+@Controller('saludo')
+export class SaludoController {
+  @Get()
+  getSaludo(): { mensaje: string } {
+    return { mensaje: 'Hola Mundo' };
+  }
+}
 ```
+### Next.js
+**Instalación:** `npx create-next-app@latest mi-app`
+Framework React full-stack. SSR, SSG, ISR. App Router (sistema de archivos), Server Components, API routes integradas.
+```typescript
+export default function Home() {
+  return <h1>Hola Mundo</h1>;
+}
 
-**Estructura Principal:**
-Arquitectura modular inspirada en Angular (Módulos, Controladores, Servicios).
+export async function getServerSideProps() {
+  return { props: { data: 'desde el servidor' } };
+}
+```
 
 ## 📝 Ejercicios Prácticos
 
-1. **Interface**: Crea una interfaz de Usuario y una función que la use.
-2. **Generic**: Implementa una función genérica de identidad.
-3. **Decorator**: Usa un decorador simple para loguear llamadas a clases.
+1. **Interfaz de Usuario** 🟢 `[Fácil]` — Define `interface Usuario` con nombre, email, edad opcional y rol (enum). Función que valide los campos.
+2. **Función Genérica** 🟡 `[Intermedio]` — Implementa `agruparPor<T, K>(items: T[], key: (item: T) => K): Map<K, T[]>`.
+3. **API con NestJS** 🔴 `[Avanzado]` — CRUD de productos con DTOs, validación (`class-validator`) y servicio con DI.
+4. **Type Guard** 🟡 `[Intermedio]` — Type guard personalizado con discriminated unions para manejar diferentes formas de datos.
+5. **Decorator @LogTime** 🔴 `[Avanzado]` — Decorador de método que registre tiempo de ejecución de cualquier función decorada.
 
-### 🏆 Retos Recomendados
-- [Reto Avanzado: Optimización de Rutas (Greedy)](/challenges/guia-plus-reto-avanzado-03-optimizacion-de-rutas-greedy)
+## ⚡ Buenas Prácticas y Complejidad
+
+**Buenas prácticas:**
+
+- Activa `strict: true` en tsconfig.json desde el inicio.
+- Usa `unknown` en lugar de `any` — fuerza verificación antes de usar.
+- Define interfaces en archivos separados y expórtalas.
+- Usa `as const` para literales y `satisfies` para verificación sin ensanchar tipo.
+- No abuses de `as` (type assertion) — si lo usas mucho, el diseño de tipos puede estar mal.
+- Configura `noUnusedLocals` y `noUnusedParameters` para código limpio.
+
+**Complejidad algorítmica (Big O):**
+
+Al compilar a JS, la complejidad es la del JS generado. TypeScript no añade overhead runtime. El análisis de tipos ocurre en compilación (O(n) respecto al tamaño del código).
 
 ## 📚 Recursos y Documentación
 
-- [Documentación Oficial](https://www.typescriptlang.org/docs/)
-- [Repositorio en GitHub](https://github.com/microsoft/TypeScript)
-- [Recurso Adicional](https://www.typescriptlang.org/play)
+- 📖 [TypeScript Oficial](https://www.typescriptlang.org/)
+- 🔧 [TypeScript Playground](https://www.typescriptlang.org/play/)
+- 📖 [NestJS Documentación](https://docs.nestjs.com/)
+- 📖 [Next.js Documentación](https://nextjs.org/docs)
+- 📖 [TypeScript en GitHub](https://github.com/microsoft/TypeScript)
+
+### 🏆 Retos Relacionados
+
+Pon a prueba lo aprendido con estos desafíos:
+- [Plus Reto Avanzado 03 Optimizacion De Rutas Greedy](/retos/guia-plus-reto-avanzado-03-optimizacion-de-rutas-greedy)
+- [Plus Reto Intermedio 38 Validador De Isbn](/retos/guia-plus-reto-intermedio-38-validador-de-isbn)

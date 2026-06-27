@@ -8,14 +8,35 @@
 
 Apply these principles when writing code. First make it work correctly, then improve the design.
 
-## ⚠️ Critical Rules (Priority Order)
+## 🔴 CRITICAL RULES — Zero Tolerance (Priority Order)
 
-**Files, folders, and config files (`.gitignore`, `.vercelignore`)**
-Before modifying, adding entries to, or deleting any file, folder, or config file:
+### 🚫 ABSOLUTELY NEVER DELETE FILES WITHOUT EXPLICIT CONFIRMATION
+
+You MUST ask before running **ANY** command that modifies or removes files/folders:
+- `rm`, `rmdir`, `rm -rf`, `del`
+- `git rm` (even though allowed, still needs confirmation)
+- `mv` / `rename` (moving = removing from original location)
+- `cp` with `--remove-source-files`
+- Any script or tool call that deletes files
+
+The rule applies to **ALL** files regardless of type: generated, cached, snapshots, logs, temp, node_modules, build output, `.gitignore` entries, etc. There are no exceptions.
+
+**Mandatory workflow — every single time:**
+
+**Step 1 — STOP and EXPLAIN**: Say exactly which files/folders you want to delete, how many, their total size, and why.
+
+**Step 2 — EXPLAIN alternatives**: Mention if there is a better approach (e.g. adding to `.gitignore` instead of deleting, or keeping the folder structure and only deleting contents).
+
+**Step 3 — WAIT**: You MUST stop and wait for the user to explicitly say "yes" or "adelante" or equivalent. The user's silence is NOT consent. Do not proceed unless the user gives a clear affirmative answer.
+
+**Step 4 — EXECUTE**: Only after receiving explicit confirmation, run the command.
+
+### ⚠️ Other modification rules
+
+**Config files (`.gitignore`, `.vercelignore`, `astro.config.*`, etc.)**
+Before modifying:
 1. Explain exactly what you are going to do and why
-2. For deletions: explain why it and its contents should be removed
-3. Mention if there is a better alternative approach
-4. Wait for explicit user confirmation before proceeding
+2. Wait for explicit user confirmation before proceeding
 
 **Dependencies (npm, Python, or any tool)**
 When adding or changing a dependency:

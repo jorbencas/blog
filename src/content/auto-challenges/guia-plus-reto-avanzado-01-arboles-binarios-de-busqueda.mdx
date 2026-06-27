@@ -1,6 +1,6 @@
 ---
 draft: false
-title: "Reto Avanzado 01: Árboles Binarios de Búsqueda"
+title: "🏆 RETO: Reto Avanzado 01: Árboles Binarios de Búsqueda"
 description: "Implementa inserción y búsqueda en un ABB."
 pubDate: "2025-12-14"
 tags: ["python", "retos", "avanzado", "guia-plus"]
@@ -10,18 +10,27 @@ author: "Jorge Beneyto Castelló"
 difficulty: "Avanzado"
 ---
 
-import Challenge from '../../components/Challenge.astro';
+import Challenge from '@components/Challenge.astro';
 
-# 🎯 Reto Avanzado 01: Árboles Binarios de Búsqueda
+# 🎯 Desafío: Reto Avanzado 01: Árboles Binarios de Búsqueda
 
 ### 📝 Descripción del Reto
-
 Implementa inserción y búsqueda en un ABB.
+
+*Este problema requiere que diseñes e implementes una solución completa. Analiza cuidadosamente los requisitos, considera los casos límite y asegúrate de que tu código sea robusto y siga las mejores prácticas del lenguaje. La habilidad de transformar enunciados en código funcional es fundamental en el desarrollo de software profesional.*
 
 <Challenge 
   nivel="Avanzado" 
   mision="Implementa inserción y búsqueda en un ABB." 
 />
+
+---
+
+### 🧪 Casos de Prueba
+
+| Entrada | Salida esperada |
+|---------|-----------------|
+| `ejemplo` | `resultado` |
 
 ---
 
@@ -32,45 +41,46 @@ Implementa inserción y búsqueda en un ABB.
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-
 Nodos con left, right y val.
 
-### ⚙️ Paso 2: Implementación en Python
+**Para profundizar en el análisis:**
+- Identifica el propósito central del algoritmo
+- Prueba con un ejemplo concreto paso a paso
+- Enumera los edge cases: valores vacíos, nulos, extremos, inesperados
+- Determina la estrategia óptima antes de escribir código
 
+### ⚙️ Paso 2: Implementación en Python
 Insertar recurriendo por el lado menor o mayor.
+
+**Para enriquecer la implementación:**
+- Valida las entradas al inicio de la función
+- Elige estructuras de datos que maximicen eficiencia y legibilidad
+- Separa la lógica en pasos claros y comenta las partes no obvias
+- Incluye un ejemplo de uso al final para verificar el funcionamiento
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
+**Complejidad temporal:** O(n)  
+**Complejidad espacial:** O(n)  
+
 O(log n) promedio, O(n) peor caso.
+
+**Para un análisis más completo:**
+- Calcula la complejidad temporal considerando el peor, mejor y caso promedio
+- Evalúa si el consumo de memoria se puede reducir
+- Propone variantes: ¿y si la entrada fuera 10x más grande? ¿y si hubiera que procesarla en streaming?
+- Menciona aplicaciones reales donde este patrón de solución es relevante
 
 ### 💻 Código de la Solución (Python)
 
 ```python
 class Node:
-    def __init__(self, v):
-        self.val = v
-        self.izq = None
-        self.der = None
-
-def insertar(root, v):
-    if not root: return Node(v)
-    if v < root.val:
-        root.izq = insertar(root.izq, v)
-    else:
-        root.der = insertar(root.der, v)
-    return root
-
-def buscar(root, v):
-    if not root: return False
-    if root.val == v: return True
-    if v < root.val: return buscar(root.izq, v)
-    return buscar(root.der, v)
-
-root = None
-for v in [5, 3, 7, 2, 8]:
-    root = insertar(root, v)
-print(buscar(root, 7))
-print(buscar(root, 4))
+ def __init__(self,v): self.v=v; self.l=None; self.r=None
+def ins(root,v):
+ if not root: return Node(v)
+ if v<root.v: root.l=ins(root.l,v)
+ else: root.r=ins(root.r,v)
+ return root
 ```
 
 </div>

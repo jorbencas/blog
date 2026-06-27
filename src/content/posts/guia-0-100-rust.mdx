@@ -10,42 +10,90 @@ author: "Jorge Beneyto Castelló"
 
 # Guía de Rust: De 0 a 100
 
-Rust garantiza seguridad de memoria mediante su sistema de propiedad (ownership) y préstamo (borrowing).
-
 ## 🛠️ Requisitos e Instalación
 
-1. Usar rustup: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`.
+**Todas las plataformas:** `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh` — instala `rustup`, `rustc` y `cargo`.
+**Linux (apt):** `sudo apt install rustc cargo` (pero rustup es recomendado para versiones actualizadas).
+**Verificación:** `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh` y prueba con un `"Hola Mundo"`.
+**Herramientas recomendadas:** **Cargo** = gestor de paquetes y build. **rustfmt** para formateo. **Clippy** para lints. **rust-analyzer** para IDE (VSCode).
 
 ## 🚀 Hola Mundo y Sintaxis Básica
 
-```rust
-fn main() {
-    println!("Hola Mundo");
-}
-```
+**Conceptos clave:**
 
-Fuertemente tipado. Usa `match` para control de flujo exhaustivo.
+- **Ownership:** Cada valor tiene un único propietario. Al asignar: `let s2 = s1` — `s1` ya no es válido (move semantics). Para copiar: `.clone()`.
+- **Borrowing:** `&T` (referencia inmutable, múltiples) y `&mut T` (referencia mutable, solo una). El compilador garantiza que no haya data races.
+- **Lifetimes:** `<'a>` anota cuánto vive una referencia. Normalmente el compilador las infiere. Necesario cuando una función devuelve una referencia.
+- **Pattern Matching:** `match valor { 1 => "uno", _ => "otro" }`. `if let Some(val) = opt { ... }`. Exhaustividad verificada en compilación.
+- **Option y Result:** `Option<T>` (Some/None) y `Result<T, E>` (Ok/Err) — no hay null ni excepciones. `?` propaga errores automáticamente.
 
 ## 🏗️ Frameworks Populares
 
 ### Actix-Web
+**Instalación:** `Añade `actix-web = "4"` a Cargo.toml y ejecuta `cargo build``
+Framework web asíncrono de alto rendimiento. Basado en Tokio. Ideal para APIs REST eficientes.
+```rust
+use actix_web::{get, App, HttpResponse, HttpServer};
 
-**Instalación:**
-```bash
-cargo add actix-web
+#[get("/")]
+async fn index() -> HttpResponse {
+    HttpResponse::Ok().body("Hola Mundo")
+}
+
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    HttpServer::new(|| App::new().service(index))
+        .bind(("127.0.0.1", 8080))?
+        .run()
+        .await
+}
 ```
-
-**Estructura Principal:**
-Basado en actores y procesamiento asíncrono eficiente.
+### Tokio
+**Instalación:** ``cargo add tokio --features full` — o añade manualmente en Cargo.toml.`
+Runtime asíncrono para Rust. Proporciona I/O, temporizadores, canales y sincronización. Base de la mayoría de herramientas de red en Rust.
+```rust
+#[tokio::main]
+async fn main() {
+    let tarea = tokio::spawn(async {
+        println!("Hola desde tokio");
+    });
+    tarea.await.unwrap();
+}
+```
 
 ## 📝 Ejercicios Prácticos
 
-1. **Ownership**: Experimenta moviendo una variable de un scope a otro.
-2. **Error Handling**: Usa Result e Option para manejar un caso de error.
-3. **Calculadora CLI**: Lee de la entrada estándar y realiza operaciones básicas.
+1. **Ownership básico** 🟢 `[Fácil]` — Función que toma ownership de un String, lo modifica y lo devuelve. Demuestra move semantics.
+2. **CLI con Clap** 🟡 `[Intermedio]` — Herramienta tipo `wc` (líneas/palabras/caracteres). Usa `clap` para argumentos.
+3. **Servidor Actix-Web** 🔴 `[Avanzado]` — Endpoint que acepta JSON, lo valida con serde, lo almacena en HashMap con Arc&lt;Mutex&lt;&gt;&gt;.
+4. **Caché concurrente** 🔴 `[Avanzado]` — Sistema de caché con `tokio::sync::RwLock` que expire entradas. Usa `tokio::time::interval`.
+
+## ⚡ Buenas Prácticas y Complejidad
+
+**Buenas prácticas:**
+
+- Ejecuta `cargo clippy` regularmente — detecta anti-patrones.
+- Usa `cargo fmt` para formateo consistente.
+- Usa `Result` con `?` en lugar de `unwrap()` o `expect()`.
+- Mide rendimiento con `cargo bench` y `criterion`.
+- Organiza código en módulos con `mod` y `pub mod`.
+- Usa `#[derive(Debug, Clone, PartialEq)]` para tipos de datos simples.
+
+**Complejidad algorítmica (Big O):**
+
+Vec&lt;T&gt;: acceso O(1), push/pop O(1) amortizado, inserción O(n). HashMap: O(1) promedio. BTreeMap: O(log n). `sort()` O(n log n).
 
 ## 📚 Recursos y Documentación
 
-- [Documentación Oficial](https://doc.rust-lang.org/book/)
-- [Repositorio en GitHub](https://github.com/rust-lang/rust)
-- [Recurso Adicional](https://play.rust-lang.org/)
+- 📖 [The Rust Book](https://doc.rust-lang.org/book/)
+- 📖 [Rust by Example](https://doc.rust-lang.org/stable/rust-by-example/)
+- 🔧 [Rust Playground](https://play.rust-lang.org/)
+- 📖 [Rust en GitHub](https://github.com/rust-lang/rust)
+- 📖 [Actix-Web Docs](https://actix.rs/docs/)
+
+### 🏆 Retos Relacionados
+
+Pon a prueba lo aprendido con estos desafíos:
+- [Buscador De Minas Logica](/retos/guia-buscador-de-minas-logica)
+- [Detector De Palindromos](/retos/guia-detector-de-palindromos)
+- [Jwt Generator Manual](/retos/guia-jwt-generator-manual)

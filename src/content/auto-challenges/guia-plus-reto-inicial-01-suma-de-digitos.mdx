@@ -1,27 +1,38 @@
 ---
 draft: false
-title: "Reto Inicial 01: Suma de Dígitos"
+title: "🏆 RETO: Reto Inicial 01: Suma de Dígitos"
 description: "Suma los dígitos de un número entero positivo."
 pubDate: "2026-03-29"
-tags: ["python", "retos", "iniciación", "guia-plus"]
+tags: ["python", "retos", "iniciaci\u00f3n", "guia-plus"]
 slug: "guia-plus-reto-inicial-01-suma-de-digitos"
 image: "img/guia_plus_reto_inicial_01_suma_de_digitos_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 difficulty: "Iniciación"
 ---
 
-import Challenge from '../../components/Challenge.astro';
+import Challenge from '@components/Challenge.astro';
 
-# 🎯 Reto Inicial 01: Suma de Dígitos
+# 🎯 Desafío: Reto Inicial 01: Suma de Dígitos
 
 ### 📝 Descripción del Reto
-
-Suma los dígitos de un número entero positivo.
+Dado un número entero positivo, suma todos sus dígitos individuales. Por ejemplo, si el número es 1234 el resultado sería 1 + 2 + 3 + 4 = 10. Este ejercicio clásico de manipulación numérica te ayudará a practicar la conversión entre tipos de datos y el uso de operaciones aritméticas básicas. Es un problema fundamental que aparece en pruebas técnicas y entrevistas de nivel inicial, y sienta las bases para entender cómo descomponer números en sus componentes.
 
 <Challenge 
   nivel="Iniciación" 
   mision="Suma los dígitos de un número entero positivo." 
 />
+
+---
+
+### 🧪 Casos de Prueba
+
+| Entrada | Salida esperada |
+|---------|-----------------|
+| `1234` | `10` |
+| `9999` | `36` |
+| `0` | `0` |
+| `-1234` | `10` |
+| `100000` | `1` |
 
 ---
 
@@ -32,22 +43,26 @@ Suma los dígitos de un número entero positivo.
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-
-Convertir a cadena e iterar sumando los valores numéricos.
+**Análisis del problema:** Lo primero es entender cómo extraer dígitos individuales de un número entero. Tenemos dos enfoques principales: el enfoque aritmético (usando división y módulo entre 10 para extraer dígitos de derecha a izquierda) y el enfoque de cadenas (convertir el número a string e iterar sobre cada carácter). Para este problema, el enfoque de cadenas resulta más legible y directo. **Ejemplo concreto:** Con entrada 1234 → lo convertimos a "1234" → iteramos: 1+2+3+4 = 10. **Edge cases:** números negativos (usar valor absoluto), número 0 (resultado 0), números muy grandes (considerar límites de representación).
 
 ### ⚙️ Paso 2: Implementación en Python
-
-Usar sum() con generador para mayor brevedad.
+**Implementación paso a paso:** 1) Tomamos el valor absoluto del número para manejar entradas negativas con `abs(n)`. 2) Convertimos a string con `str()` para poder iterar dígito a dígito. 3) Usamos una expresión generadora con `int(d)` para convertir cada carácter a entero. 4) Sumamos todo con `sum()`. En otros lenguajes como JavaScript, el enfoque es similar: convertimos a string, dividimos en array con `split('')`, transformamos cada elemento a número con `map(Number)` y reducimos con `reduce()`. La clave es que todos los lenguajes modernos ofrecen herramientas para trabajar con colecciones que hacen este código conciso y expresivo.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-O(d) tiempo, O(d) espacio para la cadena.
+**Complejidad temporal:** O(log n)  
+**Complejidad espacial:** O(1)  
+
+**Complejidad:** O(log n) tiempo (o O(d) donde d es el número de dígitos, que es aproximadamente log₁₀(n)). O(1) espacio adicional si usamos el enfoque aritmético, O(d) si usamos cadenas. **Variantes:** 1) Versión aritmética pura con bucle `while n &gt; 0: suma += n % 10; n //= 10` — más eficiente en memoria. 2) Suma recursiva de dígitos hasta obtener un solo dígito (raíz digital). 3) Producto de dígitos en vez de suma. **Aplicaciones reales:** checksums simples, validación de números de tarjeta (Luhn), procesamiento de datos numéricos en ETL.
 
 ### 💻 Código de la Solución (Python)
 
 ```python
-def sol(n): return sum(int(d) for d in str(abs(n)))
-print(sol(1234))
+def suma_digitos(n):
+    return sum(int(d) for d in str(abs(n)))
+
+print(suma_digitos(1234))  # 10
+print(suma_digitos(9999))  # 36
 ```
 
 </div>

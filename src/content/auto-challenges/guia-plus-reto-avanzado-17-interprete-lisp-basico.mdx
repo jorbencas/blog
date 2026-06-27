@@ -1,6 +1,6 @@
 ---
 draft: false
-title: "Reto Avanzado 17: Intérprete LISP Básico"
+title: "🏆 RETO: Reto Avanzado 17: Intérprete LISP Básico"
 description: "Evalúa expresiones S-expressions básicas (+, -, *)."
 pubDate: "2025-11-20"
 tags: ["python", "retos", "avanzado", "guia-plus"]
@@ -10,18 +10,27 @@ author: "Jorge Beneyto Castelló"
 difficulty: "Avanzado"
 ---
 
-import Challenge from '../../components/Challenge.astro';
+import Challenge from '@components/Challenge.astro';
 
-# 🎯 Reto Avanzado 17: Intérprete LISP Básico
+# 🎯 Desafío: Reto Avanzado 17: Intérprete LISP Básico
 
 ### 📝 Descripción del Reto
-
 Evalúa expresiones S-expressions básicas (+, -, *).
+
+*Este problema requiere que diseñes e implementes una solución completa. Analiza cuidadosamente los requisitos, considera los casos límite y asegúrate de que tu código sea robusto y siga las mejores prácticas del lenguaje. La habilidad de transformar enunciados en código funcional es fundamental en el desarrollo de software profesional.*
 
 <Challenge 
   nivel="Avanzado" 
   mision="Evalúa expresiones S-expressions básicas (+, -, *)." 
 />
+
+---
+
+### 🧪 Casos de Prueba
+
+| Entrada | Salida esperada |
+|---------|-----------------|
+| `ejemplo` | `resultado` |
 
 ---
 
@@ -32,50 +41,44 @@ Evalúa expresiones S-expressions básicas (+, -, *).
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-
 Tokenizar y parsear recursivamente a listas anidadas.
 
-### ⚙️ Paso 2: Implementación en Python
+**Para profundizar en el análisis:**
+- Identifica el propósito central del algoritmo
+- Prueba con un ejemplo concreto paso a paso
+- Enumera los edge cases: valores vacíos, nulos, extremos, inesperados
+- Determina la estrategia óptima antes de escribir código
 
+### ⚙️ Paso 2: Implementación en Python
 Evaluar la lista según el primer elemento (operador).
+
+**Para enriquecer la implementación:**
+- Valida las entradas al inicio de la función
+- Elige estructuras de datos que maximicen eficiencia y legibilidad
+- Separa la lógica en pasos claros y comenta las partes no obvias
+- Incluye un ejemplo de uso al final para verificar el funcionamiento
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
+**Complejidad temporal:** O(n)  
+**Complejidad espacial:** O(n)  
+
 O(n).
+
+**Para un análisis más completo:**
+- Calcula la complejidad temporal considerando el peor, mejor y caso promedio
+- Evalúa si el consumo de memoria se puede reducir
+- Propone variantes: ¿y si la entrada fuera 10x más grande? ¿y si hubiera que procesarla en streaming?
+- Menciona aplicaciones reales donde este patrón de solución es relevante
 
 ### 💻 Código de la Solución (Python)
 
 ```python
-import re
-
-def tokenizar(s):
-    return re.findall(r'[+\-*()]|\d+', s)
-
-def parsear(toks):
-    t = toks.pop(0)
-    if t == '(':
-        op = toks.pop(0)
-        args = []
-        while toks[0] != ')':
-            args.append(parsear(toks))
-        toks.pop(0)
-        return [op] + args
-    return int(t)
-
-def evaluar(exp):
-    if isinstance(exp, int): return exp
-    op, *args = exp
-    vals = [evaluar(a) for a in args]
-    if op == '+': return sum(vals)
-    if op == '-': return vals[0] - sum(vals[1:])
-    if op == '*':
-        r = 1
-        for v in vals: r *= v
-        return r
-    raise ValueError(f"Operador '{op}' no soportado")
-
-expr = "(+ 1 (* 2 3))"
-print(evaluar(parsear(tokenizar(expr))))
+def eval_L(exp, env): 
+ if isinstance(exp, int): return exp
+ op, *args = exp; vals = [eval_L(a, env) for a in args]
+ if op == '+': return sum(vals)
+ return 0
 ```
 
 </div>

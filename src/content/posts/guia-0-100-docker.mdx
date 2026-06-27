@@ -1,0 +1,108 @@
+---
+draft: false
+title: "Guía de Docker: De 0 a 100"
+description: "Contenerización de aplicaciones desde cero hasta producción."
+pubDate: "2017-06-11"
+tags: ["docker", "guia", "devops"]
+image: "img/guia_0_100_docker_cover-1200.webp"
+author: "Jorge Beneyto Castelló"
+---
+
+# Guía de Docker: De 0 a 100
+
+## 🛠️ Requisitos e Instalación
+
+**Windows/macOS:** Descarga [Docker Desktop](https://www.docker.com/products/docker-desktop/). Incluye Docker Engine, CLI, Compose y una interfaz gráfica. Windows requiere WSL2.
+**Linux:** `sudo apt install docker.io docker-compose-v2 && sudo usermod -aG docker $USER` — añade tu usuario al grupo docker para evitar `sudo`. Luego cierra sesión y vuelve a entrar.
+**Verificación:** `docker --version && docker compose version`. Ejecuta `docker run hello-world` para verificar que todo funciona correctamente.
+**Verificación:** `--version` y prueba con un `"Hola Mundo"`.
+**Herramientas recomendadas:** **Docker CLI** para comandos. **Docker Desktop** UI. **Docker Hub** para imágenes públicas. **Portainer** para gestión web alternativa. **LazyDocker** para terminal TUI.
+
+## 🚀 Hola Mundo y Sintaxis Básica
+
+**Conceptos clave:**
+
+- **Dockerfile:** Archivo de instrucciones para construir una imagen. `FROM` define la imagen base. `COPY` copia archivos. `RUN` ejecuta comandos. `CMD` o `ENTRYPOINT` definen el comando por defecto. Cada instrucción crea una capa (layer) cacheable.
+- **Imágenes y Contenedores:** **Imagen**: plantilla inmutable con el sistema de archivos y configuración. **Contenedor**: instancia ejecutable de una imagen. `docker build -t nombre .` construye. `docker run nombre` ejecuta. `docker ps` lista contenedores activos.
+- **Volúmenes y Redes:** **Volúmenes**: `docker volume create datos` o `-v host:container` para persistir datos. **Redes**: `docker network create miapp` para comunicación entre contenedores. Bridge, host y overlay son los drivers principales.
+- **docker-compose.yml:** Define servicios, redes y volúmenes en YAML. `services:` lista los contenedores. Cada servicio tiene `image`, `build`, `ports`, `volumes`, `environment`, `depends_on`. Un solo comando: `docker compose up -d` levanta todo.
+- **Registro y Distribución:** `docker tag mi-app usuario/mi-app:latest` etiqueta. `docker push usuario/mi-app` sube a Docker Hub. `docker pull usuario/mi-app` descarga. Usa tags semánticos (`v1.0.0`, `latest`, `sha-...`) para versionado.
+
+## 🏗️ Frameworks Populares
+
+### Docker Compose
+**Instalación:** `Incluido en Docker Desktop. Linux: `sudo apt install docker-compose-v2`.`
+Herramienta para definir y ejecutar aplicaciones multi-contenedor. Un solo archivo `compose.yml` describe servicios, redes, volúmenes y dependencias. Comandos: `up -d` (iniciar), `down` (detener), `logs -f` (logs en vivo), `exec` (ejecutar comando en contenedor).
+```docker
+version: '3.8'
+services:
+  web:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - db
+  db:
+    image: postgres:16
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: secret
+volumes:
+  pgdata:
+```
+### Docker Swarm / Kubernetes
+**Instalación:** `Swarm: `docker swarm init` (incluido en Docker). K8s: `minikube start` o `kubectl`.`
+**Swarm**: orquestador nativo de Docker. Clúster de nodos, servicios con réplicas, redes overlay, balanceo de carga integrado. **Kubernetes**: estándar de la industria para orquestación. Minikube para desarrollo local, managed K8s (EKS, GKE, AKS) para producción.
+```docker
+# Swarm
+# docker swarm init
+docker service create --name web --replicas 3 -p 80:80 nginx
+
+# Kubernetes (minikube)
+kubectl create deployment web --image=nginx --replicas=3
+kubectl expose deployment web --port=80 --type=LoadBalancer
+```
+
+## 📝 Ejercicios Prácticos
+
+1. **Hola Mundo Docker** 🟢 `[Fácil]` — Crea un Dockerfile simple para una app Node.js/Express que sirva "Hola Mundo". Construye la imagen, ejecuta el contenedor y accede en localhost.
+2. **Multi-stage build** 🟡 `[Intermedio]` — Escribe un Dockerfile multi-etapa que compile una app Go o Rust en la primera etapa y copie solo el binario a la imagen final. Compara tamaños de imagen.
+3. **App con Compose** 🟡 `[Intermedio]` — Crea un `compose.yml` con un servicio web (Node.js/Python), una base de datos (PostgreSQL) y un caché (Redis). Usa volúmenes para persistencia y redes para comunicación.
+4. **CI/CD con Docker** 🔴 `[Avanzado]` — Configura un GitHub Action que construya la imagen Docker, la etiquete con el SHA del commit y la publique en Docker Hub al hacer push a main.
+5. **Cluster Swarm local** 🔴 `[Avanzado]` — Inicia un clúster Swarm con 3 nodos (1 manager + 2 workers) usando `docker swarm init` y `docker swarm join`. Despliega un servicio con réplicas.
+
+## ⚡ Buenas Prácticas y Complejidad
+
+**Buenas prácticas:**
+
+- Usa imágenes base oficiales y específicas (`python:3.12-slim` no `python:latest`).
+- Minimiza el número de capas combinando comandos `RUN` con `&&`.
+- Ordena las instrucciones de menos a más cambiantes para maximizar el cache de capas.
+- Nunca almacenes secrets en imágenes — usa variables de entorno o secret mounts.
+- Usa `.dockerignore` para excluir archivos innecesarios del contexto de build.
+- Ejecuta el contenedor como usuario no root (`USER appuser`) por seguridad.
+
+**Complejidad algorítmica (Big O):**
+
+El build de imágenes es O(n) donde n es el número de capas, pero el cache reduce drásticamente builds repetidos (O(1) si solo cambia la última capa). La ejecución de contenedores tiene overhead mínimo (~0%). Docker Compose añade complejidad O(s) para la resolución de dependencias entre servicios.
+
+## 📚 Recursos y Documentación
+
+- 📖 [Docker Documentación](https://docs.docker.com/)
+- 🔧 [Docker Hub](https://hub.docker.com/)
+- 📖 [Docker en GitHub](https://github.com/docker)
+- 🔧 [Play with Docker](https://labs.play-with-docker.com/)
+- 🌐 [Docker Curriculum](https://docker-curriculum.com/)
+
+### 🏆 Retos Relacionados
+
+Pon a prueba lo aprendido con estos desafíos:
+- [Consistencia De Base De Datos](/retos/guia-consistencia-de-base-de-datos)
+- [Plus Reto Avanzado 13 Balanceador De Carga Simulado](/retos/guia-plus-reto-avanzado-13-balanceador-de-carga-simulado)
+- [Plus Reto Avanzado 25 Orquestador De Microservicios](/retos/guia-plus-reto-avanzado-25-orquestador-de-microservicios)

@@ -10,50 +10,72 @@ author: "Jorge Beneyto Castelló"
 
 # Guía de Java: De 0 a 100
 
-Java es un lenguaje orientado a objetos, robusto y con un ecosistema gigante.
-
 ## 🛠️ Requisitos e Instalación
 
-1. Instalar JDK (OpenJDK recomendado).
-2. Configurar JAVA_HOME.
-3. Probar con `java -version`.
+**Todas las plataformas:** Descarga **Eclipse Temurin JDK 21 LTS** desde [adoptium.net](https://adoptium.net/). O desde [oracle.com](https://www.oracle.com/java/).
+**Linux (apt):** `sudo apt install openjdk-21-jdk` — instala OpenJDK desde repos oficiales.
+**Post-instalación:** Configura `JAVA_HOME` apuntando al directorio del JDK y añade `$JAVA_HOME/bin` al PATH.
+**Verificación:** `--version` y prueba con un `"Hola Mundo"`.
+**Herramientas recomendadas:** **Maven** (`mvn`) o **Gradle** para build y dependencias. IntelliJ IDEA (Community gratis) es el IDE más usado.
 
 ## 🚀 Hola Mundo y Sintaxis Básica
 
-```java
-public class Main {
-    public static void main(String[] args) {
-        System.out.println("Hola Mundo");
-    }
-}
-```
+**Conceptos clave:**
 
-Todo ocurre dentro de clases. Tipado estático y verboso.
+- **Clases y Métodos:** `public class Main { public static void main(String[] args) { ... } }`. PascalCase para clases, camelCase para métodos. El método `main` es el punto de entrada.
+- **Tipos de Datos:** Primitivos: `int`, `long`, `double`, `float`, `boolean`, `char`. Wrappers: `Integer`, `Double` con auto-boxing/unboxing desde Java 5.
+- **Control de Flujo:** `if-else`, `switch` (arrow syntax desde Java 14), `for` (clásico y enhanced), `while`. `switch` como expresión: `int d = switch(dia) { case "LUN" -> 1; ... };`
+- **POO:** Herencia con `extends`. Interfaces con `implements` (métodos default desde Java 8). Encapsulación con `private`/`public`/`protected`. Polimorfismo con overriding y overloading.
+- **Streams y Lambdas:** `list.stream().filter(x -> x > 5).map(String::valueOf).collect(Collectors.toList())`. `Optional<T>` evita NullPointerException. Programación funcional desde Java 8.
 
 ## 🏗️ Frameworks Populares
 
 ### Spring Boot
-
-**Instalación:**
-```bash
-Generar vía start.spring.io
+**Instalación:** `Usa [start.spring.io](https://start.spring.io/) o curl para generar el proyecto base.`
+Framework dominante en Java. Auto-configuración, DI, seguridad (Spring Security), datos (Spring Data JPA) y microservicios (Spring Cloud).
+```java
+@RestController
+@RequestMapping("/api")
+public class SaludoController {
+    @GetMapping("/saludo")
+    public String saludo() {
+        return "Hola Mundo";
+    }
+}
 ```
-
-**Estructura Principal:**
-Inyección de dependencias y configuración automática mediante anotaciones.
 
 ## 📝 Ejercicios Prácticos
 
-1. **POO**: Crea una clase Animal y una subclase Perro.
-2. **Streams API**: Filtra y mapea una lista de números usando Streams.
-3. **REST Controller**: Define un @RestController simple en Spring Boot.
+1. **POO Básica** 🟢 `[Fácil]` — Clase abstracta `Animal` con `hacerSonido()`. Extiende con `Perro` y `Gato`. Demuestra polimorfismo.
+2. **Streams API** 🟡 `[Intermedio]` — Dada una lista de empleados (nombre, departamento, salario), obtén el salario medio por departamento.
+3. **REST API con Spring Boot** 🟡 `[Intermedio]` — CRUD de tareas con endpoints GET, POST, PUT, DELETE. Almacena en memoria.
+4. **Concurrencia** 🔴 `[Avanzado]` — Productor-consumidor con `ExecutorService`, `BlockingQueue` y `Callable<V>`. Mide throughput.
 
-### 🏆 Retos Recomendados
-- [Reto Inicial: Lista de Compras](/challenges/guia-lista-de-compras)
-- [Reto Avanzado: Middleware de Seguridad](/challenges/guia-plus-reto-avanzado-06-middleware-de-seguridad)
+## ⚡ Buenas Prácticas y Complejidad
+
+**Buenas prácticas:**
+
+- Sigue convenciones Java: PascalCase para clases, camelCase para métodos, MAYUSCULAS para constantes.
+- Usa `Optional` para valores que pueden ser nulos.
+- Prefiere composición sobre herencia.
+- Usa `record` (Java 14+) para datos inmutables.
+- Usa try-with-resources para recursos autocerrables.
+- Escribe tests con JUnit 5 y Mockito.
+
+**Complejidad algorítmica (Big O):**
+
+ArrayList: acceso O(1), inserción/eliminación O(n). HashMap: O(1) promedio. TreeMap: O(log n). `Collections.sort()` (TimSort) O(n log n).
 
 ## 📚 Recursos y Documentación
 
-- [Documentación Oficial](https://docs.oracle.com/en/java/)
-- [Repositorio en GitHub](https://github.com/openjdk/jdk)
-- [Recurso Adicional](https://www.baeldung.com/)
+- 📖 [Java Documentación Oficial](https://docs.oracle.com/en/java/)
+- 📖 [OpenJDK GitHub](https://github.com/openjdk/jdk)
+- 🌐 [Baeldung — Tutoriales Java](https://www.baeldung.com/)
+- 📖 [Spring Boot Documentación](https://docs.spring.io/spring-boot/)
+- 🌐 [Dev.java](https://dev.java/)
+
+### 🏆 Retos Relacionados
+
+Pon a prueba lo aprendido con estos desafíos:
+- [Lista De Compras](/retos/guia-lista-de-compras)
+- [Plus Reto Avanzado 06 Middleware De Seguridad](/retos/guia-plus-reto-avanzado-06-middleware-de-seguridad)

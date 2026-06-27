@@ -1,6 +1,6 @@
 ---
 draft: false
-title: "Optimización de Consultas"
+title: "🏆 RETO: Optimización de Consultas"
 description: "Filtra registros por rango de valores simulando consultas optimizadas."
 pubDate: "2026-03-24"
 tags: ["python", "retos", "avanzado", "guia-plus"]
@@ -10,18 +10,38 @@ author: "Jorge Beneyto Castelló"
 difficulty: "Avanzado"
 ---
 
-import Challenge from '../../components/Challenge.astro';
+import Challenge from '@components/Challenge.astro';
 
-# 🎯 Optimización de Consultas
+# 🎯 Desafío: Optimización de Consultas
 
 ### 📝 Descripción del Reto
+Este reto de programación te propone el siguiente desafío: **Optimización de Consultas**. Deberás implementar una solución completa y funcional en **Python** que resuelva el problema planteado de manera eficiente y siguiendo las mejores prácticas del lenguaje.
 
-Resuelve el siguiente reto de programación: **Optimización de Consultas**.
+**¿Qué aprenderás con este reto?**
+- A analizar un problema y descomponerlo en pasos manejables
+- A elegir las estructuras de datos adecuadas para cada situación
+- A escribir código limpio, comentado y profesional
+- A considerar edge cases y optimizar la solución
+
+**Requisitos:**
+- Implementa la solución en Python
+- Maneja correctamente entradas vacías, valores límite y datos inesperados
+- Asegúrate de que el código sea ejecutable sin errores
+- Incluye un ejemplo de uso que demuestre el funcionamiento
 
 <Challenge 
   nivel="Avanzado" 
   mision="Filtra registros por rango de valores simulando consultas optimizadas." 
 />
+
+---
+
+### 🧪 Casos de Prueba
+
+| Entrada | Salida esperada |
+|---------|-----------------|
+| `ejemplo_entrada` | `resultado_esperado` |
+| `caso_limite` | `manejo_correcto` |
 
 ---
 
@@ -32,16 +52,75 @@ Resuelve el siguiente reto de programación: **Optimización de Consultas**.
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
+**Análisis del problema: Optimización de Consultas**
 
-Dada una lista de registros con id y valor, filtrar los que están dentro de un rango [min, max].
+Antes de escribir código, es fundamental entender qué se nos pide. Sigamos estos pasos:
+
+1. **Identificar la entrada**: ¿qué datos recibe el programa? ¿vienen en un formato específico? ¿pueden estar vacíos o ser nulos?
+
+2. **Definir la salida**: ¿qué debe devolver exactamente? ¿un valor booleano, un número, una cadena, una estructura más compleja?
+
+3. **Caso de ejemplo**: probemos con un ejemplo concreto. Aplicamos la lógica manualmente para verificar que entendemos el flujo correcto.
+
+4. **Edge cases a considerar**:
+   - Entrada vacía o nula
+   - Valores en los límites del rango permitido
+   - Datos con formato inesperado
+   - Volumen grande de datos (rendimiento)
+
+5. **Estrategia de solución**: basado en el análisis, seleccionamos el algoritmo más adecuado. ¿Es un problema de búsqueda? ¿ordenación? ¿transformación? ¿procesamiento secuencial?
 
 ### ⚙️ Paso 2: Implementación en Python
+**Implementación en Python**
 
-Recorrer la lista con una comprensión y aplicar el filtro por rango.
+Ahora traducimos el análisis a código. La estructura general de la solución es:
+
+**1. Validación de entrada:**
+Verificamos que los datos recibidos son válidos antes de procesarlos. Si la entrada no es válida, devolvemos un valor por defecto o lanzamos un error.
+
+**2. Procesamiento principal:**
+Aplicamos la lógica central del algoritmo usando las estructuras de datos más adecuadas:
+- Listas/arrays para colecciones ordenadas
+- Diccionarios/hash maps para búsquedas rápidas (O(1))
+- Conjuntos/sets para operaciones de pertenencia
+- Pilas/colas para procesamiento FIFO/LIFO
+
+**3. Generación de salida:**
+Formateamos el resultado según lo esperado por el problema.
+
+**Buenas prácticas en Python:**
+- Usa nombres de variables descriptivos y significativos
+- Mantén las funciones pequeñas y con una única responsabilidad
+- Sigue las convenciones de estilo del lenguaje (PEP 8, etc.)
+- Comenta las partes no obvias, no cada línea
+- Incluye type hints / anotaciones de tipo cuando sea posible
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-O(n) tiempo, O(k) espacio (k = resultados filtrados).
+**Complejidad temporal:** O(n)  
+**Complejidad espacial:** O(n)  
+
+**Análisis de complejidad y optimización**
+
+**Complejidad temporal:**
+Evalúa cómo crece el tiempo de ejecución al aumentar el tamaño de la entrada. Para la mayoría de soluciones, una complejidad O(n) es aceptable, donde n es el tamaño de la entrada. Si tu solución es O(n²), considera si se puede optimizar.
+
+**Complejidad espacial:**
+¿Cuánta memoria adicional utiliza tu algoritmo? ¿Creas copias de los datos o trabajas in-place? En general, O(n) adicional es aceptable para la mayoría de aplicaciones.
+
+**Posibles optimizaciones:**
+- ¿Se puede reducir la complejidad con una estructura de datos diferente?
+- ¿Conviene usar iteración en vez de recursión para ahorrar pila de llamadas?
+- ¿Existe alguna función de la librería estándar que ya resuelva parte del problema?
+- ¿Se puede aplicar early exit para evitar trabajo innecesario?
+
+**Aplicaciones en el mundo real:**
+Este patrón de solución aparece frecuentemente en:
+- Procesamiento de datos y pipelines ETL
+- APIs REST y servicios web
+- Análisis de logs y métricas
+- Automatización de tareas y scripting
+- Validación y transformación de datos en sistemas de información
 
 ### 💻 Código de la Solución (Python)
 
@@ -52,7 +131,6 @@ def sol(datos, min_v, max_v):
 datos = [{"id": i, "valor": i * 5} for i in range(200)]
 resultado = sol(datos, 50, 150)
 print(f"Registros en rango: {len(resultado)}")
-
 ```
 
 </div>

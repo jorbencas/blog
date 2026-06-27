@@ -10,41 +10,85 @@ author: "Jorge Beneyto Castelló"
 
 # Guía de PHP: De 0 a 100
 
-PHP es un lenguaje de script del lado del servidor diseñado para el desarrollo web.
-
 ## 🛠️ Requisitos e Instalación
 
-1. Instalar XAMPP o PHP directo en Linux.
-2. Probar con `php -v`.
+**Windows:** Usa [XAMPP](https://www.apachefriends.org/) (Apache + PHP + MySQL) o [Laragon](https://laragon.org/).
+**macOS:** `brew install php` — instala PHP 8.x con Homebrew. Servidor integrado: `php -S localhost:8000`.
+**Linux:** `sudo apt install php libapache2-mod-php php-mysql php-mbstring php-xml php-curl`
+**Verificación:** `--version` y prueba con un `"Hola Mundo"`.
+**Herramientas recomendadas:** **Composer** para dependencias. **Xdebug** para debugging. **PHPStan** o **Psalm** para análisis estático. VSCode + extensiones PHP.
 
 ## 🚀 Hola Mundo y Sintaxis Básica
 
-```php
-<?php echo "Hola Mundo"; ?>
-```
+**Conceptos clave:**
 
-Variables empiezan por `$`. Débilmente tipado (aunque moderno permite tipos).
+- **Variables y Tipos:** Variables con `$`: `$nombre = "Ana"`. Tipado gradual con PHP 7.4+ typed properties: `public string $nombre`. Union types (PHP 8.0): `int|string`.
+- **Arrays:** Indexados: `$nums = [1, 2, 3]`. Asociativos: `$user = ["nombre" => "Ana"]`. `array_map`, `array_filter`, `array_reduce`. Spread `...` para desempaquetar.
+- **POO:** Clases, interfaces, traits (PHP 5.4+), enums nativos (PHP 8.1+). Constructor promotion: `function __construct(public string $nombre) {}`. `match` expression.
+- **Namespaces y Autoload:** `namespace App\Models;`. Composer genera autoload PSR-4. Estándares PSR son fundamentales en el ecosistema.
 
 ## 🏗️ Frameworks Populares
 
 ### Laravel
+**Instalación:** `composer global require laravel/installer && laravel new mi-app`
+El framework PHP más popular. Eloquent ORM, Blade templating, Artisan CLI, migraciones, autenticación. MVC con convención sobre configuración.
+```php
+Route::get('/', function () {
+    return 'Hola Mundo';
+});
 
-**Instalación:**
-```bash
-composer global require laravel/installer
+Route::get('/saludo/{nombre}', function (string $nombre) {
+    return response()->json(['mensaje' => "Hola, $nombre"]);
+});
 ```
+### Symfony
+**Instalación:** `composer create-project symfony/skeleton mi-app`
+Framework empresarial con componentes reutilizables. Doctrine ORM, Twig templating, Messenger, API Platform.
+```php
+// config/routes.yaml
+index:
+    path: /
+    controller: App\Controller\SaludoController::index
 
-**Estructura Principal:**
-Patrón MVC elegante, Eloquent ORM y Blade como motor de plantillas.
+// src/Controller/SaludoController.php
+class SaludoController {
+    public function index(): Response {
+        return new Response('Hola Mundo');
+    }
+}
+```
 
 ## 📝 Ejercicios Prácticos
 
-1. **Array Map**: Aplica una función a todos los elementos de un array.
-2. **Formulario**: Recibe datos de un POST y muéstralos por pantalla.
-3. **Migrations**: Define una tabla simple en Laravel usando migraciones.
+1. **Array Functions** 🟢 `[Fácil]` — Filtra usuarios mayores de edad de un array, devuelve nombres ordenados.
+2. **Formulario POST** 🟢 `[Fácil]` — Formulario HTML → script PHP que valida campos y devuelve mensaje.
+3. **CRUD con Eloquent** 🟡 `[Intermedio]` — Modelo Producto con migración y seeder. Controlador RESTful en Laravel.
+4. **API con Slim** 🟡 `[Intermedio]` — API REST para blog con autenticación básica. Usa Slim Framework.
+
+## ⚡ Buenas Prácticas y Complejidad
+
+**Buenas prácticas:**
+
+- Usa type hints en funciones y métodos.
+- Sigue PSR-12 para estilo. Usa PHP_CodeSniffer o Laravel Pint.
+- Usa Composer para dependencias con PSR-4 autoloading.
+- Escapa salida con `htmlspecialchars()` — prevención XSS.
+- Usa prepared statements con PDO o Eloquent — nunca concatenes SQL.
+
+**Complejidad algorítmica (Big O):**
+
+Arrays en PHP son tablas hash internamente: acceso O(1), inserción O(1), búsqueda O(1) promedio. `array_search()` O(n). `sort()` O(n log n). `array_filter()` O(n).
 
 ## 📚 Recursos y Documentación
 
-- [Documentación Oficial](https://www.php.net/docs.php)
-- [Repositorio en GitHub](https://github.com/php/php-src)
-- [Recurso Adicional](https://laracasts.com/)
+- 📖 [PHP Manual](https://www.php.net/manual/en/)
+- 📖 [PHP en GitHub](https://github.com/php/php-src)
+- 📖 [Laravel Documentación](https://laravel.com/docs)
+- 🌐 [Laracasts](https://laracasts.com/)
+- 🌐 [PHP The Right Way](https://phptherightway.com/)
+
+### 🏆 Retos Relacionados
+
+Pon a prueba lo aprendido con estos desafíos:
+- [Plus Reto Intermedio 25 Simulacion De Red Ping](/retos/guia-plus-reto-intermedio-25-simulacion-de-red-ping)
+- [Lista De Compras](/retos/guia-lista-de-compras)

@@ -10,46 +10,94 @@ author: "Jorge Beneyto Castelló"
 
 # Guía de Ruby: De 0 a 100
 
-Ruby es un lenguaje dinámico y de código abierto enfocado en la simplicidad y la productividad.
-
 ## 🛠️ Requisitos e Instalación
 
-1. Usar rbenv o rvm para instalar Ruby.
-2. `ruby -v`.
+**Linux/macOS:** Usa **rbenv**: `git clone https://github.com/rbenv/rbenv.git ~/.rbenv && ~/.rbenv/bin/rbenv init`. O **RVM**: `curl -sSL https://get.rvm.io | bash`.
+**Windows:** [RubyInstaller](https://rubyinstaller.org/) — incluye Ruby, gems, y MSYS2.
+**Directo (Linux):** `sudo apt install ruby-full` — pero version manager es preferible.
+**Verificación:** `git clone https://github.com/rbenv/rbenv.git ~/.rbenv && ~/.rbenv/bin/rbenv init` y prueba con un `"Hola Mundo"`.
+**Herramientas recomendadas:** **Bundler** (`gem install bundler`) para dependencias. **RSpec** para tests. **rubocop** para linting. **pry** para debugging interactivo.
 
 ## 🚀 Hola Mundo y Sintaxis Básica
 
-```ruby
-puts "Hola Mundo"
-```
+**Conceptos clave:**
 
-Todo es un objeto. Bloques, procs y lambdas son muy comunes.
+- **Todo es Objeto:** `42.class` → Integer. `"hola".class` → String. No hay primitivos. `nil` es un objeto (NilClass).
+- **Métodos y Bloques:** `def saludar(nombre) "Hola, #{nombre}" end`. Bloques: `[1,2,3].each { |n| puts n }`. `yield` invoca un bloque desde un método.
+- **Símbolos y Strings:** Símbolos `:nombre` — inmutables, únicos, ideales para keys. Strings mutables. Interpolación: `"Hola #{nombre}"`.
+- **POO Dinámico:** Módulos como mixins (`include`, `extend`). `attr_accessor :nombre`. Duck typing. `method_missing` para delegación dinámica.
+- **Enumerable:** `.map`, `.select`, `.reduce`, `.any?`, `.all?`, `.group_by`. Rangos `(1..10)`. Blocks + enumerables = máximo poder expresivo.
 
 ## 🏗️ Frameworks Populares
 
 ### Ruby on Rails
+**Instalación:** `gem install rails && rails new mi_app`
+Framework full-stack que popularizó CoC. ActiveRecord ORM, Action Cable (WebSockets), Active Storage, testing integrado. Ideal para prototipado rápido.
+```ruby
+# config/routes.rb
+Rails.application.routes.draw do
+  root 'home#index'
+  get '/saludo/:nombre', to: 'home#saludo'
+end
 
-**Instalación:**
-```bash
-gem install rails
+# app/controllers/home_controller.rb
+class HomeController < ApplicationController
+  def index
+    render plain: 'Hola Mundo'
+  end
+  def saludo
+    render json: { mensaje: "Hola, #{params[:nombre]}" }
+  end
+end
 ```
+### Sinatra
+**Instalación:** `gem install sinatra`
+Microframework web minimalista. DSL elegante, perfecto para APIs pequeñas y prototipos.
+```ruby
+require 'sinatra'
 
-**Estructura Principal:**
-Filosofía 'Convención sobre Configuración' (CoC) y DRY.
+get '/' do
+  'Hola Mundo'
+end
+
+get '/saludo/:nombre' do
+  content_type :json
+  { mensaje: "Hola, #{params[:nombre]}" }.to_json
+end
+```
 
 ## 📝 Ejercicios Prácticos
 
-1. **Iterador**: Usa `.each` para recorrer una lista de nombres.
-2. **Clase Persona**: Crea una clase con atributos y un método de saludo.
-3. **Scaffold**: Genera un CRUD completo en Rails con un solo comando.
+1. **Enumerable** 🟢 `[Fácil]` — De un array de números, filtra pares, calcula cuadrado, suma resultado. Una línea con métodos Enumerable.
+2. **Mixins** 🟢 `[Fácil]` — Módulo `Loggable` que añada método `log` imprimiendo clase y timestamp.
+3. **API con Rails** 🟡 `[Intermedio]` — API REST para blog con ActiveRecord y serialización JSON.
+4. **CLI con OptionParser** 🟡 `[Intermedio]` — Herramienta CLI que lea archivos, procese texto y genere informes.
 
-### 🏆 Retos Recomendados
-- [Reto Inicial: Contador de Vocales](/challenges/guia-contador-de-vocales)
-- [Reto Intermedio: Ordenamiento por Burbuja](/challenges/guia-ordenamiento-por-burbuja)
-- [Reto Intermedio: Filtro de Spam](/challenges/guia-filtro-de-spam-por-keywords)
+## ⚡ Buenas Prácticas y Complejidad
+
+**Buenas prácticas:**
+
+- Sigue Ruby Style Guide. Usa RuboCop para verificación automática.
+- Prefiere bloques de una línea con `{}` y multínea con `do..end`.
+- Usa `symbol` en lugar de `string` para identificadores y keys de hash.
+- Escribe tests con RSpec — describe context it expect.
+- Usa `||=` para memoización: `@cache ||= compute_heavy`.
+
+**Complejidad algorítmica (Big O):**
+
+Arrays: acceso O(1), búsqueda O(n), push/pop O(1). Hashes: O(1) promedio. Enumerable#sort: O(n log n). Range#include?: O(1) para rangos numéricos.
 
 ## 📚 Recursos y Documentación
 
-- [Documentación Oficial](https://www.ruby-lang.org/en/documentation/)
-- [Repositorio en GitHub](https://github.com/ruby/ruby)
-- [Recurso Adicional](https://rubyonrails.org/)
+- 📖 [Ruby Lang](https://www.ruby-lang.org/)
+- 📖 [Ruby en GitHub](https://github.com/ruby/ruby)
+- 📖 [Ruby on Rails](https://rubyonrails.org/)
+- 📖 [Ruby Docs](https://ruby-doc.org/)
+- 🌐 [Ruby Guides](https://www.rubyguides.com/)
+
+### 🏆 Retos Relacionados
+
+Pon a prueba lo aprendido con estos desafíos:
+- [Contador De Vocales](/retos/guia-contador-de-vocales)
+- [Filtro De Spam Por Keywords](/retos/guia-filtro-de-spam-por-keywords)
+- [Ordenamiento Por Burbuja](/retos/guia-ordenamiento-por-burbuja)

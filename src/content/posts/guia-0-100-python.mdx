@@ -10,42 +10,85 @@ author: "Jorge Beneyto Castelló"
 
 # Guía de Python: De 0 a 100
 
-Python es un lenguaje versátil, fácil de leer y potente, ideal para ciencia de datos y web.
-
 ## 🛠️ Requisitos e Instalación
 
-1. Descarga desde python.org.
-2. Instala usando el instalador oficial.
-3. Verifica con `python --version`.
+**Windows:** Descarga el instalador desde [python.org](https://python.org). **Marca "Add Python to PATH"** durante la instalación.
+**macOS:** Usa Homebrew: `brew install python3`. Verifica con `python3 --version`.
+**Linux:** `sudo apt update && sudo apt install python3 python3-pip python3-venv` (Debian/Ubuntu) o `sudo dnf install python3` (Fedora).
+**Verificación:** `--version` y prueba con un `"Hola Mundo"`.
+**Herramientas recomendadas:** **pip** para paquetes, **venv** para entornos virtuales. IDE: VSCode + extensión Python, o PyCharm.
 
 ## 🚀 Hola Mundo y Sintaxis Básica
 
-```python
-print("Hola Mundo")
-```
+**Conceptos clave:**
 
-Usa indentación para bloques. Tipado dinámico pero fuerte.
+- **Variables y Tipos:** Tipado dinámico: `nombre = "Ana"`, `edad = 30`. Tipos: `int`, `float`, `str`, `bool`, `list`, `dict`. Usa `type()` para inspeccionar.
+- **Condicionales y Bucles:** `if edad >= 18: ...` sin paréntesis obligatorios. `for x in iterable:` para recorrer. `while cond:` para bucles condicionales. `range(n)` genera secuencias.
+- **Funciones:** `def suma(a, b): return a + b`. Parámetros por defecto, `*args`/`**kwargs`. Type hints opcionales desde PEP 484. Puede devolver múltiples valores.
+- **Estructuras de Datos:** Listas mutables con `append()`, `pop()`, slicing. Diccionarios `{clave: valor}` con acceso O(1). Tuplas inmutables. Sets `{1, 2, 3}` sin duplicados.
+- **POO:** `class Nombre:` con `__init__` como constructor. `self` es explícito. Herencia: `class Hijo(Padre)`. Métodos mágicos: `__str__`, `__len__`, `__eq__`.
 
 ## 🏗️ Frameworks Populares
 
 ### FastAPI
+**Instalación:** `pip install fastapi uvicorn`
+Framework moderno con validación automática basada en type hints. Soporta async, OpenAPI automático y docs interactivos en `/docs`.
+```python
+from fastapi import FastAPI
 
-**Instalación:**
-```bash
-pip install fastapi uvicorn
+app = FastAPI()
+
+@app.get("/")
+def raiz():
+    return {"mensaje": "Hola Mundo"}
 ```
+### Django
+**Instalación:** `pip install django`
+Framework full-stack con ORM, admin panel, autenticación y más. Sigue MTV (Model-Template-View). Ideal para apps completas con base de datos.
+```python
+# django-admin startproject mysite
+# python manage.py runserver
+from django.http import HttpResponse
 
-**Estructura Principal:**
-Usa decoradores para rutas. Soporta tipado de Python para validación automática.
+def home(request):
+    return HttpResponse("Hola Mundo")
+```
 
 ## 📝 Ejercicios Prácticos
 
-1. **Calculadora**: Crea una función que sume dos números.
-2. **Web API**: Un endpoint simple con FastAPI que retorne un JSON.
-3. **Scraper**: Usa requests para obtener el HTML de una web.
+1. **Calculadora con errores** 🟢 `[Fácil]` — Función que reciba dos números y un operador (+, -, *, /). Maneja división entre cero y operandos no numéricos.
+2. **Gestor de Tareas CLI** 🟡 `[Intermedio]` — Añadir, listar, completar y eliminar tareas desde terminal. Persistencia con archivo JSON.
+3. **API con FastAPI** 🟡 `[Intermedio]` — Endpoint GET `/saludo/{nombre}` que devuelva JSON. Valida que nombre contenga solo letras.
+4. **Web Scraper** 🔴 `[Avanzado]` — Usa `requests` y `BeautifulSoup` para extraer titulares de un sitio de noticias. Guarda en CSV.
+5. **Analizador de frecuencia léxica** 🟡 `[Intermedio]` — Lee un archivo, cuenta frecuencia de cada palabra, muestra las 10 más comunes ignorando puntuación.
+
+## ⚡ Buenas Prácticas y Complejidad
+
+**Buenas prácticas:**
+
+- Sigue PEP 8 — usa `ruff` o `black` para formateo automático.
+- Usa `is` para comparar con `None`, no `==`.
+- Prefiere `pathlib.Path` sobre `os.path`.
+- Usa `with` para manejar recursos (archivos, conexiones).
+- Escribe type hints — permiten verificación estática con `mypy`.
+- Usa comprensiones de listas y generadores para código conciso.
+
+**Complejidad algorítmica (Big O):**
+
+Listas: acceso O(1), búsqueda O(n), inserción O(n). Diccionarios: O(1) promedio para inserciones y búsquedas. `sorted()` es O(n log n).
 
 ## 📚 Recursos y Documentación
 
-- [Documentación Oficial](https://docs.python.org/3/)
-- [Repositorio en GitHub](https://github.com/python/cpython)
-- [Recurso Adicional](https://realpython.com/)
+- 📖 [Documentación Oficial](https://docs.python.org/3/)
+- 📖 [Python en GitHub](https://github.com/python/cpython)
+- 🌐 [Real Python](https://realpython.com/)
+- 🔧 [PyPI — Índice de Paquetes](https://pypi.org/)
+
+### 🏆 Retos Relacionados
+
+Pon a prueba lo aprendido con estos desafíos:
+- [Plus Reto Inicial 06 Par O Impar](/retos/guia-plus-reto-inicial-06-par-o-impar)
+- [Fibonacci Recursivo](/retos/guia-fibonacci-recursivo)
+- [Plus Reto Intermedio 05 Generador De Contrasenas](/retos/guia-plus-reto-intermedio-05-generador-de-contrasenas)
+- [Plus Reto Intermedio 13 Contador De Palabras Unicas](/retos/guia-plus-reto-intermedio-13-contador-de-palabras-unicas)
+- [Plus Reto Avanzado 05 Asyncio Para Scrapers](/retos/guia-plus-reto-avanzado-05-asyncio-para-scrapers)

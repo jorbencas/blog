@@ -1,6 +1,6 @@
 ---
 draft: false
-title: "Buscador con Autocompletado"
+title: "🏆 RETO: Buscador con Autocompletado"
 description: "Implementa un buscador con autocompletado usando un Trie."
 pubDate: "2026-03-22"
 tags: ["python", "retos", "avanzado", "guia-plus"]
@@ -10,18 +10,27 @@ author: "Jorge Beneyto Castelló"
 difficulty: "Avanzado"
 ---
 
-import Challenge from '../../components/Challenge.astro';
+import Challenge from '@components/Challenge.astro';
 
-# 🎯 Buscador con Autocompletado
+# 🎯 Desafío: Buscador con Autocompletado
 
 ### 📝 Descripción del Reto
-
 Implementa un buscador con autocompletado usando un Trie.
+
+*Este problema requiere que diseñes e implementes una solución completa. Analiza cuidadosamente los requisitos, considera los casos límite y asegúrate de que tu código sea robusto y siga las mejores prácticas del lenguaje. La habilidad de transformar enunciados en código funcional es fundamental en el desarrollo de software profesional.*
 
 <Challenge 
   nivel="Avanzado" 
   mision="Implementa un buscador con autocompletado usando un Trie." 
 />
+
+---
+
+### 🧪 Casos de Prueba
+
+| Entrada | Salida esperada |
+|---------|-----------------|
+| `ejemplo` | `resultado` |
 
 ---
 
@@ -32,57 +41,42 @@ Implementa un buscador con autocompletado usando un Trie.
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-
 Insertar palabras en el Trie y buscar prefijos.
 
-### ⚙️ Paso 2: Implementación en Python
+**Para profundizar en el análisis:**
+- Identifica el propósito central del algoritmo
+- Prueba con un ejemplo concreto paso a paso
+- Enumera los edge cases: valores vacíos, nulos, extremos, inesperados
+- Determina la estrategia óptima antes de escribir código
 
+### ⚙️ Paso 2: Implementación en Python
 DFS para encontrar todas las palabras desde un nodo.
+
+**Para enriquecer la implementación:**
+- Valida las entradas al inicio de la función
+- Elige estructuras de datos que maximicen eficiencia y legibilidad
+- Separa la lógica en pasos claros y comenta las partes no obvias
+- Incluye un ejemplo de uso al final para verificar el funcionamiento
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
+**Complejidad temporal:** O(n)  
+**Complejidad espacial:** O(n)  
+
 O(L) para búsqueda, O(N) para sugerencias.
+
+**Para un análisis más completo:**
+- Calcula la complejidad temporal considerando el peor, mejor y caso promedio
+- Evalúa si el consumo de memoria se puede reducir
+- Propone variantes: ¿y si la entrada fuera 10x más grande? ¿y si hubiera que procesarla en streaming?
+- Menciona aplicaciones reales donde este patrón de solución es relevante
 
 ### 💻 Código de la Solución (Python)
 
 ```python
-class TrieNode:
-    def __init__(self):
-        self.hijos = {}
-        self.fin = False
-
-class Trie:
-    def __init__(self):
-        self.raiz = TrieNode()
-
-    def insertar(self, palabra):
-        n = self.raiz
-        for c in palabra:
-            if c not in n.hijos:
-                n.hijos[c] = TrieNode()
-            n = n.hijos[c]
-        n.fin = True
-
-    def _dfs(self, n, pref, res):
-        if n.fin:
-            res.append(pref)
-        for c, hijo in n.hijos.items():
-            self._dfs(hijo, pref + c, res)
-
-    def autocompletar(self, pref):
-        n = self.raiz
-        for c in pref:
-            if c not in n.hijos:
-                return []
-            n = n.hijos[c]
-        res = []
-        self._dfs(n, pref, res)
-        return res
-
-t = Trie()
-for p in ["hola", "holgazán", "hongo", "hoja", "hotel"]:
-    t.insertar(p)
-print(t.autocompletar("ho"))
+class TrieNode: 
+ def __init__(self): self.c={}; self.end=False
+def sol(root, pref): pass
 ```
 
 </div>

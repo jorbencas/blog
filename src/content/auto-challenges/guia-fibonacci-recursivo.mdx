@@ -1,6 +1,6 @@
 ---
 draft: false
-title: "Fibonacci Recursivo"
+title: "🏆 RETO: Fibonacci Recursivo"
 description: "Implementa la secuencia de Fibonacci de forma recursiva."
 pubDate: "2026-03-04"
 tags: ["python", "retos", "intermedio", "guia-plus"]
@@ -10,18 +10,29 @@ author: "Jorge Beneyto Castelló"
 difficulty: "Intermedio"
 ---
 
-import Challenge from '../../components/Challenge.astro';
+import Challenge from '@components/Challenge.astro';
 
-# 🎯 Fibonacci Recursivo
+# 🎯 Desafío: Fibonacci Recursivo
 
 ### 📝 Descripción del Reto
-
-Resuelve el siguiente reto de programación: **Fibonacci Recursivo**.
+Calcula el n-ésimo número de la famosa serie de Fibonacci, donde cada número es la suma de los dos anteriores: F(0) = 0, F(1) = 1, F(n) = F(n-1) + F(n-2). Por ejemplo, F(7) = 13 (0, 1, 1, 2, 3, 5, 8, 13). Este es el ejercicio clásico para entender la recursión y la programación dinámica, apareciendo en innumerables entrevistas técnicas. Sirve como introducción perfecta a conceptos como memoización, complejidad algorítmica y optimización de funciones recursivas.
 
 <Challenge 
   nivel="Intermedio" 
   mision="Implementa la secuencia de Fibonacci de forma recursiva." 
 />
+
+---
+
+### 🧪 Casos de Prueba
+
+| Entrada | Salida esperada |
+|---------|-----------------|
+| `0` | `0` |
+| `1` | `1` |
+| `7` | `13` |
+| `10` | `55` |
+| `20` | `6765` |
 
 ---
 
@@ -32,27 +43,31 @@ Resuelve el siguiente reto de programación: **Fibonacci Recursivo**.
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-
-Caso base: fib(0) = 0, fib(1) = 1. Caso recursivo: fib(n) = fib(n-1) + fib(n-2).
+**Análisis del problema:** La serie de Fibonacci tiene una definición recursiva natural: cada término depende de los dos anteriores. **Ejemplo concreto:** fib(7) → fib(6) + fib(5) → (fib(5)+fib(4)) + (fib(4)+fib(3)) → ... hasta los casos base F(0)=0 y F(1)=1. **Problema de la recursión pura:** sin optimización, fib(40) genera más de 300 MILLONES de llamadas. El mismo subproblema se calcula miles de veces. Para fib(40), fib(3) se calcula más de 30 millones de veces. **Edge cases:** n=0 → 0, n=1 → 1, n negativo (no definido para esta serie), n grande (el número crece exponencialmente, se necesita BigInt para n &gt; 92 en 64 bits).
 
 ### ⚙️ Paso 2: Implementación en Python
-
-Función recursiva con condición base y llamadas anidadas.
+**Implementación con memoización:** La solución óptima usa un cache (`functools.lru_cache` en Python, `Map` en otros lenguajes) que almacena resultados ya calculados. Así cada F(k) se calcula una sola vez. **Estructura:** 1) Casos base: si n ≤ 1, devolver n. 2) Consultar cache: si ya calculamos F(n), devolverlo. 3) Calcular recursivamente: F(n) = F(n-1) + F(n-2), guardar en cache y devolver. **Alternativa iterativa:** Con un bucle simple es aún más eficiente: O(n) tiempo y O(1) espacio, sin recursión ni cache. Simplemente se mantienen dos variables a, b = 0, 1 y se actualizan en cada iteración. Esta versión es la preferida en producción. **Versión con array:** precalcular todos los valores hasta n en un array, también O(n) tiempo y O(n) espacio.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-O(2^n) tiempo, O(n) espacio en pila de llamadas.
+**Complejidad temporal:** O(2^n) (O(n) con memoización/iterativo)  
+**Complejidad espacial:** O(n) recursivo, O(1) iterativo  
+
+**Complejidad:** Recursivo puro: O(2^n) tiempo — catastrófico, no usable para n &gt; 30. Con memoización: O(n) tiempo, O(n) espacio (para el cache y la pila de recursión). Iterativo: O(n) tiempo, O(1) espacio — el mejor. **Matemáticas:** La fórmula de Binet permite calcular F(n) en O(1) usando el número áureo φ = (1 + √5) / 2. **Aplicaciones reales:** modelado de crecimiento poblacional, algoritmos de compresión con Fibonacci coding, búsqueda en árboles Fibonacci (estructura de datos), análisis de mercados financieros, optimización de búsqueda con búsqueda Fibonacci (similar a binaria pero con proporción áurea).
 
 ### 💻 Código de la Solución (Python)
 
 ```python
-def sol(n):
-    if n <= 1: return n
-    return sol(n - 1) + sol(n - 2)
+from functools import lru_cache
 
-for n in [0, 1, 5, 10, 20]:
-    print(f"fib({n}) = {sol(n)}")
+@lru_cache(maxsize=None)
+def fib(n):
+    if n <= 1:
+        return n
+    return fib(n-1) + fib(n-2)
 
+for i in range(10):
+    print(f'fib({i}) = {fib(i)}')
 ```
 
 </div>

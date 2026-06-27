@@ -1,6 +1,6 @@
 ---
 draft: false
-title: "Reto Avanzado 16: Profilier de Funciones"
+title: "🏆 RETO: Reto Avanzado 16: Profilier de Funciones"
 description: "Cuenta llamadas y tiempo total por función."
 pubDate: "2025-11-22"
 tags: ["python", "retos", "avanzado", "guia-plus"]
@@ -10,18 +10,27 @@ author: "Jorge Beneyto Castelló"
 difficulty: "Avanzado"
 ---
 
-import Challenge from '../../components/Challenge.astro';
+import Challenge from '@components/Challenge.astro';
 
-# 🎯 Reto Avanzado 16: Profilier de Funciones
+# 🎯 Desafío: Reto Avanzado 16: Profilier de Funciones
 
 ### 📝 Descripción del Reto
-
 Cuenta llamadas y tiempo total por función.
+
+*Este problema requiere que diseñes e implementes una solución completa. Analiza cuidadosamente los requisitos, considera los casos límite y asegúrate de que tu código sea robusto y siga las mejores prácticas del lenguaje. La habilidad de transformar enunciados en código funcional es fundamental en el desarrollo de software profesional.*
 
 <Challenge 
   nivel="Avanzado" 
   mision="Cuenta llamadas y tiempo total por función." 
 />
+
+---
+
+### 🧪 Casos de Prueba
+
+| Entrada | Salida esperada |
+|---------|-----------------|
+| `ejemplo` | `resultado` |
 
 ---
 
@@ -32,41 +41,45 @@ Cuenta llamadas y tiempo total por función.
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-
 Uso de wrapper que actualiza estadísticas globales.
 
-### ⚙️ Paso 2: Implementación en Python
+**Para profundizar en el análisis:**
+- Identifica el propósito central del algoritmo
+- Prueba con un ejemplo concreto paso a paso
+- Enumera los edge cases: valores vacíos, nulos, extremos, inesperados
+- Determina la estrategia óptima antes de escribir código
 
-Diccionario de rastro \{func: \{count, time\}\}.
+### ⚙️ Paso 2: Implementación en Python
+Diccionario de rastro &#123;func: &#123;count, time&#125;&#125;.
+
+**Para enriquecer la implementación:**
+- Valida las entradas al inicio de la función
+- Elige estructuras de datos que maximicen eficiencia y legibilidad
+- Separa la lógica en pasos claros y comenta las partes no obvias
+- Incluye un ejemplo de uso al final para verificar el funcionamiento
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
+**Complejidad temporal:** O(n)  
+**Complejidad espacial:** O(n)  
+
 O(1) overhead.
+
+**Para un análisis más completo:**
+- Calcula la complejidad temporal considerando el peor, mejor y caso promedio
+- Evalúa si el consumo de memoria se puede reducir
+- Propone variantes: ¿y si la entrada fuera 10x más grande? ¿y si hubiera que procesarla en streaming?
+- Menciona aplicaciones reales donde este patrón de solución es relevante
 
 ### 💻 Código de la Solución (Python)
 
 ```python
-import time
-
 stats = {}
 def profile(f):
-    def w(*a, **kw):
-        inicio = time.perf_counter()
-        res = f(*a, **kw)
-        duracion = time.perf_counter() - inicio
-        s = stats.setdefault(f.__name__, {'c': 0, 't': 0.0})
-        s['c'] += 1
-        s['t'] += duracion
-        return res
-    return w
-
-@profile
-def suma(n):
-    return sum(range(n))
-
-for _ in range(5):
-    suma(10_000_000)
-print(stats['suma'])
+ def w(*a,**kw):
+  s=stats.setdefault(f.__name__,{'c':0,'t':0}); s['c']+=1
+  return f(*a,**kw)
+ return w
 ```
 
 </div>

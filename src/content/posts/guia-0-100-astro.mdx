@@ -1,0 +1,99 @@
+---
+draft: false
+title: "Guía de Astro: De 0 a 100"
+description: "El framework web que revoluciona el frontend con Islands Architecture."
+pubDate: "2017-06-11"
+tags: ["astro", "guia", "frontend"]
+image: "img/guia_0_100_astro_cover-1200.webp"
+author: "Jorge Beneyto Castelló"
+---
+
+# Guía de Astro: De 0 a 100
+
+## 🛠️ Requisitos e Instalación
+
+**Requisitos:** Node.js 18+ y un editor (VSCode con extensión Astro recomendado).
+**Crear proyecto:** `npm create astro@latest` — elige una plantilla (vacío, blog, portfolio). Incluye TypeScript por defecto.
+**Ejecutar:** `npm run dev` inicia el servidor de desarrollo en `localhost:4321`. `npm run build` genera la build estática.
+**Verificación:** `--version` y prueba con un `"Hola Mundo"`.
+**Herramientas recomendadas:** **Astro CLI** integrado. **Vite** como bundler. **Tailwind CSS** opcional (`astro add tailwind`). **Adapter** para deploy (Vercel, Netlify, Cloudflare).
+
+## 🚀 Hola Mundo y Sintaxis Básica
+
+**Conceptos clave:**
+
+- **Archivos `.astro`:** Componentes de una sola página que combinan HTML, CSS y JS en un mismo archivo. El código entre `---` se ejecuta en el servidor (build-time). Todo lo demás es HTML con interpolación `{expresión}`.
+- **Frontmatter (---):** La sección `---` al inicio ejecuta JavaScript/TypeScript en el servidor. Sirve para fetch de datos, imports, y lógica. Las variables definidas están disponibles en el template HTML debajo.
+- **Componentes:** Los componentes `.astro` pueden anidarse. También puedes importar componentes de otros frameworks (React, Svelte, Vue) con `import MiComponente from './MiComp.jsx'` y usarlos directamente en el template.
+- **Islands Architecture:** Por defecto, Astro renderiza todo en el servidor y envía HTML estático al cliente. Para interactividad, usa `client:load`, `client:visible`, o `client:idle` en componentes de framework. Esto minimiza JavaScript enviado al navegador.
+- **Colecciones de Contenido:** `src/content/` organiza contenido con esquemas Zod. `defineCollection` + `z.object()` para validación. `getCollection()` y `getEntry()` para consultar contenido en páginas. Soporta MDX con componentes embebidos.
+
+## 🏗️ Frameworks Populares
+
+### Astro (núcleo)
+**Instalación:** `Viene incluido — no necesita instalación adicional.`
+El framework base incluye enrutamiento basado en archivos (`src/pages/`), soporte Markdown/MDX como páginas, optimización de imágenes, y bundling con Vite. Todo el JavaScript se elimina por defecto (zero JS by default).
+```astro
+---
+// src/pages/index.astro
+const data = await fetch('https://api.example.com/data').then(r => r.json());
+---
+<html>
+  <body>
+    <h1>Hola Mundo</h1>
+    <ul>
+      {data.map(item => <li>{item.nombre}</li>)}
+    </ul>
+  </body>
+</html>
+```
+### Svelte + Astro
+**Instalación:** `npm install @astrojs/svelte && npx astro add svelte`
+Svelte es el framework perfecto para componentes interactivos en Astro: es ligero, compila a JS vanilla, y no tiene runtime. Los componentes Svelte se hidratan solo cuando se indica explícitamente con directivas `client:*`.
+```astro
+---
+// src/pages/index.astro
+import Contador from '../components/Contador.svelte';
+---
+
+<h1>App interactiva</h1>
+<Contador client:load />
+```
+
+## 📝 Ejercicios Prácticos
+
+1. **Página informativa** 🟢 `[Fácil]` — Crea una página con Astro que muestre datos de una API pública (JSONPlaceholder, GitHub API). Usa fetch en el frontmatter y renderiza en HTML.
+2. **Blog con Colecciones** 🟡 `[Intermedio]` — Configura una colección de contenido MDX para posts de blog con schema Zod. Crea una página de listado y una de detalle.
+3. **Componente interactivo** 🟡 `[Intermedio]` — Crea un contador en Svelte (o React) y em bébelo en una página Astro con `client:visible`. Mide el JS enviado al cliente.
+4. **E-commerce minimalista** 🔴 `[Avanzado]` — Página de producto con datos desde MDX, carrito con estado global en Svelte (store), y página de checkout. Despliega en Vercel.
+5. **Portfolio con imágenes optimizadas** 🟡 `[Intermedio]` — Usa `astro:assets` para optimizar imágenes en un portfolio. Incluye modo oscuro con Tailwind y layout responsivo.
+
+## ⚡ Buenas Prácticas y Complejidad
+
+**Buenas prácticas:**
+
+- Prefiere HTML estático sobre JS. Astro es mejor cuando menos JavaScript envías al cliente.
+- Usa colecciones de contenido con esquemas Zod en lugar de archivos sueltos — validación automática y TypeScript.
+- Aplica directivas `client:*` solo en componentes que realmente necesitan interactividad.
+- Usa `Astro.glob()` para importar múltiples archivos de contenido de forma dinámica.
+- Configura un adapter de deploy al inicio del proyecto (Vercel, Netlify) para evitar sorpresas.
+- Aprovecha `ViewTransitions` para transiciones entre páginas sin recarga completa.
+
+**Complejidad algorítmica (Big O):**
+
+Astro genera HTML estático en build time, por lo que la complejidad es O(n) respecto al número de páginas. El tiempo de build escala linealmente con el contenido. La hidratación parcial (Islands) es O(k) donde k son los componentes interactivos, independiente del tamaño total de la página.
+
+## 📚 Recursos y Documentación
+
+- 📖 [Astro Documentación](https://docs.astro.build/)
+- 📖 [Astro en GitHub](https://github.com/withastro/astro)
+- 🔧 [Astro Playground](https://astro.new/)
+- 🌐 [Astro Themes](https://astro.build/themes/)
+- 🌐 [Astro Discord](https://astro.build/chat)
+
+### 🏆 Retos Relacionados
+
+Pon a prueba lo aprendido con estos desafíos:
+- [Consumo De Api Mock](/retos/guia-consumo-de-api-mock)
+- [El Reclutador De La Banda](/retos/guia-el-reclutador-de-la-banda)
+- [Plus Reto Intermedio 30 Manejador De Historial Undo](/retos/guia-plus-reto-intermedio-30-manejador-de-historial-undo)

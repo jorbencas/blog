@@ -10,42 +10,80 @@ author: "Jorge Beneyto Castelló"
 
 # Guía de Kotlin: De 0 a 100
 
-Kotlin es totalmente interoperable con Java, eliminando errores de punteros nulos.
-
 ## 🛠️ Requisitos e Instalación
 
-1. Instalar IntelliJ IDEA o configurar el compilador `kotlinc`.
+**IntelliJ IDEA:** Descarga [IntelliJ IDEA Community](https://www.jetbrains.com/idea/). Incluye soporte Kotlin nativo.
+**Android Studio:** Para desarrollo Android: [developer.android.com/studio](https://developer.android.com/studio). Kotlin incluido por defecto.
+**CLI:** Instala SDKMAN: `curl -s https://get.sdkman.io | bash && sdk install kotlin`. O usa `kotlinc` directamente.
+**Verificación:** `--version` y prueba con un `"Hola Mundo"`.
+**Herramientas recomendadas:** **Gradle** o **Maven** para build. [Kotlin Playground](https://play.kotlinlang.org/) online. IDE principal: IntelliJ IDEA.
 
 ## 🚀 Hola Mundo y Sintaxis Básica
 
-```kotlin
-fun main() {
-    println("Hola Mundo")
-}
-```
+**Conceptos clave:**
 
-Más conciso que Java. Null safety por defecto (?).
+- **Variables y Null Safety:** `val` (inmutable) / `var` (mutable). Tipado nulo: `String?` — el compilador fuerza manejo de null. Elvis: `texto?.length ?: 0`. Smart casts automáticos.
+- **Funciones:** `fun suma(a: Int, b: Int): Int = a + b`. Cuerpo de expresión. Parámetros con valores por defecto. Funciones de una sola expresión sin llaves.
+- **Data Classes:** `data class Usuario(val nombre: String, val edad: Int)` — genera `equals()`, `hashCode()`, `toString()`, `copy()` y destructuring automáticamente.
+- **Extension Functions:** `fun String.esPalindromo(): Boolean = this == this.reversed()`. Añade métodos a clases existentes sin herencia.
+- **Corrutinas:** Concurrencia estructurada: `launch { val data = async { fetchData() }; println(data.await()) }`. Más ligeras que threads. Basadas en `suspend`.
 
 ## 🏗️ Frameworks Populares
 
 ### Ktor
-
-**Instalación:**
-```bash
-Implementar plugin en Gradle
+**Instalación:** `Desde [start.ktor.io](https://start.ktor.io/) o añadiendo dependencias en build.gradle.kts`
+Framework web asíncrono sobre corrutinas. Ligero, modular, ideal para microservicios y APIs.
+```kotlin
+fun Application.module() {
+    routing {
+        get("/") {
+            call.respondText("Hola Mundo")
+        }
+    }
+}
 ```
-
-**Estructura Principal:**
-Basado en corrutinas de Kotlin para alta escalabilidad y ligereza.
+### Jetpack Compose
+**Instalación:** `Incluido en Android Studio para proyectos nuevos.`
+Toolkit moderno de UI para Android con enfoque declarativo. Código más corto y legible que XML Views.
+```kotlin
+@Composable
+fun Saludo(nombre: String) {
+    Text(text = "Hola, $nombre!")
+}
+```
 
 ## 📝 Ejercicios Prácticos
 
-1. **Data Classes**: Define un modelo de datos en una sola línea.
-2. **Coroutines**: Lanza una tarea asíncrona suspendida.
-3. **Cálculo de Promedio**: Usa funciones de extensión sobre una lista.
+1. **Extension Function** 🟢 `[Fácil]` — Extensión para `String` que capitalice cada palabra: `"hola mundo".capitalizarPalabras()` → `"Hola Mundo"`.
+2. **Data Class + copy()** 🟢 `[Fácil]` — Data class `Producto` con nombre, precio, categoría. Función que aplique descuento usando `copy()`.
+3. **API con Ktor** 🟡 `[Intermedio]` — Servidor Ktor con GET/POST para gestor de notas. Almacenamiento en memoria.
+4. **Corrutinas** 🔴 `[Avanzado]` — Descarga 10 URLs concurrentemente, midiendo tiempo total vs secuencial.
+
+## ⚡ Buenas Prácticas y Complejidad
+
+**Buenas prácticas:**
+
+- Prefiere `val` sobre `var` — la inmutabilidad reduce bugs.
+- Usa `sealed class` para jerarquías cerradas (como uniones discriminadas).
+- Aprovecha las extension functions para organizar código por dominio.
+- Usa `require()` y `check()` para validar precondiciones.
+- En corrutinas, usa `viewModelScope` o `lifecycleScope`, no `GlobalScope`.
+
+**Complejidad algorítmica (Big O):**
+
+Colecciones Kotlin = mismas que Java: ArrayList O(1) acceso, O(n) inserción. HashMap O(1) promedio. `asSequence()` permite lazy evaluation.
 
 ## 📚 Recursos y Documentación
 
-- [Documentación Oficial](https://kotlinlang.org/docs/)
-- [Repositorio en GitHub](https://github.com/JetBrains/kotlin)
-- [Recurso Adicional](https://play.kotlinlang.org/)
+- 📖 [Kotlin Documentación](https://kotlinlang.org/docs/home.html)
+- 🔧 [Kotlin Playground](https://play.kotlinlang.org/)
+- 📖 [Android Developers — Kotlin](https://developer.android.com/kotlin)
+- 📖 [Kotlin en GitHub](https://github.com/JetBrains/kotlin)
+- 🌐 [Kotlin Weekly](https://kotlinweekly.net/)
+
+### 🏆 Retos Relacionados
+
+Pon a prueba lo aprendido con estos desafíos:
+- [Compresor De Cadenas Rle](/retos/guia-compresor-de-cadenas-rle)
+- [El Reclutador De La Banda](/retos/guia-el-reclutador-de-la-banda)
+- [Maximo De Tres Numeros](/retos/guia-maximo-de-tres-numeros)

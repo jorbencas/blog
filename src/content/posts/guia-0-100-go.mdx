@@ -11,52 +11,95 @@ audioSrc: "/audio/guia_0_100_go.mp3"
 
 # Guía de Go (Golang): De 0 a 100
 
-Go es un lenguaje compilado enfocado en la simplicidad, la eficiencia y el manejo de concurrencia mediante goroutines.
-
 ## 🛠️ Requisitos e Instalación
 
-1. Descarga desde go.dev.
-2. Configura el GOPATH.
-3. Verifica con `go version`.
+**Linux/macOS:** `wget https://go.dev/dl/go1.22.x.linux-amd64.tar.gz && sudo tar -C /usr/local -xzf go1.22.x.tar.gz`. Añade `/usr/local/go/bin` al PATH.
+**Windows:** Usa el instalador MSI desde [go.dev/dl](https://go.dev/dl/). Se añade automáticamente al PATH. O: `winget install GoLang.Go`.
+**Verificación:** `wget https://go.dev/dl/go1.22.x.linux-amd64.tar.gz && sudo tar -C /usr/local -xzf go1.22.x.tar.gz` y prueba con un `"Hola Mundo"`.
+**Herramientas recomendadas:** **`go mod init`** para módulos. **`go get`** para dependencias. **`go build`** compila binarios estáticos. VSCode + extensión Go (gopls).
 
 ## 🚀 Hola Mundo y Sintaxis Básica
 
-```go
-package main
-import "fmt"
+**Conceptos clave:**
 
-func main() {
-    fmt.Println("Hola Mundo")
-}
-```
-
-Sin clases, usa structs e interfaces. Manejo de paquetes explícito.
+- **Paquetes y Main:** `package main` para ejecutables. `func main()` es el punto de entrada. `import "fmt"` para I/O. Variables no usadas = error de compilación.
+- **Variables y Tipos:** `var nombre string = "Ana"` o inferencia `:=`. Tipos: `string`, `int`, `float64`, `bool`, `byte`, `rune`. Zero values por defecto.
+- **Control de Flujo:** `if`, `else`, `for` (único bucle — no hay while). `switch` sin break automático. `defer` aplaza ejecución al salir de la función.
+- **Structs e Interfaces:** `type Usuario struct { Nombre string; Edad int }`. Métodos: `func (u Usuario) Saludar() string`. Interfaces implícitas: si implementas los métodos, implementas la interfaz.
+- **Concurrencia:** `go funcion()` lanza goroutines (hilos ligeros). `ch := make(chan int)` para canales. `select` espera múltiples canales. `sync.WaitGroup` para sincronización.
 
 ## 🏗️ Frameworks Populares
 
 ### Gin Gonic
+**Instalación:** `go get -u github.com/gin-gonic/gin`
+Framework web minimalista con enrutamiento basado en árbol radix. Middleware integrado, validación y serialización JSON.
+```go
+package main
 
-**Instalación:**
-```bash
-go get -u github.com/gin-gonic/gin
+import "github.com/gin-gonic/gin"
+
+func main() {
+    r := gin.Default()
+    r.GET("/", func(c *gin.Context) {
+        c.JSON(200, gin.H{"mensaje": "Hola Mundo"})
+    })
+    r.Run()
+}
 ```
+### stdlib net/http
+**Instalación:** `No necesita instalación — incluido en Go.`
+La stdlib incluye servidor HTTP completo, cliente HTTP, templates, JSON/XML, tests, y más. Muchos proyectos no necesitan frameworks externos.
+```go
+package main
 
-**Estructura Principal:**
-Enfoque en middleware y rutas ultra-rápidas mediante un árbol de búsqueda.
+import (
+    "fmt"
+    "net/http"
+)
+
+func handler(w http.ResponseWriter, r *http.Request) {
+    fmt.Fprintf(w, "Hola Mundo")
+}
+
+func main() {
+    http.HandleFunc("/", handler)
+    http.ListenAndServe(":8080", nil)
+}
+```
 
 ## 📝 Ejercicios Prácticos
 
-1. **Goroutines**: Ejecuta un bucle en paralelo usando la palabra clave `go`.
-2. **JSON API**: Crea un servidor HTTP que responda un JSON usando Gin.
-3. **Channels**: Comunica dos goroutines usando un canal.
+1. **Web Server básico** 🟢 `[Fácil]` — Crea un servidor con `net/http` que sirva rutas `/`, `/about`, `/api`.
+2. **API con Gin** 🟡 `[Intermedio]` — CRUD de libros usando Gin. Slice en memoria y manejo de IDs únicos.
+3. **Worker Pool** 🔴 `[Avanzado]` — Procesa URLs de un canal de entrada, escribe resultados en otro. Usa `sync.WaitGroup`.
+4. **CLI Tool** 🟡 `[Intermedio]` — Herramienta CLI con flags (`--input`, `--output`, `--verbose`). Usa paquete `flag`.
 
-### 🏆 Retos Recomendados
-- [Reto Avanzado: Concurrencia y Canales](/challenges/guia-plus-reto-avanzado-04-manejador-de-hilos-threading)
-- [Reto Avanzado: Decorador de Tiempo](/challenges/guia-decorador-de-medicion-de-tiempo)
-- [Reto Intermedio: Juego de Adivinar Número](/challenges/guia-juego-de-adivinar-numero)
+## ⚡ Buenas Prácticas y Complejidad
+
+**Buenas prácticas:**
+
+- Ejecuta `go fmt` en todos los archivos — el formateo es parte del lenguaje.
+- Usa `go mod tidy` para limpiar dependencias no usadas.
+- Nombra los valores de retorno: `func div(a, b int) (result int, err error)`.
+- Prefiere `error` sobre panic/recover.
+- Usa `context.Context` para timeouts y cancelaciones entre goroutines.
+- Escribe tests con `testing` y benchmarks con `go test -bench`.
+
+**Complejidad algorítmica (Big O):**
+
+Slices: acceso O(1), append O(1) amortizado, búsqueda O(n). Maps: O(1) promedio. Canales: envío/recepción O(1). `sort.Slice()` O(n log n).
 
 ## 📚 Recursos y Documentación
 
-- [Documentación Oficial](https://go.dev/doc/)
-- [Repositorio en GitHub](https://github.com/golang/go)
-- [Recurso Adicional](https://gobyexample.com/)
+- 📖 [Go Documentation](https://go.dev/doc/)
+- 🌐 [Go by Example](https://gobyexample.com/)
+- 📖 [Effective Go](https://go.dev/doc/effective_go)
+- 📖 [Gin Web Framework](https://gin-gonic.com/)
+- 📖 [Go en GitHub](https://github.com/golang/go)
+
+### 🏆 Retos Relacionados
+
+Pon a prueba lo aprendido con estos desafíos:
+- [Decorador De Medicion De Tiempo](/retos/guia-decorador-de-medicion-de-tiempo)
+- [Juego De Adivinar Numero](/retos/guia-juego-de-adivinar-numero)
+- [Plus Reto Avanzado 04 Manejador De Hilos Threading](/retos/guia-plus-reto-avanzado-04-manejador-de-hilos-threading)

@@ -10,41 +10,85 @@ author: "Jorge Beneyto Castelló"
 
 # Guía de Swift: De 0 a 100
 
-Swift es un lenguaje rápido, seguro y moderno diseñado por Apple para sus plataformas.
-
 ## 🛠️ Requisitos e Instalación
 
-1. Instalar Xcode en macOS.
-2. Usar Swift Playgrounds.
+**macOS:** Instala **Xcode** desde la App Store (gratuito). Incluye Swift compiler, Interface Builder, Simuladores iOS. Swift Playgrounds para aprender.
+**Linux:** Toolchain desde [swift.org/download](https://www.swift.org/download/). `sudo apt install clang libicu-dev && export PATH=...`
+**Verificación:** `--version` y prueba con un `"Hola Mundo"`.
+**Herramientas recomendadas:** **Xcode** IDE oficial. **SPM** para dependencias. **SwiftLint** para estilo. VSCode + SourceKit-LSP como alternativa.
 
 ## 🚀 Hola Mundo y Sintaxis Básica
 
-```swift
-print("Hola Mundo")
-```
+**Conceptos clave:**
 
-Variables con `var` y constantes con `let`. Control de flujo potente.
+- **Variables y Constantes:** `let` (constante/inmutable), `var` (variable). Tipado fuerte con inferencia: `let nombre = "Ana"`. Opcionales: `var apellido: String? = nil`.
+- **Optionals:** Unwrapping seguro con `if let`: `if let ap = apellido { print(ap) }`. Guard: `guard let ap = apellido else { return }`. Nil-coalescing: `ap ?? "default"`.
+- **Funciones y Closures:** `func suma(a: Int, b: Int) -> Int { a + b }`. Closures: `let sum = { (a: Int, b: Int) -> Int in a + b }`. Trailing closure syntax.
+- **Structs vs Classes:** **Structs**: value types, copia al asignar, sin herencia. **Classes**: reference types, herencia, deinit. Prefiere struct por defecto.
+- **Protocols y Extensiones:** `protocol Volable { func volar() }`. Extensiones añaden funcionalidad a tipos existentes. Protocol-Oriented Programming.
 
 ## 🏗️ Frameworks Populares
 
 ### SwiftUI
-
-**Instalación:**
-```bash
-Incluido en Xcode
+**Instalación:** `Incluido en Xcode. Nuevo proyecto iOS → SwiftUI.`
+Framework de UI declarativo para todo el ecosistema Apple. Código más corto que UIKit, previews en vivo, @State y @Binding.
+```swift
+struct SaludoView: View {
+    var body: some View {
+        VStack {
+            Text("Hola Mundo")
+                .font(.largeTitle)
+                .foregroundColor(.blue)
+        }
+        .padding()
+    }
+}
 ```
+### Vapor
+**Instalación:** `brew install vapor  # o: curl -sL https://vapor.bin | bash`
+Framework web server-side para Swift. Asíncrono, ORM (Fluent), autenticación y WebSockets.
+```swift
+import Vapor
 
-**Estructura Principal:**
-Declarativo, basado en vistas y estados persistentes.
+func routes(_ app: Application) throws {
+    app.get { req in
+        return "Hola Mundo"
+    }
+}
+```
 
 ## 📝 Ejercicios Prácticos
 
-1. **Optionals**: Desempaqueta un valor opcional de forma segura con `if let`.
-2. **Struct vs Class**: Compara comportamientos de paso por valor y referencia.
-3. **View Simple**: Crea una interfaz básica con un texto y un botón en SwiftUI.
+1. **Optionals** 🟢 `[Fácil]` — Función que recibe String optional, unwrapea con `guard let`, devuelve longitud (0 si nil).
+2. **Struct vs Class** 🟢 `[Fácil]` — Define `struct Punto` y `class Persona`. Demuestra diferencia value vs reference type.
+3. **SwiftUI Lista** 🟡 `[Intermedio]` — Vista con lista de items, botón añadir y swipe-to-delete. Usa @State.
+4. **API con Vapor** 🔴 `[Avanzado]` — Servidor Vapor con rutas CRUD y autenticación básica via middleware.
+
+## ⚡ Buenas Prácticas y Complejidad
+
+**Buenas prácticas:**
+
+- Prefiere `let` sobre `var` — inmutabilidad por defecto.
+- Usa `struct` por defecto, `class` solo cuando necesites referencia compartida.
+- Aprovecha extensiones para organizar código por protocolos.
+- Usa `enum` con valores asociados para modelar estados.
+- Implementa `Codable` para parsear/serializar JSON automáticamente.
+
+**Complejidad algorítmica (Big O):**
+
+Arrays: acceso O(1), append O(1), inserción O(n). Dictionary: O(1) promedio. Set: O(1). `sorted()` O(n log n) (TimSort). Copy-on-write para eficiencia.
 
 ## 📚 Recursos y Documentación
 
-- [Documentación Oficial](https://developer.apple.com/documentation/swift)
-- [Repositorio en GitHub](https://github.com/apple/swift)
-- [Recurso Adicional](https://swift.org/)
+- 📖 [Swift Documentación](https://www.swift.org/documentation/)
+- 📖 [Apple Developer — Swift](https://developer.apple.com/swift/)
+- 🔧 [Swift Playgrounds](https://www.apple.com/swift/playgrounds/)
+- 📖 [Swift en GitHub](https://github.com/apple/swift)
+- 🌐 [Hacking with Swift](https://www.hackingwithswift.com/)
+
+### 🏆 Retos Relacionados
+
+Pon a prueba lo aprendido con estos desafíos:
+- [Consistencia De Base De Datos](/retos/guia-consistencia-de-base-de-datos)
+- [Eliminar Duplicados](/retos/guia-eliminar-duplicados)
+- [Motor De Busqueda Binaria](/retos/guia-motor-de-busqueda-binaria)
