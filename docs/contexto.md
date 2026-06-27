@@ -1,6 +1,6 @@
 # Contexto del proyecto — Blog
 
-**Última actualización**: 2026-06-27 (sesión: n8n + recursos, TOC con fallback DOM, iconos SVG, build pagefind)
+**Última actualización**: 2026-06-27 (sesión: anti-flash, CopyPost refactor, query Unsplash con tags)
 **Stack**: Astro 6.4 + Svelte 5 + Tailwind CSS 4.3
 **Deploy**: Vercel (`blog-jorbencas.vercel.app`)
 **Idioma**: Español
@@ -52,6 +52,29 @@
 
 ### 12. Build pagefind ✅
 - **`package.json`**: comando `pagefind --site .vercel/output/static` en vez de `dist`. Copia de salida a `dist/pagefind/` y `public/pagefind/`.
+
+### 14. Anti-flash fix — tema oscuro sin destello ✅
+- **Layout.astro**: `<script>` de tema movido a primer elemento de `<head>` (antes de meta/link). Añadido `<style>` inline para `background-color` inmediato en `<html>`. Eliminado `transition-colors duration-500` del `<body>`.
+
+### 15. Dark mode code text — sin forzar cyan ✅
+- **PostLayout/ChallengesLayout/ProjectLayout**: eliminado `dark:prose-code:text-cyan-[300/400]`. Cambiado a `text-inherit` para que el syntax highlighter de Expressive Code muestre sus colores reales.
+
+### 16. CopyPost — dropdown → botones independientes ✅
+- **CopyPost.astro**: reemplazado menú dropdown por 3 botones (MD, TXT, IA) siempre visibles. Layout con `flex-wrap` para móvil.
+
+### 17. Light theme background más suave ✅
+- **Layout.astro**: `bg-slate-50` → `bg-slate-100` para un gris de fondo ligeramente más visible.
+
+### 18. Botones "Ver más" visibles en móvil ✅
+- **index.astro**: `linkBase` mejorado con `bg-slate-200`, `border`, `shadow-sm`, `py-2.5` para que los botones de sección se vean bien en fondo claro móvil.
+
+### 19. Query Unsplash mejorada con tags + título ✅
+- **fix_images.py**: nueva función `build_unsplash_query()` que combina:
+  - Tags extraídos del frontmatter (hasta 3)
+  - Título real del post (sin stopwords genéricas)
+  - Tech hints contextuales según tecnologías detectadas en el contenido (programming, devops, design...)
+- `clean_query()` mejorada: ya no elimina palabras cortas útiles (0, 100, js, ts)
+- `search_all_providers()` ahora recibe título, tags y contenido para construir queries ricas
 
 ### 13. Fixes post-sesión ✅
 - **Navbar**: clases `peer-checked:[&>span]:rotate-45` movidas de atributos HTML separados a un solo `class` con template literal — arreglada "ventanita de CSS" en menú móvil
@@ -122,7 +145,8 @@ Secciones en orden:
 - Sin dependencia de `tags.json` (eliminado)
 
 ### CopyPost (`src/components/CopyPost.astro`)
-- Botón "COPIAR" con dropdown: Markdown, Texto plano, Para IA
+- 3 botones independientes siempre visibles: Markdown, Texto plano, Para IA
+- Layout `flex-wrap` para adaptarse a móvil
 - Datos via `<script type="application/json">`
 - Ubicado en el header de PostLayout, tras AudioPlayer
 
@@ -157,7 +181,7 @@ Secciones en orden:
 - `src/pages/tags/index.astro` (simplificado, sin componente Information)
 
 ### Scripts
-- `scripts/fix_images.py`, `image_cache.json`
+- `scripts/fix_images.py` (incluye `clean_query`, `build_unsplash_query`, `search_unsplash`, `search_all_providers`, `process_file`), `image_cache.json`
 
 ### Tests
 - `tests/specs/search.spec.mjs` (sin dependencia de window.pagefind)
