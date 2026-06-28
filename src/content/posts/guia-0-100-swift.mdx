@@ -1,92 +1,3038 @@
 ---
 draft: false
 title: "Guía de Swift: De 0 a 100"
-description: "Desarrollo nativo para el ecosistema Apple (iOS, macOS)."
+description: "Desde la primera línea de código hasta producción: instalación, ecosistema, frameworks, proyectos reales y recursos en español para el ecosistema Apple."
 pubDate: "2017-06-11"
-tags: ["swift", "guia", "ios"]
+tags: ["swift", "guia", "ios", "macos"]
 image: "img/guia_0_100_swift_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 ---
 
 # Guía de Swift: De 0 a 100
 
-## 🛠️ Requisitos e Instalación
+## ¿Qué es Swift?
 
-**macOS:** Instala **Xcode** desde la App Store (gratuito). Incluye Swift compiler, Interface Builder, Simuladores iOS. Swift Playgrounds para aprender.
-**Linux:** Toolchain desde [swift.org/download](https://www.swift.org/download/). `sudo apt install clang libicu-dev && export PATH=...`
-**Verificación:** `--version` y prueba con un `"Hola Mundo"`.
-**Herramientas recomendadas:** **Xcode** IDE oficial. **SPM** para dependencias. **SwiftLint** para estilo. VSCode + SourceKit-LSP como alternativa.
+Swift es un lenguaje de programación compilado, multiparadigma y de tipado fuerte, creado por **Chris Lattner** en Apple y lanzado por primera vez en 2014. Utiliza **LLVM** como infraestructura de compilación, lo que le permite generar código nativo optimizado para los procesadores de Apple (ARM64, x86_64) y también para Linux y Windows. Swift reemplazó a Objective-C como lenguaje principal del ecosistema Apple, ofreciendo mayor seguridad de memoria, sintaxis moderna y mejor rendimiento.
 
-## 🚀 Hola Mundo y Sintaxis Básica
+**¿Dónde se usa?**
+- **iOS / iPadOS**: UIKit, SwiftUI — aplicaciones nativas para iPhone y iPad
+- **macOS / Catalyst**: AppKit, SwiftUI — apps de escritorio y Catalyst (iPad → Mac)
+- **watchOS**: WatchKit, SwiftUI — aplicaciones para Apple Watch
+- **tvOS**: TVML, SwiftUI — apps para Apple TV
+- **Server-side**: Vapor, Hummingbird, Queues — APIs REST, GraphQL, WebSockets
+- **Scripting / CLI**: SPM permite crear herramientas de línea de comandos nativas
 
-**Conceptos clave:**
+**¿Quién lo usa?** Uber (migración de Objective-C a Swift), Airbnb, Lyft, Slack, Telegram, WhatsApp (iOS), LinkedIn. Empresas que necesitan rendimiento nativo en dispositivos Apple.
 
-- **Variables y Constantes:** `let` (constante/inmutable), `var` (variable). Tipado fuerte con inferencia: `let nombre = "Ana"`. Opcionales: `var apellido: String? = nil`.
-- **Optionals:** Unwrapping seguro con `if let`: `if let ap = apellido { print(ap) }`. Guard: `guard let ap = apellido else { return }`. Nil-coalescing: `ap ?? "default"`.
-- **Funciones y Closures:** `func suma(a: Int, b: Int) -> Int { a + b }`. Closures: `let sum = { (a: Int, b: Int) -> Int in a + b }`. Trailing closure syntax.
-- **Structs vs Classes:** **Structs**: value types, copia al asignar, sin herencia. **Classes**: reference types, herencia, deinit. Prefiere struct por defecto.
-- **Protocols y Extensiones:** `protocol Volable { func volar() }`. Extensiones añaden funcionalidad a tipos existentes. Protocol-Oriented Programming.
+**Philosophía del lenguaje:**
+- **Protocol-Oriented Programming**: Swift prioriza protocolos y structs sobre clases y herencia
+- **Safety**: opcionales eliminan los null pointer exceptions, tipo fuerte evita errores de tipo en compilación
+- **Performance**: value types evitan overhead de referencia, compilación con LLVM optimiza al máximo
+- **Clarity**: sintaxis expresiva con nombres de parámetros externos, `guard`, `defer`
 
-## 🏗️ Frameworks Populares
+Fuente: [Swift.org — About](https://www.swift.org/about/), [Wikipedia — Swift](https://en.wikipedia.org/wiki/Swift_(programming_language)), [Chris Lattner — Swift History](https://www.swift.org/blog/atp-playgrounds-and-swift/)
 
-### SwiftUI
-**Instalación:** `Incluido en Xcode. Nuevo proyecto iOS → SwiftUI.`
-Framework de UI declarativo para todo el ecosistema Apple. Código más corto que UIKit, previews en vivo, @State y @Binding.
+---
+
+## ¿Cómo empezar? Instalación en todos los entornos
+
+### macOS (el entorno nativo)
+1. Descarga **Xcode** desde la App Store (gratuito, ~8 GB). Incluye:
+   - Compilador de Swift (`swiftc`)
+   - Interface Builder (diseño visual de UIs)
+   - Simuladores de iOS, iPadOS, watchOS, tvOS
+   - Instruments (profiler)
+   - Swift Playgrounds interactivos
+2. Alternativa ligera: instala solo **Command Line Tools**: `xcode-select --install` (incluye `swiftc`, `lldb`, sin Xcode completo)
+3. Verifica: `swift --version` en terminal
+
+### Linux (Ubuntu/Debian)
+```bash
+# Descarga el toolchain de swift.org
+wget https://download.swift.org/swift-5.10-release/ubuntu2204/swift-5.10-RELEASE/swift-5.10-RELEASE-ubuntu22.04.tar.gz
+tar xzf swift-5.10-RELEASE-ubuntu22.04.tar.gz
+sudo mv swift-5.10-RELEASE-ubuntu22.04 /usr/share/swift
+echo 'export PATH=/usr/share/swift/usr/bin:$PATH' >> ~/.bashrc
+source ~/.bashrc
+```
+
+Dependencias necesarias:
+```bash
+sudo apt update
+sudo apt install clang libicu-dev libcurl4-openssl-dev libssl-dev git
+```
+
+O usa el script oficial de instalación:
+```bash
+curl -sL https://swift.org/install.sh | bash
+```
+
+### Docker
+```dockerfile
+FROM swift:5.10
+WORKDIR /app
+COPY Package.swift ./
+COPY Sources ./Sources
+RUN swift build -c release
+CMD [".build/release/mi-app"]
+```
+
+Usa `swift:5.10` como imagen base. Para producción, usa multi-stage build con `swift:5.10-slim` como imagen final.
+
+### Windows
+- Swift está disponible para Windows desde Swift 5.3+ (toolchain oficial)
+- Descarga desde [swift.org/download](https://www.swift.org/download/) — instalador MSI
+- Requiere Visual Studio 2022 con "Desktop development with C++"
+- Verifica: `swift --version` en PowerShell
+
+### Homebrew (herramientas auxiliares)
+```bash
+brew install swiftlint swiftformat  # Linter y formateador
+brew install vapor                  # CLI de Vapor (server-side)
+brew install tuist                  # Generación de proyectos Xcode
+```
+
+### Alias útiles para el día a día
+Añade a tu `~/.bashrc` o `~/.zshrc`:
+```bash
+alias sw='swift'
+alias swb='swift build'
+alias swt='swift test'
+alias swr='swift run'
+alias spm='swift package'
+alias xc='xcodebuild'
+alias xct='xcodebuild test -scheme'
+alias swlint='swiftlint'
+alias swfmt='swiftformat'
+```
+
+Fuente: [Swift.org — Downloads](https://www.swift.org/download/), [Vapor docs](https://docs.vapor.codes/install/macos/), [Swift on Windows](https://www.swift.org/blog/swift-on-windows/)
+
+---
+
+## Primeros pasos y configuración del entorno
+
+### El REPL
+Swift incluye un intérprete interactivo. Ejecuta `swift` en terminal:
 ```swift
-struct SaludoView: View {
-    var body: some View {
-        VStack {
-            Text("Hola Mundo")
-                .font(.largeTitle)
-                .foregroundColor(.blue)
-        }
-        .padding()
+1> print("Hola mundo")
+2> let x = 42
+3> x + 8
+4> [1, 2, 3].map { $0 * 2 }
+```
+
+Para salir: `:quit` o Ctrl+D.
+También puedes usar `swift repl` si el comando `swift` no entra en modo REPL automáticamente.
+
+### Scripts sueltos con swiftc
+Swift puede compilar y ejecutar archivos individuales:
+```swift
+// hola.swift
+func main() {
+    print("Hola mundo")
+}
+main()
+```
+Ejecuta: `swift hola.swift` (interpretado) o `swiftc -o hola hola.swift && ./hola` (compilado)
+
+### Swift Package Manager (SPM)
+SPM es el gestor de dependencias oficial, integrado en el compilador:
+```bash
+# Crear proyecto ejecutable
+swift package init --type executable
+# Crear proyecto librería
+swift package init --type library
+# Compilar
+swift build
+# Ejecutar tests
+swift test
+# Correr el ejecutable
+swift run
+```
+
+### Estructura Package.swift
+```swift
+// swift-tools-version: 5.10
+import PackageDescription
+
+let package = Package(
+    name: "MiProyecto",
+    platforms: [
+        .macOS(.v14), .iOS(.v17)
+    ],
+    dependencies: [
+        .package(url: "https://github.com/vapor/vapor", from: "4.92.0"),
+        .package(url: "https://github.com/apple/swift-argument-parser", from: "1.3.0"),
+    ],
+    targets: [
+        .executableTarget(
+            name: "MiProyecto",
+            dependencies: [
+                .product(name: "Vapor", package: "vapor"),
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+            ]
+        ),
+        .testTarget(
+            name: "MiProyectoTests",
+            dependencies: ["MiProyecto"]
+        ),
+    ]
+)
+```
+
+### Xcode Playgrounds
+Perfectos para experimentar sin crear un proyecto:
+1. Abre Xcode → File → New → Playground
+2. Elige iOS o macOS blank playground
+3. Escribe código y ve los resultados en la barra lateral derecha
+4. Los playgrounds ejecutan código de forma interactiva, mostrando el historial de valores
+
+### Editores recomendados
+- **Xcode**: IDE oficial con editor de código, Interface Builder, debugger visual, Instruments. Indispensable para desarrollo iOS/macOS.
+- **AppCode** (JetBrains): Alternativa a Xcode con mejor autocompletado (de pago)
+- **VSCode + SourceKit-LSP**: `ext install sswift.swift-language` — autocompletado, navegación, errores en línea
+- **Neovim + sourcekit-lsp**: con `mason.nvim` + `nvim-lspconfig` para SourceKit-LSP
+
+### Configuración inicial del proyecto
+```bash
+mkdir MiProyecto && cd MiProyecto
+swift package init --type executable
+swift build
+```
+
+Archivo `.swiftlint.yml` básico:
+```yaml
+disabled_rules:
+  - trailing_whitespace
+opt_in_rules:
+  - empty_count
+  - force_unwrapping
+line_length: 120
+identifier_name:
+  min_length: 2
+  max_length: 40
+```
+
+Fuente: [Swift.org — SPM](https://www.swift.org/documentation/package-manager/), [SwiftLint docs](https://github.com/realm/SwiftLint)
+
+---
+
+## Conceptos clave explicados a fondo
+
+### Value Types vs Reference Types
+
+Swift hace una distinción fundamental entre tipos valor (`struct`, `enum`) y tipos referencia (`class`, `actor`). Esta diferencia es la base del diseño del lenguaje y determina cómo se comporta la memoria.
+
+**Structs (value types):**
+```swift
+struct Punto {
+    var x: Double
+    var y: Double
+}
+
+var a = Punto(x: 10, y: 20)
+var b = a          // COPIA independiente
+b.x = 999
+print(a.x)         // 10 — a no se modificó
+print(b.x)         // 999 — b es copia independiente
+```
+
+**Classes (reference types):**
+```swift
+class Persona {
+    var nombre: String
+    init(nombre: String) { self.nombre = nombre }
+}
+
+let p1 = Persona(nombre: "Ana")
+let p2 = p1         // REFERENCIA al mismo objeto
+p2.nombre = "Luis"
+print(p1.nombre)    // "Luis" — p1 y p2 apuntan al mismo objeto
+print(p2.nombre)    // "Luis"
+```
+
+**Comparativa:**
+
+| Característica | Struct | Class |
+|---|---|---|
+| Tipo | Value (copia en asignación) | Reference (puntero) |
+| Herencia | No | Sí |
+| Deinit | No | Sí |
+| Mutabilidad | Solo con `var` y `mutating` | Siempre mutable si es `var` |
+| Almacenamiento | Stack (generalmente) | Heap |
+| ARC | No | Sí |
+| `let` | Propiedades inmutables incluso con `var` | `let` impide reasignar la referencia |
+| Copy-on-Write | Sí (para tipos de la stdlib como Array, Dictionary) | No |
+| Dispatch | Static (más rápido) | Dynamic (vtabla) |
+
+**Copy-on-Write (COW):** Los value types de la stdlib (`Array`, `Dictionary`, `String`, `Set`) usan COW para ser eficientes. La copia real solo ocurre cuando modificas la copia:
+```swift
+var original = [1, 2, 3, 4, 5]
+var copia = original      // No copia: comparten el buffer
+copia.append(6)           // Aquí SÍ copia: se separa el buffer
+```
+
+**¿Struct o class?**
+- **Por defecto: struct**. Usa struct siempre que puedas.
+- **Usa class cuando**: necesites herencia, deinit, identidad compartida (dos referencias al mismo objeto), o interactúes con Objective-C.
+- **Usa actor cuando**: necesites estado mutable compartido entre múltiples tareas concurrentes.
+
+Fuente: [Swift.org — Classes and Structures](https://docs.swift.org/swift-book/LanguageGuide/ClassesAndStructures.html), [Apple — WWDC 2016 Understanding Value Types](https://developer.apple.com/videos/play/wwdc2016/419/)
+
+### Optionals
+
+Los opcionales son la forma en Swift de manejar la ausencia de valor. Eliminan los null pointer exceptions de Objective-C al forzar al programador a manejar explícitamente el caso `nil`.
+
+```swift
+var nombre: String? = nil  // Opcional: puede ser String o nil
+nombre = "Ana"
+
+// Forced unwrapping (peligroso — solo cuando estás 100% seguro)
+print(nombre!)             // "Ana" — crash si es nil
+
+// Optional binding con if let
+if let nombreSeguro = nombre {
+    print("Hola, \(nombreSeguro)")
+} else {
+    print("No hay nombre")
+}
+
+// Optional binding con guard let (patrón de early return)
+func saludar(_ nombre: String?) -> String {
+    guard let nombre = nombre else {
+        return "Anónimo"
+    }
+    return "Hola, \(nombre)"
+}
+
+// Nil-coalescing operator ??
+let saludo = nombre ?? "Anónimo"
+
+// Optional chaining
+struct Direccion { var calle: String? }
+struct Usuario { var direccion: Direccion? }
+let usuario: Usuario? = Usuario(direccion: Direccion(calle: "Calle Mayor"))
+let calle = usuario?.direccion?.calle ?? "Sin calle"  // "Calle Mayor"
+
+// Optional pattern matching
+let opcional: Int? = 42
+if case .some(let valor) = opcional {
+    print(valor)
+}
+if case let valor? = opcional {  // Sugar syntax
+    print(valor)
+}
+
+// map y flatMap en opcionales
+let numero = Int("42")           // Optional(42)
+let doble = numero.map { $0 * 2 }  // Optional(84)
+let suma = numero.flatMap { Optional.some($0 + 1) }  // Optional(43)
+```
+
+**Cuándo usar cada forma de unwrapping:**
+
+| Técnica | Cuándo usarla |
+|---|---|
+| `if let` | Cuando necesitas usar el valor dentro de un bloque condicional |
+| `guard let` | Early return — el valor debe existir para continuar |
+| `??` | Valor por defecto si es nil |
+| `!` forced | Solo cuando sabes con certeza que no es nil (IBOutlets, tests) |
+| Optional chaining | Acceder a propiedades/métodos anidados que pueden ser nil |
+| `map`/`flatMap` | Transformar el valor opcional sin unwrap explícito |
+
+**Implicitly Unwrapped Optionals (`!`):**
+```swift
+@IBOutlet var label: UILabel!  // Se asigna en viewDidLoad, nunca es nil después
+```
+Usar `!` en lugar de `?` declara que el opcional se unwrapea automáticamente al acceder. Si es nil, crash. Solo para IBOutlets y casos donde el ciclo de vida garantiza el valor.
+
+Fuente: [Swift.org — Optionals](https://docs.swift.org/swift-book/LanguageGuide/TheBasics.html#ID330), [Hacking with Swift — Optionals](https://www.hackingwithswift.com/read/0/12/optionals)
+
+### Protocols y Protocol Extensions
+
+Los protocolos en Swift son como interfaces que definen un contrato: métodos, propiedades y requisitos que un tipo debe implementar. Swift usa **Protocol-Oriented Programming (POP)** como paradigma principal, donde los protocolos son la herramienta de abstracción fundamental (en lugar de la herencia de clases).
+
+**Definición y conformancia básica:**
+```swift
+protocol Volable {
+    var velocidadMaxima: Double { get }
+    mutating func volar() -> String
+}
+
+struct Pajaro: Volable {
+    let velocidadMaxima: Double = 60.0
+    func volar() -> String {
+        return "Volando a \(velocidadMaxima) km/h"
+    }
+}
+
+// Conformancia condicional
+extension Array: Volable where Element == Int {
+    var velocidadMaxima: Double { 100.0 }
+    func volar() -> String { "Array volador: \(self)" }
+}
+```
+
+**Protocol Extensions (implementación por defecto):**
+```swift
+protocol Saludable {
+    func saludar() -> String
+}
+
+extension Saludable {
+    func saludar() -> String {
+        return "Hola!"
+    }
+}
+
+struct Persona: Saludable {}
+print(Persona().saludar())  // "Hola!"
+
+struct Robot: Saludable {
+    func saludar() -> String {
+        return "01001000 01101111 01101100 01100001 00100001"
+    }
+}
+print(Robot().saludar())  // "01001000..."
+```
+
+**Protocol Composition:**
+```swift
+protocol Imprimible {
+    func imprimir() -> String
+}
+
+protocol Exportable {
+    func exportar() -> Data
+}
+
+typealias Documento = Imprimible & Exportable
+
+struct PDF: Imprimible, Exportable {
+    func imprimir() -> String { "Imprimiendo PDF" }
+    func exportar() -> Data { Data() }
+}
+
+func procesar(documento: Imprimible & Exportable) {
+    print(documento.imprimir())
+    let data = documento.exportar()
+}
+```
+
+**Associated Types (protocolos genéricos):**
+```swift
+protocol Contenedor {
+    associatedtype Item
+    var count: Int { get }
+    mutating func agregar(_ item: Item)
+    func obtener(index: Int) -> Item?
+}
+
+struct Caja<T>: Contenedor {
+    typealias Item = T  // Se puede inferir, no es obligatorio escribir
+    private var items: [T] = []
+    
+    var count: Int { items.count }
+    
+    mutating func agregar(_ item: T) {
+        items.append(item)
+    }
+    
+    func obtener(index: Int) -> T? {
+        guard index < items.count else { return nil }
+        return items[index]
+    }
+}
+
+// Constraint con where
+protocol ComparableContenedor: Contenedor where Item: Comparable {
+    func maximo() -> Item?
+}
+```
+
+**Protocols con Self requirement:**
+```swift
+protocol Clonable {
+    func clone() -> Self  // Self se refiere al tipo conforme
+}
+
+class Config: Clonable {
+    var url: String = ""
+    required init() {}
+    func clone() -> Self {
+        let config = Self()
+        config.url = self.url
+        return config
     }
 }
 ```
-### Vapor
-**Instalación:** `brew install vapor  # o: curl -sL https://vapor.bin | bash`
-Framework web server-side para Swift. Asíncrono, ORM (Fluent), autenticación y WebSockets.
+
+Los protocolos son la columna vertebral del polimorfismo en Swift. Se usan para abstracción, testing (mocks), composición de comportamientos, y tipado existencial con `any`.
+
+Fuente: [Swift.org — Protocols](https://docs.swift.org/swift-book/LanguageGuide/Protocols.html), [Apple — WWDC 2015 Protocol-Oriented Programming](https://developer.apple.com/videos/play/wwdc2015/408/)
+
+### Structs avanzadas: mutating, computed properties, property observers
+
+Las structs en Swift pueden modificar sus propiedades propias mediante el keyword `mutating`:
+
+```swift
+struct Contador {
+    private(set) var valor: Int = 0
+    
+    mutating func incrementar() {
+        valor += 1  // mutating necesario porque modificamos self
+    }
+    
+    mutating func resetear() {
+        self = Contador()  // Reemplazar self completamente (válido en structs)
+    }
+}
+```
+
+**Computed Properties:**
+```swift
+struct Rectangulo {
+    var ancho: Double
+    var alto: Double
+    
+    var area: Double {        // Computed property (getter implícito)
+        ancho * alto
+    }
+    
+    var perimetro: Double {   // Getter y setter
+        get {
+            2 * (ancho + alto)
+        }
+        set {
+            lado = newValue / 4  // newValue es el valor asignado
+        }
+    }
+    
+    var diagonal: Double {   // propiedad computada de solo lectura
+        sqrt(ancho * ancho + alto * alto)
+    }
+    
+    var descripcion: String {
+        "\(ancho)x\(alto), área: \(area)"
+    }
+    
+    // Lazy stored property (se calcula una vez al primer acceso)
+    lazy var huellaMemoria: Int = {
+        print("Calculando huella de memoria...")
+        return Int(ancho * alto * 8)
+    }()
+}
+```
+
+**Property Observers (willSet / didSet):**
+```swift
+struct Termostato {
+    var temperatura: Double {
+        willSet {
+            print("La temperatura va a cambiar de \(temperatura) a \(newValue)")
+        }
+        didSet {
+            if temperatura > 30 {
+                print("⚠️ Temperatura alta: \(temperatura)°C")
+                // oldValue tiene el valor anterior
+                if temperatura - oldValue > 10 {
+                    print("Cambio brusco detectado!")
+                }
+            }
+        }
+    }
+}
+
+var t = Termostato(temperatura: 22.0)
+t.temperatura = 35.0
+// "La temperatura va a cambiar de 22.0 a 35.0"
+// "⚠️ Temperatura alta: 35.0°C"
+// "Cambio brusco detectado!"
+```
+
+**Inicializadores en structs:**
+```swift
+struct Usuario {
+    let id: UUID
+    var nombre: String
+    var email: String
+    var activo: Bool = true  // valor por defecto
+    
+    // Memberwise init generado automáticamente
+    // init(id: UUID, nombre: String, email: String, activo: Bool = true)
+    
+    // Init personalizado
+    init(nombre: String, email: String) {
+        self.id = UUID()
+        self.nombre = nombre
+        self.email = email
+        // activo usa su valor por defecto true
+    }
+}
+```
+
+### Enums con valores asociados y pattern matching
+
+Los enums en Swift son mucho más poderosos que en otros lenguajes. Pueden tener valores asociados, métodos, computed properties y conformar protocolos.
+
+```swift
+// Enum básico
+enum Direccion {
+    case norte, sur, este, oeste
+}
+
+// Enum con valores asociados (cada caso puede llevar datos distintos)
+enum Resultado<Success, Failure: Error> {
+    case success(Success)
+    case failure(Failure)
+}
+
+enum MedioTransporte {
+    case coche(marca: String, modelo: String, año: Int)
+    case bici(tipo: String)
+    case andando
+    case transportePublico(linea: String, tarifa: Double)
+}
+
+// Enum con raw values (valores crudos)
+enum ColorHex: String {
+    case rojo = "#FF0000"
+    case verde = "#00FF00"
+    case azul = "#0000FF"
+}
+
+enum StatusCode: Int {
+    case ok = 200
+    case notFound = 404
+    case error = 500
+}
+
+// Enums con métodos y computed properties
+enum Moneda: String, CaseIterable {
+    case eur = "€"
+    case usd = "$"
+    case gbp = "£"
+    
+    var simbolo: String { rawValue }
+    
+    func convertir(monto: Double, a monedaDestino: Moneda, tasa: Double) -> Double {
+        return monto * tasa
+    }
+    
+    static func listaMonedas() -> [Moneda] {
+        return allCases
+    }
+}
+
+// Uso de valores asociados con pattern matching
+func describir(medio: MedioTransporte) -> String {
+    switch medio {
+    case .coche(let marca, let modelo, let año):
+        return "Coche: \(marca) \(modelo) (\(año))"
+    case .bici(let tipo):
+        return "Bicicleta de \(tipo)"
+    case .andando:
+        return "A pie"
+    case .transportePublico(let linea, let tarifa):
+        return "Línea \(linea) (€\(tarifa))"
+    }
+}
+
+// if case / guard case para patrones específicos
+let transporte = MedioTransporte.coche(marca: "Tesla", modelo: "Model 3", año: 2024)
+
+if case .coche(let marca, _, _) = transporte {
+    print("Es un coche marca \(marca)")
+}
+
+guard case .coche = transporte else {
+    print("No es un coche")
+    return
+}
+
+// Enum recursivo (indirect)
+indirect enum Expression {
+    case number(Int)
+    case add(Expression, Expression)
+    case multiply(Expression, Expression)
+    
+    func evaluate() -> Int {
+        switch self {
+        case .number(let value): return value
+        case .add(let a, let b): return a.evaluate() + b.evaluate()
+        case .multiply(let a, let b): return a.evaluate() * b.evaluate()
+        }
+    }
+}
+
+let expr = Expression.add(.number(2), .multiply(.number(3), .number(4)))
+print(expr.evaluate())  // 14
+```
+
+Los enums con valores asociados son la herramienta principal para modelar estados (Result, Optional, loading/data/error) y reemplazan los union types de otros lenguajes.
+
+### Closures
+
+Las closures en Swift son bloques de código autocontenidos, equivalentes a lambdas en otros lenguajes. Capturan y almacenan referencias a variables del contexto donde se definen.
+
+```swift
+// Sintaxis básica
+let suma: (Int, Int) -> Int = { (a: Int, b: Int) -> Int in
+    return a + b
+}
+
+// Formas abreviadas
+let suma2: (Int, Int) -> Int = { $0 + $1 }
+let suma3 = { (a: Int, b: Int) in a + b }  // Inferencia de tipo de retorno
+
+// Closures como parámetros de función
+func ejecutar(_ operacion: (Int, Int) -> Int, a: Int, b: Int) -> Int {
+    return operacion(a, b)
+}
+
+ejecutar(suma, a: 5, b: 3)        // 8
+ejecutar({ $0 * $1 }, a: 4, b: 5) // 20
+
+// Trailing closure syntax
+ejecutar(a: 10, b: 2) { $0 - $1 }  // 8
+
+// Múltiples closures
+func cargarDatos(
+    onSuccess: (Data) -> Void,
+    onError: (Error) -> Void
+) {
+    // ...
+}
+
+cargarDatos { data in
+    print("Datos recibidos: \(data.count) bytes")
+} onError: { error in
+    print("Error: \(error)")
+}
+```
+
+**Escaping vs Non-Escaping:**
+```swift
+var handlers: [() -> Void] = []
+
+// Non-escaping (por defecto): la closure se ejecuta dentro de la función
+func noEscaping(_ closure: () -> Void) {
+    closure()  // Se ejecuta aquí, no se almacena
+}
+
+// @escaping: la closure sobrevive al retorno de la función
+func escaping(_ closure: @escaping () -> Void) {
+    handlers.append(closure)  // Se almacena para ejecución futura
+}
+```
+
+**@autoclosure (lazy evaluation):**
+```swift
+func assert(_ condition: @autoclosure () -> Bool, message: String = "") {
+    if !condition() {
+        print("Assertion failed: \(message)")
+    }
+}
+
+assert(1 + 1 == 3, message: "Las matemáticas no funcionan")
+// La expresión 1+1==3 solo se evalúa si entramos a assert
+```
+
+**Capture lists (control de referencias en closures):**
+```swift
+class Servicio {
+    var dato: String = "inicial"
+    
+    func obtenerDato(completion: @escaping (String) -> Void) {
+        DispatchQueue.global().async { [weak self] in
+            guard let self = self else { return }
+            completion(self.dato)
+        }
+    }
+}
+```
+
+### Genéricos, where constraints, opaque types (some), any (existential)
+
+**Genéricos básicos:**
+```swift
+func intercambiar<T>(_ a: inout T, _ b: inout T) {
+    let temp = a
+    a = b
+    b = temp
+}
+
+struct Pila<Element> {
+    private var items: [Element] = []
+    
+    mutating func push(_ item: Element) {
+        items.append(item)
+    }
+    
+    mutating func pop() -> Element? {
+        items.popLast()
+    }
+}
+```
+
+**Constraints con where:**
+```swift
+func encontrarMaximo<T: Comparable>(_ array: [T]) -> T? {
+    guard var maximo = array.first else { return nil }
+    for elemento in array {
+        if elemento > maximo {
+            maximo = elemento
+        }
+    }
+    return maximo
+}
+
+protocol Sumable {
+    static func +(lhs: Self, rhs: Self) -> Self
+}
+
+func sumaArray<T>(_ array: [T]) -> T where T: Numeric {
+    return array.reduce(0, +)
+}
+```
+
+**Opaque Types (`some`):**
+El keyword `some` permite retornar un tipo que conforma un protocolo sin revelar el tipo concreto:
+```swift
+func crearLista() -> some Collection {
+    return [1, 2, 3, 4, 5]
+}
+
+protocol Figurable {
+    associatedtype Color
+    var color: Color { get }
+}
+
+struct Circulo: Figurable {
+    typealias Color = String
+    var color: String = "rojo"
+}
+
+func crearFigura() -> some Figurable {
+    return Circulo(color: "azul")
+}
+```
+
+`some` preserva la identidad del tipo (el compilador sabe el tipo concreto). Es diferente de `any`:
+
+**Existential Types (`any`):**
+```swift
+// any borra el tipo concreto — type erasure
+let figuras: [any Figurable] = [Circulo(color: "rojo"), Circulo(color: "azul")]
+```
+
+| Característica | `some` (opaque) | `any` (existential) |
+|---|---|---|
+| Identidad del tipo | Preservada | Borrada |
+| Se usa en | Return types, propiedades | Arrays, variables, parámetros |
+| Performance | Static dispatch | Dynamic dispatch (box) |
+| Restricciones | Mismo tipo siempre | Tipos distintos permitidos |
+
+### Error handling: throws, try/catch, Result, defer
+
+Swift tiene un sistema de manejo de errores integrado con el lenguaje:
+
+```swift
+// Definir errores con enum
+enum ErrorRed: Error {
+    case sinConexion
+    case timeout(segundos: Int)
+    case notFound
+    case desconocido(mensaje: String)
+}
+
+// Función que lanza errores
+func obtenerUsuario(id: Int) throws -> String {
+    guard id > 0 else {
+        throw ErrorRed.notFound
+    }
+    guard id < 100 else {
+        throw ErrorRed.timeout(segundos: 30)
+    }
+    return "Usuario \(id)"
+}
+
+// Manejo con do/catch
+do {
+    let usuario = try obtenerUsuario(id: 42)
+    print(usuario)
+} catch ErrorRed.notFound {
+    print("Usuario no encontrado")
+} catch ErrorRed.timeout(let segundos) {
+    print("Timeout después de \(segundos)s")
+} catch {
+    print("Error desconocido: \(error)")
+}
+
+// try? — convierte el error en nil
+let usuario = try? obtenerUsuario(id: -1)  // nil (no lanza)
+
+// try! — confianza ciega (crash si hay error)
+let usuarioSeguro = try! obtenerUsuario(id: 1)
+
+// throw en propiedades computadas
+struct Config {
+    var archivo: String
+    var contenido: String {
+        get throws {
+            guard !archivo.isEmpty else {
+                throw ErrorRed.notFound
+            }
+            return "contenido del archivo"
+        }
+    }
+}
+
+// Re-lanzar errores con rethrows
+func ejecutarTarea(_ tarea: () throws -> Void) rethrows {
+    try tarea()
+}
+```
+
+**`Result<Success, Failure>`:**
+```swift
+func dividir(_ a: Int, _ b: Int) -> Result<Int, Error> {
+    guard b != 0 else {
+        return .failure(NSError(domain: "math", code: 1))
+    }
+    return .success(a / b)
+}
+
+let resultado = dividir(10, 2)
+switch resultado {
+case .success(let valor):
+    print("Resultado: \(valor)")
+case .failure(let error):
+    print("Error: \(error)")
+}
+
+// map y flatMap en Result
+let cuadrado = resultado.map { $0 * $0 }
+let dividido = resultado.flatMap { dividir($0, 2) }
+```
+
+**defer — ejecución al salir del ámbito:**
+```swift
+func leerArchivo(ruta: String) throws -> String {
+    let file = open(ruta, O_RDONLY)
+    defer {
+        close(file)  // Se ejecuta SIEMPRE al salir, incluso si hay throw
+        print("Archivo cerrado")
+    }
+    guard file != -1 else {
+        throw ErrorRed.notFound
+    }
+    // ... leer archivo
+    return "contenido"
+}
+```
+`defer` se ejecuta en orden inverso al que se declara (LIFO) y siempre al salir del ámbito, independientemente de cómo se salga (return, throw, break).
+
+### ARC (Automatic Reference Counting)
+
+ARC gestiona la memoria de las reference types (class, actor) automáticamente. Cada objeto tiene un contador de referencias que se incrementa al crear una referencia y se decrementa al eliminarla. Cuando llega a 0, el objeto se libera.
+
+```swift
+class Usuario {
+    let nombre: String
+    init(nombre: String) { self.nombre = nombre }
+    deinit { print("\(nombre) liberado") }
+}
+
+var ana: Usuario? = Usuario(nombre: "Ana")  // retain count = 1
+var otraRef: Usuario? = ana                 // retain count = 2
+ana = nil                                    // retain count = 1
+otraRef = nil                                // retain count = 0 → deinit
+```
+
+**strong, weak, unowned:**
+
+| Keyword | Retain count | Cuándo usarla |
+|---|---|---|
+| `strong` (default) | Incrementa | Propiedad normal |
+| `weak` | No incrementa | Para evitar ciclos (delegados, closures). Siempre opcional (`var`) |
+| `unowned` | No incrementa | Cuando sabes que la referencia nunca será nil. No opcional. Peligroso si el objeto se libera antes |
+
+**Ciclo de referencia (memory leak):**
+```swift
+class Persona {
+    let nombre: String
+    var perro: Perro?
+    init(nombre: String) { self.nombre = nombre }
+    deinit { print("\(nombre) liberado") }
+}
+
+class Perro {
+    let nombre: String
+    weak var dueno: Persona?  // weak previene el ciclo
+    init(nombre: String) { self.nombre = nombre }
+    deinit { print("\(nombre) liberado") }
+}
+
+var ana: Persona? = Persona(nombre: "Ana")
+var bobby: Perro? = Perro(nombre: "Bobby")
+ana?.perro = bobby
+bobby?.dueno = ana
+ana = nil   // Ahora sí se libera (dueno es weak)
+bobby = nil // Se libera
+```
+
+**Capture lists en closures:**
+```swift
+class ServicioNotificaciones {
+    var handlers: [() -> Void] = []
+    
+    func registrarHandler() {
+        handlers.append { [weak self] in
+            guard let self = self else { return }
+            self.ejecutar()
+        }
+    }
+    
+    func ejecutar() { print("Ejecutando...") }
+    deinit { print("Servicio liberado") }
+}
+```
+
+Fuente: [Apple — Automatic Reference Counting](https://docs.swift.org/swift-book/LanguageGuide/AutomaticReferenceCounting.html)
+
+### async/await, actors, Sendable, TaskGroup
+
+Swift introdujo concurrencia estructurada nativa en Swift 5.5 con async/await, actors y task groups.
+
+```swift
+// Funciones asíncronas
+func obtenerDatos() async throws -> Data {
+    let url = URL(string: "https://api.example.com/data")!
+    let (data, _) = try await URLSession.shared.data(from: url)
+    return data
+}
+
+// Llamada desde un contexto async
+Task {
+    do {
+        let datos = try await obtenerDatos()
+        print("Recibidos \(datos.count) bytes")
+    } catch {
+        print("Error: \(error)")
+    }
+}
+```
+
+**Actors (protección de estado concurrente):**
+```swift
+actor Banco {
+    private var saldo: Double = 0
+    
+    func depositar(_ monto: Double) {
+        saldo += monto
+    }
+    
+    func retirar(_ monto: Double) -> Bool {
+        guard saldo >= monto else { return false }
+        saldo -= monto
+        return true
+    }
+    
+    func consultarSaldo() -> Double {
+        saldo
+    }
+}
+
+let banco = Banco()
+Task {
+    await banco.depositar(100)
+    let saldo = await banco.consultarSaldo()
+    print("Saldo: \(saldo)")
+}
+```
+
+**Sendable (seguridad en concurrencia):**
+```swift
+// Sendable indica que un tipo es seguro para pasar entre actores/tasks
+struct Configuracion: Sendable {
+    let url: String
+    let timeout: Int
+}
+
+// @unchecked Sendable para tipos que sabes que son seguros
+final class Cache: @unchecked Sendable {
+    private let lock = NSLock()
+    private var datos: [String: Any] = [:]
+    
+    func obtener(_ key: String) -> Any? {
+        lock.lock()
+        defer { lock.unlock() }
+        return datos[key]
+    }
+}
+```
+
+**TaskGroup (concurrencia dinámica):**
+```swift
+func descargarMultiples(urls: [URL]) async throws -> [Data] {
+    try await withThrowingTaskGroup(of: Data.self) { group in
+        for url in urls {
+            group.addTask {
+                let (data, _) = try await URLSession.shared.data(from: url)
+                return data
+            }
+        }
+        
+        var resultados: [Data] = []
+        for try await resultado in group {
+            resultados.append(resultado)
+        }
+        return resultados
+    }
+}
+```
+
+**Continuations (bridge entre callbacks y async/await):**
+```swift
+func esperarTemporizador(segundos: Int) async {
+    await withCheckedContinuation { continuation in
+        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(segundos)) {
+            continuation.resume()  // Reanuda la async function
+        }
+    }
+}
+
+// UnsafeContinuation (más rápido, sin checks)
+func esperarNotificacion() async -> String {
+    await withUnsafeContinuation { continuation in
+        NotificationCenter.default.addObserver(
+            forName: .init("MiNotificacion"),
+            object: nil,
+            queue: .main
+        ) { notif in
+            continuation.resume(returning: notif.name.rawValue)
+        }
+    }
+}
+```
+
+**Cuándo usar cada uno:**
+
+| Herramienta | Para |
+|---|---|
+| `async`/`await` | Operaciones I/O asíncronas: red, BD, archivos |
+| `actor` | Estado mutable compartido entre tareas concurrentes |
+| `Sendable` | Marcar tipos seguros para concurrencia |
+| `TaskGroup` | Múltiples tareas dinámicas con resultados agregados |
+| `Continuation` | Adaptar APIs legacy con callbacks a async/await |
+| `Task.detached` | Tarea que no hereda el contexto del padre |
+
+Fuente: [Swift.org — Concurrency](https://docs.swift.org/swift-book/LanguageGuide/Concurrency.html), [Apple — WWDC 2021 Meet async/await](https://developer.apple.com/videos/play/wwdc2021/10132/)
+
+### Codable (Encodable/Decodable)
+
+Codable es el sistema nativo de serialización/deserialización en Swift. Combina Encodable y Decodable en un typealias. Soporta JSON, Property List y formatos personalizados.
+
+```swift
+// Conformancia automática (todas las propiedades son Codable)
+struct Usuario: Codable {
+    let id: Int
+    var nombre: String
+    var email: String
+    var activo: Bool
+}
+
+// JSON → Struct
+let json = """
+{
+    "id": 1,
+    "nombre": "Ana",
+    "email": "ana@email.com",
+    "activo": true
+}
+""".data(using: .utf8)!
+
+let usuario = try JSONDecoder().decode(Usuario.self, from: json)
+print(usuario.nombre)  // "Ana"
+
+// Struct → JSON
+let encoder = JSONEncoder()
+encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+let data = try encoder.encode(usuario)
+print(String(data: data, encoding: .utf8)!)
+```
+
+**CodingKeys personalizados (mapeo de nombres):**
+```swift
+struct Producto: Codable {
+    let id: Int
+    let nombre: String
+    let precio: Double
+    let fechaCreacion: Date
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case nombre = "name"           // JSON key es "name"
+        case precio = "price"
+        case fechaCreacion = "created_at"
+    }
+}
+```
+
+**Decodable personalizado:**
+```swift
+struct RespuestaAPI<T: Decodable>: Decodable {
+    let data: T
+    let mensaje: String
+    let codigo: Int
+    
+    enum CodingKeys: String, CodingKey {
+        case data, mensaje = "message", codigo = "code"
+    }
+    
+    // Init personalizado para transformaciones
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        data = try container.decode(T.self, forKey: .data)
+        mensaje = (try? container.decode(String.self, forKey: .mensaje)) ?? "Sin mensaje"
+        codigo = (try? container.decode(Int.self, forKey: .codigo)) ?? -1
+    }
+}
+```
+
+**KeyPaths:**
+```swift
+struct Persona {
+    let nombre: String
+    let edad: Int
+}
+
+let keyPathNombre = \Persona.nombre  // KeyPath<Persona, String>
+let ana = Persona(nombre: "Ana", edad: 30)
+print(ana[keyPath: keyPathNombre])  // "Ana"
+
+// WritableKeyPath para propiedades var
+var mutable = Persona(nombre: "Luis", edad: 25)
+let keyPathEdad = \Persona.edad
+mutable[keyPath: keyPathEdad] = 26
+
+// KeyPaths en funciones de orden superior
+let personas = [Persona(nombre: "Ana", edad: 30), Persona(nombre: "Luis", edad: 25)]
+let nombres = personas.map(\.nombre)  // ["Ana", "Luis"]
+```
+
+**@dynamicMemberLookup (subscript dinámico por string):**
+```swift
+@dynamicMemberLookup
+struct JSON {
+    private var data: [String: Any]
+    
+    init(_ data: [String: Any]) { self.data = data }
+    
+    subscript(dynamicMember key: String) -> Any? {
+        data[key]
+    }
+}
+
+let json = JSON(["nombre": "Ana", "edad": 30])
+print(json.nombre as Any)  // Optional("Ana")
+print(json.edad as Any)    // Optional(30)
+```
+
+### Property Wrappers
+
+Los property wrappers encapsulan lógica de acceso a propiedades (validación, transformación, almacenamiento):
+
+```swift
+@propertyWrapper
+struct Trimmed {
+    private var value: String = ""
+    
+    var wrappedValue: String {
+        get { value }
+        set { value = newValue.trimmingCharacters(in: .whitespacesAndNewlines) }
+    }
+    
+    init(wrappedValue initialValue: String) {
+        self.wrappedValue = initialValue
+    }
+}
+
+@propertyWrapper
+struct ValidatedRange<T: Comparable> {
+    private var value: T
+    private let min: T
+    private let max: T
+    
+    init(wrappedValue: T, min: T, max: T) {
+        self.value = Swift.min(Swift.max(wrappedValue, min), max)
+        self.min = min
+        self.max = max
+    }
+    
+    var wrappedValue: T {
+        get { value }
+        set { value = Swift.min(Swift.max(newValue, min), max) }
+    }
+}
+
+// Uso
+struct Formulario {
+    @Trimmed var nombre: String
+    @ValidatedRange(min: 0, max: 100) var puntuacion: Int = 50
+    @ValidatedRange(min: -10, max: 10) var offset: Int = 0
+}
+
+var form = Formulario()
+form.nombre = "   Ana Pérez   "
+print(form.nombre)  // "Ana Pérez" (trimmed automático)
+
+form.puntuacion = 150
+print(form.puntuacion)  // 100 (clamped al máximo)
+```
+
+**Property Wrappers en SwiftUI:**
+```swift
+import SwiftUI
+
+struct ContadorView: View {
+    @State private var contador: Int = 0          // Estado local
+    @Binding var compartido: Int                  // Referencia a estado externo
+    @StateObject private var viewModel = ViewModel() // Objeto observable propio
+    @ObservedObject var modeloExterno: ViewModel   // Objeto observable externo
+    @EnvironmentObject var appState: AppState     // Inyección de dependencias
+    @AppStorage("nombre") var nombre: String = "" // UserDefaults
+    @SceneStorage("tab") var tabActual: Int = 0   // Persistencia por escena
+    @FocusState var campoActivo: Bool             // Estado de foco
+    @Namespace var animacionNamespace             // Para matched geometry effect
+    
+    var body: some View {
+        VStack {
+            Text("Contador: \(contador)")
+            Button("Incrementar") { contador += 1 }
+        }
+    }
+}
+```
+
+### Result Builders
+
+Los result builders permiten construir valores complejos a partir de una lista declarativa de elementos:
+
+```swift
+@resultBuilder
+struct ArrayBuilder<Element> {
+    static func buildBlock(_ components: Element...) -> [Element] {
+        components
+    }
+    
+    static func buildOptional(_ component: [Element]?) -> [Element] {
+        component ?? []
+    }
+    
+    static func buildEither(first component: [Element]) -> [Element] {
+        component
+    }
+    
+    static func buildEither(second component: [Element]) -> [Element] {
+        component
+    }
+    
+    static func buildArray(_ components: [[Element]]) -> [Element] {
+        components.flatMap { $0 }
+    }
+    
+    static func buildExpression(_ expression: Element) -> [Element] {
+        [expression]
+    }
+}
+
+// Uso
+func construirArray<T>(@ArrayBuilder<T> builder: () -> [T]) -> [T] {
+    builder()
+}
+
+let numeros = construirArray {
+    1
+    2
+    3
+    if true {
+        4
+        5
+    }
+}
+print(numeros)  // [1, 2, 3, 4, 5]
+```
+
+**@ViewBuilder de SwiftUI:**
+```swift
+import SwiftUI
+
+struct CardView<Content: View>: View {
+    @ViewBuilder let content: Content
+    
+    var body: some View {
+        VStack(spacing: 8) {
+            Text("Tarjeta")
+                .font(.headline)
+            content
+        }
+        .padding()
+        .background(Color.white)
+        .cornerRadius(12)
+    }
+}
+
+// Uso con @ViewBuilder implícito
+struct ContentView: View {
+    var body: some View {
+        CardView {
+            Text("Contenido de la tarjeta")
+            Image(systemName: "star")
+        }
+    }
+}
+```
+
+### SwiftUI Basics
+
+SwiftUI es el framework declarativo de UI de Apple. En lugar de decir cómo construir la interfaz (imperativo), describes cómo debería verse.
+
+```swift
+import SwiftUI
+
+struct ListaTareasView: View {
+    @State private var tareas: [String] = ["Comprar leche", "Estudiar Swift"]
+    @State private var nuevaTarea: String = ""
+    
+    var body: some View {
+        NavigationStack {
+            List {
+                ForEach(tareas, id: \.self) { tarea in
+                    HStack {
+                        Image(systemName: "circle")
+                            .foregroundColor(.blue)
+                        Text(tarea)
+                    }
+                }
+                .onDelete(perform: eliminarTarea)
+                
+                HStack {
+                    TextField("Nueva tarea", text: $nuevaTarea)
+                        .textFieldStyle(.roundedBorder)
+                    Button("Añadir") {
+                        guard !nuevaTarea.isEmpty else { return }
+                        tareas.append(nuevaTarea)
+                        nuevaTarea = ""
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+            }
+            .navigationTitle("Tareas")
+        }
+    }
+    
+    func eliminarTarea(at offsets: IndexSet) {
+        tareas.remove(atOffsets: offsets)
+    }
+}
+
+// Preview en Xcode
+#Preview {
+    ListaTareasView()
+}
+```
+
+**Patrones clave de SwiftUI:**
+- `@State`: estado local a la vista
+- `@Binding`: enlace bidireccional a estado externo
+- `@ObservedObject`/`@StateObject`: estado en un objeto observable
+- `@EnvironmentObject`: dependencias inyectadas desde el entorno
+- `$` prefijo: proyección del binding para enlaces bidireccionales
+- `VStack`/`HStack`/`ZStack`: layouts básicos
+- `@ViewBuilder`: construye múltiples vistas sin `Group`
+
+Fuente: [Swift.org — Properties](https://docs.swift.org/swift-book/LanguageGuide/Properties.html), [Apple — SwiftUI Tutorials](https://developer.apple.com/tutorials/swiftui), [Hacking with Swift — SwiftUI](https://www.hackingwithswift.com/quick-start/swiftui)
+
+---
+
+## Ejemplo completo de POO y POP en Swift
+
+Este ejemplo une todos los conceptos explicados arriba en un sistema realista de biblioteca multimedia. Léelo de arriba a abajo: cada tipo añade una capa.
+
+```swift
+import Foundation
+
+// MARK: - Enums y modelos base
+
+enum FormatoVideo: String, Codable, CaseIterable {
+    case mp4, webm, avi, mkv
+}
+
+struct Metadatos: Codable, Equatable {
+    let titulo: String
+    let duracionSegundos: Int
+    let fechaCreacion: Date
+    var tags: [String]
+    
+    var duracionFormateada: String {
+        let minutos = duracionSegundos / 60
+        let segundos = duracionSegundos % 60
+        return "\(minutos):\(String(format: "%02d", segundos))"
+    }
+}
+
+// MARK: - Protocolos base
+
+protocol Reproducible: AnyObject {
+    var metadatos: Metadatos { get }
+    var reproducciones: Int { get }
+    func reproducir() -> String
+}
+
+protocol Informable {
+    func obtenerInfo() -> String
+}
+
+protocol Exportable {
+    func exportar(formato: String) throws -> Data
+}
+
+// Protocol composition con extensión por defecto
+extension Exportable {
+    func exportar(formato: String = "json") throws -> Data {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        return try encoder.encode(self)
+    }
+}
+
+// MARK: - Struct que conforma protocolos
+
+struct Audio: Reproducible, Informable, Codable {
+    let metadatos: Metadatos
+    private(set) var reproducciones: Int = 0
+    let bitrateKbps: Int
+    
+    mutating func reproducir() -> String {
+        reproducciones += 1
+        return "▶️ Reproduciendo \(metadatos.titulo)... (\(bitrateKbps)kbps)"
+    }
+    
+    func obtenerInfo() -> String {
+        "🎵 \(metadatos.titulo) | \(metadatos.duracionFormateada) | \(bitrateKbps)kbps | \(reproducciones) reproducciones"
+    }
+}
+
+// MARK: - Clase con herencia
+
+class Contenido: Reproducible, Informable {
+    let metadatos: Metadatos
+    private(set) var reproducciones: Int = 0
+    
+    init(metadatos: Metadatos) {
+        self.metadatos = metadatos
+    }
+    
+    func reproducir() -> String {
+        reproducciones += 1
+        return "▶️ Reproduciendo \(metadatos.titulo)..."
+    }
+    
+    func obtenerInfo() -> String {
+        "[\(type(of: self))] \(metadatos.titulo)"
+    }
+    
+    deinit {
+        print("\(metadatos.titulo) liberado de memoria")
+    }
+}
+
+class Video: Contenido {
+    let resolucion: String
+    let formato: FormatoVideo
+    var subtitulos: Bool = false
+    
+    init(metadatos: Metadatos, resolucion: String, formato: FormatoVideo) {
+        self.resolucion = resolucion
+        self.formato = formato
+        super.init(metadatos: metadatos)
+    }
+    
+    override func obtenerInfo() -> String {
+        "🎬 \(metadatos.titulo) | \(resolucion) | \(formato.rawValue.uppercased()) | \(subtitulos ? "CC" : "Sin subtítulos")"
+    }
+}
+
+// MARK: - Herencia + conformancia por extensión
+
+class Podcast: Contenido, Exportable {
+    let episodio: Int
+    let anfitrion: String
+    let bitrateKbps: Int
+    
+    init(metadatos: Metadatos, bitrateKbps: Int, episodio: Int, anfitrion: String) {
+        self.episodio = episodio
+        self.anfitrion = anfitrion
+        self.bitrateKbps = bitrateKbps
+        super.init(metadatos: metadatos)
+    }
+    
+    override func obtenerInfo() -> String {
+        "🎙️ Ep.\(episodio): \(metadatos.titulo) | con \(anfitrion) | \(bitrateKbps)kbps"
+    }
+}
+
+// MARK: - Composición
+
+struct ListaReproduccion {
+    let nombre: String
+    private(set) var items: [any Reproducible & Informable] = []
+    
+    var count: Int { items.count }
+    
+    mutating func agregar(_ item: some Reproducible & Informable) {
+        items.append(item)
+    }
+    
+    mutating func quitar(at index: Int) {
+        guard index < items.count else { return }
+        items.remove(at: index)
+    }
+    
+    func reproducirTodo() -> [String] {
+        items.map { $0.reproducir() }
+    }
+    
+    func infoCompleta() -> [String] {
+        items.map { $0.obtenerInfo() }
+    }
+}
+
+// MARK: - Protocol con associated type + extensions
+
+protocol EstrategiaFiltro {
+    associatedtype Item
+    func filtrar(_ items: [Item]) -> [Item]
+}
+
+struct FiltroPorTag: EstrategiaFiltro {
+    let tag: String
+    
+    func filtrar(_ items: [Metadatos]) -> [Metadatos] {
+        items.filter { $0.tags.contains(tag) }
+    }
+}
+
+extension ListaReproduccion {
+    mutating func aplicarFiltro(_ filtro: FiltroPorTag) {
+        let metadatos = items.map(\.metadatos)
+        let filtrados = filtro.filtrar(metadatos)
+        items = items.filter { item in
+            filtrados.contains(where: { $0.titulo == item.metadatos.titulo })
+        }
+    }
+}
+
+// MARK: - Uso del sistema
+
+func main() {
+    // Crear contenido de distintos tipos
+    var cancion = Audio(
+        metadatos: Metadatos(
+            titulo: "Bohemian Rhapsody",
+            duracionSegundos: 354,
+            fechaCreacion: Date(),
+            tags: ["rock", "clásico"]
+        ),
+        bitrateKbps: 320
+    )
+    
+    let pelicula = Video(
+        metadatos: Metadatos(
+            titulo: "Inception",
+            duracionSegundos: 8880,
+            fechaCreacion: Date(),
+            tags: ["ciencia ficción", "thriller"]
+        ),
+        resolucion: "4K",
+        formato: .mkv
+    )
+    pelicula.subtitulos = true
+    
+    let podcast = Podcast(
+        metadatos: Metadatos(
+            titulo: "El futuro de la IA",
+            duracionSegundos: 2700,
+            fechaCreacion: Date(),
+            tags: ["tecnología", "IA"]
+        ),
+        bitrateKbps: 128,
+        episodio: 42,
+        anfitrion: "Ana López"
+    )
+    
+    // Polimorfismo: obtenerInfo() se comporta distinto según el tipo
+    let contenidos: [any Informable] = [cancion, pelicula, podcast]
+    for contenido in contenidos {
+        print(contenido.obtenerInfo())
+    }
+    
+    // Composición
+    var lista = ListaReproduccion(nombre: "Favoritos")
+    lista.agregar(cancion)
+    lista.agregar(pelicula)
+    lista.agregar(podcast)
+    print(lista.reproducirTodo())
+    print(lista.infoCompleta())
+    
+    // Protocol con extensión y exportación
+    if let data = try? podcast.exportar() {
+        print(String(data: data, encoding: .utf8)!)
+    }
+    
+    // Mutating en struct
+    cancion.reproducciones  // 0 — canción original
+    cancion.reproducir()    // mutating struct
+    cancion.reproducciones  // 1
+    
+    // Deinit en clase
+    // pelicula se libera al salir del ámbito (con su deinit)
+}
+```
+
+**Conceptos demostrados:**
+
+| Concepto | Cómo aparece |
+|---|---|
+| Protocolos | `Reproducible`, `Informable`, `Exportable`, `EstrategiaFiltro` |
+| Protocol Extensions | `Exportable.exportar()` con implementación por defecto |
+| Protocol Composition | `Reproducible & Informable` como tipo |
+| Associated Types | `EstrategiaFiltro.Item` |
+| Struct vs Class | `Audio` (struct) vs `Contenido`/`Video`/`Podcast` (class) |
+| `mutating` | `Audio.reproducir()` modifica `reproducciones` |
+| Herencia | `Video: Contenido`, `Podcast: Contenido` |
+| `override` | `Video.obtenerInfo()`, `Podcast.obtenerInfo()` |
+| Composición | `ListaReproduccion` contiene `[Reproducible & Informable]` |
+| Codable | `Metadatos`, `Audio` conforman Codable automáticamente |
+| Computed properties | `Metadatos.duracionFormateada` |
+| Enums con raw values | `FormatoVideo: String` |
+| `deinit` | `Contenido.deinit` para logging de liberación |
+| `defer` | Análogo: cleanup en `Exportable` |
+| Value semantics | `cancion` se copia al modificar, `pelicula` comparte referencia |
+
+---
+
+## Patrones de diseño con ejemplos
+
+### Strategy (protocolos + structs)
+
+```swift
+protocol OrdenadorEstrategia {
+    func ordenar<T: Comparable>(_ datos: [T]) -> [T]
+}
+
+struct OrdenAscendente: OrdenadorEstrategia {
+    func ordenar<T: Comparable>(_ datos: [T]) -> [T] {
+        datos.sorted()
+    }
+}
+
+struct OrdenDescendente: OrdenadorEstrategia {
+    func ordenar<T: Comparable>(_ datos: [T]) -> [T] {
+        datos.sorted(by: >)
+    }
+}
+
+struct OrdenPorLongitud: OrdenadorEstrategia {
+    func ordenar<T: Comparable>(_ datos: [T]) -> [T] {
+        datos.sorted { "\($0)".count < "\($1)".count }
+    }
+}
+
+struct Analizador {
+    var estrategia: OrdenadorEstrategia
+    
+    mutating func cambiarEstrategia(_ nueva: OrdenadorEstrategia) {
+        estrategia = nueva
+    }
+    
+    func analizar<T: Comparable>(_ datos: [T]) -> [T] {
+        estrategia.ordenar(datos)
+    }
+}
+
+var analizador = Analizador(estrategia: OrdenDescendente())
+print(analizador.analizar([3, 1, 4, 1, 5, 9]))  // [9, 5, 4, 3, 1, 1]
+analizador.cambiarEstrategia(OrdenAscendente())
+print(analizador.analizar([3, 1, 4, 1, 5, 9]))  // [1, 1, 3, 4, 5, 9]
+```
+
+**Cuándo usarlo**: múltiples variantes de un algoritmo que quieres intercambiar sin condicionales.
+
+### Observer (Combine / NotificationCenter)
+
+```swift
+import Combine
+
+// Con Combine (moderno)
+class SensorTemperatura: ObservableObject {
+    @Published var temperatura: Double = 0
+    
+    func actualizar(_ valor: Double) {
+        temperatura = valor
+    }
+}
+
+class DashboardViewModel {
+    private var cancellables = Set<AnyCancellable>()
+    let sensor = SensorTemperatura()
+    
+    init() {
+        sensor.$temperatura
+            .sink { [weak self] temp in
+                print("[DASH] Actualizando gráfico con \(temp)°C")
+            }
+            .store(in: &cancellables)
+    }
+}
+
+// Con NotificationCenter (legacy)
+extension Notification.Name {
+    static let temperaturaCambio = Notification.Name("temperaturaCambio")
+}
+
+class Logger {
+    init() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(logTemperatura),
+            name: .temperaturaCambio,
+            object: nil
+        )
+    }
+    
+    @objc func logTemperatura(_ notification: Notification) {
+        guard let temp = notification.userInfo?["valor"] as? Double else { return }
+        print("[LOG] Temperatura: \(temp)°C")
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+}
+```
+
+**Cuándo usarlo**: eventos, señales, actualizaciones en tiempo real. Combine es el estándar moderno. NotificationCenter para interoperar con Objective-C.
+
+### Singleton (static let + private init)
+
+```swift
+final class ConfiguracionApp {
+    static let shared = ConfiguracionApp()
+    
+    private init() {}  // Previene instanciación externa
+    
+    let apiURL = "https://api.example.com"
+    var timeout: TimeInterval = 30
+    var cacheSize: Int = 50 * 1024 * 1024  // 50MB
+    
+    private var _modoDebug: Bool = false
+    var modoDebug: Bool {
+        get { _modoDebug }
+        set {
+            _modoDebug = newValue
+            print("Modo debug: \(newValue)")
+        }
+    }
+}
+
+ConfiguracionApp.shared.timeout = 60
+print(ConfiguracionApp.shared.apiURL)
+```
+
+Los singletons son controvertidos en Swift porque dificultan el testing. Usa inyección de dependencias siempre que puedas. SwiftUI los evita mediante `@EnvironmentObject`.
+
+### Factory (protocol + registry)
+
+```swift
+protocol Plugin {
+    func ejecutar() -> String
+}
+
+struct PluginPDF: Plugin {
+    func ejecutar() -> String { "Procesando PDF" }
+}
+
+struct PluginCSV: Plugin {
+    func ejecutar() -> String { "Procesando CSV" }
+}
+
+struct PluginImagen: Plugin {
+    func ejecutar() -> String { "Procesando imagen" }
+}
+
+enum PluginFactory {
+    private static var registry: [String: Plugin.Type] = [:]
+    
+    static func registrar(_ tipo: Plugin.Type, para clave: String) {
+        registry[clave] = tipo
+    }
+    
+    static func crear(_ clave: String) -> Plugin? {
+        registry[clave]?.init() as? Plugin
+    }
+    
+    static func tiposDisponibles() -> [String] {
+        Array(registry.keys)
+    }
+}
+
+// Registro
+PluginFactory.registrar(PluginPDF.self, para: "pdf")
+PluginFactory.registrar(PluginCSV.self, para: "csv")
+PluginFactory.registrar(PluginImagen.self, para: "imagen")
+
+// Uso
+if let plugin = PluginFactory.crear("pdf") {
+    print(plugin.ejecutar())  // "Procesando PDF"
+}
+```
+
+### Builder (con Result Builders)
+
+```swift
+@resultBuilder
+struct EmailBuilder {
+    static func buildBlock(_ parts: String...) -> String {
+        parts.joined(separator: "\n")
+    }
+    
+    static func buildOptional(_ part: String?) -> String {
+        part ?? ""
+    }
+}
+
+struct Email {
+    let destinatario: String
+    let asunto: String
+    @EmailBuilder let cuerpo: String
+    
+    func enviar() {
+        print("Enviando email a \(destinatario)")
+        print("Asunto: \(asunto)")
+        print("Cuerpo:\n\(cuerpo)")
+    }
+}
+
+let email = Email(
+    destinatario: "ana@email.com",
+    asunto: "Bienvenida"
+) {
+    "Hola Ana,"
+    ""
+    "Bienvenida a nuestra plataforma."
+    if true {
+        "Tu cuenta ha sido creada exitosamente."
+    }
+    ""
+    "Saludos,"
+    "El equipo"
+}
+
+email.enviar()
+```
+
+### Adapter (protocol conformance)
+
+```swift
+// Sistema legacy (Objective-C o código antiguo)
+class DatabaseLegacy: NSObject {
+    @objc func query(_ sql: String) -> [[String: Any]] {
+        return [["resultado": "datos"]]
+    }
+}
+
+// Sistema moderno
+protocol DatabaseProtocol {
+    func execute(_ query: String) async throws -> [[String: Any]]
+}
+
+// Adaptador que unifica la interfaz
+struct DatabaseAdapter: DatabaseProtocol {
+    let legacy: DatabaseLegacy
+    
+    func execute(_ query: String) async throws -> [[String: Any]] {
+        // Bridge sincrónico → async
+        return legacy.query(query)
+    }
+}
+
+// Uso: el adaptador conforma al protocolo moderno
+let adapter = DatabaseAdapter(legacy: DatabaseLegacy())
+Task {
+    let results = try await adapter.execute("SELECT 1")
+    print(results)
+}
+```
+
+---
+
+## Polimorfismo en detalle
+
+Swift tiene múltiples formas de polimorfismo. Todas coexisten en el mismo código.
+
+### 1. Polimorfismo por protocolos (POP)
+```swift
+protocol Sonido {
+    func hacerSonido() -> String
+}
+
+struct Perro: Sonido {
+    func hacerSonido() -> String { "Guau" }
+}
+
+struct Gato: Sonido {
+    func hacerSonido() -> String { "Miau" }
+}
+
+struct Coche: Sonido {
+    func hacerSonido() -> String { "Brum" }
+}
+
+func emitirSonido(_ objeto: some Sonido) {
+    print(objeto.hacerSonido())
+}
+
+emitirSonido(Perro())  // Guau
+emitirSonido(Gato())   // Miau
+emitirSonido(Coche())  // Brum
+```
+
+### 2. Polimorfismo por herencia (clásico con clases)
+```swift
+class Forma {
+    func area() -> Double { 0 }
+}
+
+class Circulo: Forma {
+    let radio: Double
+    init(radio: Double) { self.radio = radio }
+    override func area() -> Double { Double.pi * radio * radio }
+}
+
+class Rectangulo: Forma {
+    let ancho: Double
+    let alto: Double
+    init(ancho: Double, alto: Double) { self.ancho = ancho; self.alto = alto }
+    override func area() -> Double { ancho * alto }
+}
+
+func mostrarArea(_ forma: Forma) {
+    print("Área: \(forma.area())")
+}
+
+mostrarArea(Circulo(radio: 5))       // Área: 78.53...
+mostrarArea(Rectangulo(ancho: 3, alto: 4)) // Área: 12.0
+```
+
+### 3. Polimorfismo con genéricos y where constraints
+```swift
+func duplicar<T: Numeric>(_ valor: T) -> T {
+    valor * 2
+}
+
+print(duplicar(5))     // 10
+print(duplicar(3.5))   // 7.0
+
+// Overloading (sobrecarga)
+func formatear(_ valor: Int) -> String { "Entero: \(valor)" }
+func formatear(_ valor: Double) -> String { String(format: "Decimal: %.2f", valor) }
+func formatear(_ valor: String) -> String { "Texto: \(valor)" }
+
+print(formatear(42))       // "Entero: 42"
+print(formatear(3.14159))  // "Decimal: 3.14"
+print(formatear("Hola"))   // "Texto: Hola"
+```
+
+### 4. Polimorfismo con Opaque Types (some)
+```swift
+protocol Listable {
+    associatedtype Elemento
+    var count: Int { get }
+    func obtener(_ index: Int) -> Elemento?
+}
+
+struct ListaNumeros: Listable {
+    typealias Elemento = Int
+    private let datos = [10, 20, 30]
+    var count: Int { datos.count }
+    func obtener(_ index: Int) -> Int? {
+        guard index < datos.count else { return nil }
+        return datos[index]
+    }
+}
+
+struct ListaTextos: Listable {
+    typealias Elemento = String
+    private let datos = ["a", "b", "c"]
+    var count: Int { datos.count }
+    func obtener(_ index: Int) -> String? {
+        guard index < datos.count else { return nil }
+        return datos[index]
+    }
+}
+
+func crearLista() -> some Listable {
+    ListaNumeros()
+}
+
+let lista = crearLista()
+print(lista.count)  // 3
+```
+
+El polimorfismo por protocolos se resuelve con dispatch dinámico (vtabla), por genéricos con monomorfización en compilación (más rápido), y por `some` preservando el tipo concreto para optimizaciones.
+
+---
+
+## Bases de datos
+
+### CoreData (Apple, ORM graph-based)
+
+CoreData es el framework ORM de Apple para persistencia local. No es SQLite puro, aunque suele usar SQLite como backend.
+
+```swift
+import CoreData
+
+// Modelo: crea .xcdatamodeld en Xcode con entidad Usuario (nombre, email)
+
+// Crear contexto
+let container = NSPersistentContainer(name: "Modelo")
+container.loadPersistentStores { _, error in
+    if let error = error { print(error) }
+}
+
+// Crear objeto
+let context = container.viewContext
+let usuario = Usuario(context: context)
+usuario.nombre = "Ana"
+usuario.email = "ana@email.com"
+
+// Guardar
+try? context.save()
+
+// Fetch request
+let request = Usuario.fetchRequest()
+request.predicate = NSPredicate(format: "nombre CONTAINS %@", "Ana")
+let resultados = try? context.fetch(request)
+```
+
+### SwiftData (moderno, Swift native)
+
+SwiftData es el reemplazo moderno de CoreData, introducido en iOS 17/macOS 14:
+
+```swift
+import SwiftData
+import SwiftUI
+
+@Model
+final class Tarea {
+    var titulo: String
+    var completada: Bool
+    var fechaCreacion: Date
+    
+    init(titulo: String) {
+        self.titulo = titulo
+        self.completada = false
+        self.fechaCreacion = Date()
+    }
+}
+
+struct TareasView: View {
+    @Environment(\.modelContext) private var context
+    @Query private var tareas: [Tarea]
+    
+    var body: some View {
+        List(tareas) { tarea in
+            Text(tarea.titulo)
+        }
+    }
+}
+```
+
+### GRDB (SQLite moderno, librería third-party)
+
+```swift
+import GRDB
+
+// Definición del modelo
+struct Usuario: Codable, FetchableRecord, PersistableRecord {
+    var id: Int64?
+    var nombre: String
+    var email: String
+}
+
+// Conexión
+let dbQueue = try DatabaseQueue(path: "/path/to/db.sqlite")
+
+// Migración
+try dbQueue.write { db in
+    try db.create(table: "usuario") { t in
+        t.autoIncrementedPrimaryKey("id")
+        t.column("nombre", .text).notNull()
+        t.column("email", .text).unique()
+    }
+}
+
+// CRUD
+try dbQueue.write { db in
+    var usuario = Usuario(nombre: "Ana", email: "ana@email.com")
+    try usuario.insert(db)  // INSERT automático
+    usuario.nombre = "Ana López"
+    try usuario.update(db)  // UPDATE automático
+}
+
+// Query
+let usuarios = try dbQueue.read { db in
+    try Usuario.filter(Column("nombre") != nil).fetchAll(db)
+}
+```
+
+### Fluent (Vapor ORM, server-side)
+
+```swift
+import Fluent
+import Vapor
+
+// Modelo
+final class Usuario: Model, Content {
+    static let schema = "usuarios"
+    
+    @ID(key: .id)
+    var id: UUID?
+    
+    @Field(key: "nombre")
+    var nombre: String
+    
+    @Field(key: "email")
+    var email: String
+    
+    @Timestamp(key: "created_at", on: .create)
+    var createdAt: Date?
+    
+    init() { }
+    
+    init(id: UUID? = nil, nombre: String, email: String) {
+        self.id = id
+        self.nombre = nombre
+        self.email = email
+    }
+}
+
+// Migración
+struct CrearUsuarios: AsyncMigration {
+    func prepare(on database: Database) async throws {
+        try await database.schema("usuarios")
+            .id()
+            .field("nombre", .string, .required)
+            .field("email", .string, .required)
+            .unique(on: "email")
+            .create()
+    }
+    
+    func revert(on database: Database) async throws {
+        try await database.schema("usuarios").delete()
+    }
+}
+
+// Consulta
+app.get("usuarios") { req async throws -> [Usuario] in
+    try await Usuario.query(on: req.db).all()
+}
+```
+
+### Base de datos comparativa
+
+| Framework | Async | ORM | Para qué |
+|---|---|---|---|
+| **CoreData** | Sí (iOS 15+) | ORM graph | Persistencia local Apple, iCloud sync |
+| **SwiftData** | Sí | ORM declarativo | Nuevos proyectos iOS 17+, Swift Native |
+| **GRDB** | Sí | Sí (FetchableRecord) | SQLite rápido y flexible, iOS y server |
+| **Fluent** | Sí | ORM completo | Vapor server-side, PostgreSQL/MySQL/SQLite |
+| **Realm** | No | ODM | Persistencia local mobile (obsoleto en iOS 17+) |
+| **MongoDB driver** | Sí | No | Server-side con MondoDB |
+
+Fuente: [Apple — CoreData](https://developer.apple.com/documentation/coredata), [SwiftData docs](https://developer.apple.com/documentation/swiftdata), [GRDB docs](https://github.com/groue/GRDB.swift), [Fluent docs](https://docs.vapor.codes/fluent/overview/)
+
+---
+
+## WebSockets
+
+### URLSessionWebSocketTask (nativa, iOS 13+)
+
+```swift
+import Foundation
+
+class WebSocketCliente: NSObject, URLSessionWebSocketDelegate {
+    private var webSocket: URLSessionWebSocketTask?
+    
+    func conectar(url: URL) {
+        let session = URLSession(configuration: .default, delegate: self, delegateQueue: .main)
+        webSocket = session.webSocketTask(with: url)
+        webSocket?.resume()
+        recibir()
+    }
+    
+    private func recibir() {
+        webSocket?.receive { [weak self] result in
+            switch result {
+            case .success(let mensaje):
+                switch mensaje {
+                case .string(let texto):
+                    print("Recibido: \(texto)")
+                case .data(let data):
+                    print("Datos: \(data.count) bytes")
+                @unknown default:
+                    break
+                }
+                self?.recibir()  // Escuchar siguiente mensaje
+            case .failure(let error):
+                print("Error: \(error)")
+            }
+        }
+    }
+    
+    func enviar(_ texto: String) {
+        webSocket?.send(.string(texto)) { error in
+            if let error = error {
+                print("Error al enviar: \(error)")
+            }
+        }
+    }
+    
+    func desconectar() {
+        webSocket?.cancel(with: .normalClosure, reason: nil)
+    }
+    
+    // URLSessionWebSocketDelegate
+    func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {
+        print("Conectado")
+    }
+    
+    func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didCloseWith closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?) {
+        print("Desconectado")
+    }
+}
+```
+
+### Vapor WebSocket (server-side)
+
 ```swift
 import Vapor
 
-func routes(_ app: Application) throws {
-    app.get { req in
-        return "Hola Mundo"
+func configure(_ app: Application) throws {
+    app.webSocket("chat") { req, ws in
+        ws.onText { ws, texto in
+            // Broadcast a todos los clientes conectados
+            req.application.webSocketClients.forEach { client in
+                client.send("Echo: \(texto)")
+            }
+        }
+        
+        ws.onClose.whenComplete { _ in
+            print("Cliente desconectado")
+        }
     }
 }
 ```
 
-## 📝 Ejercicios Prácticos
+### Starscream (librería WebSocket third-party)
 
-1. **Optionals** 🟢 `[Fácil]` — Función que recibe String optional, unwrapea con `guard let`, devuelve longitud (0 si nil).
-2. **Struct vs Class** 🟢 `[Fácil]` — Define `struct Punto` y `class Persona`. Demuestra diferencia value vs reference type.
-3. **SwiftUI Lista** 🟡 `[Intermedio]` — Vista con lista de items, botón añadir y swipe-to-delete. Usa @State.
-4. **API con Vapor** 🔴 `[Avanzado]` — Servidor Vapor con rutas CRUD y autenticación básica via middleware.
+```swift
+import Starscream
 
-## ⚡ Buenas Prácticas y Complejidad
+class ChatCliente: WebSocketDelegate {
+    var socket: WebSocket?
+    
+    func conectar() {
+        var request = URLRequest(url: URL(string: "wss://chat.example.com")!)
+        request.timeoutInterval = 5
+        socket = WebSocket(request: request)
+        socket?.delegate = self
+        socket?.connect()
+    }
+    
+    func didReceive(event: WebSocketEvent, client: WebSocket) {
+        switch event {
+        case .connected(let headers):
+            print("Conectado: \(headers)")
+        case .text(let texto):
+            print("Mensaje: \(texto)")
+        case .disconnected(let reason, let code):
+            print("Desconectado: \(reason)")
+        case .error(let error):
+            print("Error: \(error)")
+        default:
+            break
+        }
+    }
+}
+```
 
-**Buenas prácticas:**
+| Librería | Nativa | Async/await | Para qué |
+|---|---|---|---|
+| **URLSessionWebSocketTask** | Sí (iOS 13+) | Sí | WebSocket nativo, no requiere dependencias |
+| **Vapor WebSocket** | Sí (Vapor) | Sí | WebSocket server-side con Vapor |
+| **Starscream** | No | Sí | WebSocket cliente con más features (auto reconnect, SSL) |
 
-- Prefiere `let` sobre `var` — inmutabilidad por defecto.
-- Usa `struct` por defecto, `class` solo cuando necesites referencia compartida.
-- Aprovecha extensiones para organizar código por protocolos.
-- Usa `enum` con valores asociados para modelar estados.
-- Implementa `Codable` para parsear/serializar JSON automáticamente.
+Fuente: [Apple — URLSessionWebSocketTask](https://developer.apple.com/documentation/foundation/urlsessionwebsockettask), [Vapor — WebSocket](https://docs.vapor.codes/advanced/websockets/), [Starscream GitHub](https://github.com/daltoniam/Starscream)
 
-**Complejidad algorítmica (Big O):**
+---
 
-Arrays: acceso O(1), append O(1), inserción O(n). Dictionary: O(1) promedio. Set: O(1). `sorted()` O(n log n) (TimSort). Copy-on-write para eficiencia.
+## Concurrencia
 
-## 📚 Recursos y Documentación
+Swift tiene múltiples modelos de concurrencia. Cada uno sirve para un escenario distinto.
 
-- 📖 [Swift Documentación](https://www.swift.org/documentation/)
-- 📖 [Apple Developer — Swift](https://developer.apple.com/swift/)
-- 🔧 [Swift Playgrounds](https://www.apple.com/swift/playgrounds/)
-- 📖 [Swift en GitHub](https://github.com/apple/swift)
-- 🌐 [Hacking with Swift](https://www.hackingwithswift.com/)
+### async/await (concurrencia estructurada moderna)
 
-### 🏆 Retos Relacionados
+```swift
+func descargarTodas(urls: [URL]) async throws -> [Data] {
+    try await withThrowingTaskGroup(of: Data.self) { group in
+        for url in urls {
+            group.addTask {
+                let (data, _) = try await URLSession.shared.data(from: url)
+                return data
+            }
+        }
+        
+        var resultados: [Data] = []
+        for try await data in group {
+            resultados.append(data)
+        }
+        return resultados
+    }
+}
+```
+
+### Actors (protección de estado compartido)
+
+```swift
+actor Cache {
+    private var storage: [String: Any] = [:]
+    
+    func get<T>(_ key: String, as type: T.Type) -> T? {
+        storage[key] as? T
+    }
+    
+    func set(_ value: Any, for key: String) {
+        storage[key] = value
+    }
+    
+    nonisolated func prefijoCache() -> String {
+        "cache_"  // nonisolated: no necesita acceso al actor
+    }
+}
+
+// Acceso desde fuera del actor
+Task {
+    let cache = Cache()
+    await cache.set("valor", for: "clave")
+    let valor: String? = await cache.get("clave", as: String.self)
+}
+```
+
+### Combine (programación reactiva)
+
+```swift
+import Combine
+
+class ViewModel: ObservableObject {
+    @Published var textoBusqueda: String = ""
+    @Published var resultados: [String] = []
+    private var cancellables = Set<AnyCancellable>()
+    
+    init() {
+        $textoBusqueda
+            .debounce(for: .milliseconds(300), scheduler: RunLoop.main)  // Anti-rebote
+            .removeDuplicates()
+            .filter { $0.count >= 2 }
+            .map { self.buscar($0) }  // Simular búsqueda
+            .switchToLatest()         // Cancela peticiones anteriores
+            .assign(to: &$resultados)
+    }
+    
+    private func buscar(_ texto: String) -> AnyPublisher<[String], Never> {
+        // Simular API call
+        return Just(["Resultado para: \(texto)"])
+            .delay(for: .seconds(0.5), scheduler: RunLoop.main)
+            .eraseToAnyPublisher()
+    }
+}
+```
+
+### DispatchQueue / OperationQueue (GCD clásico)
+
+```swift
+// DispatchQueue
+let queue = DispatchQueue(label: "com.app.mi-queue", qos: .userInitiated, attributes: .concurrent)
+
+queue.async {
+    print("Tarea en background")
+}
+
+DispatchQueue.main.async {
+    print("Actualizar UI en hilo principal")
+}
+
+// DispatchGroup para sincronización
+let group = DispatchGroup()
+var resultados: [String] = []
+
+for i in 1...3 {
+    group.enter()
+    DispatchQueue.global().async {
+        resultados.append("Tarea \(i)")
+        group.leave()
+    }
+}
+
+group.notify(queue: .main) {
+    print("Todas las tareas completadas: \(resultados)")
+}
+
+// OperationQueue con dependencias
+let networkOperation = BlockOperation {
+    print("Descargar datos")
+}
+
+let parseOperation = BlockOperation {
+    print("Parsear datos")
+}
+parseOperation.addDependency(networkOperation)  // Espera a network
+
+let updateOperation = BlockOperation {
+    print("Actualizar UI")
+}
+updateOperation.addDependency(parseOperation)
+
+let opQueue = OperationQueue()
+opQueue.addOperations([networkOperation, parseOperation, updateOperation], waitUntilFinished: false)
+```
+
+### ¿Cuál usar?
+
+| Escenario | Modelo | Ejemplo |
+|---|---|---|
+| Llamadas HTTP, BD, API externas | async/await + Task | Microservicios, scrapers |
+| Estado mutable compartido | Actor | Cache, contadores, sesiones |
+| Tareas dinámicas con resultados | TaskGroup | Descargas paralelas |
+| UI reactiva | Combine / @Published | Búsqueda en tiempo real, formularios |
+| Operaciones con dependencias | OperationQueue | Pipelines de procesamiento |
+| Tareas en background | DispatchQueue | Procesamiento de imágenes, archivos |
+| Timer / intervalos | Timer.publish (Combine) | Actualizaciones periódicas |
+
+Fuente: [Swift.org — Concurrency](https://docs.swift.org/swift-book/LanguageGuide/Concurrency.html), [Apple — Combine](https://developer.apple.com/documentation/combine), [Apple — GCD](https://developer.apple.com/documentation/dispatch)
+
+---
+
+## Escala de aprendizaje: de 0 a 100
+
+Cada nivel incluye lo que debes saber y un proyecto para fijar los conceptos.
+
+### Nivel 0–15: Fundamentos absolutos
+**Qué aprender:**
+- Sintaxis básica: `let` vs `var`, tipos (`Int`, `Double`, `String`, `Bool`), `print()`
+- Optionals: `?`, `if let`, `guard let`, `??`, forced unwrap (saber que existe)
+- Funciones: `func`, parámetros internos/externos, valores por defecto, `->` retorno
+- Colecciones: `Array`, `Set`, `Dictionary` — creación, acceso, mutación
+- Bucles: `for-in`, `while`, `switch` básico
+- **Conceptos clave**: diferencia entre `let` y `var` — una constante no puede reasignarse. Las structs se copian, las classes se referencian. Los opcionales no son punteros, son enums con dos casos: `.none` y `.some(valor)`.
+
+**Proyecto:** *Adivina el número* — el programa elige un número aleatorio entre 1 y 100, el usuario intenta adivinarlo. Pistas de "mayor/menor". Contador de intentos. Manejo de opcionales para la entrada. Reflexión: ¿por qué `String?` es diferente de `String`? ¿qué pasa si haces force unwrap de un nil?
+
+### Nivel 15–30: Estructuras de datos y funciones avanzadas
+**Qué aprender:**
+- Closures: sintaxis, trailing closure, `$0`, captura de valores
+- Enums: raw values, valores asociados, pattern matching con `switch`
+- Mutating methods en structs
+- Computed properties y property observers (`willSet`, `didSet`)
+- Strings: `split()`, `joined()`, interpolación, `NSString` bridge
+- Manejo de archivos: `FileManager`, `Codable` básico, `JSONEncoder`/`JSONDecoder`
+- `Error`, `throws`, `do/catch`
+- **Conceptos clave**: los enums con valores asociados son la herramienta principal para modelar estados. Las computed properties no ocupan memoria — se calculan cada vez. `willSet`/`didSet` no se llaman durante init.
+
+**Proyecto:** *Gestor de tareas CLI* — SPM executable. Comandos: `add "texto"`, `list`, `done <id>`, `delete <id>`. Persistencia con `Codable` y JSON. Usa `enum` para modelar el estado de la tarea (pendiente/completada). Manejo de errores con throws. Usa `ArgumentParser` (swift-argument-parser) para los comandos.
+
+### Nivel 30–45: Protocolos y diseño orientado a protocolos
+**Qué aprender:**
+- Protocolos: definición, conformancia, herencia de protocolos
+- Protocol Extensions: implementación por defecto
+- Protocol Composition: `ProtocolA & ProtocolB`
+- Clases: herencia, `override`, `super`, `final`, `required`
+- Type casting: `is`, `as?`, `as!`
+- Extensions en tipos existentes
+- Access control: `private`, `fileprivate`, `internal`, `public`, `open`
+- `defer` y gestión de recursos
+- **Conceptos clave**: POP es el paradigma principal de Swift. Prefiere protocolos + structs sobre clases + herencia. Los Protocol Extensions permiten comportamiento compartido sin herencia. `private(set)` para propiedades de solo lectura desde fuera.
+
+**Proyecto:** *Sistema de inventario* — protocolo `Almacenable` con métodos `agregar()`, `retirar()`, `total()`. Struct `Producto` conforme a `Codable`. Class `Inventario` con extensión para persistencia. Protocol `Validador` con extensiones para validación de stock. Tests con `XCTest`.
+
+### Nivel 45–60: Testing, dependencias y concurrencia básica
+**Qué aprender:**
+- XCTest: `XCTestCase`, `XCTAssert`, `setUp`/`tearDown`, performance tests
+- SPM: dependencias, versionado, productos
+- async/await básico: `Task`, `async let`, `try await`
+- `Result<Success, Failure>` type
+- Property Wrappers básicos: entender `@State`, `@Published`
+- Combine básico: `Publisher`, `Subscriber`, `sink`
+- **Conceptos clave**: `async/await` es concurrencia estructurada — no puedes olvidarte de manejar el resultado. `Result` es un enum con `.success`/`.failure`. Los property wrappers son azúcar sintáctico sobre `init(wrappedValue:)` y `var wrappedValue`.
+
+**Proyecto:** *CLI de análisis de texto* — lee archivos, cuenta palabras, frecuencia de caracteres, detecta idioma básico. Tests con XCTest (parametrizados). async/await para archivos grandes. Property wrapper `@Clamped` para límites. Empaquetado como librería SPM.
+
+### Nivel 60–75: SwiftUI, Combine y APIs
+**Qué aprender:**
+- SwiftUI: `View`, `@State`, `@Binding`, `@Environment`, `NavigationStack`, `List`
+- Combine: `@Published`, `ObservableObject`, `PassthroughSubject`, `map`, `filter`, `debounce`
+- URLSession async/await: peticiones HTTP con `data(from:)`, `Codable` automático
+- MVVM arquitectura: Model — ViewModel — View
+- `@main`, `App` protocol, Scene lifecycle
+- Swift Charts (iOS 16+)
+- **Conceptos clave**: en SwiftUI la UI es función del estado. `@State` para valor local, `@StateObject` para objetos. Las vistas se recrean cuando cambia el estado. Combine conecta fuentes de datos asíncronas con la UI.
+
+**Proyecto:** *App del clima* — SwiftUI + API de clima (OpenWeatherMap). MVVM con `ObservableObject`. Búsqueda de ciudades con `debounce`. Swift Charts para temperatura semanal. Persistencia de ciudades favoritas con `@AppStorage` o SwiftData.
+
+### Nivel 75–90: Actores, SwiftData, producción
+**Qué aprender:**
+- Actores: `actor`, `Sendable`, `nonisolated`, `MainActor`
+- SwiftData: `@Model`, `@Query`, relaciones, migraciones
+- TaskGroup: tareas concurrentes con resultados agregados
+- `@MainActor`: asegurar que código se ejecute en hilo principal
+- CI/CD: GitHub Actions para Xcode, `xcodebuild test`, SwiftLint
+- Widgets: WidgetKit, `TimelineProvider`
+- Localización: `String(localized:)`, XLIFF export
+- **Conceptos clave**: los actores protegen su estado automáticamente — solo se accede con `await`. `Sendable` es un marcador para tipos seguros en concurrencia. SwiftData elimina el boilerplate de CoreData. Los widgets son extensiones de app que muestran información rápida.
+
+**Proyecto:** *App de notas con iCloud Sync* — SwiftData como persistencia local, CoreData + CloudKit para sync (o SwiftData en iOS 18+). Actor para operaciones de red. Widget con últimas notas. Tests de UI con XCUITest. CI con GitHub Actions que ejecuta tests y SwiftLint.
+
+### Nivel 90–100: Arquitectura y apps complejas
+**Qué aprender:**
+- TCA (The Composable Architecture) — arquitectura funcional con Reducers
+- Modularización: múltiples targets SPM, microfeatures
+- Performance: Instruments (Time Profiler, Allocations, Leaks)
+- Metal: gráficos 3D, compute shaders, procesamiento GPU
+- Core ML: modelos de ML on-device, Create ML
+- StoreKit 2: compras in-app, suscripciones, StoreKit testing
+- Accessibility: VoiceOver, Dynamic Type, asistive technologies
+- App Intents: Siri shortcuts, widgets interactivos
+- **Conceptos clave**: TCA usa `@Reducer`, `Store`, `ViewStore` para apps predecibles. La modularización evita circular dependencies y mejora tiempos de compilación. Instruments es indispensable para encontrar memory leaks y cuellos de botella.
+
+**Proyecto:** *App de fitness completa* — SwiftUI + TCA. SwiftData para entrenamientos y progreso. Core ML para reconocimiento de ejercicios. Widget con resumen diario. Watch app companion. StoreKit para suscripciones premium. App Intents para Siri ("empieza un entrenamiento de 30 min").
+
+Fuente: [Apple — SwiftUI Tutorials](https://developer.apple.com/tutorials/swiftui), [Hacking with Swift](https://www.hackingwithswift.com/), [TCA docs](https://pointfreeco.github.io/swift-composable-architecture/), [Swift by Sundell](https://www.swiftbysundell.com/)
+
+---
+
+## Proyectos prácticos detallados
+
+### CLI de gestión de contraseñas (nivel 30)
+
+```swift
+import ArgumentParser
+import Foundation
+import CryptoKit
+
+struct Entry: Codable {
+    let service: String
+    let username: String
+    let password: String
+}
+
+struct Vault: Codable {
+    private var entries: [String: Entry] = [:]
+    
+    mutating func add(_ entry: Entry) {
+        entries[entry.service] = entry
+    }
+    
+    func get(_ service: String) -> Entry? {
+        entries[service]
+    }
+    
+    func save(to url: URL, key: SymmetricKey) throws {
+        let data = try JSONEncoder().encode(self)
+        let sealedBox = try AES.GCM.seal(data, using: key)
+        try sealedBox.combined!.write(to: url)
+    }
+    
+    static func load(from url: URL, key: SymmetricKey) throws -> Vault {
+        let data = try Data(contentsOf: url)
+        let sealedBox = try AES.GCM.SealedBox(combined: data)
+        let decrypted = try AES.GCM.open(sealedBox, using: key)
+        return try JSONDecoder().decode(Vault.self, from: decrypted)
+    }
+}
+
+@main
+struct PasswordManager: ParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "pm",
+        subcommands: [Add.self, Get.self, Generate.self]
+    )
+    
+    static var vaultURL: URL {
+        FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent(".vault.enc")
+    }
+    
+    static var key: SymmetricKey {
+        // En producción: deriva de una contraseña maestra con PBKDF2
+        SymmetricKey(size: .bits256)
+    }
+}
+
+extension PasswordManager {
+    struct Add: ParsableCommand {
+        @Argument var service: String
+        @Argument var username: String
+        @Argument var password: String
+        
+        mutating func run() throws {
+            var vault = (try? Vault.load(from: vaultURL, key: key)) ?? Vault()
+            vault.add(Entry(service: service, username: username, password: password))
+            try vault.save(to: vaultURL, key: key)
+            print("✅ \(service) guardado")
+        }
+    }
+    
+    struct Get: ParsableCommand {
+        @Argument var service: String
+        
+        mutating func run() throws {
+            let vault = try Vault.load(from: vaultURL, key: key)
+            guard let entry = vault.get(service) else {
+                throw ValidationError("Servicio no encontrado")
+            }
+            print("Servicio: \(entry.service)")
+            print("Usuario:  \(entry.username)")
+            print("Password: \(entry.password)")
+        }
+    }
+}
+```
+
+### Web scraper con async/await (nivel 60)
+
+```swift
+import Foundation
+
+struct Article: Codable, Identifiable {
+    let id = UUID()
+    let title: String
+    let url: String
+    let source: String
+}
+
+actor Scraper {
+    private let session: URLSession
+    
+    init() {
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 15
+        config.httpAdditionalHeaders = ["User-Agent": "Mozilla/5.0"]
+        self.session = URLSession(configuration: config)
+    }
+    
+    func scrapeNews(from urls: [URL]) async throws -> [Article] {
+        try await withThrowingTaskGroup(of: [Article].self) { group in
+            for url in urls {
+                group.addTask {
+                    try await self.scrapeSingle(url)
+                }
+            }
+            
+            var allArticles: [Article] = []
+            for try await articles in group {
+                allArticles.append(contentsOf: articles)
+            }
+            return allArticles
+        }
+    }
+    
+    private func scrapeSingle(_ url: URL) async throws -> [Article] {
+        let (data, _) = try await session.data(from: url)
+        guard let html = String(data: data, encoding: .utf8) else {
+            return []
+        }
+        // Parseo básico (en producción: SwiftSoup o SwiftSoup)
+        let lines = html.components(separatedBy: .newlines)
+        var articles: [Article] = []
+        // Regex simple para títulos (ejemplo didáctico)
+        for line in lines where line.contains("<h2") || line.contains("class=\"headline\"") {
+            if let title = line.firstMatch(of: />(.+?)</) {
+                let text = String(title.1).trimmingCharacters(in: .whitespaces)
+                if !text.isEmpty {
+                    articles.append(Article(title: text, url: url.absoluteString, source: url.host ?? ""))
+                }
+            }
+        }
+        return articles
+    }
+}
+
+Task {
+    let scraper = Scraper()
+    let urls = [
+        URL(string: "https://news.ycombinator.com")!,
+        URL(string: "https://developer.apple.com/news/")!
+    ]
+    let articles = try await scraper.scrapeNews(from: urls)
+    for article in articles.prefix(10) {
+        print("[\(article.source)] \(article.title)")
+    }
+}
+```
+
+---
+
+## Hacks y tips de productividad
+
+**1. print debugging con dump()**
+```swift
+let usuario = ["nombre": "Ana", "edad": 30]
+print(usuario)         // Compacto: ["nombre": "Ana", "edad": 30]
+dump(usuario)          // Detallado con tipos y jerarquía
+// ▿ 2 key/value pairs
+//   ▿ (2 elements)
+//     - key: "nombre"
+//     - value: "Ana"
+//     ...
+```
+
+**2. KeyPaths para transformaciones funcionales**
+```swift
+let personas = [Persona(nombre: "Ana", edad: 30), Persona(nombre: "Luis", edad: 25)]
+let nombres = personas.map(\.nombre)    // ["Ana", "Luis"]
+let edades = personas.map(\.edad)       // [30, 25]
+let mayores25 = personas.filter { $0.edad > 25 }  // filter con KeyPath no existe nativo...
+```
+
+**3. Extensiones que simplifican el día a día**
+```swift
+extension String {
+    var trimmed: String {
+        trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    
+    var lines: [String] {
+        components(separatedBy: .newlines)
+    }
+    
+    func containsIgnoreCase(_ other: String) -> Bool {
+        range(of: other, options: .caseInsensitive) != nil
+    }
+}
+
+extension Collection {
+    subscript(safe index: Index) -> Element? {
+        indices.contains(index) ? self[index] : nil
+    }
+}
+
+extension Optional where Wrapped: Collection {
+    var isEmptyOrNil: Bool {
+        self?.isEmpty ?? true
+    }
+}
+```
+
+**4. Phantom Types para seguridad en tipos**
+```swift
+struct UserID: Hashable {
+    let rawValue: Int
+}
+
+struct ProductID: Hashable {
+    let rawValue: Int
+}
+
+// No se pueden confundir:
+// let id: ProductID = UserID(rawValue: 5)  // Error de compilación
+```
+
+**5. Custom property wrapper para validación**
+```swift
+@propertyWrapper
+struct Email {
+    private var value: String = ""
+    
+    var wrappedValue: String {
+        get { value }
+        set {
+            guard newValue.contains("@") && newValue.contains(".") else {
+                fatalError("Email inválido: \(newValue)")
+            }
+            value = newValue
+        }
+    }
+    
+    init(wrappedValue: String) {
+        self.wrappedValue = wrappedValue
+    }
+}
+
+struct Usuario {
+    @Email var email: String
+}
+
+// let u = Usuario(email: "invalido")  // Crash en desarrollo, valida en init
+```
+
+**6. CustomStringConvertible para debug readable**
+```swift
+struct ErrorRed: Error, CustomStringConvertible {
+    let codigo: Int
+    let mensaje: String
+    
+    var description: String {
+        "[Error \(codigo)] \(mensaje)"
+    }
+}
+
+print(ErrorRed(codigo: 404, mensaje: "Not found"))
+// "[Error 404] Not found"
+```
+
+**7. Previews rápidas con #Preview**
+```swift
+#Preview("Estado vacío") {
+    ContentView(items: [])
+}
+
+#Preview("Con datos") {
+    ContentView(items: ["a", "b", "c"])
+}
+
+#Preview("Dark mode") {
+    ContentView(items: ["test"])
+        .preferredColorScheme(.dark)
+}
+```
+
+**8. Result Builder personalizado para HTML**
+```swift
+@resultBuilder
+struct HTMLBuilder {
+    static func buildBlock(_ components: String...) -> String {
+        components.joined(separator: "\n")
+    }
+    
+    static func buildExpression(_ text: String) -> String { text }
+    
+    static func buildExpression(_ tag: HTMLTag) -> String { tag.render() }
+}
+
+struct HTMLTag {
+    let name: String
+    let content: String
+    
+    func render() -> String {
+        "<\(name)>\(content)</\(name)>"
+    }
+}
+
+func p(_ content: String) -> HTMLTag { HTMLTag(name: "p", content: content) }
+func h1(_ content: String) -> HTMLTag { HTMLTag(name: "h1", content: content) }
+
+func html(@HTMLBuilder _ builder: () -> String) -> String {
+    "<html>\n\(builder())\n</html>"
+}
+
+let pagina = html {
+    h1("Mi página")
+    p("Bienvenido")
+    p("Contenido")
+}
+```
+
+Fuente: [Swift by Sundell — Tips](https://www.swiftbysundell.com/tips/), [Hacking with Swift — Swift Extensions](https://www.hackingwithswift.com/example-code/language/extensions)
+
+---
+
+## Canales y recursos en español
+
+### YouTube
+- **SwiftBeta** — Tutoriales diarios de Swift y SwiftUI, muy prácticos y actualizados. El canal de referencia en español.
+- **MoureDev** (@mouredev) — Swift, desarrollo iOS, arquitectura limpia y proyectos reales
+- **Apple Coding** — Swift, SwiftUI, UIKit, desarrollo de apps iOS
+- **Código Swift** — Curso completo de Swift desde cero, bien estructurado
+- **Swift Fundamentals** — Conceptos avanzados: Combine, async/await, protocolos
+- **Javier Aznar** — SwiftUI, arquitectura de apps iOS, testing
+- **Alberto García** — iOS development, Xcode tips, UIKit legacy
+- **KeepCoding** — Cursos intensivos de iOS con Swift (bootcamp)
+- **CódigoFacilito** — Algunos cursos de Swift en su plataforma
+
+### Comunidades
+- **r/swift** (Reddit) — Comunidad global de Swift. En inglés pero muy activa
+- **r/iOSProgramming** — Desarrollo iOS en general
+- **Swift Spain** (Meetup/grupo) — Comunidad española de Swift, eventos y charlas
+- **Stack Overflow en español** — Etiqueta `swift` para dudas técnicas
+- **Discord iOS Developers Spain** — Comunidad hispana de desarrollo iOS
+
+### Blogs y newsletters
+- **SwiftBeta Blog** — Artículos en español sobre SwiftUI, Combine, Swift
+- **Swift Lee Weekly** (inglés) — Newsletter semanal con lo mejor de Swift
+- **Hacking with Swift** (inglés) — El recurso más completo para aprender Swift
+- **Swift by Sundell** (inglés) — Artículos profundos sobre Swift moderno
+- **Little Bites of Cocoa** (inglés) — Tips diarios de iOS/macOS
+- **Use Your Loaf** (inglés) — Blog de desarrollo iOS
+
+### Repositorios de código
+- [apple/swift](https://github.com/apple/swift) — Código fuente del compilador y stdlib
+- [apple/swift-evolution](https://github.com/apple/swift-evolution) — Propuestas de evolución del lenguaje
+- [matteocrippa/awesome-swift](https://github.com/matteocrippa/awesome-swift) — Lista curada de frameworks y librerías
+- [vsouza/awesome-ios](https://github.com/vsouza/awesome-ios) — Recursos iOS (incluye Swift)
+- [kodecocodes/swift-algorithm-club](https://github.com/kodecocodes/swift-algorithm-club) — Algoritmos implementados en Swift
+
+Fuente: búsqueda en YouTube y Reddit, listas curadas de Awesome Swift
+
+---
+
+## Referencias y documentación oficial
+
+- **Docs oficiales**: [docs.swift.org/swift-book](https://docs.swift.org/swift-book/) — Language Guide y Reference
+- **Swift.org**: [swift.org/documentation](https://www.swift.org/documentation/) — Guías, tutoriales, API design guidelines
+- **Apple Developer**: [developer.apple.com/swift](https://developer.apple.com/swift/) — Recursos oficiales de Apple
+- **Swift Evolution**: [github.com/apple/swift-evolution](https://github.com/apple/swift-evolution) — Propuestas SE (Swift Evolution)
+- **SPM**: [swift.org/package-manager](https://www.swift.org/documentation/package-manager/) — Documentación del gestor de paquetes
+- **Xcode Help**: [developer.apple.com/xcode](https://developer.apple.com/xcode/) — Guías de Xcode
+- **Swift en GitHub**: [github.com/apple/swift](https://github.com/apple/swift) — Compilador, stdlib, Foundation
+- **Swift Forums**: [forums.swift.org](https://forums.swift.org/) — Discusiones sobre el desarrollo del lenguaje
+
+### Fuentes de esta guía
+
+Esta guía se ha elaborado a partir de las siguientes fuentes consultadas durante su desarrollo:
+
+- [Swift.org — Documentación oficial y tutorial](https://docs.swift.org/swift-book/)
+- [Apple Developer — SwiftUI Tutorials](https://developer.apple.com/tutorials/swiftui)
+- [Hacking with Swift](https://www.hackingwithswift.com/) — tutoriales, ejemplos y desafíos
+- [Swift by Sundell](https://www.swiftbysundell.com/) — artículos profundos sobre Swift
+- [Apple — WWDC Videos](https://developer.apple.com/wwdc/) — sesiones de WWDC sobre Swift
+- [Vapor Docs](https://docs.vapor.codes/) — documentación del framework server-side
+- [GRDB.swift](https://github.com/groue/GRDB.swift) — documentación de GRDB
+- [Point-Free](https://www.pointfree.co/) — series sobre Combine, SwiftUI, TCA
+- [Awesome Swift (GitHub)](https://github.com/matteocrippa/awesome-swift) — lista curada de recursos
+- [r/swift](https://reddit.com/r/swift) — comunidad, debates y proyectos destacados
+- [Swift Lee Weekly](https://swiftleeweekly.com/) — newsletter semanal
+- [Advanced Swift (objc.io)](https://www.objc.io/books/advanced-swift/) — libro sobre Swift avanzado
+- [Swift Algorithms Club](https://github.com/kodecocodes/swift-algorithm-club) — algoritmos en Swift
+- [NSHipster](https://nshipster.com/) — artículos sobre APIs de Apple y Swift obscuras
+- [Use Your Loaf](https://useyourloaf.com/) — blog de desarrollo iOS
+- [Little Bites of Cocoa](https://littlebitesofcocoa.com/) — tips diarios de iOS/macOS
+
+---
+
+## 🏆 Retos Relacionados
 
 Pon a prueba lo aprendido con estos desafíos:
 - [Consistencia De Base De Datos](/retos/guia-consistencia-de-base-de-datos)

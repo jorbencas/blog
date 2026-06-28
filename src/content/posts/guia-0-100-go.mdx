@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "Guía de Go (Golang): De 0 a 100"
-description: "Simplicidad y concurrencia. El lenguaje de Google para sistemas escalables."
+description: "Desde la primera línea de código hasta producción: instalación, ecosistema, frameworks, proyectos reales y recursos en español."
 pubDate: "2017-06-11"
 tags: ["go", "guia", "backend"]
 image: "img/guia_0_100_go_cover-1200.webp"
@@ -11,93 +11,4228 @@ audioSrc: "/audio/guia_0_100_go.mp3"
 
 # Guía de Go (Golang): De 0 a 100
 
-## 🛠️ Requisitos e Instalación
+## ¿Qué es Go?
 
-**Linux/macOS:** `wget https://go.dev/dl/go1.22.x.linux-amd64.tar.gz && sudo tar -C /usr/local -xzf go1.22.x.tar.gz`. Añade `/usr/local/go/bin` al PATH.
-**Windows:** Usa el instalador MSI desde [go.dev/dl](https://go.dev/dl/). Se añade automáticamente al PATH. O: `winget install GoLang.Go`.
-**Verificación:** `wget https://go.dev/dl/go1.22.x.linux-amd64.tar.gz && sudo tar -C /usr/local -xzf go1.22.x.tar.gz` y prueba con un `"Hola Mundo"`.
-**Herramientas recomendadas:** **`go mod init`** para módulos. **`go get`** para dependencias. **`go build`** compila binarios estáticos. VSCode + extensión Go (gopls).
+Go (o Golang) es un lenguaje de programación compilado, de tipado estático y concurrente, creado en **Google** por **Robert Griesemer**, **Rob Pike** y **Ken Thompson** y lanzado públicamente en **2009**. Su diseño prioriza la **simplicidad**, la **legibilidad** y la **productividad** del equipo por encima de la expresividad del lenguaje.
 
-## 🚀 Hola Mundo y Sintaxis Básica
+**Filosofía:**
+- Compilación rápida, binarios estáticos sin dependencias
+- Concurrencia nativa con goroutines y canales
+- Tipado estático con inferencia
+- Sin herencia de clases (composición sobre herencia)
+- Sin genéricos hasta 1.18 (llegaron en 2022 con polémica)
+- `gofmt` como estándar de formato — el formateo no es negociable
 
-**Conceptos clave:**
+**¿Dónde se usa?**
+- **CLI y herramientas de sistema**: Docker, Kubernetes, Terraform, Hugo, Prometheus, Caddy, Syncthing
+- **APIs REST y microservicios**: net/http, Gin, Echo, Fiber, Chi
+- **Infraestructura cloud**: Docker, Kubernetes, etcd, Consul, Vault, Traefik
+- **Bases de datos**: InfluxDB, CockroachDB, TiDB, Dgraph, Badger
+- **Redes y proxies**: Caddy, Traefik, Envoy (data plane), gRPC
+- **DevOps**: Terraform, Packer, Vault, Consul, Nomad (todo HashiCorp)
+- **Blockchain**: Hyperledger Fabric, go-ethereum
 
-- **Paquetes y Main:** `package main` para ejecutables. `func main()` es el punto de entrada. `import "fmt"` para I/O. Variables no usadas = error de compilación.
-- **Variables y Tipos:** `var nombre string = "Ana"` o inferencia `:=`. Tipos: `string`, `int`, `float64`, `bool`, `byte`, `rune`. Zero values por defecto.
-- **Control de Flujo:** `if`, `else`, `for` (único bucle — no hay while). `switch` sin break automático. `defer` aplaza ejecución al salir de la función.
-- **Structs e Interfaces:** `type Usuario struct { Nombre string; Edad int }`. Métodos: `func (u Usuario) Saludar() string`. Interfaces implícitas: si implementas los métodos, implementas la interfaz.
-- **Concurrencia:** `go funcion()` lanza goroutines (hilos ligeros). `ch := make(chan int)` para canales. `select` espera múltiples canales. `sync.WaitGroup` para sincronización.
+**¿Quién lo usa?** Google (YouTube, Chrome), Docker Inc, HashiCorp, Cloudflare, Uber, Twitch, Dropbox, Netflix (partes), PayPal, Mercado Libre, Salesforce.
 
-## 🏗️ Frameworks Populares
+Fuente: [Go dev — About](https://go.dev/about/), [Wikipedia — Go](https://en.wikipedia.org/wiki/Go_(programming_language)), [Go at Google (Rob Pike)](https://go.dev/sources/2012/go-at-google-io.pdf)
 
-### Gin Gonic
-**Instalación:** `go get -u github.com/gin-gonic/gin`
-Framework web minimalista con enrutamiento basado en árbol radix. Middleware integrado, validación y serialización JSON.
+---
+
+## ¿Cómo empezar? Instalación en todos los entornos
+
+### Linux (Debian/Ubuntu)
+```bash
+# Opción 1: paquete oficial
+wget https://go.dev/dl/go1.22.5.linux-amd64.tar.gz
+sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.22.5.linux-amd64.tar.gz
+echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
+source ~/.bashrc
+go version
+
+# Opción 2: gestor de paquetes
+sudo apt install golang-go  # versión del repo, suele ir atrasada
+
+# Opción 3: snap
+sudo snap install go --classic
+```
+
+### macOS
+```bash
+# Homebrew (recomendado)
+brew install go@1.22
+
+# Binario oficial
+wget https://go.dev/dl/go1.22.5.darwin-amd64.tar.gz
+sudo tar -C /usr/local -xzf go1.22.5.darwin-amd64.tar.gz
+```
+
+### Windows
+1. Descarga el instalador MSI desde [go.dev/dl](https://go.dev/dl/)
+2. El instalador añade Go al PATH automáticamente
+3. Verifica en PowerShell: `go version`
+4. Alternativa vía winget: `winget install GoLang.Go`
+
+### gvm (Go Version Manager) — múltiples versiones
+```bash
+bash < <(curl -sSL https://raw.githubusercontent.com/moovweb/gvm/master/binscripts/gvm-installer)
+source ~/.gvm/scripts/gvm
+
+gvm install go1.22.5
+gvm install go1.21.12
+gvm use go1.22.5 --default
+```
+
+### Docker multi-stage (producción)
+```dockerfile
+# Build stage
+FROM golang:1.22-alpine AS builder
+WORKDIR /app
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -o /app/server .
+
+# Runtime stage — imagen mínima
+FROM scratch
+COPY --from=builder /app/server /server
+EXPOSE 8080
+CMD ["/server"]
+```
+Usa `golang:1.22-alpine` para build (~350 MB) y `scratch` o `distroless` para runtime (~5 MB). `CGO_ENABLED=0` produce binarios estáticos que funcionan en cualquier Linux sin dependencias.
+
+### Alias útiles para el día a día
+Añade a tu `~/.bashrc` o `~/.zshrc`:
+```bash
+alias grun='go run .'
+alias gtest='go test -v ./...'
+alias gmod='go mod tidy'
+alias gbuild='go build -o bin/ ./...'
+alias gfmt='gofmt -l -w .'
+alias gvet='go vet ./...'
+alias gall='go fmt ./... && go vet ./... && go mod tidy'
+```
+
+Fuente: [Go dev — Download](https://go.dev/dl/), [gvm GitHub](https://github.com/moovweb/gvm), [Docker Official Images — Golang](https://hub.docker.com/_/golang/)
+
+---
+
+## Primeros pasos y configuración del entorno
+
+### Estructura de proyecto con módulos
+
+Go moderno usa **módulos** (go mod). El `GOPATH` es cosa del pasado desde Go 1.16.
+
+```bash
+# Inicializar un módulo
+go mod init github.com/tu-usuario/mi-proyecto
+
+# Añadir dependencias
+go get github.com/gin-gonic/gin
+
+# Limpiar dependencias no usadas
+go mod tidy
+```
+
+Resultado: archivos `go.mod` (módulos y versiones) y `go.sum` (checksums de seguridad).
+
+### Hola Mundo
+
 ```go
 package main
 
-import "github.com/gin-gonic/gin"
+import "fmt"
 
 func main() {
-    r := gin.Default()
-    r.GET("/", func(c *gin.Context) {
-        c.JSON(200, gin.H{"mensaje": "Hola Mundo"})
-    })
-    r.Run()
+    fmt.Println("Hola Mundo")
 }
 ```
-### stdlib net/http
-**Instalación:** `No necesita instalación — incluido en Go.`
-La stdlib incluye servidor HTTP completo, cliente HTTP, templates, JSON/XML, tests, y más. Muchos proyectos no necesitan frameworks externos.
+
+Ejecuta: `go run main.go` o `go run .` (todo el paquete).
+
+### Compilación
+
+```bash
+go build -o mi-programa .         # Binario para tu arquitectura
+GOOS=linux GOARCH=amd64 go build  # Cross-compile para Linux
+GOOS=windows GOARCH=amd64 go build  # Cross-compile para Windows
+```
+
+Go produce **binarios estáticos**: no necesitas runtime, ni JVM, ni nada. Copias el binario y funciona.
+
+### Herramientas del lenguaje
+
+```bash
+go fmt ./...      # Formatea todo el código (indentación, alineación)
+go vet ./...      # Analiza bugs sospechosos (variable no usada, etc.)
+go mod tidy       # Limpia go.mod y go.sum
+go doc fmt.Println  # Documentación desde terminal
+go env            # Variables de entorno del toolchain
+go list ./...     # Lista todos los paquetes del módulo
+```
+
+### Editores recomendados
+
+- **VSCode**: extensión Go de Google (gopls como language server). Características: autocompletado, refactor, navegación, debugging integrado. Perfil recomendado: instalar `gopls`, `dlv` (delve debugger), `staticcheck`.
+- **GoLand**: IDE de JetBrains especializado en Go. Refactorings avanzados, depurador visual, cobertura de tests integrada. Característica única: detección de race conditions en el editor.
+- **Neovim**: con `gopls` via `mason.nvim`, `nvim-dap` para debugging con delve.
+
+### GOPATH vs módulos
+
+| Aspecto | GOPATH (obsoleto) | Módulos (actual) |
+|---|---|---|
+| Ubicación | `$GOPATH/src/...` | Cualquier directorio |
+| Dependencias | `go get` global | Versionadas en `go.mod` |
+| Versiones | `master` siempre | SemVer fijo, reproducible |
+| Herramienta | `dep`/`govendor` | `go mod` nativo |
+| Reproducibilidad | No | Sí (`go.sum` verifica checksums) |
+
+Desde Go 1.16, `GO111MODULE=on` es el comportamiento por defecto. Si ves tutoriales que hablan de `GOPATH`, son anteriores a 2020.
+
+Fuente: [Go dev — Getting Started](https://go.dev/doc/tutorial/getting-started), [Go dev — Modules](https://go.dev/doc/modules/managing-dependencies), [gopls](https://github.com/golang/tools/blob/master/gopls/README.md)
+
+---
+
+## Paradigmas de programación en Go
+
+Go es un lenguaje **multiparadigma** que combina lo mejor de varios mundos sin llegar a ser extremo en ninguno.
+
+### Imperativo / Procedural
+
+El núcleo de Go es imperativo: el programa se ejecuta secuencialmente, instrucción tras instrucción.
+
+```go
+func main() {
+    var sum int
+    for i := 1; i <= 10; i++ {
+        sum += i
+    }
+    fmt.Println("Suma:", sum)
+}
+```
+
+### Concurrente (el paradigma estrella)
+
+Go está diseñado desde sus cimientos para la concurrencia. **Goroutines** y **canales** son el modelo de comunicación entre tareas concurrentes, inspirado en los *Communicating Sequential Processes* (CSP) de Hoare.
+
+```go
+func main() {
+    ch := make(chan string)
+    go func() {
+        ch <- "Hola desde goroutine"
+    }()
+    fmt.Println(<-ch)
+}
+```
+
+La filosofía de Go: *"Do not communicate by sharing memory; instead, share memory by communicating."*
+
+### POO sin clases
+
+Go no tiene clases ni herencia. En su lugar ofrece:
+- **Structs** para definir tipos compuestos
+- **Métodos** con receptores explícitos
+- **Interfaces** implícitas (duck typing en tiempo de compilación)
+- **Embedding** (composición sobre herencia)
+
+```go
+type Animal struct{ Nombre string }
+func (a Animal) Saludar() string { return "Soy " + a.Nombre }
+
+type Perro struct{ Animal }
+func (p Perro) Saludar() string { return "Guau, soy " + p.Nombre }
+```
+
+### Funcional parcial
+
+Go soporta programación funcional de forma limitada:
+- **First-class functions**: las funciones son valores
+- **Closures**: funciones que capturan variables del ámbito exterior
+- **Funciones como parámetros y retorno**
+
+```go
+func mapSlice(f func(int) int, nums []int) []int {
+    result := make([]int, len(nums))
+    for i, n := range nums {
+        result[i] = f(n)
+    }
+    return result
+}
+
+func main() {
+    doble := func(x int) int { return x * 2 }
+    fmt.Println(mapSlice(doble, []int{1, 2, 3})) // [2, 4, 6]
+}
+```
+
+**Limitaciones:** no hay genéricos hasta Go 1.18; no hay `map`/`filter`/`reduce` nativos en la stdlib; no hay tuplas; no hay pattern matching. La stdlib tiene `slices` y `maps` desde Go 1.21 con funciones utilitarias.
+
+### Lo que Go NO tiene
+
+| Ausencia | Consecuencia |
+|---|---|
+| **Herencia** | No hay `extends`. Se usa composición con embedding |
+| **Excepciones** | No hay `try/catch`. Los errores son valores (`error` interface) |
+| **Genéricos** (hasta 1.18) | Había que usar `interface{}` / `any` o generar código |
+| **Sobrecarga** | No puedes tener dos funciones con el mismo nombre |
+| **Operadores personalizados** | No hay sobrecarga de operadores |
+| **Herencia múltiple** | Ni falta que hace con interfaces implícitas |
+| **Aritmética de punteros** | Los punteros existen pero no puedes hacer `p++` |
+
+Fuente: [Effective Go](https://go.dev/doc/effective_go), [Go FAQ](https://go.dev/doc/faq), [Rob Pike — Go at Google](https://go.dev/sources/2012/go-at-google-io.pdf), [Concurrency is not Parallelism (Rob Pike)](https://go.dev/talks/2012/concurrency.slide)
+
+---
+
+## Tipos de datos y variables
+
+### Tipos built-in
+
+| Categoría | Tipos |
+|---|---|
+| Booleano | `bool` |
+| Enteros con signo | `int`, `int8`, `int16` (`rune`), `int32`, `int64` |
+| Enteros sin signo | `uint`, `uint8` (`byte`), `uint16`, `uint32`, `uint64` |
+| Flotantes | `float32`, `float64` |
+| Complejos | `complex64`, `complex128` |
+| Texto | `string` (UTF-8, inmutable) |
+
+`int` y `uint` tienen el tamaño de la arquitectura (32 o 64 bits). `byte` es alias de `uint8`. `rune` es alias de `int32` y representa un code point Unicode.
+
+### Zero values
+
+Go no deja variables sin inicializar. Si declaras sin valor, se asigna el **zero value** automáticamente:
+
+```go
+var s string    // ""
+var i int       // 0
+var f float64   // 0.0
+var b bool      // false
+var p *int      // nil
+var sl []string // nil
+var m map[string]int // nil
+var ch chan int // nil
+var iface any   // nil
+```
+
+### Short declaration `:=`
+
+Dentro de funciones, `:=` declara e infiere el tipo:
+
+```go
+nombre := "Ana"     // string
+edad := 30          // int
+precio := 19.99     // float64
+activo := true      // bool
+```
+
+No se puede usar fuera de funciones. Requiere al menos una variable nueva a la izquierda.
+
+### Type inference (inferencia de tipos)
+
+Go infiere el tipo del valor asignado:
+
+```go
+var x = 42           // int (por defecto entero)
+var y = 3.14         // float64 (por defecto flotante)
+var z = 3 + 4i       // complex128 (por defecto complejo)
+```
+
+### Conversión explícita
+
+Go **no** convierte implícitamente entre tipos. Incluso entre `int` y `int32`:
+
+```go
+var a int = 42
+var b int32 = int32(a)  // ✅ explícita
+// var c int32 = a       // ❌ no compila
+var d float64 = float64(a)
+var e string = strconv.Itoa(a) // int → string requiere strconv
+```
+
+### Tipos compuestos
+
+**Struct** — tipo compuesto con campos nombrados:
+
+```go
+type Punto struct {
+    X float64
+    Y float64
+}
+p := Punto{X: 3.0, Y: 4.0}
+```
+
+**Array** — tamaño fijo, en línea (no es puntero interno):
+
+```go
+var arr [3]int = [3]int{1, 2, 3}
+```
+
+**Slice** — vista dinámica sobre un array subyacente. **Diferencia crítica con array:** el slice es un descriptor (puntero, longitud, capacidad), el array son los datos en línea:
+
+```go
+arr := [3]int{1, 2, 3}        // array — tamaño fijo
+sl := []int{1, 2, 3}          // slice — tamaño dinámico
+sl = append(sl, 4)            // reasigna si no cabe
+```
+
+**Map** — tabla hash:
+
+```go
+m := make(map[string]int)
+m["clave"] = 42
+val, ok := m["clave"] // ok=false si no existe
+```
+
+**Punteros (`*T`):**
+
+```go
+var x int = 42
+var p *int = &x
+*p = 100 // modifica x
+```
+
+No hay aritmética de punteros.
+
+**`interface{}` y `any`:**
+
+```go
+var x any = 42
+x = "texto"
+x = []int{1, 2, 3}
+```
+
+`any` es un alias de `interface{}` desde Go 1.18.
+
+**Tipo `error`:**
+
+```go
+type error interface {
+    Error() string
+}
+```
+
+**`nil`:** Go no tiene `null`. Solo puede ser `nil`: punteros, slices, maps, canales, interfaces y funciones. Acceder a un mapa `nil` no panic (devuelve zero value). Acceder a campos de un struct pointer `nil` sí panic.
+
+### Strings
+
+Los strings en Go son **inmutables** y contienen **UTF-8** (no ASCII ni bytes planos):
+
+```go
+s := "Hello, 世界"
+fmt.Println(len(s))                         // 13 bytes (no 9 caracteres)
+fmt.Println(utf8.RuneCountInString(s))      // 9 runas
+```
+
+Se pueden convertir a `[]byte` (copia) o `[]rune`:
+
+```go
+b := []byte(s)  // cada byte
+r := []rune(s)  // cada runa (code point)
+```
+
+### Memoria: stack vs heap
+
+Go tiene **escape analysis** en tiempo de compilación. Decide automáticamente si una variable va al stack o al heap:
+
+```go
+func enStack() int {
+    x := 42       // stack — no escapa
+    return x
+}
+
+func enHeap() *int {
+    x := 42       // heap — escapa (se referencia fuera)
+    return &x
+}
+```
+
+Usa `go build -gcflags='-m' ./...` para ver las decisiones del compilador.
+
+Go tiene un **garbage collector concurrente** (no generacional) desde Go 1.5. El GC marca y barre mientras el programa se ejecuta, con pausas de `&lt;1ms` típicamente.
+
+Fuente: [Go dev — Spec variables](https://go.dev/ref/spec#Variables), [Go dev — Spec types](https://go.dev/ref/spec#Types), [Go dev — Strings](https://go.dev/blog/strings), [Go GC](https://go.dev/doc/gc-guide)
+
+---
+
+## Control de flujo, modularidad y funciones
+
+### if/else
+
+```go
+if x > 0 {
+    fmt.Println("positivo")
+} else if x < 0 {
+    fmt.Println("negativo")
+} else {
+    fmt.Println("cero")
+}
+```
+
+**Short statement:** declarar variable en la misma línea del `if`:
+
+```go
+if err := f(); err != nil {
+    return err
+}
+// err no visible aquí — ámbito del if
+```
+
+### switch
+
+**Con expresión:**
+
+```go
+switch dia {
+case "lunes", "martes", "miercoles":
+    fmt.Println("entre semana")
+case "sabado", "domingo":
+    fmt.Println("finde")
+default:
+    fmt.Println("día inválido")
+}
+```
+
+**Sin expresión (equivale a if/else if):**
+
+```go
+switch {
+case nota >= 9:
+    fmt.Println("sobresaliente")
+case nota >= 7:
+    fmt.Println("notable")
+default:
+    fmt.Println("aprobado o suspenso")
+}
+```
+
+**`fallthrough`:** por defecto NO hay fallthrough (a diferencia de C/C++). Si quieres que continúe al siguiente caso, usa `fallthrough` explícitamente.
+
+### for (único bucle)
+
+Go tiene **un solo bucle**: `for`. Tres formas:
+
+**Init/cond/post (como for de C):**
+
+```go
+for i := 0; i < 10; i++ {
+    fmt.Println(i)
+}
+```
+
+**Solo condición (como while):**
+
+```go
+for x < 100 {
+    x *= 2
+}
+```
+
+**Range (slices, maps, canales, strings):**
+
+```go
+for i, v := range []int{10, 20, 30} {
+    fmt.Println(i, v)
+}
+
+for k, v := range map[string]int{"a": 1} {
+    fmt.Println(k, v)
+}
+
+for i, r := range "Hola 世界" {
+    fmt.Printf("%d: %c\n", i, r) // i es byte offset, no índice de runa
+}
+```
+
+**break / continue:**
+
+```go
+for {
+    if condicion {
+        break      // sale del bucle
+    }
+    if otraCond {
+        continue   // siguiente iteración
+    }
+}
+```
+
+### defer
+
+Ejecuta una función al salir del ámbito. Ideal para cleanup (cerrar archivos, liberar recursos):
+
+```go
+f, err := os.Open("archivo.txt")
+if err != nil {
+    return err
+}
+defer f.Close()
+```
+
+Los `defer` se ejecutan en orden **LIFO** (pila):
+
+```go
+defer fmt.Println("primero")  // se ejecuta último
+defer fmt.Println("segundo")
+defer fmt.Println("tercero")  // se ejecuta primero
+```
+
+### panic / recover
+
+No hay `try/catch`. `panic` detiene el flujo normal. `recover` lo captura, pero solo funciona dentro de un `defer`:
+
+```go
+defer func() {
+    if r := recover(); r != nil {
+        fmt.Println("panic capturado:", r)
+    }
+}()
+panic("algo terrible")
+```
+
+### Funciones
+
+Funciones con múltiples retornos, valores nombrados, variádicas:
+
+```go
+func suma(a, b int) int {
+    return a + b
+}
+
+func dividir(a, b float64) (float64, error) {
+    if b == 0 {
+        return 0, fmt.Errorf("división por cero")
+    }
+    return a / b, nil
+}
+
+// Retorno nombrado
+func dividir(a, b float64) (result float64, err error) {
+    if b == 0 {
+        err = fmt.Errorf("división por cero")
+        return
+    }
+    result = a / b
+    return
+}
+
+// Variádica
+func sumar(nums ...int) int {
+    total := 0
+    for _, n := range nums {
+        total += n
+    }
+    return total
+}
+```
+
+### Módulos y paquetes
+
+**Package:** todo archivo `.go` pertenece a un paquete (primera línea).
+
+**Exportación:** mayúscula = pública, minúscula = privada al paquete.
+
+```go
+package usuario
+
+type Usuario struct {  // exportado
+    Nombre string      // exportado
+    email  string      // privado
+}
+
+func NuevoUsuario(nombre, email string) *Usuario {  // exportado
+    return &Usuario{Nombre: nombre, email: email}
+}
+
+func validarEmail(e string) bool {  // privado
+    return strings.Contains(e, "@")
+}
+```
+
+**go.mod y go.sum:** definen el módulo, sus dependencias y checksums de seguridad.
+
+```bash
+go mod init github.com/usuario/proyecto
+go get github.com/gin-gonic/gin
+go mod tidy
+```
+
+**Internal packages:** el directorio `internal/` restringe la importación solo al árbol padre del módulo.
+
+**init() functions:** se ejecutan automáticamente al cargar el paquete, antes de `main()`:
+
+```go
+var db *sql.DB
+
+func init() {
+    var err error
+    db, err = sql.Open("postgres", os.Getenv("DATABASE_URL"))
+    if err != nil {
+        panic(err)
+    }
+}
+```
+
+**Blank identifier `_`:** descarta valores que no necesitas:
+
+```go
+resultado, _ := dividir(10, 3)
+_, err := fmt.Println("hola")
+for _, v := range slice {
+    fmt.Println(v)
+}
+```
+
+Fuente: [Go dev — Control flow](https://go.dev/ref/spec#If_statements), [Go dev — Modules](https://go.dev/doc/modules/managing-dependencies), [Go dev — Internal packages](https://go.dev/doc/go1.4#internalpackages)
+
+---
+
+## Conceptos clave explicados a fondo
+
+### Paquetes y exportación
+
+Go organiza el código en **paquetes**. Todo archivo `.go` pertenece a un paquete (primera línea del archivo).
+
+```go
+package models   // El directorio se llama models/, el paquete se llama models
+
+// Exportado: empieza con mayúscula — visible fuera del paquete
+type Usuario struct {
+    Nombre string  // Exportado
+    email  string  // No exportado (privado al paquete)
+}
+
+// No exportado: solo visible dentro del paquete
+func validarEmail(e string) bool {
+    return strings.Contains(e, "@")
+}
+
+// Exportado
+func NuevoUsuario(nombre, email string) *Usuario {
+    return &Usuario{Nombre: nombre, email: email}
+}
+```
+
+**Convenciones:**
+- `package main` → genera un ejecutable con `func main()`
+- Cualquier otro nombre → librería
+- El nombre del paquete coincide con el último segmento del directorio (`models/models.go`)
+- El directorio `internal/` es especial: sus paquetes solo son importables por el árbol padre
+
+**El directorio `internal`:**
+
+```go
+// project/api/handler.go
+import "project/internal/crypto"
+// ✅ permitido — internal/ está dentro de project/
+
+// otro-project/main.go
+import "project/internal/crypto"
+// ❌ error de compilación — internal/ no es accesible desde fuera
+```
+
+`internal` es el mecanismo de Go para crear APIs privadas dentro de un módulo. No hay `private` como en otros lenguajes: `internal` es la barrera de visibilidad entre módulos.
+
+Fuente: [Go dev — Package reference](https://go.dev/ref/spec#Packages), [Go dev — Internal packages](https://go.dev/doc/go1.4#internalpackages)
+
+### Variables, tipos y zero values
+
+Go es de **tipado estático** con inferencia de tipos mediante `:=`.
+
+```go
+// Declaración explícita
+var nombre string = "Ana"
+var edad int = 30
+var activo bool = true
+
+// Inferencia (short declaration — solo dentro de funciones)
+nombre := "Ana"
+edad := 30
+
+// Zero values — Go inicializa todo a cero automáticamente
+var s string    // "" (cadena vacía)
+var i int       // 0
+var f float64   // 0.0
+var b bool      // false
+var p *int      // nil (punteros, slices, maps, canales, interfaces)
+var sl []string // nil
+var m map[string]int // nil
+
+// Múltiples variables
+var x, y int = 1, 2
+a, b := "hola", 42
+
+// Tipos básicos
+var entero int8     // -128 a 127
+var entero32 int32  // -2^31 a 2^31-1
+var entero64 int64  // -2^63 a 2^63-1
+var sinSigno uint   // 0 a 2^64-1 (según arquitectura)
+var decimal float32 // ~6 dígitos precisión
+var decimal64 float64 // ~15 dígitos precisión
+var texto string    // UTF-8, inmutable
+var caracter rune   // alias de int32, representa un code point Unicode
+var byte byte       // alias de uint8
+var comaComplejo complex128 // números complejos
+```
+
+**Conversiones explícitas — no hay coerciones automáticas:**
+
+```go
+var i int = 42
+var f float64 = float64(i)   // ✅ explícita
+var u uint = uint(f)          // ✅ explícita (pierde decimales)
+
+// ❌ Esto no compila: Go no convierte implícitamente
+// var f float64 = i
+```
+
+Incluso entre tipos numéricos del mismo tamaño, debes convertir explícitamente. Go prefiere la seguridad a la conveniencia.
+
+**`iota` — enumeradores automáticos:**
+
+```go
+type Estado int
+
+const (
+    Pendiente Estado = iota // 0
+    Activo                  // 1
+    Inactivo                // 2
+    Archivado               // 3
+)
+
+type Permiso int
+
+const (
+    Leer Permiso = 1 << iota // 1 (1 << 0)
+    Escribir                 // 2 (1 << 1)
+    Ejecutar                 // 4 (1 << 2)
+)
+```
+
+Fuente: [Go dev — Variables](https://go.dev/ref/spec#Variables), [Go dev — iota](https://go.dev/ref/spec#Iota)
+
+### Structs, métodos y embedding
+
+**Structs** son la forma de Go de definir tipos compuestos. No hay clases.
+
+```go
+type Direccion struct {
+    Calle   string
+    Ciudad string
+    CP      string
+}
+
+type Usuario struct {
+    Nombre    string
+    Email     string
+    Edad      int
+    Direccion Direccion // composición: Usuario "tiene una" Direccion
+    activo    bool      // campo privado al paquete
+}
+```
+
+**Métodos** — funciones con receptor (receiver):
+
+```go
+// Receptor por valor
+func (u Usuario) Saludar() string {
+    return "Hola, soy " + u.Nombre
+}
+
+// Receptor por puntero — puede modificar el struct
+func (u *Usuario) Activar() {
+    u.activo = true
+}
+
+// Convención: si un método tiene receptor puntero, todos deben tenerlo
+func (u *Usuario) CambiarEmail(email string) {
+    u.Email = email
+}
+```
+
+**Embedding — composición sobre herencia:**
+
+```go
+type Animal struct {
+    Nombre string
+}
+
+func (a Animal) Sonido() string {
+    return "..."
+}
+
+// Perro "extiende" Animal via embedding
+type Perro struct {
+    Animal          // embedding (sin nombre de campo)
+    Raza string
+}
+
+// Override: Perro sobreescribe Sonido
+func (p Perro) Sonido() string {
+    return "Guau"
+}
+
+// Uso
+p := Perro{Animal: Animal{Nombre: "Max"}, Raza: "Labrador"}
+fmt.Println(p.Nombre)    // "Max" — campo promovido desde Animal
+fmt.Println(p.Sonido())  // "Guau" — propio
+fmt.Println(p.Animal.Sonido()) // "..." — acceso directo al embedido
+```
+
+El embedding NO es herencia. No hay polimorfismo de subtipos. `Perro` no es un `Animal`. Pero los métodos y campos del struct embebido se "promocionan" al struct contenedor. Es composición con sintaxis conveniente.
+
+**Tags de struct (metadata para serialización/validación):**
+
+```go
+type Usuario struct {
+    ID        int       `json:"id" db:"id" validate:"required"`
+    Nombre    string    `json:"nombre" validate:"min=2,max=100"`
+    Email     string    `json:"email" validate:"email"`
+    CreatedAt time.Time `json:"created_at" db:"created_at"`
+}
+```
+
+Las tags son strings que las librerías interpretan via `reflect`. `encoding/json`, `database/sql`, `validator` las usan.
+
+Fuente: [Go dev — Structs](https://go.dev/ref/spec#Struct_types), [Go dev — Methods](https://go.dev/ref/spec#Method_declarations), [Effective Go — Embedding](https://go.dev/doc/effective_go#embedding)
+
+### Interfaces (duck typing estructural)
+
+Las interfaces en Go son **implícitas** y **estructurales**. No necesitas declarar que implementas una interfaz: si tienes los métodos, la implementas.
+
+```go
+// Definición de interfaz
+type Saludador interface {
+    Saludar() string
+}
+
+// Perro implementa Saludador implícitamente
+type Perro struct{ Nombre string }
+func (p Perro) Saludar() string {
+    return "Guau, soy " + p.Nombre
+}
+
+// Gato también
+type Gato struct{ Nombre string }
+func (g Gato) Saludar() string {
+    return "Miau, soy " + g.Nombre
+}
+
+// Función polimórfica
+func Festejar(s Saludador) {
+    fmt.Println(s.Saludar() + "! 🎉")
+}
+
+// Uso
+Festejar(Perro{Nombre: "Max"})  // Guau, soy Max! 🎉
+Festejar(Gato{Nombre: "Luna"})  // Miau, soy Luna! 🎉
+```
+
+**Interfaz vacía (`interface{}` y `any`):**
+
+```go
+// Desde Go 1.18, 'any' es un alias de interface{}
+var x any = 42
+x = "hola"
+x = true
+x = []int{1, 2, 3}
+```
+
+`any` es útil cuando realmente necesitas aceptar cualquier tipo, pero pierdes seguridad de tipos. Prefiere interfaces específicas.
+
+**Type assertions:**
+
+```go
+var val any = "texto"
+
+s, ok := val.(string)     // ok=true, s="texto"
+n, ok := val.(int)        // ok=false, n=0 (no panic)
+// n := val.(int)         // ❌ panic si no es int
+
+// Sin el ok, si falla → panic
+```
+
+**Type switch:**
+
+```go
+func describir(v any) string {
+    switch v.(type) {
+    case string:
+        return "Cadena de longitud " + strconv.Itoa(len(v.(string)))
+    case int:
+        return "Entero: " + strconv.Itoa(v.(int))
+    case bool:
+        if v.(bool) {
+            return "Verdadero"
+        }
+        return "Falso"
+    case []int:
+        return fmt.Sprintf("Slice de %d enteros", len(v.([]int)))
+    default:
+        return "Tipo desconocido"
+    }
+}
+```
+
+**Interfaces pequeñas son la norma en Go:**
+
+- `io.Reader`: `Read(p []byte) (n int, err error)`
+- `io.Writer`: `Write(p []byte) (n int, err error)`
+- `fmt.Stringer`: `String() string`
+- `error`: `Error() string`
+
+La filosofía Go es: "cuanto más pequeña la interfaz, mejor". Una interfaz de un solo método es idiomática.
+
+Fuente: [Go dev — Interfaces](https://go.dev/ref/spec#Interface_types), [Effective Go — Interfaces](https://go.dev/doc/effective_go#interfaces)
+
+### Genéricos (Go 1.18+)
+
+Los genéricos llegaron en Go 1.18 (marzo 2022). Permiten escribir funciones y tipos parametrizados por tipos.
+
+```go
+// Función genérica
+func Min[T constraints.Ordered](a, b T) T {
+    if a < b {
+        return a
+    }
+    return b
+}
+
+// Uso
+fmt.Println(Min[int](5, 3))     // 3 (explícito)
+fmt.Println(Min(5.5, 3.2))      // 3.2 (inferencia)
+fmt.Println(Min("a", "b"))      // "a" (también funciona)
+```
+
+**Constraints (restringen qué tipos se aceptan):**
+
+```go
+// Constraint personalizada
+type Numeric interface {
+    ~int | ~int8 | ~int16 | ~int32 | ~int64 |
+        ~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 |
+        ~float32 | ~float64
+}
+
+func Suma[N Numeric](vals ...N) N {
+    var total N
+    for _, v := range vals {
+        total += v
+    }
+    return total
+}
+
+// ~int significa "cualquier tipo cuyo tipo subyacente sea int"
+type MiInt int
+Suma(MiInt(1), MiInt(2))  // ✅ MiInt tiene ~int
+```
+
+**Constraints predefinidas en `golang.org/x/exp/constraints`:**
+
+```go
+import "golang.org/x/exp/constraints"
+
+// constraints.Ordered → tipos comparables con <, >, <=, >=
+// constraints.Signed → int, int8, ..., int64
+// constraints.Unsigned → uint, uint8, ..., uint64
+// constraints.Integer → Signed + Unsigned
+// constraints.Float → float32, float64
+// constraints.Complex → complex64, complex128
+```
+
+**`comparable` — constraint para tipos comparables:**
+
+```go
+func Contains[T comparable](slice []T, val T) bool {
+    for _, v := range slice {
+        if v == val {
+            return true
+        }
+    }
+    return false
+}
+```
+
+**Estructuras genéricas:**
+
+```go
+type Stack[T any] struct {
+    items []T
+}
+
+func (s *Stack[T]) Push(item T) {
+    s.items = append(s.items, item)
+}
+
+func (s *Stack[T]) Pop() (T, bool) {
+    if len(s.items) == 0 {
+        var zero T
+        return zero, false
+    }
+    item := s.items[len(s.items)-1]
+    s.items = s.items[:len(s.items)-1]
+    return item, true
+}
+
+// Uso
+s := Stack[string]{}
+s.Push("hola")
+s.Push("mundo")
+val, ok := s.Pop()  // val="mundo", ok=true
+```
+
+**Limitaciones de los genéricos en Go:**
+
+1. No puedes usar operadores en tipos genéricos sin constraints (excepto `==` y `!=` con `comparable`)
+2. No puedes hacer `switch v.(type)` directamente (necesitas reflexión)
+3. Type inference no siempre funciona con tipos complejos
+4. El rendimiento es bueno, pero no igual que monomorfización manual
+
+Fuente: [Go dev — Generics](https://go.dev/doc/tutorial/generics), [Proposal — Type Parameters](https://go.googlesource.com/proposal/+/master/design/43651-type-parameters.md)
+
+### Punteros
+
+Go tiene punteros, pero no aritmética de punteros (a diferencia de C).
+
+```go
+var x int = 42
+var p *int = &x  // p es un puntero a int, &x obtiene la dirección
+
+fmt.Println(*p)  // 42 — desreferenciación
+*p = 100         // Modifica x a través del puntero
+fmt.Println(x)   // 100
+```
+
+**¿Cuándo usar punteros vs valores?**
+
+| Escenario | Recomendación |
+|---|---|
+| Struct grande (>64 bytes) | Puntero — evita copiar |
+| Método que modifica el receptor | Puntero — `func (u *Usuario) SetNombre()` |
+| Campo nil permitido | Puntero — indica ausencia |
+| Canal, slice, map | Siempre referencia (ya son punteros internamente) |
+| Enteros, booleanos, flags | Valor — los punteros añaden overhead |
+| Strings | Valor — son inmutables y ligeras |
+
+**Escape analysis (compilador decide heap vs stack):**
+
+El compilador de Go decide automáticamente si una variable va al stack o al heap. No necesitas `new` vs `malloc` — Go lo hace por ti.
+
+```go
+func crearUsuario() *Usuario {
+    u := Usuario{Nombre: "Ana"} // ¿stack o heap?
+    return &u                    // ❗ Escapa al heap — se usa fuera de la función
+}
+
+func procesar() {
+    var u Usuario               // Stack — no escapa
+    u.Nombre = "Ana"
+    _ = u.Nombre
+}
+```
+
+Puedes ver las decisiones del compilador:
+```bash
+go build -gcflags='-m' ./...
+```
+
+Si el compilador ve que una variable debe sobrevivir a la función que la crea, la asigna al heap. Si no, la asigna al stack — mucho más rápido.
+
+Fuente: [Go dev — Pointers](https://go.dev/ref/spec#Pointer_types), [Escape Analysis in Go](https://medium.com/@blanchon.vincent/go-escape-analysis-101-d687b3f139d3)
+
+### Errores
+
+Go trata los errores como **valores**, no como excepciones. No hay `try/catch`.
+
+```go
+// error es una interfaz predefinida
+type error interface {
+    Error() string
+}
+
+// Función que puede fallar — devuelve error
+func Dividir(a, b float64) (float64, error) {
+    if b == 0 {
+        return 0, fmt.Errorf("división por cero")
+    }
+    return a / b, nil // nil = no error
+}
+
+// Uso idiomático
+resultado, err := Dividir(10, 0)
+if err != nil {
+    fmt.Println("Error:", err)
+    return
+}
+fmt.Println(resultado)
+```
+
+**Wrapping errores (Go 1.13+):**
+
+```go
+import "errors"
+import "fmt"
+
+// Envolver un error con contexto
+if err != nil {
+    return fmt.Errorf("leer archivo %s: %w", filename, err)
+}
+
+// Desenvolver con errors.Is y errors.As
+if errors.Is(err, os.ErrNotExist) {
+    fmt.Println("El archivo no existe")
+}
+
+var pathError *os.PathError
+if errors.As(err, &pathError) {
+    fmt.Println("Path:", pathError.Path)
+}
+```
+
+**`fmt.Errorf("%w")`** envuelve el error para que `errors.Is` y `errors.As` puedan atravesar la cadena. Usa `%v` en lugar de `%w` si no necesitas desenvolver.
+
+**`errors.Join` (Go 1.20+):**
+
+```go
+var errs error
+for _, op := range operaciones {
+    if err := op(); err != nil {
+        errs = errors.Join(errs, err) // acumula errores
+    }
+}
+return errs // devuelve todos los errores combinados
+```
+
+**Errores personalizados:**
+
+```go
+type ErrorValidacion struct {
+    Campo string
+    Valor any
+    Motivo string
+}
+
+func (e *ErrorValidacion) Error() string {
+    return fmt.Sprintf("validación: %s con valor %v — %s", e.Campo, e.Valor, e.Motivo)
+}
+
+// Uso
+return nil, &ErrorValidacion{Campo: "email", Valor: "", Motivo: "no puede estar vacío"}
+```
+
+**Sentinel errors vs error types:**
+
+| Patrón | Ejemplo | Cuándo |
+|---|---|---|
+| Sentinel | `var ErrNotFound = errors.New("not found")` | Error simple y conocido |
+| Custom type | `type ErrorValidacion struct` | Lleva datos adicionales |
+| Opaque error | Solo `err != nil` | Al llamante no le importa el detalle |
+
+Fuente: [Go dev — Errors](https://go.dev/blog/go1.13-errors), [Dave Cheney — Don't just check errors](https://dave.cheney.net/2016/04/27/dont-just-check-errors-handle-them-gracefully)
+
+### Defer, panic y recover
+
+**`defer`** — ejecuta una función al salir del ámbito actual:
+
+```go
+func leerArchivo(nombre string) error {
+    f, err := os.Open(nombre)
+    if err != nil {
+        return err
+    }
+    defer f.Close() // se ejecuta cuando leerArchivo termina
+
+    // procesar archivo...
+    return nil
+}
+```
+
+Los defer se ejecutan en orden **LIFO** (last in, first out):
+
+```go
+func ejemplo() {
+    defer fmt.Println("tercero")
+    defer fmt.Println("segundo")
+    fmt.Println("primero")
+}
+// Output:
+// primero
+// segundo
+// tercero
+```
+
+**`panic`** — error irrecuperable (equivalente a lanzar excepción):
+
+```go
+func init() {
+    if config == nil {
+        panic("config no inicializada — el programa no puede continuar")
+    }
+}
+```
+
+Usa panic solo para casos que **no deberían ocurrir** (bugs, estado imposible). No uses panic para errores normales — para eso está `error`.
+
+**`recover`** — captura un panic (como un catch):
+
+```go
+func proteger() {
+    defer func() {
+        if r := recover(); r != nil {
+            fmt.Println("Recuperado de panic:", r)
+            // Log, cleanup, etc.
+        }
+    }()
+    // código que podría paniquear
+    panic("algo salió mal")
+}
+```
+
+`recover` solo funciona dentro de un `defer`. Si llamas `recover` fuera de un defer, devuelve `nil`.
+
+**Cuándo usar panic/recover:**
+
+- **Panic**: inicialización que falla, errores de programación (nil dereference), casos imposibles
+- **Error**: todo lo demás (IO, validación, red, BD)
+- **Recover**: en el borde del programa (middleware HTTP, worker supervisor, entrada de goroutine)
+
+```go
+// Middleware HTTP que captura panics
+func recoveryMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        defer func() {
+            if r := recover(); r != nil {
+                log.Printf("panic capturado: %v", r)
+                http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+            }
+        }()
+        next.ServeHTTP(w, r)
+    })
+}
+```
+
+Fuente: [Go dev — Defer](https://go.dev/ref/spec#Defer_statements), [Go dev — Panic/Recover](https://go.dev/blog/defer-panic-and-recover)
+
+### Goroutines y canales
+
+**Goroutines** son hilos ligeros gestionados por el runtime de Go. Cuestan ~4KB de stack (frente a ~1MB de un thread del SO).
+
+```go
+func decir(texto string) {
+    for i := 0; i < 5; i++ {
+        time.Sleep(100 * time.Millisecond)
+        fmt.Println(texto)
+    }
+}
+
+func main() {
+    go decir("hola")   // goroutine — se ejecuta concurrentemente
+    go decir("mundo")  // otra goroutine
+    time.Sleep(1 * time.Second) // espera a que terminen (mala práctica)
+}
+```
+
+**Canales** — tuberías tipadas para comunicación entre goroutines:
+
+```go
+// Crear canal
+ch := make(chan int)       // unbuffered — bloquea hasta que alguien recibe
+buf := make(chan int, 10)  // buffered — buffer de 10 elementos
+
+// Enviar
+ch <- 42
+
+// Recibir
+valor := <-ch
+valor, ok := <-ch  // ok=false si el canal está cerrado
+
+// Cerrar canal
+close(ch)
+```
+
+**Canales unbuffered (sincrónicos):**
+
+```go
+func main() {
+    ch := make(chan string)
+
+    // Goroutine que envía
+    go func() {
+        fmt.Println("Goroutine: enviando...")
+        ch <- "mensaje"  // Bloquea hasta que main recibe
+        fmt.Println("Goroutine: enviado!")
+    }()
+
+    time.Sleep(500 * time.Millisecond)
+    fmt.Println("Main: recibiendo...")
+    msg := <-ch          // Bloquea hasta que la goroutine envía
+    fmt.Println("Main:", msg)
+}
+```
+
+**Canales buffered (asíncronos):**
+
+```go
+ch := make(chan int, 3)  // buffer de 3
+
+ch <- 1  // No bloquea (buffer no está lleno)
+ch <- 2  // No bloquea
+ch <- 3  // No bloquea
+// ch <- 4 // ❌ Bloquearía — buffer lleno
+
+fmt.Println(<-ch)  // 1
+fmt.Println(<-ch)  // 2
+fmt.Println(<-ch)  // 3
+```
+
+**`range` sobre canales:**
+
+```go
+func main() {
+    ch := make(chan string)
+
+    go func() {
+        defer close(ch) // importante: cerrar el canal
+        for _, m := range []string{"a", "b", "c"} {
+            ch <- m
+        }
+    }()
+
+    for msg := range ch { // itera hasta que el canal se cierra
+        fmt.Println(msg)
+    }
+}
+```
+
+**`select`** — espera múltiples canales (como `switch` pero para canales):
+
+```go
+func main() {
+    ch1 := make(chan string)
+    ch2 := make(chan string)
+
+    go func() {
+        time.Sleep(1 * time.Second)
+        ch1 <- "uno"
+    }()
+    go func() {
+        time.Sleep(2 * time.Second)
+        ch2 <- "dos"
+    }()
+
+    select {
+    case msg := <-ch1:
+        fmt.Println("Recibido de ch1:", msg)
+    case msg := <-ch2:
+        fmt.Println("Recibido de ch2:", msg)
+    case <-time.After(500 * time.Millisecond):
+        fmt.Println("Timeout") // si ninguno responde
+    default:
+        fmt.Println("Ningún canal listo") // select no bloqueante
+    }
+}
+```
+
+**Patrón fan-out/fan-in (distribuir trabajo):**
+
+```go
+// Fan-out: múltiples workers leen del mismo canal
+func worker(id int, jobs <-chan int, results chan<- int) {
+    for job := range jobs {
+        results <- job * 2
+    }
+}
+
+func main() {
+    jobs := make(chan int, 100)
+    results := make(chan int, 100)
+
+    // Lanzar 3 workers
+    for w := 1; w <= 3; w++ {
+        go worker(w, jobs, results)
+    }
+
+    // Enviar 9 jobs
+    for j := 1; j <= 9; j++ {
+        jobs <- j
+    }
+    close(jobs)
+
+    // Recibir resultados
+    for r := 1; r <= 9; r++ {
+        <-results
+    }
+}
+```
+
+Fuente: [Go dev — Goroutines](https://go.dev/ref/spec#Go_statements), [Go dev — Channels](https://go.dev/ref/spec#Channel_types), [Go by Example — Channels](https://gobyexample.com/channels)
+
+### Context
+
+`context.Context` lleva deadlines, cancelaciones y valores a través de la cadena de llamadas. Es el mecanismo estándar para controlar el ciclo de vida de operaciones concurrentes.
+
+```go
+import "context"
+
+// Función que acepta context y respeta cancelación
+func operacionLarga(ctx context.Context) error {
+    select {
+    case <-time.After(2 * time.Second):
+        return nil
+    case <-ctx.Done():
+        return ctx.Err() // context.Canceled o context.DeadlineExceeded
+    }
+}
+```
+
+**Contextos padre/hijo:**
+
+```go
+// Con cancelación manual
+ctx, cancel := context.WithCancel(context.Background())
+defer cancel() // importante: siempre llama a cancel para liberar recursos
+
+go func() {
+    time.Sleep(100 * time.Millisecond)
+    cancel() // cancela todas las operaciones que usen ctx
+}()
+
+err := operacionLarga(ctx)
+
+// Con timeout automático
+ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+defer cancel()
+
+// Con deadline absoluto
+deadline := time.Now().Add(5 * time.Second)
+ctx, cancel := context.WithDeadline(context.Background(), deadline)
+defer cancel()
+
+// Con valores (tipo map, scope limitado al contexto)
+ctx = context.WithValue(ctx, "requestID", "abc-123")
+reqID := ctx.Value("requestID").(string) // type assertion necesaria
+```
+
+**Buenas prácticas con context:**
+
+1. El context es **siempre el primer parámetro** de una función
+2. Nunca almacenes un context en un struct — pásalo como argumento
+3. Siempre llama a `cancel()` cuando crees un context cancelable
+4. Usa `context.Background()` para el root, `context.TODO()` cuando aún no sabes qué usar
+5. No uses `context.WithValue` para cosas que deberían ser parámetros
+
+```go
+func Handler(ctx context.Context, req *Request) (*Response, error) {
+    ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+    defer cancel()
+
+    data, err := fetchFromDB(ctx, req.ID)
+    if err != nil {
+        return nil, err
+    }
+    return &Response{Data: data}, nil
+}
+```
+
+Fuente: [Go dev — Context](https://go.dev/blog/context), [Go dev — pkg context](https://go.dev/pkg/context/)
+
+### Sincronización (sync)
+
+**`sync.WaitGroup`** — esperar a que un grupo de goroutines termine:
+
+```go
+func main() {
+    var wg sync.WaitGroup
+
+    for i := 1; i <= 5; i++ {
+        wg.Add(1) // incrementa contador
+        go func(id int) {
+            defer wg.Done() // decrementa contador
+            fmt.Printf("Worker %d terminado\n", id)
+        }(i)
+    }
+
+    wg.Wait() // bloquea hasta que contador llegue a 0
+    fmt.Println("Todos los workers terminaron")
+}
+```
+
+**`sync.Mutex`** — exclusión mutua:
+
+```go
+type Contador struct {
+    mu    sync.Mutex
+    valor int
+}
+
+func (c *Contador) Incrementar() {
+    c.mu.Lock()
+    defer c.mu.Unlock()
+    c.valor++
+}
+
+func (c *Contador) Valor() int {
+    c.mu.Lock()
+    defer c.mu.Unlock()
+    return c.valor
+}
+```
+
+**`sync.RWMutex`** — lectores concurrentes, escritor exclusivo:
+
+```go
+type Cache struct {
+    mu   sync.RWMutex
+    data map[string]string
+}
+
+func (c *Cache) Get(key string) (string, bool) {
+    c.mu.RLock() // múltiples lecturas concurrentes
+    defer c.mu.RUnlock()
+    v, ok := c.data[key]
+    return v, ok
+}
+
+func (c *Cache) Set(key, value string) {
+    c.mu.Lock() // escritura exclusiva
+    defer c.mu.Unlock()
+    c.data[key] = value
+}
+```
+
+**`sync.Once`** — ejecuta algo exactamente una vez (singletons, inicialización):
+
+```go
+var (
+    config   *Config
+    configMu sync.Once
+)
+
+func GetConfig() *Config {
+    configMu.Do(func() {
+        fmt.Println("Inicializando configuración (solo una vez)")
+        config = &Config{
+            DBUrl:  os.Getenv("DB_URL"),
+            Puerto: 8080,
+        }
+    })
+    return config
+}
+```
+
+**`sync.Map`** — map concurrente optimizado (cuando las claves se escriben una vez y se leen muchas):
+
+```go
+var m sync.Map
+
+m.Store("key", "value")
+val, ok := m.Load("key")
+m.LoadOrStore("key", "default") // si existe, devuelve el existente
+m.Delete("key")
+
+m.Range(func(key, value any) bool {
+    fmt.Println(key, value)
+    return true // continuar iterando
+})
+```
+
+⚠️ `sync.Map` está optimizado para patrones específicos (escritura una vez, lectura frecuente). Para la mayoría de casos, un `map` con `sync.RWMutex` es mejor opción.
+
+Fuente: [Go dev — sync](https://go.dev/pkg/sync/)
+
+### io.Reader y io.Writer
+
+`io.Reader` y `io.Writer` son las interfaces más ubicuas de Go después de `error`.
+
+```go
+type Reader interface {
+    Read(p []byte) (n int, err error)
+}
+
+type Writer interface {
+    Write(p []byte) (n int, err error)
+}
+```
+
+**Composición de readers/writers:**
+
+```go
+// Leer todo de un reader
+data, _ := io.ReadAll(reader)
+
+// Copiar de reader a writer
+io.Copy(writer, reader)
+
+// TeeReader: escribe lo que lee a otro writer (como `tee` en Unix)
+io.Copy(os.Stdout, io.TeeReader(file, os.Stderr))
+
+// LimitedReader: lee solo N bytes
+limited := io.LimitReader(reader, 1024)
+
+// MultiReader: concatenar múltiples readers
+combined := io.MultiReader(file1, file2)
+
+// MultiWriter: escribir a múltiples writers a la vez
+writers := io.MultiWriter(file, os.Stdout)
+
+// PipeReader/PipeWriter: conexión síncrona entre goroutines
+pr, pw := io.Pipe()
+```
+
+**Ejemplo práctico — servidor de archivos con io.Copy:**
+
+```go
+func serveFile(w http.ResponseWriter, path string) {
+    f, err := os.Open(path)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusNotFound)
+        return
+    }
+    defer f.Close()
+
+    // Detecta Content-Type automáticamente
+    buf := make([]byte, 512)
+    f.Read(buf)
+    w.Header().Set("Content-Type", http.DetectContentType(buf))
+
+    f.Seek(0, io.SeekStart) // vuelve al principio
+    io.Copy(w, f)           // copia eficiente del archivo a la response
+}
+```
+
+Fuente: [Go dev — io](https://go.dev/pkg/io/)
+
+### encoding/json
+
+```go
+type Usuario struct {
+    ID        int       `json:"id"`
+    Nombre    string    `json:"nombre"`
+    Email     string    `json:"email,omitempty"` // omitir si está vacío
+    CreatedAt time.Time `json:"created_at"`
+    Password  string    `json:"-"` // nunca se serializa
+}
+```
+
+**Marshaling (struct → JSON):**
+
+```go
+u := Usuario{ID: 1, Nombre: "Ana", Email: "ana@email.com", CreatedAt: time.Now()}
+
+bytes, err := json.Marshal(u)          // []byte
+bytes, err := json.MarshalIndent(u, "", "  ") // pretty print
+
+// Escribir directamente a un writer
+json.NewEncoder(w).Encode(u)
+```
+
+**Unmarshaling (JSON → struct):**
+
+```go
+jsonData := `{"id":1,"nombre":"Ana","email":"ana@email.com"}`
+var u Usuario
+err := json.Unmarshal([]byte(jsonData), &u)
+
+// Leer desde un reader
+json.NewDecoder(r).Decode(&u)
+```
+
+**JSON dinámico (raw message + map):**
+
+```go
+var data map[string]any
+json.Unmarshal(bytes, &data)
+fmt.Println(data["nombre"]) // "Ana"
+
+// RawMessage para decodificación parcial
+type Flexible struct {
+    Type string          `json:"type"`
+    Data json.RawMessage `json:"data"` // decodifica después
+}
+```
+
+**JSON streams (NDJSON):**
+
+```go
+dec := json.NewDecoder(file)
+for {
+    var u Usuario
+    if err := dec.Decode(&u); err == io.EOF {
+        break
+    } else if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Println(u.Nombre)
+}
+```
+
+Fuente: [Go dev — encoding/json](https://go.dev/pkg/encoding/json/)
+
+### database/sql
+
+```go
+import (
+    "database/sql"
+    _ "github.com/lib/pq" // driver PostgreSQL — el _ importa sin usar
+)
+
+// Abrir conexión (no conecta, solo prepara)
+db, err := sql.Open("postgres", "postgres://user:pass@localhost/dbname?sslmode=disable")
+if err != nil {
+    log.Fatal(err)
+}
+defer db.Close()
+
+// Configurar pool
+db.SetMaxOpenConns(25)
+db.SetMaxIdleConns(5)
+db.SetConnMaxLifetime(5 * time.Minute)
+```
+
+**Operaciones básicas:**
+
+```go
+// Query (SELECT)
+rows, err := db.Query("SELECT id, nombre FROM usuarios WHERE activo = $1", true)
+if err != nil {
+    log.Fatal(err)
+}
+defer rows.Close()
+
+for rows.Next() {
+    var id int
+    var nombre string
+    if err := rows.Scan(&id, &nombre); err != nil {
+        log.Fatal(err)
+    }
+    fmt.Println(id, nombre)
+}
+if err := rows.Err(); err != nil {
+    log.Fatal(err)
+}
+
+// QueryRow (una fila)
+var nombre string
+err := db.QueryRow("SELECT nombre FROM usuarios WHERE id = $1", 1).Scan(&nombre)
+
+// Exec (INSERT, UPDATE, DELETE)
+result, err := db.Exec("INSERT INTO usuarios (nombre, email) VALUES ($1, $2)", "Ana", "ana@email.com")
+id, _ := result.LastInsertId()    // no soportado por todos los drivers
+n, _ := result.RowsAffected()     // filas afectadas
+
+// Prepared statements
+stmt, err := db.Prepare("INSERT INTO usuarios (nombre) VALUES ($1) RETURNING id")
+defer stmt.Close()
+var newID int
+stmt.QueryRow("Pedro").Scan(&newID)
+
+// Transacciones
+tx, err := db.Begin()
+tx.Exec("UPDATE cuentas SET saldo = saldo - $1 WHERE id = $2", 100, 1)
+tx.Exec("UPDATE cuentas SET saldo = saldo + $1 WHERE id = $2", 100, 2)
+tx.Commit() // o tx.Rollback()
+```
+
+**Nullables:**
+
+```go
+var apellido sql.NullString  // String que puede ser NULL
+if err := rows.Scan(&apellido); err != nil {
+    log.Fatal(err)
+}
+if apellido.Valid {
+    fmt.Println(apellido.String)
+} else {
+    fmt.Println("NULL")
+}
+// También: sql.NullInt64, sql.NullFloat64, sql.NullBool, sql.NullTime
+```
+
+Fuente: [Go dev — database/sql](https://go.dev/pkg/database/sql/)
+
+### Testing
+
+Go incluye testing en la stdlib. No necesitas pytest ni nada externo.
+
+```go
+// main_test.go
+import "testing"
+
+func TestSuma(t *testing.T) {
+    result := Suma(2, 3)
+    expected := 5
+    if result != expected {
+        t.Errorf("Suma(2,3) = %d; esperado %d", result, expected)
+    }
+}
+```
+
+**Ejecutar:**
+```bash
+go test                    # tests del paquete actual
+go test ./...             # todos los paquetes
+go test -v                # verbose
+go test -run TestSuma     # test específico
+go test -count=1          # sin caché
+go test -race             # race detector
+```
+
+**Subtests (`t.Run`):**
+
+```go
+func TestUsuario(t *testing.T) {
+    t.Run("crear usuario válido", func(t *testing.T) {
+        u := NuevoUsuario("Ana", "ana@email.com")
+        if u.Nombre != "Ana" {
+            t.Errorf("nombre incorrecto")
+        }
+    })
+
+    t.Run("crear usuario sin email", func(t *testing.T) {
+        _, err := NuevoUsuario("Ana", "")
+        if err == nil {
+            t.Error("se esperaba error")
+        }
+    })
+}
+```
+
+**Table-driven tests (el patrón estándar en Go):**
+
+```go
+func TestDividir(t *testing.T) {
+    tests := []struct {
+        nombre   string
+        a, b     float64
+        esperado float64
+        err      bool
+    }{
+        {nombre: "división normal", a: 10, b: 2, esperado: 5, err: false},
+        {nombre: "división exacta", a: 9, b: 3, esperado: 3, err: false},
+        {nombre: "división por cero", a: 10, b: 0, esperado: 0, err: true},
+        {nombre: "números negativos", a: -10, b: 2, esperado: -5, err: false},
+    }
+
+    for _, tt := range tests {
+        t.Run(tt.nombre, func(t *testing.T) {
+            result, err := Dividir(tt.a, tt.b)
+            if tt.err {
+                if err == nil {
+                    t.Error("se esperaba un error")
+                }
+                return
+            }
+            if result != tt.esperado {
+                t.Errorf("Dividir(%f, %f) = %f; esperado %f", tt.a, tt.b, result, tt.esperado)
+            }
+        })
+    }
+}
+```
+
+**Benchmarks:**
+
+```go
+func BenchmarkSuma(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        Suma(1000, 2000)
+    }
+}
+```
+```bash
+go test -bench=.
+go test -bench=. -benchmem  # también muestra alocaciones de memoria
+```
+
+**Test helpers:**
+
+```go
+func setupTest(t *testing.T) *sql.DB {
+    t.Helper() // marca como helper — el error se reporta en la línea del caller
+    db, err := sql.Open("sqlite3", ":memory:")
+    if err != nil {
+        t.Fatal(err)
+    }
+    return db
+}
+
+func TestConBD(t *testing.T) {
+    db := setupTest(t) // si falla, el error apunta aquí, no a setupTest
+    defer db.Close()
+    // ...
+}
+```
+
+**Test fixtures con testdata:**
+
+```go
+func TestLeerArchivo(t *testing.T) {
+    data, err := os.ReadFile("testdata/input.json")
+    // testdata/ es un directorio especial que Go ignora en builds
+}
+```
+
+**Testing HTTP (`net/http/httptest`):**
+
+```go
+func TestHandler(t *testing.T) {
+    req := httptest.NewRequest(http.MethodGet, "/api/usuarios", nil)
+    w := httptest.NewRecorder()
+
+    miHandler(w, req)
+
+    resp := w.Result()
+    body, _ := io.ReadAll(resp.Body)
+
+    if resp.StatusCode != http.StatusOK {
+        t.Errorf("status = %d; esperado %d", resp.StatusCode, http.StatusOK)
+    }
+    // assert JSON body...
+}
+```
+
+Fuente: [Go dev — Testing](https://go.dev/pkg/testing/), [Go dev — Testing tutorial](https://go.dev/doc/tutorial/add-a-test)
+
+---
+
+## Sistema de archivos
+
+Go tiene una stdlib de sistema de archivos completa, moderna y multiplataforma.
+
+### os — operaciones del sistema
+
+```go
+import "os"
+
+// Archivos
+f, err := os.Open("archivo.txt")       // solo lectura
+f, err := os.Create("archivo.txt")      // crea o trunca
+data, err := os.ReadFile("archivo.txt") // leer completo (~ioutil.ReadFile)
+err := os.WriteFile("archivo.txt", []byte("hola"), 0644)
+info, err := os.Stat("archivo.txt")     // metadatos
+err := os.Mkdir("dir", 0755)
+err := os.MkdirAll("a/b/c", 0755)      // crea directorios intermedios
+err := os.Remove("archivo.txt")
+err := os.RemoveAll("dir")             // rm -rf
+err := os.Rename("old.txt", "new.txt")
+entries, err := os.ReadDir(".")        // lista directorio (Go 1.16+)
+```
+
+**os.File — operaciones avanzadas:**
+
+```go
+f, _ := os.Open("archivo.txt")
+defer f.Close()
+
+buf := make([]byte, 1024)
+n, err := f.Read(buf)        // leer hasta len(buf) bytes
+n, err := f.Write([]byte("datos"))
+pos, err := f.Seek(0, io.SeekStart) // ir al principio
+f.Close()
+```
+
+### bufio — I/O con buffer
+
+```go
+import "bufio"
+
+f, _ := os.Open("archivo.txt")
+defer f.Close()
+
+// Scanner — leer línea por línea (idiomático)
+scanner := bufio.NewScanner(f)
+for scanner.Scan() {
+    fmt.Println(scanner.Text())
+}
+if err := scanner.Err(); err != nil {
+    log.Fatal(err)
+}
+
+// Reader con buffer
+r := bufio.NewReader(f)
+line, err := r.ReadString('\n')
+
+// Writer con buffer
+w := bufio.NewWriter(os.Stdout)
+w.WriteString("hola")
+w.Flush() // vaciar buffer al writer subyacente
+```
+
+### io — interfaces fundamentales
+
+```go
+import "io"
+
+// Interfaces base
+type Reader interface {
+    Read(p []byte) (n int, err error)
+}
+type Writer interface {
+    Write(p []byte) (n int, err error)
+}
+type Closer interface {
+    Close() error
+}
+
+// Utilidades
+data, _ := io.ReadAll(r)       // leer todo
+n, _ := io.Copy(w, r)          // copiar de reader a writer
+io.CopyN(w, r, 1024)           // copiar N bytes
+combined := io.MultiReader(r1, r2) // concatenar readers
+writers := io.MultiWriter(w1, w2)  // escribir a múltiples writers
+```
+
+### io/fs — sistema de archivos virtual (Go 1.16+)
+
+```go
+import "io/fs"
+
+// FS interface — cualquier sistema de archivos
+type FS interface {
+    Open(name string) (File, error)
+}
+
+// Recorrer directorios
+fs.WalkDir(os.DirFS("."), ".", func(path string, d fs.DirEntry, err error) error {
+    fmt.Println(path)
+    return nil
+})
+
+// Leer archivo desde un FS
+data, _ := fs.ReadFile(os.DirFS("."), "archivo.txt")
+```
+
+### filepath — manipulación de rutas
+
+```go
+import "path/filepath"
+
+path := filepath.Join("dir", "sub", "archivo.txt") // dir/sub/archivo.txt
+dir := filepath.Dir("/a/b/c.txt")   // /a/b
+base := filepath.Base("/a/b/c.txt") // c.txt
+ext := filepath.Ext("archivo.txt")  // .txt
+
+filepath.Walk("dir", func(path string, info os.FileInfo, err error) error {
+    fmt.Println(path)
+    return nil
+})
+
+matches, _ := filepath.Glob("*.txt")  // todos los .txt del directorio
+```
+
+### embed — incrustar archivos en binario (Go 1.16+)
+
+```go
+import "embed"
+
+//go:embed templates/*.html
+//go:embed static/css/*.css
+var assets embed.FS
+
+func main() {
+    data, _ := assets.ReadFile("templates/index.html")
+    fmt.Println(string(data))
+    http.Handle("/static/", http.FileServer(http.FS(assets)))
+}
+```
+
+### encoding/csv
+
+```go
+import "encoding/csv"
+
+f, _ := os.Create("datos.csv")
+w := csv.NewWriter(f)
+w.Write([]string{"Nombre", "Email", "Edad"})
+w.Write([]string{"Ana", "ana@mail.com", "30"})
+w.Flush()
+
+f, _ = os.Open("datos.csv")
+r := csv.NewReader(f)
+records, _ := r.ReadAll() // [][]string
+```
+
+### encoding/json
+
+```go
+import "encoding/json"
+
+type Usuario struct {
+    Nombre string `json:"nombre"`
+    Email  string `json:"email,omitempty"`
+}
+
+u := Usuario{Nombre: "Ana", Email: "ana@mail.com"}
+bytes, _ := json.Marshal(u)
+json.Unmarshal(bytes, &u)
+
+// Streaming
+json.NewEncoder(w).Encode(u)
+json.NewDecoder(r).Decode(&u)
+```
+
+### archive/zip y compress/gzip
+
+```go
+import "archive/zip"
+import "compress/gzip"
+
+// ZIP
+w := zip.NewWriter(file)
+f, _ := w.Create("archivo.txt")
+f.Write([]byte("contenido"))
+w.Close()
+
+// GZIP
+gw := gzip.NewWriter(file)
+gw.Write([]byte("datos comprimidos"))
+gw.Close()
+
+gr, _ := gzip.NewReader(file)
+data, _ := io.ReadAll(gr)
+gr.Close()
+```
+
+Fuente: [Go dev — os](https://go.dev/pkg/os/), [Go dev — io](https://go.dev/pkg/io/), [Go dev — bufio](https://go.dev/pkg/bufio/), [Go dev — embed](https://go.dev/embed/), [Go dev — csv](https://go.dev/pkg/encoding/csv/), [Go dev — zip](https://go.dev/pkg/archive/zip/)
+
+---
+
+## Algoritmos y estructuras de datos
+
+### sort — ordenación y búsqueda
+
+```go
+import "sort"
+
+// Ordenar slice de enteros
+nums := []int{3, 1, 4, 1, 5}
+sort.Ints(nums)
+
+// Ordenar slice genérico con función de comparación
+sort.Slice(nums, func(i, j int) bool {
+    return nums[i] < nums[j]
+})
+
+// Búsqueda binaria (slice debe estar ordenado)
+idx := sort.Search(len(nums), func(i int) bool {
+    return nums[i] >= 4
+}) // devuelve el primer índice donde nums[i] >= 4
+```
+
+### slices — utilidades genéricas (Go 1.21+)
+
+```go
+import "slices"
+
+nums := []int{3, 1, 4, 1, 5}
+
+slices.Sort(nums)                         // ordenación
+idx, found := slices.BinarySearch(nums, 4) // búsqueda binaria
+nums = slices.Delete(nums, 1, 3)           // eliminar elementos [1,3)
+nums = slices.Insert(nums, 0, 0)           // insertar
+slices.Reverse(nums)                       // invertir
+slices.Compact(nums)                       // eliminar duplicados adyacentes
+slices.Contains(nums, 3)                   // contiene
+slices.Index(nums, 4)                      // primer índice
+slices.Equal(nums, []int{1, 2, 3})         // igualdad
+```
+
+### maps — utilidades genéricas (Go 1.21+)
+
+```go
+import "maps"
+
+m1 := map[string]int{"a": 1, "b": 2}
+m2 := maps.Clone(m1)           // copia superficial
+maps.Copy(m2, m1)              // copia m1 sobre m2 (sobrescribe claves)
+keys := maps.Keys(m1)          // slice de claves (orden no determinado)
+vals := maps.Values(m1)        // slice de valores
+maps.DeleteFunc(m1, func(k string, v int) bool {
+    return v == 1              // eliminar donde v == 1
+})
+```
+
+### container/heap (min-heap)
+
+```go
+import "container/heap"
+
+type MinHeap []int
+
+func (h MinHeap) Len() int            { return len(h) }
+func (h MinHeap) Less(i, j int) bool  { return h[i] < h[j] }
+func (h MinHeap) Swap(i, j int)       { h[i], h[j] = h[j], h[i] }
+
+func (h *MinHeap) Push(x any) {
+    *h = append(*h, x.(int))
+}
+
+func (h *MinHeap) Pop() any {
+    old := *h
+    n := len(old)
+    x := old[n-1]
+    *h = old[:n-1]
+    return x
+}
+
+func main() {
+    h := &MinHeap{3, 1, 4}
+    heap.Init(h)
+    heap.Push(h, 2)
+    fmt.Println(heap.Pop(h).(int)) // 1 (mínimo)
+}
+```
+
+### container/list (lista enlazada doble)
+
+```go
+import "container/list"
+
+l := list.New()
+l.PushBack(1)
+l.PushFront(0)
+elem := l.PushBack(2)
+l.Remove(elem)
+
+for e := l.Front(); e != nil; e = e.Next() {
+    fmt.Println(e.Value)
+}
+```
+
+### container/ring (lista circular)
+
+```go
+import "container/ring"
+
+r := ring.New(3)
+for i := 0; i < r.Len(); i++ {
+    r.Value = i
+    r = r.Next()
+}
+
+r.Do(func(v any) {
+    fmt.Println(v)
+})
+```
+
+### Big O de operaciones comunes en Go
+
+| Estructura | Acceso | Inserción | Eliminación | Búsqueda | Notas |
+|---|---|---|---|---|---|
+| Slice (append) | O(1) | O(1) amortizado | O(n) | O(n) | append reasigna al doble cuando lleno |
+| Slice (índice) | O(1) | — | — | — | acceso directo por índice |
+| Slice (búsqueda) | — | — | — | O(n) | lineal; con sort+Search O(log n) |
+| Map | O(1) promedio | O(1) promedio | O(1) promedio | O(1) promedio | tabla hash, colisiones posibles |
+| Lista enlazada | O(n) | O(1) | O(1) (con elem) | O(n) | container/list |
+
+Fuente: [Go dev — sort](https://go.dev/pkg/sort/), [Go dev — slices](https://go.dev/pkg/slices/), [Go dev — maps](https://go.dev/pkg/maps/), [Go dev — container](https://go.dev/pkg/container/), [Go dev — blog slices](https://go.dev/blog/slices)
+
+---
+
+## POO en Go (no hay clases)
+
+Go no tiene clases ni herencia. En su lugar usa **tipos** (structs), **métodos** (receiver functions), **interfaces** y **composición** (embedding).
+
+| Concepto OOP | En Go |
+|---|---|
+| Clase | `struct` con métodos |
+| Constructor | Función que devuelve `*T` (ej: `NewUsuario()`) |
+| Herencia | Embedding de structs (composición) |
+| Polimorfismo | Interfaces (implícitas, estructurales) |
+| Encapsulación | Mayúscula/minúscula (exportado/no exportado) |
+| Métodos estáticos | Funciones de paquete |
+| this/self | Receptor explícito (`u *Usuario`) |
+| super | Llamar al método del struct embebido |
+| Abstract class | Interfaz + constructor que devuelve la interfaz |
+| Overloading | No existe — nombres de función únicos |
+| Excepciones | `error` interface + `panic/recover` |
+| Genéricos | Type parameters (Go 1.18+) |
+
+### Ejemplo completo: sistema de medios
+
+```go
+package media
+
+import (
+    "fmt"
+    "time"
+)
+
+// ── Tipos base ──
+
+type FormatoVideo int
+
+const (
+    MP4 FormatoVideo = iota
+    WEBM
+    AVI
+    MKV
+)
+
+type Metadata struct {
+    Titulo         string
+    DuracionSegs   int
+    FechaCreacion  time.Time
+    Tags           []string
+}
+
+func (m Metadata) DuracionFormateada() string {
+    mins := m.DuracionSegs / 60
+    segs := m.DuracionSegs % 60
+    return fmt.Sprintf("%d:%02d", mins, segs)
+}
+
+func (m Metadata) String() string {
+    return fmt.Sprintf("%s (%s)", m.Titulo, m.DuracionFormateada())
+}
+
+// ── Interfaz base ──
+
+type Contenido interface {
+    Reproducir() string
+    Info() string
+    Metadata() Metadata
+    Reproducciones() int
+}
+
+// ── Implementación base embebible ──
+
+type contenidoBase struct {
+    meta       Metadata
+    reproducciones int
+}
+
+func (c *contenidoBase) Reproducir() string {
+    c.reproducciones++
+    return "▶️ Reproduciendo " + c.meta.Titulo + "..."
+}
+
+func (c *contenidoBase) Metadata() Metadata {
+    return c.meta
+}
+
+func (c *contenidoBase) Reproducciones() int {
+    return c.reproducciones
+}
+
+// ── Tipos concretos con embedding ──
+
+type Audio struct {
+    *contenidoBase          // embedding
+    BitrateKbps int
+}
+
+func NewAudio(meta Metadata, bitrate int) *Audio {
+    return &Audio{
+        contenidoBase: &contenidoBase{meta: meta},
+        BitrateKbps:   bitrate,
+    }
+}
+
+func (a *Audio) Info() string {
+    return fmt.Sprintf("🎵 %s | %d kbps | %d reproducciones",
+        a.meta.Titulo, a.BitrateKbps, a.reproducciones)
+}
+
+type Video struct {
+    *contenidoBase
+    Resolucion string
+    Formato    FormatoVideo
+    subtitulos bool
+}
+
+func NewVideo(meta Metadata, resolucion string, formato FormatoVideo) *Video {
+    return &Video{
+        contenidoBase: &contenidoBase{meta: meta},
+        Resolucion:    resolucion,
+        Formato:       formato,
+    }
+}
+
+func (v *Video) Info() string {
+    subs := "Sin subtítulos"
+    if v.subtitulos {
+        subs = "CC"
+    }
+    return fmt.Sprintf("🎬 %s | %s | %v | %s",
+        v.meta.Titulo, v.Resolucion, v.Formato, subs)
+}
+
+func (v *Video) SetSubtitulos(activo bool) {
+    v.subtitulos = activo
+}
+
+// ── Composición: lista de reproducción ──
+
+type Playlist struct {
+    Nombre string
+    items  []Contenido
+}
+
+func NewPlaylist(nombre string) *Playlist {
+    return &Playlist{Nombre: nombre, items: make([]Contenido, 0)}
+}
+
+func (p *Playlist) Agregar(item Contenido) {
+    p.items = append(p.items, item)
+}
+
+func (p *Playlist) ReproducirTodo() []string {
+    result := make([]string, len(p.items))
+    for i, item := range p.items {
+        result[i] = item.Reproducir()
+    }
+    return result
+}
+
+func (p *Playlist) InfoCompleta() []string {
+    result := make([]string, len(p.items))
+    for i, item := range p.items {
+        result[i] = item.Info()
+    }
+    return result
+}
+
+// ── Interface de emisión (tipo estructural) ──
+
+type Emisible interface {
+    Reproducir() string
+    Metadata() Metadata
+}
+
+func Emitir(c Emisible) {
+    meta := c.Metadata()
+    fmt.Printf("📡 Emitiendo: %s → %s\n", c.Reproducir(), meta.Titulo)
+}
+
+// ── Uso ──
+
+func main() {
+    cancion := NewAudio(
+        Metadata{Titulo: "Bohemian Rhapsody", DuracionSegs: 354, Tags: []string{"rock", "clásico"}},
+        320,
+    )
+
+    pelicula := NewVideo(
+        Metadata{Titulo: "Inception", DuracionSegs: 8880, Tags: []string{"ciencia ficción"}},
+        "4K", MKV,
+    )
+    pelicula.SetSubtitulos(true)
+
+    // Polimorfismo: Info() cambia según tipo concreto
+    for _, c := range []Contenido{cancion, pelicula} {
+        fmt.Println(c.Info())
+    }
+
+    // Composición
+    lista := NewPlaylist("Favoritos")
+    lista.Agregar(cancion)
+    lista.Agregar(pelicula)
+    fmt.Println(lista.InfoCompleta())
+
+    // Interfaz estructural
+    Emitir(cancion)
+}
+```
+
+**Conceptos demostrados:**
+
+| Concepto | Cómo aparece |
+|---|---|
+| Interfaz | `Contenido`, `Emisible` |
+| Implementación implícita | `*Audio` implementa `Contenido` sin declaración |
+| Embedding | `*contenidoBase` dentro de `Audio` y `Video` |
+| Composicion | `Playlist` contiene `[]Contenido` |
+| Constructor | `NewAudio()`, `NewVideo()` |
+| Encapsulación | `subtitulos` minúscula, `SetSubtitulos()` mayúscula |
+| Polimorfismo | `Info()` distinto comportamiento según tipo |
+| Métodos | Receiver `(a *Audio)` |
+| Interfaz vacía | No se usa — se prefieren interfaces específicas |
+
+---
+
+## Patrones de diseño con ejemplos
+
+### Strategy (interfaces)
+
+```go
+type EstrategiaOrdenacion interface {
+    Ordenar([]int) []int
+}
+
+type Ascendente struct{}
+func (Ascendente) Ordenar(datos []int) []int {
+    result := make([]int, len(datos))
+    copy(result, datos)
+    sort.Ints(result)
+    return result
+}
+
+type Descendente struct{}
+func (Descendente) Ordenar(datos []int) []int {
+    result := make([]int, len(datos))
+    copy(result, datos)
+    sort.Sort(sort.Reverse(sort.IntSlice(result)))
+    return result
+}
+
+type Mitades struct{}
+func (Mitades) Ordenar(datos []int) []int {
+    if len(datos) < 2 {
+        return datos
+    }
+    mid := len(datos) / 2
+    izq := make([]int, mid)
+    der := make([]int, len(datos)-mid)
+    copy(izq, datos[:mid])
+    copy(der, datos[mid:])
+    sort.Ints(izq)
+    sort.Sort(sort.Reverse(sort.IntSlice(der)))
+    return append(izq, der...)
+}
+
+type Analizador struct {
+    estrategia EstrategiaOrdenacion
+}
+
+func (a *Analizador) Analizar(datos []int) []int {
+    return a.estrategia.Ordenar(datos)
+}
+
+// Uso
+a := Analizador{estrategia: Descendente{}}
+fmt.Println(a.Analizar([]int{3, 1, 4, 1, 5, 9})) // [9, 5, 4, 3, 1, 1]
+```
+
+### Builder (functional options)
+
+El patrón Builder en Go se implementa idiomáticamente con **functional options**:
+
+```go
+type Servidor struct {
+    host    string
+    port    int
+    timeout time.Duration
+    tls     bool
+    logger  *log.Logger
+}
+
+type Option func(*Servidor)
+
+func WithHost(host string) Option {
+    return func(s *Servidor) { s.host = host }
+}
+
+func WithPort(port int) Option {
+    return func(s *Servidor) { s.port = port }
+}
+
+func WithTimeout(t time.Duration) Option {
+    return func(s *Servidor) { s.timeout = t }
+}
+
+func WithTLS() Option {
+    return func(s *Servidor) { s.tls = true }
+}
+
+func NuevoServidor(opts ...Option) *Servidor {
+    s := &Servidor{
+        host:    "localhost",
+        port:    8080,
+        timeout: 30 * time.Second,
+    }
+    for _, opt := range opts {
+        opt(s)
+    }
+    return s
+}
+
+// Uso
+s := NuevoServidor(
+    WithHost("example.com"),
+    WithPort(443),
+    WithTLS(),
+    WithTimeout(10*time.Second),
+)
+```
+
+Es el patrón estándar en librerías como gRPC, HTTP, etc.
+
+### Observer (canales)
+
+```go
+type Observable struct {
+    observers []chan<- any
+    mu        sync.RWMutex
+}
+
+func (o *Observable) Conectar() (<-chan any, func()) {
+    ch := make(chan any, 10)
+    o.mu.Lock()
+    o.observers = append(o.observers, ch)
+    o.mu.Unlock()
+
+    disconnect := func() {
+        o.mu.Lock()
+        defer o.mu.Unlock()
+        for i, obs := range o.observers {
+            if obs == ch {
+                o.observers = append(o.observers[:i], o.observers[i+1:]...)
+                break
+            }
+        }
+        close(ch)
+    }
+
+    return ch, disconnect
+}
+
+func (o *Observable) Notificar(dato any) {
+    o.mu.RLock()
+    defer o.mu.RUnlock()
+    for _, obs := range o.observers {
+        select {
+        case obs <- dato:
+        default:
+            // buffer lleno, descartar (non-blocking send)
+        }
+    }
+}
+
+// Uso
+sensor := &Observable{}
+ch, disconnect := sensor.Conectar()
+defer disconnect()
+
+go func() {
+    for dato := range ch {
+        fmt.Println("Recibido:", dato)
+    }
+}()
+
+sensor.Notificar("lectura sensor: 23.5°C")
+```
+
+### Factory (constructores)
+
+```go
+type Parser interface {
+    Parse(data []byte) (any, error)
+}
+
+type JSONParser struct{}
+func (JSONParser) Parse(data []byte) (any, error) {
+    var result any
+    err := json.Unmarshal(data, &result)
+    return result, err
+}
+
+type XMLParser struct{}
+func (XMLParser) Parse(data []byte) (any, error) {
+    var result any
+    err := xml.Unmarshal(data, &result)
+    return result, err
+}
+
+// Factory
+func NewParser(format string) (Parser, error) {
+    switch format {
+    case "json":
+        return JSONParser{}, nil
+    case "xml":
+        return XMLParser{}, nil
+    default:
+        return nil, fmt.Errorf("formato no soportado: %s", format)
+    }
+}
+```
+
+**Factory con registro (más flexible):**
+
+```go
+var parsers = make(map[string]func() Parser)
+
+func RegisterParser(format string, factory func() Parser) {
+    parsers[format] = factory
+}
+
+func NewParser(format string) (Parser, error) {
+    factory, ok := parsers[format]
+    if !ok {
+        return nil, fmt.Errorf("formato no registrado: %s", format)
+    }
+    return factory(), nil
+}
+
+func init() {
+    RegisterParser("json", func() Parser { return JSONParser{} })
+    RegisterParser("xml", func() Parser { return XMLParser{} })
+}
+```
+
+### Singleton (sync.Once)
+
+```go
+type Config struct {
+    DBUrl  string
+    Puerto int
+}
+
+var (
+    config *Config
+    once   sync.Once
+)
+
+func GetConfig() *Config {
+    once.Do(func() {
+        config = &Config{
+            DBUrl:  os.Getenv("DATABASE_URL"),
+            Puerto: 8080,
+        }
+    })
+    return config
+}
+```
+
+### Worker pool (goroutines + canales)
+
+```go
+type Pool struct {
+    jobs    chan func()
+    wg      sync.WaitGroup
+}
+
+func NewPool(size int) *Pool {
+    p := &Pool{
+        jobs: make(chan func(), 100),
+    }
+    for i := 0; i < size; i++ {
+        p.wg.Add(1)
+        go p.worker(i)
+    }
+    return p
+}
+
+func (p *Pool) worker(id int) {
+    defer p.wg.Done()
+    for job := range p.jobs {
+        log.Printf("Worker %d ejecutando job", id)
+        job()
+    }
+}
+
+func (p *Pool) Submit(job func()) {
+    p.jobs <- job
+}
+
+func (p *Pool) Shutdown() {
+    close(p.jobs)
+    p.wg.Wait()
+}
+```
+
+### Middleware (http.Handler)
+
+```go
+type Middleware func(http.Handler) http.Handler
+
+// Logging middleware
+func Logging(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        start := time.Now()
+        next.ServeHTTP(w, r)
+        log.Printf("%s %s %v", r.Method, r.URL.Path, time.Since(start))
+    })
+}
+
+// Autenticación middleware
+func Autenticar(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        token := r.Header.Get("Authorization")
+        if token == "" {
+            http.Error(w, "Unauthorized", http.StatusUnauthorized)
+            return
+        }
+        // validar token...
+        next.ServeHTTP(w, r)
+    })
+}
+
+// Chain (componer middlewares)
+func Chain(h http.Handler, middlewares ...Middleware) http.Handler {
+    for i := len(middlewares) - 1; i >= 0; i-- {
+        h = middlewares[i](h)
+    }
+    return h
+}
+
+// Uso
+handler := Chain(
+    miHandler,
+    Logging,
+    Autenticar,
+    RateLimit,
+)
+```
+
+---
+
+## Polimorfismo en detalle
+
+Go tiene dos formas de polimorfismo: **interfaces estructurales** (duck typing en compilación) y **genéricos** (Go 1.18+).
+
+### 1. Polimorfismo por interfaces (el estándar de Go)
+
+```go
+type Animal interface {
+    Sonido() string
+}
+
+type Perro struct{ Nombre string }
+func (p Perro) Sonido() string { return "Guau" }
+
+type Gato struct{ Nombre string }
+func (g Gato) Sonido() string { return "Miau" }
+
+type Coche struct{ Marca string }
+func (c Coche) Sonido() string { return "Brum" }
+
+func HacerSonido(a Animal) {
+    fmt.Println(a.Sonido())
+}
+
+func main() {
+    HacerSonido(Perro{}) // Guau
+    HacerSonido(Gato{})  // Miau
+    HacerSonido(Coche{}) // Brum — no es animal, pero implementa la interfaz
+}
+```
+
+**Type switch para polimorfismo condicional:**
+
+```go
+func Describir(a any) string {
+    switch v := a.(type) {
+    case Perro:
+        return fmt.Sprintf("Perro llamado %s", v.Nombre)
+    case Gato:
+        return fmt.Sprintf("Gato llamado %s", v.Nombre)
+    case Coche:
+        return fmt.Sprintf("Coche marca %s", v.Marca)
+    default:
+        return fmt.Sprintf("Tipo desconocido: %T", v)
+    }
+}
+```
+
+### 2. Polimorfismo con genéricos (Go 1.18+)
+
+```go
+type Sumable interface {
+    ~int | ~float64 | ~string
+}
+
+func Suma[S Sumable](vals ...S) S {
+    var total S
+    for _, v := range vals {
+        total += v
+    }
+    return total
+}
+
+func main() {
+    fmt.Println(Suma(1, 2, 3))                    // 6
+    fmt.Println(Suma(1.5, 2.5, 3.0))              // 7.0
+    fmt.Println(Suma("a", "b", "c"))               // "abc"
+}
+```
+
+**Cuándo usar cada uno:**
+
+| Situación | Interfaces | Genéricos |
+|---|---|---|
+| Diferentes tipos, mismo comportamiento | ✅ | ❌ (no necesitas) |
+| Mismo código para cualquier tipo | ❌ | ✅ |
+| Quieres almacenar tipos en una variable | ✅ `var a Animal = Perro{}` | ❌ |
+| Type switch sobre el tipo concreto | ✅ `switch v.(type)` | ❌ |
+| Funciones sobre slices/maps genéricos | ❌ | ✅ |
+| Rendimiento crítico | ❌ (dynamic dispatch) | ✅ (monomorfización) |
+
+---
+
+## Multimedia e imágenes
+
+Go no tiene una stdlib multimedia potente como Python (Pillow) o Node (Sharp). Sin embargo, cubre lo básico con `image` y hay librerías externas excelentes.
+
+### image — decodificar y codificar imágenes
+
+```go
+import "image"
+import _ "image/png"  // registro del decoder PNG
+import _ "image/jpeg" // registro del decoder JPEG
+import _ "image/gif"  // registro del decoder GIF
+
+f, _ := os.Open("imagen.png")
+defer f.Close()
+
+img, format, err := image.Decode(f) // format = "png", "jpeg", "gif"
+fmt.Println("Formato:", format)
+bounds := img.Bounds()
+fmt.Printf("Dimensiones: %dx%d", bounds.Dx(), bounds.Dy())
+```
+
+### image/color — colores
+
+```go
+import "image/color"
+
+c := color.RGBA{R: 255, G: 0, B: 0, A: 255} // rojo opaco
+// También: color.NRGBA (pre-multiplicado), color.Gray, color.CMYK
+```
+
+### image/draw — dibujar sobre imágenes
+
+```go
+import "image/draw"
+import "image/png"
+
+// Crear imagen en blanco
+dst := image.NewRGBA(image.Rect(0, 0, 800, 600))
+draw.Draw(dst, dst.Bounds(), &image.Uniform{color.White}, image.Point{}, draw.Src)
+
+// Dibujar una imagen sobre otra
+srcFile, _ := os.Open("logo.png")
+src, _, _ := image.Decode(srcFile)
+srcFile.Close()
+
+offset := image.Pt(100, 50)
+draw.Draw(dst, src.Bounds().Add(offset), src, image.Point{}, draw.Over)
+
+// Guardar
+out, _ := os.Create("resultado.png")
+png.Encode(out, dst)
+out.Close()
+```
+
+### image/gif — crear GIFs animados
+
+```go
+import "image/gif"
+
+var frames []*image.Paletted
+var delays []int
+
+for i := 0; i < 10; i++ {
+    // crear frame...
+    frames = append(frames, frame)
+    delays = append(delays, 10) // 10 centésimas de segundo
+}
+
+f, _ := os.Create("animacion.gif")
+gif.EncodeAll(f, &gif.GIF{
+    Image: frames,
+    Delay: delays,
+})
+f.Close()
+```
+
+### golang.org/x/image — extensiones
+
+Paquetes oficiales fuera de la stdlib pero mantenidos por el equipo Go:
+
+- `golang.org/x/image/tiff` — TIFF
+- `golang.org/x/image/bmp` — BMP
+- `golang.org/x/image/webp` — WebP decode
+- `golang.org/x/image/font` — renderizado de fuentes
+- `golang.org/x/image/vector` — gráficos vectoriales
+
+```bash
+go get golang.org/x/image
+```
+
+### Librerías externas populares
+
+| Librería | Para qué | Enlace |
+|---|---|---|
+| **gg** | Renderizado 2D (líneas, formas, texto, gradientes) | [github.com/fogleman/gg](https://github.com/fogleman/gg) |
+| **go-ffmpeg** | Bindings para FFmpeg (procesamiento de video) | [github.com/m1k1o/go-ffmpeg](https://github.com/m1k1o/go-ffmpeg) |
+| **beep** | Reproducción y procesamiento de audio | [github.com/gopxl/beep](https://github.com/gopxl/beep) |
+| **oto** | Audio multiplataforma (sin dependencias externas) | [github.com/hajimehoshi/oto](https://github.com/hajimehoshi/oto) |
+| **gocv** | OpenCV bindings (visión artificial) | [github.com/hybridgroup/gocv](https://github.com/hybridgroup/gocv) |
+| **gographics/imagick** | ImageMagick bindings | [github.com/gographics/imagick](https://github.com/gographics/imagick) |
+| **disintegration/imaging** | Procesamiento de imágenes de alto nivel | [github.com/disintegration/imaging](https://github.com/disintegration/imaging) |
+
+```go
+// gg — ejemplo de renderizado 2D
+import "github.com/fogleman/gg"
+
+dc := gg.NewContext(400, 300)
+dc.SetRGB(1, 1, 1)
+dc.Clear()
+dc.SetRGB(0, 0, 0)
+dc.SetLineWidth(4)
+dc.DrawCircle(200, 150, 50)
+dc.Stroke()
+dc.SavePNG("circulo.png")
+```
+
+Fuente: [Go dev — image](https://go.dev/pkg/image/), [Go dev — image/png](https://go.dev/pkg/image/png/), [Go dev — image/gif](https://go.dev/pkg/image/gif/), [golang.org/x/image](https://pkg.go.dev/golang.org/x/image), [gg GitHub](https://github.com/fogleman/gg), [beep GitHub](https://github.com/gopxl/beep), [gocv GitHub](https://github.com/hybridgroup/gocv)
+
+---
+
+## Bases de datos
+
+### SQL
+
+| Librería | Async | ORM | Para qué |
+|---|---|---|---|
+| **database/sql** (stdlib) | No | No | Driver estándar, funciona con PostgreSQL, MySQL, SQLite |
+| **pgx** | Sí | No | Driver PostgreSQL nativo en Go. 5x más rápido que lib/pq |
+| **sqlx** | No | No | Extensión de database/sql con struct scanning, named params |
+| **GORM** | No | ORM completo | ORM más popular. Migraciones automáticas, callbacks, preloading |
+| **bun** | Sí | ORM ligero | SQLite/PostgreSQL/MySQL. Query builder fluido |
+| **jet** | No | Query builder | Genera tipos desde la BD, type-safe queries |
+
+```go
+// sqlx — el punto medio entre stdlib y ORM
+type Usuario struct {
+    ID    int    `db:"id"`
+    Nombre string `db:"nombre"`
+    Email  string `db:"email"`
+}
+
+db, err := sqlx.Connect("postgres", "postgres://user:pass@localhost/db?sslmode=disable")
+
+// Select — mapea automáticamente a struct
+var usuarios []Usuario
+db.Select(&usuarios, "SELECT * FROM usuarios")
+
+// Get — una fila
+var u Usuario
+db.Get(&u, "SELECT * FROM usuarios WHERE id = $1", 1)
+
+// Named queries
+db.NamedExec("INSERT INTO usuarios (nombre, email) VALUES (:nombre, :email)", &u)
+
+// In — queries con IN dinámico
+query, args, _ := sqlx.In("SELECT * FROM usuarios WHERE id IN (?)", []int{1, 2, 3})
+query = db.Rebind(query) // adapta $1, $2 según driver
+db.Select(&usuarios, query, args...)
+```
+
+```go
+// pgx — PostgreSQL nativo, moderno y rápido
+import "github.com/jackc/pgx/v5"
+
+conn, err := pgx.Connect(ctx, "postgres://user:pass@localhost/db")
+
+// Query simple
+rows, err := conn.Query(ctx, "SELECT id, nombre FROM usuarios")
+for rows.Next() {
+    var id int
+    var nombre string
+    rows.Scan(&id, &nombre)
+}
+
+// pgxpool — connection pooling
+pool, err := pgxpool.New(ctx, "postgres://user:pass@localhost/db")
+pool.Config().MaxConns = 20
+
+// Con pgx la interfaz database/sql también funciona:
+db, err := sql.Open("pgx", "postgres://user:pass@localhost/db")
+```
+
+```go
+// GORM — ORM completo
+import "gorm.io/gorm"
+import "gorm.io/driver/postgres"
+
+type Usuario struct {
+    gorm.Model
+    Nombre string `gorm:"size:100;not null"`
+    Email  string `gorm:"uniqueIndex"`
+    Edad   int
+    Posts  []Post // HasMany
+}
+
+type Post struct {
+    gorm.Model
+    Titulo    string
+    UsuarioID uint
+    Usuario   Usuario // BelongsTo
+}
+
+db, _ := gorm.Open(postgres.Open("postgres://user:pass@localhost/db"), &gorm.Config{})
+
+// AutoMigrate — crea/actualiza tablas
+db.AutoMigrate(&Usuario{}, &Post{})
+
+// CRUD
+db.Create(&Usuario{Nombre: "Ana", Email: "ana@email.com"})
+var u Usuario
+db.First(&u, 1)                       // por ID
+db.Where("nombre = ?", "Ana").First(&u)
+db.Model(&u).Update("edad", 30)
+db.Delete(&u)
+
+// Preloading (eager loading)
+var usuarios []Usuario
+db.Preload("Posts").Find(&usuarios)
+```
+
+### Migraciones
+
+```go
+// golang-migrate/migrate — estándar de facto
+import "github.com/golang-migrate/migrate/v4"
+import _ "github.com/golang-migrate/migrate/v4/database/postgres"
+import _ "github.com/golang-migrate/migrate/v4/source/file"
+```
+
+```bash
+# CLI (instalar con brew o go install)
+migrate create -ext sql -dir migrations -seq crear_usuarios
+
+# migrations/000001_crear_usuarios.up.sql
+CREATE TABLE usuarios (
+    id SERIAL PRIMARY KEY,
+    nombre TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL
+);
+
+# migrations/000001_crear_usuarios.down.sql
+DROP TABLE IF EXISTS usuarios;
+
+# Ejecutar migraciones
+migrate -path migrations -database "postgres://user:pass@localhost/db?sslmode=disable" up
+```
+
+Alternativas:
+- **pressly/goose**: migraciones en SQL o Go, soporte para embedding
+- **golang-migrate/migrate**: el más usado, soporta múltiples drivers y fuentes (archivos, S3, GitHub)
+
+### NoSQL
+
+```go
+// Redis — go-redis/redis
+import "github.com/redis/go-redis/v9"
+
+rdb := redis.NewClient(&redis.Options{
+    Addr:     "localhost:6379",
+    Password: "",
+    DB:       0,
+})
+
+// Set/Get
+rdb.Set(ctx, "key", "value", 10*time.Minute)
+val, _ := rdb.Get(ctx, "key").Result()
+
+// Estructuras
+rdb.HSet(ctx, "user:1", "nombre", "Ana", "email", "ana@email.com")
+rdb.LPush(ctx, "queue", "job1")
+rdb.SAdd(ctx, "tags", "golang", "redis")
+rdb.ZAdd(ctx, "leaderboard", redis.Z{Score: 100, Member: "Ana"})
+
+// Pub/Sub
+pubsub := rdb.Subscribe(ctx, "canal")
+for msg := range pubsub.Channel() {
+    fmt.Println(msg.Payload)
+}
+```
+
+```go
+// MongoDB — mongo-go-driver
+import "go.mongodb.org/mongo-driver/mongo"
+import "go.mongodb.org/mongo-driver/bson"
+
+client, _ := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
+db := client.Database("app")
+coll := db.Collection("usuarios")
+
+// Insert
+coll.InsertOne(ctx, bson.M{"nombre": "Ana", "email": "ana@email.com"})
+
+// Find
+cursor, _ := coll.Find(ctx, bson.M{"nombre": "Ana"})
+var usuarios []bson.M
+cursor.All(ctx, &usuarios)
+
+// FindOne + decode a struct
+var u struct {
+    Nombre string `bson:"nombre"`
+    Email  string `bson:"email"`
+}
+coll.FindOne(ctx, bson.M{"_id": objectID}).Decode(&u)
+```
+
+Fuente: [pgx docs](https://github.com/jackc/pgx), [GORM docs](https://gorm.io/docs/), [sqlx docs](https://jmoiron.github.io/sqlx/), [go-redis docs](https://redis.uptrace.dev/), [MongoDB Go Driver](https://www.mongodb.com/docs/drivers/go/current/)
+
+---
+
+## WebSockets
+
+| Librería | Para qué |
+|---|---|
+| **gorilla/websocket** | La más usada, madura y bien documentada |
+| **nhooyr.io/websocket** | Moderna, más simple, mejor soporte para context |
+| **Melody** | Framework sobre gorilla, sesiones, broadcast |
+
+### gorilla/websocket
+
+```go
+import "github.com/gorilla/websocket"
+
+var upgrader = websocket.Upgrader{
+    ReadBufferSize:  1024,
+    WriteBufferSize: 1024,
+    CheckOrigin: func(r *http.Request) bool { return true }, // solo dev
+}
+
+type Hub struct {
+    clients    map[*websocket.Conn]bool
+    broadcast  chan []byte
+    register   chan *websocket.Conn
+    unregister chan *websocket.Conn
+    mu         sync.RWMutex
+}
+
+func (h *Hub) Run() {
+    for {
+        select {
+        case client := <-h.register:
+            h.mu.Lock()
+            h.clients[client] = true
+            h.mu.Unlock()
+
+        case client := <-h.unregister:
+            h.mu.Lock()
+            if _, ok := h.clients[client]; ok {
+                delete(h.clients, client)
+                client.Close()
+            }
+            h.mu.Unlock()
+
+        case message := <-h.broadcast:
+            h.mu.RLock()
+            for client := range h.clients {
+                client.WriteMessage(websocket.TextMessage, message)
+            }
+            h.mu.RUnlock()
+        }
+    }
+}
+
+func handleWebSocket(hub *Hub, w http.ResponseWriter, r *http.Request) {
+    conn, err := upgrader.Upgrade(w, r, nil)
+    if err != nil {
+        log.Println(err)
+        return
+    }
+
+    hub.register <- conn
+
+    defer func() {
+        hub.unregister <- conn
+    }()
+
+    for {
+        _, msg, err := conn.ReadMessage()
+        if err != nil {
+            if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
+                log.Printf("error: %v", err)
+            }
+            break
+        }
+        hub.broadcast <- msg
+    }
+}
+
+// En main()
+hub := &Hub{
+    clients:   make(map[*websocket.Conn]bool),
+    broadcast: make(chan []byte),
+    register:  make(chan *websocket.Conn),
+    unregister: make(chan *websocket.Conn),
+}
+go hub.Run()
+
+http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+    handleWebSocket(hub, w, r)
+})
+```
+
+### nhooyr.io/websocket (moderna)
+
+```go
+import "nhooyr.io/websocket"
+
+func handleWS(w http.ResponseWriter, r *http.Request) {
+    conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{
+        InsecureSkipVerify: true,
+    })
+    if err != nil {
+        log.Println(err)
+        return
+    }
+    defer conn.Close(websocket.StatusInternalError, "connection closed")
+
+    for {
+        msgType, msg, err := conn.Read(r.Context())
+        if err != nil {
+            break
+        }
+        conn.Write(r.Context(), msgType, msg) // echo
+    }
+}
+```
+
+Fuente: [gorilla/websocket docs](https://github.com/gorilla/websocket), [nhooyr.io/websocket](https://nhooyr.io/websocket)
+
+---
+
+## Concurrencia en detalle
+
+Go tiene un modelo de concurrencia único: **goroutines** (hilos ligeros del runtime) + **canales** (comunicación tipada entre goroutines). La filosofía es: "no comuniques memoria compartida, comparte memoria comunicándote".
+
+### Tabla de escenarios
+
+| Escenario | Solución Go |
+|---|---|
+| Lanzar N tareas independientes | `go func()` + `sync.WaitGroup` |
+| Productor-consumidor | Canal buffered |
+| Fan-out (1 productor, N workers) | Canal compartido, N goroutines |
+| Fan-in (N productores, 1 consumidor) | `select` o merge de canales |
+| Timeout en operación | `context.WithTimeout` |
+| Rate limiting | Canal ticker o `rate.Limiter` |
+| Pipeline de procesamiento | Canales encadenados |
+| Broadcast a N listeners | Canal cerrado (todos reciben zero value) |
+| Shared state protegido | `sync.Mutex` o `sync.RWMutex` |
+| Una sola inicialización | `sync.Once` |
+
+### Patrones de concurrencia
+
+**Pipeline (canales encadenados):**
+
+```go
+func gen(nums ...int) <-chan int {
+    out := make(chan int)
+    go func() {
+        for _, n := range nums {
+            out <- n
+        }
+        close(out)
+    }()
+    return out
+}
+
+func sq(in <-chan int) <-chan int {
+    out := make(chan int)
+    go func() {
+        for n := range in {
+            out <- n * n
+        }
+        close(out)
+    }()
+    return out
+}
+
+func main() {
+    // Pipeline: nums → sq → sq → print
+    for n := range sq(sq(gen(2, 3, 4))) {
+        fmt.Println(n) // 16, 81, 256
+    }
+}
+```
+
+**Fan-out / Fan-in con error handling:**
+
+```go
+type Result struct {
+    Value int
+    Err   error
+}
+
+func worker(ctx context.Context, id int, jobs <-chan int, results chan<- Result) {
+    for job := range jobs {
+        select {
+        case <-ctx.Done():
+            return
+        default:
+            // Simular trabajo que puede fallar
+            if job == 42 {
+                results <- Result{Err: fmt.Errorf("worker %d: job %d es prohibido", id, job)}
+            } else {
+                results <- Result{Value: job * 2}
+            }
+        }
+    }
+}
+
+func main() {
+    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
+
+    jobs := make(chan int, 10)
+    results := make(chan Result, 10)
+
+    // Fan-out: 3 workers
+    for w := 1; w <= 3; w++ {
+        go worker(ctx, w, jobs, results)
+    }
+
+    // Enviar jobs
+    for j := 1; j <= 9; j++ {
+        jobs <- j
+    }
+    close(jobs)
+
+    // Recibir resultados
+    for r := 1; r <= 9; r++ {
+        result := <-results
+        if result.Err != nil {
+            fmt.Println("Error:", result.Err)
+        } else {
+            fmt.Println("Resultado:", result.Value)
+        }
+    }
+}
+```
+
+**errgroup (cancelación al primer error):**
+
+```go
+import "golang.org/x/sync/errgroup"
+
+g, ctx := errgroup.WithContext(context.Background())
+
+urls := []string{
+    "https://httpbin.org/delay/1",
+    "https://httpbin.org/delay/2",
+    "https://httpbin.org/status/500", // este falla
+}
+
+results := make([]string, len(urls))
+for i, url := range urls {
+    i, url := i, url // capturar variables del bucle
+    g.Go(func() error {
+        req, _ := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+        resp, err := http.DefaultClient.Do(req)
+        if err != nil {
+            return err
+        }
+        defer resp.Body.Close()
+        if resp.StatusCode >= 400 {
+            return fmt.Errorf("URL %s: status %d", url, resp.StatusCode)
+        }
+        body, _ := io.ReadAll(resp.Body)
+        results[i] = string(body)
+        return nil
+    })
+}
+
+// Espera a todas las goroutines — si una falla, cancela las demás
+if err := g.Wait(); err != nil {
+    fmt.Println("Error en goroutine:", err)
+}
+```
+
+**Ticker (rate limiting):**
+
+```go
+limiter := time.NewTicker(200 * time.Millisecond)
+defer limiter.Stop()
+
+for _, req := range requests {
+    <-limiter.C // espera el tick
+    go process(req)
+}
+```
+
+**Worker pool con control de errores:**
+
+```go
+func ProcessJobs(ctx context.Context, jobs []Job, workers int) []Result {
+    jobCh := make(chan Job, len(jobs))
+    resultCh := make(chan Result, len(jobs))
+    ctx, cancel := context.WithCancel(ctx)
+    defer cancel()
+
+    // Workers
+    var wg sync.WaitGroup
+    for i := 0; i < workers; i++ {
+        wg.Add(1)
+        go func() {
+            defer wg.Done()
+            for job := range jobCh {
+                select {
+                case <-ctx.Done():
+                    return
+                default:
+                    resultCh <- processJob(ctx, job)
+                }
+            }
+        }()
+    }
+
+    // Enviar jobs
+    for _, job := range jobs {
+        jobCh <- job
+    }
+    close(jobCh)
+
+    // Cerrar resultCh cuando todos terminen
+    go func() {
+        wg.Wait()
+        close(resultCh)
+    }()
+
+    // Recoger resultados
+    var results []Result
+    for result := range resultCh {
+        results = append(results, result)
+        if result.Err != nil {
+            cancel() // cancelar workers restantes
+        }
+    }
+    return results
+}
+```
+
+### Concurrencia vs paralelismo
+
+| Concepto | Concurrencia | Paralelismo |
+|---|---|---|
+| Definición | Múltiples tareas progresan al mismo tiempo | Múltiples tareas se ejecutan simultáneamente |
+| En Go | Goroutines multiplexadas en threads del SO | Varias goroutines ejecutándose en distintos cores |
+| Núcleos | No necesita múltiples cores | Necesita múltiples cores |
+| `GOMAXPROCS` | Controla cuántos threads del SO usa el runtime | `runtime.GOMAXPROCS(runtime.NumCPU())` |
+
+```go
+// Paralelismo real: usa todos los cores
+import "runtime"
+
+func main() {
+    runtime.GOMAXPROCS(runtime.NumCPU()) // por defecto ya lo hace Go
+    // Ahora las goroutines pueden ejecutarse en paralelo real
+}
+```
+
+Fuente: [Go dev — Concurrency](https://go.dev/doc/effective_go#concurrency), [Go Concurrency Patterns (Rob Pike)](https://go.dev/talks/2012/concurrency.slide), [errgroup docs](https://pkg.go.dev/golang.org/x/sync/errgroup)
+
+---
+
+## Escala de aprendizaje: de 0 a 100
+
+Cada nivel incluye lo que debes saber y un proyecto para fijar los conceptos. Las secciones nuevas de esta guía (Paradigmas, Tipos de datos, Control de flujo, Sistema de archivos, Algoritmos, Multimedia) se integran en los niveles según su dificultad conceptual.
+
+### Nivel 0–15: Fundamentos absolutos
+**Qué aprender:**
+- Sintaxis básica: `package main`, `func main()`, `import`, `fmt.Println`
+- Variables: `var`, `:=`, tipos básicos (`string`, `int`, `float64`, `bool`)
+- Control de flujo: `if`, `else`, `for` (único bucle), `switch` — ver sección **Control de flujo y modularidad**
+- Funciones: `func`, parámetros, valores de retorno múltiples
+- Zero values: Go inicializa todo a cero/nil automáticamente
+- `fmt.Printf()` con `%s`, `%d`, `%v`, `%+v`, `%T`
+- **Conceptos clave**: Go es compilado — necesitas `go build` o `go run`. Tipado estático: no puedes sumar `int` y `float64` sin convertir. Las llaves `{` van en la misma línea que la declaración (gofmt no da opción). Variables no usadas = error de compilación.
+
+**Proyecto:** *Adivina el número* — el programa elige un número aleatorio entre 1 y 100 (`rand.Intn`), el usuario intenta adivinarlo con pistas "mayor/menor". Contador de intentos. Manejo de entrada con `fmt.Scanf` o `bufio.Scanner`. Reflexión: ¿por qué Go fuerza a manejar el error de `Scanf` aunque no te importe? (no hay excepciones, los errores son valores)
+
+### Nivel 15–30: Structs, slices, maps y punteros
+**Qué aprender:**
+- Slices: `make([]int, 5)`, `append`, `slicing[:3]`, `copy` — ver sección **Tipos de datos y variables**
+- Maps: `make(map[string]int)`, `mapeo["key"]`, comprobar existencia
+- Structs: `type Usuario struct`, campos, literales
+- Punteros: `*T`, `&`, cuándo pasar puntero vs valor
+- Métodos: receiver value vs pointer
+- Strings: `strings.Split`, `strings.Join`, `strconv.Atoi`, `fmt.Sprintf`
+- Archivos: `os.Open`, `os.ReadFile`, `bufio.Scanner`, `io.Copy` — ver sección **Sistema de archivos**
+- `defer` para cleanup — ver sección **Control de flujo y modularidad**
+- Algoritmos básicos: `sort.Slice`, `slices.Sort`, `container/list` — ver sección **Algoritmos**
+- **Conceptos clave**: un slice NO tiene datos, es un descriptor (puntero, longitud, capacidad). `append` puede reasignar el slice si no cabe. Los maps devuelven zero value si la clave no existe — usa `val, ok := m["key"]`. Los strings son inmutables y UTF-8. `range` sobre slice devuelve índice y valor, sobre map devuelve clave y valor (orden aleatorio).
+
+**Proyecto:** *Gestor de tareas CLI* — añadir (`add "Comprar leche"`), listar (`list`), completar (`done 3`), eliminar (`rm 3`). Persistencia en JSON (`encoding/json`). Usa `flag` para los comandos. Struct `Tarea` con `ID`, `Texto`, `Hecho`. Slice de tareas. Punteros para modificar tareas existentes.
+
+### Nivel 30–45: Interfaces, errores y paquetes
+**Qué aprender:**
+- Interfaces: definición, implementación implícita, `io.Reader`/`io.Writer`
+- Type assertions y type switches
+- Errores: `error` interface, `fmt.Errorf`, `errors.Is`, `errors.As`, errores personalizados
+- Paquetes: exportación pública/privada, `internal`, `go.mod` — ver sección **Control de flujo y modularidad**
+- Embedding de structs (composición) — ver sección **Paradigmas**
+- `init()` functions
+- `encoding/json`: marshal/unmarshal structs, tags `json:`
+- Paradigmas en acción: POO sin clases (structs + métodos + interfaces), funcional parcial (closures, funciones como valores) — ver sección **Paradigmas**
+- **Conceptos clave**: una interfaz es un tipo (valor + type descriptor). `nil` en una interfaz no es lo mismo que un puntero nil. La interfaz vacía `interface{}` (o `any`) es el "tope" del sistema de tipos. Go no tiene `try/catch` — cada error se maneja explícitamente. Las interfaces pequeñas (1 método) son la norma.
+
+**Proyecto:** *Sistema de inventario* — tipos `Producto`, `Inventario` (map[string]*Producto). Interfaz `Almacenable` con métodos `Guardar()`, `Cargar()`. Implementación con JSON y otra con SQLite. Errores personalizados (`ProductoNoExiste`, `StockInsuficiente`). Embedding para `ProductoFisico` y `ProductoDigital`. Tests con table-driven tests.
+
+### Nivel 45–60: Testing, módulos y librerías estándar
+**Qué aprender:**
+- `go test`: `_test.go`, `t.Run`, table-driven tests, `t.Helper`
+- `go test -bench` benchmarks
+- `go test -race` detector de data races
+- `go mod`, `go mod tidy`, `go get`, versionado semántico
+- `net/http`: handlers, `http.HandlerFunc`, `http.ServeMux`, middleware
+- `context.Context`: WithCancel, WithTimeout, WithDeadline, WithValue
+- `time`: `time.Now`, `time.After`, `time.Ticker`, `time.Sleep`
+- `sync`: WaitGroup, Mutex, RWMutex, Once
+- **Conceptos clave**: los tests se colocan en el mismo paquete o en `_test` (black-box testing). El race detector es obligatorio en cualquier código concurrente. `context.Background()` es la raíz, `context.TODO()` marca pendiente, nunca almacenes context en structs. Los middlewares HTTP son funciones que envuelven un `http.Handler`.
+
+**Proyecto:** *API de recetas con net/http* — servidor HTTP sin frameworks. Rutas `/recetas` (GET), `/recetas/{id}` (GET), `/recetas` (POST). Mux manual con `http.ServeMux`. Middleware de logging y CORS. Tests con `httptest.NewRecorder`. Context para timeouts. Mutex para acceso concurrente al slice de recetas.
+
+### Nivel 60–75: Frameworks web y bases de datos
+**Qué aprender:**
+- Gin, Echo o Chi para APIs REST
+- GORM o sqlx para bases de datos
+- Migraciones con golang-migrate
+- Validación de datos (struct tags, validator)
+- JWT: autenticación middleware
+- Variables de entorno: `os.Getenv`, `godotenv` o `viper`
+- `slog` (Go 1.21+): log estructurado nativo
+- **Conceptos clave**: los frameworks Go son más finos que Django/FastAPI — no hay tanto magic. El tipado estático evita muchas clases de bugs. Los handlers reciben `*gin.Context` o `echo.Context` que unifican request/response. La inyección de dependencias se hace a mano (funciones que reciben dependencias como parámetros).
+
+**Proyecto:** *API de recetas con Gin + PostgreSQL* — endpoints CRUD para recetas e ingredientes. GORM para ORM, golang-migrate para migraciones. Autenticación JWT. Búsqueda por ingrediente con SQL parametrizado. Tests con BD de prueba en memoria (SQLite para tests, PostgreSQL en producción). `slog` para logging estructurado.
+
+### Nivel 75–90: Concurrencia avanzada y producción
+**Qué aprender:**
+- Worker pools con errgroup
+- Rate limiting con `golang.org/x/time/rate`
+- Graceful shutdown de servidores HTTP
+- Docker multi-stage para Go
+- CI/CD: GitHub Actions con `go build`, `go test`, `golangci-lint`
+- Redis: caché de endpoints, rate limiting, sesiones
+- Pruebas de integración con testcontainers-go
+- Profiling: `pprof`, trace, memory profiling
+- **Conceptos clave**: `signal.NotifyContext` para graceful shutdown. `errgroup` para cancelar todas las goroutines si una falla. `sync.WaitGroup` + canales = worker pool. El binario estático de Go simplifica Docker enormemente (scratch image de ~10 MB). `GOMAXPROCS` por defecto = todos los cores.
+
+**Proyecto:** *Worker de procesamiento de imágenes* — API que acepta URLs de imágenes, las encola en Redis, workers las procesan concurrentemente. errgroup para control de errores. Rate limiting por usuario. Graceful shutdown que espera a workers terminar. Docker multi-stage (imagen final ~15 MB). CI con golangci-lint, tests, race detector.
+
+### Nivel 90–100: Arquitectura y sistemas distribuidos
+**Qué aprender:**
+- gRPC: protobuf, servidores y clientes, streaming bidireccional
+- Kafka: `segmentio/kafka-go` o `confluent-kafka-go`
+- Arquitectura hexagonal / clean architecture en Go
+- OpenTelemetry: tracing distribuido, métricas
+- Fuzzing con `go test -fuzz`
+- Go generics avanzados: constraints, type inference, patterns
+- Plugins con `plugin` package o WASM
+- **Conceptos clave**: gRPC es el protocolo RPC estándar en Go — Google lo usa internamente. Protobuf es más eficiente que JSON pero menos legible. Kafka ofrece garantías de entrega (at-least-once, exactly-once). Las arquitecturas hexagonales se implementan con interfaces: dominio puro, adaptadores de infraestructura. Los genéricos permiten librerías de colecciones, pipelines, y DSLs internos sin reflection.
+
+**Proyecto:** *Sistema de notificaciones distribuidas* — microservicios con gRPC para comunicación interna. Kafka como event bus (servicio usuarios → servicio notificaciones → servicio email). OpenTelemetry para tracing. Arquitectura hexagonal: dominio (`Notificacion`, `Usuario`), puertos (interfaces), adaptadores (Kafka, gRPC, SMTP). Docker Compose con todos los servicios. Fuzzing en la validación de entrada.
+
+Fuente: [Go dev — doc](https://go.dev/doc/), [Gin docs](https://gin-gonic.com/docs/), [GORM docs](https://gorm.io/docs/), [gRPC Go docs](https://grpc.io/docs/languages/go/)
+
+---
+
+## Proyectos prácticos detallados
+
+### Servidor Web con net/http (nivel 15)
+
 ```go
 package main
 
 import (
+    "encoding/json"
     "fmt"
+    "log"
     "net/http"
+    "time"
 )
 
-func handler(w http.ResponseWriter, r *http.Request) {
-    fmt.Fprintf(w, "Hola Mundo")
+type StatusResponse struct {
+    Status    string `json:"status"`
+    Timestamp string `json:"timestamp"`
+    Version   string `json:"version"`
+}
+
+func statusHandler(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(StatusResponse{
+        Status:    "ok",
+        Timestamp: time.Now().Format(time.RFC3339),
+        Version:   "1.0.0",
+    })
+}
+
+func loggingMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        start := time.Now()
+        next.ServeHTTP(w, r)
+        log.Printf("%s %s %s", r.Method, r.URL.Path, time.Since(start))
+    })
 }
 
 func main() {
-    http.HandleFunc("/", handler)
-    http.ListenAndServe(":8080", nil)
+    mux := http.NewServeMux()
+    mux.HandleFunc("GET /api/status", statusHandler)
+
+    mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
+        fmt.Fprintf(w, "<h1>Bienvenido</h1><p><a href='/api/status'>Status</a></p>")
+    })
+
+    server := &http.Server{
+        Addr:         ":8080",
+        Handler:      loggingMiddleware(mux),
+        ReadTimeout:  10 * time.Second,
+        WriteTimeout: 10 * time.Second,
+    }
+
+    log.Println("Servidor iniciado en :8080")
+    log.Fatal(server.ListenAndServe())
 }
 ```
 
-## 📝 Ejercicios Prácticos
+### Worker pool con errgroup (nivel 75)
 
-1. **Web Server básico** 🟢 `[Fácil]` — Crea un servidor con `net/http` que sirva rutas `/`, `/about`, `/api`.
-2. **API con Gin** 🟡 `[Intermedio]` — CRUD de libros usando Gin. Slice en memoria y manejo de IDs únicos.
-3. **Worker Pool** 🔴 `[Avanzado]` — Procesa URLs de un canal de entrada, escribe resultados en otro. Usa `sync.WaitGroup`.
-4. **CLI Tool** 🟡 `[Intermedio]` — Herramienta CLI con flags (`--input`, `--output`, `--verbose`). Usa paquete `flag`.
+```go
+package main
 
-## ⚡ Buenas Prácticas y Complejidad
+import (
+    "context"
+    "fmt"
+    "log"
+    "net/http"
+    "time"
 
-**Buenas prácticas:**
+    "golang.org/x/sync/errgroup"
+)
 
-- Ejecuta `go fmt` en todos los archivos — el formateo es parte del lenguaje.
-- Usa `go mod tidy` para limpiar dependencias no usadas.
-- Nombra los valores de retorno: `func div(a, b int) (result int, err error)`.
-- Prefiere `error` sobre panic/recover.
-- Usa `context.Context` para timeouts y cancelaciones entre goroutines.
-- Escribe tests con `testing` y benchmarks con `go test -bench`.
+func fetchURL(ctx context.Context, url string) (string, error) {
+    req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+    if err != nil {
+        return "", err
+    }
 
-**Complejidad algorítmica (Big O):**
+    resp, err := http.DefaultClient.Do(req)
+    if err != nil {
+        return "", fmt.Errorf("fetch %s: %w", url, err)
+    }
+    defer resp.Body.Close()
 
-Slices: acceso O(1), append O(1) amortizado, búsqueda O(n). Maps: O(1) promedio. Canales: envío/recepción O(1). `sort.Slice()` O(n log n).
+    return fmt.Sprintf("%s → %d", url, resp.StatusCode), nil
+}
 
-## 📚 Recursos y Documentación
+func main() {
+    ctx := context.Background()
+    g, ctx := errgroup.WithContext(ctx)
 
-- 📖 [Go Documentation](https://go.dev/doc/)
-- 🌐 [Go by Example](https://gobyexample.com/)
-- 📖 [Effective Go](https://go.dev/doc/effective_go)
-- 📖 [Gin Web Framework](https://gin-gonic.com/)
-- 📖 [Go en GitHub](https://github.com/golang/go)
+    urls := []string{
+        "https://httpbin.org/delay/1",
+        "https://httpbin.org/delay/2",
+        "https://httpbin.org/delay/3",
+        "https://httpbin.org/status/404",
+    }
 
-### 🏆 Retos Relacionados
+    results := make(chan string, len(urls))
+
+    for _, url := range urls {
+        url := url
+        g.Go(func() error {
+            result, err := fetchURL(ctx, url)
+            if err != nil {
+                return err
+            }
+            select {
+            case results <- result:
+            case <-ctx.Done():
+                return ctx.Err()
+            }
+            return nil
+        })
+    }
+
+    // Cerrar results cuando todas las goroutines terminen
+    go func() {
+        g.Wait()
+        close(results)
+    }()
+
+    for result := range results {
+        fmt.Println(result)
+    }
+
+    if err := g.Wait(); err != nil {
+        log.Printf("Error en worker pool: %v", err)
+    } else {
+        fmt.Println("Todas las URLs procesadas exitosamente")
+    }
+}
+```
+
+### API CRUD con sqlx (nivel 60)
+
+```go
+package main
+
+import (
+    "encoding/json"
+    "log"
+    "net/http"
+    "strconv"
+    "time"
+
+    "github.com/go-chi/chi/v5"
+    "github.com/go-chi/chi/v5/middleware"
+    "github.com/jmoiron/sqlx"
+    _ "github.com/lib/pq"
+)
+
+type Usuario struct {
+    ID        int       `db:"id" json:"id"`
+    Nombre    string    `db:"nombre" json:"nombre"`
+    Email     string    `db:"email" json:"email"`
+    Activo    bool      `db:"activo" json:"activo"`
+    CreatedAt time.Time `db:"created_at" json:"created_at"`
+}
+
+type CrearUsuarioRequest struct {
+    Nombre string `json:"nombre"`
+    Email  string `json:"email"`
+}
+
+type Server struct {
+    db *sqlx.DB
+}
+
+func NewServer(db *sqlx.DB) *Server {
+    return &Server{db: db}
+}
+
+func (s *Server) ListarUsuarios(w http.ResponseWriter, r *http.Request) {
+    var usuarios []Usuario
+    if err := s.db.Select(&usuarios, "SELECT * FROM usuarios ORDER BY id"); err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+    json.NewEncoder(w).Encode(usuarios)
+}
+
+func (s *Server) ObtenerUsuario(w http.ResponseWriter, r *http.Request) {
+    id, _ := strconv.Atoi(chi.URLParam(r, "id"))
+    var u Usuario
+    if err := s.db.Get(&u, "SELECT * FROM usuarios WHERE id = $1", id); err != nil {
+        http.Error(w, "Usuario no encontrado", http.StatusNotFound)
+        return
+    }
+    json.NewEncoder(w).Encode(u)
+}
+
+func (s *Server) CrearUsuario(w http.ResponseWriter, r *http.Request) {
+    var req CrearUsuarioRequest
+    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+        http.Error(w, "JSON inválido", http.StatusBadRequest)
+        return
+    }
+
+    var u Usuario
+    err := s.db.Get(&u,
+        "INSERT INTO usuarios (nombre, email) VALUES ($1, $2) RETURNING *",
+        req.Nombre, req.Email,
+    )
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    w.WriteHeader(http.StatusCreated)
+    json.NewEncoder(w).Encode(u)
+}
+
+func main() {
+    db, err := sqlx.Connect("postgres", "postgres://user:pass@localhost/db?sslmode=disable")
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    s := NewServer(db)
+    r := chi.NewRouter()
+
+    r.Use(middleware.Logger)
+    r.Use(middleware.Recoverer)
+    r.Use(middleware.Timeout(10 * time.Second))
+
+    r.Route("/api/usuarios", func(r chi.Router) {
+        r.Get("/", s.ListarUsuarios)
+        r.Post("/", s.CrearUsuario)
+        r.Get("/{id}", s.ObtenerUsuario)
+    })
+
+    log.Println("API iniciada en :8080")
+    http.ListenAndServe(":8080", r)
+}
+```
+
+---
+
+## Hacks y tips de productividad
+
+**1. `go generate` — generación de código**
+
+```go
+//go:generate stringer -type=Estado
+type Estado int
+
+const (
+    Pendiente Estado = iota
+    Activo
+    Inactivo
+)
+```
+```bash
+go install golang.org/x/tools/cmd/stringer@latest
+go generate ./...  # genera estado_string.go con método String()
+```
+
+**2. `//go:embed` — incrustar archivos en el binario (Go 1.16+)**
+
+```go
+import "embed"
+
+//go:embed templates/*.html
+//go:embed static/*
+var assets embed.FS
+
+func main() {
+    data, _ := assets.ReadFile("templates/index.html")
+    fmt.Println(string(data))
+
+    // Servir archivos embedded
+    http.Handle("/static/", http.FileServer(http.FS(assets)))
+}
+```
+
+**3. `slog` — logging estructurado nativo (Go 1.21+)**
+
+```go
+import "log/slog"
+
+func main() {
+    // JSON logger
+    logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+        Level: slog.LevelDebug,
+    }))
+    slog.SetDefault(logger)
+
+    slog.Info("servidor iniciado",
+        "puerto", 8080,
+        "env", "production",
+    )
+    slog.Error("error de conexión",
+        "error", err,
+        "intento", 3,
+    )
+}
+```
+
+**4. Profiling con pprof**
+
+```go
+import _ "net/http/pprof" // registra handlers en /debug/pprof/
+
+func main() {
+    go func() {
+        http.ListenAndServe("localhost:6060", nil) // servidor de profiling
+    }()
+    // ... tu aplicación
+}
+```
+```bash
+go tool pprof http://localhost:6060/debug/pprof/heap  # heap profile
+go tool pprof http://localhost:6060/debug/pprof/profile?seconds=30  # CPU profile
+go tool pprof -http=:8081 ~/pprof/pprof.samples.cpu.001.pb.gz  # UI web
+```
+
+**5. Race detector**
+
+```bash
+go test -race ./...      # detecta data races en tests
+go build -race .         # compila con race detector
+```
+
+El race detector es una herramienta de desarrollo. Los binarios con `-race` son más lentos y usan más memoria. Nunca en producción.
+
+**6. Fuzzing (Go 1.18+)**
+
+```go
+func FuzzDividir(f *testing.F) {
+    testcases := []struct {
+        a, b float64
+    }{
+        {10, 2},
+        {0, 5},
+        {-1, 3},
+    }
+    for _, tc := range testcases {
+        f.Add(tc.a, tc.b)
+    }
+
+    f.Fuzz(func(t *testing.T, a, b float64) {
+        result, err := Dividir(a, b)
+        if err == nil && b == 0 {
+            t.Errorf("se esperaba error para división por cero")
+        }
+        if err != nil && b != 0 {
+            t.Errorf("error inesperado para %f / %f: %v", a, b, err)
+        }
+        if err == nil && !math.IsInf(result, 0) {
+            _ = result
+        }
+    })
+}
+```
+```bash
+go test -fuzz=FuzzDividir -fuzztime=30s
+```
+
+**7. `any` vs `interface{}`**
+
+Son exactamente lo mismo. `any` es un alias introducido en Go 1.18. Usa `any` en código nuevo (más corto, más legible).
+
+```go
+// Antes (Go < 1.18)
+var x interface{}
+
+// Después (Go 1.18+)
+var x any
+```
+
+**8. `net/http/httptest` para tests HTTP**
+
+```go
+func TestHandler(t *testing.T) {
+    ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        fmt.Fprintln(w, "Hola")
+    }))
+    defer ts.Close()
+
+    resp, err := http.Get(ts.URL)
+    if err != nil {
+        t.Fatal(err)
+    }
+    defer resp.Body.Close()
+
+    body, _ := io.ReadAll(resp.Body)
+    if string(body) != "Hola\n" {
+        t.Errorf("esperado 'Hola\\n', got %q", body)
+    }
+}
+```
+
+**9. `singleflight` — evitar duplicación de peticiones**
+
+```go
+import "golang.org/x/sync/singleflight"
+
+var sf singleflight.Group
+
+func fetchData(key string) (any, error) {
+    result, err, _ := sf.Do(key, func() (any, error) {
+        // Solo una goroutine ejecuta esto
+        return fetchFromDB(key)
+    })
+    return result, err
+}
+```
+
+**10. `golangci-lint` — linter multi-herramienta**
+
+```bash
+# Instalación
+go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+
+# Ejecutar
+golangci-lint run ./...
+
+# .golangci.yml
+linters:
+  enable:
+    - errcheck
+    - govet
+    - staticcheck
+    - gosec
+    - revive
+```
+
+**11. Cross-compile inteligente**
+
+```bash
+# Compilar para cualquier plataforma desde cualquier máquina
+GOOS=linux GOARCH=arm64 go build -o app-linux-arm64 .
+GOOS=windows GOARCH=amd64 go build -o app-windows-amd64.exe .
+GOOS=darwin GOARCH=amd64 go build -o app-darwin-amd64 .
+```
+
+Go hace cross-compile nativo. No necesitas Docker ni VMs. `CGO_ENABLED=0` para binarios estáticos sin dependencias C.
+
+Fuente: [Go dev — blog](https://go.dev/blog/), [Go dev — pprof](https://go.dev/blog/pprof), [Go dev — fuzzing](https://go.dev/blog/fuzz)
+
+---
+
+## Canales y recursos en español
+
+### YouTube
+- **Midulive** — Go, desarrollo backend, Docker, Kubernetes. Explicaciones claras y proyectos prácticos. [Canal](https://www.youtube.com/c/Midulive)
+- **MoureDev** — Go, Rust, automatización, proyectos fullstack con explicaciones detalladas. También hace directos en Twitch. [Canal](https://www.youtube.com/c/MoureDev)
+- **Fazt** — Go desde cero, APIs REST, Gin, MongoDB. Tutoriales cortos y directos. [Canal](https://www.youtube.com/c/FaztTech)
+- **Código Kotlin** — Canal variado con Go, Rust, Kotlin y desarrollo backend. Buenas explicaciones de concurrencia. [Canal](https://www.youtube.com/c/CodigoKotlin)
+- **OpenWebinars** — Cursos formales de Go con certificados. Desde fundamentos hasta despliegue. [OpenWebinars Go](https://openwebinars.net/cursos/go/)
+
+### Comunidades
+- **r/golang** (Reddit) — Comunidad oficial de Go en inglés, muy activa, con threads de preguntas y proyectos
+- **Gophers en Español** — Grupos de Telegram y Discord para hablar de Go en español
+- **Go Spain** ([gospain.org](https://gospain.org/)) — Comunidad española de Go, meetups, eventos
+- **Stack Overflow en español** — Etiqueta `go` para dudas técnicas
+
+### Repositorios de código
+- [golang/go](https://github.com/golang/go) — Código fuente del lenguaje y la stdlib
+- [awesome-go](https://github.com/avelino/awesome-go) — Lista curada de frameworks, librerías y recursos
+- [golang-standards/project-layout](https://github.com/golang-standards/project-layout) — Estructura estándar de proyectos Go
+- [dgraph-io/badger](https://github.com/dgraph-io/badger) — Base de datos KV embebida en Go
+- [gin-gonic/gin](https://github.com/gin-gonic/gin) — Framework web más popular
+
+### Blogs y newsletters
+- [Go dev blog](https://go.dev/blog/) — Blog oficial del equipo de Go
+- [Go by Example](https://gobyexample.com/) — Ejemplos interactivos de cada concepto
+- [Go Time podcast](https://changelog.com/gotime) — Podcast semanal sobre Go (inglés)
+- [Just For Func](https://www.youtube.com/c/JustForFunc) — YouTube channel sobre Go avanzado (inglés)
+- [Dave Cheney blog](https://dave.cheney.net/) — Artículos profundos sobre Go, testing, errores
+
+Fuente: búsqueda en YouTube y Reddit, listas curadas de Awesome Go
+
+---
+
+## Referencias y documentación oficial
+
+- **Docs oficiales**: [go.dev/doc](https://go.dev/doc/) — tutorial, effective go, language reference
+- **Go Specification**: [go.dev/ref/spec](https://go.dev/ref/spec) — especificación completa del lenguaje
+- **Go Modules**: [go.dev/doc/modules](https://go.dev/doc/modules/managing-dependencies) — gestión de dependencias
+- **Go Packages**: [pkg.go.dev](https://pkg.go.dev/) — documentación de todos los paquetes
+- **Go Playground**: [go.dev/play](https://go.dev/play/) — probar código Go en el navegador
+- **Go DL**: [go.dev/dl](https://go.dev/dl/) — descargas oficiales
+- **Go Forum**: [forum.golangbridge.org](https://forum.golangbridge.org/) — foro de la comunidad
+- **Go GitHub**: [github.com/golang/go](https://github.com/golang/go) — issues, proposals, contribuciones
+
+### Fuentes de esta guía
+
+Esta guía se ha elaborado a partir de las siguientes fuentes consultadas durante su desarrollo:
+
+- [Go dev — Documentación oficial y tutorial](https://go.dev/doc/)
+- [Go by Example](https://gobyexample.com/) — Ejemplos prácticos de cada concepto
+- [Effective Go](https://go.dev/doc/effective_go) — Guía de estilo y buenas prácticas
+- [Go Specification](https://go.dev/ref/spec) — Referencia completa del lenguaje
+- [Gin Web Framework — Documentación](https://gin-gonic.com/docs/)
+- [GORM — Documentación](https://gorm.io/docs/)
+- [sqlx — Documentación](https://jmoiron.github.io/sqlx/)
+- [Go Blog](https://go.dev/blog/) — Artículos oficiales del equipo Go
+- [Dave Cheney — Blog sobre Go](https://dave.cheney.net/)
+- [Go Time Podcast](https://changelog.com/gotime) — Discusiones semanales sobre Go
+- [r/golang](https://reddit.com/r/golang) — Comunidad, debates y proyectos
+- [Awesome Go](https://github.com/avelino/awesome-go) — Lista curada de librerías
+- [Go Proverbs (Rob Pike)](https://go-proverbs.github.io/) — Filosofía del lenguaje en aforismos
+- [Concurrency is not parallelism (Rob Pike)](https://go.dev/talks/2012/concurrency.slide) — Charla fundamental sobre concurrencia
+- [Go Standard Project Layout](https://github.com/golang-standards/project-layout) — Convenciones de estructura de proyectos
+
+---
+
+## 🏆 Retos Relacionados
 
 Pon a prueba lo aprendido con estos desafíos:
 - [Decorador De Medicion De Tiempo](/retos/guia-decorador-de-medicion-de-tiempo)

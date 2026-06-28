@@ -143,13 +143,79 @@ Schemas in `src/content.config.ts` using `astro/loaders` (glob) + `astro/zod`.
 
 ### Layout
 - Post pages: 12-column grid, `lg:col-span-8` main + `lg:col-span-4` sidebar (TOC).
-- Sidebar TOC: `hidden lg:block` on desktop, `lg:hidden` collapsible above article on mobile.
+- TOC: `TableOfContents` component renderiza ambas versiones (mobile + desktop). Colocar en `lg:col-span-4` con `lg:sticky lg:top-24 lg:pl-8 h-fit`.
+- Article prose: `max-w-4xl` (no `max-w-none`) para líneas de lectura cómodas.
+- Breadcrumbs: colocar dentro del `<main>`, antes del `<header>`, en la misma columna.
 - Max widths: `max-w-screen-xl` for post layout, `max-w-3xl` for description text.
 
-## Notes
-- `image_cache.json` is auto-generated; treat as cache.
-- Posts with `draft: true` are filtered at runtime.
-- Content is in Spanish — prefer Spanish for new content.
+## MDX Syntax — Critical Rules
+
+MDX parses `<` and `{` as JSX/expression boundaries even in prose. **Never leave these unescaped outside code blocks:**
+
+| Pattern | Problem | Fix |
+|---|---|---|
+| `<Fragment>` en heading | JSX tag en heading | Renombrar heading sin `<>` |
+| `<1ms` en prosa | JSX tag inválido (`1` no es nombre válido) | `` `<1ms` `` o `&lt;1ms` |
+| `Span<T>` en link text | `<T>` interpretado como JSX | `Span&lt;T&gt;` |
+| `{variable}` fuera de code block | Interpretado como expresión JS | Escapar con `{'{variable}'}` |
+
+**Regla de oro**: si ves `<` seguido de letra/número fuera de un bloque de código, escápalo. Siempre correr `npm run build` después de tocar MDX.
+
+## Component Patterns (from UI audit)
+
+### Card descriptions
+- **NUNCA** usar comillas alrededor de `{description}`
+- **NUNCA** usar `italic` ni `opacity-80` en descripciones
+- Clase estándar: `text-sm sm:text-base text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed font-medium`
+
+### Tabla de contenidos (TOC)
+- Mobile: `<details>` colapsable con gradient badge `from-sky-800 to-cyan-500`, `lg:hidden`
+- Desktop: sidebar sticky `hidden lg:block` con `IntersectionObserver` para highlight activo
+- Ambos usan la misma clase `.toc-link` para que el observer resalte ambas listas
+- El `<details>` debe tener `summary::-webkit-details-marker { display: none }` y `summary { list-style: none }`
+
+### Breadcrumbs
+- Colocar antes del `<header>` del post, dentro del `main` (no fuera del grid)
+- Formato: `Inicio / Sección / Título` con `text-xs font-black uppercase tracking-[0.2em]`
+- Separador: `/` en `text-slate-400 mx-2`
+- Título truncado con `truncate max-w-[200px]` si es muy largo
+
+### Header / Nav
+- Buscador dentro del menú hamburguesa en mobile (`<slot />` en Navbar)
+- Buscador visible en barra solo en desktop (`hidden lg:block`)
+- ToggleButton siempre visible
+- El `slot` en Navbar debe ir dentro de `#menu-items`, después de los nav links
+
+### Scroll to top
+- Sin `lg:hidden` — visible en desktop también tras 400px scroll
+- `opacity-0 translate-y-4 pointer-events-none` → `opacity-100 translate-y-0 pointer-events-auto`
+
+### Archive / Listados
+- Mostrar solo últimos 2 años por defecto
+- Link "Ver archivo completo (N años)" si hay más
+- Usar `<details>` nativos para colapsar años
+- Contador `Total_Entradas: {allPosts.length}` al final
+
+## Mobile-first Responsive Patterns
+
+| Componente | Mobile | Desktop |
+|---|---|---|
+| TOC | `<details>` colapsable encima del article | Sidebar sticky `lg:col-span-4` |
+| Buscador | Dentro del menú hamburguesa | Barra header, al lado del toggle |
+| Navbar | Overlay fullscreen con `fixed inset-0` | Horizontal, sin overlay |
+| ScrollToTop | Visible tras 400px | Visible tras 400px |
+| Archive | Plegado por defecto (2 años) | Plegado por defecto (2 años) |
+
+## Build Verification
+
+1. **Siempre** correr `npm run build` después de cualquier cambio en MDX o componentes
+2. Errores comunes de build:
+   - `<` no escapado en MDX → buscar `<[A-Za-z0-9]` en prosa
+   - `{ }` no escapados en MDX → buscar `{[a-zA-Z]` fuera de code blocks
+   - Etiquetas JSX cerradas incorrectamente en headings (`<Fragment>`, `<Base>`)
+3. Errores preexistentes conocidos (no tocar a menos que sea necesario):
+   - `guia-0-100-csharp.mdx`: XML tags en code blocks son seguros
+   - `guia-0-100-astro.mdx`: `<Base>`, `<Markdown>` en code blocks son seguros
 
 ## Git Conventions
 - Commits in Spanish (castellano).

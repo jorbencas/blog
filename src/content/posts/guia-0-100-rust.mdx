@@ -1,99 +1,2317 @@
 ---
 draft: false
 title: "Guía de Rust: De 0 a 100"
-description: "Seguridad de memoria sin recolector de basura. El futuro del sistema."
-pubDate: "2017-06-11"
-tags: ["rust", "guia", "sistemas"]
+description: "Seguridad de memoria sin recolector de basura. Concurrencia sin miedo. El lenguaje de sistemas del futuro, desde los fundamentos hasta producción."
+pubDate: "2023-06-11"
+tags: ["rust", "guia", "sistemas", "backend"]
 image: "img/guia_0_100_rust_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 ---
 
 # Guía de Rust: De 0 a 100
 
-## 🛠️ Requisitos e Instalación
+## ¿Qué es Rust?
 
-**Todas las plataformas:** `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh` — instala `rustup`, `rustc` y `cargo`.
-**Linux (apt):** `sudo apt install rustc cargo` (pero rustup es recomendado para versiones actualizadas).
-**Verificación:** `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh` y prueba con un `"Hola Mundo"`.
-**Herramientas recomendadas:** **Cargo** = gestor de paquetes y build. **rustfmt** para formateo. **Clippy** para lints. **rust-analyzer** para IDE (VSCode).
+Rust es un lenguaje compilado, tipado estáticamente, enfocado en seguridad de memoria **sin GC**, concurrencia sin carreras de datos y rendimiento C/C++. Creado por **Graydon Hoare** en 2006 en Mozilla Research, lanzado públicamente en 2010, estable desde 2015.
 
-## 🚀 Hola Mundo y Sintaxis Básica
+**¿Qué lo hace único?**
+- **Ownership**: el compilador verifica en compile-time que no haya use-after-free, double free o data races. Sin GC ni gestión manual.
+- **Zero-cost abstractions**: las abstracciones se compilan a código máquina tan eficiente como el escrito a mano.
+- **Fearless concurrency**: el borrow checker previene data races en compilación.
+- **FFI sin runtime**: integrable en cualquier runtime (embebido, kernel, WASM).
 
-**Conceptos clave:**
+**¿Dónde se usa?**
+- **Sistemas**: Linux kernel (Rust-for-Linux 6.1+), Fuchsia OS
+- **Navegadores**: Firefox (Stylo, WebRender), Servo
+- **Cloud**: AWS (Firecracker VMM, Lambda runtime), Cloudflare (Pingora), Dropbox (filesystem)
+- **CLI/DevTools**: ripgrep, fd, bat, delta, zoxide, alacritty, starship
+- **WebAssembly**: Figma, Shopify, Atlassian
+- **Blockchain**: Solana, Polkadot, Near
+- **Embebido**: Tock OS, Embassy, ESP-RS
 
-- **Ownership:** Cada valor tiene un único propietario. Al asignar: `let s2 = s1` — `s1` ya no es válido (move semantics). Para copiar: `.clone()`.
-- **Borrowing:** `&T` (referencia inmutable, múltiples) y `&mut T` (referencia mutable, solo una). El compilador garantiza que no haya data races.
-- **Lifetimes:** `<'a>` anota cuánto vive una referencia. Normalmente el compilador las infiere. Necesario cuando una función devuelve una referencia.
-- **Pattern Matching:** `match valor { 1 => "uno", _ => "otro" }`. `if let Some(val) = opt { ... }`. Exhaustividad verificada en compilación.
-- **Option y Result:** `Option<T>` (Some/None) y `Result<T, E>` (Ok/Err) — no hay null ni excepciones. `?` propaga errores automáticamente.
+**¿Quién lo usa?** Microsoft (Azure IoT), Google (Android/Fuchsia), Meta, Amazon, Discord, Figma.
 
-## 🏗️ Frameworks Populares
+Fuente: [Rust官方](https://www.rust-lang.org/learn), [Rust Blog](https://blog.rust-lang.org/), [Rust in Android](https://security.googleblog.com/2022/12/memory-safe-languages-in-android-13.html)
 
-### Actix-Web
-**Instalación:** `Añade `actix-web = "4"` a Cargo.toml y ejecuta `cargo build``
-Framework web asíncrono de alto rendimiento. Basado en Tokio. Ideal para APIs REST eficientes.
-```rust
-use actix_web::{get, App, HttpResponse, HttpServer};
+---
 
-#[get("/")]
-async fn index() -> HttpResponse {
-    HttpResponse::Ok().body("Hola Mundo")
-}
+## Instalación
 
-#[actix_web::main]
-async fn main() -> std::io::Result<()> {
-    HttpServer::new(|| App::new().service(index))
-        .bind(("127.0.0.1", 8080))?
-        .run()
-        .await
+### rustup (todas las plataformas)
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source "$HOME/.cargo/env"
+rustc --version    # rustc 1.85.0 (2026-02-20)
+cargo --version
+```
+
+Esto instala: **rustup** (gestor de versiones), **rustc** (compilador), **cargo** (gestor de paquetes/build).
+
+### Windows
+
+- Ejecuta `rustup-init.exe` desde [rustup.rs](https://rustup.rs/)
+- Necesita **Visual Studio Build Tools** con workload "Desktop C++" (o MSYS2/MinGW)
+- Alternativa: `winget install Rustlang.Rustup`
+
+### macOS
+
+```bash
+xcode-select --install  # Xcode CLT necesario para linker
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+### Linux (Debian/Ubuntu)
+
+```bash
+curl ... | sh
+sudo apt install build-essential pkg-config libssl-dev
+```
+
+Fedora: `sudo dnf install gcc pkg-config openssl-devel`
+
+### rustup avanzado
+
+```bash
+rustup update                     # Actualizar
+rustup install nightly            # Canal nightly
+rustup target add wasm32-unknown-unknown  # Cross-compile WASM
+rustup component add rust-src     # Para rust-analyzer
+rustup component add rustfmt clippy
+rustup show                       # Toolchains instaladas
+rustup default nightly            # Cambiar default
+```
+
+### Docker multi-stage
+
+```dockerfile
+FROM rust:1.85-slim-bookworm AS builder
+WORKDIR /app
+COPY Cargo.toml Cargo.lock ./
+RUN mkdir src && echo "fn main() {}" > src/main.rs
+RUN cargo build --release 2>/dev/null || true
+COPY src/ src/
+RUN cargo build --release
+
+FROM debian:bookworm-slim
+COPY --from=builder /app/target/release/mi-app /usr/local/bin/
+CMD ["mi-app"]
+```
+
+### Alias útiles
+
+```bash
+alias rlb='cargo build --release'
+alias rchk='cargo check'
+alias rtest='cargo test'
+alias rfmt='cargo fmt'
+alias rclp='cargo clippy'
+alias rrun='cargo run --'
+alias radd='cargo add'
+alias rdoc='cargo doc --open'
+alias rclean='cargo clean'
+alias rtree='cargo tree'
+alias rbench='cargo bench'
+alias ro='cargo outdated'
+alias rup='cargo upgrade'
+```
+
+Fuente: [rustup.rs](https://rustup.rs/), [Docker Rust](https://hub.docker.com/_/rust/)
+
+---
+
+## Primeros pasos
+
+### Crear proyecto
+
+```bash
+cargo new mi-proyecto
+cd mi-proyecto
+```
+
+Estructura:
+```
+mi-proyecto/
+├── Cargo.toml    # Manifiesto
+└── src/
+    └── main.rs   # Punto de entrada
+```
+
+### Cargo.toml
+
+```toml
+[package]
+name = "mi-proyecto"
+version = "0.1.0"
+edition = "2021"          # 2015, 2018, 2021, 2024
+
+[dependencies]
+# serde = { version = "1", features = ["derive"] }
+# tokio = { version = "1", features = ["full"] }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
+```
+
+### Compilar y ejecutar
+
+```bash
+cargo build           # Debug
+cargo build --release # Optimizado
+cargo run             # Compila + ejecuta
+cargo check           # Solo verifica tipos (más rápido)
+cargo run -- arg1 arg2
+```
+
+### rustfmt
+
+```bash
+rustup component add rustfmt
+cargo fmt               # Formatea
+cargo fmt --check       # Verifica (CI)
+```
+
+Config `rustfmt.toml`:
+```toml
+max_width = 100
+tab_spaces = 4
+edition = "2021"
+```
+
+### Clippy
+
+```bash
+rustup component add clippy
+cargo clippy                       # Lints
+cargo clippy -- -W clippy::pedantic  # Pedante
+cargo clippy --fix                 # Auto-fix
+```
+
+### rust-analyzer (IDE)
+
+**VSCode:** extensión `rust-analyzer` (oficial).
+**Neovim:** `mrcjkb/rustaceanvim` o `lspconfig.rust_analyzer`.
+**Helix:** built-in.
+
+Config VSCode `.vscode/settings.json`:
+```json
+{
+  "rust-analyzer.check.command": "clippy",
+  "rust-analyzer.inlayHints.typeHints.enable": true
 }
 ```
-### Tokio
-**Instalación:** ``cargo add tokio --features full` — o añade manualmente en Cargo.toml.`
-Runtime asíncrono para Rust. Proporciona I/O, temporizadores, canales y sincronización. Base de la mayoría de herramientas de red en Rust.
+
+### Ediciones de Rust
+
+| Edition | Rust | Novedades |
+|---------|------|-----------|
+| 2015 | 1.0 | Original |
+| 2018 | 1.31 | `impl Trait`, `dyn Trait`, NLL, `?`, async/await, módulos modernos |
+| 2021 | 1.56 | `IntoIterator` for arrays, `TryInto` closures, `bindings_after_at` |
+| 2024 | 1.85 | `impl Trait` everywhere, `unsafe` extern blocks, `cargo` script, `gen` blocks, RPITIT |
+
+Migración: `cargo fix --edition`
+
+Fuente: [The Rust Book — Getting Started](https://doc.rust-lang.org/book/ch01-00-getting-started.html), [Edition Guide](https://doc.rust-lang.org/edition-guide/)
+
+---
+
+## Paradigmas
+
+Rust es un lenguaje **multi-paradigma** con énfasis en funcional y sistémico. Puedes mezclar paradigmas según el problema.
+
+### Imperativo
+
+Rust tiene statements y expressions. Casi todo es una expresión (retorna un valor):
+
 ```rust
+let x = if cond { 10 } else { 20 };  // if es expresión
+let y = loop { break 42; };          // loop retorna valor
+let z = match n {
+    1 => "uno",
+    _ => "otro",
+};
+```
+
+### Funcional
+
+Rust adopta varios conceptos funcionales:
+
+- **Inmutabilidad por defecto**: `let` crea variables inmutables. Solo `let mut` permite mutación.
+- **Iterators**: lazy, zero-cost, chainable (`map`, `filter`, `fold`, `flat_map`)
+- **Closures**: `|args| expr`, capturan entorno por referencia/move, traits `Fn`/`FnMut`/`FnOnce`
+- **Pattern matching exhaustivo**: `match` obliga a cubrir todos los casos
+- **Option/Result como mónadas**: `map`, `and_then`, `or_else`, `unwrap_or_else` permiten encadenar sin anidar
+
+```rust
+let pares: Vec<i32> = (0..10)
+    .filter(|x| x % 2 == 0)
+    .map(|x| x * 2)
+    .collect();
+
+let r = Some(10)
+    .map(|x| x * 2)
+    .filter(|x| x > 5)
+    .and_then(|x| if x < 100 { Some(x) } else { None });
+```
+
+### POO parcial
+
+Rust no tiene clases ni herencia, pero ofrece:
+
+- **Structs + `impl`**: datos + métodos (como clases sin herencia)
+- **Traits como interfaces**: definen comportamiento compartido
+- **Composición sobre herencia**: agregar campos en lugar de extender
+- **No clases**: no hay `class`, `extends`, `super`, `protected`
+- **Encapsulación**: `pub` controla visibilidad de campos y métodos
+
+```rust
+trait Volador { fn volar(&self); }
+
+struct Pajaro { nombre: String }
+struct Avion { modelo: String }
+
+impl Volador for Pajaro { fn volar(&self) { println!("{} bate alas", self.nombre); } }
+impl Volador for Avion { fn volar(&self) { println!("{} enciende motores", self.modelo); } }
+```
+
+### Concurrente
+
+El **ownership** garantiza thread-safety en compilación:
+
+- El borrow checker previene data races: no puedes tener `&mut` simultáneos entre threads
+- Traits `Send`/`Sync`: el compilador verifica qué tipos son seguros entre threads
+- `Rc<T>` no es `Send` (contador no atómico), `Arc<T>` sí
+- `Mutex<T>` protege acceso concurrente con RAII
+
+```rust
+use std::sync::{Arc, Mutex};
+use std::thread;
+
+let contador = Arc::new(Mutex::new(0));
+let mut handles = vec![];
+for _ in 0..10 {
+    let c = Arc::clone(&contador);
+    handles.push(thread::spawn(move || {
+        let mut num = c.lock().unwrap();
+        *num += 1;
+    }));
+}
+for h in handles { h.join().unwrap(); }
+println!("{}", contador.lock().unwrap()); // 10
+```
+
+### Sistémico
+
+Rust da control de memoria sin GC:
+
+- **Sin garbage collector**: la memoria se libera en compile-time con ownership
+- **Zero-cost abstractions**: iterators, closures, genéricos se compilan a código tan eficiente como el escrito a mano
+- **Control manual**: puedes elegir stack vs heap (`Box`), memoria compartida (`Rc`/`Arc`), representaciones con `repr(C)`
+- **FFI sin runtime**: integrable en C, Python, JS, WASM, kernel
+
+```rust
+// Zero-cost: este código se compila a un loop óptimo
+let suma: u32 = (0..1000).filter(|x| x % 2 == 0).map(|x| x * x).sum();
+```
+
+| Paradigma | Soporte en Rust |
+|-----------|----------------|
+| Imperativo | Statements, loops, mutabilidad explícita |
+| Funcional | Inmutabilidad, iterators, closures, pattern matching, Option/Result |
+| POO | Structs + impl, traits, composición, encapsulación |
+| Concurrente | Ownership + Send/Sync, canales, Arc\<Mutex\> |
+| Sistémico | Sin GC, control de memoria, zero-cost, FFI, no_std |
+
+Fuente: [Rust Book — FP](https://doc.rust-lang.org/book/ch13-00-functional-features.html), [Rust Book — OOP](https://doc.rust-lang.org/book/ch17-00-oop.html), [Rust Book — Concurrency](https://doc.rust-lang.org/book/ch16-00-concurrency.html), [Rustonomicon](https://doc.rust-lang.org/nomicon/)
+
+---
+
+## Tipos de datos y variables
+
+### Escalares
+
+| Tipo | Rango/Tamaño |
+|------|-------------|
+| `i8`..`i128` | Enteros con signo (8..128 bits) |
+| `u8`..`u128` | Enteros sin signo (8..128 bits) |
+| `isize`/`usize` | Según arquitectura (64 bits en x86-64) |
+| `f32`/`f64` | IEEE 754, 32 y 64 bits |
+| `bool` | `true`/`false` |
+| `char` | Unicode de 4 bytes (32 bits) |
+
+```rust
+let decimal = 98_222;
+let hex = 0xff;
+let octal = 0o77;
+let bin = 0b1111_0000;
+let byte = b'A';
+let c: char = '😊';
+```
+
+### Compuestos
+
+| Tipo | Descripción |
+|------|-------------|
+| `(T1, T2, ...)` | Tupla: tamaño fijo, tipos distintos |
+| `[T; N]` | Array: tamaño fijo, mismo tipo |
+| `&[T]` | Slice: vista de un array/vec |
+
+```rust
+let tup: (i32, f64, char) = (42, 3.14, 'R');
+let (x, y, z) = tup;
+let primero = tup.0;
+
+let arr: [i32; 3] = [1, 2, 3];
+let slice: &[i32] = &arr[1..3];
+```
+
+### Structs
+
+```rust
+struct Usuario { nombre: String, edad: u8 }
+
+struct Edad(u8);
+
+struct SinDatos;
+
+struct Email(String);
+fn enviar(a: &Email, msg: &str) {}
+```
+
+### Enums
+
+```rust
+enum Color { Rojo, Verde, Azul }
+enum Mensaje { Texto(String), Coord(f64, f64), Salir }
+
+enum Option<T> { Some(T), None }
+
+enum Result<T, E> { Ok(T), Err(E) }
+```
+
+### String vs &str (diferencia crítica)
+
+| Aspecto | `String` | `&str` |
+|---------|----------|--------|
+| Propietario | Sí (owning) | No (borrowed) |
+| Mutabilidad | Sí (con `let mut`) | No |
+| Almacenamiento | Heap | Cualquier lado (heap, stack, data segment) |
+| Growable | Sí | No |
+| Deref | `&String` → `&str` | — |
+
+```rust
+let mut s = String::from("hola");
+s.push_str(" mundo");
+
+let r: &str = &s;
+let literal: &str = "hola";
+let slice: &str = &s[0..4];
+```
+
+### Vec\<T\> vs &[T]
+
+| Aspecto | `Vec<T>` | `&[T]` |
+|---------|----------|--------|
+| Propietario | Sí | No |
+| Tamaño | Dinámico (growable) | Fijo (vista) |
+| Heap | Sí | Puede referenciar cualquier memoria |
+
+### Colecciones estándar
+
+```rust
+let mut map = std::collections::HashMap::new();
+map.insert("clave".to_string(), 42);
+map.get("clave");
+
+use std::collections::BTreeMap;
+let mut btree = BTreeMap::new();
+btree.insert("b", 2);
+btree.insert("a", 1);
+
+use std::collections::HashSet;
+let mut set = HashSet::new();
+set.insert(1);
+
+use std::collections::BinaryHeap;
+let mut heap = BinaryHeap::new();
+heap.push(3);
+heap.push(1);
+heap.push(5);
+assert_eq!(heap.pop(), Some(5));
+```
+
+### Smart Pointers
+
+| Tipo | Uso |
+|------|-----|
+| `Box<T>` | Heap allocation simple, un propietario |
+| `Rc<T>` | Reference counting (single-thread) |
+| `Arc<T>` | Reference counting atómico (multi-thread) |
+| `Cell<T>` | Interior mutability (Copy types, sin runtime check) |
+| `RefCell<T>` | Interior mutability (runtime borrow check, single-thread) |
+| `Mutex<T>` | Interior mutability multi-thread |
+
+### Variables: const vs let vs let mut
+
+```rust
+const MAX_PUNTOS: u32 = 100_000;
+
+let x = 5;
+let mut y = 5;
+y += 1;
+
+let nombre = String::from("  Ana  ");
+let nombre = nombre.trim();
+let nombre = nombre.to_uppercase();
+
+type Kilometros = u32;
+let distancia: Kilometros = 100;
+```
+
+### Newtype pattern
+
+```rust
+struct UsuarioId(u64);
+struct PedidoId(u64);
+
+fn buscar_usuario(id: UsuarioId) {}
+
+struct Precio(f64);
+impl Precio {
+    fn con_iva(&self) -> f64 { self.0 * 1.21 }
+}
+```
+
+### Memoria: Stack vs Heap
+
+| Aspecto | Stack | Heap |
+|---------|-------|------|
+| Velocidad | Instantáneo | Más lento (allocador) |
+| Tamaño | Conocido en compile-time | Dinámico |
+| Límite | Pequeño (8 MB típico) | Grandísimo |
+| Tipos | Escalares, tuplas pequeñas, arrays fijos | Box, Vec, String, Rc, Arc |
+
+**Regla general:** todo se almacena en stack por defecto. `Box<T>`, `Vec<T>`, `String`, `Rc<T>`, `Arc<T>` almacenan sus datos en heap.
+
+### Ownership y RAII
+
+El ownership garantiza:
+- **No dangling pointers**: cada referencia tiene un lifetime verificado
+- **No double free**: cada valor tiene exactamente un owner
+- **No memory leaks** (en la práctica): RAII libera recursos al salir de ámbito
+
+RAII (Resource Acquisition Is Initialization): el `Drop` trait se ejecuta automáticamente al salir del ámbito:
+
+```rust
+struct Archivo { fd: i32 }
+impl Drop for Archivo {
+    fn drop(&mut self) {
+        println!("Cerrando archivo {}", self.fd);
+    }
+}
+{
+    let f = Archivo { fd: 42 };
+}
+```
+
+**No garbage collector:** toda la gestión de memoria ocurre en compile-time. No hay pausas de GC, no hay runtime overhead de memoria.
+
+Fuente: [The Rust Book — Data Types](https://doc.rust-lang.org/book/ch03-02-data-types.html), [Rust Book — Variables](https://doc.rust-lang.org/book/ch03-01-variables-and-mutability.html), [Rustonomicon — RAII](https://doc.rust-lang.org/nomicon/), [Rust Reference — Memory](https://doc.rust-lang.org/reference/expressions.html)
+
+---
+
+## Control de flujo y modularidad
+
+### if/else (expresión)
+
+```rust
+let x = if cond { 10 } else { 20 };
+let y = if cond { 10 } else if otra { 20 } else { 30 };
+```
+
+### Loops
+
+```rust
+let mut contador = 0;
+let resultado = loop {
+    contador += 1;
+    if contador == 10 { break contador * 2; }
+};
+println!("{resultado}");
+
+while n > 0 { n -= 1; }
+
+for x in 0..10 { println!("{x}"); }
+for (i, item) in items.iter().enumerate() { }
+for item in &collection { }
+```
+
+### Match (exhaustivo obligatorio)
+
+```rust
+match valor {
+    1 => "uno",
+    2 | 3 => "dos o tres",
+    4..=10 => "rango",
+    n if n > 10 => format!("grande {n}"),
+    _ => "otro",
+}
+
+match p {
+    Point { x: 0, y } => format!("eje Y en {y}"),
+    Point { x, y } => format!("({x}, {y})"),
+}
+
+match id {
+    e @ 1..=5 => format!("temprano {e}"),
+    _ => "tarde".into(),
+}
+```
+
+### if let / while let (pattern matching no exhaustivo)
+
+```rust
+if let Some(val) = opt { println!("{val}"); }
+
+while let Some(top) = pila.pop() { procesar(top); }
+```
+
+### Módulos y visibilidad
+
+```
+src/
+├── main.rs
+├── lib.rs
+└── routes/
+    ├── mod.rs
+    ├── auth.rs
+    └── admin.rs
+```
+
+```rust
+mod routes;
+use routes::auth::login;
+
+pub fn login() {}
+fn validar() {}
+pub(crate) fn interno() {}
+pub(super) fn helper() {}
+```
+
+### Re-exports y organización
+
+```rust
+mod auth_impl;
+pub use auth_impl::login;
+```
+
+### Cargo.toml y workspaces
+
+```toml
+[package]
+name = "mi-app"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+tokio = { version = "1", features = ["full"] }
+
+[lib]
+name = "mi_app"
+path = "src/lib.rs"
+
+[[bin]]
+name = "cli"
+path = "src/bin/cli.rs"
+
+[workspace]
+members = ["crates/*"]
+```
+
+```bash
+cargo new --lib crate/utilerias
+cargo build --package utilerias
+cargo test -p utilerias
+```
+
+| Concepto | Explicación |
+|----------|-------------|
+| `mod` | Declara un módulo |
+| `pub` | Hace público un item |
+| `use` | Trae items al ámbito |
+| `super` | Módulo padre (equivalente a `..`) |
+| `crate` | Raíz del crate (equivalente a `/`) |
+| `pub use` | Re-exporta (público) |
+| `extern crate` | Legacy (< 2018 edition) |
+
+Fuente: [The Rust Book — Control Flow](https://doc.rust-lang.org/book/ch03-05-control-flow.html), [Rust Book — Modules](https://doc.rust-lang.org/book/ch07-00-managing-growing-projects-with-packages-crates-and-modules.html)
+
+---
+
+## Conceptos clave
+
+### Ownership, Borrowing y Lifetimes
+
+**Tres reglas del ownership:**
+1. Cada valor tiene un **único propietario**
+2. Al salir del ámbito, el valor se **dropea** (libera)
+3. El propietario puede mover (transferir) o prestar (borrow) el valor
+
+```rust
+// Move semantics
+let s1 = String::from("hola");
+let s2 = s1;             // s1 se mueve a s2
+// println!("{s1}");     // ERROR: moved
+
+// Clone (deep copy)
+let s1 = String::from("hola");
+let s2 = s1.clone();     // Copia explícita
+println!("{s1} {s2}");   // OK ambos
+
+// Copy types (stack)
+let x = 5;
+let y = x;               // Copy, no move (i32: Copy)
+println!("{x} {y}");     // OK
+```
+
+**Borrowing:**
+
+```rust
+fn largo(s: &String) -> usize { s.len() }  // Presta, no mueve
+
+let s = String::from("hola");
+let l = largo(&s);
+println!("{s} tiene {l}");  // s sigue vivo
+```
+
+**Reglas del borrow checker:**
+
+| Situación | Permitido | Por qué |
+|-----------|-----------|---------|
+| Múltiples `&T` | ✅ | Solo lectura |
+| Un `&mut T` | ✅ | Escritura exclusiva |
+| `&T` + `&mut T` simultáneo | ❌ | Data race en potencia |
+| Referencia a variable local | ❌ | Dangling pointer |
+
+```rust
+let mut s = String::from("hola");
+let r1 = &s;      // OK
+let r2 = &s;      // OK (múltiples inmutables)
+// let r3 = &mut s; // ERROR: ya hay inmutables
+println!("{r1} {r2}");  // Las inmutables dejan de usarse aquí
+let r3 = &mut s;   // OK ahora
+r3.push_str(" mundo");
+```
+
+**Lifetimes:**
+
+```rust
+// 'a: el output vive tanto como el input más corto
+fn mas_largo<'a>(x: &'a str, y: &'a str) -> &'a str {
+    if x.len() > y.len() { x } else { y }
+}
+
+// Elisión: el compilador infiere lifetimes automáticamente
+fn primera(s: &str) -> &str {    // fn primera<'a>(s: &'a str) -> &'a str
+    s.split_whitespace().next().unwrap_or("")
+}
+```
+
+**Diagrama conceptual:**
+
+```
+Stack:
+  let s1 = String::from("hola")
+  ┌──────────────┐
+  │ s1: ptr ──────┼────→ Heap: ['h','o','l','a']
+  │     len: 4    │
+  │     cap: 4    │
+  └──────────────┘
+
+  let s2 = s1;  // MOVE
+  ┌──────────────┐
+  │ s1: inválido │
+  │ s2: ptr ──────┼────→ Heap: ['h','o','l','a']
+  └──────────────┘
+
+  let r = &s2;   // BORROW
+  ┌──────────────┐
+  │ r: ptr ──────┼──→ s2.ptr → Heap
+  └──────────────┘
+```
+
+**¿Qué previene el borrow checker?**
+
+| Bug C/C++ | Cómo lo previene Rust |
+|---|---|
+| Use-after-free | Ownership: se dropea al salir de ámbito |
+| Double free | Move: un solo owner |
+| Buffer overflow | Bounds checking en indexación |
+| Data race | `&mut T` es exclusivo entre threads |
+| Dangling pointer | Lifetimes verificados |
+
+**Consejo:** La primera semana peleas con el borrow checker. No te frustres. Cada error te enseña un patrón que antes permitías sin saberlo. Con el tiempo, *piensas en ownership* antes de escribir.
+
+Fuente: [The Rust Book — Ownership](https://doc.rust-lang.org/book/ch04-00-understanding-ownership.html)
+
+### String vs &str, Box, Rc, Arc, Cell, RefCell, Mutex
+
+| Tipo | Propietario | Thread-safe | Almacenamiento |
+|------|-------------|-------------|----------------|
+| `String` | Sí | Sí | Heap, mutable, growable |
+| `&str` | No | Sí | Referencia a string |
+| `Box<T>` | Sí | Sí | Heap allocation simple |
+| `Rc<T>` | Compartido | No | Reference counting single-thread |
+| `Arc<T>` | Compartido | Sí | Reference counting atómico |
+| `Cell<T>` | Interior mut | No | Copy in/out, sin runtime check |
+| `RefCell<T>` | Interior mut | No | Borrow check en runtime |
+| `Mutex<T>` | Interior mut | Sí | Lock en runtime |
+| `RwLock<T>` | Interior mut | Sí | Múltiples readers/writer exclusivo |
+
+```rust
+// Box — heap allocation, tipos recursivos
+enum Lista {
+    Nodo(i32, Box<Lista>),
+    Fin,
+}
+
+// Rc — reference counting single-thread
+use std::rc::Rc;
+let a = Rc::new(42);
+let b = Rc::clone(&a);  // contador = 2
+
+// Arc — reference counting multi-thread (atómico)
+use std::sync::Arc;
+let datos = Arc::new(vec![1, 2, 3]);
+// Arc::clone(&datos) en cada thread
+
+// RefCell — interior mutability (single-thread)
+use std::cell::RefCell;
+struct Logger { logs: RefCell<Vec<String>> }
+impl Logger {
+    fn log(&self, msg: &str) {
+        self.logs.borrow_mut().push(msg.into());
+    }
+}
+
+// Mutex — interior mutability multi-thread
+use std::sync::{Arc, Mutex};
+let contador = Arc::new(Mutex::new(0));
+{
+    let mut num = contador.lock().unwrap();
+    *num += 1;
+}  // Lock liberado automáticamente (RAII)
+```
+
+**Cuándo usar cada uno:**
+
+| Escenario | Solución |
+|---|---|
+| Un propietario, heap | `Box<T>` |
+| Múltiples owners, 1 thread | `Rc<T>` |
+| Múltiples owners, multi-thread | `Arc<T>` |
+| Mutabilidad interior, 1 thread | `RefCell<T>` |
+| Mutabilidad interior, multi-thread | `Mutex<T>` / `RwLock<T>` |
+| Lectura frecuente escritura rara | `RwLock<T>` |
+| Thread-safe + mutabilidad | `Arc<Mutex<T>>` |
+
+Fuente: [The Rust Book — Smart Pointers](https://doc.rust-lang.org/book/ch15-00-smart-pointers.html)
+
+### Structs, enums y pattern matching
+
+```rust
+// Struct con campos
+struct Usuario { nombre: String, email: String, activo: bool, edad: u8 }
+
+// Tuple struct
+struct Color(u8, u8, u8);
+
+// Unit struct
+struct Marcador;
+
+// Instanciación y spread
+let u = Usuario { nombre: "Ana".into(), email: "ana@email.com".into(), activo: true, edad: 30 };
+let u2 = Usuario { nombre: "Luis".into(), ..u };  // El resto se mueve de u
+
+// Enum con datos
+enum Estado {
+    Activo,
+    Inactivo,
+    Suspendido { razon: String, hasta: String },
+}
+```
+
+**Pattern matching exhaustivo:**
+
+```rust
+enum Moneda { Euro(f64), Dolar(f64), Libra(f64) }
+
+fn convertir(m: Moneda) -> f64 {
+    match m {
+        Moneda::Euro(c) => c,
+        Moneda::Dolar(c) => c * 0.92,
+        Moneda::Libra(c) => c * 1.17,
+        // El compilador verifica que TODOS los casos están cubiertos
+    }
+}
+```
+
+**Patrones avanzados:**
+
+```rust
+match numero {
+    1 => "uno",
+    2 | 3 | 5 | 7 | 11 => "primo",
+    13..=19 => "adolescente",
+    n if n % 2 == 0 => "par",
+    _ => "otro",
+}
+
+// if let — cuando solo te importa un caso
+if let Some(val) = config { println!("{val}"); }
+
+// while let
+while let Some(top) = pila.pop() { println!("{top}"); }
+```
+
+Fuente: [The Rust Book — Enums](https://doc.rust-lang.org/book/ch06-00-enums.html)
+
+### Traits, derives, bounds, impl Trait, dyn Trait
+
+```rust
+trait Hablador {
+    fn hablar(&self) -> String;
+    fn presentarse(&self) -> String { format!("Digo: {}", self.hablar()) }
+}
+
+struct Perro;
+struct Gato;
+
+impl Hablador for Perro {
+    fn hablar(&self) -> String { "Guau".into() }
+}
+impl Hablador for Gato {
+    fn hablar(&self) -> String { "Miau".into() }
+}
+```
+
+**Derives más comunes:**
+
+```rust
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Default)]
+struct Usuario { nombre: String, edad: u8 }
+```
+
+| Derive | Genera |
+|--------|--------|
+| `Debug` | `{:?}` formateo |
+| `Clone` | `.clone()` |
+| `Copy` | Copia implícita (bitwise) |
+| `PartialEq` | `==`, `!=` |
+| `Eq` | `==` reflexivo |
+| `PartialOrd` | `<`, `>`, `<=`, `>=` |
+| `Hash` | `hash()` |
+| `Default` | `T::default()` |
+
+**Trait bounds:**
+
+```rust
+fn imprimir<T: Display + Debug>(item: T) { println!("{item:?}"); }
+
+// Sintaxis where (preferible con múltiples bounds)
+fn procesar<T>(item: T) where T: Display + Clone + Serialize { }
+```
+
+**`impl Trait` (estático, sin overhead):**
+
+```rust
+fn saludar(nombre: impl Display) { println!("Hola {nombre}"); }
+
+fn obtener_hablador() -> impl Hablador { Perro }
+```
+
+**`dyn Trait` (dinámico, vtable):**
+
+```rust
+let animales: Vec<Box<dyn Hablador>> = vec![Box::new(Perro), Box::new(Gato)];
+for a in animales { println!("{}", a.hablar()); }
+```
+
+| | Generics / `impl Trait` | `dyn Trait` |
+|---|---|---|
+| Dispatch | Estático (monomorfización) | Dinámico (vtable) |
+| Overhead | Cero | 1 indirección |
+| Mixed types | No | Sí |
+
+Fuente: [The Rust Book — Traits](https://doc.rust-lang.org/book/ch10-02-traits.html)
+
+### Genéricos, const genéricos, GATs
+
+```rust
+struct Par<T, U> { primero: T, segundo: U }
+
+// Const genéricos (Rust 1.51+)
+fn fib<const N: usize>() -> [u64; N] {
+    let mut arr = [0u64; N];
+    if N > 1 { arr[1] = 1; }
+    for i in 2..N { arr[i] = arr[i-1] + arr[i-2]; }
+    arr
+}
+let f: [u64; 10] = fib();  // N = 10
+
+// GATs — Generic Associated Types (Rust 1.65+)
+trait Contenedor {
+    type Item<'a> where Self: 'a;
+    fn obtener<'a>(&'a self) -> Self::Item<'a>;
+}
+```
+
+Fuente: [RFC 2000](https://rust-lang.github.io/rfcs/2000-const-generics.html), [RFC 1598 — GATs](https://rust-lang.github.io/rfcs/1598-generic_associated_types.html)
+
+### Option y Result
+
+```rust
+// Option<T> — sin null
+fn encontrar(id: u32) -> Option<String> {
+    if id == 42 { Some("Ana".into()) } else { None }
+}
+
+// Formas de extraer:
+match encontrar(42) { Some(n) => println!("{n}"), None => {} }
+if let Some(n) = encontrar(42) { println!("{n}"); }
+let n = encontrar(42).unwrap();             // panic si None
+let n = encontrar(42).expect("msg");        // panic con mensaje
+let n = encontrar(42).map(|s| s.to_uppercase()).unwrap_or_else(|| "ANON".into());
+let n = encontrar(42)?;                      // Propaga None (solo en fn que retorna Option)
+
+// Result<T, E> — operaciones que fallan
+use std::fs;
+fn leer(path: &str) -> Result<String, std::io::Error> {
+    fs::read_to_string(path)  // ? propaga el error
+}
+
+// Formas de manejar:
+match leer("datos.txt") { Ok(c) => println!("{c}"), Err(e) => eprintln!("{e}") }
+let datos = leer("config.toml").expect("debe existir");
+let len = leer("datos.txt").map(|c| c.len()).unwrap_or(0);
+
+// ? con errores mixtos (necesita Box<dyn Error>)
+fn procesar() -> Result<i32, Box<dyn std::error::Error>> {
+    let archivo = fs::read_to_string("datos.txt")?;
+    Ok(archivo.trim().parse()?)
+}
+```
+
+| Método | Cuándo |
+|--------|--------|
+| `match` | Lógica distinta por caso |
+| `if let` | Solo importa el caso positivo |
+| `unwrap()` | Prototipos/tests |
+| `expect()` | Bugs que nunca deberían pasar |
+| `?` | Delegar al llamador (estándar) |
+| `map/and_then` | Transformar sin match verboso |
+
+Fuente: [The Rust Book — Error Handling](https://doc.rust-lang.org/book/ch09-00-error-handling.html)
+
+### Error handling: thiserror y anyhow
+
+```rust
+// thiserror — errores tipados (librerías)
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum ApiError {
+    #[error("no encontrado: {0}")]
+    NotFound(String),
+    #[error("error BD: {0}")]
+    Database(#[from] sqlx::Error),
+    #[error("validación: {field} - {msg}")]
+    Validation { field: String, msg: String },
+}
+
+// anyhow — errores con contexto (binarios/aplicaciones)
+use anyhow::{Context, Result};
+
+fn procesar(path: &str) -> Result<()> {
+    let c = std::fs::read_to_string(path)
+        .with_context(|| format!("no se pudo leer {path}"))?;
+    let json: serde_json::Value = serde_json::from_str(&c)
+        .context("JSON inválido")?;
+    Ok(())
+}
+```
+
+Patrón recomendado: **thiserror en librerías, anyhow en binarios**.
+
+Fuente: [thiserror docs](https://docs.rs/thiserror/), [anyhow docs](https://docs.rs/anyhow/)
+
+### Macros
+
+**Declarativas (`macro_rules!`):**
+
+```rust
+macro_rules! vec2 {
+    ( $( $x:expr ),* ) => {{
+        let mut v = Vec::new();
+        $( v.push($x); )*
+        v
+    }};
+}
+
+// debug macro
+macro_rules! trace {
+    ($val:expr) => {{
+        eprintln!("{} = {:?}", stringify!($val), &$val);
+        $val
+    }};
+}
+```
+
+**Procedurales (syn + quote):**
+
+Requieren crate separada con `proc-macro = true`.
+
+```rust
+// macros/Cargo.toml: [lib] proc-macro = true
+use proc_macro::TokenStream;
+use quote::quote;
+use syn;
+
+#[proc_macro_derive(Responder)]
+pub fn responder_derive(input: TokenStream) -> TokenStream {
+    let ast = syn::parse_macro_input!(input as syn::DeriveInput);
+    let name = &ast.ident;
+    quote! { impl Responder for #name { fn responder(&self) -> String { format!("{:?}", self) } } }.into()
+}
+```
+
+**Librerías clave:** `syn` (parsea AST), `quote` (genera tokens).
+
+Fuente: [The Little Book of Rust Macros](https://veykril.github.io/tlborm/), [syn docs](https://docs.rs/syn/)
+
+### unsafe, FFI y no_std
+
+`unsafe` habilita exactamente 5 operaciones:
+
+```rust
+// 1. Desreferenciar raw pointer
+let mut n = 5;
+let r = &n as *const i32;
+unsafe { println!("{}", *r); }
+
+// 2. Llamar funciones unsafe (FFI)
+extern "C" { fn abs(i: i32) -> i32; }
+unsafe { println!("{}", abs(-3)); }
+
+// 3. Acceder/modificar static mut
+static mut C: u32 = 0;
+unsafe { C += 1; }
+
+// 4. Implementar traits unsafe
+// 5. Acceder a campos de union
+```
+
+**FFI — Llamar C desde Rust / Rust desde C:**
+
+```rust
+// Binding seguro a C
+mod ffi {
+    extern "C" { pub(super) fn sqrt(x: f64) -> f64; }
+}
+fn raiz(x: f64) -> f64 { unsafe { ffi::sqrt(x) } }
+
+// Llamar Rust desde C
+#[no_mangle]
+pub extern "C" fn suma(a: i32, b: i32) -> i32 { a + b }
+```
+
+**no_std:**
+
+```rust
+#![no_std]
+#![no_main]
+use core::panic::PanicInfo;
+
+#[panic_handler]
+fn panic(_: &PanicInfo) -> ! { loop {} }
+// Sin std, sin alloc (a menos que implementes allocator)
+```
+
+**Cuándo usar unsafe:** FFI, optimizaciones con raw pointers, implementar Vec/HashMap internamente, acceso a hardware embebido. El 99% del código debe ser safe.
+
+Fuente: [The Rustonomicon](https://doc.rust-lang.org/nomicon/)
+
+### async/await, Tokio, Send + Sync
+
+**async/await en Rust es único: las Futures son lazy, no hacen nada hasta que se poll (await).** Esto permite ejecutar I/O sin bloquear threads.
+
+```toml
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+```
+
+```rust
+use tokio::time::{sleep, Duration};
+
+#[tokio::main]  // Macro que transforma main en async + inicia runtime multi-thread
+async fn main() {
+    // spawn: lanza tarea en el thread pool (work-stealing)
+    let handle = tokio::spawn(async {
+        sleep(Duration::from_millis(100)).await;
+        "tarea completada"
+    });
+    println!("{}", handle.await.unwrap());
+
+    // join!: ejecuta múltiples tareas concurrentemente
+    let (r1, r2) = tokio::join!(tarea_io(), tarea_io());
+    println!("{r1}, {r2}");
+
+    // select!: espera la primera tarea que termine
+    tokio::select! {
+        val = canal.recv() => println!("recibido: {val}"),
+        _ = sleep(Duration::from_secs(1)) => println!("timeout"),
+    }
+
+    // timeout: límite de tiempo para una operación
+    use tokio::time::timeout;
+    match timeout(Duration::from_secs(5), operacion_lenta()).await {
+        Ok(val) => println!("{val}"),
+        Err(_) => eprintln!("timeout"),
+    }
+}
+
+// Runtime single-thread (útil para WASM o embebido)
+#[tokio::main(flavor = "current_thread")]
+async fn main_single() {}
+
+// Runtime manual
+fn main() {
+    let rt = tokio::runtime::Runtime::new().unwrap();
+    rt.block_on(async { println!("Hola"); });
+}
+```
+
+```rust
+async fn tarea_io() -> String { sleep(Duration::from_millis(50)).await; "ok".into() }
+```
+
+**Runtimes async:**
+
+| Runtime | Uso |
+|---------|-----|
+| **Tokio** | Multi-thread work-stealing, estándar de facto para servidores |
+| **async-std** | API similar a stdlib, más simple |
+| **smol** | Minimalista (~2k LOC), single-thread por defecto |
+| **embassy** | Embebido, microcontroladores (STM32, nRF, RP2040) |
+
+**Send + Sync: la magia de concurrencia de Rust**
+
+El borrow checker se aplica entre threads. La mayoría de tipos implementan `Send` y `Sync` automáticamente, pero algunos no:
+
+```rust
+// Send: el tipo se puede transferir entre threads de forma segura
+// Sync: el tipo se puede compartir entre threads (&T es Send)
+
+// NO son Send/Sync:
+// - Rc<T>: el contador no es atómico
+// - RefCell<T>: el contador de borrows no es atómico
+// - *const T / *mut T: raw pointers no tienen garantías
+
+// SÍ son Send + Sync:
+// - Arc<T>: contador atómico
+// - Mutex<T>, RwLock<T>: sincronización nativa
+// - mpsc::Sender<T>: Send (pero Receiver no es Sync)
+```
+
+| Tipo | Send | Sync |
+|------|------|------|
+| `i32`, `bool`, `String` | ✅ | ✅ |
+| `Rc<T>` | ❌ | ❌ |
+| `Arc<T>` | ✅ (si T: Send+Sync) | ✅ |
+| `RefCell<T>` | ✅ | ❌ |
+| `Mutex<T>` | ✅ (si T: Send) | ✅ |
+| `mpsc::Sender<T>` | ✅ | ❌ |
+| `*const T` | ❌ | ❌ |
+| `Pin<Box<T>>` | ✅ (si T: Send) | ✅ |
+
+**Pin:** garantiza que un valor no se mueve en memoria. Las futures de Rust a menudo contienen auto-referencias, y `Pin` asegura que sean seguras. Normalmente no lo tocas directamente — async/await lo maneja internamente.
+
+Fuente: [Tokio docs](https://tokio.rs/tokio/tutorial), [Async Book](https://rust-lang.github.io/async-book/)
+
+---
+
+## Sistema de archivos
+
+### std::fs
+
+```rust
+use std::fs;
+use std::io::{self, BufRead, BufReader, Write};
+
+let contenido = fs::read_to_string("archivo.txt")?;
+fs::write("salida.txt", "contenido")?;
+
+fs::create_dir("nueva-carpeta")?;
+fs::create_dir_all("a/b/c")?;
+fs::remove_dir("vacia")?;
+fs::remove_dir_all("carpeta")?;
+fs::remove_file("archivo.txt")?;
+
+for entry in fs::read_dir(".")? {
+    let entry = entry?;
+    println!("{:?} {}", entry.path(), entry.file_name().to_string_lossy());
+}
+
+let meta = fs::metadata("archivo.txt")?;
+println!("tamaño: {}, permisos: {:?}", meta.len(), meta.permissions());
+```
+
+### std::fs::File (control fino)
+
+```rust
+use std::fs::{File, OpenOptions};
+use std::io::{Read, Write, Seek, SeekFrom};
+
+let mut f = File::open("datos.bin")?;
+let mut buf = Vec::new();
+f.read_to_end(&mut buf)?;
+
+let mut f = File::create("salida.bin")?;
+f.write_all(b"datos binarios")?;
+
+let mut f = OpenOptions::new()
+    .read(true)
+    .write(true)
+    .create(true)
+    .append(true)
+    .open("log.txt")?;
+
+f.seek(SeekFrom::Start(0))?;
+f.seek(SeekFrom::End(-10))?;
+```
+
+### BufReader / BufWriter
+
+```rust
+let f = File::open("grande.txt")?;
+let reader = BufReader::new(f);
+for line in reader.lines() {
+    let line = line?;
+    println!("{line}");
+}
+
+let f = File::create("salida.txt")?;
+let mut writer = io::BufWriter::new(f);
+write!(writer, "línea 1\n")?;
+write!(writer, "línea 2\n")?;
+```
+
+### std::path::Path y PathBuf
+
+```rust
+use std::path::{Path, PathBuf};
+
+let p = Path::new("/home/user/docs/file.txt");
+
+p.exists();
+p.is_file();
+p.is_dir();
+p.join("subdir");
+p.parent();
+p.file_name();
+p.extension();
+p.file_stem();
+p.canonicalize();
+
+let mut pb = PathBuf::from("/home");
+pb.push("user");
+pb.set_extension("bak");
+```
+
+### Procesar CSV y escribir JSON
+
+```rust
+use serde::{Deserialize, Serialize};
+use std::fs;
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Producto {
+    nombre: String,
+    precio: f64,
+    stock: u32,
+}
+
+fn leer_csv(path: &str) -> Result<Vec<Producto>, Box<dyn std::error::Error>> {
+    let mut reader = csv::Reader::from_path(path)?;
+    let mut productos = Vec::new();
+    for result in reader.deserialize() {
+        productos.push(result?);
+    }
+    Ok(productos)
+}
+
+fn escribir_json(path: &str, data: &[Producto]) -> Result<(), Box<dyn std::error::Error>> {
+    let json = serde_json::to_string_pretty(data)?;
+    fs::write(path, json)?;
+    Ok(())
+}
+```
+
+| Crate | Propósito |
+|-------|-----------|
+| `serde` + `serde_json` | Serializar/deserializar JSON |
+| `serde_yaml` | YAML |
+| `csv` | Leer/escribir CSVs con tipado |
+| `tempfile` | Archivos/directorios temporales |
+| `notify` | Watch de archivos (file system events) |
+
+Fuente: [std::fs docs](https://doc.rust-lang.org/std/fs/), [std::io docs](https://doc.rust-lang.org/std/io/), [std::path docs](https://doc.rust-lang.org/std/path/), [csv crate](https://docs.rs/csv/), [serde_json](https://docs.rs/serde_json/)
+
+---
+
+## Algoritmos
+
+### Ordenación
+
+```rust
+let mut v = vec![3, 1, 4, 1, 5, 9, 2, 6];
+v.sort();                          // Timsort (estable, O(n log n))
+v.sort_unstable();                 // Pattern-defeating Quicksort (inestable, más rápido)
+v.sort_by(|a, b| b.cmp(a));
+v.sort_by_key(|x| x.abs());
+
+v.select_nth_unstable(3);          // Ordena solo el percentil N (O(n))
+```
+
+### Búsqueda
+
+```rust
+let v = vec![1, 3, 5, 7, 9];
+v.binary_search(&5);               // Ok(2) — O(log n)
+v.contains(&3);                    // true
+v.iter().position(|x| x > 5);     // Some(3)
+```
+
+### Vec + Iterators API
+
+```rust
+let v: Vec<i32> = (0..10).collect();
+let cuadrados: Vec<i32> = v.iter().map(|x| x * x).collect();
+let pares: Vec<&i32> = v.iter().filter(|x| *x % 2 == 0).collect();
+
+let suma: i32 = v.iter().fold(0, |acc, x| acc + x);
+let producto: i32 = v.iter().product();
+let max = v.iter().max();
+let min = v.iter().min();
+
+let (pares, impares): (Vec<_>, Vec<_>) = v.iter().partition(|&&x| x % 2 == 0);
+
+let algun_par = v.iter().any(|x| x % 2 == 0);
+let todos_pares = v.iter().all(|x| x % 2 == 0);
+
+let nums: Vec<i32> = ["1", "a", "3"].iter()
+    .filter_map(|s| s.parse::<i32>().ok())
+    .collect();
+```
+
+### Iterator API completa
+
+| Método | Descripción |
+|--------|-------------|
+| `chain` | Concatena dos iteradores |
+| `zip` | Combina dos iteradores en tuplas |
+| `enumerate` | Añade índice |
+| `skip` | Salta N elementos |
+| `take` | Toma N elementos |
+| `cycle` | Repite infinitamente |
+| `inspect` | Inspecciona sin consumir |
+| `fold` | Reduce con acumulador |
+| `reduce` | fold sin valor inicial |
+| `any` | ¿Alguno cumple condición? |
+| `all` | ¿Todos cumplen? |
+| `partition` | Divide en dos colecciones |
+| `filter_map` | filter + map |
+| `flat_map` | Aplana iterador de iteradores |
+| `flatten` | Aplana Option/Result/Iterator anidados |
+
+```rust
+let r: Vec<_> = (0..3).chain(10..13).collect();
+
+for (i, (a, b)) in (0..3).zip(10..13).enumerate() {
+    println!("{i}: ({a}, {b})");
+}
+
+let r: Vec<_> = (0..3).cycle().take(7).collect();
+
+let palabras = vec!["hola mundo", "adios"];
+let r: Vec<_> = palabras.iter()
+    .flat_map(|s| s.split_whitespace())
+    .collect();
+
+let nums = vec![Some(1), None, Some(3)];
+let r: Vec<_> = nums.into_iter().flatten().collect();
+```
+
+### Big O de colecciones estándar
+
+| Operación | Vec | HashMap | BTreeMap | HashSet | BTreeSet | BinaryHeap |
+|-----------|-----|---------|----------|---------|----------|------------|
+| Insertar | O(1)* | O(1)** | O(log n) | O(1)** | O(log n) | O(log n) |
+| Obtener | O(1) | O(1)** | O(log n) | — | — | — |
+| Eliminar | O(n) | O(1)** | O(log n) | O(1)** | O(log n) | O(log n) |
+| Buscar | O(n) | O(1)** | O(log n) | O(1)** | O(log n) | O(n) |
+| Min/Max | O(1) | O(n) | O(log n) | O(n) | O(log n) | O(1) |
+| Ordenado | No | No | Sí | No | Sí | No |
+
+* Amortizado (ocasionalmente O(n) cuando crece)
+** Hash perfecto esperado; peor caso O(n)
+
+Fuente: [Rust std docs — sort](https://doc.rust-lang.org/std/primitive.slice.html#method.sort), [Vec docs](https://doc.rust-lang.org/std/vec/struct.Vec.html), [Iterator docs](https://doc.rust-lang.org/std/iter/trait.Iterator.html)
+
+---
+
+## POO en Rust (composición sobre herencia)
+
+Rust no tiene clases ni herencia. Usa **traits + structs + composición**.
+
+```rust
+trait Contenido: Debug + Send + Sync {
+    fn metadatos(&self) -> &Metadatos;
+    fn reproducir(&self) -> String {
+        format!("▶️ Reproduciendo {}...", self.metadatos().titulo)
+    }
+    fn obtener_info(&self) -> String;
+}
+
+struct Audio { metadatos: Metadatos, bitrate_kbps: u32, reproducciones: u64 }
+struct Video { metadatos: Metadatos, resolucion: String, formato: FormatoVideo, subtitulos: bool, reproducciones: u64 }
+
+impl Contenido for Audio { /* ... */ }
+impl Contenido for Video { /* ... */ }
+
+// Composición: Vec de trait objects
+struct ListaReproduccion {
+    items: Vec<Box<dyn Contenido>>,
+}
+```
+
+| Concepto Python | Rust |
+|---|---|
+| Clase abstracta (ABC) | Trait |
+| Herencia simple | `impl Trait for Struct` |
+| Herencia múltiple | Múltiples traits |
+| `super().__init__()` | No existe; cada struct construye sus campos |
+| `@property` | Métodos getter |
+| Duck typing | Traits (estructural, compile-time) |
+| Mixin | Trait con métodos por defecto |
+| `dataclass` | `#[derive(Debug, Clone)]` |
+| Protocol (PEP 544) | Traits (nativos) |
+
+Fuente: [The Rust Book — OOP](https://doc.rust-lang.org/book/ch17-00-oop.html)
+
+---
+
+## Patrones de diseño
+
+| Patrón | Rust |
+|--------|------|
+| **Strategy** | Traits o closures |
+| **Builder** | Struct con métodos que retornan `Self` |
+| **Observer** | `tokio::sync::broadcast`, `mpsc`, `watch` |
+| **Factory** | `From`/`TryFrom`/`FromStr` |
+| **RAII** | `Drop` trait (nativo) |
+| **Newtype** | Tuple struct `struct Email(String)` |
+| **State** | `enum` + `match` exhaustivo |
+| **Adapter** | `From`/`Into` |
+| **Iterator** | `IntoIterator` / `Iterator` |
+
+```rust
+// Builder
+struct ServidorBuilder { host: String, port: u16, tls: bool }
+impl ServidorBuilder {
+    fn new(host: &str) -> Self { Self { host: host.into(), port: 8080, tls: false } }
+    fn port(mut self, p: u16) -> Self { self.port = p; self }
+    fn tls(mut self, e: bool) -> Self { self.tls = e; self }
+    fn build(self) -> Servidor { Servidor { host: self.host, port: self.port, tls: self.tls } }
+}
+
+// RAII — Drop se ejecuta al salir de ámbito
+struct Db { id: u32 }
+impl Drop for Db { fn drop(&mut self) { println!("Cerrando DB {}", self.id); } }
+
+// Newtype — tipos fuertes
+struct Email(String);
+struct Telefono(String);
+fn notificar(email: &Email, tlf: &Telefono) {}  // El compilador no permite mezclar
+
+// State — enum + match verificados
+enum Estado { Pendiente, EnProceso, Completado }
+fn transicion(actual: &Estado, nuevo: Estado) -> Result<(), String> {
+    match (actual, &nuevo) {
+        (Pendiente, EnProceso) | (EnProceso, Completado) | (Pendiente, Completado) => { Ok(()) }
+        (Completado, _) => Err("Completado no cambia".into()),
+        _ => Err("Transición inválida".into()),
+    }
+}
+```
+
+Fuente: [Rust Design Patterns](https://rust-unofficial.github.io/patterns/)
+
+---
+
+## Polimorfismo
+
+Rust tiene tres formas, cada una con sus compensaciones.
+
+### 1. Genéricos (monomorfización)
+
+```rust
+fn sonido<T: Sonido>(cosa: T) { println!("{}", cosa.hacer_sonido()); }
+// Compilador genera N copias (1 por tipo concreto)
+```
+
+### 2. Trait objects (`dyn Trait`)
+
+```rust
+let cosas: Vec<Box<dyn Sonido>> = vec![Box::new(Perro), Box::new(Gato)];
+// Indirección vtable, colección heterogénea
+```
+
+### 3. Enum dispatch
+
+```rust
+enum Animal { Perro(Perro), Gato(Gato) }
+impl Animal {
+    fn sonido(&self) -> String {
+        match self { Animal::Perro(p) => p.hacer_sonido(), Animal::Gato(g) => g.hacer_sonido() }
+    }
+}
+// Cero overhead, exhaustividad, pero conjunto cerrado de tipos
+```
+
+| | Genéricos | `dyn Trait` | Enum dispatch |
+|---|---|---|---|
+| Overhead | Cero | 1 indirección vtable | Cero |
+| Binario | N copias | 1 copia | 1 copia |
+| Colección heterogénea | No | Sí | No (enum fijo) |
+| Extensible externamente | Sí | Sí | No |
+
+**¿Cuál usar?** Enum dispatch para conjuntos cerrados; genéricos para máximo rendimiento; `dyn Trait` para colecciones heterogéneas.
+
+---
+
+## Multimedia
+
+### image crate (PNG, JPEG, GIF, BMP, WebP, ICO)
+
+```rust
+use image::{open, GenericImageView, ImageFormat};
+
+let img = open("foto.png")?;
+img.save("copia.png")?;
+
+// Redimensionar
+let pequena = img.resize(200, 200, image::imageops::FilterType::Lanczos3);
+pequena.save("thumb.jpg")?;
+
+// Recortar
+let recorte = img.crop_imm(100, 100, 300, 300);
+
+// Desenfocar
+let borroso = image::imageops::blur(&img, 4.0);
+
+// Convertir formato
+img.save_with_format("output.webp", ImageFormat::WebP)?;
+
+// Desde/hacia bytes
+use std::io::Cursor;
+let mut bytes: Vec<u8> = Vec::new();
+img.write_to(&mut Cursor::new(&mut bytes), ImageFormat::Png)?;
+let img2 = image::load_from_memory(&bytes)?;
+
+// Filtros
+use image::imageops::FilterType::*;
+let filtrada = img.resize_exact(200, 200, Gaussian);
+```
+
+### imageproc (procesamiento avanzado)
+
+```rust
+// use imageproc::{drawing, contours, morphology, template_matching};
+```
+
+### GIFs animados
+
+```rust
+use gif::{Encoder, Frame, Repeat};
+use std::fs::File;
+
+let mut encoder = Encoder::new(
+    File::create("animado.gif")?,
+    100, 100,
+    &[0, 0, 0],
+)?;
+encoder.set_repeat(Repeat::Infinite)?;
+
+for i in 0..10 {
+    let mut pixels = vec![0; 100 * 100 * 3];
+    let frame = Frame::from_rgb(100, 100, &pixels);
+    encoder.write_frame(&frame)?;
+}
+```
+
+### 2D rendering (raqote)
+
+```rust
+// use raqote::{DrawTarget, Source, PathBuilder, StrokeStyle, DrawOptions};
+```
+
+### Audio
+
+```rust
+// hound — leer WAV
+use hound::WavReader;
+let mut reader = WavReader::open("audio.wav")?;
+let spec = reader.spec();
+println!("{:?}", spec);
+let samples: Vec<i16> = reader.samples::<i16>()
+    .filter_map(|s| s.ok())
+    .collect();
+```
+
+### FFmpeg bindings
+
+```rust
+// use ffmpeg_next as ffmpeg;
+// ffmpeg::init()?;
+// let mut ictx = ffmpeg::format::input(&path)?;
+```
+
+| Crate | Propósito |
+|-------|-----------|
+| `image` | Cargar, guardar, redimensionar, recortar, filtrar imágenes (PNG, JPEG, GIF, BMP, WebP, ICO) |
+| `imageproc` | Procesamiento: dibujo, contornos, morfología, template matching |
+| `gif` | Decodificar/crear GIFs animados |
+| `raqote` | Render 2D tipo Skia |
+| `symphonia` | Decodificación de audio (MP3, FLAC, Ogg, WAV, AAC) |
+| `kira` | Reproducción de audio |
+| `hound` | WAV read/write |
+| `rodio` | Reproducción simple de audio |
+| `ffmpeg-next` | FFmpeg bindings seguros |
+
+Fuente: [image crate docs](https://docs.rs/image/), [imageproc docs](https://docs.rs/imageproc/), [gif crate](https://docs.rs/gif/), [symphonia docs](https://docs.rs/symphonia/), [kira docs](https://docs.rs/kira/)
+
+---
+
+## Bases de datos
+
+| Librería | Async | ORM | BD |
+|----------|-------|-----|----|
+| **Diesel** | No | ORM | Pg, MySQL, SQLite |
+| **SQLx** | Sí | Query builder | Pg, MySQL, SQLite |
+| **SeaORM** | Sí | ORM | Pg, MySQL, SQLite |
+| **redis-rs** | Sí | No | Redis |
+| **mongodb** | Sí | Driver | MongoDB |
+
+```rust
+// SQLx — queries verificadas en compilación
+use sqlx::postgres::PgPool;
+#[derive(sqlx::FromRow)]
+struct User { id: i32, nombre: String, email: String }
+
+async fn crear(pool: &PgPool) -> Result<User, sqlx::Error> {
+    sqlx::query_as("INSERT INTO usuarios (nombre) VALUES ($1) RETURNING *")
+        .bind("Ana").fetch_one(pool).await
+}
+
+// Diesel — ORM sync, schema first
+// #[derive(Queryable, Insertable)]
+// #[diesel(table_name = usuarios)]
+// struct User { id: i32, nombre: String }
+// usuarios.filter(email.eq("a@b.com")).first(&mut conn)
+
+// Redis
+use redis::AsyncCommands;
+let mut conn = client.get_multiplexed_async_connection().await?;
+conn.set("clave", "valor").await?;
+let v: String = conn.get("clave").await?;
+
+// Migraciones
+// SQLx: migrations/ archivos .sql + sqlx::migrate!("./migrations")
+// Diesel: diesel migration generate nombre
+```
+
+Fuente: [SQLx docs](https://docs.rs/sqlx/), [Diesel docs](https://diesel.rs/), [SeaORM docs](https://www.sea-ql.org/SeaORM/)
+
+---
+
+## WebSockets
+
+```toml
+[dependencies]
+axum = { version = "0.8", features = ["ws"] }
+tokio = { version = "1", features = ["full"] }
+```
+
+```rust
+use axum::extract::ws::{WebSocket, WebSocketUpgrade, Message};
+
+async fn ws_handler(ws: WebSocketUpgrade) -> impl IntoResponse {
+    ws.on_upgrade(move |socket| manejar(socket))
+}
+
+async fn manejar(mut socket: WebSocket) {
+    while let Some(Ok(msg)) = socket.recv().await {
+        match msg {
+            Message::Text(t) => { socket.send(Message::Text(format!("Echo: {t}"))).await.unwrap(); }
+            Message::Close(_) => break,
+            _ => {}
+        }
+    }
+}
+
+// Broadcast con tokio::sync::broadcast
+async fn ws_broadcast(ws: WebSocketUpgrade, tx: Arc<broadcast::Sender<String>>) -> impl IntoResponse {
+    ws.on_upgrade(move |socket| async {
+        let mut rx = tx.subscribe();
+        loop {
+            tokio::select! {
+                msg = socket.recv() => { if let Some(Ok(Message::Text(t))) = msg { tx.send(t).ok(); } else { break; } }
+                msg = rx.recv() => { if let Ok(t) = msg { socket.send(Message::Text(t)).await.unwrap(); } }
+            }
+        }
+    })
+}
+```
+
+Alternativa: `tokio-tungstenite` para WebSocket sin servidor HTTP.
+
+Fuente: [axum WebSocket docs](https://docs.rs/axum/latest/axum/extract/ws/index.html)
+
+---
+
+## Concurrencia
+
+El borrow checker se aplica entre threads: si compila, **no tiene data races**.
+
+```rust
+let datos = vec![1, 2, 3];
+std::thread::spawn(move || { /* datos movido aquí */ });
+// datos.push(4);  // ERROR: datos ya no es válido
+```
+
+### Tokio channels
+
+```rust
+// mpsc: múltiples productores, 1 consumidor
+let (tx, mut rx) = mpsc::channel::<String>(32);
+tokio::spawn(async move { tx.send("msg".into()).await.unwrap(); });
+while let Some(msg) = rx.recv().await { println!("{msg}"); }
+
+// broadcast: 1 productor, N consumidores
+let (tx, _) = broadcast::channel::<String>(16);
+let mut rx1 = tx.subscribe();
+let mut rx2 = tx.subscribe();
+tx.send("global".into()).unwrap();
+
+// watch: 1 valor que cambia, N observadores
+let (tx, mut rx) = watch::channel(0);
+tokio::spawn(async move { while rx.changed().await.is_ok() { println!("{}", *rx.borrow()); } });
+tx.send(1).unwrap();
+```
+
+### Rayon: paralelismo CPU-bound
+
+```rust
+use rayon::prelude::*;
+let suma: u64 = (0..1_000_000u64).into_par_iter().sum();
+let sorted: Vec<i32> = vec![3, 1, 4].par_sort(); // sort paralelo
+```
+
+### Tabla de decisión
+
+| Escenario | Herramienta |
+|---|---|
+| I/O-bound (HTTP, BD) | Tokio async |
+| CPU-bound (cálculos) | Rayon |
+| 1:N productor-consumidor | `tokio::sync::mpsc` |
+| Broadcast 1:N | `tokio::sync::broadcast` |
+| Valor que cambia | `tokio::sync::watch` |
+| Estado exclusivo | `Arc<Mutex<T>>` |
+| Múltiples lectores | `Arc<RwLock<T>>` |
+| Background tasks | `tokio::spawn` |
+| Rate limiting | `tokio::sync::Semaphore` |
+
+Fuente: [Tokio docs](https://tokio.rs/tokio/tutorial), [Rayon docs](https://docs.rs/rayon/)
+
+---
+
+## Escala 0-100
+
+Cada nivel incluye lo que debes saber y un proyecto para fijar los conceptos.
+
+### Nivel 0–15: Fundamentos
+
+**Qué aprender:**
+- `fn main()`, `let`/`mut`, tipos primitivos (`i32`, `f64`, `bool`, `char`)
+- `println!`, `eprintln!`, `format!`
+- `if`/`else`, `loop`, `while`, `for x in collection`
+- `String` vs `&str`, `String::from()`, `push_str()`
+- `Vec<T>`: `vec![]`, `push()`, `pop()`, `len()`, indexación `[]`
+- Ownership: `let s2 = s1` mueve. Para compartir, usa `&` o `.clone()`. `i32`, `bool` implementan `Copy` — se copian automáticamente.
+- **Concepto clave**: entender **ownership** desde el día uno. No puedes tener dos `&mut` al mismo tiempo.
+
+```rust
+fn main() {
+    let secreto = rand::random::<u32>() % 100 + 1;
+    let mut intentos = 0;
+    loop {
+        intentos += 1;
+        let mut entrada = String::new();
+        std::io::stdin().read_line(&mut entrada).unwrap();
+        let n: u32 = match entrada.trim().parse() {
+            Ok(n) => n,
+            Err(_) => { println!("No es número"); continue; }
+        };
+        if n < secreto { println!("Más grande"); }
+        else if n > secreto { println!("Más pequeño"); }
+        else { println!("¡Acertaste en {intentos}!"); break; }
+    }
+}
+```
+
+**Proyecto:** *Adivina el número* — número aleatorio con `rand::Rng`, pistas mayor/menor, contador de intentos, manejo de parse con `match`. Reflexión: ¿por qué `String::new()` y no `let s = ""`? (String vs &str, ownership).
+
+### Nivel 15–30: Structs, enums, traits
+
+**Qué aprender:**
+- Structs con campos, tuple structs, unit structs
+- `impl` blocks: métodos y funciones asociadas
+- Enums con/sin datos, `match` exhaustivo, `if let`, `while let`
+- `Option<T>`: `Some`/`None`, `unwrap`, `expect`, `map`
+- `Result<T, E>`: `Ok`/`Err`, `?` operator, `unwrap_or`
+- Traits: definirlos, implementarlos, trait bounds
+- `#[derive(Debug, Clone, PartialEq)]`
+- `HashMap<K, V>`: `insert`, `get`, `entry`
+- **Concepto clave**: el match exhaustivo — el compilador te obliga a cubrir todos los casos. `?` propaga errores automáticamente. Los traits son interfaces, no herencia.
+
+```rust
+#[derive(Debug, Clone, PartialEq)]
+enum Estado { Pendiente, Completada }
+struct Tarea { titulo: String, estado: Estado }
+struct Gestor { tareas: HashMap<u32, Tarea>, siguiente_id: u32 }
+impl Gestor {
+    fn new() -> Self { Self { tareas: HashMap::new(), siguiente_id: 1 } }
+    fn agregar(&mut self, titulo: &str) -> u32 {
+        let id = self.siguiente_id;
+        self.tareas.insert(id, Tarea { titulo: titulo.into(), estado: Estado::Pendiente });
+        self.siguiente_id += 1;
+        id
+    }
+    fn completar(&mut self, id: u32) -> Result<(), String> {
+        self.tareas.get_mut(&id).map(|t| t.estado = Estado::Completada).ok_or("No encontrada".into())
+    }
+}
+```
+
+**Proyecto:** *Gestor de tareas CLI* — comandos `add`, `list`, `done`, `rm`. Persistencia JSON con `serde_json`. Errores con `anyhow`. Usa `clap` o `std::env::args()`. Implementa `Drop` para mensaje al salir.
+
+### Nivel 30–45: Smart pointers e iterators
+
+**Qué aprender:**
+- `Box<T>`: heap allocation, tipos recursivos
+- `Rc<T>` / `Arc<T>`: reference counting
+- `RefCell<T>` / `Cell<T>` / `Mutex<T>`: interior mutability
+- Iterators: `Iterator` trait, adapters (`map`, `filter`, `fold`, `take`, `collect`)
+- Closures: `|args| expr`, `Fn`/`FnMut`/`FnOnce`
+- Slicing: `&[T]`, `split_at`, `windows`
+- **Concepto clave**: `Box` resuelve tipos de tamaño desconocido. `Rc` no es `Send` (no atómico). `RefCell` mueve el borrow check a runtime — panic si violas reglas.
+
+```rust
+enum Arbol<T> { Vacio, Nodo(T, Box<Arbol<T>>, Box<Arbol<T>>) }
+struct Fib { actual: u64, siguiente: u64 }
+impl Iterator for Fib {
+    type Item = u64;
+    fn next(&mut self) -> Option<u64> {
+        let n = self.actual + self.siguiente;
+        self.actual = self.siguiente;
+        self.siguiente = n;
+        Some(self.actual)
+    }
+}
+let suma: u64 = fib().take(20).filter(|&x| x % 2 == 0).map(|x| x * 2).sum();
+```
+
+**Proyecto:** *Árbol binario de búsqueda* con `Box`. Métodos: `insertar`, `buscar`, `en_orden`. `IntoIterator`. `Drop` para contar nodos liberados. `cargo test`.
+
+### Nivel 45–60: Testing, documentación y módulos
+
+**Qué aprender:**
+- `#[test]`, `#[should_panic]`, `assert_eq!`, `assert!`
+- `#[cfg(test)] mod tests`, integración en `tests/`
+- Doc tests con `///` + código en ejemplos
+- `cargo doc --open`, documentación con markdown
+- Módulos: `mod`, `pub`, `pub use`, `mod.rs` vs carpetas
+- Workspaces: `[workspace]` en Cargo.toml
+- `criterion` para benchmarks
+- **Concepto clave**: los tests son ciudadanos de primera clase en Rust. Los doc tests garantizan que los ejemplos funcionan. Los módulos siguen el sistema de archivos.
+
+```rust
+/// Raíz cuadrada entera (Newton-Raphson).
+/// ```
+/// use mi_crate::raiz;
+/// assert_eq!(raiz(16), 4);
+/// ```
+pub fn raiz(n: u64) -> u64 {
+    if n < 2 { return n; }
+    let mut x = n; let mut y = (x + 1) / 2;
+    while y < x { x = y; y = (x + n / x) / 2; }
+    x
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test] fn raiz_cero() { assert_eq!(raiz(0), 0); }
+    #[test] fn raiz_perfecta() { assert_eq!(raiz(144), 12); }
+}
+```
+
+**Proyecto:** *Calculadora como crate* — tipos `Operacion`, trait `Calculadora`. Tests unitarios + integración + doc tests + CI (GitHub Actions: check, test, clippy, fmt).
+
+### Nivel 60–75: Web APIs asíncronas
+
+**Qué aprender:**
+- Axum: routers, extractors (`Path`, `Query`, `Json`, `State`), responders
+- `serde`: `Serialize`/`Deserialize`
+- Tokio: `#[tokio::main]`, `spawn`, `join!`, `select!`
+- SQLx: queries asíncronas, migraciones, `query_as!`
+- Tower: middleware, logging, CORS
+- `tracing`: spans, eventos, subscribers
+- **Concepto clave**: los extractors implementan `FromRequestParts`. `State` es `Arc<T>` compartido. Las queries SQLx se verifican en compilación.
+
+```rust
+async fn listar(State(db): State<Db>) -> Json<Vec<Receta>> {
+    Json(db.read().await.clone())
+}
+async fn crear(State(db): State<Db>, Json(r): Json<Receta>) -> Result<(StatusCode, Json<Receta>), (StatusCode, String)> {
+    db.write().await.push(r.clone());
+    Ok((StatusCode::CREATED, Json(r)))
+}
 #[tokio::main]
 async fn main() {
-    let tarea = tokio::spawn(async {
-        println!("Hola desde tokio");
-    });
-    tarea.await.unwrap();
+    let app = Router::new()
+        .route("/recetas", get(listar).post(crear))
+        .with_state(Arc::new(RwLock::new(Vec::new())));
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    axum::serve(listener, app).await.unwrap();
 }
 ```
 
-## 📝 Ejercicios Prácticos
+**Proyecto:** *API de recetas* — Axum + SQLx + PostgreSQL. CRUD recetas con ingredientes. Búsqueda por ingrediente. Validación con `validator`. Tests con `axum_test`. Middleware `tracing`.
 
-1. **Ownership básico** 🟢 `[Fácil]` — Función que toma ownership de un String, lo modifica y lo devuelve. Demuestra move semantics.
-2. **CLI con Clap** 🟡 `[Intermedio]` — Herramienta tipo `wc` (líneas/palabras/caracteres). Usa `clap` para argumentos.
-3. **Servidor Actix-Web** 🔴 `[Avanzado]` — Endpoint que acepta JSON, lo valida con serde, lo almacena en HashMap con Arc&lt;Mutex&lt;&gt;&gt;.
-4. **Caché concurrente** 🔴 `[Avanzado]` — Sistema de caché con `tokio::sync::RwLock` que expire entradas. Usa `tokio::time::interval`.
+### Nivel 75–90: Producción
 
-## ⚡ Buenas Prácticas y Complejidad
+**Qué aprender:**
+- Docker multi-stage para Rust (distroless, slim)
+- Graceful shutdown: `tokio::signal` + `with_graceful_shutdown`
+- WebSockets con axum, broadcast con canales
+- Observabilidad: `tracing` + `opentelemetry` + Jaeger
+- Caché con `redis-rs`
+- Rate limiting: `governor` crate
+- Workers asíncronos con Tokio
+- `cargo audit` para seguridad de dependencias
+- **Concepto clave**: en producción Rust brilla por predictibilidad (sin GC, sin pausas). `tracing` permite spans con contexto que cruzan awaits — ideal para debugging distribuido.
 
-**Buenas prácticas:**
+```rust
+serve(listener, app)
+    .with_graceful_shutdown(async {
+        signal::ctrl_c().await.unwrap();
+        tracing::info!("Apagando servidor...");
+    })
+    .await.unwrap();
+```
 
-- Ejecuta `cargo clippy` regularmente — detecta anti-patrones.
-- Usa `cargo fmt` para formateo consistente.
-- Usa `Result` con `?` en lugar de `unwrap()` o `expect()`.
-- Mide rendimiento con `cargo bench` y `criterion`.
-- Organiza código en módulos con `mod` y `pub mod`.
-- Usa `#[derive(Debug, Clone, PartialEq)]` para tipos de datos simples.
+**Proyecto:** *Dashboard de monitorización* — Tokio recolecta métricas (`sysinfo`). Axum + WebSocket. Cache Redis. Workers background. Docker Compose. Graceful shutdown.
 
-**Complejidad algorítmica (Big O):**
+### Nivel 90–100: Sistemas y arquitectura
 
-Vec&lt;T&gt;: acceso O(1), push/pop O(1) amortizado, inserción O(n). HashMap: O(1) promedio. BTreeMap: O(log n). `sort()` O(n log n).
+**Qué aprender:**
+- Arquitectura hexagonal: dominio, puertos (traits), adaptadores
+- CQRS/Event sourcing con canales o Kafka (`rdkafka`)
+- `unsafe`: cuándo es necesario (FFI, optimizaciones, embebido)
+- `no_std` embebido: Embassy, `cortex-m`, `esp-rs`
+- WASM: `wasm-pack`, `wasm-bindgen`, `web-sys`
+- FFI: `extern "C"`, `#[no_mangle]`, `cbindgen`, `bindgen`
+- gRPC: `tonic` + `prost` + protobuf
+- GraphQL: `async-graphql` o `juniper`
+- PGO (Profile Guided Optimization)
+- `#[target_feature]` para SIMD
+- **Concepto clave**: `unsafe` no desactiva el borrow checker. Solo permite 5 operaciones. El 99.9% del código debe ser safe. Las abstracciones `unsafe` bien diseñadas (como `Vec`, `HashMap`) exponen APIs seguras.
 
-## 📚 Recursos y Documentación
+```rust
+// gRPC con Tonic
+#[tonic::async_trait]
+impl Saludos for MiServicio {
+    async fn saludar(&self, req: Request<SaludoRequest>) -> Result<Response<SaludoResponse>, Status> {
+        Ok(Response::new(SaludoResponse { mensaje: format!("Hola {}!", req.into_inner().nombre) }))
+    }
+}
+```
 
-- 📖 [The Rust Book](https://doc.rust-lang.org/book/)
-- 📖 [Rust by Example](https://doc.rust-lang.org/stable/rust-by-example/)
-- 🔧 [Rust Playground](https://play.rust-lang.org/)
-- 📖 [Rust en GitHub](https://github.com/rust-lang/rust)
-- 📖 [Actix-Web Docs](https://actix.rs/docs/)
+**Proyecto:** *Sistema de notificaciones* — arquitectura hexagonal con traits. gRPC entre servicios. Kafka como event bus (`rdkafka`). GraphQL como BFF (`async-graphql`). OpenTelemetry tracing. Docker Compose multi-servicio.
 
-### 🏆 Retos Relacionados
+Fuente: [axum docs](https://docs.rs/axum/), [Tokio docs](https://tokio.rs/), [SQLx docs](https://docs.rs/sqlx/)
+
+---
+
+## Proyectos prácticos detallados
+
+### Gestor de contraseñas CLI (nivel 30)
+
+```rust
+use clap::{Parser, Subcommand};
+use serde::{Serialize, Deserialize};
+use std::collections::HashMap;
+
+#[derive(Serialize, Deserialize)]
+struct Entry { service: String, username: String, password: String }
+#[derive(Serialize, Deserialize, Default)]
+struct Vault { entries: HashMap<String, Entry> }
+
+#[derive(Parser)]
+#[command(name = "passman")]
+struct Cli {
+    #[command(subcommand)]
+    command: Commands,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    Add { service: String, username: String, password: String },
+    Get { service: String },
+    List,
+}
+
+fn main() -> anyhow::Result<()> {
+    let cli = Cli::parse();
+    let mut vault: Vault = if std::path::Path::new("vault.json").exists() {
+        serde_json::from_str(&std::fs::read_to_string("vault.json")?)?
+    } else { Vault::default() };
+
+    match cli.command {
+        Commands::Add { service, username, password } => {
+            vault.entries.insert(service.clone(), Entry { service, username, password });
+            std::fs::write("vault.json", serde_json::to_string_pretty(&vault)?)?;
+            println!("✅ Guardado");
+        }
+        Commands::Get { service } => match vault.entries.get(&service) {
+            Some(e) => println!("Usuario: {}\nPass: {}", e.username, e.password),
+            None => println!("❌ No encontrado"),
+        },
+        Commands::List => { for (s, _) in &vault.entries { println!("  • {s}"); } }
+    }
+    Ok(())
+}
+```
+
+### Web scraper asíncrono (nivel 60)
+
+```rust
+use reqwest::Client;
+use scraper::{Html, Selector};
+use tokio::sync::Semaphore;
+use std::sync::Arc;
+
+#[derive(Debug)]
+struct Article { title: String, url: String, source: String }
+
+async fn scrape(url: &str, client: &Client, sem: &Semaphore) -> Vec<Article> {
+    let _permit = sem.acquire().await.unwrap();
+    let resp = client.get(url).send().await.ok()?;
+    let doc = Html::parse_document(&resp.text().await.ok()?);
+    let sel = Selector::parse("a.title, a.storylink, h2 a").unwrap();
+    Some(doc.select(&sel).filter_map(|el| {
+        let title = el.text().collect::<String>().trim().to_string();
+        let href = el.value().attr("href")?;
+        let full = if href.starts_with("http") { href.into() } else { format!("{}{}", url.trim_end_matches('/'), href) };
+        if title.is_empty() { None } else { Some(Article { title, url: full, source: url.into() }) }
+    }).collect())
+}
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::builder().user_agent("Mozilla/5.0").timeout(std::time::Duration::from_secs(10)).build()?;
+    let sem = Arc::new(Semaphore::new(5));
+    let urls = vec!["https://news.ycombinator.com", "https://blog.rust-lang.org/"];
+
+    let mut handles = vec![];
+    for url in urls {
+        let (c, s) = (client.clone(), Arc::clone(&sem));
+        handles.push(tokio::spawn(async move { scrape(url, &c, &s).await }));
+    }
+    for h in handles { for a in h.await.unwrap_or_default() { println!("{} - {}", a.source, a.title); } }
+    Ok(())
+}
+```
+
+---
+
+## Hacks de productividad
+
+**1. `dbg!` — depuración instantánea**
+```rust
+let r = dbg!(x * 2);  // [src/main.rs:1] x * 2 = 10
+// Se puede insertar en cualquier expresión
+```
+
+**2. Patrones borrow checker**
+```rust
+// Iterar con índices para modificar
+for i in 0..items.len() { if items[i] % 2 == 0 { items.push(items[i] * 2); } }
+
+// Separar colección
+let (even, odd): (Vec<_>, Vec<_>) = items.iter().partition(|&&x| x % 2 == 0);
+```
+
+**3. Newtype para type safety**
+```rust
+struct UserId(u64);
+struct PedidoId(u64);
+fn buscar_usuario(id: UserId) {}
+// buscar_usuario(PedidoId(42));  // Error de tipos
+```
+
+**4. `#[derive(Debug)]`** — imprescindible en todo struct/enum.
+
+**5. Clippy pedante:** `cargo clippy -- -W clippy::pedantic -W clippy::nursery`
+
+**6. `cargo expand`** — expande macros procedurales: `cargo install cargo-expand && cargo expand`
+
+**7. `cargo-watch`** — auto-rebuild: `cargo watch -x check -x test`
+
+**8. `cargo-insta`** — snapshot testing.
+
+**9. `include_str!` / `include_bytes!`** — embebe archivos en compilación:
+```rust
+const SQL: &str = include_str!("../migrations/001.sql");
+const ICON: &[u8] = include_bytes!("../static/favicon.ico");
+```
+
+**10. Comandos del día a día:**
+```bash
+cargo check              # Verifica errores (rápido)
+cargo clippy --fix       # Auto-fix de lints
+cargo test -- --nocapture  # Tests con output
+cargo tree               # Árbol de dependencias
+cargo outdated           # Deps desactualizadas
+cargo upgrade            # Actualiza
+cargo audit              # Seguridad (cargo install cargo-audit)
+cargo udeps              # Deps no usadas (cargo install cargo-udeps)
+```
+
+**11. `todo!()` y `unreachable!()`:**
+```rust
+fn pendiente() { todo!("implementar") }
+fn dispatch() -> &'static str { match t { A => "a", B => "b", _ => unreachable!() } }
+```
+
+**12. Config global `~/.cargo/config.toml`:**
+```toml
+[alias]
+check-all = "check --workspace"
+test-all = "test --workspace"
+[registries.crates-io]
+protocol = "sparse"
+```
+
+Fuente: [Clippy docs](https://doc.rust-lang.org/clippy/), [cargo-expand](https://docs.rs/cargo-expand/)
+
+---
+
+## Canales en español
+
+**YouTube:**
+- **midulive** — Rust, TypeScript, proyectos prácticos
+- **MoureDev** — Rust desde cero, comparativas
+- **Jamir Soto** — Curso completo de Rust (~30 videos)
+- **Carlos Aznarán** — Conceptos difíciles (ownership, lifetimes)
+- **Programa en Rust** — Canal dedicado a Rust: proyectos y patrones
+
+**Comunidades:**
+- **r/rust** (Reddit) — Comunidad principal
+- **Rust Lang en Español** (Telegram)
+- **Discord Rust Latino**
+- **Stack Overflow español** — etiqueta `rust`
+- **Rust Latam** — Conferencia anual (YouTube)
+
+**Newsletters:**
+- **This Week in Rust** ([this-week-in-rust.org](https://this-week-in-rust.org/))
+- **Rust Blog** ([blog.rust-lang.org](https://blog.rust-lang.org/))
+
+**Repositorios:**
+- [awesome-rust](https://github.com/rust-unofficial/awesome-rust)
+- [rustlings](https://github.com/rust-lang/rustlings) — ejercicios interactivos
+
+---
+
+## Fuentes
+
+**Documentación oficial:**
+- [The Rust Book](https://doc.rust-lang.org/book/)
+- [Rust by Example](https://doc.rust-lang.org/stable/rust-by-example/)
+- [Rustonomicon](https://doc.rust-lang.org/nomicon/)
+- [Rust Reference](https://doc.rust-lang.org/reference/)
+- [Edition Guide](https://doc.rust-lang.org/edition-guide/)
+- [Async Book](https://rust-lang.github.io/async-book/)
+
+**Frameworks y librerías:**
+- [Tokio](https://tokio.rs/)
+- [Axum](https://docs.rs/axum/)
+- [SQLx](https://docs.rs/sqlx/)
+- [Diesel](https://diesel.rs/)
+- [SeaORM](https://www.sea-ql.org/SeaORM/)
+- [Tonic (gRPC)](https://docs.rs/tonic/)
+- [wasm-pack](https://rustwasm.github.io/docs/wasm-pack/)
+- [Serde](https://serde.rs/)
+- [Clap](https://docs.rs/clap/)
+- [Rayon](https://docs.rs/rayon/)
+
+**Comunidad y patrones:**
+- [Rust Design Patterns](https://rust-unofficial.github.io/patterns/)
+- [Rust Playground](https://play.rust-lang.org/)
+- [Rust Compiler Error Index](https://doc.rust-lang.org/error-index.html)
+- [r/rust](https://reddit.com/r/rust)
+- [This Week in Rust](https://this-week-in-rust.org/)
+- [Rust Latam](https://rustlatam.org/)
+
+**Fuentes de esta guía:**
+
+- [The Rust Book](https://doc.rust-lang.org/book/)
+- [Rust by Example](https://doc.rust-lang.org/stable/rust-by-example/)
+- [Rustonomicon](https://doc.rust-lang.org/nomicon/)
+- [Tokio tutorial](https://tokio.rs/tokio/tutorial)
+- [Axum docs](https://docs.rs/axum/)
+- [SQLx docs](https://docs.rs/sqlx/)
+- [Diesel docs](https://diesel.rs/guides/getting-started)
+- [Rust Design Patterns](https://rust-unofficial.github.io/patterns/)
+- [Awesome Rust](https://github.com/rust-unofficial/awesome-rust)
+- [This Week in Rust](https://this-week-in-rust.org/)
+- [r/rust](https://reddit.com/r/rust)
+- [Rust Blog](https://blog.rust-lang.org/)
+- [RFCs de Rust](https://rust-lang.github.io/rfcs/)
+
+---
+
+## 🏆 Retos Relacionados
 
 Pon a prueba lo aprendido con estos desafíos:
-- [Buscador De Minas Logica](/retos/guia-buscador-de-minas-logica)
-- [Detector De Palindromos](/retos/guia-detector-de-palindromos)
-- [Jwt Generator Manual](/retos/guia-jwt-generator-manual)
+- [Plus Reto Inicial 06 Par O Impar](/retos/guia-plus-reto-inicial-06-par-o-impar)
+- [Fibonacci Recursivo](/retos/guia-fibonacci-recursivo)
+- [Plus Reto Intermedio 05 Generador De Contrasenas](/retos/guia-plus-reto-intermedio-05-generador-de-contrasenas)
+- [Plus Reto Intermedio 13 Contador De Palabras Únicas](/retos/guia-plus-reto-intermedio-13-contador-de-palabras-unicas)
+- [Plus Reto Avanzado 05 Asyncio Para Scrapers](/retos/guia-plus-reto-avanzado-05-asyncio-para-scrapers)

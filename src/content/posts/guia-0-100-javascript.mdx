@@ -1,92 +1,4825 @@
 ---
 draft: false
 title: "Guía de JavaScript: De 0 a 100"
-description: "El lenguaje de la web. Aprende JS moderno y frameworks potentes."
+description: "El lenguaje que mueve la web. Aprende JS desde los fundamentos hasta producción: event loop, closures, promesas, POO, patrones, bases de datos y microservicios."
 pubDate: "2017-06-11"
-tags: ["javascript", "guia", "frontend"]
+tags: ["javascript", "guia", "frontend", "backend", "nodejs"]
 image: "img/guia_0_100_javascript_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 ---
 
 # Guía de JavaScript: De 0 a 100
 
-## 🛠️ Requisitos e Instalación
+## ¿Qué es JavaScript?
 
-**Windows/macOS:** Descarga [Node.js](https://nodejs.org/) (LTS). Incluye `npm`.
-**Linux:** `curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash - && sudo apt install nodejs`
-**Verificación:** `npm` y prueba con un `"Hola Mundo"`.
-**Herramientas recomendadas:** **npm** para paquetes, **npx** para ejecutar binarios. Alternativa: **bun** o **pnpm**. Editores: VSCode, WebStorm.
+JavaScript es un lenguaje de programación interpretado, de tipado dinámico y multiparadigma, creado por **Brendan Eich** en 1995 en Netscape. Originalmente diseñado para añadir interactividad al navegador, hoy es uno de los lenguajes más ubicuos del mundo.
 
-## 🚀 Hola Mundo y Sintaxis Básica
+Nacido como **Mocha**, luego **LiveScript** y finalmente **JavaScript**, en 1997 se estandarizó como **ECMAScript** (ES). Desde ES6 (2015) el lenguaje ha evolucionado enormemente con clases, promesas, módulos, y más.
 
-**Conceptos clave:**
+**¿Dónde se usa?**
+- **Frontend web**: React, Vue, Svelte, Angular — el único lenguaje nativo del navegador
+- **Backend**: Node.js (Express, Fastify, NestJS), Deno, Bun — JavaScript en el servidor
+- **Aplicaciones de escritorio**: Electron (VS Code, Slack, Discord, Figma), Tauri
+- **Aplicaciones móviles**: React Native, Ionic, NativeScript, Expo
+- **Bases de datos**: MongoDB (aggregation pipeline), Firebase (Cloud Functions), CockroachDB
+- **IoT**: Johnny-Five, Espruino, Moddable SDK
+- **CLI / herramientas**: npm, yarn, eslint, vite, webpack, turborepo
+- **Juegos**: Phaser, Three.js, Babylon.js, PlayCanvas
 
-- **Variables y Tipos:** `let` (mutable) y `const` (inmutable). Evita `var`. Primitivos: string, number, boolean, null, undefined, symbol, bigint. Usa `===` para comparación estricta.
-- **Funciones:** Función clásica: `function suma(a, b) { return a + b; }`. Arrow: `const suma = (a, b) => a + b;`. Las funciones son ciudadanos de primera clase.
-- **Objetos y Arrays:** Objetos: `const user = { nombre: "Ana", edad: 30 }`. Arrays: `const nums = [1, 2, 3]`. Métodos: `.map()`, `.filter()`, `.reduce()`. Spread: `[...arr]`, `{...obj}`.
-- **Asincronía:** Callbacks → Promesas (`fetch(url).then(r => r.json())`) → Async/await (`const data = await fetch(url)`). El event loop gestiona la concurrencia en un solo hilo.
-- **Módulos:** ES Modules: `export` / `import`. CommonJS (legacy Node): `module.exports` / `require()`. Usa ES modules en proyectos modernos (`"type": "module"` en package.json).
+**¿Quién lo usa?** Google (GMail, Maps, YouTube), Netflix (UI + Express backend), Facebook/Meta (React, Jest), Microsoft (VS Code, Teams, Edge), PayPal (Node.js backend), LinkedIn (backbone de la app), Figma (editor en WebAssembly + JS), MongoDB (shell y drivers).
 
-## 🏗️ Frameworks Populares
+Fuente: [MDN — About JavaScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript/About_JavaScript), [ECMAScript spec](https://tc39.es/ecma262/), [Node.js — About](https://nodejs.org/en/about/)
 
-### React
-**Instalación:** `npx create-react-app mi-app  # o: npm create vite@latest mi-app -- --template react`
-Biblioteca para UI basada en componentes. Virtual DOM para renderizado eficiente. Hooks (`useState`, `useEffect`) para estado y efectos secundarios.
+---
+
+## ¿Cómo empezar? Instalación en todos los entornos
+
+### Navegador (el intérprete más básico)
+Abre Chrome, Edge o Firefox → `F12` → pestaña Console. Ya tienes un REPL de JavaScript. Escribe `console.log("Hola mundo")`.
+
+### Node.js (estándar para backend y herramientas)
+```bash
+# Windows — descargar de https://nodejs.org/ (LTS)
+# O con winget:
+winget install OpenJS.NodeJS.LTS
+
+# macOS
+brew install node@22
+
+# Linux (Debian/Ubuntu)
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+sudo apt install nodejs
+
+# Verificar
+node --version  # v22.x
+npm --version   # 10.x
+```
+
+### nvm (gestor de versiones de Node)
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+# Recargar shell o:
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+nvm install 22    # Última LTS
+nvm install 20    # LTS anterior
+nvm install 18    # Aún con soporte
+nvm alias default 22
+nvm use 22
+```
+
+### Docker
+```dockerfile
+FROM node:22-alpine
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --only=production
+COPY . .
+EXPOSE 3000
+CMD ["node", "server.js"]
+```
+Usa `node:22-alpine` (~130 MB). Para desarrollo, `node:22-slim` incluye herramientas de compilación.
+
+### Bun (alternativa ultrarrápida)
+```bash
+curl -fsSL https://bun.sh/install | bash
+bun --version
+bun init
+bun run index.ts  # Bun ejecuta TypeScript nativamente
+```
+Bun es un runtime todo-en-uno (intérprete, bundler, package manager, test runner). Compatible con la mayoría de APIs de Node.js.
+
+### Deno (seguro por defecto, TypeScript nativo)
+```bash
+curl -fsSL https://deno.land/install.sh | sh
+deno --version
+deno run https://deno.land/std/examples/welcome.ts
+```
+Deno implementa web APIs estándar (`fetch`, `WebSocket`) de forma nativa. No usa `package.json` — importa desde URLs.
+
+### Alias útiles para el día a día
+Añade a tu `~/.bashrc` o `~/.zshrc`:
+```bash
+alias node='node --experimental-strip-types'  # Ejecuta TS sin ts-node
+alias nrd='npm run dev'
+alias nrb='npm run build'
+alias nrt='npm test'
+alias ni='npm install'
+alias nrs='npm run start'
+alias ncu='npx npm-check-updates -u'  # Actualiza dependencias
+alias pn='pnpm'
+alias b='bun'
+```
+
+Fuente: [nvm GitHub](https://github.com/nvm-sh/nvm), [Node.js Docker images](https://hub.docker.com/_/node/), [Bun docs](https://bun.sh/docs), [Deno docs](https://docs.deno.com/)
+
+---
+
+## Primeros pasos y configuración del entorno
+
+### El REPL de Node.js
+```bash
+node
+```
 ```javascript
-function Saludo({ nombre }) {
-  return <h1>Hola, {nombre}!</h1>;
+> console.log("Hola mundo")
+Hola mundo
+> 2 + 2
+4
+> [1, 2, 3].map(x => x ** 2)
+[ 1, 4, 9 ]
+> .exit
+```
+
+### Hola mundo (módulo ESM)
+```javascript
+// hola.mjs — extensión .mjs para ES Modules explícito
+function main() {
+  console.log("Hola mundo");
 }
 
-export default function App() {
-  return <Saludo nombre="Mundo" />;
+main();
+```
+Ejecuta: `node hola.mjs`
+
+O en `package.json` añade `"type": "module"` y usa `.js`:
+```json
+{
+  "type": "module",
+  "name": "mi-proyecto",
+  "version": "1.0.0"
 }
 ```
-### Express
-**Instalación:** `npm init -y && npm install express`
-Framework web minimalista para Node.js. Middleware-based, gran ecosistema. Alternativas modernas: Fastify, Hono.
-```javascript
-const express = require('express');
-const app = express();
 
-app.get('/', (req, res) => {
-  res.json({ mensaje: 'Hola Mundo' });
+### Crear un proyecto npm
+```bash
+mkdir mi-proyecto && cd mi-proyecto
+npm init -y                    # package.json básico
+npm install express            # instalar dependencia
+npm install -D typescript      # dev dependency
+npx tsc --init                 # inicializar tsconfig.json
+```
+
+### VSCode y herramientas de calidad
+Extensiones esenciales:
+- **ESLint** (Microsoft) — linting de JS/TS
+- **Prettier** (Prettier) — formateador automático
+- **JavaScript and TypeScript Nightly** (Microsoft) — últimas features del language server
+- **npm Intellisense** (Christian Kohler) — autocompletado en imports
+
+Configuración mínima `eslint.config.js` (flat config, ESLint 9+):
+```javascript
+import js from "@eslint/js";
+
+export default [
+  js.configs.recommended,
+  {
+    rules: {
+      "no-unused-vars": "warn",
+      "no-console": "off",
+      "eqeqeq": ["error", "always"],
+      "curly": "error",
+      "semi": ["error", "always"],
+    },
+  },
+];
+```
+
+Configuración `.prettierrc`:
+```json
+{
+  "semi": true,
+  "singleQuote": false,
+  "tabWidth": 2,
+  "trailingComma": "all",
+  "printWidth": 100
+}
+```
+
+### TypeScript (tsconfig.json mínimo)
+```json
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "outDir": "dist",
+    "rootDir": "src",
+    "declaration": true,
+    "sourceMap": true
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
+}
+```
+Ejecuta con `npx tsc --watch` o `tsx` (ejecución directa de TS): `npx tsx src/index.ts`.
+
+Fuente: [Node.js — Modules: Packages](https://nodejs.org/api/packages.html), [ESLint docs](https://eslint.org/docs/latest/), [Prettier docs](https://prettier.io/docs/en/), [TypeScript tsconfig](https://www.typescriptlang.org/tsconfig/)
+
+---
+
+## Paradigmas en JavaScript
+
+JavaScript es un lenguaje **multiparadigma**: puedes escribir código imperativo, orientado a objetos, funcional, event-driven y reactivo, a menudo combinándolos en un mismo programa. Su identidad real es la de un lenguaje **event-driven con fuerte influencia funcional**.
+
+### Programación imperativa
+
+Describir paso a paso cómo se hace algo:
+
+```javascript
+const numeros = [3, 1, 4, 1, 5, 9];
+let suma = 0;
+for (let i = 0; i < numeros.length; i++) {
+  suma += numeros[i];
+}
+console.log(suma); // 23
+```
+
+### Programación orientada a objetos (prototipos y clases)
+
+JS implementa POO mediante **prototipos** (no clases clásicas al estilo Java). Las clases ES6+ son azúcar sintáctico sobre prototipos:
+
+```javascript
+// Prototipos
+function Animal(nombre) {
+  this.nombre = nombre;
+}
+Animal.prototype.saludar = function () {
+  return `Hola, soy ${this.nombre}`;
+};
+
+const perro = new Animal("Rex");
+console.log(perro.saludar()); // "Hola, soy Rex"
+
+// Clases (mismo mecanismo interno)
+class Gato extends Animal {
+  constructor(nombre) {
+    super(nombre);
+  }
+  maullar() {
+    return "Miau";
+  }
+}
+
+const gato = new Gato("Bigotes");
+console.log(gato.saludar());       // "Hola, soy Bigotes"
+console.log(typeof Gato);           // "function"
+console.log(Gato.prototype === Object.getPrototypeOf(gato)); // true
+```
+
+### Programación funcional (callbacks, closures, map/filter/reduce)
+
+JS trata las funciones como **ciudadanos de primera clase**: se asignan, pasan como argumento y se devuelven desde otras funciones.
+
+**Callbacks:**
+```javascript
+function procesar(datos, callback) {
+  return datos.map(callback);
+}
+
+console.log(procesar([1, 2, 3], (x) => x * 2)); // [2, 4, 6]
+
+setTimeout(() => console.log("Temporizador"), 1000);
+```
+
+**Closures (función que recuerda su ámbito de creación):**
+```javascript
+function crearMultiplicador(factor) {
+  return (numero) => numero * factor;
+}
+
+const duplicar = crearMultiplicador(2);
+const triplicar = crearMultiplicador(3);
+console.log(duplicar(5));  // 10
+console.log(triplicar(5)); // 15
+
+// Uso real: función con estado encapsulado
+function crearContador(inicial = 0) {
+  let cuenta = inicial;
+  return {
+    incrementar: () => ++cuenta,
+    decrementar: () => --cuenta,
+    obtener: () => cuenta,
+  };
+}
+
+const c = crearContador(10);
+console.log(c.incrementar()); // 11
+console.log(c.obtener());     // 11
+```
+
+**map, filter, reduce — las tres operaciones fundamentales:**
+```javascript
+const nums = [1, 2, 3, 4, 5, 6];
+
+const pares = nums.filter((n) => n % 2 === 0);      // [2, 4, 6]
+const dobles = nums.map((n) => n * 2);               // [2, 4, 6, 8, 10, 12]
+const total = nums.reduce((acc, n) => acc + n, 0);   // 21
+
+// Composición funcional (pipeline):
+const resultado = nums
+  .filter((n) => n % 2 === 0)     // [2, 4, 6]
+  .map((n) => n * 2)               // [4, 8, 12]
+  .reduce((acc, n) => acc + n, 0); // 24
+```
+
+**Funciones puras e inmutabilidad:**
+```javascript
+// Impura (modifica el original)
+const agregarImpuro = (arr, item) => {
+  arr.push(item);
+  return arr;
+};
+
+// Pura (devuelve nuevo array)
+const agregarPuro = (arr, item) => [...arr, item];
+
+const original = [1, 2];
+const resultado = agregarPuro(original, 3);
+console.log(original);  // [1, 2] — sin modificar
+console.log(resultado); // [1, 2, 3]
+```
+
+### Programación event-driven
+
+El núcleo de JavaScript en el navegador y Node.js está basado en eventos gestionados por el **event loop**:
+
+```javascript
+// Navegador
+document.querySelector("button")
+  .addEventListener("click", (event) => {
+    console.log("Clickeado", event);
+  });
+
+// Node.js (EventEmitter nativo)
+import { EventEmitter } from "events";
+
+const emisor = new EventEmitter();
+emisor.on("datos", (payload) => console.log("Recibido:", payload));
+emisor.emit("datos", { id: 1, mensaje: "hola" });
+```
+
+### Programación reactiva (RxJS)
+
+Extiende el patrón observer con operadores para componer flujos de datos asíncronos:
+
+```javascript
+import { fromEvent, map, filter, debounceTime } from "rxjs";
+
+const input = document.querySelector("#buscador");
+
+fromEvent(input, "input").pipe(
+  debounceTime(300),
+  map((e) => e.target.value),
+  filter((texto) => texto.length >= 3),
+).subscribe((query) => {
+  console.log("Buscar:", query);
+});
+```
+
+### Tabla comparativa de paradigmas
+
+| Paradigma | Unidad básica | Estado | Efectos secundarios | Soporte JS |
+|---|---|---|---|---|
+| Imperativo | Instrucciones | Mutable | Sí | Nativo |
+| POO (prototipos) | Objetos | Propiedades mutables | Sí | Nativo |
+| POO (clases) | Clases/instancias | Propiedades mutables | Sí | ES6+ |
+| Funcional | Funciones | Inmutable (preferido) | Evitados | Nativo |
+| Event-driven | Eventos | Callbacks/Listeners | Sí | Nativo |
+| Reactivo | Streams/Observables | Flujo de datos | Gestionado | RxJS |
+
+JS destaca por combinar **event-driven** (el event loop) con **funcional** (closures, map/filter/reduce). No hay que elegir uno — se mezclan constantemente.
+
+Fuente: [MDN — Introduction](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Introduction#what_is_javascript), [RxJS docs](https://rxjs.dev/guide/overview), [Exploring JS](https://exploringjs.com/js/book/ch_first-steps.html)
+
+---
+
+## Tipos de datos y variables
+
+### typeof y tipado dinámico
+
+JavaScript tiene **tipado dinámico**: una variable cambia de tipo en cualquier momento. Usa `typeof` para inspeccionar:
+
+```javascript
+typeof 42;             // "number"
+typeof "hola";         // "string"
+typeof true;           // "boolean"
+typeof undefined;      // "undefined"
+typeof null;           // "object" — bug histórico (no se corrigió por retrocompatibilidad)
+typeof Symbol();       // "symbol"
+typeof 42n;            // "bigint"
+typeof {};             // "object"
+typeof [];             // "object"
+typeof (() => {});     // "function"
+typeof NaN;            // "number" — NaN es de tipo number
+```
+
+### null vs undefined vs undeclared
+
+| Valor | Significado | typeof | Comparación `==` vs `===` |
+|---|---|---|---|
+| `undefined` | Declarada sin valor | `"undefined"` | `undefined == null` → `true` |
+| `null` | Ausencia intencional | `"object"` | `null === undefined` → `false` |
+| (no declarada) | No existe | `"undefined"` (seguro) | `typeof` no lanza error |
+
+```javascript
+let a;
+console.log(a);        // undefined
+const b = null;
+console.log(b);        // null
+// console.log(c);     // ReferenceError
+console.log(typeof c); // "undefined" — typeof es seguro
+
+// Detectar null correctamente:
+valor === null;
+// Detectar undefined:
+valor === undefined;
+// Ambos a la vez:
+valor == null; // true para null o undefined
+```
+
+### NaN (Not a Number)
+
+Valor de tipo `number` que representa un resultado numérico inválido. Propiedad única: nunca es igual a nada, ni siquiera a sí mismo.
+
+```javascript
+console.log(NaN === NaN); // false — la única excepción en JS
+
+Number.isNaN(NaN);        // true (recomendado, no coerce)
+isNaN("hola");             // true (coerce a número primero — "hola" → NaN)
+Number.isNaN("hola");      // false (no coerce)
+
+// Operaciones que producen NaN:
+Math.sqrt(-1);        // NaN
+0 / 0;                // NaN
+parseInt("abc");      // NaN
+undefined + 1;        // NaN
+```
+
+### Number (IEEE 754 double-precision)
+
+JavaScript sigue el estándar **IEEE 754** con 64 bits de doble precisión:
+
+```javascript
+// Problemas de precisión con decimales:
+0.1 + 0.2;                 // 0.30000000000000004
+0.1 + 0.2 === 0.3;         // false
+
+// Soluciones:
+Math.round((0.1 + 0.2) * 100) / 100;          // 0.3
+Number.EPSILON;                                // 2.220446049250313e-16
+Math.abs(0.1 + 0.2 - 0.3) < Number.EPSILON;   // true
+(0.1 + 0.2).toFixed(1);                       // "0.3"
+
+// Límites numéricos:
+Number.MAX_SAFE_INTEGER;  // 9_007_199_254_740_991 (2^53 - 1)
+Number.MIN_SAFE_INTEGER;  // -9_007_199_254_740_991
+Number.MAX_VALUE;         // 1.7976931348623157e+308
+Number.MIN_VALUE;         // 5e-324
+```
+
+### BigInt
+
+Para enteros más grandes que `Number.MAX_SAFE_INTEGER`:
+
+```javascript
+const grande = 9007199254740993n;    // notación con n
+const enorme = BigInt("123456789012345678901234567890");
+
+typeof grande; // "bigint"
+
+grande + 1n;               // 9007199254740994n
+grande * 2n;               // 18014398509481986n
+// grande + 1;             // TypeError: cannot mix BigInt and other types
+
+Number(grande);            // 9007199254740993 (pierde precisión si > MAX_SAFE_INTEGER)
+5n / 2n;                   // 2n (trunca, no redondea)
+```
+
+### String (UTF-16 y emojis)
+
+JS almacena strings como secuencias de unidades de código **UTF-16**:
+
+```javascript
+const emoji = "😀";
+emoji.length;              // 2 — ¡no 1! (ocupa 2 unidades UTF-16)
+emoji[0];                  // "\uD83D" — surrogate half
+[...emoji].length;         // 1 — spread itera por caracteres Unicode
+
+// Iteración correcta con for...of:
+for (const char of "Hola 😀") {
+  console.log(char); // H, o, l, a,  , 😀
+}
+
+// Métodos útiles:
+"  JS es genial  ".trim();               // "JS es genial"
+"JavaScript".includes("Script");         // true
+"JavaScript".startsWith("Java");         // true
+"JavaScript".slice(0, 4);               // "Java"
+"a,b,c".split(",");                     // ["a", "b", "c"]
+"hola".replace("h", "H");               // "Hola"
+
+// Template literals con interpolación:
+const nombre = "Ana", edad = 30;
+`Me llamo ${nombre} y tengo ${edad} años.`;
+// "Me llamo Ana y tengo 30 años."
+```
+
+### Symbol
+
+Tipo primitivo que garantiza unicidad. Se usa como clave de propiedades para evitar colisiones:
+
+```javascript
+const ID = Symbol("id");
+const NOMBRE = Symbol("nombre");
+
+const usuario = {
+  [ID]: 12345,
+  [NOMBRE]: "Ana",
+  nombre: "Ana Pública",
+};
+
+usuario[ID];              // 12345
+usuario.nombre;           // "Ana Pública"
+
+Object.keys(usuario);                    // ["nombre"] — Symbols no aparecen
+Object.getOwnPropertySymbols(usuario);   // [Symbol(id), Symbol(nombre)]
+
+Symbol("id") === Symbol("id");           // false — siempre únicos
+
+// Symbols registrados (globales / cross-realm):
+const GLOBAL_ID = Symbol.for("app.id");
+const MISMO_ID = Symbol.for("app.id");
+GLOBAL_ID === MISMO_ID;                  // true
+Symbol.keyFor(GLOBAL_ID);                // "app.id"
+
+// Well-known symbols:
+class Iterable {
+  [Symbol.iterator]() {
+    let i = 0;
+    return {
+      next: () => ({ value: i++, done: i > 5 }),
+    };
+  }
+}
+console.log([...new Iterable()]); // [0, 1, 2, 3, 4]
+```
+
+### Object
+
+Colecciones dinámicas de pares clave-valor (claves son strings o Symbols):
+
+```javascript
+const obj = {
+  nombre: "Ana",
+  edad: 30,
+  saludar() { return `Hola, soy ${this.nombre}`; },
+};
+
+// Propiedades dinámicas
+const clave = "email";
+obj[clave] = "ana@email.com";
+
+// Propiedades computadas en literal
+const key = "score";
+const jugador = { nombre: "Luis", [key]: 95 };
+
+// Métodos estáticos:
+Object.keys(obj);              // ["nombre", "edad", "saludar", "email"]
+Object.values(obj);            // ["Ana", 30, f, "ana@email.com"]
+Object.entries(obj);           // [["nombre", "Ana"], ...]
+Object.fromEntries([["a", 1]]);// { a: 1 }
+
+// Descriptores de propiedades:
+const desc = Object.getOwnPropertyDescriptor(obj, "nombre");
+// { value: "Ana", writable: true, enumerable: true, configurable: true }
+
+Object.defineProperty(obj, "fijo", {
+  value: 42,
+  writable: false,      // no se puede reasignar
+  enumerable: true,     // aparece en Object.keys
+  configurable: false,  // no se puede borrar ni reconfigurar
+});
+```
+
+### Array (no son arrays reales)
+
+Los arrays en JS son **objetos con índices como strings** y una propiedad `length` especial — no son arrays contiguos en memoria:
+
+```javascript
+const arr = [10, 20, 30];
+// Internamente: { "0": 10, "1": 20, "2": 30, length: 3 }
+
+// Propiedades "no índex" no afectan length:
+arr[-1] = "negativo";
+arr["foo"] = "bar";
+console.log(arr.length); // 3
+
+// Arrays sparse (con huecos):
+const sparse = [1, , , 4];
+console.log(sparse.length);    // 4
+console.log(sparse[1]);        // undefined
+console.log(Object.keys(sparse)); // ["0", "3"]
+
+// Métodos clave:
+const nums = [3, 1, 4, 1, 5, 9];
+nums.push(2);            // añade al final
+nums.pop();              // quita del final
+nums.unshift(0);         // añade al inicio
+nums.shift();            // quita del inicio
+nums.splice(2, 1);       // elimina 1 en índice 2
+nums.slice(1, 3);        // copia [1, 3)
+nums.sort((a, b) => a - b); // ordenación numérica
+
+// NO uses delete en arrays (deja hueco):
+delete nums[1];
+// Prefiere splice o filter
+
+// Vaciar correctamente:
+nums.length = 0; // ✅ más eficiente que arr = []
+```
+
+### TypedArrays
+
+Buffers de **memoria contigua** con tipos fijos. Ideales para datos binarios, WebGL, audio, imágenes:
+
+```javascript
+// Int32Array: enteros con signo de 32 bits
+const int32 = new Int32Array(4);
+int32[0] = 42;
+int32[1] = -7;
+console.log(int32); // Int32Array(4) [42, -7, 0, 0]
+
+// Uint8Array: bytes 0-255
+const bytes = new Uint8Array([72, 101, 108, 108, 111]); // "Hello"
+new TextDecoder().decode(bytes); // "Hello"
+
+// Float64Array: doble precisión
+const floats = new Float64Array(3);
+floats[0] = 3.141592653589793;
+
+// ArrayBuffer subyacente:
+const buffer = new ArrayBuffer(16); // 16 bytes
+const vista32 = new Int32Array(buffer);
+const vista8 = new Uint8Array(buffer);
+vista32[0] = 0x12345678;
+console.log(vista8[0]); // 0x78 (little-endian) o 0x12 (big-endian)
+
+// Tipos disponibles:
+// Int8Array, Uint8Array, Uint8ClampedArray, Int16Array, Uint16Array,
+// Int32Array, Uint32Array, Float32Array, Float64Array,
+// BigInt64Array, BigUint64Array
+
+// Uint8ClampedArray satura (no wrappea) — útil para Canvas ImageData:
+const pixeles = new Uint8ClampedArray(4);
+pixeles[0] = 300; pixeles[0]; // 255 (saturado)
+pixeles[1] = -10; pixeles[1]; // 0   (saturado)
+```
+
+### Map, Set, WeakMap, WeakSet
+
+**Map — clave-valor con cualquier tipo de clave:**
+
+```javascript
+const mapa = new Map();
+const objKey = { id: 1 };
+
+mapa.set(objKey, "valor asociado");
+mapa.set("string", "otro");
+mapa.set(NaN, "NaN como clave");
+
+mapa.get(objKey);   // "valor asociado"
+mapa.has("string"); // true
+mapa.size;          // 3
+
+// Iteración:
+for (const [k, v] of mapa) console.log(k, v);
+mapa.forEach((v, k) => console.log(k, v));
+```
+
+**Set — valores únicos:**
+
+```javascript
+const conjunto = new Set([1, 2, 3, 2, 1, 3, 4]);
+[...conjunto]; // [1, 2, 3, 4]
+
+conjunto.add(5);
+conjunto.has(3);     // true (O(1))
+conjunto.delete(1);
+
+// Operaciones:
+const a = new Set([1, 2, 3]), b = new Set([2, 3, 4]);
+const union = new Set([...a, ...b]);                    // {1, 2, 3, 4}
+const interseccion = new Set([...a].filter(x => b.has(x))); // {2, 3}
+const diferencia = new Set([...a].filter(x => !b.has(x)));  // {1}
+```
+
+**WeakMap — claves objeto, referencias débiles (no evita GC):**
+
+```javascript
+const cache = new WeakMap();
+// Solo acepta objetos como clave
+cache.set({}, "valor");                                    // OK
+// cache.set("string", "x");                              // TypeError
+
+// Uso típico: metadatos sin impedir recolección
+class Componente {
+  constructor(id) {
+    this.id = id;
+    cache.set(this, { creado: Date.now() });
+  }
+  getCreado() { return cache.get(this)?.creado; }
+}
+
+let comp = new Componente("x");
+comp = null; // WeakMap libera la entrada automáticamente
+```
+
+**WeakSet — valores objeto únicos con referencia débil:**
+
+```javascript
+const visitados = new WeakSet();
+let nodo = { id: 1 };
+visitados.add(nodo);
+visitados.has(nodo); // true
+nodo = null;         // desaparece del WeakSet
+```
+
+**Tabla comparativa de colecciones:**
+
+| Colección | Clave | Orden | Iterable | size | GC-safe |
+|---|---|---|---|---|---|
+| Object | string/Symbol | Inserción | ❌ directo | Manual | No |
+| Array | number (índice) | Sí | Sí | `.length` | No |
+| Map | Cualquiera | Inserción | Sí | `.size` | No |
+| Set | Valor único | Inserción | Sí | `.size` | No |
+| WeakMap | Objeto | No | No | No | Sí |
+| WeakSet | Objeto | No | No | No | Sí |
+| TypedArray | number (índice) | Sí | Sí | `.length` | No |
+
+### Mutabilidad: `const` no es inmutabilidad
+
+```javascript
+const PI = 3.1416;
+// PI = 3; // TypeError
+
+const usuario = { nombre: "Ana", edad: 30 };
+usuario.nombre = "Luis";  // ✅ mutación permitida
+usuario.email = "l@e.com";// ✅ nuevo campo
+// usuario = {};          // TypeError — la referencia es constante
+
+// Object.freeze (superficial):
+const congelado = Object.freeze({ nombre: "Ana", dir: { ciudad: "Madrid" } });
+// congelado.nombre = "L"; // TypeError
+congelado.dir.ciudad = "Barcelona"; // ✅ freeze es shallow
+
+// Inmutabilidad con spread (copia superficial):
+const original = { a: 1, b: { c: 2 } };
+const nuevo = { ...original, b: { ...original.b, c: 3 } };
+```
+
+### Hoisting y TDZ (Temporal Dead Zone)
+
+```javascript
+// var: hoisting con undefined
+console.log(x); // undefined
+var x = 5;
+
+// let/const: hoisting SIN inicialización → TDZ
+// console.log(y); // ReferenceError
+let y = 10;
+
+// TDZ en acción:
+{
+  // TDZ para z comienza aquí
+  const func = () => console.log(z);
+  let z = 3; // TDZ termina aquí
+  func(); // ✅ z está inicializada
+}
+
+// Function declarations: hoisting completo
+saludar(); // "Hola"
+function saludar() { console.log("Hola"); }
+
+// Function expressions: según la variable
+// foo(); // TypeError (var → undefined)
+// bar(); // ReferenceError (let → TDZ)
+var foo = function () {};
+let bar = () => {};
+```
+
+### Scope: global, function y block
+
+```javascript
+const globalVar = "accesible desde cualquier lugar";
+
+function ejemplo() {
+  var functionVar = "solo dentro de la función (function scope)";
+
+  if (true) {
+    let blockLet = "solo dentro del bloque (block scope)";
+    const blockConst = "también block scope";
+    var blockVar = "NO tiene block scope — se eleva al function scope";
+  }
+
+  console.log(functionVar);  // ✅
+  console.log(blockVar);     // ✅ (elevada)
+  // console.log(blockLet);  // ❌ ReferenceError
+}
+
+// Scope chain:
+const global = "🌍";
+function externa() {
+  const outer = "📦";
+  function interna() {
+    const inner = "🎁";
+    console.log(inner); // ✅ propia
+    console.log(outer); // ✅ del padre (closure)
+    console.log(global); // ✅ global
+  }
+  interna();
+}
+```
+
+### Garbage Collection (V8 Orinoco)
+
+V8 usa el recolector **Orinoco**: GC generacional (young/old), mark-sweep compactado, concurrente e incremental (pausas < 1ms).
+
+```javascript
+let vivo = { data: "importante" };  // alcanzable → vive
+let muerto = { data: "basura" };    // alcanzable
+muerto = null;                      // inalcanzable → GC lo limpia
+
+// Ciclos de referencia: V8 los detecta
+function test() {
+  let a = {}, b = {};
+  a.ref = b; b.ref = a;
+  // Al salir, a y b son inalcanzables desde la raíz → se recolectan
+}
+```
+
+**Patrones que causan memory leaks:**
+
+| Patrón | Ejemplo | Solución |
+|---|---|---|
+| Variables globales | `function f() { x = 5; }` | `"use strict"` o `let x` |
+| Closures grandes | `() => bigArray` sin liberar | `bigArray = null` tras uso |
+| Timers sin limpiar | `setInterval(fn, 1000)` | Guardar ID y `clearInterval` |
+| Listeners huérfanos | `emitter.on("e", fn)` sin `off` | `emitter.off("e", fn)` |
+| Caché sin límite | `const cache = {}` | WeakMap o LRU |
+| DOM detached | `el.remove()` pero referencia viva | `el = null` |
+
+Fuente: [MDN — typeof](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/typeof), [MDN — Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number), [MDN — BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt), [MDN — Symbol](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol), [MDN — Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map), [MDN — Set](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set), [MDN — WeakMap](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap), [MDN — TypedArrays](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray), [MDN — const](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/const), [V8 — Trash talk](https://v8.dev/blog/trash-talk), [JavaScript.info — GC](https://javascript.info/garbage-collection)
+
+---
+
+## Control de flujo y modularidad
+
+### if/else
+
+```javascript
+const edad = 18;
+
+if (edad < 12) {
+  console.log("Niño");
+} else if (edad < 18) {
+  console.log("Adolescente");
+} else if (edad < 65) {
+  console.log("Adulto");
+} else {
+  console.log("Jubilado");
+}
+```
+
+### Operador ternario
+
+```javascript
+const mensaje = edad >= 18 ? "Mayor de edad" : "Menor de edad";
+
+// Anidados (con moderación):
+const etapa = edad < 12 ? "niño" : edad < 18 ? "adolescente" : "adulto";
+
+// Ternario para asignación condicional:
+const mostrar = debug ? `Debug: ${JSON.stringify(data)}` : "Producción";
+```
+
+### switch
+
+```javascript
+const dia = new Date().getDay();
+
+switch (dia) {
+  case 0:
+    console.log("Domingo");
+    break;
+  case 6:
+    console.log("Sábado");
+    break;
+  case 1: case 2: case 3: case 4: case 5:
+    console.log("Laborable");
+    break;
+  default:
+    console.log("Día inválido");
+}
+```
+
+### Short-circuit: &&, ||, ??
+
+```javascript
+// && devuelve el primer falsy o el último truthy
+0 && "hola";           // 0
+1 && "hola";           // "hola"
+true && "a" && "b";    // "b"
+
+// || devuelve el primer truthy o el último falsy
+0 || "default";        // "default"
+1 || "default";        // 1
+false || 0 || null;    // null
+
+// ?? (nullish coalescing): solo reacciona a null/undefined
+0 ?? "default";        // 0 (?? no reacciona a falsy)
+"" ?? "default";       // ""
+null ?? "default";     // "default"
+undefined ?? "d";      // "d"
+
+// Combinación práctica:
+const nombre = usuario?.perfil?.nombre ?? "Anónimo";
+```
+
+### Bucles: for, while, do-while
+
+```javascript
+// for clásico
+for (let i = 0; i < 5; i++) console.log(i); // 0 1 2 3 4
+
+// while
+let i = 0;
+while (i < 5) console.log(i++);
+
+// do-while (se ejecuta al menos una vez)
+let j = 0;
+do { console.log(j); } while (j > 0); // imprime 0
+```
+
+### for-in vs for-of
+
+```javascript
+const arr = ["a", "b", "c"];
+const obj = { x: 1, y: 2, z: 3 };
+
+// for-in: itera sobre KEYS (incluye herencia)
+for (const k in arr) console.log(k);   // "0", "1", "2"
+for (const k in obj) console.log(k);   // "x", "y", "z"
+
+// for-of: itera sobre VALUES (requiere iterable)
+for (const v of arr) console.log(v);   // "a", "b", "c"
+// for (const v of obj) {}             // TypeError: obj no es iterable
+
+// for-of en otros iterables:
+for (const c of "Hola") console.log(c);    // H, o, l, a
+for (const [k, v] of new Map([["a", 1]])) console.log(k, v);
+for (const n of new Set([1, 2, 3])) console.log(n);
+```
+
+### forEach, map, reduce
+
+```javascript
+const nums = [1, 2, 3, 4, 5];
+
+// forEach: ejecuta por cada elemento (sin return)
+nums.forEach((n, i) => console.log(`[${i}]: ${n}`));
+
+// map: transforma cada elemento, nuevo array
+const dobles = nums.map((n) => n * 2); // [2, 4, 6, 8, 10]
+
+// filter: selecciona los que cumplen
+const pares = nums.filter((n) => n % 2 === 0); // [2, 4]
+
+// reduce: acumula
+const suma = nums.reduce((acc, n) => acc + n, 0); // 15
+
+// Casos avanzados de reduce:
+const agrupado = nums.reduce((acc, n) => {
+  const key = n % 2 === 0 ? "pares" : "impares";
+  (acc[key] ??= []).push(n);
+  return acc;
+}, {});
+// { impares: [1, 3, 5], pares: [2, 4] }
+
+const aplanado = [[1, 2], [3], [4, 5]].reduce((acc, arr) => [...acc, ...arr], []);
+// [1, 2, 3, 4, 5]
+
+// find: primer elemento que cumple
+nums.find((n) => n > 3);     // 4
+
+// some: algún elemento cumple?
+nums.some((n) => n > 10);    // false
+
+// every: todos cumplen?
+nums.every((n) => n > 0);    // true
+```
+
+### try/catch/finally y errores personalizados
+
+```javascript
+// Básico
+try {
+  JSON.parse("inválido");
+} catch (error) {
+  console.error("Error:", error.message);
+} finally {
+  console.log("Siempre se ejecuta");
+}
+
+// Errores personalizados
+class ValidationError extends Error {
+  constructor(campo, mensaje) {
+    super(mensaje);
+    this.name = "ValidationError";
+    this.campo = campo;
+  }
+}
+
+class NotFoundError extends Error {
+  constructor(recurso, id) {
+    super(`${recurso} con id ${id} no encontrado`);
+    this.name = "NotFoundError";
+    this.statusCode = 404;
+  }
+}
+
+function buscarUsuario(id) {
+  if (id <= 0) throw new ValidationError("id", "Debe ser positivo");
+  throw new NotFoundError("Usuario", id);
+}
+
+// Manejo por tipo:
+try {
+  buscarUsuario(-1);
+} catch (err) {
+  if (err instanceof ValidationError) {
+    console.error("Validación:", err.campo, err.message);
+  } else if (err instanceof NotFoundError) {
+    console.error("No encontrado:", err.message, `(HTTP ${err.statusCode})`);
+  } else {
+    console.error("Inesperado:", err);
+  }
+}
+```
+
+### throw
+
+```javascript
+function dividir(a, b) {
+  if (typeof a !== "number" || typeof b !== "number")
+    throw new TypeError("Ambos deben ser números");
+  if (b === 0) throw new Error("División por cero");
+  return a / b;
+}
+
+// Lanza siempre objetos Error (tienen stack trace):
+throw new Error("mensaje");  // ✅
+// throw "texto";            // posible pero no recomendado
+```
+
+### ESM (import/export)
+
+```javascript
+// 📁 math.js
+export const PI = 3.1416;
+export function sumar(a, b) { return a + b; }
+export default class Calc {
+  mul(a, b) { return a * b; }
+}
+
+// 📁 main.js
+import Calc, { PI, sumar } from "./math.js";
+import * as Math from "./math.js"; // namespace import
+
+// Re-export:
+export { sumar } from "./math.js";
+export { default as Calculadora } from "./math.js";
+```
+
+### CommonJS (require/module.exports)
+
+```javascript
+// 📁 math.cjs
+const PI = 3.1416;
+function sumar(a, b) { return a + b; }
+module.exports = { PI, sumar };
+// O: exports.PI = PI; exports.sumar = sumar;
+
+// 📁 main.cjs
+const { PI, sumar } = require("./math.cjs");
+```
+
+### Diferencias ESM vs CommonJS
+
+| Característica | ESM | CommonJS |
+|---|---|---|
+| Sintaxis | `import`/`export` | `require()`/`module.exports` |
+| Carga | Asíncrona (parsea todo antes) | Síncrona (ejecuta mientras importa) |
+| Ámbito | Strict mode siempre | Sloppy mode por defecto |
+| `this` en módulo | `undefined` | `module.exports` |
+| Análisis | Estático (parseo) | Dinámico (ejecución) |
+| Top-level await | ✅ | ❌ |
+| Tree shaking | ✅ automático | ❌ |
+| Ciclos | ✅ (TDZ-like) | ⚠️ parcial |
+| Extensión | `.mjs` o `"type": "module"` | `.cjs` o `"type": "commonjs"` |
+| Import dinámico | `import()` (promesa) | `require()` (síncrono) |
+
+```javascript
+// Tree shaking: bundlers eliminan exports no usados
+// 📁 utils.js
+export const usado = "se incluye en el bundle";
+export const noUsado = "se elimina en producción";
+
+// 📁 main.js
+import { usado } from "./utils.js";
+// noUsado no aparece en el bundle final (webpack/Rollup/esbuild eliminan código muerto)
+```
+
+### Dynamic import()
+
+```javascript
+// Carga bajo demanda (devuelve una promesa)
+const modulo = await import("./ruta/modulo.js");
+
+// Casos de uso:
+// 1. Code splitting
+const { default: Componente } = await import("./ComponenteGrande.jsx");
+
+// 2. Import condicional
+const idioma = navigator.language.startsWith("es") ? "es" : "en";
+const { saludo } = await import(`./i18n/${idioma}.js`);
+
+// 3. Polyfill bajo demanda
+if (!globalThis.fetch) {
+  globalThis.fetch = (await import("node-fetch")).default;
+}
+
+// 4. Carga perezosa en evento
+btn.addEventListener("click", async () => {
+  const { default: confetti } = await import("canvas-confetti");
+  confetti();
+});
+```
+
+Fuente: [MDN — Control flow](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Control_flow_and_error_handling), [MDN — Loops](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Loops_and_iteration), [MDN — Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error), [Node.js — ES Modules](https://nodejs.org/api/esm.html), [MDN — import](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import), [Webpack — Tree Shaking](https://webpack.js.org/guides/tree-shaking/)
+
+---
+
+## Conceptos clave explicados a fondo
+
+### Variables, hoisting y TDZ
+
+JavaScript tiene tres formas de declarar variables:
+
+```javascript
+var nombre = "Ana";    // function-scoped, hoisting con undefined
+let edad = 30;         // block-scoped, hoisting con TDZ
+const PI = 3.1416;     // block-scoped, no se puede reasignar
+```
+
+**Hoisting**: `var` y las declaraciones `function` se elevan al inicio de su ámbito. `let`/`const` también se elevan pero no se inicializan — entran en **Temporal Dead Zone (TDZ)**:
+
+```javascript
+console.log(a); // undefined (hoisting de var)
+var a = 5;
+
+console.log(b); // ReferenceError: Cannot access 'b' before initialization
+let b = 10;
+
+// TDZ — el tiempo entre la entrada al bloque y la declaración
+{
+  // TDZ para x
+  console.log(typeof x); // ReferenceError (no es undefined, está en TDZ)
+  let x = 5;
+}
+```
+
+**`const` no es inmutable, es no-reasignable**:
+```javascript
+const obj = { a: 1 };
+obj.a = 2;      // ✅ permitido
+obj.b = 3;      // ✅ permitido
+// obj = {};    // ❌ TypeError: Assignment to constant variable
+```
+
+### Memoria: stack vs heap y garbage collection
+
+JavaScript maneja dos áreas de memoria:
+
+```javascript
+// Stack: primitivos (number, string, boolean, null, undefined, symbol, bigint)
+let a = 42;       // a → 42 (en stack)
+let b = a;        // b → 42 (copia del valor)
+b = 100;          // a sigue siendo 42
+
+// Heap: objetos, arrays, funciones
+let obj1 = { valor: 10 };   // obj1 → referencia → { valor: 10 } (en heap)
+let obj2 = obj1;            // obj2 → misma referencia
+obj2.valor = 20;            // obj1.valor también es 20
+```
+
+**Garbage Collection**: V8 (Chrome/Node.js) usa el algoritmo **Mark-and-Sweep** generacional. Divide los objetos en generaciones:
+- **Young generation** (nursery): objetos nuevos. Se recolecta frecuentemente (menor GC).
+- **Old generation**: objetos que sobreviven varios ciclos. Se recolecta menos frecuentemente (major GC).
+
+Los ciclos de referencia se detectan y limpian. No puedes forzar el GC en producción, pero en Node.js:
+```javascript
+globalThis.gc?.();  // Solo con --expose-gc en Node
+```
+
+**¿Hay memory leaks en JS?** Sí, comunes:
+1. Variables globales accidentales (`function() { x = 5; }` — x es global)
+2. Closures que retienen referencias grandes
+3. Timers no limpiados (`setInterval` sin `clearInterval`)
+4. Listeners de eventos que nunca se eliminan
+5. Cachés sin límite (crecen indefinidamente)
+6. Referencias desde el DOM (`const el = document.getElementById("x"); el.remove();` — la referencia sigue viva)
+
+**WeakMap y WeakSet** para evitar leaks:
+```javascript
+const cache = new WeakMap();
+
+class Procesador {
+  constructor() {
+    cache.set(this, { creado: Date.now() });
+  }
+}
+
+// Cuando la instancia se recolecta, la entrada en WeakMap también
+// WeakMap NO evita la recolección — esa es su gracia
+```
+
+**¿Hay buffer overflow en JS?** No en el lenguaje mismo. Los arrays y TypedArrays tienen bounds checking (`arr[100]` en array de 5 elementos da `undefined`). El peligro real:
+1. **Buffer overflow en C++ addons nativos** (módulos como `bcrypt`, `sharp`, `sass`)
+2. **`Buffer.allocUnsafe()` en Node.js**: asigna memoria sin inicializar, puede contener datos sensibles de procesos anteriores
+3. **`ArrayBuffer` + `SharedArrayBuffer`**: acceso concurrente mal sincronizado puede corromper datos
+4. **WebAssembly**: si el módulo Wasm tiene bugs de memoria, puede corromper el heap lineal
+
+Para JS puro, el lenguaje no expone punteros ni acceso a memoria arbitraria.
+
+Fuente: [MDN — Memory Management](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Memory_Management), [V8 — Trash talk](https://v8.dev/blog/trash-talk), [Node.js — Buffer](https://nodejs.org/api/buffer.html)
+
+### Tipado dinámico débil, coerción y `===` vs `==`
+
+JavaScript es de **tipado dinámico** (no declaras el tipo) y **débil** (el lenguaje coerce tipos automáticamente):
+
+```javascript
+let x = "5";
+console.log(x + 2);    // "52" — coerción a string
+console.log(x - 2);    // 3   — coerción a number
+console.log(+x);       // 5   — unario + fuerza a número
+console.log(!!"hola"); // true — cualquier string no vacío es truthy
+```
+
+**Valores truthy y falsy:**
+```javascript
+// Falsy (todos):
+false, 0, -0, 0n, "", null, undefined, NaN
+
+// Todo lo demás es truthy:
+"0", "false", [], {}, Infinity, -Infinity
+```
+
+**Las comparaciones:**
+
+| Expresión | `==` | `===` | Motivo |
+|-----------|------|-------|--------|
+| `5 == "5"` | `true` | `false` | `==` coerce string a number |
+| `0 == false` | `true` | `false` | `false` coerce a 0 |
+| `"" == false` | `true` | `false` | Ambos coerced a 0 |
+| `null == undefined` | `true` | `false` | Regla especial de `==` |
+| `[] == false` | `true` | `false` | `[]` → `""` → `0` |
+| `NaN == NaN` | `false` | `false` | NaN nunca es igual a nada |
+
+**Regla de oro:** usa siempre `===`. Solo usa `==` cuando explícitamente quieras comparar contra `null`/`undefined`:
+```javascript
+if (value == null) { }  // true para null o undefined (equivalente a value === null || value === undefined)
+```
+
+**Coerción en condiciones:**
+```javascript
+if (value) { }  // value debe ser truthy
+// Equivalente a: if (Boolean(value) === true)
+```
+
+Fuente: [MDN — Equality comparisons](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Equality_comparisons_and_sameness), [JavaScript.info — Type Conversions](https://javascript.info/type-conversions)
+
+### Objetos, prototipos vs clases, `this`, bind/call/apply
+
+**Objetos literales:**
+```javascript
+const usuario = {
+  nombre: "Ana",
+  edad: 30,
+  saludar() {
+    return `Hola, soy ${this.nombre}`;
+  },
+};
+
+// Propiedades dinámicas
+const key = "email";
+usuario[key] = "ana@email.com";
+
+// Shorthand properties
+const x = 1, y = 2;
+const punto = { x, y };  // { x: 1, y: 2 }
+```
+
+**Prototipos (el mecanismo real de herencia):**
+```javascript
+// Cada objeto tiene un [[Prototype]] (accesible via __proto__ o Object.getPrototypeOf)
+const animal = {
+  respirar() {
+    return "respirando...";
+  },
+};
+
+const perro = {
+  ladrar() {
+    return "Guau!";
+  },
+};
+
+Object.setPrototypeOf(perro, animal);
+console.log(perro.ladrar());  // Guau!
+console.log(perro.respirar()); // respirando... (del prototipo)
+console.log(Object.getPrototypeOf(perro) === animal); // true
+
+// La cadena de prototipos:
+// perro → animal → Object.prototype → null
+```
+
+**Constructores (pre-ES6):**
+```javascript
+function Persona(nombre) {
+  this.nombre = nombre;
+}
+
+Persona.prototype.saludar = function () {
+  return `Hola, soy ${this.nombre}`;
+};
+
+const ana = new Persona("Ana");
+console.log(ana.saludar());  // Hola, soy Ana
+```
+
+**Clases ES6+ (azúcar sintáctico sobre prototipos):**
+```javascript
+class Persona {
+  constructor(nombre) {
+    this.nombre = nombre;
+  }
+
+  saludar() {
+    return `Hola, soy ${this.nombre}`;
+  }
+}
+
+// Siguen siendo prototipos internamente
+console.log(typeof Persona);                     // "function"
+console.log(Persona.prototype.saludar);          // [Function: saludar]
+console.log(Persona.prototype === Object.getPrototypeOf(ana)); // true
+```
+
+**`this` — la pregunta del millón:**
+
+`this` se determina en tiempo de ejecución según **cómo se llama la función**, no dónde se define:
+
+```javascript
+// 1. Llamada normal: this → objeto global (window/globalThis) o undefined en strict mode
+function mostrar() {
+  "use strict";
+  console.log(this); // undefined
+}
+
+// 2. Método de objeto: this → el objeto
+const obj = { nombre: "obj", mostrar };
+obj.mostrar(); // { nombre: "obj", mostrar: f }
+
+// 3. Constructor (new): this → la nueva instancia
+new Persona("Ana"); // this → instancia nueva
+
+// 4. Arrow function: no tiene su propio this, hereda del ámbito léxico
+const objeto = {
+  nombre: "objeto",
+  tardio: function () {
+    setTimeout(function () {
+      console.log(this.nombre); // undefined (this es global)
+    }, 100);
+  },
+  correcto: function () {
+    setTimeout(() => {
+      console.log(this.nombre); // "objeto" (arrow hereda this del enclosing scope)
+    }, 100);
+  },
+};
+```
+
+**bind, call, apply — controlar `this` explícitamente:**
+```javascript
+function saludar(prefix, suffix) {
+  return `${prefix} ${this.nombre}${suffix}`;
+}
+
+const user = { nombre: "Ana" };
+
+// call: invoca inmediatamente, argumentos uno a uno
+console.log(saludar.call(user, "Hola", "!"));     // "Hola Ana!"
+
+// apply: invoca inmediatamente, argumentos como array
+console.log(saludar.apply(user, ["Hola", "!"]));   // "Hola Ana!"
+
+// bind: devuelve nueva función con this fijado
+const saludarAna = saludar.bind(user, "Hola", "!");
+console.log(saludarAna());                         // "Hola Ana!"
+
+// Partial application con bind
+const saludarHola = saludar.bind(user, "Hola");
+console.log(saludarHola("!!"));                    // "Hola Ana!!"
+```
+
+Fuente: [MDN — Prototypes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Inheritance_and_the_prototype_chain), [MDN — this](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/this), [MDN — Function.prototype.bind](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+
+### Closures, scope y IIFE
+
+**Scope (ámbito):**
+
+JavaScript tiene tres niveles de ámbito:
+
+```javascript
+// 1. Global
+const globalVar = "accesible desde cualquier lugar";
+
+function ejemplo() {
+  // 2. Function scope
+  var functionVar = "solo dentro de ejemplo()";
+
+  if (true) {
+    // 3. Block scope (let/const)
+    let blockVar = "solo dentro del if";
+    var noBlockVar = "esto se eleva al function scope";
+  }
+
+  console.log(functionVar); // ✅
+  console.log(noBlockVar);  // ✅ (elevado)
+  // console.log(blockVar);  // ❌ ReferenceError
+}
+```
+
+**Closures:**
+
+Un closure es una función que recuerda el ámbito donde fue creada, incluso después de que ese ámbito haya terminado:
+
+```javascript
+function crearContador(inicial = 0) {
+  let cuenta = inicial;  // Variable "privada" gracias al closure
+
+  return {
+    incrementar() { return ++cuenta; },
+    decrementar() { return --cuenta; },
+    obtener() { return cuenta; },
+    resetear(valor = 0) { cuenta = valor; },
+  };
+}
+
+const contador = crearContador(10);
+console.log(contador.incrementar()); // 11
+console.log(contador.incrementar()); // 12
+console.log(contador.obtener());     // 12
+// cuenta NO es accesible directamente
+// console.log(contador.cuenta);     // undefined
+
+// Cada llamada a crearContador genera un nuevo closure independiente
+const otro = crearContador();
+console.log(otro.obtener());         // 0
+```
+
+**Closures en bucles (el clásico problema):**
+```javascript
+// Problema: var no tiene block scope
+for (var i = 0; i < 3; i++) {
+  setTimeout(() => console.log(i), 100); // 3, 3, 3
+}
+
+// Solución 1: let (block scope)
+for (let i = 0; i < 3; i++) {
+  setTimeout(() => console.log(i), 100); // 0, 1, 2
+}
+
+// Solución 2: closure con IIFE
+for (var i = 0; i < 3; i++) {
+  (function (j) {
+    setTimeout(() => console.log(j), 100);
+  })(i); // 0, 1, 2
+}
+```
+
+**IIFE (Immediately Invoked Function Expression):**
+
+```javascript
+// Patrón clásico para crear ámbito aislado (pre-ES6)
+const modulo = (function () {
+  const privado = "solo aquí dentro";
+
+  function metodoPrivado() {
+    return privado.toUpperCase();
+  }
+
+  return {
+    publico: () => metodoPrivado(),
+  };
+})();
+
+console.log(modulo.publico()); // "SOLO AQUÍ DENTRO"
+// console.log(modulo.privado);  // undefined
+```
+
+**Usos reales de closures:**
+- **Manejo de eventos**: el callback recuerda el estado del componente
+- **Middleware Express**: cada middleware captura el ámbito de la configuración
+- **React Hooks**: `useState` usa closures para preservar el estado entre renders
+- **Debounce / Throttle**: el timeout se captura en el closure
+- **Currying**: funciones que devuelven funciones con parámetros parciales
+
+```javascript
+// Debounce con closure
+function debounce(fn, delay) {
+  let timer = null;
+
+  return function (...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), delay);
+  };
+}
+
+const handleSearch = debounce((query) => {
+  console.log("Buscando:", query);
+}, 300);
+```
+
+Fuente: [MDN — Closures](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Closures), [MDN — IIFE](https://developer.mozilla.org/en-US/docs/Glossary/IIFE)
+
+### Promesas, async/await, event loop y microtasks
+
+**Promesas:**
+
+Una promesa representa un valor que puede estar disponible ahora, en el futuro, o nunca:
+
+```javascript
+// Crear una promesa
+const promesa = new Promise((resolve, reject) => {
+  setTimeout(() => {
+    const exito = true;
+    if (exito) resolve("✅ Datos cargados");
+    else reject(new Error("❌ Error de carga"));
+  }, 1000);
 });
 
-app.listen(3000);
+// Consumirla
+promesa
+  .then((resultado) => console.log(resultado))
+  .catch((error) => console.error(error))
+  .finally(() => console.log("Terminado"));
+
+// Estado de una promesa: pending → fulfilled / rejected
 ```
 
-## 📝 Ejercicios Prácticos
+**Encadenamiento:**
+```javascript
+fetch("https://api.github.com/users/octocat")
+  .then((res) => {
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  })
+  .then((data) => console.log(data.login))
+  .catch((err) => console.error("Fetch failed:", err));
+```
 
-1. **Contador interactivo** 🟢 `[Fácil]` — Crea un contador HTML+JS con botones +1, -1 y reset. Muestra el valor actualizado.
-2. **Lista de Tareas (Todo List)** 🟡 `[Intermedio]` — Añadir, completar y eliminar tareas. Persiste con localStorage.
-3. **API REST con Express** 🟡 `[Intermedio]` — CRUD de productos con Express. Usa un array en memoria.
-4. **Consumo de API** 🟡 `[Intermedio]` — Usa `fetch` para obtener datos de JSONPlaceholder/GitHub API. Muestra en tabla HTML.
-5. **Juego de Memoria** 🔴 `[Avanzado]` — Emparejar cartas en el navegador con HTML, CSS y JS vanilla. Temporizador y contador de movimientos.
+**Métodos estáticos:**
+```javascript
+const p1 = Promise.resolve(3);
+const p2 = new Promise((r) => setTimeout(r, 100, "foo"));
+const p3 = fetch("https://api.github.com/users/octocat");
 
-## ⚡ Buenas Prácticas y Complejidad
+Promise.all([p1, p2, p3])              // Espera todas (falla si una falla)
+  .then(([v1, v2, v3]) => console.log(v1, v2, v3));
 
-**Buenas prácticas:**
+Promise.allSettled([p1, p2, Promise.reject("x")]) // Espera todas (nunca falla)
+  .then((results) => results.forEach((r) => console.log(r.status)));
 
-- Usa `===` en lugar de `==` para comparaciones estrictas.
-- Mantén las funciones puras cuando sea posible (misma entrada → misma salida).
-- Usa `const` por defecto, `let` solo cuando necesites reasignar.
-- Evita modificar el DOM directamente — usa frameworks o `innerHTML` con precaución.
-- Usa `try/catch` con async/await para manejo de errores.
-- Implementa debounce/throttle para eventos frecuentes (scroll, input).
+Promise.race([p1, p2])                 // Primera en resolverse/rechazarse
+  .then((r) => console.log(r));
 
-**Complejidad algorítmica (Big O):**
+Promise.any([Promise.reject("x"), p2]) // Primera en resolverse (ignora rechazos)
+  .then((r) => console.log(r));
+```
 
-Arrays: acceso O(1), búsqueda O(n), push/pop O(1), shift/unshift O(n). Objetos/Map: O(1) promedio. `sort()` O(n log n).
+**async/await — azúcar sintáctico sobre promesas:**
+```javascript
+async function obtenerUsuario(username) {
+  try {
+    const res = await fetch(`https://api.github.com/users/${username}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.error("Error:", err.message);
+    throw err; // re-lanzar si el caller necesita manejarlo
+  }
+}
 
-## 📚 Recursos y Documentación
+// El async/await es promesas por debajo:
+const usuario = await obtenerUsuario("octocat");
+console.log(usuario.login);
+```
 
-- 📖 [MDN Web Docs — JavaScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
-- 📖 [Node.js Documentación](https://nodejs.org/docs/latest/api/)
-- 🌐 [JavaScript Info](https://javascript.info/)
-- 📖 [React Documentación](https://react.dev/)
-- 📖 [V8 JavaScript Engine GitHub](https://github.com/v8/v8)
+**El Event Loop — el corazón de la concurrencia en JS:**
 
-### 🏆 Retos Relacionados
+JavaScript tiene un solo hilo (single-threaded). El event loop gestiona cómo se ejecutan las tareas:
+
+```
+   ┌───────────────────────────┐
+┌─>│           timers          │ ← setTimeout, setInterval
+│  └──────────┬────────────────┘
+│  ┌──────────┴────────────────┐
+│  │     pending callbacks     │ ← I/O callbacks (TCP errors, etc.)
+│  └──────────┬────────────────┘
+│  ┌──────────┴────────────────┐
+│  │       idle, prepare       │ ← interno de Node.js/V8
+│  └──────────┬────────────────┘
+│  ┌──────────┴────────────────┐
+│  │           poll            │ ← I/O (lectura de archivos, network)
+│  └──────────┬────────────────┘
+│  ┌──────────┴────────────────┐
+│  │           check           │ ← setImmediate
+│  └──────────┬────────────────┘
+│  ┌──────────┴────────────────┐
+│  │      close callbacks      │ ← eventos close (socket.on('close'))
+│  └──────────┬────────────────┘
+└─────────────┘
+```
+
+**Microtasks vs Macrotasks:**
+
+| Tipo | Ejemplos | Prioridad |
+|------|----------|-----------|
+| **Microtasks** | `Promise.then/catch/finally`, `queueMicrotask`, `MutationObserver` | Alta (se ejecutan después de cada macrotask) |
+| **Macrotasks** | `setTimeout`, `setInterval`, `setImmediate`, I/O callbacks | Baja (una por ciclo del event loop) |
+
+```javascript
+console.log("1: sincrono");
+
+setTimeout(() => console.log("2: macrotask"), 0);
+
+Promise.resolve().then(() => console.log("3: microtask"));
+
+queueMicrotask(() => console.log("4: queueMicrotask"));
+
+console.log("5: sincrono");
+
+// Output:
+// 1: sincrono
+// 5: sincrono
+// 3: microtask
+// 4: queueMicrotask
+// 2: macrotask
+```
+
+**Ejemplo clásico de entrevista:**
+```javascript
+async function foo() {
+  console.log("2");
+  await bar();
+  console.log("6");  // Esto es una microtask (continuación de await)
+}
+
+async function bar() {
+  console.log("3");
+}
+
+console.log("1");
+foo();
+console.log("4");
+
+new Promise((resolve) => {
+  console.log("5");  // El executor se ejecuta síncronamente
+  resolve();
+}).then(() => console.log("7")); // .then es microtask
+
+console.log("8");
+
+// Output: 1, 2, 3, 4, 5, 8, 6, 7
+```
+
+Fuente: [MDN — Event loop](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Event_loop), [Node.js — Event Loop](https://nodejs.org/en/learn/asynchronous-work/event-loop-timers-and-nexttick), [JavaScript.info — Microtasks](https://javascript.info/microtask-queue)
+
+### Módulos: ESM vs CommonJS
+
+JavaScript tiene dos sistemas de módulos principales:
+
+**ES Modules (ESM) — estándar moderno:**
+```javascript
+// 📁 math.js
+export const PI = 3.1416;
+
+export function sumar(a, b) {
+  return a + b;
+}
+
+export default class Calculadora {
+  multiplicar(a, b) {
+    return a * b;
+  }
+}
+
+// 📁 main.js
+import Calculadora, { PI, sumar } from "./math.js";
+
+console.log(sumar(PI, 2)); // 5.1416
+const calc = new Calculadora();
+console.log(calc.multiplicar(2, 3)); // 6
+
+// Re-export
+export { sumar } from "./math.js";
+
+// Import dinámico
+const modulo = await import("./math.js");
+console.log(modulo.sumar(1, 2));
+```
+
+**CommonJS (CJS) — Node.js legacy:**
+```javascript
+// 📁 math.js
+const PI = 3.1416;
+
+function sumar(a, b) {
+  return a + b;
+}
+
+class Calculadora {
+  multiplicar(a, b) {
+    return a * b;
+  }
+}
+
+module.exports = { PI, sumar, Calculadora };
+
+// 📁 main.js
+const { PI, sumar, Calculadora } = require("./math.js");
+```
+
+**Diferencias clave:**
+
+| Característica | ESM | CommonJS |
+|---|---|---|
+| Sintaxis | `import`/`export` | `require()`/`module.exports` |
+| Carga | Asíncrona (parsea todo antes) | Síncrona (ejecuta mientras importa) |
+| Ámbito | Siempre strict mode | No strict por defecto |
+| `this` en módulo | `undefined` en top-level | `module.exports` |
+| Árbol de dependencias | Estático (análisis en parseo) | Dinámico (ejecución) |
+| Top-level await | ✅ | ❌ |
+| Extensión por defecto | `.mjs` o `"type": "module"` | `.cjs` o `"type": "commonjs"` |
+
+**Interoperabilidad:**
+```javascript
+// CommonJS puede importar ESM (con importación dinámica)
+// 📁 cjs.cjs
+async function main() {
+  const esm = await import("./esm.mjs");
+  console.log(esm.default);
+}
+
+// ESM puede importar CJS (import por defecto)
+// 📁 esm.mjs
+import cjsModule from "./cjs.cjs";
+```
+
+Fuente: [Node.js — ES Modules](https://nodejs.org/api/esm.html), [MDN — JavaScript modules](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules)
+
+### Proxy, Reflect, Symbol, WeakMap/WeakSet
+
+**Proxy — intercepta operaciones sobre un objeto:**
+
+```javascript
+const objetivo = { mensaje: "hola" };
+
+const proxy = new Proxy(objetivo, {
+  get(target, prop, receiver) {
+    if (prop in target) {
+      return Reflect.get(target, prop, receiver);
+    }
+    return `Propiedad "${String(prop)}" no existe`;
+  },
+  set(target, prop, value) {
+    if (prop === "edad" && typeof value !== "number") {
+      throw new TypeError("edad debe ser un número");
+    }
+    return Reflect.set(target, prop, value);
+  },
+  has(target, prop) {
+    console.log(`Verificando "${String(prop)}"`);
+    return prop in target;
+  },
+  deleteProperty(target, prop) {
+    console.log(`Eliminando "${String(prop)}"`);
+    return delete target[prop];
+  },
+});
+
+console.log(proxy.mensaje);      // "hola"
+console(proxy.noExiste);         // "Propiedad 'noExiste' no existe"
+proxy.edad = 30;                 // ✅
+// proxy.edad = "treinta";       // ❌ TypeError
+console.log("edad" in proxy);    // Verificando "edad" → true
+```
+
+**Reflect — API para operaciones de metaprogramación:**
+
+```javascript
+class MiClase {
+  constructor(nombre) {
+    this.nombre = nombre;
+  }
+}
+
+// Reflect.construct en lugar de new con variable
+const args = ["Ana"];
+const instancia = Reflect.construct(MiClase, args);
+console.log(instancia.nombre); // "Ana"
+
+// Reflect.defineProperty
+Reflect.defineProperty(instancia, "edad", {
+  value: 30,
+  writable: true,
+  configurable: true,
+  enumerable: true,
+});
+
+// Reflect.getPrototypeOf / Reflect.setPrototypeOf
+console.log(Reflect.getPrototypeOf(instancia) === MiClase.prototype); // true
+```
+
+**Symbol — valores únicos como claves de propiedades:**
+
+```javascript
+const ID = Symbol("id");
+const NOMBRE = Symbol("nombre");
+
+const usuario = {
+  [ID]: 123,
+  [NOMBRE]: "Ana",
+  nombre: "público",
+};
+
+console.log(usuario[ID]);        // 123
+console.log(usuario.nombre);     // "público"
+console.log(Object.keys(usuario)); // ["nombre"] (Symbols no aparecen)
+
+// Symbols bien conocidos (well-known symbols)
+class Iterable {
+  [Symbol.iterator]() {
+    let i = 0;
+    return {
+      next: () => ({ value: i++, done: i > 5 }),
+    };
+  }
+}
+
+console.log([...new Iterable()]); // [0, 1, 2, 3, 4]
+
+// Symbol.hasInstance
+class Valido {
+  static [Symbol.hasInstance](obj) {
+    return obj && typeof obj.valido === "boolean";
+  }
+}
+console.log({ valido: true } instanceof Valido); // true
+```
+
+**WeakMap y WeakSet — colecciones con referencias débiles:**
+
+```javascript
+// WeakMap: claves deben ser objetos, no evita GC
+const metadatos = new WeakMap();
+
+class Componente {
+  constructor(id) {
+    this.id = id;
+    metadatos.set(this, { creado: Date.now() });
+  }
+
+  getCreado() {
+    return metadatos.get(this)?.creado;
+  }
+}
+
+let comp = new Componente("x1");
+console.log(comp.getCreado()); // timestamp
+comp = null; // el WeakMap libera la entrada automáticamente
+
+// Diferencia clave vs Map: WeakMap no tiene .size, .keys(), .values()
+// porque las claves pueden desaparecer en cualquier momento
+
+// WeakSet: mismo concepto, valores objetos únicos
+const visitados = new WeakSet();
+let nodo = { id: 1 };
+visitados.add(nodo);
+console.log(visitados.has(nodo)); // true
+nodo = null; // Se limpia automáticamente
+```
+
+**¿Por qué existen?** Para evitar memory leaks en caches, metadatos asociados a objetos DOM, listeners de eventos, y tracking de objetos sin impedir su recolección.
+
+Fuente: [MDN — Proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy), [MDN — Reflect](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect), [MDN — Symbol](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol), [MDN — WeakMap](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap)
+
+---
+
+## Sistema de archivos (Node.js)
+
+Node.js tiene un potente módulo `fs` (file system) para trabajar con archivos, `path` para rutas, `stream` para flujos, `buffer` para datos binarios y `zlib` para compresión.
+
+### fs.readFile / fs.writeFile (síncrono y callback)
+
+```javascript
+import fs from "fs";
+
+// Síncrono (bloqueante)
+const data = fs.readFileSync("archivo.txt", "utf8");
+console.log(data);
+
+fs.writeFileSync("salida.txt", "Contenido del archivo");
+
+// Callback (no bloqueante)
+fs.readFile("archivo.txt", "utf8", (err, data) => {
+  if (err) {
+    console.error("Error:", err.message);
+    return;
+  }
+  console.log(data);
+});
+
+fs.writeFile("salida.txt", "Contenido", (err) => {
+  if (err) console.error("Error al escribir:", err);
+  else console.log("Archivo guardado");
+});
+
+// Opciones: flag para append
+fs.writeFileSync("log.txt", "nueva línea\n", { flag: "a" });
+```
+
+### fs/promises (API asíncrona moderna)
+
+```javascript
+import fs from "fs/promises";
+
+try {
+  const data = await fs.readFile("archivo.txt", "utf8");
+  console.log(data);
+
+  await fs.writeFile("salida.txt", "Contenido desde promesas");
+
+  // JSON
+  const usuario = { nombre: "Ana", edad: 30 };
+  await fs.writeFile("usuario.json", JSON.stringify(usuario, null, 2));
+  const leido = await fs.readFile("usuario.json", "utf8");
+  console.log(JSON.parse(leido));
+} catch (err) {
+  console.error("Error de E/S:", err.message);
+}
+```
+
+### createReadStream / createWriteStream (streams)
+
+Para archivos grandes (gigabytes) que no caben en memoria:
+
+```javascript
+import fs from "fs";
+import { createReadStream, createWriteStream } from "fs";
+
+// Copia con streams (usa buffers internos)
+const readStream = createReadStream("video_grande.mp4");
+const writeStream = createWriteStream("copia.mp4");
+
+readStream.pipe(writeStream);
+
+readStream.on("end", () => console.log("Copia completada"));
+readStream.on("error", (err) => console.error("Error:", err));
+
+// Leer por chunks
+const rs = createReadStream("archivo.txt", {
+  encoding: "utf8",
+  highWaterMark: 64 * 1024, // 64KB por chunk
+});
+
+rs.on("data", (chunk) => {
+  console.log("Chunk recibido:", chunk.length, "bytes");
+});
+```
+
+### path module
+
+```javascript
+import path from "path";
+
+const ruta = "/usr/local/bin/node";
+
+path.basename(ruta);     // "node"
+path.dirname(ruta);      // "/usr/local/bin"
+path.extname(ruta);      // ""
+path.extname("foto.jpg"); // ".jpg"
+
+path.join("/usr", "local", "bin");   // "/usr/local/bin"
+path.resolve("src", "..", "dist");   // "/absoluta/dist" (desde cwd)
+
+path.parse("/home/user/file.txt");
+// { root: "/", dir: "/home/user", base: "file.txt", ext: ".txt", name: "file" }
+
+path.relative("/home/user/docs", "/home/user/photos/img.jpg");
+// "../photos/img.jpg"
+```
+
+### __dirname vs import.meta.url
+
+En CommonJS, `__dirname` y `__filename` están disponibles. En ESM no existen — usa `import.meta.url`:
+
+```javascript
+// En ESM (no hay __dirname)
+import { fileURLToPath } from "url";
+import path from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+console.log(__dirname);  // directorio del archivo actual
+console.log(__filename); // ruta completa del archivo actual
+
+// Leer archivo relativo al módulo actual:
+const data = await fs.readFile(path.join(__dirname, "assets", "data.json"), "utf8");
+```
+
+### readdir
+
+```javascript
+import fs from "fs/promises";
+
+const archivos = await fs.readdir("./");
+console.log(archivos); // ["file1.txt", "subdir", ...]
+
+// Recursivo (Node 20+ con recursive: true)
+// const todos = await fs.readdir("./src", { recursive: true });
+
+// Con información
+const entries = await fs.readdir("./", { withFileTypes: true });
+for (const entry of entries) {
+  if (entry.isDirectory()) {
+    console.log(`📁 ${entry.name}`);
+  } else if (entry.isFile()) {
+    const stats = await fs.stat(entry.name);
+    console.log(`📄 ${entry.name} (${stats.size} bytes)`);
+  }
+}
+
+// Globbing manual:
+const jsFiles = (await fs.readdir("./src"))
+  .filter((f) => f.endsWith(".js"));
+```
+
+### watch (fs.watch)
+
+```javascript
+import fs from "fs";
+
+// Observar cambios en un archivo o directorio
+const watcher = fs.watch("./src", { recursive: true }, (eventType, filename) => {
+  console.log(`Evento: ${eventType}`);
+  console.log(`Archivo: ${filename}`);
+  // Rebuild, recompile, restart, etc.
+});
+
+// Para detener:
+// watcher.close();
+
+// Alternativa: fs.watchFile (más detallada pero menos eficiente)
+fs.watchFile("config.json", (curr, prev) => {
+  console.log(`Modificado: prev ${prev.mtimeMs} → curr ${curr.mtimeMs}`);
+  // Recargar configuración
+});
+```
+
+### Streams (pipe, transform)
+
+```javascript
+import { createReadStream, createWriteStream } from "fs";
+import { Transform, pipeline } from "stream";
+
+// Transform stream: modifica datos en tránsito
+const upperCase = new Transform({
+  transform(chunk, encoding, callback) {
+    this.push(chunk.toString().toUpperCase());
+    callback();
+  },
+});
+
+// Pipe: readable → transform → writable
+createReadStream("input.txt")
+  .pipe(upperCase)
+  .pipe(createWriteStream("output.txt"))
+  .on("finish", () => console.log("Transformación completada"));
+
+// pipeline (con promesa, manejo de errores automático):
+import { pipeline } from "stream/promises";
+
+await pipeline(
+  createReadStream("input.txt"),
+  upperCase,
+  createWriteStream("output.txt"),
+);
+
+// Transform para reemplazar texto:
+const reemplazar = new Transform({
+  transform(chunk, encoding, callback) {
+    const texto = chunk.toString().replace(/foo/g, "bar");
+    this.push(texto);
+    callback();
+  },
+});
+```
+
+### Buffer (alloc, from, concat)
+
+```javascript
+import { Buffer } from "buffer";
+
+// Crear buffers
+const buf1 = Buffer.alloc(10);               // 10 bytes, inicializados a 0
+const buf2 = Buffer.alloc(10, 0xff);         // 10 bytes, todos 0xff
+const buf3 = Buffer.from("Hola");            // <Buffer 48 6f 6c 61>
+const buf4 = Buffer.from([0x48, 0x6f, 0x6c, 0x61]); // igual
+const buf5 = Buffer.from("486f6c61", "hex"); // desde hex
+
+// Leer/escribir
+buf1.write("Hola", 0, 4, "utf8");
+console.log(buf1.toString());    // "Hola"
+console.log(buf1.toString("hex")); // "486f6c61"
+console.log(buf1[0]);            // 0x48 (72 en decimal)
+
+// Concatenar
+const combined = Buffer.concat([buf3, Buffer.from(" Mundo")]);
+console.log(combined.toString()); // "Hola Mundo"
+
+// Slice (comparte memoria — cuidado!)
+const slice = combined.slice(0, 4);
+slice[0] = 0x68; // modifica también combined
+console.log(combined.toString()); // "hola Mundo"
+
+// Subarray (copia segura)
+const sub = Buffer.from(combined.subarray(0, 4));
+sub[0] = 0x48; // no afecta a combined
+
+// Buffer.allocUnsafe (rápido pero puede contener datos previos)
+const unsafe = Buffer.allocUnsafe(1024);
+// ⚠️ Siempre llenar antes de usar:
+unsafe.fill(0);
+```
+
+### zlib (compresión gzip)
+
+```javascript
+import { createGzip, createGunzip } from "zlib";
+import { createReadStream, createWriteStream } from "fs";
+import { pipeline } from "stream/promises";
+
+// Comprimir archivo
+await pipeline(
+  createReadStream("datos.json"),
+  createGzip(),
+  createWriteStream("datos.json.gz"),
+);
+console.log("Comprimido");
+
+// Descomprimir
+await pipeline(
+  createReadStream("datos.json.gz"),
+  createGunzip(),
+  createWriteStream("datos_restaurados.json"),
+);
+
+// Comprimir en memoria
+import { gzip, gunzip } from "zlib";
+
+const data = "texto repetido ".repeat(1000);
+const compressed = await new Promise((resolve, reject) => {
+  gzip(data, (err, result) => err ? reject(err) : resolve(result));
+});
+console.log(`Original: ${data.length} bytes → Comprimido: ${compressed.length} bytes`);
+
+const decompressed = await new Promise((resolve, reject) => {
+  gunzip(compressed, (err, result) => err ? reject(err) : resolve(result));
+});
+console.log(decompressed.toString() === data); // true
+
+// Niveles de compresión (1-9, 9 es máx compresión, más lento)
+import { constants } from "zlib";
+createGzip({ level: constants.Z_BEST_COMPRESSION }); // nivel 9
+createGzip({ level: constants.Z_BEST_SPEED });        // nivel 1
+```
+
+Fuente: [Node.js — File system](https://nodejs.org/api/fs.html), [Node.js — Path](https://nodejs.org/api/path.html), [Node.js — Stream](https://nodejs.org/api/stream.html), [Node.js — Buffer](https://nodejs.org/api/buffer.html), [Node.js — Zlib](https://nodejs.org/api/zlib.html)
+
+---
+
+## Algoritmos en JavaScript
+
+### Array.sort y Timsort
+
+Desde V8 7.0 (Chrome 70 / Node.js 12+), `Array.prototype.sort` usa **Timsort** (estable, O(n log n)):
+
+```javascript
+const nums = [3, 1, 4, 1, 5, 9, 2, 6];
+
+// Ordenación por defecto: alfabética (¡convierte a string!)
+nums.sort();          // [1, 1, 2, 3, 4, 5, 6, 9] — casualmente funciona con 1 dígito
+
+// Peligro:
+[10, 2, 1].sort();    // [1, 10, 2] — compara strings: "10" < "2"
+
+// Ordenación numérica correcta con comparador:
+nums.sort((a, b) => a - b);  // ascendente
+nums.sort((a, b) => b - a);  // descendente
+
+// Timsort es ESTABLE: elementos iguales mantienen su orden relativo
+const estudiantes = [
+  { nombre: "Ana", nota: 85 },
+  { nombre: "Luis", nota: 92 },
+  { nombre: "Sofía", nota: 85 },
+];
+// Ordenar por nota, después por nombre
+estudiantes.sort((a, b) => a.nota - b.nota);
+// Ana (85) antes que Sofía (85) — estable
+
+// Ordenación con objetos:
+items.sort((a, b) => a.precio - b.precio);
+items.sort((a, b) => a.nombre.localeCompare(b.nombre)); // string
+```
+
+### Binary search (manual vs find/findIndex/findLastIndex)
+
+```javascript
+// Binary search manual (array ordenado)
+function binarySearch(arr, target) {
+  let left = 0;
+  let right = arr.length - 1;
+
+  while (left <= right) {
+    const mid = Math.floor((left + right) / 2);
+    if (arr[mid] === target) return mid;
+    if (arr[mid] < target) left = mid + 1;
+    else right = mid - 1;
+  }
+  return -1; // no encontrado
+}
+
+const sorted = [1, 3, 5, 7, 9, 11, 13];
+console.log(binarySearch(sorted, 7));  // 3
+console.log(binarySearch(sorted, 8));  // -1
+
+// find: primer elemento que cumple
+sorted.find((n) => n > 5);              // 7
+sorted.find((n) => n > 20);            // undefined
+
+// findIndex: índice del primero
+sorted.findIndex((n) => n > 5);        // 3
+
+// findLastIndex (ES2023): índice del último
+sorted.findLastIndex((n) => n < 10);   // 4 (elemento 9 en índice 4)
+
+// Búsqueda lineal (cuando no está ordenado):
+function linearSearch(arr, target) {
+  for (let i = 0; i < arr.length; i++) {
+    if (arr[i] === target) return i;
+  }
+  return -1;
+}
+```
+
+### Big O: Set vs Array, Map lookup
+
+```javascript
+const array = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+const set = new Set(array);
+const map = new Map(array.map((n) => [n, n]));
+
+// Set.has() es O(1) — búsqueda por hash
+console.log(set.has(7));  // true, O(1)
+
+// Array.includes() es O(n) — recorre todo el array
+console.log(array.includes(7));  // true, O(n)
+
+// Map.get() es O(1)
+console.log(map.get(7));  // 7, O(1)
+
+// Diferencia práctica con 1,000,000 elementos:
+// Set.has() ≈ 1 microsegundo
+// Array.includes() ≈ 1,000,000 microsegundos (1 segundo) si el elemento está al final
+
+// Array.find() es O(n)
+array.find((n) => n === 7); // O(n) en el peor caso
+
+// Convertir array a set para búsqueda rápida:
+function busquedaRapida(arr, targets) {
+  const set = new Set(arr);
+  return targets.map((t) => set.has(t));
+}
+
+// Filtrado eficiente con Set:
+const grandes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+const excluir = new Set([2, 4, 6, 8, 10]);
+const filtrados = grandes.filter((n) => !excluir.has(n)); // O(n) vs O(n*m)
+```
+
+### sort con comparadores avanzados
+
+```javascript
+const usuarios = [
+  { nombre: "Ana", edad: 30, salario: 50000 },
+  { nombre: "Luis", edad: 25, salario: 60000 },
+  { nombre: "Sofía", edad: 30, salario: 55000 },
+];
+
+// Ordenación multi-criterio:
+usuarios.sort((a, b) => {
+  // 1. Por edad ascendente
+  if (a.edad !== b.edad) return a.edad - b.edad;
+  // 2. Por salario descendente
+  return b.salario - a.salario;
+});
+// Resultado: Luis(25), Ana(30,50000), Sofía(30,55000)
+
+// Comparador reutilizable:
+function compararPor(...criterios) {
+  return (a, b) => {
+    for (const criterio of criterios) {
+      const resultado = criterio(a, b);
+      if (resultado !== 0) return resultado;
+    }
+    return 0;
+  };
+}
+
+const ascendente = (campo) => (a, b) => a[campo] - b[campo];
+const descendente = (campo) => (a, b) => b[campo] - a[campo];
+
+usuarios.sort(compararPor(ascendente("edad"), descendente("salario")));
+```
+
+### group (ES2024) — agrupación nativa
+
+```javascript
+const inventario = [
+  { nombre: "manzana", categoria: "fruta" },
+  { nombre: "zanahoria", categoria: "verdura" },
+  { nombre: "pera", categoria: "fruta" },
+  { nombre: "brócoli", categoria: "verdura" },
+  { nombre: "mesa", categoria: "mueble" },
+];
+
+// Object.groupBy
+const porCategoria = Object.groupBy(inventario, (item) => item.categoria);
+console.log(porCategoria);
+// {
+//   fruta: [{ nombre: "manzana", ... }, { nombre: "pera", ... }],
+//   verdura: [{ nombre: "zanahoria", ... }, { nombre: "brócoli", ... }],
+//   mueble: [{ nombre: "mesa", ... }]
+// }
+
+// Map.groupBy (cuando la clave no es string)
+const edades = [
+  { nombre: "Ana", edad: 30 },
+  { nombre: "Luis", edad: 25 },
+  { nombre: "Sofía", edad: 30 },
+];
+const porEdad = Map.groupBy(edades, (p) => p.edad);
+// Map(2) { 30 => [Ana, Sofía], 25 => [Luis] }
+```
+
+### toSorted, toReversed (ES2023) — copia antes de mutar
+
+```javascript
+const numeros = [3, 1, 4, 1, 5];
+
+// sort muta el array original:
+const sorted = numeros.sort((a, b) => a - b);
+console.log(numeros === sorted); // true (son el mismo array)
+
+// toSorted devuelve COPIA:
+const nums = [3, 1, 4, 1, 5];
+const copiaOrdenada = nums.toSorted((a, b) => a - b);
+console.log(nums);              // [3, 1, 4, 1, 5] — intacto
+console.log(copiaOrdenada);     // [1, 1, 3, 4, 5]
+
+// toReversed:
+const copiaInvertida = nums.toReversed();
+
+// toSpliced:
+const copiaSinElemento = nums.toSpliced(1, 2); // elimina índices 1 y 2, devuelve copia
+
+// with: cambia un elemento en copia
+const copiaModificada = nums.with(0, 100); // [100, 1, 4, 1, 5]
+```
+
+### Big O de colecciones en JavaScript
+
+| Operación | Array | Set | Map | TypedArray |
+|---|---|---|---|---|
+| Acceso por índice | O(1) | N/A | N/A | O(1) |
+| Búsqueda `.includes()` / `.has()` | O(n) | O(1) | O(1) | O(n) |
+| Inserción al final `.push()` | O(1) amortizado | O(1) | O(1) | O(1) |
+| Inserción al inicio `.unshift()` | O(n) | N/A | N/A | O(n) |
+| Eliminación por valor | O(n) | O(1) | O(1) | O(n) |
+| Iteración | O(n) | O(n) | O(n) | O(n) |
+| Búsqueda `.find()` | O(n) | O(n) | O(n) | O(n) |
+| Ordenación `.sort()` / `.toSorted()` | O(n log n) | N/A | N/A | O(n log n) |
+
+```javascript
+// Regla práctica:
+// - ¿Búsqueda frecuente? → Set o Map (O(1) vs O(n))
+// - ¿Orden importa? → Array (Set/Map preservan inserción pero no se reordenan)
+// - ¿Datos binarios/canvas? → TypedArray
+// - ¿Claves no-string? → Map (Object solo acepta string/Symbol)
+```
+
+Fuente: [V8 — Array.sort](https://v8.dev/blog/array-sort), [MDN — Array.sort](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort), [MDN — Set](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set), [MDN — Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map), [TC39 — Array grouping](https://tc39.es/proposal-array-grouping/), [MDN — toSorted](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toSorted)
+
+---
+
+## Ejemplo completo de POO en JavaScript
+
+Este ejemplo une todos los conceptos de POO (clases ES6+, herencia, encapsulación, polimorfismo, composición, getters/setters, métodos estáticos, privados) en un sistema multimedia funcional.
+
+```javascript
+// ── Enums (simulados con Object.freeze) ──
+
+const FormatoVideo = Object.freeze({
+  MP4: "mp4",
+  WEBM: "webm",
+  AVI: "avi",
+  MKV: "mkv",
+});
+
+// ── Clase base ──
+
+class Contenido {
+  #reproducciones = 0; // Campo privado (ES2022+)
+
+  constructor(titulo, duracionSegundos, tags = []) {
+    this.titulo = titulo;
+    this.duracionSegundos = duracionSegundos;
+    this.tags = tags;
+    this._creadoEn = Date.now(); // Protegido por convención
+  }
+
+  // Getter
+  get reproducciones() {
+    return this.#reproducciones;
+  }
+
+  get duracionFormateada() {
+    const min = Math.floor(this.duracionSegundos / 60);
+    const seg = this.duracionSegundos % 60;
+    return `${min}:${String(seg).padStart(2, "0")}`;
+  }
+
+  reproducir() {
+    this.#reproducciones++;
+    return `▶️ Reproduciendo ${this.titulo}...`;
+  }
+
+  // Método abstracto simulado (lanza error si no se implementa)
+  obtenerInfo() {
+    throw new Error("Método obtenerInfo() debe ser implementado por subclase");
+  }
+
+  toString() {
+    return `[${this.constructor.name}] ${this.titulo} (${this.duracionFormateada})`;
+  }
+}
+
+// ── Herencia simple ──
+
+class Audio extends Contenido {
+  constructor(titulo, duracionSegundos, bitrateKbps, tags = []) {
+    super(titulo, duracionSegundos, tags);
+    this.bitrateKbps = bitrateKbps;
+  }
+
+  obtenerInfo() {
+    return `🎵 ${this.titulo} | ${this.duracionFormateada} | ${this.bitrateKbps}kbps | ${this.reproducciones} reproducciones`;
+  }
+}
+
+class Video extends Contenido {
+  #subtitulos = false; // Propiedad privada
+
+  constructor(titulo, duracionSegundos, resolucion, formato, tags = []) {
+    super(titulo, duracionSegundos, tags);
+    this.resolucion = resolucion;
+    this.formato = formato;
+  }
+
+  // Getter y setter para propiedad privada
+  get subtitulos() {
+    return this.#subtitulos;
+  }
+
+  set subtitulos(valor) {
+    if (typeof valor !== "boolean") {
+      throw new TypeError("subtitulos debe ser booleano");
+    }
+    this.#subtitulos = valor;
+  }
+
+  obtenerInfo() {
+    return `🎬 ${this.titulo} | ${this.resolucion} | ${this.formato} | ${this.#subtitulos ? "CC" : "Sin subtítulos"}`;
+  }
+}
+
+// ── Mixin (composición de funcionalidad) ──
+
+const Exportable = (Base) =>
+  class extends Base {
+    exportar(formato = "json") {
+      if (formato === "json") {
+        return JSON.stringify(
+          {
+            titulo: this.titulo,
+            duracion: this.duracionFormateada,
+            tags: this.tags,
+            info: this.obtenerInfo(),
+          },
+          null,
+          2,
+        );
+      }
+      return `Exportación a ${formato} no soportada`;
+    }
+  };
+
+// ── Herencia con Mixin ──
+
+class Podcast extends Exportable(Audio) {
+  constructor(titulo, duracionSegundos, bitrateKbps, episodio, anfitrion, tags = []) {
+    super(titulo, duracionSegundos, bitrateKbps, tags);
+    this.episodio = episodio;
+    this.anfitrion = anfitrion;
+  }
+
+  obtenerInfo() {
+    return `🎙️ Ep.${this.episodio}: ${this.titulo} | con ${this.anfitrion} | ${super.obtenerInfo()}`;
+  }
+}
+
+// ── Composición ──
+
+class ListaReproduccion {
+  #items = [];
+
+  constructor(nombre) {
+    this.nombre = nombre;
+  }
+
+  agregar(item) {
+    this.#items.push(item);
+  }
+
+  quitar(indice) {
+    if (indice >= 0 && indice < this.#items.length) {
+      this.#items.splice(indice, 1);
+    }
+  }
+
+  reproducirTodo() {
+    return this.#items.map((item) => item.reproducir());
+  }
+
+  infoCompleta() {
+    return this.#items.map((item) => item.obtenerInfo());
+  }
+
+  // Métodos para comportarse como iterable
+  get length() {
+    return this.#items.length;
+  }
+
+  [Symbol.iterator]() {
+    return this.#items[Symbol.iterator]();
+  }
+
+  toString() {
+    return `📋 ${this.nombre} (${this.#items.length} items)`;
+  }
+}
+
+// ── Polimorfismo por duck typing ──
+
+function emitir(contenido) {
+  // Acepta cualquier objeto que tenga .reproducir() y .titulo
+  console.log(`📡 Emitiendo: ${contenido.reproducir()}`);
+}
+
+// ── Métodos estáticos ──
+
+class Biblioteca {
+  static #instancias = new Map();
+
+  static crear(nombre) {
+    if (this.#instancias.has(nombre)) {
+      return this.#instancias.get(nombre);
+    }
+    const instancia = new ListaReproduccion(nombre);
+    this.#instancias.set(nombre, instancia);
+    return instancia;
+  }
+
+  static listarBibliotecas() {
+    return [...this.#instancias.keys()];
+  }
+}
+
+// ── Uso del sistema ──
+
+const cancion = new Audio("Bohemian Rhapsody", 354, 320, ["rock", "clásico"]);
+const pelicula = new Video("Inception", 8880, "4K", FormatoVideo.MKV, ["ciencia ficción", "thriller"]);
+pelicula.subtitulos = true; // usa el setter
+
+const podcast = new Podcast(
+  "El futuro de la IA",
+  2700,
+  128,
+  42,
+  "Ana López",
+  ["tecnología", "IA"],
+);
+
+// Polimorfismo: cada uno implementa obtenerInfo() a su manera
+for (const contenido of [cancion, pelicula, podcast]) {
+  console.log(contenido.obtenerInfo());
+}
+
+// Composición
+const lista = Biblioteca.crear("Favoritos");
+lista.agregar(cancion);
+lista.agregar(pelicula);
+lista.agregar(podcast);
+console.log(lista.toString());
+console.log(lista.reproducirTodo());
+console.log(lista.infoCompleta());
+
+// Duck typing
+emitir(pelicula); // Funciona porque Video tiene .reproducir() y .titulo
+
+// Mixin: exportación
+console.log(podcast.exportar("json"));
+
+// Método estático
+console.log("Bibliotecas:", Biblioteca.listarBibliotecas());
+
+// toString implícito
+console.log(String(cancion)); // "[Audio] Bohemian Rhapsody (5:54)"
+```
+
+**Conceptos demostrados:**
+
+| Concepto | Cómo aparece |
+|---|---|
+| Clase base | `Contenido` con constructor y métodos |
+| Herencia | `Audio(Contenido)`, `Video(Contenido)` con `super()` |
+| Mixin | `Exportable(Audio)` — patrón de herencia mixin |
+| `super()` | `super(titulo, duracionSegundos, tags)` y `super.obtenerInfo()` |
+| Encapsulación | Campos privados `#reproducciones`, `#subtitulos`, `#items` |
+| Getters/setters | `get reproducciones()`, `get/set subtitulos()` |
+| Polimorfismo | `obtenerInfo()` se comporta distinto en cada subclase |
+| Composición | `ListaReproduccion` contiene `#items[]` |
+| Duck typing | `emitir()` acepta cualquier objeto con `.reproducir()` |
+| Métodos estáticos | `Biblioteca.crear()`, `Biblioteca.listarBibliotecas()` |
+| Iterable | `[Symbol.iterator]()` en `ListaReproduccion` |
+| Simulated enum | `FormatoVideo` con `Object.freeze()` |
+
+---
+
+## Patrones de diseño con ejemplos
+
+### Module Pattern (IIFE + closure)
+
+El patrón de módulo clásico, anterior a ES Modules. Sigue siendo útil para scripts que no usan bundler:
+
+```javascript
+const RepositorioUsuarios = (function () {
+  // Privado
+  const usuarios = new Map();
+  let ultimoId = 0;
+
+  function generarId() {
+    return ++ultimoId;
+  }
+
+  // Público
+  return {
+    crear(nombre, email) {
+      const id = generarId();
+      usuarios.set(id, { id, nombre, email, creado: new Date() });
+      return id;
+    },
+
+    obtener(id) {
+      return usuarios.get(id);
+    },
+
+    listar() {
+      return [...usuarios.values()];
+    },
+
+    eliminar(id) {
+      return usuarios.delete(id);
+    },
+
+    get total() {
+      return usuarios.size;
+    },
+  };
+})();
+
+const id = RepositorioUsuarios.crear("Ana", "ana@email.com");
+console.log(RepositorioUsuarios.obtener(id));
+console.log(RepositorioUsuarios.total); // 1
+// RepositorioUsuarios.usuarios  // undefined — encapsulado
+```
+
+### Observer (EventEmitter)
+
+Node.js tiene `EventEmitter` en su stdlib. También puedes implementarlo fácilmente:
+
+```javascript
+class EventEmitter {
+  #listeners = new Map();
+
+  on(evento, callback) {
+    if (!this.#listeners.has(evento)) {
+      this.#listeners.set(evento, []);
+    }
+    this.#listeners.get(evento).push(callback);
+    return () => this.off(evento, callback); // Retorna función para desuscribir
+  }
+
+  off(evento, callback) {
+    const cbs = this.#listeners.get(evento);
+    if (cbs) {
+      const idx = cbs.indexOf(callback);
+      if (idx !== -1) cbs.splice(idx, 1);
+    }
+  }
+
+  emit(evento, ...args) {
+    const cbs = this.#listeners.get(evento);
+    if (cbs) {
+      cbs.forEach((cb) => cb(...args));
+    }
+  }
+
+  once(evento, callback) {
+    const wrapper = (...args) => {
+      this.off(evento, wrapper);
+      callback(...args);
+    };
+    this.on(evento, wrapper);
+  }
+}
+
+// Uso como Store reactivo
+class Store extends EventEmitter {
+  #state = {};
+
+  constructor(initialState = {}) {
+    super();
+    this.#state = { ...initialState };
+  }
+
+  getState() {
+    return { ...this.#state };
+  }
+
+  setState(partial) {
+    this.#state = { ...this.#state, ...partial };
+    this.emit("change", this.getState());
+  }
+}
+
+const store = new Store({ count: 0 });
+const unsubscribe = store.on("change", (state) => console.log("State:", state));
+store.setState({ count: 1 }); // State: { count: 1 }
+store.setState({ count: 2 }); // State: { count: 2 }
+unsubscribe(); // Dejar de escuchar
+```
+
+### Singleton (con ES Modules)
+
+Los módulos ESM son singletons naturales — el módulo se evalúa una sola vez:
+
+```javascript
+// 📁 config.js
+class Config {
+  #dbUrl;
+  #debug;
+  #apiKey;
+
+  constructor() {
+    this.#dbUrl = process.env.DATABASE_URL || "postgresql://localhost/mydb";
+    this.#debug = process.env.DEBUG === "true";
+    this.#apiKey = process.env.API_KEY || "";
+  }
+
+  get dbUrl() { return this.#dbUrl; }
+  get debug() { return this.#debug; }
+  get apiKey() { return this.#apiKey; }
+}
+
+export const config = new Config(); // Singleton: siempre la misma instancia
+
+// 📁 cualquier-otro-archivo.js
+import { config } from "./config.js";
+// config es la misma instancia siempre
+```
+
+Si prefieres clase con `instanceof`:
+
+```javascript
+class Singleton {
+  static #instancia;
+
+  constructor() {
+    if (Singleton.#instancia) {
+      return Singleton.#instancia;
+    }
+    Singleton.#instancia = this;
+    // ... inicialización
+  }
+}
+
+const a = new Singleton();
+const b = new Singleton();
+console.log(a === b); // true
+```
+
+### Factory (registro dinámico de clases)
+
+```javascript
+// Base para plugins
+class Plugin {
+  static #registry = new Map();
+
+  static registrar(nombre, clase) {
+    if (!(clase.prototype instanceof Plugin || clase === Plugin)) {
+      throw new Error("La clase debe extender Plugin");
+    }
+    this.#registry.set(nombre, clase);
+  }
+
+  static crear(tipo, ...args) {
+    const Clase = this.#registry.get(tipo);
+    if (!Clase) {
+      throw new Error(`Plugin '${tipo}' no existe. Disponibles: ${[...this.#registry.keys()]}`);
+    }
+    return new Clase(...args);
+  }
+
+  ejecutar() {
+    throw new Error("Método ejecutar() debe implementarse");
+  }
+}
+
+// Plugins concretos
+class PluginPDF extends Plugin {
+  ejecutar() {
+    return "Procesando PDF";
+  }
+}
+
+class PluginCSV extends Plugin {
+  ejecutar() {
+    return "Procesando CSV";
+  }
+}
+
+// Registro automático (podría ser manual o con decorators)
+Plugin.registrar("pdf", PluginPDF);
+Plugin.registrar("csv", PluginCSV);
+
+const plugin = Plugin.crear("pdf");
+console.log(plugin.ejecutar()); // "Procesando PDF"
+```
+
+### Strategy (con callbacks)
+
+```javascript
+// Estrategias como funciones
+const ordenarAscendente = (datos) => [...datos].sort((a, b) => a - b);
+const ordenarDescendente = (datos) => [...datos].sort((a, b) => b - a);
+const ordenarMitades = (datos) => {
+  const mid = Math.floor(datos.length / 2);
+  const izq = datos.slice(0, mid).sort((a, b) => a - b);
+  const der = datos.slice(mid).sort((a, b) => b - a);
+  return [...izq, ...der];
+};
+
+class Analizador {
+  constructor(estrategia) {
+    this.estrategia = estrategia;
+  }
+
+  analizar(datos) {
+    return this.estrategia(datos);
+  }
+
+  setEstrategia(estrategia) {
+    this.estrategia = estrategia;
+  }
+}
+
+const a = new Analizador(ordenarDescendente);
+console.log(a.analizar([3, 1, 4, 1, 5, 9])); // [9, 5, 4, 3, 1, 1]
+
+// Cambiar estrategia en caliente:
+a.setEstrategia(ordenarAscendente);
+console.log(a.analizar([3, 1, 4, 1, 5, 9])); // [1, 1, 3, 4, 5, 9]
+```
+
+### Chain of Responsibility (middleware pattern)
+
+```javascript
+class Handler {
+  #siguiente = null;
+
+  conectar(handler) {
+    this.#siguiente = handler;
+    return handler; // permite encadenamiento
+  }
+
+  async manejar(solicitud) {
+    const resultado = await this.#procesar(solicitud);
+    if (resultado === null && this.#siguiente) {
+      return this.#siguiente.manejar(solicitud);
+    }
+    return resultado;
+  }
+
+  async #procesar(solicitud) {
+    throw new Error("Método #procesar debe implementarse");
+  }
+}
+
+class Validador extends Handler {
+  async #procesar(solicitud) {
+    if (typeof solicitud !== "string" || solicitud.length < 3) {
+      return "Error: solicitud muy corta";
+    }
+    return null; // pasa al siguiente
+  }
+}
+
+class Autenticador extends Handler {
+  async #procesar(solicitud) {
+    if (!solicitud.includes("token")) {
+      return "Error: no autenticado";
+    }
+    return null;
+  }
+}
+
+class Cache extends Handler {
+  async #procesar(solicitud) {
+    return `Respuesta desde caché: ${solicitud}`;
+  }
+}
+
+// Cadena: Validador → Autenticador → Cache
+const cadena = new Validador();
+cadena.conectar(new Autenticador()).conectar(new Cache());
+
+console.log(await cadena.manejar("ho"));          // Error: solicitud muy corta
+console.log(await cadena.manejar("hola"));         // Error: no autenticado
+console.log(await cadena.manejar("hola token"));   // Respuesta desde caché: hola token
+```
+
+---
+
+## Polimorfismo en detalle
+
+JavaScript tiene polimorfismo estructural (duck typing) como mecanismo principal, pero también admite polimorfismo por herencia y por interfaz implícita.
+
+### 1. Duck typing (el mecanismo principal de JS)
+
+```javascript
+class Perro {
+  sonido() { return "Guau"; }
+}
+
+class Gato {
+  sonido() { return "Miau"; }
+}
+
+class Coche {
+  sonido() { return "Brum"; }
+}
+
+function hacerSonido(cualquierCosa) {
+  // Mientras tenga .sonido(), funciona
+  console.log(cualquierCosa.sonido());
+}
+
+hacerSonido(new Perro());  // Guau
+hacerSonido(new Gato());   // Miau
+hacerSonido(new Coche());  // Brum (¡no es un animal!)
+```
+
+### 2. Polimorfismo por herencia (clásico)
+
+```javascript
+class Forma {
+  area() {
+    throw new Error("Método abstracto");
+  }
+}
+
+class Circulo extends Forma {
+  constructor(radio) {
+    super();
+    this.radio = radio;
+  }
+
+  area() {
+    return Math.PI * this.radio ** 2;
+  }
+}
+
+class Rectangulo extends Forma {
+  constructor(ancho, alto) {
+    super();
+    this.ancho = ancho;
+    this.alto = alto;
+  }
+
+  area() {
+    return this.ancho * this.alto;
+  }
+}
+
+function mostrarArea(forma) {
+  console.log(`Área: ${forma.area().toFixed(2)}`);
+}
+
+mostrarArea(new Circulo(5));        // Área: 78.54
+mostrarArea(new Rectangulo(3, 4));  // Área: 12.00
+```
+
+### 3. Polimorfismo por interfaz implícita (TypeScript)
+
+TypeScript añade interfaces y tipos estáticos:
+
+```typescript
+interface Imprimible {
+  imprimir(): string;
+}
+
+class Documento implements Imprimible {
+  imprimir() {
+    return "Imprimiendo documento...";
+  }
+}
+
+class Foto implements Imprimible {
+  imprimir() {
+    return "Imprimiendo foto 4x6...";
+  }
+}
+
+class Impresora implements Imprimible {
+  imprimir() {
+    return "Imprimiendo informe de estado...";
+  }
+}
+
+function enviarAImpresion(objeto: Imprimible) {
+  console.log(objeto.imprimir());
+}
+
+enviarAImpresion(new Documento()); // Imprimiendo documento...
+enviarAImpresion(new Foto());      // Imprimiendo foto 4x6...
+enviarAImpresion(new Impresora()); // Imprimiendo informe de estado...
+```
+
+En JavaScript puro, las interfaces no existen en runtime — todo es duck typing. TypeScript compila a JS puro, y las interfaces desaparecen en la compilación. Es duck typing con documentación estática.
+
+Fuente: [MDN — Polymorphism](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/OOP#polymorphism), [TypeScript — Interfaces](https://www.typescriptlang.org/docs/handbook/interfaces.html)
+
+---
+
+## Multimedia
+
+JavaScript tiene APIs nativas en el navegador para gráficos 2D, audio y vídeo, y potentes librerías en Node.js para procesamiento de imágenes y vídeo.
+
+### Canvas API (2D drawing)
+
+El elemento `<canvas>` permite dibujar gráficos rasterizados mediante JavaScript:
+
+```javascript
+const canvas = document.getElementById("miCanvas");
+const ctx = canvas.getContext("2d");
+
+// Configuración
+ctx.fillStyle = "red";
+ctx.strokeStyle = "blue";
+ctx.lineWidth = 3;
+ctx.font = "24px Arial";
+
+// Rectángulos
+ctx.fillRect(10, 10, 100, 50);       // relleno
+ctx.strokeRect(130, 10, 100, 50);    // contorno
+ctx.clearRect(10, 10, 100, 50);      // borra un área
+
+// Caminos (paths)
+ctx.beginPath();
+ctx.moveTo(50, 50);                   // inicio
+ctx.lineTo(150, 50);                  // línea
+ctx.lineTo(100, 150);                 // línea
+ctx.closePath();
+ctx.fill();                            // rellena el triángulo
+
+// Arcos y círculos
+ctx.beginPath();
+ctx.arc(200, 200, 50, 0, Math.PI * 2); // círculo completo
+ctx.fill();
+
+// Texto
+ctx.fillText("Hola Canvas", 10, 200);
+ctx.strokeText("Hola Canvas", 10, 230);
+
+// Gradientes
+const gradient = ctx.createLinearGradient(0, 0, 200, 0);
+gradient.addColorStop(0, "red");
+gradient.addColorStop(1, "blue");
+ctx.fillStyle = gradient;
+ctx.fillRect(0, 250, 200, 50);
+
+// Transformaciones
+ctx.save();
+ctx.translate(300, 100);
+ctx.rotate(Math.PI / 4);
+ctx.scale(2, 1);
+ctx.fillRect(-25, -25, 50, 50);
+ctx.restore();
+
+// Animación básica (requestAnimationFrame)
+let x = 0;
+function animar() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "green";
+  ctx.fillRect(x, 100, 50, 50);
+  x = (x + 2) % canvas.width;
+  requestAnimationFrame(animar);
+}
+requestAnimationFrame(animar);
+```
+
+### ImageData (procesamiento de píxeles)
+
+```javascript
+const ctx = canvas.getContext("2d");
+
+// Leer píxeles de un canvas
+const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+const data = imageData.data; // Uint8ClampedArray [R, G, B, A, R, G, B, A, ...]
+
+// Recorrer píxeles (formato RGBA)
+for (let y = 0; y < imageData.height; y++) {
+  for (let x = 0; x < imageData.width; x++) {
+    const i = (y * imageData.width + x) * 4;
+    const r = data[i];     // rojo
+    const g = data[i + 1]; // verde
+    const b = data[i + 2]; // azul
+    const a = data[i + 3]; // alfa
+
+    // Ejemplo: escala de grises
+    const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+    data[i] = gray;
+    data[i + 1] = gray;
+    data[i + 2] = gray;
+  }
+}
+
+// Escribir píxeles de vuelta
+ctx.putImageData(imageData, 0, 0);
+
+// Ejemplo: invertir colores
+function invertirColores(canvas) {
+  const ctx = canvas.getContext("2d");
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  for (let i = 0; i < data.length; i += 4) {
+    data[i] = 255 - data[i];         // R
+    data[i + 1] = 255 - data[i + 1]; // G
+    data[i + 2] = 255 - data[i + 2]; // B
+    // data[i + 3] = alfa (no se modifica)
+  }
+  ctx.putImageData(imageData, 0, 0);
+}
+
+// Dibujar imágenes existentes
+const img = new Image();
+img.src = "foto.jpg";
+img.onload = () => ctx.drawImage(img, 0, 0);
+```
+
+### Web Audio API
+
+Sistema de audio modular en el navegador con routing flexible:
+
+```javascript
+// Crear AudioContext
+const audioCtx = new AudioContext();
+
+// Crear nodos
+const oscillator = audioCtx.createOscillator();
+oscillator.type = "sine";       // sine, square, sawtooth, triangle
+oscillator.frequency.value = 440; // Hz (La4)
+
+const gainNode = audioCtx.createGain();
+gainNode.gain.value = 0.5;      // volumen (0-1)
+
+const analyser = audioCtx.createAnalyser();
+analyser.fftSize = 256;         // tamaño de la FFT
+
+// Conectar: oscillator → gain → analyser → speakers
+oscillator.connect(gainNode);
+gainNode.connect(analyser);
+analyser.connect(audioCtx.destination);
+
+// Iniciar/parar
+oscillator.start();
+// oscillator.stop(2); // parar a los 2 segundos
+
+// Analizar frecuencia (para visualizador)
+const bufferLength = analyser.frequencyBinCount;
+const dataArray = new Uint8Array(bufferLength);
+
+function visualizar() {
+  analyser.getByteFrequencyData(dataArray);
+  // dataArray contiene los valores de frecuencia (0-255)
+  // Usar para dibujar barras en canvas
+  requestAnimationFrame(visualizar);
+}
+
+// Cargar y reproducir archivo de audio
+async function reproducirAudio(url) {
+  const response = await fetch(url);
+  const arrayBuffer = await response.arrayBuffer();
+  const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+
+  const source = audioCtx.createBufferSource();
+  source.buffer = audioBuffer;
+  source.connect(audioCtx.destination);
+  source.start();
+}
+
+// Efectos: convolver (reverb), biquad filter (ecualizador), delay
+const filter = audioCtx.createBiquadFilter();
+filter.type = "lowpass";        // lowpass, highpass, bandpass, notch
+filter.frequency.value = 1000;  // frecuencia de corte
+```
+
+### Vídeo (HTMLVideoElement + canvas)
+
+```javascript
+<video id="video" src="pelicula.mp4" controls></video>
+
+const video = document.getElementById("video");
+const canvas = document.getElementById("output");
+const ctx = canvas.getContext("2d");
+
+// Capturar frame del vídeo al canvas
+function capturarFrame() {
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  // Procesar el frame actual
+  aplicarFiltro();
+  requestAnimationFrame(capturarFrame);
+}
+
+video.addEventListener("play", () => {
+  requestAnimationFrame(capturarFrame);
+});
+
+// canvas.captureStream() — capturar canvas como stream de vídeo
+const stream = canvas.captureStream(30); // 30 FPS
+
+// Usar con MediaRecorder para grabar
+const mediaRecorder = new MediaRecorder(stream);
+const chunks = [];
+
+mediaRecorder.ondataavailable = (event) => chunks.push(event.data);
+mediaRecorder.onstop = () => {
+  const blob = new Blob(chunks, { type: "video/webm" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "grabacion.webm";
+  a.click();
+};
+
+mediaRecorder.start();
+// setTimeout(() => mediaRecorder.stop(), 5000); // grabar 5 segundos
+
+// Detectar movimiento (diferencia entre frames)
+let previousFrame = null;
+function detectarMovimiento() {
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  const current = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+  if (previousFrame) {
+    const diff = new Uint8Array(current.data.length);
+    let cambios = 0;
+    for (let i = 0; i < current.data.length; i += 4) {
+      const dr = Math.abs(current.data[i] - previousFrame.data[i]);
+      const dg = Math.abs(current.data[i + 1] - previousFrame.data[i + 1]);
+      const db = Math.abs(current.data[i + 2] - previousFrame.data[i + 2]);
+      diff[i] = dr > 30 ? 255 : 0;
+      if (dr > 30 || dg > 30 || db > 30) cambios++;
+    }
+    console.log("Píxeles cambiados:", cambios);
+  }
+
+  previousFrame = current;
+  requestAnimationFrame(detectarMovimiento);
+}
+```
+
+### GIF (gif.js, gifencoder)
+
+Generación de GIFs animados en Node.js y navegador:
+
+**En el navegador con gif.js:**
+```javascript
+// npm install gif.js
+import GIF from "gif.js";
+
+const gif = new GIF({
+  workers: 2,
+  quality: 10,
+  width: 200,
+  height: 200,
+});
+
+// Añadir frames desde canvas
+for (let i = 0; i < 10; i++) {
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = `hsl(${i * 36}, 100%, 50%)`;
+  ctx.fillRect(0, 0, 200, 200);
+  gif.addFrame(canvas, { delay: 100 }); // 100ms por frame
+}
+
+gif.on("progress", (progress) => {
+  console.log(`Generando GIF: ${Math.round(progress * 100)}%`);
+});
+
+gif.on("finished", (blob) => {
+  const url = URL.createObjectURL(blob);
+  const img = document.createElement("img");
+  img.src = url;
+  document.body.appendChild(img);
+});
+
+gif.render();
+```
+
+**En Node.js con gifencoder:**
+```javascript
+// npm install gifencoder
+import GIFEncoder from "gifencoder";
+import { createCanvas, loadImage } from "canvas"; // node-canvas
+
+const encoder = new GIFEncoder(200, 200);
+const canvas = createCanvas(200, 200);
+const ctx = canvas.getContext("2d");
+
+encoder.createReadStream().pipe(require("fs").createWriteStream("animacion.gif"));
+encoder.start();
+encoder.setRepeat(0);   // 0 = loop infinito
+encoder.setDelay(100);  // 100ms entre frames
+encoder.setQuality(10);
+
+for (let i = 0; i < 10; i++) {
+  ctx.fillStyle = `hsl(${i * 36}, 100%, 50%)`;
+  ctx.fillRect(0, 0, 200, 200);
+  encoder.addFrame(ctx);
+}
+
+encoder.end();
+```
+
+### Sharp (procesamiento de imágenes en Node.js)
+
+Librería nativa ultrarrápida para procesamiento de imágenes (basada en libvips):
+
+```javascript
+// npm install sharp
+import sharp from "sharp";
+
+// Redimensionar
+await sharp("input.jpg")
+  .resize(300, 200)
+  .toFile("output.jpg");
+
+// Convertir formato
+await sharp("input.png")
+  .webp({ quality: 80 })
+  .toFile("output.webp");
+
+// Múltiples operaciones en pipeline
+await sharp("foto.jpg")
+  .resize(800, 600, { fit: "cover" })
+  .grayscale()
+  .rotate(90)
+  .jpeg({ quality: 70, mozjpeg: true })
+  .toFile("procesada.jpg");
+
+// Metadatos
+const metadata = await sharp("foto.jpg").metadata();
+console.log(metadata.width, metadata.height, metadata.format);
+
+// Recortar
+await sharp("input.jpg")
+  .extract({ left: 100, top: 50, width: 400, height: 300 })
+  .toFile("recorte.jpg");
+
+// Compositing (superponer imágenes)
+await sharp("fondo.jpg")
+  .composite([
+    { input: "logo.png", top: 20, left: 20 },
+    { input: "marca_agua.png", top: 500, left: 200, blend: "overlay" },
+  ])
+  .toFile("resultado.jpg");
+
+// Buffer (sin escribir a archivo)
+const buffer = await sharp("input.jpg")
+  .resize(100, 100)
+  .png()
+  .toBuffer();
+
+// Generar miniatura
+await sharp("input.jpg")
+  .resize(150, 150, { fit: "cover", position: "entropy" })
+  .toFile("thumb.jpg");
+
+// Estadísticas de color
+const stats = await sharp("foto.jpg").stats();
+console.log(stats.channels[0].mean); // media del canal rojo
+```
+
+### Jimp (procesamiento de imágenes pure JS)
+
+Alternativa 100% JavaScript (más lenta que Sharp pero sin binarios nativos):
+
+```javascript
+// npm install jimp
+import Jimp from "jimp";
+
+const image = await Jimp.read("input.jpg");
+
+await image
+  .resize(300, 200)
+  .greyscale()
+  .contrast(0.5)
+  .quality(60)
+  .writeAsync("output.jpg");
+
+// Efectos
+await Jimp.read("foto.jpg")
+  .then((img) =>
+    img
+      .resize(800, 600)
+      .sepia()                    // tono sepia
+      .posterize(5)               // posterizar (5 niveles)
+      .fisheye({ r: 1.5 })       // efecto ojo de pez
+      .blur(5)                    // desenfoque gaussiano
+      .pixelate(10)               // pixelar
+      .writeAsync("efectos.jpg"),
+  );
+
+// Recortar y rotar
+await image.crop(100, 50, 400, 300).rotate(45).writeAsync("recortada.jpg");
+
+// Compositing
+const fondo = await Jimp.read("fondo.jpg");
+const logo = await Jimp.read("logo.png");
+logo.resize(100, 100);
+fondo.composite(logo, 10, 10);
+await fondo.writeAsync("compuesta.jpg");
+```
+
+### fluent-ffmpeg (procesamiento de vídeo/audio)
+
+Wrapper de Node.js para FFmpeg:
+
+```javascript
+// npm install fluent-ffmpeg
+// Requiere ffmpeg instalado en el sistema
+import ffmpeg from "fluent-ffmpeg";
+
+// Convertir formato
+ffmpeg("input.avi")
+  .videoCodec("libx264")
+  .audioCodec("aac")
+  .output("output.mp4")
+  .on("end", () => console.log("Conversión completada"))
+  .on("error", (err) => console.error("Error:", err))
+  .run();
+
+// Extraer audio
+ffmpeg("video.mp4")
+  .audioCodec("libmp3lame")
+  .noVideo()
+  .output("audio.mp3")
+  .run();
+
+// Crear thumbnail (captura de frame)
+ffmpeg("video.mp4")
+  .screenshots({
+    timestamps: ["1:00", "2:00", "50%"],
+    filename: "thumbnail-%s.png",
+    folder: "./thumbs",
+    size: "320x240",
+  });
+
+// Recortar vídeo
+ffmpeg("input.mp4")
+  .setStartTime("0:30")
+  .setDuration("10")
+  .output("clip.mp4")
+  .run();
+
+// Redimensionar
+ffmpeg("input.mp4")
+  .size("640x360")
+  .output("output.mp4")
+  .run();
+
+// Usando async/await con promesa:
+function convertirVideo(input, output) {
+  return new Promise((resolve, reject) => {
+    ffmpeg(input)
+      .videoCodec("libx264")
+      .output(output)
+      .on("end", resolve)
+      .on("error", reject)
+      .run();
+  });
+}
+
+await convertirVideo("input.mov", "output.mp4");
+```
+
+Fuente: [MDN — Canvas API](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API), [MDN — Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API), [MDN — MediaRecorder](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder), [Sharp docs](https://sharp.pixelplumbing.com/), [Jimp docs](https://github.com/jimp-dev/jimp), [fluent-ffmpeg docs](https://github.com/fluent-ffmpeg/node-fluent-ffmpeg)
+
+---
+
+## Bases de datos
+
+### ORMs para Node.js
+
+| Librería | Async | TypeScript | Para qué |
+|---|---|---|---|
+| **Prisma** | ✅ | ✅ | ORM moderno con schema declarativo, migrations, autocompletado. PostgreSQL, MySQL, SQLite, MongoDB |
+| **Drizzle ORM** | ✅ | ✅ | SQL-like, tipado fuerte, sin clases. "TypeScript primero" |
+| **Sequelize** | ✅ | ✅ (3rd party types) | ORM maduro, promesas, migraciones, múltiples dialectos SQL |
+| **Mongoose** | ✅ | ✅ | ODM para MongoDB, esquemas, validación, populate, hooks |
+| **Knex.js** | ✅ | ✅ | Query builder SQL (no ORM). Migraciones, pooling, múltiples dialectos |
+| **TypeORM** | ✅ | ✅ | ORM con decorators, active record y data mapper. SQL y MongoDB |
+
+### Prisma (ejemplo completo)
+
+```bash
+npm install prisma @prisma/client
+npx prisma init
+```
+
+```prisma
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  nombre    String
+  posts     Post[]
+  creadoEn  DateTime @default(now())
+}
+
+model Post {
+  id        Int      @id @default(autoincrement())
+  titulo    String
+  contenido String?
+  publicado Boolean  @default(false)
+  autor     Usuario  @relation(fields: [autorId], references: [id])
+  autorId   Int
+  creadoEn  DateTime @default(now())
+}
+```
+
+```bash
+npx prisma migrate dev --name init
+npx prisma generate
+```
+
+```javascript
+// src/index.js
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
+
+async function main() {
+  // Crear
+  const usuario = await prisma.usuario.create({
+    data: {
+      email: "ana@email.com",
+      nombre: "Ana",
+      posts: {
+        create: { titulo: "Mi primer post" },
+      },
+    },
+    include: { posts: true },
+  });
+  console.log(usuario);
+
+  // Leer con filtros
+  const posts = await prisma.post.findMany({
+    where: { publicado: true },
+    include: { autor: true },
+    orderBy: { creadoEn: "desc" },
+    take: 10,
+  });
+
+  // Actualizar
+  await prisma.post.update({
+    where: { id: 1 },
+    data: { publicado: true },
+  });
+
+  // Eliminar
+  await prisma.post.delete({ where: { id: 1 } });
+}
+
+main()
+  .catch(console.error)
+  .finally(() => prisma.$disconnect());
+```
+
+### Drizzle ORM (SQL-like, tipado fuerte)
+
+```bash
+npm install drizzle-orm better-sqlite3
+npm install -D drizzle-kit @types/better-sqlite3
+```
+
+```javascript
+// src/db/schema.js
+import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+
+export const usuarios = sqliteTable("usuarios", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  email: text("email").unique().notNull(),
+  nombre: text("nombre").notNull(),
+  creadoEn: text("creado_en").default("CURRENT_TIMESTAMP"),
+});
+```
+
+```javascript
+// src/index.js
+import { drizzle } from "drizzle-orm/better-sqlite3";
+import Database from "better-sqlite3";
+import { usuarios } from "./db/schema.js";
+
+const sqlite = new Database("db.sqlite3");
+const db = drizzle(sqlite);
+
+// Insertar
+const result = db.insert(usuarios).values({
+  email: "ana@email.com",
+  nombre: "Ana",
+}).run();
+
+// Query con filtros
+const users = db.select()
+  .from(usuarios)
+  .where(usuarios.nombre.like("A%"))
+  .all();
+```
+
+### Mongoose (MongoDB)
+
+```bash
+npm install mongoose
+```
+
+```javascript
+import mongoose from "mongoose";
+
+await mongoose.connect("mongodb://localhost:27017/miapp");
+
+// Esquema
+const usuarioSchema = new mongoose.Schema({
+  nombre: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  edad: { type: Number, min: 0 },
+  direccion: {
+    calle: String,
+    ciudad: String,
+  },
+  hobbies: [String],
+  creadoEn: { type: Date, default: Date.now },
+});
+
+// Virtual (campo calculado)
+usuarioSchema.virtual("saludo").get(function () {
+  return `Hola, soy ${this.nombre}`;
+});
+
+// Hook pre-save
+usuarioSchema.pre("save", function (next) {
+  console.log(`Guardando usuario: ${this.email}`);
+  next();
+});
+
+// Método de instancia
+usuarioSchema.methods.esMayorDeEdad = function () {
+  return this.edad >= 18;
+};
+
+// Modelo
+const Usuario = mongoose.model("Usuario", usuarioSchema);
+
+// CRUD
+const ana = await Usuario.create({
+  nombre: "Ana",
+  email: "ana@email.com",
+  edad: 30,
+  hobbies: ["leer", "correr"],
+});
+
+const usuarios = await Usuario.find({ edad: { $gte: 18 } })
+  .sort({ nombre: 1 })
+  .limit(10)
+  .select("nombre email");
+```
+
+### Migraciones con Knex
+
+```bash
+npm install knex sqlite3
+npx knex init
+```
+
+```javascript
+// knexfile.js (o en el mismo archivo)
+import knex from "knex";
+
+const db = knex({
+  client: "sqlite3",
+  connection: { filename: "./db.sqlite3" },
+  useNullAsDefault: true,
+});
+
+// Migración
+db.schema.createTable("usuarios", (table) => {
+  table.increments("id");
+  table.string("email").unique().notNullable();
+  table.string("nombre").notNullable();
+  table.timestamps(true, true);
+});
+
+// CRUD con query builder
+await db("usuarios").insert({ email: "ana@email.com", nombre: "Ana" });
+const users = await db("usuarios").where("nombre", "like", "A%").orderBy("id", "desc");
+await db("usuarios").where({ id: 1 }).update({ nombre: "Ana López" });
+await db("usuarios").where({ id: 1 }).del();
+```
+
+Fuente: [Prisma docs](https://www.prisma.io/docs), [Drizzle ORM docs](https://orm.drizzle.team/), [Mongoose docs](https://mongoosejs.com/docs/), [Knex docs](https://knexjs.org/), [Sequelize docs](https://sequelize.org/)
+
+---
+
+## WebSockets
+
+JavaScript tiene WebSockets como API nativa (tanto en navegador como en Node.js moderno).
+
+### WebSocket nativo (API del navegador y Node.js 21+)
+
+Servidor con `ws` (la librería más usada en Node):
+
+```bash
+npm install ws
+```
+
+```javascript
+// server.js
+import { WebSocketServer } from "ws";
+
+const wss = new WebSocketServer({ port: 8080 });
+
+wss.on("connection", (ws) => {
+  console.log("Cliente conectado");
+
+  ws.on("message", (data) => {
+    const mensaje = data.toString();
+    console.log("Recibido:", mensaje);
+
+    // Broadcast a todos los clientes
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(`Echo: ${mensaje}`);
+      }
+    });
+  });
+
+  ws.on("close", () => console.log("Cliente desconectado"));
+
+  ws.send("Bienvenido al servidor WebSocket");
+});
+
+console.log("WS Server en puerto 8080");
+```
+
+```javascript
+// client.js (navegador o Node 21+)
+const ws = new WebSocket("ws://localhost:8080");
+
+ws.onopen = () => {
+  console.log("Conectado");
+  ws.send("Hola servidor!");
+};
+
+ws.onmessage = (event) => {
+  console.log("Recibido:", event.data);
+};
+
+ws.onclose = () => console.log("Desconectado");
+ws.onerror = (err) => console.error("Error:", err);
+```
+
+### Socket.IO (con fallback y salas)
+
+```bash
+npm install socket.io socket.io-client
+```
+
+```javascript
+// server.js
+import { Server } from "socket.io";
+import http from "http";
+
+const server = http.createServer();
+const io = new Server(server, {
+  cors: { origin: "*" },
+});
+
+io.on("connection", (socket) => {
+  console.log(`Usuario conectado: ${socket.id}`);
+
+  // Unirse a sala
+  socket.on("unirse-sala", (sala) => {
+    socket.join(sala);
+    io.to(sala).emit("notificacion", `${socket.id} se unió a ${sala}`);
+  });
+
+  // Mensaje a sala específica
+  socket.on("mensaje-sala", ({ sala, mensaje }) => {
+    io.to(sala).emit("mensaje", { de: socket.id, mensaje });
+  });
+
+  // Mensaje privado
+  socket.on("privado", ({ para, mensaje }) => {
+    io.to(para).emit("privado", { de: socket.id, mensaje });
+  });
+
+  socket.on("disconnect", () => {
+    console.log(`Usuario desconectado: ${socket.id}`);
+  });
+});
+
+server.listen(3000, () => console.log("Socket.IO en puerto 3000"));
+```
+
+```javascript
+// client.js
+import { io } from "socket.io-client";
+
+const socket = io("http://localhost:3000");
+
+socket.on("connect", () => {
+  console.log("Conectado con ID:", socket.id);
+  socket.emit("unirse-sala", "general");
+  socket.emit("mensaje-sala", { sala: "general", mensaje: "Hola a todos!" });
+});
+
+socket.on("mensaje", (data) => {
+  console.log(`${data.de}: ${data.mensaje}`);
+});
+```
+
+### ¿Cuál usar?
+
+| Situación | Recomendación |
+|---|---|
+| Aplicación simple, Node 21+ | WebSocket API nativa |
+| Necesitas salas, eventos nombrados, fallback | Socket.IO |
+| Aplicación serverless (Deno, Bun, Edge) | WebSocket API nativa |
+| Microservicios con streaming | `ws` directamente |
+| Necesitas autenticación en handshake | `ws` con `verifyClient` o Socket.IO con middleware |
+
+Fuente: [ws docs](https://github.com/websockets/ws), [Socket.IO docs](https://socket.io/docs/v4/), [MDN — WebSocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket)
+
+---
+
+## Concurrencia y paralelismo
+
+JavaScript es single-threaded, pero ofrece varios modelos para manejar concurrencia:
+
+### Event Loop (concurrencia cooperativa)
+
+Ya explicado arriba. Es la base de toda la concurrencia en JS. Para I/O-bound (HTTP, BD, archivos), el event loop es suficiente.
+
+```javascript
+// I/O concurrente con Promise.all
+async function descargarMuchos(urls) {
+  const resultados = await Promise.all(
+    urls.map((url) =>
+      fetch(url).then((r) => r.json())
+    )
+  );
+  return resultados;
+}
+```
+
+### Web Workers (navegador) — paralelismo real
+
+Los Web Workers ejecutan código en un hilo separado del navegador:
+
+```javascript
+// worker.js
+self.onmessage = function (event) {
+  const { tipo, data } = event.data;
+
+  if (tipo === "calcular") {
+    // Cálculo pesado
+    let resultado = 0;
+    for (let i = 0; i < data; i++) {
+      resultado += Math.sqrt(i);
+    }
+    self.postMessage({ tipo: "resultado", data: resultado });
+  }
+};
+
+// main.js
+const worker = new Worker("./worker.js", { type: "module" });
+
+worker.onmessage = (event) => {
+  console.log("Resultado del worker:", event.data);
+};
+
+worker.postMessage({ tipo: "calcular", data: 10_000_000 });
+```
+
+### worker_threads (Node.js) — paralelismo real en servidor
+
+```javascript
+// 📁 heavy.mjs
+import { parentPort, workerData } from "worker_threads";
+
+function calcularPrimo(n) {
+  for (let i = 2; i <= Math.sqrt(n); i++) {
+    if (n % i === 0) return false;
+  }
+  return n > 1;
+}
+
+const resultados = workerData.map(calcularPrimo);
+parentPort.postMessage(resultados);
+
+// 📁 main.mjs
+import { Worker } from "worker_threads";
+import { cpus } from "os";
+
+function procesarEnWorkers(numeros) {
+  const cores = cpus().length;
+  const chunkSize = Math.ceil(numeros.length / cores);
+  const workers = [];
+
+  for (let i = 0; i < cores; i++) {
+    const chunk = numeros.slice(i * chunkSize, (i + 1) * chunkSize);
+    workers.push(new Promise((resolve, reject) => {
+      const worker = new Worker("./heavy.mjs", { workerData: chunk });
+      worker.on("message", resolve);
+      worker.on("error", reject);
+      worker.on("exit", (code) => {
+        if (code !== 0) reject(new Error(`Worker stopped with exit code ${code}`));
+      });
+    }));
+  }
+
+  return Promise.all(workers).then((results) => results.flat());
+}
+
+// Uso
+const numeros = Array.from({ length: 1_000_000 }, (_, i) => i);
+const primos = await procesarEnWorkers(numeros);
+console.log(`Encontrados ${primos.filter(Boolean).length} primos`);
+```
+
+### child_process (Node.js) — procesos independientes
+
+```javascript
+import { spawn, exec, fork } from "child_process";
+
+// spawn: streaming de datos
+const ls = spawn("ls", ["-la", "/tmp"]);
+ls.stdout.on("data", (data) => console.log(data.toString()));
+ls.stderr.on("data", (data) => console.error(data.toString()));
+ls.on("close", (code) => console.log(`Exit code: ${code}`));
+
+// exec: buffer completo (para comandos cortos)
+const { stdout, stderr } = await new Promise((resolve, reject) => {
+  exec("du -sh /tmp", (err, stdout, stderr) => {
+    if (err) reject(err);
+    else resolve({ stdout, stderr });
+  });
+});
+
+// fork: nuevo proceso Node.js con IPC
+const child = fork("./worker-ipc.mjs");
+child.send({ cmd: "procesar", data: [1, 2, 3] });
+child.on("message", (msg) => console.log("Respuesta:", msg));
+```
+
+### cluster (Node.js) — múltiples procesos por puerto
+
+```javascript
+import cluster from "cluster";
+import os from "os";
+
+if (cluster.isPrimary) {
+  const cores = os.cpus().length;
+  console.log(`Primary ${process.pid} — lanzando ${cores} workers`);
+
+  for (let i = 0; i < cores; i++) {
+    cluster.fork();
+  }
+
+  cluster.on("exit", (worker, code) => {
+    console.log(`Worker ${worker.process.pid} muerto (code ${code}). Relanzando...`);
+    cluster.fork(); // Auto-reparación
+  });
+} else {
+  // Worker — sirve peticiones HTTP
+  import http from "http";
+
+  const server = http.createServer((req, res) => {
+    res.writeHead(200);
+    res.end(`Worker ${process.pid} responde\n`);
+  });
+
+  server.listen(3000);
+}
+```
+
+### ¿Cuál usar?
+
+| Escenario | Modelo | Ejemplo |
+|---|---|---|
+| I/O-bound (HTTP, BD, archivos) | Event loop + async/await | API REST, microservicios |
+| Cálculo intensivo en frontend | Web Workers | Procesamiento de imágenes, WebGL |
+| Cálculo intensivo en backend | worker_threads | ML, parsing, transformación de datos |
+| Comandos del sistema | child_process | Spawn git, ffmpeg, docker |
+| Máximo rendimiento HTTP | cluster | Servidores de producción |
+| Aislar tareas no confiables | child_process + timeout | Ejecución de código de usuario |
+
+Fuente: [Node.js — worker_threads](https://nodejs.org/api/worker_threads.html), [Node.js — cluster](https://nodejs.org/api/cluster.html), [MDN — Web Workers API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API)
+
+---
+
+## Escala de aprendizaje: de 0 a 100
+
+Cada nivel incluye lo que debes saber y un proyecto para fijar los conceptos.
+
+### Nivel 0–15: Fundamentos absolutos
+**Qué aprender:**
+- Sintaxis básica: variables (`let`/`const`), tipos (`string`, `number`, `boolean`, `null`, `undefined`), `console.log()`
+- Operadores: `+`, `-`, `*`, `/`, `**`, `%`, `===`, `!==`, `&&`, `||`, `!`
+- Condicionales: `if`/`else if`/`else`, ternario `cond ? a : b`
+- Bucles: `for (let i = 0; i < n; i++)`, `for...of`, `while`
+- Arrays: `push()`, `pop()`, `length`, acceso por índice, `includes()`, `indexOf()`
+- Funciones: `function` declaration, arrow functions `() => {}`
+- **Conceptos clave**: entiende la diferencia entre `let`/`const`/`var`. Aprende que `const` no hace inmutable el objeto, solo la referencia. Usa `typeof` para inspeccionar tipos. Entiende que `null` es un object (bug histórico de JS). Familiarízate con `Map` y `Set` como sustituto moderno de objetos literales para colecciones. Aprende que `NaN !== NaN`.
+- **Paradigmas**: empieza con imperativo (if/else, bucles). Asimila el event-driven básico: `setTimeout`, `addEventListener`. Entiende que JS es single-thread y usa un event loop.
+
+**Proyecto:** *Adivina el número* — el programa elige un número aleatorio entre 1 y 100 (`Math.random()`), el usuario introduce su intento con `prompt()` en navegador o `readline` en Node.js. Pistas de "mayor/menor". Contador de intentos. Manejo de entrada no numérica con `isNaN()`.
+
+### Nivel 15–30: Funciones, objetos y DOM
+**Qué aprender:**
+- Objetos literales, propiedades dinámicas, shorthand
+- `this` y cómo se determina (llamada normal, método, constructor, arrow)
+- `call`, `apply`, `bind`
+- Spread operator: `[...arr]`, `{...obj}`, `...args`
+- Destructuring: `const { a, b } = obj`, `const [x, y] = arr`
+- Métodos de arrays: `map()`, `filter()`, `reduce()`, `find()`, `some()`, `every()`, `sort()`
+- Template literals: `` `Hola ${nombre}` ``
+- Closures: qué son, por qué importan, el problema del bucle con `var`
+- **Tipos avanzados**: TypedArrays para datos binarios, Symbol para claves únicas, BigInt para enteros grandes. `typeof` y distinción null/undefined/undeclared.
+- **Algoritmos básicos**: `Array.sort()` con comparador numérico. `Array.find()` vs `Array.findIndex()`. Búsqueda binaria manual en arrays ordenados. `Set.has()` (O(1)) vs `Array.includes()` (O(n)). Conciencia de Big O.
+- **Conceptos clave**: las funciones son ciudadanos de primera clase. `this` depende del calling context, no de dónde se define. Los closures capturan variables, no valores. Las arrow functions no tienen su propio `this` ni `arguments`. `const` no congela el objeto — `Object.freeze()` sí.
+
+**Proyecto:** *Gestor de tareas CLI* — añadir (`add "Comprar leche"`), listar (`list`), completar (`done 3`), eliminar (`rm 3`). Persistencia en JSON con `fs.readFileSync`/`writeFileSync`. Usa `process.argv` o el paquete `commander` para los comandos. Usa `readline.createInterface` para input interactivo. Implementa búsqueda con `Set.has()` para O(1) en lugar de `Array.includes()`.
+
+### Nivel 30–45: POO, prototipos y asincronía básica
+**Qué aprender:**
+- Clases ES6+: `class`, `constructor`, métodos, getters/setters
+- Herencia con `extends` y `super()`
+- Campos privados `#campo` (ES2022)
+- Métodos estáticos `static`
+- Prototipos: `Object.create()`, `Object.setPrototypeOf()`, cadena de prototipos
+- Callbacks, el problema del callback hell
+- Promesas: `new Promise()`, `.then()`, `.catch()`, `.finally()`
+- `Promise.all`, `Promise.allSettled`, `Promise.race`
+- `JSON.parse()` / `JSON.stringify()`
+- **File system**: `fs.readFileSync/writeFileSync`, `fs.promises` para I/O asíncrono, `path.join`/`path.resolve` para rutas.
+- **Algoritmos**: ordenación multi-criterio con comparadores, `toSorted`/`toReversed` (ES2023), `Object.groupBy`/`Map.groupBy` (ES2024). `Map.get()` O(1) vs búsqueda en array O(n). `WeakMap`/`WeakSet` para evitar memory leaks.
+- **Multimedia**: Canvas 2D básico (rectángulos, caminos, texto, arcos), ImageData para leer/escribir píxeles.
+- **Conceptos clave**: las clases son azúcar sintáctico sobre prototipos. `instanceof` recorre la cadena de prototipos. `super()` debe llamarse antes de usar `this` en subclase. Las promesas tienen estado (pending/fulfilled/rejected) y son immutables una vez resueltas.
+
+**Proyecto:** *Sistema de inventario* — clases `Producto`, `Inventario`. Métodos: `agregar()`, `retirar()`, `buscar()`, `valorTotal()`. Persistencia asíncrona con `fs.promises`. Campos privados para el array de productos. Excepciones personalizadas (`class StockInsuficiente extends Error`). Implementa un decorador de función (wrapper) `@loggearOperacion` manualmente. Usa `Set` para IDs únicos O(1).
+
+### Nivel 45–60: Testing, módulos y herramientas
+**Qué aprender:**
+- ES Modules: `import`/`export`, default vs named exports, re-exports
+- CommonJS vs ESM, `"type": "module"` en package.json
+- `node:test` (en Node 20+) o `vitest`/`jest` para testing
+- ESLint + Prettier: configuración, reglas comunes
+- TypeScript básico: tipos primitivos, interfaces, tipos en funciones
+- `tsx` y `ts-node` para ejecutar TypeScript
+- Debugging: `node --inspect`, Chrome DevTools, `console.table()`
+- npm scripts: `"dev"`, `"build"`, `"test"`, `"lint"`
+- **File system**: Streams (`createReadStream`/`createWriteStream`, `pipe`, `Transform`), `Buffer.alloc`/`from`/`concat`, `fs.watch` para observar cambios, `zlib` (gzip/gunzip), `__dirname` vs `import.meta.url`.
+- **Algoritmos**: Timsort (estable, O(n log n)), `findLastIndex` (ES2023), complejidad computacional de colecciones.
+- **Multimedia**: Sharp para procesamiento de imágenes (redimensionar, convertir formato, metadatos). Jimp como alternativa pure JS.
+- **Conceptos clave**: `import` es estático (debe estar en top-level). Los módulos ESM son strict mode automáticamente. TypeScript compila a JS y los tipos desaparecen en runtime. Los tests deben ser deterministas. ESLint analiza el código, Prettier lo formatea — no se solapan.
+
+**Proyecto:** *Calculadora empaquetada* — paquete npm en ESM. Tests con `vitest` (parametrize para operaciones). TypeScript con tipos estrictos. ESLint + Prettier configurados. Publicación en npm (opcional con `npm publish`). CI con GitHub Actions que ejecuta `npm test` y `npm run lint`. Añade un pipeline de build que comprime assets con `zlib`.
+
+### Nivel 60–75: APIs y async avanzado
+**Qué aprender:**
+- Express/Fastify/Hono: rutas, middleware, parámetros, body parsing
+- HTTP methods: GET, POST, PUT, PATCH, DELETE
+- Prisma/Drizzle: schema, migrations, CRUD, relaciones
+- Async/await en profundidad: `for await...of`, async iterables
+- Manejo de errores: try/catch en APIs, middleware de error en Express
+- Validación: Zod (runtime + TypeScript inference)
+- JWT: `jsonwebtoken` para autenticación
+- Testing de APIs: `supertest` con `vitest`
+- **File system**: `fs.readdir` con `withFileTypes`, `fs.watch` para recarga en caliente, pipelines con `stream/promises`, compresión gzip en respuestas HTTP.
+- **Multimedia**: Canvas API avanzado (transformaciones, animaciones con requestAnimationFrame). Web Audio API (AudioContext, OscillatorNode, AnalyserNode para visualizadores). Captura de vídeo con `canvas.captureStream()` + MediaRecorder. `fluent-ffmpeg` para conversión de vídeo/audio.
+- **Conceptos clave**: `await` solo funciona dentro de `async function`. El middleware de Express es Chain of Responsibility. Zod valida en runtime y el tipo se infiere en TypeScript. Sharp es órdenes de magnitud más rápido que Jimp por usar libvips nativo.
+
+**Proyecto:** *API de recetas* — Express/Fastify + Prisma (SQLite). Endpoints CRUD para recetas e ingredientes. Búsqueda por ingrediente. Autenticación con JWT (middleware). Validación con Zod. Tests con `supertest`. Migraciones con Prisma. Añade endpoint para subir imagen de receta: redimensiona con Sharp y guarda en disco con streams.
+
+### Nivel 75–90: Producción y tiempo real
+**Qué aprender:**
+- Docker: Dockerfile multi-etapa para Node.js, docker-compose (app + db + redis)
+- WebSockets: `ws` o Socket.IO para tiempo real
+- Redis: `ioredis` para caché, sesiones, colas
+- Bull/BullMQ: colas de trabajo con Redis
+- PM2 o `--watch` de Node 22: gestión de procesos
+- Logging: `pino` o `winston`, niveles, transporte a archivo
+- Variables de entorno: `dotenv`, validación con Zod
+- Rate limiting, CORS, Helmet, compression
+- **Multimedia**: procesamiento de imágenes en cola con Sharp + BullMQ (redimensionar thumbnails al subir). Streaming de vídeo con pipes y transforms. Web Audio API para análisis de frecuencia en tiempo real. Generación de GIFs con `gif.js`/`gifencoder`.
+- **Conceptos clave**: Node.js single-thread sirve APIs I/O-bound con miles de conexiones gracias al event loop. Redis es single-threaded también — operaciones bloqueantes afectan a todos los clientes. Las colas (BullMQ) permiten delegar trabajo pesado a workers. Sharp con streams evita cargar imágenes enteras en memoria.
+
+**Proyecto:** *Dashboard de monitorización* — Express/Fastify con WebSocket para tiempo real. Redis como caché de métricas. BullMQ para workers que recolectan métricas del sistema. Docker Compose (api + redis + worker). Testing de integración. PM2 o Docker para producción. Añade visualización de métricas con Canvas + Web Audio para alertas sonoras.
+
+### Nivel 90–100: Arquitectura y microservicios
+**Qué aprender:**
+- Microservicios con Node.js: comunicación HTTP o mensajería
+- API Gateway: Express Gateway, Kong, o custom
+- Comunicación asíncrona: RabbitMQ, Kafka (con `kafkajs`), NATS
+- gRPC: `@grpc/grpc-js` + `protobufjs`
+- GraphQL: Apollo Server, subscriptions vía WebSocket
+- Observabilidad: OpenTelemetry (tracing + metrics + logs), Prometheus + Grafana
+- Testing: tests de integración con Docker, testcontainers
+- Performance: profiling con `clinic.js`, `0x` para flamegraphs
+- Patrones: Circuit Breaker (`opossum`), Retry, Bulkhead, Saga
+- TypeScript avanzado: conditional types, mapped types, template literal types
+- **Multimedia**: microservicio de procesamiento de imágenes con Sharp (redimensionar, recortar, convertir). Servicio de transcodificación de vídeo con fluent-ffmpeg como worker Kafka/BullMQ. Canvas server-side con `node-canvas` para generar gráficos e infografías.
+- **Conceptos clave**: la comunicación entre microservicios debe ser tolerante a fallos (circuit breaker, retry). La consistencia eventual es aceptable en sistemas distribuidos. OpenTelemetry es el estándar para observabilidad. gRPC es más eficiente que HTTP/REST para comunicación interna. Los streams de Node.js permiten procesar archivos multimedia sin ocupar memoria proporcional al tamaño.
+
+**Proyecto:** *Sistema de notificaciones distribuido* — microservicios en Node.js: servicio de usuarios (Express + Prisma + PostgreSQL), servicio de notificaciones (Socket.IO), API Gateway (Express). Kafka como event bus entre servicios. GraphQL como BFF (Apollo Server). OpenTelemetry para tracing distribuido. Docker Compose para desarrollo. Prometheus + Grafana para monitoreo. Añade servicio de imágenes que genera thumbnails con Sharp y los sirve optimizados.
+
+Fuente: [Express docs](https://expressjs.com/), [Fastify docs](https://fastify.dev/), [Prisma docs](https://www.prisma.io/docs), [Socket.IO docs](https://socket.io/docs/v4/)
+
+---
+
+## Proyectos prácticos detallados
+
+### Gestor de contraseñas CLI (nivel 30)
+
+```javascript
+#!/usr/bin/env node
+// password-manager.mjs
+import { readFileSync, writeFileSync, existsSync } from "fs";
+import { randomBytes, createCipheriv, createDecipheriv, scryptSync } from "crypto";
+import { createInterface } from "readline";
+import { stdin, stdout } from "process";
+
+const ALGORITHM = "aes-256-gcm";
+const VAULT_FILE = "vault.enc";
+const KEY_FILE = "vault.key";
+
+// ── Cifrado ──
+
+function getOrCreateKey() {
+  if (existsSync(KEY_FILE)) {
+    return readFileSync(KEY_FILE);
+  }
+  const key = randomBytes(32);
+  writeFileSync(KEY_FILE, key);
+  return key;
+}
+
+function encrypt(text, key) {
+  const iv = randomBytes(16);
+  const cipher = createCipheriv(ALGORITHM, key, iv);
+  let encrypted = cipher.update(text, "utf8", "hex");
+  encrypted += cipher.final("hex");
+  return iv.toString("hex") + ":" + encrypted + ":" + cipher.getAuthTag().toString("hex");
+}
+
+function decrypt(text, key) {
+  const parts = text.split(":");
+  const iv = Buffer.from(parts[0], "hex");
+  const encrypted = parts[1];
+  const authTag = Buffer.from(parts[2], "hex");
+  const decipher = createDecipheriv(ALGORITHM, key, iv);
+  decipher.setAuthTag(authTag);
+  let decrypted = decipher.update(encrypted, "hex", "utf8");
+  decrypted += decipher.final("utf8");
+  return decrypted;
+}
+
+// ── Vault ──
+
+class Vault {
+  #key;
+
+  constructor() {
+    this.#key = getOrCreateKey();
+  }
+
+  getEntries() {
+    if (!existsSync(VAULT_FILE)) return {};
+    const encrypted = readFileSync(VAULT_FILE, "utf8");
+    if (!encrypted.trim()) return {};
+    return JSON.parse(decrypt(encrypted, this.#key));
+  }
+
+  saveEntries(entries) {
+    const encrypted = encrypt(JSON.stringify(entries, null, 2), this.#key);
+    writeFileSync(VAULT_FILE, encrypted);
+  }
+
+  add(service, username, password) {
+    const entries = this.getEntries();
+    entries[service] = { username, password, creado: new Date().toISOString() };
+    this.saveEntries(entries);
+    console.log(`✅ Credenciales para '${service}' guardadas`);
+  }
+
+  get(service) {
+    const entries = this.getEntries();
+    if (!entries[service]) {
+      console.log(`❌ '${service}' no encontrado`);
+      return;
+    }
+    const { username, password, creado } = entries[service];
+    console.log(`\n🔐 ${service}`);
+    console.log(`   Usuario: ${username}`);
+    console.log(`   Password: ${password}`);
+    console.log(`   Creado: ${creado}`);
+  }
+
+  list() {
+    const entries = this.getEntries();
+    const services = Object.keys(entries);
+    if (services.length === 0) return console.log("📭 No hay credenciales guardadas");
+    console.log("\n🔑 Credenciales guardadas:");
+    services.forEach((s) => console.log(`   • ${s}`));
+  }
+
+  generatePassword(length = 20) {
+    const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()";
+    const bytes = randomBytes(length);
+    let password = "";
+    for (let i = 0; i < length; i++) {
+      password += chars[bytes[i] % chars.length];
+    }
+    return password;
+  }
+}
+
+// ── CLI ──
+
+function ask(query) {
+  const rl = createInterface({ input: stdin, output: stdout });
+  return new Promise((resolve) => rl.question(query, (answer) => {
+    rl.close();
+    resolve(answer);
+  }));
+}
+
+async function main() {
+  const vault = new Vault();
+  const cmd = process.argv[2];
+
+  switch (cmd) {
+    case "add": {
+      const service = await ask("Servicio: ");
+      const username = await ask("Usuario: ");
+      const password = await ask("Contraseña (vacío para generar): ") || vault.generatePassword();
+      vault.add(service, username, password);
+      break;
+    }
+    case "get":
+      vault.get(process.argv[3] || await ask("Servicio: "));
+      break;
+    case "list":
+      vault.list();
+      break;
+    case "generate":
+      console.log(vault.generatePassword(parseInt(process.argv[3]) || 20));
+      break;
+    default:
+      console.log(`
+Uso: node password-manager.mjs <comando>
+
+Comandos:
+  add       Añadir nueva credencial
+  get       Obtener credencial por servicio
+  list      Listar todos los servicios
+  generate  Generar contraseña segura [longitud]
+      `);
+  }
+}
+
+main().catch(console.error);
+```
+
+### Web scraper con async (nivel 60)
+
+```javascript
+#!/usr/bin/env node
+import { JSDOM } from "jsdom";
+import fs from "fs/promises";
+
+class Scraper {
+  constructor(options = {}) {
+    this.timeout = options.timeout ?? 15_000;
+    this.userAgent = options.userAgent ?? "Mozilla/5.0 (compatible; Scraper/1.0)";
+  }
+
+  async scrape(url) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), this.timeout);
+
+    try {
+      const response = await fetch(url, {
+        signal: controller.signal,
+        headers: { "User-Agent": this.userAgent },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const html = await response.text();
+      const dom = new JSDOM(html);
+      const document = dom.window.document;
+
+      return this.#extract(document, url);
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  #extract(document, baseUrl) {
+    const articles = [];
+
+    // Selector común para titulares
+    const selectors = [
+      "article h2 a",
+      ".headline a",
+      "h2 a",
+      ".post-title a",
+      ".entry-title a",
+    ];
+
+    for (const selector of selectors) {
+      const links = document.querySelectorAll(selector);
+      for (const link of links) {
+        const title = link.textContent.trim();
+        const href = link.getAttribute("href");
+        if (title && href && title.length > 5) {
+          articles.push({
+            title,
+            url: href.startsWith("http") ? href : new URL(href, baseUrl).href,
+            source: baseUrl,
+          });
+        }
+      }
+    }
+
+    return articles;
+  }
+
+  async scrapeMultiple(urls, concurrency = 3) {
+    const results = [];
+
+    for (let i = 0; i < urls.length; i += concurrency) {
+      const batch = urls.slice(i, i + concurrency);
+      const batchResults = await Promise.allSettled(
+        batch.map((url) => this.scrape(url))
+      );
+
+      for (const result of batchResults) {
+        if (result.status === "fulfilled") {
+          results.push(...result.value);
+        } else {
+          console.error("Error en scraper:", result.reason.message);
+        }
+      }
+    }
+
+    return results;
+  }
+}
+
+// Uso
+const scraper = new Scraper();
+const articles = await scraper.scrapeMultiple([
+  "https://news.ycombinator.com",
+  "https://www.echojs.com/",
+], 2);
+
+console.log(`\n📰 ${articles.length} artículos encontrados:\n`);
+articles.slice(0, 15).forEach((a, i) => {
+  console.log(`${i + 1}. [${new URL(a.source).hostname}] ${a.title}`);
+  console.log(`   ${a.url}\n`);
+});
+
+// Guardar
+await fs.writeFile("articles.json", JSON.stringify(articles, null, 2));
+```
+
+---
+
+## Hacks y tips de productividad
+
+**1. `console.table()` — tablas formateadas**
+```javascript
+const usuarios = [
+  { nombre: "Ana", edad: 30, rol: "admin" },
+  { nombre: "Luis", edad: 25, rol: "editor" },
+  { nombre: "Sofía", edad: 28, rol: "lector" },
+];
+console.table(usuarios);
+// Muestra tabla formateada con columnas nombre, edad, rol
+```
+
+**2. `structuredClone()` — deep copy nativa (ES2023)**
+```javascript
+const original = {
+  nombre: "Ana",
+  direccion: { ciudad: "Madrid", calle: "Mayor 5" },
+  fecha: new Date(),
+  tags: ["a", "b"],
+};
+
+const copia = structuredClone(original);
+copia.direccion.ciudad = "Barcelona";
+
+console.log(original.direccion.ciudad); // "Madrid" — no se modifica
+// structuredClone soporta Date, Map, Set, ArrayBuffer, RegExp
+// A diferencia de JSON.parse(JSON.stringify()), maneja ciclos y tipos nativos
+```
+
+**3. `??` (Nullish coalescing) — solo para `null`/`undefined`**
+```javascript
+const valor = 0;
+const resultado1 = valor || "default";  // "default" (porque 0 es falsy)
+const resultado2 = valor ?? "default";  // 0 (porque no es null/undefined)
+
+// Diferencia clave: ?? solo reacciona a null/undefined
+// || reacciona a cualquier falsy (0, "", false)
+```
+
+**4. `?.` (Optional chaining) — navegación segura**
+```javascript
+const usuario = {
+  perfil: {
+    // direccion no existe
+  },
+};
+
+// Antes:
+const calle = usuario.perfil && usuario.perfil.direccion && usuario.perfil.direccion.calle;
+
+// Con optional chaining:
+const calle2 = usuario?.perfil?.direccion?.calle;  // undefined (no error)
+
+// También funciona para llamadas a funciones:
+const resultado = usuario.metodo?.();    // undefined si método no existe
+
+// Y para propiedades dinámicas:
+const valor3 = arr?.[0];
+```
+
+**5. Campos privados `#` — encapsulación real**
+```javascript
+class CuentaBancaria {
+  #saldo = 0;
+
+  constructor(titular) {
+    this.titular = titular;
+  }
+
+  depositar(cantidad) {
+    if (cantidad <= 0) throw new Error("Cantidad debe ser positiva");
+    this.#saldo += cantidad;
+  }
+
+  retirar(cantidad) {
+    if (cantidad > this.#saldo) throw new Error("Saldo insuficiente");
+    this.#saldo -= cantidad;
+  }
+
+  get saldo() {
+    return this.#saldo;
+  }
+}
+
+const cuenta = new CuentaBancaria("Ana");
+cuenta.depositar(1000);
+console.log(cuenta.saldo); // 1000
+// console.log(cuenta.#saldo); // SyntaxError: campo privado
+// A diferencia de _saldo (convención), #saldo es real en tiempo de ejecución
+```
+
+**6. Proxy para validación**
+```javascript
+function crearModeloValidado(esquema) {
+  return new Proxy(
+    {},
+    {
+      set(target, prop, value) {
+        if (prop in esquema) {
+          const { type, required, min, max } = esquema[prop];
+
+          if (required && (value === undefined || value === null)) {
+            throw new Error(`${prop} es requerido`);
+          }
+
+          if (type === "number" && typeof value !== "number") {
+            throw new TypeError(`${prop} debe ser número`);
+          }
+
+          if (type === "string" && typeof value !== "string") {
+            throw new TypeError(`${prop} debe ser string`);
+          }
+
+          if (min !== undefined && value < min) {
+            throw new Error(`${prop} debe ser >= ${min}`);
+          }
+
+          if (max !== undefined && value > max) {
+            throw new Error(`${prop} debe ser <= ${max}`);
+          }
+        }
+        target[prop] = value;
+        return true;
+      },
+    }
+  );
+}
+
+const usuarioValidado = crearModeloValidado({
+  nombre: { type: "string", required: true },
+  edad: { type: "number", required: true, min: 0, max: 150 },
+  email: { type: "string", required: true },
+});
+
+usuarioValidado.nombre = "Ana";  // ✅
+usuarioValidado.edad = 30;       // ✅
+// usuarioValidado.edad = -5;    // ❌ Error: edad debe ser >= 0
+// usuarioValidado.nombre = 123; // ❌ TypeError: nombre debe ser string
+```
+
+**7. Debounce y Throttle**
+```javascript
+// Debounce: ejecuta después de un período de inactividad
+function debounce(fn, delay = 300) {
+  let timer = null;
+  return function (...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), delay);
+  };
+}
+
+// Throttle: ejecuta como máximo una vez cada período
+function throttle(fn, limit = 300) {
+  let inThrottle = false;
+  return function (...args) {
+    if (!inThrottle) {
+      fn.apply(this, args);
+      inThrottle = true;
+      setTimeout(() => (inThrottle = false), limit);
+    }
+  };
+}
+
+// Uso típico
+const handleSearch = debounce(async (query) => {
+  const results = await fetch(`/api/search?q=${query}`);
+  // actualizar UI
+}, 500);
+
+const handleScroll = throttle(() => {
+  console.log("Scroll position:", window.scrollY);
+}, 200);
+
+// input.addEventListener("input", (e) => handleSearch(e.target.value));
+// window.addEventListener("scroll", handleScroll);
+```
+
+**8. `globalThis` — objeto global universal**
+```javascript
+// Funciona en navegador, Node.js, Deno, Bun, Web Workers
+console.log(globalThis === window);       // true en navegador
+console.log(globalThis === global);       // true en Node.js
+console.log(globalThis === self);         // true en Web Workers
+
+// Polyfill de fetch en Node.js <18:
+if (!globalThis.fetch) {
+  globalThis.fetch = (await import("node-fetch")).default;
+}
+```
+
+**9. `AbortController` — cancelar promesas**
+```javascript
+async function fetchConTimeout(url, timeoutMs = 5000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    return await response.json();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+```
+
+**10. `Intl` — internacionalización nativa**
+```javascript
+const precio = 1234567.89;
+console.log(new Intl.NumberFormat("es-ES", {
+  style: "currency",
+  currency: "EUR",
+}).format(precio)); // "1.234.567,89 €"
+
+const fecha = new Date();
+console.log(new Intl.DateTimeFormat("es-ES", {
+  dateStyle: "full",
+  timeStyle: "short",
+}).format(fecha)); // "sábado, 28 de junio de 2026, 10:30"
+
+const rel = new Intl.RelativeTimeFormat("es-ES", { numeric: "auto" });
+console.log(rel.format(-3, "day"));  // "hace 3 días"
+console.log(rel.format(1, "month")); // "dentro de 1 mes"
+```
+
+Fuente: [MDN — console.table](https://developer.mozilla.org/en-US/docs/Web/API/console/table_static), [MDN — structuredClone](https://developer.mozilla.org/en-US/docs/Web/API/structuredClone), [MDN — Nullish coalescing](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing), [MDN — Optional chaining](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining)
+
+---
+
+## Canales y recursos en español
+
+### YouTube
+- **Midulive** — JavaScript, Node.js, desarrollo fullstack con proyectos prácticos y directos
+- **HolaMundo** — Tutoriales cortos y claros sobre JS, React y tecnologías web
+- **MoureDev** — JavaScript, automatización, proyectos reales (también en Twitch)
+- **Fazt** — Cursos completos de JS, React, Node.js, TypeScript, bases de datos
+- **Sergie Code** — JavaScript moderno, React, Next.js, explicaciones claras y concisas
+- **CodigoFacilito** — Cursos estructurados de JavaScript, React y Node.js
+- **Platzi** — Ruta de aprendizaje de JavaScript con proyectos prácticos
+- **Carlos Azaustre** — JavaScript, React, Node.js, TypeScript con enfoque profesional
+- **jonmircha** — Cursos gratuitos de JavaScript, React, Node.js desde cero
+- **Victor Robles** — Desarrollo web con JavaScript, Node.js y frameworks
+
+### Comunidades
+- **r/javascript** (Reddit) — Noticias, discusiones, proyectos, dudas
+- **r/Node** (Reddit) — Enfocado en Node.js y backend
+- **React Spain** ([react.spain.dev](https://react.spain.dev/)) — Comunidad React en español
+- **Discord JavaScript en español** — Canales de ayuda, proyectos, mentoría
+- **Stack Overflow en español** — Etiqueta `javascript` para dudas técnicas
+- **JavaScript Chile** — Meetups, charlas y comunidad JS en Chile
+
+### Repositorios de código
+- [airbnb/javascript](https://github.com/airbnb/javascript) — Guía de estilo JavaScript más popular
+- [goldbergyoni/nodebestpractices](https://github.com/goldbergyoni/nodebestpractices) — Buenas prácticas de Node.js
+- [trekhleb/javascript-algorithms](https://github.com/trekhleb/javascript-algorithms) — Algoritmos en JS con explicaciones
+- [30-seconds/30-seconds-of-code](https://github.com/30-seconds/30-seconds-of-code) — Fragmentos de código curados
+- [mouredev/roadmap-retos-programacion](https://github.com/mouredev/roadmap-retos-programacion) — Roadmap y retos de programación
+- [type-challenges/type-challenges](https://github.com/type-challenges/type-challenges) — Retos de TypeScript
+
+### Blogs y newsletters
+- [JavaScript Weekly](https://javascriptweekly.com/) — Newsletter semanal con novedades del ecosistema
+- [Node.js Weekly](https://nodeweekly.com/) — Newsletter semanal de Node.js
+- [RxDB — JavaScript Blog](https://rxdb.info/articles/) — Artículos técnicos avanzados
+- [2ality.com](https://2ality.com/) — Blog de Axel Rauschmayer sobre ECMAScript en profundidad
+- [Dev.to — JavaScript tag](https://dev.to/t/javascript) — Artículos variados de la comunidad
+
+Fuente: búsqueda en YouTube y Reddit, listas curadas de Awesome JavaScript
+
+---
+
+## Referencias y documentación oficial
+
+- **MDN Web Docs**: [developer.mozilla.org/en-US/docs/Web/JavaScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript) — referencia principal del lenguaje, tutoriales, guías
+- **ECMAScript spec**: [tc39.es/ecma262](https://tc39.es/ecma262/) — especificación oficial del lenguaje
+- **TC39 Proposals**: [tc39.es/proposals](https://tc39.es/proposals/) — propuestas en desarrollo para futuras versiones
+- **Node.js docs**: [nodejs.org/docs/latest/api](https://nodejs.org/docs/latest/api/) — documentación oficial de Node.js
+- **Node.js Learn**: [nodejs.org/en/learn](https://nodejs.org/en/learn/) — guías prácticas de Node.js
+- **V8 Blog**: [v8.dev/blog](https://v8.dev/blog/) — novedades del motor V8 (Chrome, Node.js)
+- **TypeScript Handbook**: [typescriptlang.org/docs/handbook](https://www.typescriptlang.org/docs/handbook/) — guía oficial de TypeScript
+- **npm docs**: [docs.npmjs.com](https://docs.npmjs.com/) — documentación del package manager
+- **Deno docs**: [docs.deno.com](https://docs.deno.com/) — documentación oficial de Deno
+- **Bun docs**: [bun.sh/docs](https://bun.sh/docs) — documentación oficial de Bun
+
+### Fuentes de esta guía
+
+Esta guía se ha elaborado a partir de las siguientes fuentes consultadas durante su desarrollo:
+
+- [MDN Web Docs — JavaScript Guide](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide)
+- [MDN Web Docs — JavaScript Reference](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference)
+- [Node.js — Documentación oficial y guías](https://nodejs.org/en/learn/)
+- [JavaScript.info](https://javascript.info/) — tutorial moderno de JavaScript
+- [You Don't Know JS (YDKJS)](https://github.com/getify/You-Dont-Know-JS) — serie de libros de Kyle Simpson
+- [Eloquent JavaScript (Marijn Haverbeke)](https://eloquentjavascript.net/) — libro gratuito online
+- [Exploring JS (Axel Rauschmayer)](https://exploringjs.com/) — libros detallados sobre ECMAScript
+- [Prisma — Documentación oficial](https://www.prisma.io/docs)
+- [Fastify — Documentación oficial](https://fastify.dev/)
+- [Socket.IO — Documentación oficial](https://socket.io/docs/v4/)
+- [TypeScript — Documentación oficial](https://www.typescriptlang.org/docs/)
+- [V8 — Blog oficial](https://v8.dev/blog)
+- [Node.js Best Practices](https://github.com/goldbergyoni/nodebestpractices) — lista curada de buenas prácticas
+- [Awesome Node.js](https://github.com/sindresorhus/awesome-nodejs) — lista curada de recursos Node.js
+- [r/javascript](https://reddit.com/r/javascript) — comunidad, debates y proyectos destacados
+- [r/Node](https://reddit.com/r/node) — comunidad Node.js
+- [TC39 — ECMAScript proposals](https://tc39.es/proposals/)
+- [ECMAScript 2025 Language Specification](https://tc39.es/ecma262/2025/)
+- [Airbnb JavaScript Style Guide](https://github.com/airbnb/javascript)
+
+---
+
+## 🏆 Retos Relacionados
 
 Pon a prueba lo aprendido con estos desafíos:
 - [Analizador De Frecuencia](/retos/guia-analizador-de-frecuencia)

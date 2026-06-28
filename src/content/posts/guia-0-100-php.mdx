@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "Guía de PHP: De 0 a 100"
-description: "El veterano de la web que sigue moviendo el mundo (Laravel, WordPress)."
+description: "Desde la primera línea de código hasta producción: instalación, ecosistema, frameworks, proyectos reales y recursos en español."
 pubDate: "2017-06-11"
 tags: ["php", "guia", "backend"]
 image: "img/guia_0_100_php_cover-1200.webp"
@@ -10,85 +10,4417 @@ author: "Jorge Beneyto Castelló"
 
 # Guía de PHP: De 0 a 100
 
-## 🛠️ Requisitos e Instalación
+## ¿Qué es PHP?
 
-**Windows:** Usa [XAMPP](https://www.apachefriends.org/) (Apache + PHP + MySQL) o [Laragon](https://laragon.org/).
-**macOS:** `brew install php` — instala PHP 8.x con Homebrew. Servidor integrado: `php -S localhost:8000`.
-**Linux:** `sudo apt install php libapache2-mod-php php-mysql php-mbstring php-xml php-curl`
-**Verificación:** `--version` y prueba con un `"Hola Mundo"`.
-**Herramientas recomendadas:** **Composer** para dependencias. **Xdebug** para debugging. **PHPStan** o **Psalm** para análisis estático. VSCode + extensiones PHP.
+PHP (PHP: Hypertext Preprocessor) es un lenguaje de programación interpretado, de tipado débil/gradual y multiparadigma, diseñado originalmente para el desarrollo web del lado del servidor. Fue creado por **Rasmus Lerdorf** en **1994** como un conjunto de scripts Perl para mantener su página personal, evolucionando rápidamente a **PHP/FI** (Personal Home Page / Forms Interpreter) y luego a una implementación completa con el motor **Zend Engine** (PHP 4, 2000).
 
-## 🚀 Hola Mundo y Sintaxis Básica
+**¿Dónde se usa?**
+- **Web (server-side scripting)**: ~77% de todos los sitios web con servidor conocido usan PHP — WordPress (~43% de toda la web), Laravel, Symfony, Drupal, Joomla
+- **APIs REST/GraphQL**: Laravel con API Resources, Symfony con API Platform, Laravel Sanctum para auth
+- **E-commerce**: Magento (Adobe Commerce), WooCommerce (plugin WordPress), PrestaShop, Shopware
+- **CMS y portales**: WordPress (blog/corporativo), Drupal (gubernamental/educativo), Joomla, TYPO3
+- **CLI y devops**: Composer (gestor de dependencias), PHPUnit (testing), PHPStan/Psalm (análisis estático), Laravel Artisan
+- **Microservicios**: Laravel Lumen, Slim, Flight, Mezzio (ex-Zend Expressive)
+- **Tiempo real**: Ratchet (WebSockets), Swoole (async server), ReactPHP (event loop), amphp
 
-**Conceptos clave:**
+**¿Quién lo usa?** Facebook (HHVM reemplazó Zend con JIT, aunque ahora usan Hack propio), Wikipedia (PHP + MediaWiki), WordPress.com (.org también), Slack (versión inicial en PHP), Etsy, Mailchimp, Yahoo, Tumblr (versión inicial), Tesla (tienda online en Magento), Pfizer, Adobe (Magento Commerce).
 
-- **Variables y Tipos:** Variables con `$`: `$nombre = "Ana"`. Tipado gradual con PHP 7.4+ typed properties: `public string $nombre`. Union types (PHP 8.0): `int|string`.
-- **Arrays:** Indexados: `$nums = [1, 2, 3]`. Asociativos: `$user = ["nombre" => "Ana"]`. `array_map`, `array_filter`, `array_reduce`. Spread `...` para desempaquetar.
-- **POO:** Clases, interfaces, traits (PHP 5.4+), enums nativos (PHP 8.1+). Constructor promotion: `function __construct(public string $nombre) {}`. `match` expression.
-- **Namespaces y Autoload:** `namespace App\Models;`. Composer genera autoload PSR-4. Estándares PSR son fundamentales en el ecosistema.
+<sup>Fuente: [W3Techs — Usage Statistics of PHP](https://w3techs.com/technologies/details/pl-php), [PHP.net — History](https://www.php.net/manual/en/history.php.php), [Wikipedia — PHP](https://en.wikipedia.org/wiki/PHP)</sup>
 
-## 🏗️ Frameworks Populares
+---
 
-### Laravel
-**Instalación:** `composer global require laravel/installer && laravel new mi-app`
-El framework PHP más popular. Eloquent ORM, Blade templating, Artisan CLI, migraciones, autenticación. MVC con convención sobre configuración.
-```php
-Route::get('/', function () {
-    return 'Hola Mundo';
-});
+## ¿Cómo empezar? Instalación en todos los entornos
 
-Route::get('/saludo/{nombre}', function (string $nombre) {
-    return response()->json(['mensaje' => "Hola, $nombre"]);
-});
+### Windows
+
+1. Descarga el instalador desde [windows.php.net/download](https://windows.php.net/download/) (versión Thread Safe para Apache, Non-Thread Safe para IIS/CGI)
+2. Alternativa todo-en-uno: [XAMPP](https://www.apachefriends.org/) (Apache + PHP + MariaDB + phpMyAdmin) o [Laragon](https://laragon.org/) (moderno, portable, con Nginx/Apache, MySQL, Redis, Composer incluido)
+3. **Laragon** recomendado: pesa ~40 MB, menú contextual, entornos aislados, Node.js + npm integrado
+4. Verifica: abre PowerShell y ejecuta `php -v`
+5. Alternativa vía **winget**: `winget install PHP.PHP.8.3`
+
+### macOS
+
+- **Homebrew** (recomendado): `brew install php` — instala PHP 8.x con extensión mbstring, xml, curl
+- **Laravel Herd**: entorno PHP todo-en-uno con Nginx, PHP 8.x, Composer, DB (`brew install herd`)
+- **MAMP**: clásico Apache + PHP + MySQL, interfaz gráfica
+- Verifica: `php -v`
+- Servidor integrado: `php -S localhost:8000`
+
+### Linux (Debian/Ubuntu)
+
+```bash
+sudo apt update
+sudo apt install php php-cli php-mbstring php-xml php-curl php-mysql php-sqlite3 php-bcmath php-gd php-zip unzip
 ```
-### Symfony
-**Instalación:** `composer create-project symfony/skeleton mi-app`
-Framework empresarial con componentes reutilizables. Doctrine ORM, Twig templating, Messenger, API Platform.
-```php
-// config/routes.yaml
-index:
-    path: /
-    controller: App\Controller\SaludoController::index
 
-// src/Controller/SaludoController.php
-class SaludoController {
-    public function index(): Response {
-        return new Response('Hola Mundo');
+Para Fedora/RHEL: `sudo dnf install php php-cli php-mbstring php-xml php-curl php-mysqlnd php-sqlite3 php-bcmath php-gd php-zip`
+
+### phpbrew (Linux/macOS/WSL) — versión múltiple
+
+```bash
+curl -L https://raw.githubusercontent.com/phpbrew/phpbrew/master/phpbrew | bash
+# Añade al ~/.bashrc:
+echo 'source ~/.phpbrew/bashrc' >> ~/.bashrc
+exec $SHELL
+
+phpbrew known                 # Lista versiones disponibles
+phpbrew install 8.3 +default  # Compila PHP 8.3 con extensiones por defecto
+phpbrew switch 8.3            # Activa PHP 8.3 globalmente
+```
+
+### Docker
+
+```dockerfile
+FROM php:8.3-cli AS base
+WORKDIR /app
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+RUN docker-php-ext-install pdo_mysql mbstring bcmath
+
+FROM base AS dev
+RUN pecl install xdebug && docker-php-ext-enable xdebug
+
+FROM base AS prod
+COPY . /app
+RUN composer install --no-dev --optimize-autoloader
+CMD ["php", "public/index.php"]
+```
+
+Usa `php:8.3-fpm-alpine` para producción con Nginx (~40 MB). Evita `php:latest` para builds reproducibles.
+
+### Alias útiles para el día a día
+
+Añade a tu `~/.bashrc` o `~/.zshrc`:
+
+```bash
+alias phpv='php -v'
+alias php-serve='php -S localhost:8000'
+alias php-repl='php -a'
+alias cda='composer dump-autoload -o'
+alias cdu='composer update'
+alias cdi='composer install'
+alias ci='composer init'
+alias phpstan='vendor/bin/phpstan analyse src --level=max'
+alias pint='vendor/bin/pint'
+```
+
+<sup>Fuente: [phpbrew GitHub](https://github.com/phpbrew/phpbrew), [Docker Official Images — PHP](https://hub.docker.com/_/php/), [Laragon](https://laragon.org/)</sup>
+
+---
+
+## Primeros pasos y configuración del entorno
+
+### El REPL
+
+PHP incluye un intérprete interactivo. Ejecuta `php -a` en terminal y escribe directamente:
+
+```php
+php > echo "Hola mundo";
+php > $suma = 2 + 2;
+php > var_dump($suma);
+php > $array = [1, 2, 3];
+php > array_map(fn($n) => $n ** 2, $array);
+```
+
+Para salir: `exit` o Ctrl+C.
+
+### Servidor integrado para desarrollo
+
+PHP 5.4+ trae un servidor web integrado. Útil para desarrollo y pruebas sin Apache/Nginx:
+
+```bash
+php -S localhost:8000                    # Servidor simple
+php -S 0.0.0.0:8080 -t public/          # Con document root
+php -S localhost:8000 router.php        # Con router personalizado
+```
+
+### Scripts y estructura de proyecto
+
+```php
+<?php
+// hola.php
+declare(strict_types=1);
+
+function main(): void
+{
+    echo "Hola mundo" . PHP_EOL;
+}
+
+main();
+```
+
+Ejecuta: `php hola.php`
+
+### Composer y autoloading (gestor de dependencias)
+
+Composer es el gestor de dependencias de facto en PHP, similar a npm (Node), pip (Python) o cargo (Rust).
+
+```bash
+# Instalación global
+php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+php composer-setup.php
+php -r "unlink('composer-setup.php');"
+mv composer.phar /usr/local/bin/composer
+
+# Iniciar proyecto
+composer init --name="usuario/mi-proyecto" --type=project --no-interaction
+
+# Añadir dependencias
+composer require laravel/framework
+composer require --dev phpunit/phpunit phpstan/phpstan
+
+# PSR-4 autoloading configurado
+composer dump-autoload -o  # -o = optimize (genera classmap)
+```
+
+Archivo `composer.json` básico:
+
+```json
+{
+    "name": "usuario/mi-proyecto",
+    "require": {
+        "php": ">=8.2"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0",
+        "phpstan/phpstan": "^1.10"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "phpstan": "phpstan analyse src --level=max",
+        "lint": "vendor/bin/pint",
+        "check": ["@lint", "@phpstan", "@test"]
     }
 }
 ```
 
-## 📝 Ejercicios Prácticos
+### Editores recomendados
 
-1. **Array Functions** 🟢 `[Fácil]` — Filtra usuarios mayores de edad de un array, devuelve nombres ordenados.
-2. **Formulario POST** 🟢 `[Fácil]` — Formulario HTML → script PHP que valida campos y devuelve mensaje.
-3. **CRUD con Eloquent** 🟡 `[Intermedio]` — Modelo Producto con migración y seeder. Controlador RESTful en Laravel.
-4. **API con Slim** 🟡 `[Intermedio]` — API REST para blog con autenticación básica. Usa Slim Framework.
+- **VSCode**: extensión **PHP Intelephense** (de Ben Mewburn) — autocompletado, navegación, diagnósticos, refactors. Complemento con **PHP Debug** (Xdebug) y **Laravel Extra Intellisense**. Perfil recomendado: `Ctrl+Shift+P → Preferences: Open Profile → PHP`
+- **PHPStorm**: IDE específico de JetBrains. Depurador visual, refactorings avanzados, integración con Symfony/Laravel, base de datos, PHPStan/Psalm integrado (De pago, pero el mejor para PHP)
+- **Neovim**: con `nvim-lspconfig` + `intelephense`, `phpactor` como LSP alternativo, `mason.nvim` para instalación
 
-## ⚡ Buenas Prácticas y Complejidad
+### Configuración inicial del proyecto
 
-**Buenas prácticas:**
+```bash
+composer init --name="app/mi-proyecto" --type=project --no-interaction
+composer require --dev phpunit/phpunit phpstan/phpstan laravel/pint
+```
 
-- Usa type hints en funciones y métodos.
-- Sigue PSR-12 para estilo. Usa PHP_CodeSniffer o Laravel Pint.
-- Usa Composer para dependencias con PSR-4 autoloading.
-- Escapa salida con `htmlspecialchars()` — prevención XSS.
-- Usa prepared statements con PDO o Eloquent — nunca concatenes SQL.
+Archivo `phpstan.neon`:
 
-**Complejidad algorítmica (Big O):**
+```neon
+parameters:
+    level: max
+    paths:
+        - src
+    checkGenericClassInNonGenericObjectType: true
+    checkMissingIterableValueType: true
+```
 
-Arrays en PHP son tablas hash internamente: acceso O(1), inserción O(1), búsqueda O(1) promedio. `array_search()` O(n). `sort()` O(n log n). `array_filter()` O(n).
+Archivo `phpunit.xml`:
 
-## 📚 Recursos y Documentación
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+         cacheDirectory=".phpunit.cache">
+    <testsuites>
+        <testsuite name="Unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory>src</directory>
+        </include>
+    </source>
+</phpunit>
+```
 
-- 📖 [PHP Manual](https://www.php.net/manual/en/)
-- 📖 [PHP en GitHub](https://github.com/php/php-src)
-- 📖 [Laravel Documentación](https://laravel.com/docs)
-- 🌐 [Laracasts](https://laracasts.com/)
-- 🌐 [PHP The Right Way](https://phptherightway.com/)
+### Xdebug (depurador paso a paso)
 
-### 🏆 Retos Relacionados
+```bash
+# Linux (PECL)
+pecl install xdebug
+
+# Verificar instalación
+php -v | grep Xdebug
+
+# Configuración php.ini
+zend_extension=xdebug.so
+xdebug.mode=develop,debug,profile
+xdebug.start_with_request=yes
+xdebug.idekey=VSCODE
+xdebug.client_host=127.0.0.1
+xdebug.client_port=9003
+```
+
+<sup>Fuente: [Composer docs](https://getcomposer.org/doc/), [Xdebug docs](https://xdebug.org/docs/), [PHP Intelephense](https://intelephense.com/)</sup>
+
+---
+
+## Paradigmas en PHP
+
+PHP es un lenguaje multiparadigma. Puedes (y acabarás) usando varios paradigmas en un mismo proyecto.
+
+### Imperativo / Procedural
+
+Es el paradigma original de PHP. La ejecución es secuencial, se usan funciones y variables globales. Fue el estilo dominante hasta PHP 4 (2000) y sigue presente en código legacy y scripts simples.
+
+```php
+<?php
+$nombre = "Mundo";
+echo "Hola, $nombre";
+```
+
+### POO (Programación Orientada a Objetos)
+
+PHP 5 (2004) trajo un modelo de objetos completo. PHP 8.x lo ha refinado con constructor promotion, readonly, enums, etc.
+
+```php
+<?php
+declare(strict_types=1);
+
+interface Logger
+{
+    public function log(string $msg): void;
+}
+
+trait Timestampable
+{
+    public function timestamp(): string
+    {
+        return date('Y-m-d H:i:s');
+    }
+}
+
+abstract class Service
+{
+    abstract public function handle(): void;
+}
+
+class UserService extends Service implements Logger
+{
+    use Timestampable;
+
+    public function __construct(
+        private string $name,
+    ) {}
+
+    public function log(string $msg): void
+    {
+        echo "[{$this->timestamp()}] $msg";
+    }
+
+    public function handle(): void
+    {
+        $this->log("Procesando {$this->name}");
+    }
+}
+```
+
+### Funcional (parcial)
+
+PHP tiene soporte funcional limitado pero útil: closures, arrow functions, y funciones de orden superior.
+
+```php
+<?php
+$numbers = [1, 2, 3, 4, 5];
+
+$duplicar = function (int $n): int {
+    return $n * 2;
+};
+
+$cuadrado = fn(int $n): int => $n ** 2;
+
+$pares = array_filter($numbers, fn($n) => $n % 2 === 0);
+$doblados = array_map(fn($n) => $n * 2, $numbers);
+$suma = array_reduce($numbers, fn($c, $n) => $c + $n, 0);
+```
+
+### Declarativo (SQL embebido)
+
+PHP nació para generar HTML con acceso a BD. Históricamente, el SQL se mezclaba directamente con el código PHP.
+
+```php
+<?php
+$link = mysqli_connect('localhost', 'user', 'pass', 'db');
+$result = mysqli_query($link, 'SELECT * FROM usuarios WHERE activo = 1');
+while ($row = mysqli_fetch_assoc($result)) {
+    echo $row['nombre'];
+}
+```
+
+<sup>Fuente: [PHP Manual — OOP](https://www.php.net/manual/en/language.oop5.php), [PHP Manual — Anonymous Functions](https://www.php.net/manual/en/functions.anonymous.php), [Wikipedia — PHP](https://en.wikipedia.org/wiki/PHP)</sup>
+
+---
+
+## Tipos de datos y variables
+
+### Variables
+
+Toda variable empieza por `$`. No necesitan declaración previa. El tipado es dinámico pero con declaraciones opcionales desde PHP 5 (tipos en funciones) y PHP 7.4 (typed properties).
+
+```php
+<?php
+$nombre = "Ana";        // string
+$edad = 28;             // int
+$precio = 29.99;        // float
+$activo = true;         // bool
+$datos = null;          // null
+```
+
+### Tipos escalares
+
+| Tipo | Desde | Ejemplo | Descripción |
+|---|---|---|---|
+| `int` | PHP 4 | `42` | Entero (64 bits en sistemas 64-bit) |
+| `float` | PHP 4 | `3.14` | Punto flotante (double precision IEEE 754) |
+| `string` | PHP 4 | `"hola"` | Secuencia de bytes (binaria, no Unicode nativo) |
+| `bool` | PHP 4 | `true` | Booleano |
+
+### Tipos compuestos
+
+| Tipo | Desde | Descripción |
+|---|---|---|
+| `array` | PHP 4 | Mapa ordenado (tabla hash) |
+| `object` | PHP 4 | Instancia de clase |
+| `callable` | PHP 5.4 | Función, método o closure invocable |
+| `iterable` | PHP 7.1 | `array` o `Traversable` (acepta foreach) |
+
+### Tipos especiales (standalone)
+
+| Tipo | Desde | Descripción |
+|---|---|---|
+| `mixed` | PHP 8.0 | Cualquier tipo |
+| `void` | PHP 7.1 | No retorna valor |
+| `never` | PHP 8.1 | Nunca retorna (exit, throw) |
+| `null` | PHP 8.2 | Solo `null` como tipo independiente |
+| `false` | PHP 8.2 | Solo `false` como tipo |
+| `true` | PHP 8.2 | Solo `true` como tipo |
+
+```php
+<?php
+declare(strict_types=1);
+
+function mixto(mixed $v): mixed { return $v; }
+function sinRetorno(): void {}
+function abortar(): never { exit(1); }
+function nulo(): null { return null; }
+function falla(): false { return false; }
+```
+
+### Typed properties (PHP 7.4+)
+
+```php
+<?php
+class Usuario
+{
+    public string $nombre;
+    protected int $edad;
+    private ?string $email = null;
+}
+```
+
+### Strings
+
+PHP strings son secuencias de bytes. No hay codificación Unicode nativa — se usa `mbstring` para UTF-8.
+
+```php
+<?php
+$s1 = 'Hola $nombre';                                   // literal: "Hola $nombre"
+$s2 = "Hola $nombre";                                   // "Hola Ana"
+$s3 = <<<TEXT
+Línea 1
+Línea 2
+TEXT;
+$s4 = <<<'TEXT'
+Línea $nombre
+TEXT;
+
+echo mb_strlen('ññ');       // 2 (no 4 como strlen)
+echo mb_substr('café', 2);  // 'fé'
+```
+
+### Arrays
+
+Los arrays de PHP son mapas ordenados. Internamente son tablas hash que mantienen el orden de inserción.
+
+```php
+<?php
+$nums = [1, 2, 3, 4, 5];
+$user = ['nombre' => 'Ana', 'edad' => 28];
+
+$cuadrados = array_map(fn($n) => $n ** 2, $nums);
+$pares = array_filter($nums, fn($n) => $n % 2 === 0);
+$suma = array_reduce($nums, fn($c, $n) => $c + $n, 0);
+
+$merged = array_merge([1, 2], [3, 4]);
+$keys = array_keys($user);
+$vals = array_values($user);
+$pos = array_search(3, $nums);
+$existe = in_array(3, $nums);
+
+sort($nums);
+rsort($nums);
+asort($nums);
+ksort($nums);
+usort($nums, fn($a, $b) => $a <=> $b);
+```
+
+### Typed arrays (SplFixedArray)
+
+```php
+<?php
+$arr = SplFixedArray::fromArray([1, 2, 3]);
+$arr[0] = 10;
+echo $arr[1];
+$arr->setSize(5);
+```
+
+### Gestión de memoria
+
+PHP usa el Zend Engine con un administrador de memoria propio.
+
+```php
+<?php
+$a = range(1, 1000000);
+$b = $a;       // refcount = 2, sin copia (copy-on-write)
+$b[0] = 999;   // aquí se copia (separación)
+unset($a);     // decrementa refcount
+```
+
+- **zval**: contenedor de valor que almacena tipo, valor y **refcount**
+- **Copy-on-write**: al asignar no se copia hasta que se modifica
+- **GC cíclico**: no existía hasta PHP 5.3; desde PHP 7.3+ está siempre activo
+
+<sup>Fuente: [PHP Manual — Types](https://www.php.net/manual/en/language.types.intro.php), [PHP Manual — Arrays](https://www.php.net/manual/en/language.types.array.php), [PHP Manual — Strings](https://www.php.net/manual/en/language.types.string.php), [PHP Manual — Reference Counting](https://www.php.net/manual/en/features.gc.refcounting-basics.php), [PHP 8.2 — Standalone Types RFC](https://wiki.php.net/rfc/standalone_types_php)</sup>
+
+---
+
+## Control de flujo y modularidad
+
+### Condicionales
+
+```php
+<?php
+$edad = 18;
+
+if ($edad < 12) {
+    echo "Niño";
+} elseif ($edad < 18) {
+    echo "Adolescente";
+} else {
+    echo "Adulto";
+}
+
+switch ($edad) {
+    case 18:
+        echo "Recién adulto";
+        break;
+    default:
+        echo "Otra edad";
+}
+
+$categoria = match (true) {
+    $edad < 12 => 'Niño',
+    $edad < 18 => 'Adolescente',
+    $edad < 65 => 'Adulto',
+    default    => 'Senior',
+};
+```
+
+### Bucles
+
+```php
+<?php
+$nums = [1, 2, 3, 4, 5];
+
+for ($i = 0; $i < count($nums); $i++) {
+    echo $nums[$i];
+}
+
+foreach ($nums as $valor) {
+    echo $valor;
+}
+
+foreach ($nums as &$valor) {
+    $valor *= 2;
+}
+unset($valor);
+
+$user = ['nombre' => 'Ana', 'edad' => 28];
+foreach ($user as $clave => $valor) {
+    echo "$clave: $valor";
+}
+
+$i = 0;
+while ($i < 5) {
+    echo $i++;
+}
+
+$i = 0;
+do {
+    echo $i++;
+} while ($i < 5);
+
+for ($i = 0; $i < 10; $i++) {
+    for ($j = 0; $j < 10; $j++) {
+        if ($i === 2 && $j === 3) break 2;
+    }
+}
+```
+
+### Excepciones
+
+```php
+<?php
+try {
+    if (!file_exists('datos.json')) {
+        throw new \RuntimeException('Archivo no encontrado');
+    }
+    $data = file_get_contents('datos.json');
+} catch (\RuntimeException $e) {
+    echo "Error: {$e->getMessage()}";
+} catch (\Throwable $e) {
+    echo "Error inesperado: {$e->getMessage()}";
+} finally {
+    echo "Limpieza";
+}
+
+$nombre = $_GET['name'] ?? throw new \InvalidArgumentException('Name required');
+```
+
+### Namespaces y autoloading
+
+```php
+<?php
+// src/Models/Usuario.php
+namespace App\Models;
+
+use App\Core\Model;
+use function array_map;
+use const PHP_EOL;
+
+class Usuario extends Model {}
+```
+
+```php
+<?php
+require_once __DIR__ . '/vendor/autoload.php';
+include_once 'config.php';
+```
+
+```json
+{
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        },
+        "classmap": ["src/Legacy"],
+        "files": ["src/helpers.php"]
+    }
+}
+```
+
+```php
+<?php
+spl_autoload_register(function (string $class): void {
+    $file = __DIR__ . '/src/' . str_replace('\\', '/', $class) . '.php';
+    if (file_exists($file)) {
+        require_once $file;
+    }
+});
+```
+
+<sup>Fuente: [PHP Manual — Control Structures](https://www.php.net/manual/en/language.control-structures.php), [PHP Manual — Exceptions](https://www.php.net/manual/en/language.exceptions.php), [PHP Manual — Namespaces](https://www.php.net/manual/en/language.namespaces.php), [PHP 8.0 — Match Expression RFC](https://wiki.php.net/rfc/match_expression_v2)</sup>
+
+---
+
+## Conceptos clave explicados a fondo
+
+### Tipado débil/gradual y sistema de tipos
+
+PHP tradicionalmente es de **tipado dinámico**: una variable puede cambiar de tipo en cualquier momento. Sin embargo, desde **PHP 7.0** (2015) se introdujeron **declaraciones de tipo escalar** (`int`, `string`, `float`, `bool`), y desde **PHP 7.4** (2019) **typed properties** en clases.
+
+**PHP 8.0** (2020) trajo **union types**, **mixed**, y el atributo `#[\\ReturnTypeWillChange]`. **PHP 8.1** (2021) añadió **`never`**, **`readonly` properties**, y **`intersection types`** (en interfaces). **PHP 8.2** (2022) introdujo **`null` como tipo independiente** y **`true`/`false` como tipos independientes**.
+
+**strict_types — el modo estricto:**
+
+```php
+<?php
+declare(strict_types=1);
+
+function suma(int $a, int $b): int {
+    return $a + $b;
+}
+
+echo suma(1, 2);    // 3
+echo suma("1", 2);  // TypeError: Argument #1 ($a) must be of type int, string given
+```
+
+Sin `declare(strict_types=1)`, PHP coerrea automáticamente: `suma("1", 2)` devuelve `3` sin error (coerción débil). Con strict types, los tipos se verifican estrictamente.
+
+**Tabla de coerciones (modo débil vs estricto):**
+
+| Declaración | Llamada | Modo débil | Modo estricto |
+|---|---|---|---|
+| `int $a` | `suma("1")` | `1` (coerción) | `TypeError` |
+| `string $a` | `saluda(42)` | `"42"` | `TypeError` |
+| `bool $a` | `activo(1)` | `true` | `TypeError` |
+| `float $a` | `precio("10.5")` | `10.5` | `TypeError` |
+| `int\|string $a` | `foo(null)` | `TypeError` | `TypeError` (null no está en union) |
+
+**Tipos disponibles en PHP 8.3+:**
+
+- **Escalares**: `int`, `float`, `string`, `bool`
+- **Compuestos**: `array`, `object`, `callable`, `iterable`
+- **Especiales**: `mixed` (cualquier tipo), `never` (nunca retorna), `void` (no retorna valor), `null` (solo null), `true`, `false`
+- **Uniones**: `int|string|float`, `string|null` (equivalente a `?string`)
+- **Intersecciones**: `Countable&ArrayAccess` (PHP 8.1+)
+- **DNF (Disjunctive Normal Form)**: `(Countable&ArrayAccess)|string` (PHP 8.2+)
+
+<sup>Fuente: [PHP Manual — Type System](https://www.php.net/manual/en/language.types.intro.php), [PHP 8.0 — Union Types RFC](https://wiki.php.net/rfc/union_types_v2)</sup>
+
+### Variables, alcance y variables variables
+
+PHP usa el prefijo `$` para todas las variables. No hay declaración explícita: una variable existe desde la primera asignación.
+
+**Alcance (scope):**
+
+```php
+<?php
+$global = "soy global";  // Variable global
+
+function test(): void {
+    $local = "soy local";  // Variable local a la función
+    
+    // Para acceder a global dentro de una función:
+    global $global;
+    echo $global;
+    
+    // O mediante $GLOBALS:
+    echo $GLOBALS['global'];
+    
+    // Variable estática: persiste entre llamadas
+    static $contador = 0;
+    $contador++;
+    echo $contador;  // 1, 2, 3...
+}
+
+test();
+echo $local;  // Warning: Undefined variable $local (no accesible fuera)
+```
+
+**Variables variables ($$):**
+
+```php
+<?php
+$nombre = "framework";
+$$nombre = "Laravel";  // Crea $framework = "Laravel"
+echo $framework;       // "Laravel"
+echo ${$nombre};       // "Laravel"
+echo ${$nombre[0]};    // Accede a $f (primera letra de "framework")
+
+// Útil para acceso dinámico
+$tipo = "db";
+${$tipo . "_host"} = "localhost";  // Crea $db_host = "localhost"
+```
+
+**Por qué PHP usa $?**
+
+El `$` diferencia variables de funciones/constantes. `foo()` es una función, `$foo` es una variable, `FOO` es una constante. Esto elimina ambigüedades en parsing y permite interpolación directa en strings: `"Hola $nombre"`.
+
+**Referencias (&) — paso por referencia:**
+
+```php
+<?php
+function añadir(&$array, $valor): void {
+    $array[] = $valor;  // Modifica el array original
+}
+
+$nums = [1, 2];
+añadir($nums, 3);
+print_r($nums);  // [1, 2, 3]
+```
+
+A diferencia de Python (todo pass-by-object-reference), PHP permite paso explícito por referencia con `&`. Sin referencia, las variables se copian (copy-on-write mediante el zend_value interno).
+
+<sup>Fuente: [PHP Manual — Variables](https://www.php.net/manual/en/language.variables.php), [PHP Manual — References](https://www.php.net/manual/en/language.references.php)</sup>
+
+### Arrays: la estructura de datos más versátil de PHP
+
+Los arrays en PHP son **mapas ordenados** (tablas hash internamente). Pueden funcionar como listas, diccionarios, pilas, colas, conjuntos, etc.
+
+**Indexados y asociativos:**
+
+```php
+<?php
+// Indexado (array list)
+$numeros = [1, 2, 3, 4, 5];
+
+// Asociativo (hash map)
+$usuario = [
+    'nombre' => 'Ana',
+    'email' => 'ana@email.com',
+    'edad' => 28,
+];
+
+// Mixto (no recomendado pero posible)
+$mixto = [
+    'clave' => 'valor',
+    0 => 'cero',
+    true => 'uno',  // true se convierte a 1
+];
+
+// Arrays multidimensionales
+$matrix = [
+    [1, 2, 3],
+    [4, 5, 6],
+    [7, 8, 9],
+];
+```
+
+**Array functions esenciales:**
+
+```php
+<?php
+$nums = [1, 2, 3, 4, 5];
+
+// Map, filter, reduce
+$cuadrados = array_map(fn($n) => $n ** 2, $nums);
+$pares = array_filter($nums, fn($n) => $n % 2 === 0);
+$suma = array_reduce($nums, fn($carry, $n) => $carry + $n, 0);
+
+// Búsqueda
+$pos = array_search(3, $nums);        // 2 (índice), false si no existe
+$existe = in_array(3, $nums);         // true/false
+$claves = array_keys($usuario);       // ['nombre', 'email', 'edad']
+$valores = array_values($usuario);    // ['Ana', 'ana@email.com', 28]
+
+// Ordenación (modifica el array original)
+sort($nums);        // Orden ascendente (valores)
+rsort($nums);       // Orden descendente
+asort($nums);       // Ordena manteniendo asociación clave-valor
+ksort($nums);       // Ordena por claves
+usort($nums, fn($a, $b) => $a <=> $b);  // Orden personalizado con spaceship
+
+// Manipulación
+$slice = array_slice($nums, 0, 3);      // [1, 2, 3] (no modifica original)
+$removed = array_splice($nums, 1, 2);   // Elimina desde índice 1, 2 elementos
+$merged = array_merge([1, 2], [3, 4]);  // [1, 2, 3, 4]
+$diff = array_diff([1, 2, 3], [2, 4]);  // [1, 3] (valores en primero no en segundo)
+$intersect = array_intersect([1, 2, 3], [2, 3, 4]); // [2, 3]
+
+// Comprobar tipo
+echo is_array($nums);        // true
+echo is_list($nums);         // true si índices son 0, 1, 2... secuenciales (PHP 8.1+)
+echo array_is_list($nums);   // mismo que is_list
+
+// Spread operator en arrays (PHP 7.4+)
+$part1 = [1, 2];
+$part2 = [3, 4];
+$completo = [...$part1, ...$part2];  // [1, 2, 3, 4]
+```
+
+**ArrayAccess y Traversable (objetos como arrays):**
+
+```php
+<?php
+class Coleccion implements ArrayAccess, Countable, Iterator {
+    private array $items = [];
+    
+    public function offsetExists(mixed $offset): bool {
+        return isset($this->items[$offset]);
+    }
+    
+    public function offsetGet(mixed $offset): mixed {
+        return $this->items[$offset] ?? null;
+    }
+    
+    public function offsetSet(mixed $offset, mixed $value): void {
+        if ($offset === null) {
+            $this->items[] = $value;
+        } else {
+            $this->items[$offset] = $value;
+        }
+    }
+    
+    public function offsetUnset(mixed $offset): void {
+        unset($this->items[$offset]);
+    }
+    
+    public function count(): int {
+        return count($this->items);
+    }
+    
+    public function current(): mixed {
+        return current($this->items);
+    }
+    
+    public function next(): void {
+        next($this->items);
+    }
+    
+    public function key(): mixed {
+        return key($this->items);
+    }
+    
+    public function valid(): bool {
+        return current($this->items) !== false;
+    }
+    
+    public function rewind(): void {
+        reset($this->items);
+    }
+}
+
+$col = new Coleccion();
+$col[] = 'PHP';
+$col[] = 'Python';
+echo $col[0];  // 'PHP' (via offsetGet)
+echo count($col);  // 2 (via count)
+
+foreach ($col as $key => $value) {
+    echo "$key: $value";  // 0: PHP, 1: Python
+}
+```
+
+**SplFixedArray — array de tamaño fijo más eficiente:**
+
+```php
+<?php
+// Más rápido y ocupa menos memoria que array normal
+$arr = SplFixedArray::fromArray([1, 2, 3, 4, 5]);
+echo $arr[0];      // 1
+echo $arr->count(); // 5
+$arr->setSize(10);  // Redimensiona (rellena con null)
+```
+
+**Complejidad de arrays en PHP** (son tablas hash internamente):
+
+| Operación | Complejidad | Notas |
+|---|---|---|
+| Acceso `$arr[$key]` | O(1) promedio | Tabla hash interna |
+| Inserción `$arr[] = $val` | O(1) | Amortizado |
+| `in_array()` / `array_search()` | O(n) | Búsqueda lineal |
+| `isset($arr[$key])` | O(1) | Verificación hash |
+| `sort()` | O(n log n) | Quicksort interno |
+| `array_map()` / `array_filter()` | O(n) | Recorrido completo |
+| `array_merge()` | O(n + m) | Copia ambos arrays |
+
+<sup>Fuente: [PHP Manual — Array](https://www.php.net/manual/en/language.types.array.php), [PHP Manual — Array Functions](https://www.php.net/manual/en/ref.array.php)</sup>
+
+### POO: clases, interfaces, traits, namespaces y autoloading
+
+PHP tiene un modelo de objetos muy completo desde PHP 5 (2004). PHP 7+ y 8+ han añadido características modernas.
+
+**Clases básicas y constructor promotion (PHP 8.0):**
+
+```php
+<?php
+declare(strict_types=1);
+
+namespace App\Models;
+
+enum Status: string {
+    case Active = 'active';
+    case Inactive = 'inactive';
+    case Archived = 'archived';
+}
+
+class Usuario
+{
+    // Constructor property promotion (PHP 8.0)
+    // Crea las propiedades y las asigna automáticamente
+    public function __construct(
+        private string $nombre,
+        private string $email,
+        private int $edad,
+        private Status $status = Status::Active,
+    ) {}
+    
+    // Getter (tipado de retorno)
+    public function nombre(): string
+    {
+        return $this->nombre;
+    }
+    
+    // Setter con validación
+    public function setEdad(int $edad): static
+    {
+        if ($edad < 0 || $edad > 150) {
+            throw new \InvalidArgumentException("Edad inválida: $edad");
+        }
+        $this->edad = $edad;
+        return $this;  // fluent interface
+    }
+    
+    public function esMayorDeEdad(): bool
+    {
+        return $this->edad >= 18;
+    }
+}
+```
+
+**Interfaces y traits:**
+
+```php
+<?php
+// Interfaz: define un contrato
+interface Exportable
+{
+    public function toArray(): array;
+    public function toJson(): string;
+}
+
+// Trait: reutilización horizontal de métodos (PHP 5.4+)
+trait Timestampable
+{
+    private \DateTimeImmutable $createdAt;
+    private ?\DateTimeImmutable $updatedAt = null;
+    
+    public function initializeTimestamps(): void
+    {
+        $this->createdAt = new \DateTimeImmutable();
+    }
+    
+    public function markAsUpdated(): void
+    {
+        $this->updatedAt = new \DateTimeImmutable();
+    }
+    
+    public function createdAt(): \DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+    
+    public function updatedAt(): ?\DateTimeImmutable
+    {
+        return $this->updatedAt;
+    }
+}
+
+// Clase abstracta
+abstract class Entidad implements Exportable
+{
+    use Timestampable;
+    
+    public function __construct(
+        private int $id,
+    ) {
+        $this->initializeTimestamps();
+    }
+    
+    public function id(): int
+    {
+        return $this->id;
+    }
+    
+    // Método abstracto: las subclases deben implementarlo
+    abstract public function validar(): bool;
+}
+
+// Implementación concreta
+class Producto extends Entidad
+{
+    public function __construct(
+        int $id,
+        private string $nombre,
+        private float $precio,
+    ) {
+        parent::__construct($id);
+    }
+    
+    public function validar(): bool
+    {
+        return $this->precio > 0 && strlen($this->nombre) > 0;
+    }
+    
+    public function toArray(): array
+    {
+        return [
+            'id' => $this->id(),
+            'nombre' => $this->nombre,
+            'precio' => $this->precio,
+        ];
+    }
+    
+    public function toJson(): string
+    {
+        return json_encode($this->toArray());
+    }
+}
+```
+
+**Herencia múltiple con traits (MRO):**
+
+```php
+<?php
+trait A {
+    public function foo(): string { return 'A'; }
+}
+
+trait B {
+    public function foo(): string { return 'B'; }
+}
+
+class MiClase {
+    use A, B {
+        B::foo insteadof A;  // Usa foo de B en lugar de A
+        A::foo as fooA;      // Alias para acceder a foo de A
+    }
+}
+
+$obj = new MiClase();
+echo $obj->foo();   // 'B'
+echo $obj->fooA();  // 'A'
+```
+
+**Namespaces y autoloading PSR-4:**
+
+```php
+<?php
+// src/Controllers/UsuarioController.php
+namespace App\Controllers;
+
+use App\Models\Usuario;
+use App\Repositories\UsuarioRepository;
+
+class UsuarioController
+{
+    public function __construct(
+        private UsuarioRepository $repo,
+    ) {}
+    
+    public function index(): array
+    {
+        return array_map(
+            fn(Usuario $u) => $u->toArray(),
+            $this->repo->findAll(),
+        );
+    }
+}
+```
+
+Composer autoload (PSR-4) mapea `App\\` al directorio `src/`. Cualquier clase en `src/Controllers/` con namespace `App\Controllers\` se carga automáticamente. Ya no necesitas `require_once`.
+
+**Final y readonly (PHP 8.1):**
+
+```php
+<?php
+// Final: no se puede extender la clase ni sobrescribir el método
+final class Configuracion
+{
+    // Readonly: propiedad que solo se asigna una vez (PHP 8.1)
+    // Con PHP 8.2, readonly permite asignación en __clone
+    public readonly string $dbUrl;
+    
+    public function __construct()
+    {
+        $this->dbUrl = getenv('DATABASE_URL') ?: 'mysql://localhost:3306/db';
+    }
+}
+
+// Error: Cannot inherit from final class Configuracion
+// class ConfigHija extends Configuracion {}
+```
+
+<sup>Fuente: [PHP Manual — OOP](https://www.php.net/manual/en/language.oop5.php), [PHP 8.0 — Constructor Promotion RFC](https://wiki.php.net/rfc/constructor_promotion), [PHP 8.1 — Readonly RFC](https://wiki.php.net/rfc/readonly_properties_v2)</sup>
+
+### Type hints, uniones, match expression y enums
+
+**Union types, nullable y mixed:**
+
+```php
+<?php
+declare(strict_types=1);
+
+// Nullable: ?Type = Type|null
+function buscar(?int $id): ?string
+{
+    if ($id === null) {
+        return null;
+    }
+    return "Resultado para $id";
+}
+
+// Union type (PHP 8.0+)
+function procesar(int|string $valor): string|int
+{
+    return match (true) {
+        is_int($valor) => $valor * 2,
+        is_string($valor) => strtoupper($valor),
+    };
+}
+
+// Mixed (cualquier tipo, PHP 8.0+)
+function debug(mixed $valor): void
+{
+    var_dump($valor);
+}
+
+// Never (nunca retorna, PHP 8.1+)
+function abortar(string $mensaje): never
+{
+    echo $mensaje . PHP_EOL;
+    exit(1);
+}
+```
+
+**Nullsafe operator (?->) (PHP 8.0):**
+
+```php
+<?php
+// Antes (cadenas de null checks):
+$ciudad = null;
+if ($usuario !== null) {
+    $direccion = $usuario->direccion;
+    if ($direccion !== null) {
+        $ciudad = $direccion->ciudad;
+    }
+}
+
+// PHP 8.0+ nullsafe:
+$ciudad = $usuario?->direccion?->ciudad;
+
+// Null coalescing (??) y null coalescing assignment (??=)
+$nombre = $_GET['nombre'] ?? 'Invitado';  // Si no existe, usa default
+$usuario['avatar'] ??= 'default.png';     // Asigna solo si es null o no existe
+```
+
+**match expression (PHP 8.0):**
+
+```php
+<?php
+// match es una expresión (devuelve valor), no una sentencia como switch
+// No necesita break, es exhaustivo (lanza UnhandledMatchError si no hay match)
+
+$statusCode = 404;
+
+$mensaje = match ($statusCode) {
+    200, 201 => 'Éxito',
+    301, 302 => 'Redirección',
+    400, 422 => 'Error de validación',
+    401 => 'No autenticado',
+    403 => 'Prohibido',
+    404 => 'No encontrado',
+    500 => 'Error del servidor',
+    default => 'Código desconocido',
+};
+
+// match con condiciones booleanas
+$edad = 25;
+$categoria = match (true) {
+    $edad < 13 => 'Niño',
+    $edad < 18 => 'Adolescente',
+    $edad < 65 => 'Adulto',
+    default => 'Senior',
+};
+```
+
+**Enums nativos (PHP 8.1):**
+
+```php
+<?php
+// Enum puro (sin valor asociado)
+enum Status
+{
+    case Draft;
+    case Published;
+    case Archived;
+    
+    // Métodos en enums
+    public function label(): string
+    {
+        return match ($this) {
+            Status::Draft => 'Borrador',
+            Status::Published => 'Publicado',
+            Status::Archived => 'Archivado',
+        };
+    }
+}
+
+// Backed enum (con valor string o int)
+enum Rol: string
+{
+    case Admin = 'admin';
+    case Editor = 'editor';
+    case Viewer = 'viewer';
+    
+    public function permisos(): array
+    {
+        return match ($this) {
+            Rol::Admin => ['create', 'read', 'update', 'delete'],
+            Rol::Editor => ['create', 'read', 'update'],
+            Rol::Viewer => ['read'],
+        };
+    }
+}
+
+// Uso
+$rol = Rol::Admin;
+echo $rol->name;      // 'Admin'
+echo $rol->value;     // 'admin'
+echo $rol->permisos(); // ['create', 'read', 'update', 'delete']
+echo Rol::from('editor'); // Rol::Editor
+echo Rol::tryFrom('xyz');  // null (no lanza excepción)
+```
+
+**First-class callable syntax (PHP 8.1):**
+
+```php
+<?php
+// Antes (PHP 8.0 y anterior):
+$callback = [$this, 'metodo'];
+$callback2 = 'strtoupper';
+
+// PHP 8.1:
+$callback = $this->metodo(...);
+$callback2 = strtoupper(...);
+
+// Especialmente útil con array_map/array_filter:
+$nombres = ['ana', 'luis', 'pedro'];
+$mayusculas = array_map(strtoupper(...), $nombres);
+```
+
+<sup>Fuente: [PHP 8.0 — Match Expression RFC](https://wiki.php.net/rfc/match_expression_v2), [PHP 8.1 — Enums RFC](https://wiki.php.net/rfc/enumerations), [PHP 8.1 — First-class Callable Syntax](https://wiki.php.net/rfc/first_class_callable_syntax)</sup>
+
+### Named arguments y attributes (PHP 8.0)
+
+**Named arguments:**
+
+```php
+<?php
+// Permite pasar argumentos por nombre, no solo por posición
+function crearUsuario(
+    string $nombre,
+    string $email,
+    int $edad = 18,
+    bool $activo = true,
+    array $roles = ['user'],
+): array {
+    return compact('nombre', 'email', 'edad', 'activo', 'roles');
+}
+
+// Llamada tradicional (posicional)
+$u1 = crearUsuario('Ana', 'ana@email.com', 28, true, ['admin', 'user']);
+
+// Llamada con named arguments (solo especificas los que cambian)
+$u2 = crearUsuario(
+    nombre: 'Luis',
+    email: 'luis@email.com',
+    roles: ['editor'],
+    // $edad y $activo usan valores por defecto
+);
+
+// Orden arbitrario, saltar defaults
+$u3 = crearUsuario(email: 'a@b.com', nombre: 'Pe');
+```
+
+**Attributes (PHP 8.0):**
+
+```php
+<?php
+// Los atributos son metadatos estructurados para clases, métodos, propiedades
+// Similar a anotaciones en Java o decoradores en Python (pero no ejecutan código)
+
+#[Attribute(Attribute::TARGET_PROPERTY | Attribute::TARGET_PARAMETER)]
+class Validar
+{
+    public function __construct(
+        public string $regla,
+        public ?int $min = null,
+        public ?int $max = null,
+    ) {}
+}
+
+#[Attribute(Attribute::TARGET_CLASS)]
+class Ruta
+{
+    public function __construct(
+        public string $path,
+        public string $method = 'GET',
+    ) {}
+}
+
+// Uso
+#[Ruta('/usuarios')]
+class UsuarioController
+{
+    public function __construct(
+        #[Validar('email')]
+        private string $email,
+        
+        #[Validar('string', min: 3, max: 100)]
+        private string $nombre,
+    ) {}
+}
+
+// Leer atributos en runtime (reflection)
+$ref = new ReflectionClass(UsuarioController::class);
+$rutaAttr = $ref->getAttributes(Ruta::class)[0] ?? null;
+if ($rutaAttr) {
+    $ruta = $rutaAttr->newInstance();
+    echo "{$ruta->method} {$ruta->path}";  // "GET /usuarios"
+}
+
+$propRef = $ref->getProperty('email');
+$validarAttr = $propRef->getAttributes(Validar::class)[0]?->newInstance();
+echo $validarAttr->regla;  // 'email'
+```
+
+**Fibers (PHP 8.1) — concurrencia cooperativa:**
+
+```php
+<?php
+// Fibers son corutinas a nivel de sistema: permiten pausar y reanudar
+// una función en un punto específico, similar a async/await pero sin event loop
+
+$fiber = new Fiber(function (): void {
+    $valor = Fiber::suspend('retorno inicial');
+    echo "Recibido: $valor";
+});
+
+$resultado = $fiber->start();
+echo $resultado;  // 'retorno inicial'
+
+$fiber->resume('mensaje desde fuera');
+// Output: "Recibido: mensaje desde fuera"
+```
+
+<sup>Fuente: [PHP 8.0 — Named Arguments RFC](https://wiki.php.net/rfc/named_params), [PHP 8.0 — Attributes RFC](https://wiki.php.net/rfc/attributes_v2), [PHP 8.1 — Fibers RFC](https://wiki.php.net/rfc/fibers)</sup>
+
+### Excepciones: try/catch/finally y custom exceptions
+
+```php
+<?php
+declare(strict_types=1);
+
+// Excepción personalizada
+class UsuarioNoEncontrado extends \RuntimeException
+{
+    public function __construct(
+        int $id,
+        string $message = '',
+        int $code = 404,
+        ?\Throwable $previous = null,
+    ) {
+        if ($message === '') {
+            $message = "Usuario con ID {$id} no encontrado";
+        }
+        parent::__construct($message, $code, $previous);
+    }
+}
+
+// Excepción de validación
+class ValidacionException extends \InvalidArgumentException
+{
+    /** @var array<string, string[]> */
+    private array $errores;
+    
+    public function __construct(array $errores)
+    {
+        parent::__construct('Error de validación', 422);
+        $this->errores = $errores;
+    }
+    
+    public function errores(): array
+    {
+        return $this->errores;
+    }
+}
+
+// Throw expression (PHP 8.0+): throw se puede usar en expresiones
+$nombre = $_GET['nombre'] ?? throw new \InvalidArgumentException('Nombre requerido');
+
+// Uso completo
+function buscarUsuario(int $id): array
+{
+    // Simulación de búsqueda
+    if ($id <= 0) {
+        throw new \InvalidArgumentException('ID inválido');
+    }
+    
+    if ($id !== 1) {
+        throw new UsuarioNoEncontrado($id);
+    }
+    
+    return ['id' => 1, 'nombre' => 'Ana'];
+}
+
+// Try/catch/finally
+try {
+    $usuario = buscarUsuario(5);
+    echo $usuario['nombre'];
+} catch (UsuarioNoEncontrado $e) {
+    echo "Error: {$e->getMessage()}";  // "Error: Usuario con ID 5 no encontrado"
+    
+    // try/catch anidados con throw
+    throw $e;
+} catch (\InvalidArgumentException $e) {
+    echo "Datos inválidos: {$e->getMessage()}";
+} catch (\Throwable $e) {
+    // Captura cualquier error o excepción
+    echo "Error inesperado: {$e->getMessage()}";
+    throw $e;  // Re-lanzar si no podemos manejarlo
+} finally {
+    // Siempre se ejecuta, haya o no excepción
+    echo "Limpiando recursos...";
+}
+```
+
+<sup>Fuente: [PHP Manual — Exceptions](https://www.php.net/manual/en/language.exceptions.php)</sup>
+
+### Genéricos (no nativos, con PHPDoc/Psalm/PHPStan)
+
+PHP no tiene genéricos nativos en runtime (a diferencia de Java, C# o TypeScript). Sin embargo, las herramientas de análisis estático como **PHPStan** (nivel max) y **Psalm** soportan **genéricos en PHPDoc**:
+
+```php
+<?php
+/**
+ * @template T
+ * @implements \IteratorAggregate<int, T>
+ */
+class Coleccion implements \IteratorAggregate
+{
+    /** @var array<int, T> */
+    private array $items = [];
+    
+    /**
+     * @param T $item
+     */
+    public function añadir(mixed $item): void
+    {
+        $this->items[] = $item;
+    }
+    
+    /**
+     * @return T|null
+     */
+    public function primero(): mixed
+    {
+        return $this->items[0] ?? null;
+    }
+    
+    /**
+     * @return \ArrayIterator<int, T>
+     */
+    public function getIterator(): \ArrayIterator
+    {
+        return new \ArrayIterator($this->items);
+    }
+}
+
+/**
+ * @template TEntity
+ */
+interface Repositorio
+{
+    /**
+     * @param int $id
+     * @return TEntity|null
+     */
+    public function find(int $id): ?object;
+    
+    /**
+     * @return Coleccion<TEntity>
+     */
+    public function findAll(): Coleccion;
+}
+
+/**
+ * @implements Repositorio<Usuario>
+ */
+class UsuarioRepository implements Repositorio
+{
+    public function find(int $id): ?Usuario
+    {
+        // PHPStan sabe que retorna Usuario|null
+    }
+    
+    public function findAll(): Coleccion
+    {
+        // PHPStan sabe que retorna Coleccion<Usuario>
+    }
+}
+```
+
+Para PHP 8.3+ no hay planes concretos para genéricos en runtime. La comunidad usa PHPDoc + PHPStan/Psalm.
+
+<sup>Fuente: [PHPStan — Generics](https://phpstan.org/writing-php-code/generics), [Psalm — Template](https://psalm.dev/docs/annotating_code/templated_annotations/)</sup>
+
+### Composer: Packagist, autoload y scripts
+
+Composer es el gestor de dependencias de PHP. Análogo a npm (Node), pip (Python), cargo (Rust).
+
+**Packagist — el repositorio de paquetes:**
+
+[packagist.org](https://packagist.org/) es el registro oficial, equivalente a PyPI (Python) o npmjs.com. Alberga >400,000 paquetes.
+
+```json
+{
+    "require": {
+        "laravel/framework": "^11.0",
+        "monolog/monolog": "^3.0",
+        "guzzlehttp/guzzle": "^7.0"
+    }
+}
+```
+
+**Autoload PSR-4:**
+
+```json
+{
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/",
+            "App\\Domain\\": "src/Domain/",
+            "App\\Infrastructure\\": "src/Infrastructure/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    }
+}
+```
+
+**Scripts de Composer:**
+
+```json
+{
+    "scripts": {
+        "dev": "php -S localhost:8000 -t public/",
+        "test": "phpunit",
+        "test:coverage": "phpunit --coverage-html coverage/",
+        "phpstan": "phpstan analyse src --level=max",
+        "psalm": "psalm",
+        "lint": "pint",
+        "fix": "pint --preset=laravel",
+        "check": [
+            "@lint",
+            "@phpstan",
+            "@test"
+        ],
+        "post-create-project-cmd": [
+            "php artisan key:generate"
+        ]
+    }
+}
+```
+
+**Comandos esenciales:**
+
+| Comando | Equivalente npm | Para qué |
+|---|---|---|
+| `composer install` | `npm install` | Instala dependencias del `composer.lock` |
+| `composer update` | `npm update` | Actualiza dependencias y regenera lock |
+| `composer require X` | `npm install X` | Añade dependencia |
+| `composer remove X` | `npm uninstall X` | Elimina dependencia |
+| `composer dump-autoload -o` | — | Regenera autoloader (optimizado) |
+| `composer show` | `npm list` | Lista dependencias instaladas |
+
+<sup>Fuente: [Composer docs](https://getcomposer.org/doc/), [Packagist](https://packagist.org/)</sup>
+
+### Generadores (yield) e iteradores SPL
+
+```php
+<?php
+// Generador: función que produce múltiples valores sin crear un array completo
+// Similar a los generadores de Python
+
+function numerosPares(int $limite): \Generator
+{
+    for ($i = 0; $i <= $limite; $i += 2) {
+        // yield pausa la ejecución y retorna el valor
+        // La próxima llamada a next() continúa desde aquí
+        yield $i;
+    }
+}
+
+foreach (numerosPares(10) as $num) {
+    echo "$num ";  // 0 2 4 6 8 10
+}
+
+// Generador con claves (yield key => value)
+function mapeoLetras(): \Generator
+{
+    yield 'a' => 1;
+    yield 'b' => 2;
+    yield 'c' => 3;
+}
+
+// Generador delegado (yield from)
+function combinado(): \Generator
+{
+    yield 1;
+    yield from numerosPares(6);  // 0, 2, 4, 6
+    yield 99;
+}
+
+// Generadores para leer archivos grandes (memoria constante)
+function leerPorLineas(string $path): \Generator
+{
+    $handle = fopen($path, 'r');
+    while (($line = fgets($handle)) !== false) {
+        yield trim($line);
+    }
+    fclose($handle);
+}
+
+// SPL Iterators
+$iterator = new \DirectoryIterator(__DIR__);
+foreach ($iterator as $file) {
+    if ($file->isFile()) {
+        echo $file->getFilename() . PHP_EOL;
+    }
+}
+
+// Composición de iteradores
+$arr = [1, 2, 3, 4, 5];
+$filter = new \CallbackFilterIterator(
+    new \ArrayIterator($arr),
+    fn($item) => $item % 2 === 0,
+);
+foreach ($filter as $item) {
+    echo $item;  // 2, 4
+}
+```
+
+<sup>Fuente: [PHP Manual — Generators](https://www.php.net/manual/en/language.generators.php), [PHP Manual — SPL Iterators](https://www.php.net/manual/en/spl.iterators.php)</sup>
+
+---
+
+## Sistema de archivos
+
+PHP tiene un sistema de archivos muy completo, heredado de C y ampliado con wrappers de stream.
+
+### Operaciones básicas
+
+```php
+<?php
+$contenido = file_get_contents('archivo.txt');
+file_put_contents('copia.txt', $contenido);
+
+$lineas = file('datos.csv');
+foreach ($lineas as $linea) {
+    echo trim($linea);
+}
+
+$handle = fopen('archivo.txt', 'r');
+while (($line = fgets($handle)) !== false) {
+    echo $line;
+}
+fclose($handle);
+
+echo file_exists('archivo.txt');
+echo is_file('archivo.txt');
+echo is_dir('uploads');
+echo filesize('archivo.txt');
+echo filemtime('archivo.txt');
+
+mkdir('nueva-carpeta', 0755, true);
+rmdir('nueva-carpeta');
+$archivos = scandir('uploads');
+$glob = glob('uploads/*.jpg');
+
+$info = new SplFileInfo('archivo.txt');
+echo $info->getFilename();
+echo $info->getExtension();
+echo $info->getSize();
+
+$file = new SplFileObject('datos.csv');
+$file->setFlags(SplFileObject::READ_CSV);
+foreach ($file as $row) {
+    print_r($row);
+}
+```
+
+### Formatos estructurados
+
+```php
+<?php
+$data = ['nombre' => 'Ana', 'edad' => 28];
+$json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+file_put_contents('data.json', $json);
+$decoded = json_decode(file_get_contents('data.json'), true);
+
+$handle = fopen('datos.csv', 'w');
+fputcsv($handle, ['Nombre', 'Edad']);
+fputcsv($handle, ['Ana', 28]);
+fclose($handle);
+
+$handle = fopen('datos.csv', 'r');
+while ($row = fgetcsv($handle)) {
+    print_r($row);
+}
+fclose($handle);
+
+$zip = new ZipArchive();
+if ($zip->open('archive.zip', ZipArchive::CREATE) === true) {
+    $zip->addFile('archivo.txt', 'carpeta/archivo.txt');
+    $zip->addFromString('nota.txt', 'Contenido');
+    $zip->close();
+}
+
+$data = gzencode($contenido, 9);
+file_put_contents('datos.gz', $data);
+$original = gzdecode(file_get_contents('datos.gz'));
+
+// yaml_parse_file('config.yaml');  // requiere pecl install yaml
+
+$finfo = new finfo(FILEINFO_MIME_TYPE);
+echo $finfo->file('imagen.jpg');
+```
+
+### Archivos temporales
+
+```php
+<?php
+$tmp = tmpfile();
+fwrite($tmp, 'datos temporales');
+rewind($tmp);
+echo fread($tmp, 1024);
+fclose($tmp);
+
+$path = tempnam(sys_get_temp_dir(), 'php_');
+file_put_contents($path, 'contenido');
+unlink($path);
+
+// move_uploaded_file($_FILES['avatar']['tmp_name'], 'uploads/avatar.jpg');
+```
+
+<sup>Fuente: [PHP Manual — Filesystem](https://www.php.net/manual/en/book.filesystem.php), [PHP Manual — Zip](https://www.php.net/manual/en/book.zip.php), [PHP Manual — JSON](https://www.php.net/manual/en/book.json.php), [PHP Manual — Fileinfo](https://www.php.net/manual/en/book.fileinfo.php)</sup>
+
+---
+
+## Algoritmos
+
+### Array functions de ordenación
+
+```php
+<?php
+$nums = [5, 3, 8, 1, 9, 2];
+
+sort($nums);     // [1, 2, 3, 5, 8, 9]
+rsort($nums);    // [9, 8, 5, 3, 2, 1]
+
+$user = ['edad' => 28, 'nombre' => 'Ana', 'id' => 1];
+asort($user);    // ordena por valor, mantiene keys
+ksort($user);    // ordena por key
+natsort($user);  // orden natural
+
+usort($nums, fn($a, $b) => $b <=> $a);
+uasort($user, fn($a, $b) => $a <=> $b);
+uksort($user, fn($a, $b) => $a <=> $b);
+
+shuffle($nums);
+$clave = array_rand($nums);
+```
+
+### Búsqueda y comparación
+
+```php
+<?php
+$nums = [1, 2, 3, 4, 5];
+
+$pos = array_search(3, $nums);           // 2
+$existe = in_array(3, $nums);            // true
+$tieneKey = array_key_exists('edad', $user);
+
+$unicos = array_unique([1, 2, 2, 3, 3]);
+
+$intersect = array_intersect([1, 2, 3], [2, 3, 4]);
+$diff = array_diff([1, 2, 3], [2, 3, 4]);
+```
+
+### Transformación
+
+```php
+<?php
+$nums = [1, 2, 3, 4, 5];
+$users = [
+    ['name' => 'Ana', 'edad' => 28],
+    ['name' => 'Luis', 'edad' => 35],
+];
+
+$cuadrados = array_map(fn($n) => $n ** 2, $nums);
+$pares = array_filter($nums, fn($n) => $n % 2 === 0);
+$suma = array_reduce($nums, fn($c, $n) => $c + $n, 0);
+
+array_walk($nums, fn(&$n) => $n *= 2);
+
+$nombres = array_column($users, 'name');
+
+$chunks = array_chunk($nums, 2);
+$slice = array_slice($nums, 0, 3);
+array_splice($nums, 1, 2, ['a', 'b']);
+
+$nombre = 'Ana';
+$edad = 28;
+$arr = compact('nombre', 'edad');
+extract($arr);
+
+$frecuencias = array_count_values([1, 1, 2, 3, 1]);
+```
+
+### SPL — Estructuras de datos
+
+```php
+<?php
+$stack = new SplStack();
+$stack->push('a');
+$stack->push('b');
+echo $stack->pop();  // 'b'
+
+$queue = new SplQueue();
+$queue->enqueue('a');
+$queue->enqueue('b');
+echo $queue->dequeue();  // 'a'
+
+$heap = new SplMaxHeap();
+$heap->insert(10);
+$heap->insert(5);
+$heap->insert(20);
+echo $heap->extract();  // 20
+
+$minHeap = new SplMinHeap();
+$minHeap->insert(10);
+$minHeap->insert(5);
+echo $minHeap->extract();  // 5
+
+$pq = new SplPriorityQueue();
+$pq->insert('baja', 1);
+$pq->insert('alta', 10);
+echo $pq->extract();  // 'alta'
+
+$fa = new SplFixedArray(3);
+$fa[0] = 'a';
+
+$storage = new SplObjectStorage();
+$obj = new stdClass();
+$storage->attach($obj, 'metadata');
+echo $storage[$obj];
+
+$list = new SplDoublyLinkedList();
+$list->push('a');
+$list->push('b');
+echo $list->shift();  // 'a'
+```
+
+### Tabla de complejidad Big O
+
+| Operación | Array nativo | SplFixedArray | SplHeap |
+|---|---|---|---|
+| Acceso `$arr[$key]` | O(1) | O(1) | — |
+| Inserción | O(1) amortizado | O(1) | O(log n) |
+| Búsqueda `in_array()` | O(n) | O(n) | — |
+| `sort()` | O(n log n) | — | — |
+| `array_map/filter` | O(n) | O(n) | — |
+| `array_merge` | O(n + m) | — | — |
+| `array_unique` | O(n) | — | — |
+
+<sup>Fuente: [PHP Manual — Array Functions](https://www.php.net/manual/en/ref.array.php), [PHP Manual — SPL Data Structures](https://www.php.net/manual/en/spl.datastructures.php), [Wikipedia — Big O notation](https://en.wikipedia.org/wiki/Big_O_notation)</sup>
+
+---
+
+## Ejemplo completo de POO en PHP
+
+Este ejemplo une todos los conceptos de POO explicados arriba en un sistema realista de biblioteca multimedia. Léelo de arriba a abajo: cada clase añade una capa.
+
+```php
+<?php
+declare(strict_types=1);
+
+namespace App\Media;
+
+// ── Enum y DTOs (modelos de datos) ──
+
+enum VideoFormat: string
+{
+    case MP4 = 'mp4';
+    case WEBM = 'webm';
+    case AVI = 'avi';
+    case MKV = 'mkv';
+}
+
+enum MediaType: string
+{
+    case Audio = 'audio';
+    case Video = 'video';
+    case Podcast = 'podcast';
+}
+
+class Metadata
+{
+    public function __construct(
+        public readonly string $title,
+        public readonly int $durationSeconds,
+        public readonly \DateTimeImmutable $createdAt = new \DateTimeImmutable(),
+        public array $tags = [],
+    ) {}
+
+    public function formattedDuration(): string
+    {
+        $minutes = intdiv($this->durationSeconds, 60);
+        $seconds = $this->durationSeconds % 60;
+        return sprintf('%d:%02d', $minutes, $seconds);
+    }
+
+    public function __toString(): string
+    {
+        return sprintf('%s (%s)', $this->title, $this->formattedDuration());
+    }
+}
+
+// ── Interfaz base ──
+
+interface ContentInterface
+{
+    public function metadata(): Metadata;
+    public function play(): string;
+    public function info(): string;
+    public function plays(): int;
+}
+
+// ── Trait reutilizable ──
+
+trait Playable
+{
+    private int $plays = 0;
+
+    public function play(): string
+    {
+        $this->plays++;
+        return sprintf('▶️ Reproduciendo %s...', $this->metadata()->title);
+    }
+
+    public function plays(): int
+    {
+        return $this->plays;
+    }
+}
+
+// ── Clase abstracta base ──
+
+abstract class Content implements ContentInterface
+{
+    use Playable;
+
+    public function __construct(
+        protected Metadata $metadata,
+    ) {}
+
+    public function metadata(): Metadata
+    {
+        return $this->metadata;
+    }
+
+    abstract protected function typeLabel(): string;
+
+    public function __toString(): string
+    {
+        return sprintf('[%s] %s', (new \ReflectionClass($this))->getShortName(), $this->metadata);
+    }
+}
+
+// ── Herencia simple ──
+
+class Audio extends Content
+{
+    public function __construct(
+        Metadata $metadata,
+        public readonly int $bitrateKbps,
+    ) {
+        parent::__construct($metadata);
+    }
+
+    public function info(): string
+    {
+        return sprintf(
+            '🎵 %s | %s | %dkbps | %d reproducciones',
+            $this->metadata->title,
+            $this->metadata->formattedDuration(),
+            $this->bitrateKbps,
+            $this->plays,
+        );
+    }
+
+    protected function typeLabel(): string
+    {
+        return 'Audio';
+    }
+}
+
+class Video extends Content
+{
+    private bool $subtitles = false;
+
+    public function __construct(
+        Metadata $metadata,
+        public readonly string $resolution,
+        public readonly VideoFormat $format,
+    ) {
+        parent::__construct($metadata);
+    }
+
+    public function hasSubtitles(): bool
+    {
+        return $this->subtitles;
+    }
+
+    public function enableSubtitles(): static
+    {
+        $this->subtitles = true;
+        return $this;
+    }
+
+    public function disableSubtitles(): static
+    {
+        $this->subtitles = false;
+        return $this;
+    }
+
+    public function info(): string
+    {
+        return sprintf(
+            '🎬 %s | %s | %s | %s',
+            $this->metadata->title,
+            $this->resolution,
+            $this->format->value,
+            $this->subtitles ? 'CC' : 'Sin subtítulos',
+        );
+    }
+
+    protected function typeLabel(): string
+    {
+        return 'Video';
+    }
+}
+
+// ── Interfaz adicional y herencia múltiple con traits ──
+
+interface Exportable
+{
+    public function toArray(): array;
+    public function toJson(): string;
+}
+
+trait JsonExportable
+{
+    public function toJson(): string
+    {
+        return json_encode($this->toArray(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    }
+}
+
+class Podcast extends Audio implements Exportable
+{
+    use JsonExportable;
+
+    public function __construct(
+        Metadata $metadata,
+        int $bitrateKbps,
+        public readonly int $episode,
+        public readonly string $host,
+    ) {
+        parent::__construct($metadata, $bitrateKbps);
+    }
+
+    public function info(): string
+    {
+        return sprintf(
+            '🎙️ Ep.%d: %s | con %s | %s',
+            $this->episode,
+            $this->metadata->title,
+            $this->host,
+            parent::info(),
+        );
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'type' => 'podcast',
+            'episode' => $this->episode,
+            'host' => $this->host,
+            'title' => $this->metadata->title,
+            'duration' => $this->metadata->formattedDuration(),
+            'bitrate' => $this->bitrateKbps,
+            'plays' => $this->plays,
+            'tags' => $this->metadata->tags,
+        ];
+    }
+
+    protected function typeLabel(): string
+    {
+        return 'Podcast';
+    }
+}
+
+// ── Composición: un objeto contiene otros objetos ──
+
+class Playlist implements \IteratorAggregate, \Countable
+{
+    /** @var Content[] */
+    private array $items = [];
+
+    public function __construct(
+        public readonly string $name,
+    ) {}
+
+    public function add(Content $item): void
+    {
+        $this->items[] = $item;
+    }
+
+    public function remove(int $index): void
+    {
+        if (isset($this->items[$index])) {
+            array_splice($this->items, $index, 1);
+        }
+    }
+
+    /** @return string[] */
+    public function playAll(): array
+    {
+        return array_map(fn(Content $c) => $c->play(), $this->items);
+    }
+
+    /** @return string[] */
+    public function allInfo(): array
+    {
+        return array_map(fn(Content $c) => $c->info(), $this->items);
+    }
+
+    public function count(): int
+    {
+        return count($this->items);
+    }
+
+    public function getIterator(): \ArrayIterator
+    {
+        return new \ArrayIterator($this->items);
+    }
+
+    public function __toString(): string
+    {
+        return sprintf('📋 %s (%d items)', $this->name, count($this->items));
+    }
+}
+
+// ── Uso del sistema ──
+
+// Crear contenido de distintos tipos
+$song = new Audio(
+    new Metadata('Bohemian Rhapsody', 354, tags: ['rock', 'clásico']),
+    bitrateKbps: 320,
+);
+
+$movie = new Video(
+    new Metadata('Inception', 8880, tags: ['ciencia ficción', 'thriller']),
+    resolution: '4K',
+    format: VideoFormat::MKV,
+);
+$movie->enableSubtitles();
+
+$podcast = new Podcast(
+    new Metadata('El futuro de la IA', 2700, tags: ['tecnología', 'IA']),
+    bitrateKbps: 128,
+    episode: 42,
+    host: 'Ana López',
+);
+
+// Polimorfismo: cada uno implementa info() a su manera
+foreach ([$song, $movie, $podcast] as $content) {
+    echo $content->info() . PHP_EOL;
+}
+
+// Composición
+$playlist = new Playlist('Favoritos');
+$playlist->add($song);
+$playlist->add($movie);
+$playlist->add($podcast);
+echo $playlist . PHP_EOL;  // 📋 Favoritos (3 items)
+print_r($playlist->playAll());
+print_r($playlist->allInfo());
+
+// Exportación vía interfaz + trait
+echo $podcast->toJson() . PHP_EOL;
+
+// Countable + IteratorAggregate
+echo count($playlist) . PHP_EOL;  // 3
+foreach ($playlist as $item) {
+    echo "  - {$item->metadata()->title}" . PHP_EOL;
+}
+```
+
+**Conceptos demostrados:**
+
+| Concepto | Cómo aparece |
+|---|---|
+| Clase abstracta | `Content` con método abstracto `typeLabel()` |
+| Herencia simple | `Audio(Content)`, `Video(Content)` |
+| Interfaces | `ContentInterface`, `Exportable` — definen contratos |
+| Traits | `Playable` y `JsonExportable` — reutilización horizontal |
+| `parent::` | `parent::__construct()` y `parent::info()` en Podcast |
+| Encapsulación | Propiedades `private`/`protected`, métodos públicos |
+| Polimorfismo | `info()` da resultados distintos según la clase concreta |
+| Composición | `Playlist` contiene `Content[]` |
+| Enums | `VideoFormat`, `MediaType` con métodos |
+| Constructor promotion | `public readonly string $title` sin propiedades separadas |
+| Readonly | `Metadata` usa `readonly` para inmutabilidad |
+| Type hints | Tipos estrictos en todos los métodos |
+| Generadores | `getIterator()` con `ArrayIterator` |
+| SPL | `ArrayIterator`, `Countable`, `IteratorAggregate` |
+
+---
+
+## Patrones de diseño con ejemplos
+
+### Strategy
+
+Permite intercambiar algoritmos en tiempo de ejecución. En PHP puedes usar tanto interfaces como funciones anónimas/callables.
+
+```php
+<?php
+declare(strict_types=1);
+
+// Estrategia como interfaz
+interface SortStrategy
+{
+    /** @param int[] $data */
+    public function sort(array $data): array;
+}
+
+class AscendingSort implements SortStrategy
+{
+    public function sort(array $data): array
+    {
+        sort($data);
+        return $data;
+    }
+}
+
+class DescendingSort implements SortStrategy
+{
+    public function sort(array $data): array
+    {
+        rsort($data);
+        return $data;
+    }
+}
+
+class OddFirstSort implements SortStrategy
+{
+    public function sort(array $data): array
+    {
+        $odds = array_filter($data, fn($n) => $n % 2 !== 0);
+        $evens = array_filter($data, fn($n) => $n % 2 === 0);
+        return [...$odds, ...$evens];
+    }
+}
+
+// Contexto
+class Analyzer
+{
+    public function __construct(
+        private SortStrategy $strategy,
+    ) {}
+
+    public function analyze(array $data): array
+    {
+        return $this->strategy->sort($data);
+    }
+}
+
+// Uso
+$analyzer = new Analyzer(new DescendingSort());
+print_r($analyzer->analyze([3, 1, 4, 1, 5, 9]));
+
+// Alternativa: estrategia como callable (más simple)
+class AnalyzerCallable
+{
+    /** @param callable(int[]): int[] $strategy */
+    public function __construct(
+        private callable $strategy,
+    ) {}
+
+    public function analyze(array $data): array
+    {
+        return ($this->strategy)($data);
+    }
+}
+
+$customSort = new AnalyzerCallable(
+    fn(array $d) => array_reverse($d),
+);
+```
+
+### Observer (SplSubject / SplObserver)
+
+PHP tiene interfaces SPL nativas para el patrón Observer.
+
+```php
+<?php
+declare(strict_types=1);
+
+class Sensor implements \SplSubject
+{
+    private int $state = 0;
+
+    /** @var \SplObserver[] */
+    private array $observers = [];
+
+    public function attach(\SplObserver $observer): void
+    {
+        $this->observers[] = $observer;
+    }
+
+    public function detach(\SplObserver $observer): void
+    {
+        $this->observers = array_filter(
+            $this->observers,
+            fn(\SplObserver $o) => $o !== $observer,
+        );
+    }
+
+    public function notify(): void
+    {
+        foreach ($this->observers as $observer) {
+            $observer->update($this);
+        }
+    }
+
+    public function readSensor(): int
+    {
+        return $this->state;
+    }
+
+    public function setState(int $value): void
+    {
+        $this->state = $value;
+        $this->notify();
+    }
+}
+
+class LoggerObserver implements \SplObserver
+{
+    public function update(\SplSubject $subject): void
+    {
+        if ($subject instanceof Sensor) {
+            echo sprintf("[LOG] Sensor actualizado: %d\n", $subject->readSensor());
+        }
+    }
+}
+
+class DashboardObserver implements \SplObserver
+{
+    public function update(\SplSubject $subject): void
+    {
+        if ($subject instanceof Sensor) {
+            echo sprintf("[DASH] Gráfico actualizado con valor %d\n", $subject->readSensor());
+        }
+    }
+}
+
+// Uso
+$sensor = new Sensor();
+$sensor->attach(new LoggerObserver());
+$sensor->attach(new DashboardObserver());
+$sensor->setState(42);
+// [LOG] Sensor actualizado: 42
+// [DASH] Gráfico actualizado con valor 42
+```
+
+<sup>Fuente: [PHP Manual — SplSubject](https://www.php.net/manual/en/class.splsubject.php), [PHP Manual — SplObserver](https://www.php.net/manual/en/class.splobserver.php)</sup>
+
+### Singleton (el ant-patrón; mejor usa DI)
+
+```php
+<?php
+// Singleton clásico (NO recomendado en proyectos modernos)
+class Database
+{
+    private static ?self $instance = null;
+    private \PDO $pdo;
+    
+    private function __construct()
+    {
+        $this->pdo = new \PDO('mysql:host=localhost;dbname=test', 'user', 'pass');
+    }
+    
+    public static function getInstance(): self
+    {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+    
+    // Evitar clonación y deserialización
+    private function __clone() {}
+    public function __wakeup(): void
+    {
+        throw new \RuntimeException('No se puede deserializar un singleton');
+    }
+    
+    public function connection(): \PDO
+    {
+        return $this->pdo;
+    }
+}
+
+// MEJOR: Inyección de dependencias (DI Container)
+// Laravel: app()->make(Database::class) siempre devuelve la misma instancia
+// Symfony: autowiring + shared: true
+// Sin framework: usa un simple DI container
+class Container
+{
+    /** @var array<string, object> */
+    private array $instances = [];
+    
+    public function singleton(string $class, callable $factory): void
+    {
+        $this->instances[$class] = $factory($this);
+    }
+    
+    public function get(string $class): object
+    {
+        if (!isset($this->instances[$class])) {
+            throw new \RuntimeException("No binding for {$class}");
+        }
+        return $this->instances[$class];
+    }
+}
+
+// Uso del container
+$container = new Container();
+$container->singleton(Database::class, fn() => new Database());
+$db = $container->get(Database::class);  // Siempre la misma instancia
+```
+
+### Factory (con registro dinámico)
+
+```php
+<?php
+declare(strict_types=1);
+
+interface PaymentGateway
+{
+    public function charge(float $amount, array $metadata): array;
+}
+
+class StripeGateway implements PaymentGateway
+{
+    public function charge(float $amount, array $metadata): array
+    {
+        return ['provider' => 'stripe', 'amount' => $amount, 'status' => 'success'];
+    }
+}
+
+class PayPalGateway implements PaymentGateway
+{
+    public function charge(float $amount, array $metadata): array
+    {
+        return ['provider' => 'paypal', 'amount' => $amount, 'status' => 'success'];
+    }
+}
+
+class PaymentFactory
+{
+    /** @var array<string, class-string<PaymentGateway>> */
+    private static array $gateways = [
+        'stripe' => StripeGateway::class,
+        'paypal' => PayPalGateway::class,
+    ];
+    
+    public static function register(string $name, string $gatewayClass): void
+    {
+        self::$gateways[$name] = $gatewayClass;
+    }
+    
+    public static function create(string $name): PaymentGateway
+    {
+        if (!isset(self::$gateways[$name])) {
+            throw new \InvalidArgumentException(
+                "Gateway '{$name}' no registrado. Disponibles: " . implode(', ', array_keys(self::$gateways))
+            );
+        }
+        
+        $class = self::$gateways[$name];
+        return new $class();
+    }
+}
+
+// Uso
+$gateway = PaymentFactory::create('stripe');
+echo $gateway->charge(100.0, ['order_id' => '123'])['status'];  // 'success'
+
+// Registrar nuevo gateway dinámicamente
+PaymentFactory::register('mercadopago', MercadoPagoGateway::class);
+```
+
+### Builder (fluent interface)
+
+```php
+<?php
+declare(strict_types=1);
+
+class QueryBuilder
+{
+    private string $table = '';
+    /** @var string[] */
+    private array $selects = ['*'];
+    /** @var array<string, mixed> */
+    private array $wheres = [];
+    private ?int $limit = null;
+    private ?int $offset = null;
+    /** @var string[] */
+    private array $orders = [];
+
+    public function table(string $table): static
+    {
+        $this->table = $table;
+        return $this;
+    }
+
+    public function select(string ...$columns): static
+    {
+        $this->selects = $columns;
+        return $this;
+    }
+
+    public function where(string $column, mixed $value): static
+    {
+        $this->wheres[$column] = $value;
+        return $this;
+    }
+
+    public function limit(int $limit): static
+    {
+        $this->limit = $limit;
+        return $this;
+    }
+
+    public function offset(int $offset): static
+    {
+        $this->offset = $offset;
+        return $this;
+    }
+
+    public function orderBy(string $column, string $direction = 'ASC'): static
+    {
+        $this->orders[] = "{$column} {$direction}";
+        return $this;
+    }
+
+    public function build(): string
+    {
+        $sql = 'SELECT ' . implode(', ', $this->selects) . ' FROM ' . $this->table;
+
+        if (!empty($this->wheres)) {
+            $conditions = array_map(
+                fn(string $col, mixed $val) => is_string($val)
+                    ? "{$col} = '{$val}'"
+                    : "{$col} = {$val}",
+                array_keys($this->wheres),
+                $this->wheres,
+            );
+            $sql .= ' WHERE ' . implode(' AND ', $conditions);
+        }
+
+        if (!empty($this->orders)) {
+            $sql .= ' ORDER BY ' . implode(', ', $this->orders);
+        }
+
+        if ($this->limit !== null) {
+            $sql .= " LIMIT {$this->limit}";
+        }
+
+        if ($this->offset !== null) {
+            $sql .= " OFFSET {$this->offset}";
+        }
+
+        return $sql;
+    }
+}
+
+// Uso
+$query = (new QueryBuilder())
+    ->table('usuarios')
+    ->select('id', 'nombre', 'email')
+    ->where('activo', 1)
+    ->where('rol', 'admin')
+    ->orderBy('nombre')
+    ->limit(10)
+    ->offset(0)
+    ->build();
+
+// "SELECT id, nombre, email FROM usuarios WHERE activo = 1 AND rol = 'admin' ORDER BY nombre ASC LIMIT 10 OFFSET 0"
+```
+
+### Adapter (interfaces)
+
+```php
+<?php
+declare(strict_types=1);
+
+// Interfaz que espera nuestro sistema
+interface PaymentProcessor
+{
+    public function pay(float $amount, string $currency): array;
+}
+
+// Sistema externo con API diferente
+class OldPaymentSystem
+{
+    public function makePayment(float $total, string $curr): string
+    {
+        return "Paid {$curr} {$total}";
+    }
+}
+
+// Adapter: unifica la interfaz
+class OldPaymentAdapter implements PaymentProcessor
+{
+    public function __construct(
+        private OldPaymentSystem $system,
+    ) {}
+
+    public function pay(float $amount, string $currency): array
+    {
+        $result = $this->system->makePayment($amount, $currency);
+        return [
+            'success' => true,
+            'message' => $result,
+            'amount' => $amount,
+            'currency' => $currency,
+        ];
+    }
+}
+
+// Nuevo sistema nativo
+class NewPaymentSystem implements PaymentProcessor
+{
+    public function pay(float $amount, string $currency): array
+    {
+        return [
+            'success' => true,
+            'amount' => $amount,
+            'currency' => $currency,
+            'transaction_id' => uniqid('tx_'),
+        ];
+    }
+}
+
+// Uso: ambos se usan igual gracias al adapter
+$processor = new OldPaymentAdapter(new OldPaymentSystem());
+echo $processor->pay(100.0, 'USD')['message'];  // "Paid USD 100"
+
+$processor2 = new NewPaymentSystem();
+print_r($processor2->pay(50.0, 'EUR'));
+```
+
+---
+
+## Polimorfismo en detalle
+
+PHP tiene varias formas de lograr polimorfismo. Todas coexisten en el mismo código.
+
+### 1. Polimorfismo por interfaces (el más común)
+
+```php
+<?php
+declare(strict_types=1);
+
+interface Speaker
+{
+    public function sound(): string;
+}
+
+class Dog implements Speaker
+{
+    public function sound(): string
+    {
+        return 'Guau';
+    }
+}
+
+class Cat implements Speaker
+{
+    public function sound(): string
+    {
+        return 'Miau';
+    }
+}
+
+class Car implements Speaker
+{
+    public function sound(): string
+    {
+        return 'Brum';
+    }
+}
+
+function makeSound(Speaker $speaker): void
+{
+    echo $speaker->sound() . PHP_EOL;
+}
+
+makeSound(new Dog());  // Guau
+makeSound(new Cat());  // Miau
+makeSound(new Car());  // Brum (¡implementa la interfaz!)
+```
+
+### 2. Polimorfismo por herencia (abstract + override)
+
+```php
+<?php
+declare(strict_types=1);
+
+abstract class Shape
+{
+    abstract public function area(): float;
+}
+
+class Circle extends Shape
+{
+    public function __construct(
+        private float $radius,
+    ) {}
+
+    public function area(): float
+    {
+        return M_PI * $this->radius ** 2;
+    }
+}
+
+class Rectangle extends Shape
+{
+    public function __construct(
+        private float $width,
+        private float $height,
+    ) {}
+
+    public function area(): float
+    {
+        return $this->width * $this->height;
+    }
+}
+
+function printArea(Shape $shape): void
+{
+    printf("Área: %.2f\n", $shape->area());
+}
+
+printArea(new Circle(5));       // Área: 78.54
+printArea(new Rectangle(3, 4)); // Área: 12.00
+```
+
+### 3. Polimorfismo por traits (reutilización con override)
+
+```php
+<?php
+declare(strict_types=1);
+
+trait Loggable
+{
+    public function log(string $message): void
+    {
+        echo "[{$this->logPrefix()}] {$message}" . PHP_EOL;
+    }
+
+    abstract protected function logPrefix(): string;
+}
+
+class FileLogger
+{
+    use Loggable;
+
+    protected function logPrefix(): string
+    {
+        return 'FILE';
+    }
+}
+
+class DatabaseLogger
+{
+    use Loggable;
+
+    protected function logPrefix(): string
+    {
+        return 'DB';
+    }
+}
+
+$logger = new FileLogger();
+$logger->log('Archivo creado');  // [FILE] Archivo creado
+```
+
+### 4. Union types + match (polimorfismo sin herencia)
+
+```php
+<?php
+declare(strict_types=1);
+
+// Polimorfismo ad-hoc con union types (PHP 8.0+)
+function processInput(string|int|float $input): string
+{
+    return match (true) {
+        is_string($input) => "String: " . strtoupper($input),
+        is_int($input) => "Int: " . ($input * 2),
+        is_float($input) => "Float: " . number_format($input, 2),
+    };
+}
+
+echo processInput('hola');   // "String: HOLA"
+echo processInput(42);       // "Int: 84"
+echo processInput(3.1416);   // "Float: 3.14"
+```
+
+### 5. Overloading con __call (método mágico)
+
+```php
+<?php
+declare(strict_types=1);
+
+// PHP no soporta sobrecarga de métodos tradicional (varias firmas con mismo nombre)
+// Pero puedes emularlo con __call
+class DynamicRouter
+{
+    /** @var array<string, callable> */
+    private array $handlers = [];
+
+    public function __call(string $name, array $arguments): mixed
+    {
+        if (isset($this->handlers[$name])) {
+            return ($this->handlers[$name])(...$arguments);
+        }
+
+        throw new \BadMethodCallException("Método '{$name}' no encontrado");
+    }
+
+    public function __set(string $name, callable $handler): void
+    {
+        $this->handlers[$name] = $handler;
+    }
+}
+
+$router = new DynamicRouter();
+$router->saludo = fn(string $nombre) => "Hola, {$nombre}!";
+$router->despedida = fn() => "Adiós!";
+
+echo $router->saludo('Ana');   // "Hola, Ana!"
+echo $router->despedida();     // "Adiós!"
+```
+
+---
+
+## Multimedia
+
+PHP tiene varias extensiones para procesamiento de imágenes, video y PDF.
+
+### GD (extensión nativa)
+
+GD viene incluida con PHP y permite crear y manipular imágenes. Soporta JPEG, PNG, GIF, WebP, AVIF.
+
+```php
+<?php
+declare(strict_types=1);
+
+$img = imagecreatetruecolor(800, 600);
+
+$bg = imagecolorallocate($img, 255, 255, 255);
+$textColor = imagecolorallocate($img, 0, 0, 0);
+
+imagefill($img, 0, 0, $bg);
+
+imagettftext($img, 20, 0, 50, 100, $textColor,
+    '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', 'Hola PHP!');
+
+$src = imagecreatefromjpeg('foto.jpg');
+$thumb = imagecreatetruecolor(200, 150);
+imagecopyresampled($thumb, $src, 0, 0, 0, 0, 200, 150, imagesx($src), imagesy($src));
+
+imagefilter($img, IMG_FILTER_GRAYSCALE);
+
+imagejpeg($img, 'output.jpg', 90);
+imagepng($img, 'output.png');
+imagegif($img, 'output.gif');
+imagewebp($img, 'output.webp', 80);
+imageavif($img, 'output.avif');
+
+imagedestroy($img);
+```
+
+### Imagick (ImageMagick OO)
+
+Imagick es mas potente que GD: mas formatos, mejor calidad, mas filtros.
+
+```bash
+pecl install imagick
+```
+
+```php
+<?php
+$img = new Imagick('foto.jpg');
+$img->resizeImage(800, 600, Imagick::FILTER_LANCZOS, 1, true);
+$img->cropImage(400, 300, 100, 50);
+$img->rotateImage(new ImagickPixel('none'), 90);
+$img->blurImage(5, 3);
+$img->sharpenImage(3, 2);
+
+$watermark = new Imagick('watermark.png');
+$img->compositeImage($watermark, Imagick::COMPOSITE_OVER, 10, 10);
+
+$draw = new ImagickDraw();
+$draw->setFontSize(30);
+$draw->setGravity(Imagick::GRAVITY_CENTER);
+$img->annotateImage($draw, 0, 0, 0, 'Marca de agua');
+
+$img->setImageFormat('webp');
+$img->writeImage('output.webp');
+$img->clear();
+```
+
+### FFmpeg (video)
+
+```php
+<?php
+exec("ffmpeg -i input.mp4 -vf scale=640:360 -c:v libx264 -crf 23 output_small.mp4 2>&1", $output, $exitCode);
+
+// php-ffmpeg: composer require php-ffmpeg/php-ffmpeg
+// $ffmpeg = FFMpeg\FFMpeg::create();
+// $video = $ffmpeg->open('input.mp4');
+// $video->filters()->resize(new FFMpeg\Coordinate\Dimension(640, 360))->synchronize();
+// $video->save(new FFMpeg\Format\Video\X264(), 'output.mp4');
+```
+
+### Metadatos de imagenes
+
+```php
+<?php
+[$width, $height, $type, $attr] = getimagesize('foto.jpg');
+echo "$width x $height";
+echo image_type_to_mime_type($type);
+
+$exif = exif_read_data('foto.jpg');
+echo $exif['Make'];
+echo $exif['Model'];
+echo $exif['ExposureTime'];
+echo $exif['FNumber'];
+echo $exif['ISOSpeedRatings'];
+echo $exif['DateTimeOriginal'];
+echo $exif['GPSLatitude'];
+```
+
+### PDF
+
+```php
+<?php
+// TCPDF: composer require tecnickcom/tcpdf
+// $pdf = new TCPDF();
+// $pdf->AddPage();
+// $pdf->SetFont('dejavusans', '', 14);
+// $pdf->Cell(0, 10, 'Hola Mundo!', 0, 1);
+// $pdf->Image('foto.jpg', 15, 30, 100);
+// $pdf->Output('documento.pdf', 'D');
+
+// FPDF: composer require setasign/fpdf
+```
+
+<sup>Fuente: [PHP Manual - GD](https://www.php.net/manual/en/book.image.php), [Imagick docs](https://www.php.net/manual/en/book.imagick.php), [FFmpeg](https://ffmpeg.org/), [TCPDF](https://tcpdf.org/), [PHP Manual - EXIF](https://www.php.net/manual/en/book.exif.php)</sup>
+
+---
+
+## Bases de datos
+
+### PDO (PHP Data Objects) — capa de abstracción estándar
+
+PDO es la extensión nativa de PHP para acceso a bases de datos. Soporta MySQL, PostgreSQL, SQLite, SQL Server, Oracle, etc.
+
+```php
+<?php
+declare(strict_types=1);
+
+// Conexión
+$dsn = 'mysql:host=127.0.0.1;port=3306;dbname=blog;charset=utf8mb4';
+$user = 'root';
+$pass = 'secret';
+
+$options = [
+    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,         // Lanza excepciones
+    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,    // Array asociativo
+    PDO::ATTR_EMULATE_PREPARES => false,                 // Prepared statements reales
+    PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci",
+];
+
+try {
+    $pdo = new PDO($dsn, $user, $pass, $options);
+} catch (PDOException $e) {
+    throw new RuntimeException("Conexión fallida: " . $e->getMessage());
+}
+
+// Prepared statements (nunca concatenes SQL)
+$stmt = $pdo->prepare('SELECT * FROM usuarios WHERE email = :email AND activo = :activo');
+$stmt->execute(['email' => 'ana@email.com', 'activo' => true]);
+$usuario = $stmt->fetch();
+
+// Insert con named params
+$stmt = $pdo->prepare('INSERT INTO usuarios (nombre, email, edad) VALUES (:nombre, :email, :edad)');
+$stmt->execute([
+    'nombre' => 'Ana',
+    'email' => 'ana@email.com',
+    'edad' => 28,
+]);
+$id = $pdo->lastInsertId();
+
+// Transacciones
+$pdo->beginTransaction();
+try {
+    $pdo->exec('UPDATE cuentas SET saldo = saldo - 100 WHERE id = 1');
+    $pdo->exec('UPDATE cuentas SET saldo = saldo + 100 WHERE id = 2');
+    $pdo->commit();
+} catch (PDOException $e) {
+    $pdo->rollBack();
+    throw $e;
+}
+
+// Múltiples consultas con un solo prepare
+$stmt = $pdo->prepare('SELECT * FROM usuarios WHERE id = ?');
+foreach ([1, 2, 3] as $id) {
+    $stmt->execute([$id]);
+    print_r($stmt->fetch());
+}
+```
+
+| Base de datos | DSN | Driver |
+|---|---|---|
+| MySQL / MariaDB | `mysql:host=...;dbname=...` | `pdo_mysql` |
+| PostgreSQL | `pgsql:host=...;dbname=...` | `pdo_pgsql` |
+| SQLite | `sqlite:/path/to/db.sqlite` | `pdo_sqlite` |
+| SQL Server | `sqlsrv:Server=...;Database=...` | `pdo_sqlsrv` |
+| Oracle | `oci:dbname=//localhost:1521/db` | `pdo_oci` |
+
+### Eloquent ORM (Laravel)
+
+Eloquent es el ORM incluido en Laravel. Usa Active Record: cada modelo es una fila de la BD.
+
+```php
+<?php
+// Migración (base de datos)
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration {
+    public function up(): void
+    {
+        Schema::create('usuarios', function (Blueprint $table) {
+            $table->id();
+            $table->string('nombre', 100);
+            $table->string('email', 255)->unique();
+            $table->integer('edad')->nullable();
+            $table->timestamps();  // created_at, updated_at
+        });
+    }
+    
+    public function down(): void
+    {
+        Schema::dropIfExists('usuarios');
+    }
+};
+
+// Modelo
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class Usuario extends Model
+{
+    protected $fillable = ['nombre', 'email', 'edad'];  // Mass assignment
+    
+    protected $casts = [
+        'edad' => 'integer',
+        'created_at' => 'datetime',
+    ];
+    
+    // Relaciones
+    public function posts(): HasMany
+    {
+        return $this->hasMany(Post::class);
+    }
+    
+    // Accessor
+    public function getNombreMayusculasAttribute(): string
+    {
+        return strtoupper($this->nombre);
+    }
+    
+    // Scope
+    public function scopeMayoresDe($query, int $edad)
+    {
+        return $query->where('edad', '>=', $edad);
+    }
+}
+
+// Uso
+$usuario = Usuario::create([
+    'nombre' => 'Ana',
+    'email' => 'ana@email.com',
+    'edad' => 28,
+]);
+
+$usuarios = Usuario::where('edad', '>=', 18)
+    ->orderBy('nombre')
+    ->take(10)
+    ->get();
+
+foreach ($usuarios as $u) {
+    echo "{$u->nombre} ({$u->edad})";
+}
+
+// Eager loading (evita N+1 queries)
+$usuarios = Usuario::with('posts')->get();
+foreach ($usuarios as $u) {
+    foreach ($u->posts as $post) {
+        echo $post->title;
+    }
+}
+```
+
+### Doctrine ORM (Symfony)
+
+Doctrine es el ORM de Symfony. Usa Data Mapper: las entidades son POPOs (Plain Old PHP Objects) sin herencia de clase base.
+
+```php
+<?php
+// Entidad (anotaciones o attributes, PHP 8.0+)
+use Doctrine\ORM\Mapping as ORM;
+
+#[ORM\Entity]
+#[ORM\Table(name: 'usuarios')]
+class Usuario
+{
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
+    private int $id;
+    
+    #[ORM\Column(type: 'string', length: 100)]
+    private string $nombre;
+    
+    #[ORM\Column(type: 'string', length: 255, unique: true)]
+    private string $email;
+    
+    #[ORM\Column(type: 'integer', nullable: true)]
+    private ?int $edad = null;
+    
+    // Getters y setters necesarios (Doctrine los usa)
+    public function getId(): int { return $this->id; }
+    public function getNombre(): string { return $this->nombre; }
+    public function setNombre(string $nombre): static { $this->nombre = $nombre; return $this; }
+    public function getEmail(): string { return $this->email; }
+    public function setEmail(string $email): static { $this->email = $email; return $this; }
+}
+
+// Uso con EntityManager
+$entityManager = /* obtenido del container */;
+
+$usuario = new Usuario();
+$usuario->setNombre('Ana')->setEmail('ana@email.com');
+
+$entityManager->persist($usuario);
+$entityManager->flush();  // INSERT
+
+// Consultas con DQL (Doctrine Query Language)
+$query = $entityManager->createQuery(
+    'SELECT u FROM App\Entity\Usuario u WHERE u.edad >= :edad ORDER BY u.nombre ASC'
+);
+$query->setParameter('edad', 18);
+$usuarios = $query->getResult();
+```
+
+### Redis (caché y sesiones)
+
+```php
+<?php
+declare(strict_types=1);
+
+use Predis\Client as Redis;
+
+$redis = new Redis([
+    'scheme' => 'tcp',
+    'host' => '127.0.0.1',
+    'port' => 6379,
+]);
+
+// String
+$redis->set('usuario:1:nombre', 'Ana');
+echo $redis->get('usuario:1:nombre');  // 'Ana'
+
+// Hash
+$redis->hmset('usuario:1', ['nombre' => 'Ana', 'email' => 'ana@email.com']);
+echo $redis->hget('usuario:1', 'email');
+
+// List (cola)
+$redis->lpush('notificaciones', 'mensaje1');
+$redis->rpush('notificaciones', 'mensaje2');
+echo $redis->lpop('notificaciones');  // 'mensaje1'
+
+// Set (conjunto)
+$redis->sadd('tags:php', 'laravel', 'symfony', 'php8');
+$redis->sismember('tags:php', 'laravel');  // true
+
+// Cache con TTL
+$redis->setex('usuario:1:datos', 3600, json_encode($usuarioArray));
+
+// Rate limiting
+$clave = "rate_limit:{$ip}";
+$current = $redis->incr($clave);
+if ($current === 1) {
+    $redis->expire($clave, 60);  // Primer request, expira en 60s
+}
+if ($current > 100) {
+    throw new \RuntimeException('Rate limit excedido');
+}
+```
+
+### Migraciones con Phinx
+
+```bash
+composer require --dev robmorgan/phinx
+
+# Inicializar
+vendor/bin/phinx init
+
+# Crear migración
+vendor/bin/phinx create CrearUsuarios
+
+# Ejecutar
+vendor/bin/phinx migrate
+vendor/bin/phinx rollback
+vendor/bin/phinx status
+```
+
+```php
+<?php
+// db/migrations/20240101000000_crear_usuarios.php
+use Phinx\Migration\AbstractMigration;
+
+final class CrearUsuarios extends AbstractMigration
+{
+    public function change(): void
+    {
+        $table = $this->table('usuarios', ['id' => false, 'primary_key' => 'id']);
+        $table->addColumn('id', 'integer', ['identity' => true])
+              ->addColumn('nombre', 'string', ['limit' => 100])
+              ->addColumn('email', 'string', ['limit' => 255])
+              ->addColumn('edad', 'integer', ['null' => true])
+              ->addColumn('created_at', 'datetime', ['default' => 'CURRENT_TIMESTAMP'])
+              ->addIndex(['email'], ['unique' => true])
+              ->create();
+    }
+}
+```
+
+<sup>Fuente: [PHP Manual — PDO](https://www.php.net/manual/en/book.pdo.php), [Laravel Eloquent docs](https://laravel.com/docs/eloquent), [Doctrine docs](https://www.doctrine-project.org/), [Phinx docs](https://book.cakephp.org/phinx/0/en/index.html)</sup>
+
+---
+
+## WebSockets
+
+PHP tradicionalmente es síncrono (cada request → proceso → response), pero existen librerías para WebSockets y tiempo real.
+
+### Ratchet (WebSocket server)
+
+```bash
+composer require cboden/ratchet
+```
+
+```php
+<?php
+declare(strict_types=1);
+
+use Ratchet\MessageComponentInterface;
+use Ratchet\ConnectionInterface;
+use Ratchet\Server\IoServer;
+use Ratchet\Http\HttpServer;
+use Ratchet\WebSocket\WsServer;
+
+class ChatServer implements MessageComponentInterface
+{
+    /** @var \SplObjectStorage<ConnectionInterface, mixed> */
+    private \SplObjectStorage $clients;
+
+    public function __construct()
+    {
+        $this->clients = new \SplObjectStorage();
+        echo "Servidor WebSocket iniciado\n";
+    }
+
+    public function onOpen(ConnectionInterface $conn): void
+    {
+        $this->clients->attach($conn);
+        echo "Nueva conexión: {$conn->resourceId}\n";
+    }
+
+    public function onMessage(ConnectionInterface $from, $msg): void
+    {
+        $numRecv = count($this->clients) - 1;
+        echo sprintf('Mensaje de %d a %d otros: %s', $from->resourceId, $numRecv, $msg);
+
+        foreach ($this->clients as $client) {
+            if ($from !== $client) {
+                $client->send($msg);  // Broadcast
+            }
+        }
+    }
+
+    public function onClose(ConnectionInterface $conn): void
+    {
+        $this->clients->detach($conn);
+        echo "Conexión cerrada: {$conn->resourceId}\n";
+    }
+
+    public function onError(ConnectionInterface $conn, \Exception $e): void
+    {
+        echo "Error: {$e->getMessage()}\n";
+        $conn->close();
+    }
+}
+
+// Iniciar servidor (ejecutar en CLI)
+// php server.php
+$server = IoServer::factory(
+    new HttpServer(
+        new WsServer(
+            new ChatServer()
+        )
+    ),
+    8080
+);
+$server->run();
+```
+
+### ReactPHP (event loop + WebSocket)
+
+```php
+<?php
+declare(strict_types=1);
+
+use React\EventLoop\Loop;
+use React\Http\HttpServer;
+use React\Http\Message\Response;
+use Psr\Http\Message\ServerRequestInterface;
+
+$loop = Loop::get();
+
+// Servidor HTTP con ReactPHP
+$server = new HttpServer(
+    function (ServerRequestInterface $request) use ($loop) {
+        return new Response(
+            200,
+            ['Content-Type' => 'text/plain'],
+            "Hola desde ReactPHP en {$request->getUri()}"
+        );
+    }
+);
+
+$socket = new \React\Socket\SocketServer('0.0.0.0:8080', [], $loop);
+$server->listen($socket);
+
+echo "Servidor ReactPHP en http://localhost:8080\n";
+
+// Timer (setInterval)
+$loop->addPeriodicTimer(5.0, function () {
+    echo "Tick cada 5 segundos\n";
+});
+
+$loop->run();
+```
+
+### amphp (fiber-based async)
+
+```php
+<?php
+declare(strict_types=1);
+
+// amphp usa Fibers (PHP 8.1+) para async nativo
+use function Amp\async;
+use function Amp\delay;
+use function Amp\Parallel\Worker\submit;
+
+// Corutinas con amphp
+$handler = function () {
+    // await no bloqueante
+    echo "Inicio\n";
+    delay(1.0);  // Pausa sin bloquear
+    echo "Después de 1 segundo\n";
+};
+
+// Ejecutar concurrentemente
+\Amp\Future\await([
+    async($handler),
+    async($handler),
+]);
+```
+
+### Swoole (server async en C)
+
+Swoole es una extensión de PHP escrita en C que proporciona un servidor HTTP, WebSocket y TCP asíncrono.
+
+```php
+<?php
+declare(strict_types=1);
+
+// Servidor HTTP asíncrono con Swoole
+$http = new Swoole\Http\Server('0.0.0.0', 9501);
+
+$http->on('request', function (Swoole\Http\Request $request, Swoole\Http\Response $response) {
+    $response->header('Content-Type', 'application/json');
+    $response->end(json_encode([
+        'message' => 'Hola desde Swoole',
+        'uri' => $request->server['request_uri'],
+    ]));
+});
+
+// Servidor WebSocket
+$ws = new Swoole\WebSocket\Server('0.0.0.0', 9502);
+
+$ws->on('open', function (Swoole\WebSocket\Server $server, Swoole\Http\Request $request) {
+    echo "Cliente conectado: {$request->fd}\n";
+});
+
+$ws->on('message', function (Swoole\WebSocket\Server $server, Swoole\WebSocket\Frame $frame) {
+    echo "Mensaje: {$frame->data}\n";
+    // Broadcast a todos
+    foreach ($server->connections as $fd) {
+        if ($server->isEstablished($fd)) {
+            $server->push($fd, $frame->data);
+        }
+    }
+});
+
+$ws->on('close', function (Swoole\WebSocket\Server $server, int $fd) {
+    echo "Cliente desconectado: {$fd}\n";
+});
+
+$http->start();
+```
+
+<sup>Fuente: [Ratchet docs](http://socketo.me/), [ReactPHP docs](https://reactphp.org/), [amphp docs](https://amphp.org/), [Swoole docs](https://www.swoole.co.uk/docs)</sup>
+
+---
+
+## Concurrencia
+
+PHP es tradicionalmente **síncrono y monolítico** por diseño: cada request de HTTP crea un proceso que se ejecuta secuencialmente y termina. Sin embargo, hay formas de lograr concurrencia.
+
+### Tabla comparativa de modelos de concurrencia en PHP
+
+| Modelo | Librería | Mecanismo | Para qué | Async |
+|---|---|---|---|---|
+| **Event loop** | ReactPHP | `loop->addTimer()`, promesas | I/O-bound (HTTP, BD, archivos) | Sí |
+| **Corutinas con Fibers** | amphp | `Amp\async()`, Fibers PHP 8.1 | I/O-bound, concurrencia estructurada | Sí |
+| **Corutinas en C** | Swoole | `go()`, `chan()`, servidor propio | Alto rendimiento, reemplazo de FPM | Sí |
+| **Extension parallel** | parallel (\|\|) | Hilos reales (OS threads) | CPU-bound en paralelo real | Sí (bloqueante) |
+| **Multiprocesamiento** | `pcntl_fork()` | Procesos hijos | Aislamiento total, tareas largas | No |
+| **Colas** | Laravel Horizon, RabbitMQ | Workers en background | Tareas diferidas, emails, notificaciones | No |
+| **Server-sent events** | N/A | Event loop del navegador | Tiempo real unidireccional | Sí (navegador) |
+
+### ReactPHP (event loop + promises)
+
+```php
+<?php
+declare(strict_types=1);
+
+use React\EventLoop\Loop;
+use React\Http\Browser;
+use function React\Async\async;
+
+$loop = Loop::get();
+
+$client = new Browser();
+
+$urls = [
+    'https://api.github.com/repos/php/php-src',
+    'https://api.github.com/repos/laravel/laravel',
+    'https://api.github.com/repos/symfony/symfony',
+];
+
+foreach ($urls as $url) {
+    $client->get($url)->then(
+        function (Psr\Http\Message\ResponseInterface $response) use ($url) {
+            $data = json_decode((string) $response->getBody(), true);
+            echo "[{$data['full_name']}] Stars: {$data['stargazers_count']}\n";
+        },
+        function (Exception $e) use ($url) {
+            echo "Error en {$url}: {$e->getMessage()}\n";
+        },
+    );
+}
+
+$loop->run();
+```
+
+### amphp (Fibers + concurrencia estructurada)
+
+```php
+<?php
+declare(strict_types=1);
+
+// amphp usa Fibers nativos de PHP 8.1 para async
+// No necesita extensiones C, funciona con PHP puro
+
+use function Amp\async;
+use function Amp\delay;
+use Amp\Http\Client\HttpClientBuilder;
+use Amp\Http\Client\Request;
+
+// Concurrencia con amphp
+$client = HttpClientBuilder::buildDefault();
+
+function fetchUrl(HttpClientBuilder $client, string $url): array
+{
+    $request = new Request($url);
+    $response = $client->request($request);
+    $body = $response->getBody()->buffer();
+    
+    return [
+        'url' => $url,
+        'status' => $response->getStatus(),
+        'length' => strlen($body),
+    ];
+}
+
+$urls = [
+    'https://www.php.net',
+    'https://laravel.com',
+    'https://symfony.com',
+];
+
+$futures = [];
+foreach ($urls as $url) {
+    $futures[] = async(fetchUrl(...), $client, $url);
+}
+
+$results = \Amp\Future\await($futures);
+foreach ($results as $r) {
+    echo "{$r['url']}: {$r['status']} ({$r['length']} bytes)\n";
+}
+```
+
+### parallel (extension threads reales)
+
+```bash
+pecl install parallel
+```
+
+```php
+<?php
+declare(strict_types=1);
+
+// parallel crea hilos reales (OS threads) con memoria compartida
+// Solo disponible como extensión PECL (no incluida en PHP estándar)
+
+$task = function (array $numbers): array {
+    // Esto se ejecuta en un hilo separado
+    $primes = [];
+    foreach ($numbers as $n) {
+        if ($n < 2) continue;
+        $isPrime = true;
+        for ($i = 2; $i <= (int) sqrt($n); $i++) {
+            if ($n % $i === 0) {
+                $isPrime = false;
+                break;
+            }
+        }
+        if ($isPrime) $primes[] = $n;
+    }
+    return $primes;
+};
+
+$numbers = range(1, 100000);
+$chunks = array_chunk($numbers, 25000);
+
+$futures = [];
+foreach ($chunks as $chunk) {
+    $futures[] = \parallel\run($task, [$chunk]);
+}
+
+$allPrimes = [];
+foreach ($futures as $future) {
+    $allPrimes = array_merge($allPrimes, $future->value());
+}
+
+echo "Primos encontrados: " . count($allPrimes) . "\n";
+```
+
+### Fibers (PHP 8.1+)
+
+```php
+<?php
+declare(strict_types=1);
+
+// Fibers son la primitiva de concurrencia cooperativa de PHP 8.1
+// Permiten pausar/reanudar funciones, similar a corutinas
+
+function tarea(int $id, int $segundos): void
+{
+    echo "Tarea {$id}: inicio\n";
+    Fiber::suspend("tarea_{$id}_suspendida");  // Pausa
+    echo "Tarea {$id}: después de suspender\n";
+}
+
+$fiber1 = new Fiber(function () {
+    return tarea(1, 2);
+});
+
+$fiber2 = new Fiber(function () {
+    return tarea(2, 3);
+});
+
+// Ejecutar fibras de forma cooperativa
+$result1 = $fiber1->start();  // "Tarea 1: inicio"
+$result2 = $fiber2->start();  // "Tarea 2: inicio"
+
+$fiber1->resume();  // "Tarea 1: después de suspender"
+$fiber2->resume();  // "Tarea 2: después de suspender"
+
+// En la práctica, amphp abstrae los Fibers con una API más amigable
+```
+
+### ¿Cuándo usar cada modelo?
+
+| Escenario | Modelo | Ejemplo |
+|---|---|---|
+| Múltiples llamadas HTTP externas | amphp / ReactPHP | API Gateway, scraper |
+| WebSocket server en tiempo real | Swoole / Ratchet | Chat, notificaciones |
+| Tareas background | Cola (Redis + worker) | Enviar emails, procesar imágenes |
+| Cálculo intensivo (CPU) | parallel / pcntl | Procesamiento de datos, reporting |
+| API de alto rendimiento | Swoole (reemplaza FPM) | Microservicios con mucha carga |
+| Baja carga, simplicidad | PHP sin async (FPM) | Web tradicional, CRUDs |
+
+<sup>Fuente: [ReactPHP docs](https://reactphp.org/), [amphp docs](https://amphp.org/), [Swoole docs](https://www.swoole.co.uk/), [PHP parallel docs](https://www.php.net/manual/en/book.parallel.php)</sup>
+
+---
+
+## Escala de aprendizaje: de 0 a 100
+
+Cada nivel incluye lo que debes saber y un proyecto para fijar los conceptos.
+
+### Nivel 0–15: Fundamentos absolutos
+
+**Qué aprender:**
+- Sintaxis básica: etiquetas `<?php ?>`, `echo`, `print`, variables con `$`, tipos (`int`, `float`, `string`, `bool`, `null`)
+- Tipos de datos escalares y compuestos (ver sección de tipos)
+- Condicionales: `if`/`elseif`/`else`, operadores de comparación (`==`, `===`, `!=`, `!==`)
+- Bucles: `for`, `foreach`, `while`
+- Arrays básicos: indexados `$arr = [1, 2, 3]`, asociativos `$user = ['nombre' => 'Ana']`, `count()`, `isset()`, `unset()`
+- Funciones: `function`, `return`, parámetros con tipo
+- **Conceptos clave**: PHP es de tipado débil — `"1" + 1` da `2` (coerción automática). Usa `===` para comparación estricta (compara valor Y tipo). Los arrays son tablas hash: `isset()` es O(1), `in_array()` es O(n). `var_dump()` y `print_r()` para debugging.
+
+**Proyecto:** *Calculadora CLI* — el programa pide dos números y una operación (+, -, *, /). Maneja división entre cero y entrada no numérica. Muestra resultado. Reflexión: ¿por qué `0 == "0"` da true pero `0 === "0"` da false?
+
+### Nivel 15–30: Arrays, strings, paradigmas y sistema de archivos
+
+**Qué aprender:**
+- Paradigmas de PHP: imperativo/procedural, POO básico, funcional parcial con closures y arrow functions
+- Sistema de archivos: `file_get_contents`, `file_put_contents`, `fopen`/`fread`/`fwrite`, `fgets`, `is_file`, `file_exists`, `mkdir`, `scandir`, `glob`
+- JSON: `json_encode`, `json_decode`
+- Array functions: `array_map`, `array_filter`, `array_reduce`, `array_merge`, `array_search`, `sort`/`asort`/`ksort`
+- Strings: `strlen`, `strpos`, `substr`, `str_replace`, `explode`, `implode`, `trim`, `strtoupper`, `strtolower`
+- Funciones variables, funciones anónimas (closures), `fn()` arrow functions (PHP 7.4+)
+- `...` spread operator en arrays (PHP 7.4+)
+- `compact()`, `extract()`, `list()` / `[$a, $b] = $array`
+- Include/require: `require_once`, `include_once`, diferencia y cuándo usar cada uno
+- Superglobals: `$_GET`, `$_POST`, `$_SERVER`, `$_SESSION`, `$_COOKIE`
+- **Conceptos clave**: `isset()` vs `empty()` — `empty()` devuelve true para `""`, `0`, `null`, `false`, `[]`. `??` (null coalescing) vs `@` (suppressor) — nunca uses `@`. Los closures capturan variables con `use (&$var)`. `compact()` crea array a partir de variables del scope actual.
+
+**Proyecto:** *Gestor de tareas CLI* — añadir (`php tareas.php add "Comprar leche"`), listar (`list`), completar (`done 3`), eliminar (`rm 3`). Persistencia en JSON con `file_get_contents`/`file_put_contents`. Usa `$_SERVER['argv']` para argumentos.
+
+### Nivel 30–45: POO, namespaces, algoritmos y SPL
+
+**Qué aprender:**
+- Clases: `class`, `__construct()`, `$this`, propiedades y métodos
+- Visibilidad: `public`, `protected`, `private`
+- Constructor promotion (PHP 8.0): `function __construct(public string $nombre) {}`
+- Herencia: `extends`, `parent::`, `final`
+- Interfaces: `interface`, `implements`
+- Traits (PHP 5.4+): `trait`, `use`
+- Clases abstractas: `abstract class`, `abstract function`
+- Namespaces: `namespace`, `use`, `use ... as`
+- Autoloading PSR-4 con Composer: `composer dump-autoload`
+- Excepciones: `try`/`catch`/`finally`, `throw`, crear excepciones personalizadas
+- Sistema de archivos avanzado: CSV, ZIP, GZ, Fileinfo para MIME, SplFileInfo, SplFileObject
+- Algoritmos con SPL: `SplStack`, `SplQueue`, `SplHeap`, `SplFixedArray`, `SplObjectStorage`
+- Array functions avanzadas: `array_intersect`, `array_diff`, `array_column`, `array_walk`, `array_chunk`, `array_count_values`
+- Complejidad Big O de arrays: lookup O(1), búsqueda O(n), sort O(n log n)
+- Ordenación personalizada con `usort`, `uasort`, `uksort`
+- **Conceptos clave**: PHP no tiene sobrecarga de métodos (como Java/C++). Los traits resuelven el problema de herencia múltiple sin los problemas del diamante. PSR-4 mapea namespace → directorio: `App\Models\User` → `src/Models/User.php`. `parent::` llama al método de la clase padre. `final` impide herencia/override. Las estructuras SPL son más eficientes que arrays nativos para casos concretos.
+
+**Proyecto:** *Sistema de inventario* — clases `Producto`, `Inventario` con namespaces. Métodos: `agregar()`, `retirar()`, `buscar()`, `valor_total()`. Persistencia con JSON. Excepciones personalizadas (`StockInsuficiente`, `ProductoNoExiste`). Autoloading PSR-4 con Composer.
+
+### Nivel 45–60: Testing, análisis estático y empaquetado
+
+**Qué aprender:**
+- PHPUnit: `assertSame()`, `assertInstanceOf()`, data providers, setUp, pruebas de excepciones
+- Pest PHP: alternativa moderna a PHPUnit con sintaxis más expresiva
+- PHPStan: niveles 0–10, PHPDoc con `@param`, `@return`, `@var`
+- Psalm: alternativa a PHPStan con detección de código muerto
+- Laravel Pint / PHP CS Fixer: formateo automático de código (PSR-12)
+- Xdebug: depuración paso a paso, profiling
+- Composer scripts: `composer run test`, `composer run phpstan`
+- **Conceptos clave**: PHPStan nivel max detecta problemas que no imaginabas. Los type hints PHPDoc son más expresivos que los de PHP nativo (`@template`, `@param class-string`, `@return Collection<User>`). `declare(strict_types=1)` obligatorio en todos los archivos nuevos.
+
+**Proyecto:** *Calculadora empaquetada* — paquete instalable con Composer. Tests con PHPUnit (parametrized, excepciones). PHPStan nivel max. Pint para estilo. GitHub Actions ejecutando `composer check`.
+
+### Nivel 60–75: Web APIs, frameworks y multimedia
+
+**Qué aprender:**
+- Laravel: rutas, controladores, Blade, Eloquent, migraciones, validación, auth
+- Symfony: bundles, Doctrine, Twig, Messenger, EventDispatcher
+- API Platform: REST/GraphQL automático desde entidades Doctrine
+- Laravel API Resources: transformación de respuestas JSON
+- JWT / Sanctum: autenticación para APIs
+- Logging: Monolog (estándar PSR-3), canales, niveles
+- Procesamiento de imágenes con GD y Imagick: redimensionar, recortar, filtros, texto, conversión de formatos
+- Video con FFmpeg desde PHP
+- Metadatos EXIF de fotos con `exif_read_data`
+- Generación de PDF con TCPDF / FPDF
+- **Conceptos clave**: Service Container (Laravel) / DI Container (Symfony) — no instancies clases manualmente. El patrón Repository desacopla lógica de BD del negocio. Eloquent es Active Record, Doctrine es Data Mapper — elegir según proyecto. GD es nativo pero limitado; Imagick es más potente pero requiere instalación.
+
+**Proyecto:** *API de recetas* — Laravel + Eloquent + PostgreSQL o SQLite. CRUD de recetas e ingredientes. Búsqueda por ingrediente. Autenticación con Sanctum. Tests con PHPUnit. Migraciones con schema builder. Validación con Form Request.
+
+### Nivel 75–90: Producción, colas y tiempo real
+
+**Qué aprender:**
+- Docker multi-etapa para PHP: `php:8.3-fpm-alpine` + Nginx, `composer install --no-dev`
+- Docker Compose: app + nginx + mysql + redis + mailpit
+- Colas: Laravel Horizon (Redis), Symfony Messenger, RabbitMQ
+- Tareas programadas: Laravel Scheduler, cron
+- WebSockets: Laravel Echo + Reverb, Soketi, Pusher
+- Caché: Redis, Laravel Cache, Symfony Cache
+- Monitoreo: Laravel Telescope, Symfony Profiler, clockwork
+- **Conceptos clave**: PHP-FPM tiene un pool de workers — configura `pm.max_children` según RAM disponible. OpCache es crítico en producción: `opcache.enable=1`, `opcache.revalidate_freq=0`. Las colas escalan horizontalmente añadiendo workers.
+
+**Proyecto:** *Dashboard de monitorización* — Laravel que recolecta métricas del sistema (CPU, RAM, disco). Redis como cola (Horizon). WebSockets con Laravel Reverb para actualizaciones en vivo. Docker Compose (app + nginx + redis + mysql). Tests de integración.
+
+### Nivel 90–100: Arquitectura, alto rendimiento y sistemas distribuidos
+
+**Qué aprender:**
+- CQRS / Event Sourcing con Laravel + Event Sourcing (Spatie) o Ecotone
+- Event Driven: RabbitMQ / Kafka, publicación de eventos
+- Arquitectura hexagonal / clean architecture en PHP: separación de Domain, Application, Infrastructure
+- API Platform: GraphQL, subscripciones, paginación, filtros avanzados
+- Swoole / RoadRunner: reemplazar PHP-FPM por servidor persistente (10-50x más requests/segundo)
+- Performance: OpCache JIT (PHP 8.0+), preloading, FrankenPHP
+- Observabilidad: OpenTelemetry (tracing + metrics + logs), Prometheus + Grafana
+- **Conceptos clave**: PHP-FPM muere después de cada request — Swoole/RoadRunner mantiene el estado en memoria (conexiones BD, caché). El JIT de PHP 8.0+ puede acelerar código CPU-bound hasta 3x. FrankenPHP (escrito en Go) sirve PHP directamente como servidor HTTP/HTTPS.
+
+**Proyecto:** *Sistema de notificaciones distribuidas* — microservicios con Laravel + RoadRunner. Event bus con RabbitMQ (usuarios, notificaciones). API Platform para GraphQL BFF. FrankenPHP como servidor. OpenTelemetry para tracing distribuido. Docker Compose + Prometheus + Grafana.
+
+<sup>Fuente: [Laravel docs](https://laravel.com/docs), [Symfony docs](https://symfony.com/doc/current/index.html), [API Platform docs](https://api-platform.com/docs/), [Swoole docs](https://www.swoole.co.uk/), [RoadRunner docs](https://roadrunner.dev/), [FrankenPHP](https://frankenphp.dev/)</sup>
+
+---
+
+## Proyectos prácticos detallados
+
+### Gestor de contraseñas CLI (nivel 30)
+
+```php
+<?php
+declare(strict_types=1);
+
+// password-manager.php
+// Uso: php password-manager.php add google ana@email.com
+//       php password-manager.php get google
+//       php password-manager.php generate
+
+namespace App;
+
+class PasswordEntry
+{
+    public function __construct(
+        public readonly string $service,
+        public readonly string $username,
+        public readonly string $password,
+    ) {}
+}
+
+class Vault
+{
+    private string $path;
+    private string $keyPath;
+
+    public function __construct(?string $path = null)
+    {
+        $this->path = $path ?? __DIR__ . '/vault.enc';
+        $this->keyPath = __DIR__ . '/vault.key';
+    }
+
+    public function add(PasswordEntry $entry): void
+    {
+        $store = $this->load();
+        $store[$entry->service] = [
+            'service' => $entry->service,
+            'username' => $entry->username,
+            'password' => $entry->password,
+        ];
+        $this->save($store);
+    }
+
+    public function get(string $service): ?PasswordEntry
+    {
+        $store = $this->load();
+        if (!isset($store[$service])) {
+            return null;
+        }
+        $data = $store[$service];
+        return new PasswordEntry($data['service'], $data['username'], $data['password']);
+    }
+
+    private function load(): array
+    {
+        if (!file_exists($this->path)) {
+            return [];
+        }
+        $encrypted = file_get_contents($this->path);
+        $decrypted = openssl_decrypt(
+            $encrypted,
+            'aes-256-gcm',
+            $this->getKey(),
+            0,
+            str_repeat("\0", 12),
+            $tag ?? '',
+        );
+        return json_decode($decrypted, true) ?? [];
+    }
+
+    private function save(array $data): void
+    {
+        $json = json_encode($data, JSON_PRETTY_PRINT);
+        $iv = random_bytes(12);
+        $encrypted = openssl_encrypt($json, 'aes-256-gcm', $this->getKey(), 0, $iv, $tag);
+        file_put_contents($this->path, $encrypted);
+    }
+
+    private function getKey(): string
+    {
+        if (!file_exists($this->keyPath)) {
+            $key = random_bytes(32);
+            file_put_contents($this->keyPath, $key);
+        }
+        return file_get_contents($this->keyPath);
+    }
+}
+
+function generatePassword(int $length = 20): string
+{
+    $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()';
+    $password = '';
+    $max = strlen($chars) - 1;
+    for ($i = 0; $i < $length; $i++) {
+        $password .= $chars[random_int(0, $max)];
+    }
+    return $password;
+}
+
+// CLI handler
+$command = $argv[1] ?? 'help';
+
+match ($command) {
+    'add' => function () use ($argv) {
+        $service = $argv[2] ?? throw new \InvalidArgumentException('Service required');
+        $username = $argv[3] ?? throw new \InvalidArgumentException('Username required');
+        $password = $argv[4] ?? generatePassword();
+        $vault = new Vault();
+        $vault->add(new PasswordEntry($service, $username, $password));
+        echo "✓ Contraseña guardada para {$service}\n";
+    },
+    'get' => function () use ($argv) {
+        $service = $argv[2] ?? throw new \InvalidArgumentException('Service required');
+        $vault = new Vault();
+        $entry = $vault->get($service);
+        if ($entry === null) {
+            echo "✗ No se encontró {$service}\n";
+            return;
+        }
+        echo "Servicio: {$entry->service}\n";
+        echo "Usuario: {$entry->username}\n";
+        echo "Contraseña: {$entry->password}\n";
+    },
+    'generate' => function () use ($argv) {
+        $length = (int) ($argv[2] ?? 20);
+        echo "🔑 " . generatePassword($length) . "\n";
+    },
+    default => function () {
+        echo "Uso: php password-manager.php <comando> [args]\n";
+        echo "  add <service> <username> [password]  - Guardar contraseña\n";
+        echo "  get <service>                        - Obtener contraseña\n";
+        echo "  generate [length]                    - Generar contraseña\n";
+    },
+};
+```
+
+### Web scraper con async (nivel 60) — usando amphp
+
+```php
+<?php
+declare(strict_types=1);
+
+require __DIR__ . '/vendor/autoload.php';
+
+use function Amp\async;
+use function Amp\Future\await;
+use Amp\Http\Client\HttpClientBuilder;
+use Amp\Http\Client\Request;
+use Symfony\Component\DomCrawler\Crawler;
+
+class Article
+{
+    public function __construct(
+        public readonly string $title,
+        public readonly string $url,
+        public readonly string $source,
+    ) {}
+}
+
+function scrapeNews(string $url, HttpClientBuilder $client): array
+{
+    $request = new Request($url);
+    $response = $client->request($request);
+    $html = $response->getBody()->buffer();
+
+    $crawler = new Crawler($html);
+    $articles = [];
+
+    $crawler->filter('article h2 a, .headline a, h2 a')->each(function (Crawler $node) use ($url, &$articles) {
+        $title = trim($node->text());
+        $href = $node->attr('href');
+        if ($href && $title) {
+            $fullUrl = str_starts_with($href, 'http') ? $href : rtrim($url, '/') . '/' . ltrim($href, '/');
+            $articles[] = new Article($title, $fullUrl, $url);
+        }
+    });
+
+    return $articles;
+}
+
+$sources = [
+    'https://news.ycombinator.com',
+    'https://www.php.net/',
+    'https://laravel-news.com/blog',
+];
+
+$client = HttpClientBuilder::buildDefault();
+$futures = [];
+
+foreach ($sources as $source) {
+    $futures[] = async(scrapeNews(...), $source, $client);
+}
+
+$results = await($futures);
+$allArticles = array_merge(...$results);
+
+foreach (array_slice($allArticles, 0, 10) as $article) {
+    echo "[{$article->source}] {$article->title}" . PHP_EOL;
+}
+
+echo "Total artículos: " . count($allArticles) . PHP_EOL;
+```
+
+---
+
+## Hacks y tips de productividad en PHP
+
+**1. match vs switch — match siempre gana**
+
+```php
+<?php
+// switch: tedioso, propenso a errores (olvidar break)
+switch ($status) {
+    case 200:
+        $mensaje = 'OK';
+        break;
+    case 404:
+        $mensaje = 'Not Found';
+        break;
+    default:
+        $mensaje = 'Unknown';
+}
+
+// match: expresión, exhaustivo, sin break, tipos estrictos
+$mensaje = match ($status) {
+    200 => 'OK',
+    404 => 'Not Found',
+    default => 'Unknown',
+};
+
+// match con condiciones y lógica
+$nivel = match (true) {
+    $puntos >= 1000 => 'VIP',
+    $puntos >= 500  => 'Premium',
+    $puntos >= 100  => 'Regular',
+    default         => 'Nuevo',
+};
+```
+
+**2. match + enum = poder absoluto**
+
+```php
+<?php
+enum Status: string
+{
+    case Draft = 'draft';
+    case Published = 'published';
+    case Archived = 'archived';
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::Draft => 'Borrador',
+            self::Published => 'Publicado',
+            self::Archived => 'Archivado',
+        };
+    }
+
+    public function canEdit(): bool
+    {
+        return match ($this) {
+            self::Published => false,
+            default => true,
+        };
+    }
+}
+
+// Uso
+$status = Status::Draft;
+echo $status->label();     // 'Borrador'
+echo $status->canEdit();   // true
+```
+
+**3. Named arguments — adiós al orden de parámetros**
+
+```php
+<?php
+// Antes: tenías que recordar el orden exacto
+$response = new Response('', 302, ['Location' => '/']);
+
+// Con named arguments: orden arbitrario, saltas defaults
+$response = new Response(
+    headers: ['Location' => '/'],
+    status: 302,
+);
+
+// Especialmente útil en Laravel/Symfony con métodos largos
+User::create(
+    name: 'Ana',
+    email: 'ana@email.com',
+    password: bcrypt('secret'),
+    email_verified_at: now(),
+    role: 'admin',
+);
+```
+
+**4. Readonly properties — inmutabilidad fácil (PHP 8.1+)**
+
+```php
+<?php
+// Antes: getters + propiedades private
+class UsuarioOld
+{
+    private string $nombre;
+    public function __construct(string $nombre)
+    {
+        $this->nombre = $nombre;
+    }
+    public function nombre(): string { return $this->nombre; }
+}
+
+// Con readonly + constructor promotion
+class Usuario
+{
+    public function __construct(
+        public readonly string $nombre,
+        public readonly string $email,
+        public readonly ?int $edad = null,
+    ) {}
+}
+
+// PHP 8.3+: readonly modificable en __clone
+$user = new Usuario('Ana', 'ana@email.com');
+// $user->nombre = 'Luis'; // Error! Propiedad readonly
+```
+
+**5. Array unpacking y spread (PHP 7.4+)**
+
+```php
+<?php
+// Spread en arrays (como ... en JavaScript)
+$part1 = [1, 2, 3];
+$part2 = [4, 5, 6];
+$completo = [...$part1, ...$part2];  // [1, 2, 3, 4, 5, 6]
+
+// Unpacking de argumentos (...)
+$nums = [1, 2, 3, 4, 5];
+$suma = array_sum(...$nums);  // Equivalente a array_sum(1, 2, 3, 4, 5) 
+
+// En funciones variádicas
+function sumarTodos(int ...$numeros): int
+{
+    return array_sum($numeros);
+}
+echo sumarTodos(...[1, 2, 3]);  // 6
+```
+
+**6. First-class callable syntax (PHP 8.1+)**
+
+```php
+<?php
+// Antes: strings o arrays para callables
+$upper = 'strtoupper';
+$method = [$this, 'metodo'];
+
+// PHP 8.1: sintaxis (...)
+$upper = strtoupper(...);
+$method = $this->metodo(...);
+
+// Especialmente útil con array_map
+$nombres = ['ana', 'luis', 'pedro'];
+$mayusculas = array_map(strtoupper(...), $nombres);
+
+// Con closures
+$duplicar = fn(int $n) => $n * 2;
+$duplicados = array_map($duplicar(...), [1, 2, 3]);
+```
+
+**7. Los 3 comandos que todo proyecto PHP debería tener**
+
+```bash
+composer check                 # Ejecuta lint + phpstan + test
+vendor/bin/phpstan analyse src --level=max  # Análisis estático
+vendor/bin/pint                # Formatea código (Laravel Pint)
+```
+
+Configúralos como scripts de Composer:
+
+```json
+{
+    "scripts": {
+        "check": ["@lint", "@phpstan", "@test"],
+        "lint": "vendor/bin/pint --test",
+        "fix": "vendor/bin/pint",
+        "phpstan": "phpstan analyse src --level=max",
+        "test": "phpunit"
+    }
+}
+```
+
+**8. Tip: variables de entorno con phpdotenv**
+
+```php
+<?php
+// Instalar: composer require vlucas/phpdotenv
+
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+$dotenv->load();
+
+// Acceso seguro (lanza excepción si no existe)
+$dbUrl = $_ENV['DATABASE_URL'];
+
+// Con valor por defecto
+$debug = $_ENV['DEBUG'] ?? false;
+
+// Validación
+$dotenv->required('DB_PASSWORD')->notEmpty();
+$dotenv->required('APP_ENV')->allowedValues(['dev', 'test', 'prod']);
+
+// .env file
+/*
+APP_ENV=dev
+DATABASE_URL=mysql://root:secret@127.0.0.1:3306/blog
+DEBUG=true
+*/
+```
+
+**9. El depurador con `dd()`**
+
+```php
+<?php
+// Laravel: dd() = dump + die
+$usuario = User::find(1);
+dd($usuario);  // Muestra el objeto y detiene la ejecución
+
+// Sin Laravel, puedes usar:
+function dd(mixed ...$vars): never
+{
+    foreach ($vars as $var) {
+        var_dump($var);
+    }
+    exit(1);
+}
+
+// dump() solo muestra sin detener
+dump($usuario);
+```
+
+**10. Nullsafe + null coalescing = menos ifs**
+
+```php
+<?php
+// Antes: cadenas de null checks
+$ciudad = null;
+if ($usuario !== null) {
+    if ($usuario->direccion !== null) {
+        $ciudad = $usuario->direccion->ciudad;
+    }
+}
+
+// PHP 8.0+ nullsafe
+$ciudad = $usuario?->direccion?->ciudad;
+
+// Con default
+$ciudad ??= 'No especificada';
+
+// Combinado: país o default
+$pais = $usuario?->direccion?->pais ?? 'Desconocido';
+```
+
+<sup>Fuente: [PHP 8.0 — Match Expression RFC](https://wiki.php.net/rfc/match_expression_v2), [PHP 8.1 — Enums RFC](https://wiki.php.net/rfc/enumerations), [PHP 8.1 — Readonly Properties](https://wiki.php.net/rfc/readonly_properties_v2), [PHP 8.1 — First-class Callable](https://wiki.php.net/rfc/first_class_callable_syntax)</sup>
+
+---
+
+## Canales y recursos en español
+
+### YouTube
+
+- **CodigoFacilito** — Curso de PHP desde cero, Laravel, buenas prácticas. Uno de los canales más completos en español
+- **MoureDev** — PHP, automatización, proyectos. También streams en Twitch con PHP
+- **Develoteca** — PHP, Laravel, WordPress, proyectos web completos paso a paso
+- **Carlos Alfaro** — PHP moderno, PHP 8, Laravel, Symfony, testing
+- **Fatz** — PHP, Laravel, APIs, desarrollo web práctico
+- **Programación Fácil** — Tutoriales de PHP para principiantes, muy estructurados
+- **Bluuweb** — Laravel, PHP, desarrollo web full-stack con ejemplos prácticos
+- **midulive** — PHP y desarrollo web en general, con estilo directo y pragmático
+
+### Comunidades
+
+- **r/PHP** (Reddit) — Noticias, discusiones, proyectos, dudas (inglés, pero comunidad activa)
+- **PHP Hispano** (Facebook) — Grupo grande de PHP en español
+- **Laravel España** (Telegram) — Comunidad activa de Laravel en español
+- **Symfony España** (Telegram) — Para usuarios de Symfony y componentes
+- **Stack Overflow en español** — Etiqueta `php` para dudas técnicas
+- **PHP Developers Spain** (Discord) — Servidor Discord con canales de ayuda y proyectos
+- **Laravel News** (Newsletter) — Noticias semanales sobre Laravel y ecosistema PHP
+
+### Blogs y newsletters
+
+- **Laravel News** ([laravel-news.com](https://laravel-news.com/)) — Blog sobre Laravel y ecosistema PHP
+- **PHP.Watch** ([php.watch](https://php.watch/)) — Novedades de cada versión de PHP, cambios y retrocompatibilidad
+- **Laravel Daily** ([laraveldaily.com](https://laraveldaily.com/)) — Tips, tutoriales y trucos de Laravel
+- **PHP The Right Way** ([phptherightway.com](https://phptherightway.com/)) — Guía de buenas prácticas en PHP (también en español)
+- **Styde** ([styde.net](https://styde.net/)) — Cursos y tutoriales de PHP, Laravel y Symfony en español
+- **PHP Developer Blog** (Medium) — Artículos técnicos sobre PHP moderno
+
+### Repositorios de código
+
+- [php/php-src](https://github.com/php/php-src) — Código fuente del motor PHP (Zend Engine + extensions)
+- [laravel/laravel](https://github.com/laravel/laravel) — Framework Laravel
+- [symfony/symfony](https://github.com/symfony/symfony) — Framework Symfony y sus componentes
+- [thephpleague](https://github.com/thephpleague) — Paquetes PHP de alta calidad independientes de framework
+- [PHP Package Checklist](https://phppackagechecklist.com/) — Lista de verificación para crear paquetes PHP
+
+<sup>Fuente: búsqueda en YouTube y Reddit, listas curadas de Awesome PHP</sup>
+
+---
+
+## Referencias y documentación oficial
+
+- **PHP Manual**: [php.net/manual](https://www.php.net/manual/en/) — documentación oficial completa
+- **PHP Wikipedia**: [php.net/history](https://www.php.net/manual/en/history.php.php) — historia del lenguaje
+- **PHP RFCs**: [wiki.php.net/rfc](https://wiki.php.net/rfc) — propuestas de cambio del lenguaje
+- **PHP The Right Way**: [phptherightway.com](https://phptherightway.com/) — guía de buenas prácticas
+- **Composer**: [getcomposer.org/doc](https://getcomposer.org/doc/) — gestor de dependencias
+- **Packagist**: [packagist.org](https://packagist.org/) — repositorio de paquetes
+- **Laravel**: [laravel.com/docs](https://laravel.com/docs) — documentación oficial
+- **Symfony**: [symfony.com/doc](https://symfony.com/doc/current/index.html) — documentación oficial
+- **PHPUnit**: [phpunit.de/documentation](https://phpunit.de/documentation.html) — testing
+- **PHPStan**: [phpstan.org](https://phpstan.org/) — análisis estático
+- **Psalm**: [psalm.dev](https://psalm.dev/) — análisis estático alternativo
+- **Xdebug**: [xdebug.org/docs](https://xdebug.org/docs/) — depurador paso a paso
+- **PHP CS Fixer**: [cs.sensiolabs.org](https://cs.sensiolabs.org/) — formateo de código PSR-12
+- **PHP-FIG** (PSR Standards): [php-fig.org](https://www.php-fig.org/) — estándares PHP (PSR-4, PSR-7, PSR-12, etc.)
+- **PHP.Watch**: [php.watch](https://php.watch/) — novedades de cada versión
+- **PHP Security**: [php.net/manual/en/security.php](https://www.php.net/manual/en/security.php) — guía de seguridad
+- **PHP en GitHub**: [github.com/php/php-src](https://github.com/php/php-src)
+- **Awesome PHP**: [github.com/ziadoz/awesome-php](https://github.com/ziadoz/awesome-php) — lista curada de librerías y recursos
+
+### Fuentes de esta guía
+
+Esta guía se ha elaborado a partir de las siguientes fuentes consultadas durante su desarrollo:
+
+- [PHP.net — Documentación oficial y manual](https://www.php.net/manual/en/)
+- [Laravel — Documentación oficial](https://laravel.com/docs)
+- [Symfony — Documentación oficial](https://symfony.com/doc/current/index.html)
+- [PHP The Right Way](https://phptherightway.com/) — guía de buenas prácticas
+- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — estándares del ecosistema
+- [PHP.Watch — Novedades por versión](https://php.watch/)
+- [Composer — Documentación](https://getcomposer.org/doc/)
+- [PHPUnit — Documentación](https://phpunit.de/documentation.html)
+- [PHPStan — Documentación](https://phpstan.org/)
+- [Xdebug — Documentación](https://xdebug.org/docs/)
+- [ReactPHP — Documentación](https://reactphp.org/)
+- [amphp — Documentación](https://amphp.org/)
+- [Swoole — Documentación](https://www.swoole.co.uk/docs)
+- [Ratchet — Documentación](http://socketo.me/docs/)
+- [Doctrine ORM — Documentación](https://www.doctrine-project.org/)
+- [API Platform — Documentación](https://api-platform.com/docs/)
+- [RoadRunner — Documentación](https://roadrunner.dev/docs/)
+- [FrankenPHP — Documentación](https://frankenphp.dev/docs/)
+- [W3Techs — Usage Statistics of PHP](https://w3techs.com/technologies/details/pl-php)
+- [PHP RFCs — wiki.php.net/rfc](https://wiki.php.net/rfc)
+- [Awesome PHP (GitHub)](https://github.com/ziadoz/awesome-php)
+- [r/PHP — Reddit](https://reddit.com/r/PHP)
+- [PHP Security Guide](https://php.net/manual/en/security.php)
+- [GD — PHP Manual](https://www.php.net/manual/en/book.image.php)
+- [Imagick — PHP Manual](https://www.php.net/manual/en/book.imagick.php)
+- [EXIF — PHP Manual](https://www.php.net/manual/en/book.exif.php)
+- [Fileinfo — PHP Manual](https://www.php.net/manual/en/book.fileinfo.php)
+- [Filesystem — PHP Manual](https://www.php.net/manual/en/book.filesystem.php)
+- [SPL — PHP Manual](https://www.php.net/manual/en/book.spl.php)
+- [ZIP — PHP Manual](https://www.php.net/manual/en/book.zip.php)
+- [JSON — PHP Manual](https://www.php.net/manual/en/book.json.php)
+- [FFmpeg — Documentación](https://ffmpeg.org/)
+- [TCPDF — Documentación](https://tcpdf.org/)
+- [FPDF — Documentación](http://www.fpdf.org/)
+- [Styde — Cursos en español](https://styde.net/)
+- [CodigoFacilito — Cursos PHP](https://codigofacilito.com/)
+- [Hacker News](https://news.ycombinator.com/) — discusiones y tendencias del ecosistema
+
+---
+
+## 🏆 Retos Relacionados
 
 Pon a prueba lo aprendido con estos desafíos:
+
 - [Plus Reto Intermedio 25 Simulacion De Red Ping](/retos/guia-plus-reto-intermedio-25-simulacion-de-red-ping)
 - [Lista De Compras](/retos/guia-lista-de-compras)

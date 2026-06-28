@@ -1,89 +1,3448 @@
 ---
 draft: false
 title: "Guía de Kotlin: De 0 a 100"
-description: "El lenguaje preferido para Android. Moderno, conciso y seguro."
-pubDate: "2017-06-11"
-tags: ["kotlin", "guia", "mobile"]
+description: "Desde los fundamentos hasta producción: null safety, corrutinas, multiplataforma, frameworks, proyectos reales y recursos en español."
+pubDate: "2025-06-28"
+tags: ["kotlin", "guia", "mobile", "backend"]
 image: "img/guia_0_100_kotlin_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 ---
 
 # Guía de Kotlin: De 0 a 100
+## ¿Qué es Kotlin?
 
-## 🛠️ Requisitos e Instalación
+Kotlin es un lenguaje de programación moderno, de tipado estático y multiparadigma, creado por **JetBrains** (los mismos que hacen IntelliJ IDEA) y lanzado en 2011. Su primera versión estable (1.0) llegó en febrero de 2016. En 2017 Google anunció soporte oficial para Android, y en 2019 Android pasó a ser **Kotlin-first**.
 
-**IntelliJ IDEA:** Descarga [IntelliJ IDEA Community](https://www.jetbrains.com/idea/). Incluye soporte Kotlin nativo.
-**Android Studio:** Para desarrollo Android: [developer.android.com/studio](https://developer.android.com/studio). Kotlin incluido por defecto.
-**CLI:** Instala SDKMAN: `curl -s https://get.sdkman.io | bash && sdk install kotlin`. O usa `kotlinc` directamente.
-**Verificación:** `--version` y prueba con un `"Hola Mundo"`.
-**Herramientas recomendadas:** **Gradle** o **Maven** para build. [Kotlin Playground](https://play.kotlinlang.org/) online. IDE principal: IntelliJ IDEA.
+**¿Dónde se usa?**
+- **Android**: El lenguaje oficial para desarrollo Android. Jetpack Compose, Android KTX, todo el ecosistema moderno está en Kotlin
+- **Backend / Web**: Ktor (async, ligero), Spring Boot con Kotlin, http4k, Jooby
+- **Multiplataforma (KMP)**: Comparte lógica de negocio entre Android, iOS, web, desktop con Kotlin Multiplatform
+- **Native**: Kotlin/Native compila a binarios sin JVM (iOS, macOS, Linux, Windows, WebAssembly)
+- **JavaScript/Web**: Kotlin/JS compila a JavaScript, compatible con React, Node.js
+- **Data Science**: Kotlin for Data Science (KotlinDL, kmath, lets-plot), compatible con Python libraries via GraalPy
+- **Serverless / Cloud**: AWS SDK for Kotlin, funciones Lambda en Kotlin, Ktor en GraalVM Native Image
 
-## 🚀 Hola Mundo y Sintaxis Básica
+**¿Quién lo usa?** Google (aplicaciones Android, Firebase), Netflix (orquestación interna), Twitter (Performance team), Pinterest (Android), Trello (Android), Uber, Square, Gradle (build tool escrita en Kotlin).
 
-**Conceptos clave:**
+Fuente: [Kotlin.org — About](https://kotlinlang.org/), [Google Android Docs — Kotlin](https://developer.android.com/kotlin)
 
-- **Variables y Null Safety:** `val` (inmutable) / `var` (mutable). Tipado nulo: `String?` — el compilador fuerza manejo de null. Elvis: `texto?.length ?: 0`. Smart casts automáticos.
-- **Funciones:** `fun suma(a: Int, b: Int): Int = a + b`. Cuerpo de expresión. Parámetros con valores por defecto. Funciones de una sola expresión sin llaves.
-- **Data Classes:** `data class Usuario(val nombre: String, val edad: Int)` — genera `equals()`, `hashCode()`, `toString()`, `copy()` y destructuring automáticamente.
-- **Extension Functions:** `fun String.esPalindromo(): Boolean = this == this.reversed()`. Añade métodos a clases existentes sin herencia.
-- **Corrutinas:** Concurrencia estructurada: `launch { val data = async { fetchData() }; println(data.await()) }`. Más ligeras que threads. Basadas en `suspend`.
+---
 
-## 🏗️ Frameworks Populares
+## Instalación en todos los entornos
 
-### Ktor
-**Instalación:** `Desde [start.ktor.io](https://start.ktor.io/) o añadiendo dependencias en build.gradle.kts`
-Framework web asíncrono sobre corrutinas. Ligero, modular, ideal para microservicios y APIs.
+### SDKMAN (Linux/macOS/WSL) — recomendado
+```bash
+curl -s https://get.sdkman.io | bash
+source "$HOME/.sdkman/bin/sdkman-init.sh"
+sdk install kotlin
+sdk install java 17.0.9-tem  # OpenJDK
+kotlin -version
+```
+
+### IntelliJ IDEA
+- **Community Edition** (gratis): incluye soporte Kotlin nativo. File → New → Project → Kotlin
+- Plug-in Kotlin ya viene incluido desde la versión 15
+
+### Android Studio
+Descarga desde [developer.android.com/studio](https://developer.android.com/studio). Kotlin incluido por defecto. File → New → New Project → Empty Compose Activity (templates con Kotlin).
+
+### VS Code
+1. Instala la extensión **Kotlin** (de Microsoft, language server vía Kotlin LS)
+2. Extensiones adicionales: **Kotlin Test Runner**, **Gradle for Java**, **Kotlin Multiplatform**
+3. `npm install -g kotlin-language-server` (para completado y navegación)
+
+### kotlinc (compilador CLI)
+```bash
+# Manual (sin SDKMAN)
+curl -s https://get.sdkman.io | bash && sdk install kotlin
+
+# O descarga el zip desde GitHub releases
+wget https://github.com/JetBrains/kotlin/releases/download/v2.1.0/kotlin-compiler-2.1.0.zip
+unzip kotlin-compiler-*.zip
+export PATH=$PATH:$(pwd)/kotlinc/bin
+```
+
+### Gradle (build principal de Kotlin)
+```bash
+# Instalar SDKMAN
+sdk install gradle
+
+# O usar el wrapper (recomendado en proyectos)
+gradle wrapper --gradle-version 8.5
+```
+
+`build.gradle.kts` mínimo (Kotlin DSL en Gradle — sí, Gradle se configura con Kotlin):
 ```kotlin
-fun Application.module() {
-    routing {
-        get("/") {
-            call.respondText("Hola Mundo")
+plugins {
+    kotlin("jvm") version "2.1.0"
+    application
+}
+
+application {
+    mainClass = "MainKt"
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation(kotlin("stdlib"))
+    testImplementation(kotlin("test"))
+}
+```
+
+### Docker
+```dockerfile
+FROM openjdk:17-slim
+RUN apt-get update && apt-get install -y curl unzip \
+    && curl -s https://get.sdkman.io | bash \
+    && bash -c "source /root/.sdkman/bin/sdkman-init.sh && sdk install kotlin"
+COPY . /app
+WORKDIR /app
+CMD ["kotlin", "Main.kt"]
+```
+
+O usa imágenes ya preparadas:
+```bash
+docker run -it --rm -v "$PWD":/app -w /app openjdk:17-slim \
+  bash -c "curl -s https://get.sdkman.io | bash && source /root/.sdkman/bin/sdkman-init.sh && sdk install kotlin && kotlin Main.kt"
+```
+
+### Alias útiles para el día a día
+Añade a tu `~/.bashrc` o `~/.zshrc`:
+```bash
+alias k='kotlin'
+alias kotlin-repl='kotlin -version 2>/dev/null || sdk use kotlin; kotlin'
+alias kg='kotlinc-jvm'
+alias kw='gradle wrapper --gradle-version'
+alias ktest='gradle test'
+alias kbuild='gradle build'
+alias krun='gradle run'
+```
+
+Fuente: [SDKMAN docs](https://sdkman.io/), [Kotlin Compiler manual](https://kotlinlang.org/docs/command-line.html), [Docker Hub — openjdk](https://hub.docker.com/_/openjdk)
+
+---
+
+## Primeros pasos y entorno interactivo
+
+### Kotlin REPL
+Ejecuta `kotlin` en terminal (sin archivos) y escribe directamente:
+```kotlin
+println("Hola Mundo")
+2 + 2
+val lista = listOf(1, 2, 3)
+lista.map { it * 2 }
+```
+Para salir: `:quit` o Ctrl+D.
+
+### Kotlin Playground
+Navega a [play.kotlinlang.org](https://play.kotlinlang.org/) — editor online oficial de JetBrains. Soporta:
+- Programas completos con `fun main()`
+- Corrutinas, multiplataforma, Java interop
+- Compartir snippets por URL
+- Descargar como archivo .kt
+
+### Scripts Kotlin (.kts)
+Kotlin también puede ejecutarse como script (sin compilar):
+```kotlin
+// hola.kts
+fun main() {
+    println("Hola desde Kotlin script")
+}
+main()
+```
+Ejecuta: `kotlin hola.kts`
+
+### main() sin clase
+Kotlin permite funciones de nivel superior. No necesitas clases:
+```kotlin
+// Main.kt
+fun main() {
+    println("Hola, mundo!")
+}
+```
+Compila y ejecuta:
+```bash
+kotlinc-jvm Main.kt -include-runtime -d main.jar
+java -jar main.jar
+# O usando kotlin directamente:
+kotlin Main.kt
+```
+
+### Estructura de proyecto con Gradle Kotlin DSL
+```
+mi-proyecto/
+├── build.gradle.kts     # Configuración en Kotlin
+├── settings.gradle.kts
+├── gradle.properties
+├── src/
+│   ├── main/
+│   │   └── kotlin/
+│   │       └── Main.kt
+│   └── test/
+│       └── kotlin/
+│           └── MainTest.kt
+└── gradle/
+    └── wrapper/
+```
+
+### Tipos y construcción básica
+```kotlin
+// Tipos básicos
+val entero: Int = 42
+val largo: Long = 42L
+val doble: Double = 3.14
+val texto: String = "Hola"
+val booleano: Boolean = true
+val caracter: Char = 'A'
+val bytes: Byte = 127
+val array: IntArray = intArrayOf(1, 2, 3)
+
+// Template strings
+val nombre = "Mundo"
+println("Hola $nombre!")
+println("2 + 2 = ${2 + 2}")
+
+// Rangos
+for (i in 1..10) print(i)
+for (i in 10 downTo 1 step 2) print(i)
+for (i in 1 until 10) print(i)  // hasta 9
+
+// When (switch potente)
+val x = 3
+val resultado = when (x) {
+    1 -> "uno"
+    2 -> "dos"
+    in 3..10 -> "varios"
+    !in 0..100 -> "fuera de rango"
+    else -> "otro"
+}
+```
+
+Fuente: [Kotlin Playground](https://play.kotlinlang.org/), [Kotlin docs — Basic Syntax](https://kotlinlang.org/docs/basic-syntax.html)
+
+---
+
+## Paradigmas
+
+Kotlin es un lenguaje multiparadigma que combina lo mejor de la programación orientada a objetos y la funcional. No te obliga a elegir uno — puedes mezclarlos libremente.
+
+### Programación Orientada a Objetos (POO) pura
+
+En Kotlin **todo es un objeto**: no hay tipos primitivos independientes. Incluso los números (`Int`, `Long`) son objetos con métodos y propiedades.
+
+```kotlin
+val numero = 42
+println(numero.toString())       // "42"
+println(numero.rangeTo(50))      // 42..50
+println(42.compareTo(10))        // 1 (mayor que)
+println((-1).coerceAtLeast(0))   // 0 — evita negativos
+
+// Los tipos básicos se compilan a primitivos JVM cuando es posible
+// Pero en Kotlin los tratas como objetos
+```
+
+**Principios soportados:**
+- **Clases y objetos**: `class`, `object`, `data class`, `sealed class`
+- **Herencia**: Jerarquía única con `open class` y `abstract class`
+- **Interfaces**: Con propiedades abstractas y métodos con implementación por defecto
+- **Polimorfismo**: Por subtipo, paramétrico (genéricos) y ad-hoc (extension functions)
+- **Encapsulación**: Visibilidad `public`, `private`, `protected`, `internal`
+
+**Comparación con Java:** En Java los primitivos (`int`, `long`) no son objetos. En Kotlin todo desciende de `Any` (equivalente a `Object` en Java), pero el compilador optimiza a primitivos en el bytecode cuando no hay nullable o genéricos de por medio.
+
+### Programación Funcional
+
+Kotlin incorpora elementos funcionales sin ser puramente funcional. Las funciones son ciudadanos de primera clase.
+
+**Lambdas y higher-order functions:**
+```kotlin
+val numeros = listOf(1, 2, 3, 4, 5)
+
+val pares = numeros.filter { it % 2 == 0 }       // [2, 4]
+val cuadrados = numeros.map { it * it }           // [1, 4, 9, 16, 25]
+val suma = numeros.reduce { acc, i -> acc + i }   // 15
+
+// Higher-order function: función que recibe otra función
+fun operar(a: Int, b: Int, op: (Int, Int) -> Int): Int = op(a, b)
+println(operar(5, 3) { x, y -> x + y })  // 8
+println(operar(5, 3) { x, y -> x * y })  // 15
+```
+
+**Inmutabilidad con `val`:**
+```kotlin
+val inmutable = listOf(1, 2, 3)  // Lista inmutable
+// inmutable.add(4)  // ❌ No compila
+```
+
+**Data classes (value objects funcionales):**
+```kotlin
+data class Persona(val nombre: String, val edad: Int)
+// equals, hashCode, toString, copy, componentN generados automáticamente
+```
+
+**Pattern matching con `when` y sealed classes:**
+```kotlin
+sealed class Tree
+data class Leaf(val value: Int) : Tree()
+data class Node(val left: Tree, val right: Tree) : Tree()
+
+fun sum(tree: Tree): Int = when (tree) {
+    is Leaf -> tree.value
+    is Node -> sum(tree.left) + sum(tree.right)
+}
+// Exhaustivo: el compilador verifica que cubres todos los casos
+```
+
+**Funciones puras y efectos secundarios:**
+Kotlin no impone pureza, pero fomenta separar lógica pura (data class, extension functions sin side effects) de impura (I/O, corrutinas, mutabilidad).
+
+### Programación orientada a nulabilidad
+
+Kotlin integra la nulabilidad en el sistema de tipos, haciendo que los errores de null pointer sean detectables en compilación.
+
+```kotlin
+var nullable: String? = null
+var noNullable: String = "Hola"
+// noNullable = null  // ❌ Error de compilación
+
+val longitud = nullable?.length ?: 0
+```
+
+Esto no es un "añadido" — es parte central del diseño del lenguaje. No hay `NullPointerException` sorpresa (a menos que uses `!!` explícitamente o interop con Java).
+
+### Multiplataforma (KMP)
+
+Kotlin compila a múltiples targets desde el mismo código:
+- **JVM** (Android, backend, desktop)
+- **Native** (iOS, macOS, Linux, Windows, WebAssembly)
+- **JavaScript** (navegador, Node.js)
+- **WASM** (WebAssembly)
+
+```kotlin
+// commonMain: código compartido
+expect fun platformName(): String
+
+// androidMain / iosMain / jvmMain: implementación específica
+actual fun platformName(): String = "Android"
+```
+
+El código común declara `expect` y cada plataforma provee `actual`. La lógica de negocio se comparte al 100%.
+
+### Conclusión
+
+Kotlin es principalmente **POO + funcional**. No es Haskell (puramente funcional) ni Java (puramente POO con lambdas añadidas). Es un lenguaje práctico que toma lo mejor de ambos mundos:
+- POO para modelar el dominio y la arquitectura
+- Funcional para transformación de datos, pipelines y concurrencia
+- Null safety como capa transversal
+- Multiplataforma como valor añadido para compartir código
+
+Fuente: [Kotlin docs — Idioms](https://kotlinlang.org/docs/idioms.html), [Kotlin docs — Functional Programming](https://kotlinlang.org/docs/fun-interfaces.html), [Kotlin Multiplatform docs](https://kotlinlang.org/docs/multiplatform.html)
+
+---
+
+## Tipos de datos y variables
+
+### val vs var
+
+La primera decisión al declarar una variable:
+
+```kotlin
+val nombre: String = "Ana"  // Inmutable (read-only, no reasignable)
+var edad: Int = 30          // Mutable (reasignable)
+
+nombre = "Luis"  // ❌ Error de compilación
+edad = 31        // ✅
+
+// val NO significa inmutable en profundidad:
+val lista = mutableListOf(1, 2, 3)
+lista.add(4)  // ✅ el objeto es mutable
+// lista = otraLista  // ❌ la referencia no se puede reasignar
+```
+
+**Regla de oro:** Usa `val` por defecto. Solo usa `var` cuando sea estrictamente necesario. Esto hace el código más predecible y fácil de razonar.
+
+### Tipos básicos
+
+| Tipo | Tamaño | Ejemplo | Notas |
+|---|---|---|---|
+| `Byte` | 8 bits | `127` | -128 a 127 |
+| `Short` | 16 bits | `32000` | -32768 a 32767 |
+| `Int` | 32 bits | `42` | -2³¹ a 2³¹-1 |
+| `Long` | 64 bits | `42L` | Sufijo `L` |
+| `Float` | 32 bits | `3.14f` | Sufijo `f` o `F` |
+| `Double` | 64 bits | `3.14` | Por defecto para decimales |
+| `Boolean` | 1 bit | `true` / `false` | |
+| `Char` | 16 bits (Unicode) | `'A'` | Unicode, comilla simple |
+| `String` | Variable | `"Hola"` | Inmutable, array de Chars |
+
+### Type inference
+
+Kotlin infiere el tipo automáticamente:
+
+```kotlin
+val mensaje = "Hola"       // String
+val numero = 42            // Int
+val decimal = 3.14         // Double
+val bandera = true         // Boolean
+
+// Puedes declarar el tipo explícitamente si quieres:
+val texto: String = "Hola"
+```
+
+### Nullable types (T?)
+
+Cualquier tipo puede ser nullable añadiendo `?`:
+
+```kotlin
+var nulo: String? = null
+var noNulo: String = "Hola"
+
+val longitud = nulo?.length ?: 0  // Elvis: si es null, usa 0
+
+// Smart cast: el compilador sabe que no es null tras un check
+if (nulo != null) {
+    println(nulo.length)  // Smart cast a String
+}
+```
+
+### Unsigned types
+
+Kotlin 1.3+ soporta tipos sin signo:
+
+```kotlin
+val uByte: UByte = 255u
+val uShort: UShort = 65535u
+val uInt: UInt = 4_294_967_295u
+val uLong: ULong = 18_446_744_073_709_551_615uL
+
+// Útiles para: identificadores, máscaras de bits, índices circulares
+println(255u + 1u)  // 0 (wrap around)
+```
+
+### Arrays
+
+```kotlin
+// Array genérico (de objetos)
+val array: Array<String> = arrayOf("a", "b", "c")
+
+// Arrays de primitivos (sin boxing, más eficientes)
+val intArray = intArrayOf(1, 2, 3)       // IntArray
+val longArray = longArrayOf(1L, 2L, 3L)  // LongArray
+val floatArray = floatArrayOf(1f, 2f)    // FloatArray
+val boolArray = booleanArrayOf(true, false)
+
+// Inicialización con lambda
+val cuadrados = IntArray(5) { i -> i * i }  // [0, 1, 4, 9, 16]
+
+array[0]  // Acceso
+array.size
+```
+
+### Colecciones
+
+Kotlin separa colecciones mutables e inmutables claramente:
+
+```kotlin
+// List (inmutable por defecto)
+val lista: List<Int> = listOf(1, 2, 3)
+
+// MutableList
+val mutable: MutableList<Int> = mutableListOf(1, 2, 3)
+mutable.add(4)  // ✅
+mutable.removeAt(0)
+
+// Set
+val set: Set<Int> = setOf(1, 2, 3, 1, 2)  // [1, 2, 3]
+val mutableSet = mutableSetOf(1, 2, 3)
+
+// Map
+val mapa: Map<String, Int> = mapOf("uno" to 1, "dos" to 2)
+val mutableMap = mutableMapOf("a" to 1)
+
+// Colecciones específicas
+val linkedSet = linkedSetOf(1, 2, 3)   // Preserva orden de inserción
+val sortedSet = sortedSetOf(3, 1, 2)   // Ordenado naturalmente
+val hashMap = hashMapOf("a" to 1)
+val linkedMap = linkedMapOf("a" to 1)  // Preserva orden
+val sortedMap = sortedMapOf("a" to 1)  // Ordenado por clave
+```
+
+### Smart casts
+
+El compilador infiere el tipo después de un check:
+
+```kotlin
+fun procesar(obj: Any) {
+    when (obj) {
+        is String -> println(obj.length)          // Smart cast
+        is Int -> println(obj + 1)                // Smart cast
+    }
+}
+
+// También con null checks
+val x: String? = "hola"
+if (x != null) {
+    println(x.length)  // Smart cast a String no null
+}
+```
+
+### String templates
+
+```kotlin
+val nombre = "Mundo"
+println("Hola $nombre!")           // Hola Mundo!
+println("2 + 2 = ${2 + 2}")       // 2 + 2 = 4
+println("Suma: ${sumar(2, 3)}")   // Suma: 5
+println('$')                       // Escapar: $
+```
+
+### Números: representación en memoria
+
+| Tipo | Bits | Rango | Boxing nullable |
+|---|---|---|---|
+| `Int` | 32 | -2³¹ a 2³¹-1 | `Int?` → objeto en heap |
+| `Long` | 64 | -2⁶³ a 2⁶³-1 | `Long?` → objeto en heap |
+| `Float` | 32 | ±1.4E-45 a ±3.4E+38 | `Float?` → objeto en heap |
+| `Double` | 64 | ±4.9E-324 a ±1.8E+308 | `Double?` → objeto en heap |
+
+**Boxing de nullable:** Cuando usas `Int?` en lugar de `Int`, el compilador no puede optimizar a primitivo JVM. Cada valor se mete en un objeto en el heap. Para colecciones de primitivos, usa `IntArray` en lugar de `List<Int>` si el rendimiento importa.
+
+### Memoria: JVM vs Native vs WASM
+
+| Plataforma | Stack | Heap | GC |
+|---|---|---|---|
+| **JVM** | Variables locales, primitivos optimizados | Objetos, arrays | GC de la JVM (G1, ZGC, Shenandoah) |
+| **Native** | Valores no compartidos | Objetos en memoria nativa | GC propio (actual, no concurrente) |
+| **WASM** | Memoria lineal | Memoria lineal | GC en desarrollo (vía WasmGC) |
+
+En **JVM**, los `Int` no-nulables suelen ser primitivos `int` en el stack o dentro de objetos. Los `Int?` siempre son objetos `Integer` en el heap (boxing automático). Las `IntArray` se almacenan como `int[]` contiguo en heap.
+
+En **Native**, no hay JVM — Kotlin compila a código nativo con su propio runtime. La memoria se gestiona con ARC (Automatic Reference Counting) similar a Swift.
+
+En **WASM**, Kotlin compila a WebAssembly usando su propio runtime. La memoria es lineal y gestionada por el runtime.
+
+Fuente: [Kotlin docs — Basic Types](https://kotlinlang.org/docs/basic-types.html), [Kotlin docs — Collections](https://kotlinlang.org/docs/collections-overview.html), [Kotlin docs — Null Safety](https://kotlinlang.org/docs/null-safety.html)
+
+---
+
+## Control de flujo y modularidad
+
+### if como expresión
+
+En Kotlin, `if` devuelve un valor:
+
+```kotlin
+val max = if (a > b) a else b  // Ternario sin sintaxis especial
+
+val resultado = if (condicion) {
+    println("Ejecutando rama true")
+    a + b
+} else {
+    println("Ejecutando rama false")
+    a - b
+}
+```
+
+No hay operador ternario (`cond ? a : b`) — `if` lo reemplaza.
+
+### when (switch potenciado)
+
+**Con argumento:**
+```kotlin
+val x = 3
+val texto = when (x) {
+    1 -> "uno"
+    2 -> "dos"
+    in 3..10 -> "varios"
+    !in 0..100 -> "fuera de rango"
+    else -> "otro"
+}
+```
+
+**Sin argumento (similar a if-else if):**
+```kotlin
+when {
+    x < 0 -> println("Negativo")
+    x == 0 -> println("Cero")
+    x > 0 -> println("Positivo")
+}
+```
+
+**Exhaustivo con sealed class:** El compilador verifica que cubres todos los casos:
+```kotlin
+sealed class Estado
+object Cargando : Estado()
+data class Exito(val data: String) : Estado()
+data class Error(val msg: String) : Estado()
+
+fun manejar(estado: Estado) = when (estado) {
+    Estado.Cargando -> "⏳"
+    is Estado.Exito -> "✅ ${estado.data}"
+    is Estado.Error -> "❌ ${estado.msg}"
+}
+```
+
+### for (sobre rangos/colecciones)
+
+```kotlin
+for (i in 1..5) print(i)                 // 12345
+for (i in 1 until 5) print(i)            // 1234
+for (i in 0..10 step 2) print(i)         // 0246810
+for (i in 10 downTo 1 step 3) print(i)   // 10741
+
+val lista = listOf("a", "b", "c")
+for (item in lista) print(item)          // abc
+
+for ((index, value) in lista.withIndex()) {
+    println("$index: $value")
+}
+
+lista.forEach { println(it) }
+```
+
+### while / do-while
+
+```kotlin
+var i = 0
+while (i < 5) { println(i); i++ }
+
+var j = 0
+do { println(j); j++ } while (j < 5)
+```
+
+### break y continue con labels
+
+```kotlin
+outer@ for (i in 1..3) {
+    for (j in 1..3) {
+        if (i == 2 && j == 2) break@outer
+        println("($i, $j)")
+    }
+}
+// Imprime: (1,1) (1,2) (1,3) (2,1)
+```
+
+### try/catch/finally
+
+```kotlin
+fun leerArchivo(path: String): String {
+    return try {
+        FileReader(path).readText()
+    } catch (e: FileNotFoundException) {
+        "Archivo no encontrado"
+    } catch (e: Exception) {
+        "Error: ${e.message}"
+    } finally {
+        println("Intento de lectura completado")
+    }
+}
+```
+
+**try como expresión:**
+```kotlin
+val resultado = try {
+    val dato = api.fetchData()
+    "Éxito: $dato"
+} catch (e: Exception) {
+    "Error: ${e.message}"
+}
+```
+
+### Nothing type
+
+`Nothing` es un tipo que no tiene valores. Se usa para funciones que nunca retornan:
+
+```kotlin
+fun fail(mensaje: String): Nothing {
+    throw IllegalStateException(mensaje)
+}
+
+fun bucleInfinito(): Nothing {
+    while (true) { println("Nunca termina") }
+}
+```
+
+`Nothing` es subtipo de todos los tipos, por lo que puedes usarlo en cualquier contexto.
+
+### Módulos y organización del código
+
+**package e import:**
+```kotlin
+package com.ejemplo.util
+
+fun String.contarVocales(): Int = count { it.lowercase() in "aeiou" }
+
+import com.ejemplo.util.contarVocales
+```
+
+**Visibilidad:**
+
+| Modificador | Visibilidad |
+|---|---|
+| `public` (default) | Visible en cualquier parte |
+| `private` | Solo dentro del archivo o clase |
+| `protected` | Clase: visible en subclases. Top-level: no aplica |
+| `internal` | Visible dentro del mismo módulo (Gradle) |
+
+**Modularidad con Gradle:**
+```
+proyecto/
+├── app/
+│   └── build.gradle.kts
+├── domain/
+│   └── build.gradle.kts
+├── data/
+│   └── build.gradle.kts
+└── build.gradle.kts
+```
+
+Cada módulo tiene su propio `build.gradle.kts`:
+
+```kotlin
+// domain/build.gradle.kts
+plugins { kotlin("jvm") }
+dependencies { implementation(kotlin("stdlib")) }
+```
+
+**Multiplataforma source sets:**
+
+| Source set | Target |
+|---|---|
+| `commonMain` | Código compartido entre todas las plataformas |
+| `commonTest` | Tests compartidos |
+| `jvmMain` | Solo JVM (Android, backend) |
+| `jsMain` | Solo JavaScript |
+| `iosMain` | Solo iOS |
+| `linuxMain` | Solo Linux |
+
+```kotlin
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            implementation(kotlin("stdlib-common"))
+        }
+        jvmMain.dependencies {
+            implementation(kotlin("stdlib-jdk8"))
         }
     }
 }
 ```
-### Jetpack Compose
-**Instalación:** `Incluido en Android Studio para proyectos nuevos.`
-Toolkit moderno de UI para Android con enfoque declarativo. Código más corto y legible que XML Views.
+
+Fuente: [Kotlin docs — Control Flow](https://kotlinlang.org/docs/control-flow.html), [Kotlin docs — Packages](https://kotlinlang.org/docs/packages.html), [Kotlin Multiplatform docs](https://kotlinlang.org/docs/multiplatform-set-up-source-sets.html)
+
+---
+
+## Conceptos clave explicados a fondo
+
+### Null Safety
+
+El sistema de tipos de Kotlin distingue entre referencias que pueden ser nulas (`T?`) y las que no (`T`). Es la característica que más bugs evita en el día a día.
+
+**Tipos nulables vs no nulables:**
 ```kotlin
-@Composable
-fun Saludo(nombre: String) {
-    Text(text = "Hola, $nombre!")
+var noNulo: String = "Hola"
+noNulo = null  // ❌ Error de compilación
+
+var siNulo: String? = "Hola"
+siNulo = null  // ✅
+
+// No puedes llamar a métodos directamente sobre un nulable:
+siNulo.length        // ❌ Error: solo para tipos no nulables
+siNulo?.length       // ✅ Safe call: devuelve null si siNulo es null
+```
+
+**Operadores de null safety:**
+
+| Operador | Nombre | Qué hace |
+|---|---|---|
+| `?.` | Safe call | Llama al método si no es null, devuelve null si lo es |
+| `?:` | Elvis | Devuelve el valor izquierdo si no es null, el derecho si lo es |
+| `!!` | Not-null assertion | Fuerza como no-nulable; lanza NullPointerException si es null |
+| `?:` | Safe cast | `x as? Tipo` — devuelve null si el cast falla en lugar de ClassCastException |
+
+```kotlin
+val texto: String? = obtenerTexto()
+val longitud = texto?.length ?: 0        // Si texto es null → 0
+val longitudForzada = texto!!.length       // Lanza excepción si texto es null
+val numero = texto as? Int ?: 0            // Safe cast con Elvis
+
+// let con null safety
+texto?.let { valor ->
+    println("El texto tiene ${valor.length} caracteres")
+} ?: println("El texto es null")
+```
+
+**Smart casts:** El compilador infiere el tipo después de un check:
+```kotlin
+fun procesar(obj: Any) {
+    when (obj) {
+        is String -> println(obj.length)          // Smart cast a String
+        is Int -> println(obj + 1)                // Smart cast a Int
+        !is Long -> println("No es Long")
+    }
+}
+
+// También funciona con null checks:
+val x: String? = "hola"
+if (x != null) {
+    println(x.length)  // Smart cast a String (no null)
+}
+// Y con early return:
+fun saludar(nombre: String?) {
+    val n = nombre ?: return  // Early return si es null
+    println(n.length)          // Smart cast después de Elvis
 }
 ```
 
-## 📝 Ejercicios Prácticos
+**¿Cómo se compara con otros lenguajes?**
 
-1. **Extension Function** 🟢 `[Fácil]` — Extensión para `String` que capitalice cada palabra: `"hola mundo".capitalizarPalabras()` → `"Hola Mundo"`.
-2. **Data Class + copy()** 🟢 `[Fácil]` — Data class `Producto` con nombre, precio, categoría. Función que aplique descuento usando `copy()`.
-3. **API con Ktor** 🟡 `[Intermedio]` — Servidor Ktor con GET/POST para gestor de notas. Almacenamiento en memoria.
-4. **Corrutinas** 🔴 `[Avanzado]` — Descarga 10 URLs concurrentemente, midiendo tiempo total vs secuencial.
+- **Java**: `Optional<String>` — solución verbosa, no integrada en el sistema de tipos. Kotlin lo tiene nativo con `String?`
+- **Swift**: `String?` — casi idéntico, opcionales con `if let` / `guard let`. Kotlin añade el Elvis `?:` y safe calls `?.`
+- **TypeScript**: `string | null | undefined` — más flexible pero menos estricto (necesitas `strictNullChecks` en tsconfig)
+- **Rust**: `Option<String>` — equivalente funcional, más verboso pero con pattern matching exhaustivo
 
-## ⚡ Buenas Prácticas y Complejidad
+Fuente: [Kotlin docs — Null Safety](https://kotlinlang.org/docs/null-safety.html)
 
-**Buenas prácticas:**
+### Inmutabilidad y propiedades
 
-- Prefiere `val` sobre `var` — la inmutabilidad reduce bugs.
-- Usa `sealed class` para jerarquías cerradas (como uniones discriminadas).
-- Aprovecha las extension functions para organizar código por dominio.
-- Usa `require()` y `check()` para validar precondiciones.
-- En corrutinas, usa `viewModelScope` o `lifecycleScope`, no `GlobalScope`.
+**val vs var:**
+```kotlin
+val nombre: String = "Ana"  // Inmutable (read-only, no reasignable)
+var edad: Int = 30          // Mutable (reasignable)
 
-**Complejidad algorítmica (Big O):**
+nombre = "Luis"  // ❌ Error de compilación
+edad = 31        // ✅
 
-Colecciones Kotlin = mismas que Java: ArrayList O(1) acceso, O(n) inserción. HashMap O(1) promedio. `asSequence()` permite lazy evaluation.
+// val no significa inmutable en profundidad:
+val lista = mutableListOf(1, 2, 3)
+lista.add(4)  // ✅ el objeto es mutable
+// lista = otraLista  // ❌ la referencia no se puede reasignar
+```
 
-## 📚 Recursos y Documentación
+**Propiedades (más que campos):**
+```kotlin
+class Usuario {
+    var nombre: String = "Anónimo"
+        get() = field.uppercase()       // Getter personalizado
+        set(value) {
+            field = value.trim()         // Setter con validación
+        }
 
-- 📖 [Kotlin Documentación](https://kotlinlang.org/docs/home.html)
-- 🔧 [Kotlin Playground](https://play.kotlinlang.org/)
-- 📖 [Android Developers — Kotlin](https://developer.android.com/kotlin)
-- 📖 [Kotlin en GitHub](https://github.com/JetBrains/kotlin)
-- 🌐 [Kotlin Weekly](https://kotlinweekly.net/)
+    val id: Long = 0
+        get() = field  // Solo getter (val)
 
-### 🏆 Retos Relacionados
+    var edad: Int = 0
+        private set    // Setter privado (solo dentro de la clase)
+}
+```
+
+**Backing fields:** El campo `field` es auto-generado. Se usa dentro de getters/setters para evitar recursión infinita.
+
+**lateinit** (para inicialización tardía, solo con `var`):
+```kotlin
+class App {
+    lateinit var database: Database
+
+    fun setup() {
+        database = Database.connect()
+    }
+
+    fun usar() {
+        if (::database.isInitialized) {
+            database.query(...)
+        }
+    }
+}
+// Lanza UninitializedPropertyAccessException si accedes antes de inicializar
+```
+
+**lazy** (para inicialización perezosa, solo con `val`):
+```kotlin
+val config: Config by lazy {
+    println("Cargando configuración... (una sola vez)")
+    Config.load()
+}
+// Se ejecuta solo la primera vez que se accede. Thread-safe por defecto.
+```
+
+Fuente: [Kotlin docs — Properties](https://kotlinlang.org/docs/properties.html), [Kotlin docs — lateinit](https://kotlinlang.org/docs/properties.html#late-initialized-properties-and-variables)
+
+### Data Classes
+
+Las `data class` son clases diseñadas exclusivamente para contener datos. El compilador genera automáticamente:
+- `equals()` / `hashCode()` (comparación por valor)
+- `toString()` (representación legible)
+- `copy()` (copia con modificación)
+- `componentN()` (destructuring declaration)
+
+```kotlin
+data class Usuario(
+    val nombre: String,
+    val email: String,
+    val edad: Int = 0,
+    val activo: Boolean = true
+)
+
+val usuario = Usuario("Ana", "ana@email.com", 28)
+println(usuario)                    // Usuario(nombre=Ana, email=ana@email.com, edad=28, activo=true)
+
+// Copy: crea una copia modificando solo los campos especificados
+val usuario2 = usuario.copy(edad = 30, nombre = "Ana G.")
+println(usuario2)
+
+// Destructuring
+val (nombre, email) = usuario
+println("$nombre <$email>")
+
+// Componentes individuales
+println(usuario.component1())  // nombre
+
+// Comparación por valor
+println(usuario == usuario.copy()) // true, aunque sean instancias distintas
+```
+
+**Requisitos de una data class:**
+- El constructor primario debe tener al menos un parámetro
+- Todos los parámetros del constructor primario deben ser `val` o `var`
+- No puede ser `abstract`, `open`, `sealed`, o `inner`
+
+**Métodos generados y personalización:**
+```kotlin
+data class Producto(
+    val nombre: String,
+    val precio: Double
+) {
+    init {
+        require(precio >= 0) { "El precio no puede ser negativo" }
+    }
+
+    // Solo se generan equals/hashCode para propiedades del constructor
+    var descuento: Double = 0.0
+}
+```
+
+**¿Cómo se compara?**
+- **Java**: Necesitas `record` (Java 16+) o librerías como Lombok (`@Data`, `@Builder`). Kotlin data class es más conciso y nativo.
+- **Python**: `@dataclass` de Python 3.7+ similar, pero Kotlin también genera `copy()` y destructuring.
+- **Scala**: `case class` — casi idéntico, pero Kotlin se integra mejor con Java.
+
+Fuente: [Kotlin docs — Data Classes](https://kotlinlang.org/docs/data-classes.html)
+
+### Clases selladas (Sealed Classes)
+
+Las `sealed class` representan jerarquías de clases restringidas: todas las subclases posibles se conocen en tiempo de compilación. Son ideales para representar estados, resultados, o uniones discriminadas.
+
+```kotlin
+sealed class Resultado<out T> {
+    data class Exito<T>(val datos: T) : Resultado<T>()
+    data class Error(val mensaje: String, val codigo: Int = 0) : Resultado<Nothing>()
+    object Cargando : Resultado<Nothing>()
+}
+
+// Uso con when exhaustivo (el compilador verifica que cubres todos los casos)
+fun <T> procesar(resultado: Resultado<T>): String = when (resultado) {
+    is Resultado.Exito -> "Éxito: ${resultado.datos}"
+    is Resultado.Error -> "Error: ${resultado.mensaje} (código ${resultado.codigo})"
+    Resultado.Cargando -> "Cargando..."
+    // No necesita else — todos los casos están cubiertos
+}
+```
+
+**Sealed interfaces:**
+```kotlin
+sealed interface Estado {
+    data class Activo(val desde: Long) : Estado
+    data class Inactivo(val motivo: String) : Estado
+    object Pendiente : Estado
+}
+```
+
+**Sealed classes con when y smart casts:**
+```kotlin
+sealed class Expresion {
+    data class Numero(val valor: Int) : Expresion()
+    data class Suma(val izquierdo: Expresion, val derecho: Expresion) : Expresion()
+    object Error : Expresion()
+}
+
+fun evaluar(expr: Expresion): Int = when (expr) {
+    is Expresion.Numero -> expr.valor
+    is Expresion.Suma -> evaluar(expr.izquierdo) + evaluar(expr.derecho)
+    Expresion.Error -> throw Exception("Expresión errónea")
+}
+```
+
+**¿Con qué se relaciona?**
+- **Java**: `sealed class` desde Java 17 (similar, pero Kotlin lo tiene desde 1.0)
+- **TypeScript**: Discriminated unions
+- **Swift**: Enums con associated values
+- **Rust**: Enums con valores
+
+Las sealed classes son la base de patrones como `Result<T>`, `Either<L, R>`, y los estados de UI en Jetpack Compose.
+
+Fuente: [Kotlin docs — Sealed Classes](https://kotlinlang.org/docs/sealed-classes.html)
+
+### Object, Companion Object y Object Expressions
+
+Kotlin unifica el patrón Singleton, métodos estáticos y clases anónimas con la palabra clave `object`.
+
+**Object declaration (Singleton)**:
+```kotlin
+object Config {
+    val version = "1.0"
+    val apiUrl = "https://api.example.com"
+    var debug = false
+
+    fun cargar() {
+        println("Cargando configuración...")
+    }
+}
+
+// Uso: Config es un singleton
+println(Config.apiUrl)
+Config.cargar()
+```
+
+**Companion object (métodos "estáticos"):**
+```kotlin
+class Usuario(val nombre: String) {
+    companion object Factory {
+        fun crear(nombre: String): Usuario = Usuario(nombre.trim())
+        val anonimo = Usuario("Anónimo")
+    }
+}
+
+// Llamada como si fuera estático
+val usuario = Usuario.crear("  Ana  ")
+val anonimo = Usuario.anonimo
+
+// También accesible via el nombre del companion
+val usuario2 = Usuario.Factory.crear("Luis")
+```
+
+**Object expressions (clases anónimas):**
+```kotlin
+// Equivalente a clases anónimas en Java
+val listener = object : ClickListener {
+    override fun onClick() {
+        println("Clickeado!")
+    }
+
+    override fun onLongClick(): Boolean {
+        println("Long click")
+        return true
+    }
+}
+
+// Object expression sin herencia
+val contador = object {
+    var count = 0
+    fun incrementar() { count++ }
+}
+contador.incrementar()
+println(contador.count)  // 1
+```
+
+Fuente: [Kotlin docs — Object](https://kotlinlang.org/docs/object-declarations.html)
+
+### Extension Functions e Infix Functions
+
+**Extension functions:** Añaden métodos a clases existentes sin herencia ni decoradores. Se resuelven estáticamente (no son polimórficas).
+
+```kotlin
+// Extensión para String
+fun String.esPalindromo(): Boolean =
+    this == this.reversed()
+
+// Extensión para List
+fun <T> List<T>.segundo(): T? = this.getOrNull(1)
+
+// Extensión con receiver genérico
+fun <T> T.also(block: (T) -> Unit): T {
+    block(this)
+    return this
+}
+
+// Uso
+println("anilina".esPalindromo())  // true
+println(listOf(1, 2, 3).segundo())  // 2
+```
+
+**Extension properties:**
+```kotlin
+val <T> List<T>.ultimo: T?
+    get() = if (isEmpty()) null else this[lastIndex]
+
+println(listOf(1, 2, 3).ultimo)  // 3
+```
+
+**Infix functions:** Funciones que se llaman sin el `.` y los paréntesis, con un solo parámetro.
+```kotlin
+infix fun Int.esMultiploDe(otro: Int): Boolean = this % otro == 0
+
+println(10 esMultiploDe 5)  // true
+println(10 esMultiploDe 3)  // false
+```
+
+**¿Cómo se compara?**
+- **C#**: Extension methods (sintaxis `this` en el primer parámetro)
+- **Swift**: Extensions (similar, pero pueden añadir protocolos)
+- **Java**: No tiene — necesitas métodos utilitarios estáticos (`Collections.sort()`)
+
+Fuente: [Kotlin docs — Extensions](https://kotlinlang.org/docs/extensions.html)
+
+### Operator Overloading
+
+Kotlin permite sobrecargar operadores mediante funciones con nombres específicos, usando la palabra `operator`.
+
+```kotlin
+data class Punto(val x: Int, val y: Int) {
+    operator fun plus(otro: Punto) = Punto(x + otro.x, y + otro.y)
+    operator fun minus(otro: Punto) = Punto(x - otro.x, y - otro.y)
+    operator fun times(escalar: Int) = Punto(x * escalar, y * escalar)
+    operator fun compareTo(otro: Punto): Int = (x + y) - (otro.x + otro.y)
+}
+
+val p1 = Punto(3, 4)
+val p2 = Punto(1, 2)
+println(p1 + p2)  // Punto(4, 6)
+println(p1 * 3)   // Punto(9, 12)
+println(p1 > p2)  // true
+```
+
+**Tabla de operadores sobrecargables:**
+
+| Operador | Función |
+|---|---|
+| `+a` | `unaryPlus()` |
+| `-a` | `unaryMinus()` |
+| `!a` | `not()` |
+| `a + b` | `plus(b)` |
+| `a - b` | `minus(b)` |
+| `a * b` | `times(b)` |
+| `a / b` | `div(b)` |
+| `a % b` | `rem(b)` |
+| `a..b` | `rangeTo(b)` |
+| `a in b` | `contains(b)` |
+| `a[b]` | `get(b)` |
+| `a[b] = c` | `set(b, c)` |
+| `a()` | `invoke()` |
+
+```kotlin
+// Ejemplo de invoke — objeto llamable
+class Operacion {
+    operator fun invoke(a: Int, b: Int): Int = a + b
+}
+
+val suma = Operacion()
+println(suma(3, 4))  // 7 — llama a invoke
+```
+
+Fuente: [Kotlin docs — Operator Overloading](https://kotlinlang.org/docs/operator-overloading.html)
+
+### Scope Functions
+
+Kotlin tiene cinco funciones de ámbito (`let`, `run`, `with`, `apply`, `also`). Todas ejecutan un bloque de código en el contexto de un objeto. Se diferencian por cómo accedes al contexto (`it` vs `this`) y qué devuelven.
+
+**Tabla comparativa:**
+
+| Función | Contexto | Retorno | Caso de uso |
+|---|---|---|---|
+| `let` | `it` (param) | Resultado del lambda | Operaciones encadenadas con null safety |
+| `run` | `this` (receiver) | Resultado del lambda | Calcular un valor desde un objeto |
+| `with` | `this` (receiver) | Resultado del lambda | Configurar un objeto sin retornarlo |
+| `apply` | `this` (receiver) | El objeto mismo | Configuración de objetos (DSL) |
+| `also` | `it` (param) | El objeto mismo | Efectos secundarios (logging, validación) |
+
+```kotlin
+data class Persona(var nombre: String = "", var edad: Int = 0)
+
+// apply: configura y devuelve el objeto
+val persona = Persona().apply {
+    nombre = "Ana"      // this.nombre
+    edad = 28           // this.edad
+}
+println(persona)  // Persona(nombre=Ana, edad=28)
+
+// let: transforma con null safety
+val texto: String? = "Hola"
+val longitud = texto?.let { it.length } ?: 0
+texto?.let { valor ->
+    println("El texto '$valor' tiene ${valor.length} caracteres")
+}
+
+// run: computa un valor desde un objeto
+val info = persona.run {
+    "$nombre tiene $edad años"
+}
+
+// with: similar a run pero como función independiente
+val info2 = with(persona) {
+    "$nombre tiene $edad años"
+}
+
+// also: efectos secundarios
+val lista = mutableListOf(1, 2, 3).also {
+    println("Creando lista con ${it.size} elementos")
+}.apply {
+    add(4)
+    add(5)
+}
+```
+
+**Regla práctica:** Si necesitas devolver el objeto → `apply` o `also`. Si necesitas devolver otro valor → `let` o `run`. Si solo necesitas operar → `with`.
+
+Fuente: [Kotlin docs — Scope Functions](https://kotlinlang.org/docs/scope-functions.html)
+
+### Corrutinas
+
+Las corrutinas son la primitiva de concurrencia de Kotlin. Son más ligeras que los threads (se ejecutan cientos de miles en el mismo thread).
+
+```kotlin
+import kotlinx.coroutines.*
+
+// suspending function
+suspend fun fetchUserData(): String {
+    delay(1000)  // No bloquea el thread
+    return "Datos del usuario"
+}
+
+// Lanzar una corrutina
+fun main() = runBlocking {
+    launch {
+        val data = fetchUserData()
+        println(data)
+    }
+    println("Esto se ejecuta antes (la corrutina no bloquea)")
+}
+
+// async/await para paralelismo
+fun main() = runBlocking {
+    val datos = async { fetchUserData() }
+    val otros = async { fetchOtherData() }
+    println("Combinado: ${datos.await()} + ${otros.await()}")
+}
+```
+
+**Dispatchers:**
+
+| Dispatcher | Qué hace |
+|---|---|
+| `Dispatchers.Default` | CPU-bound (procesamiento, cálculo) — hilos = núcleos CPU |
+| `Dispatchers.IO` | I/O-bound (red, BD, archivos) — pool grande de hilos |
+| `Dispatchers.Main` | UI thread (Android, JavaFX, Swing) |
+| `Dispatchers.Unconfined` | Comienza en el hilo actual (no recomendado en general) |
+
+```kotlin
+withContext(Dispatchers.IO) {
+    val datos = api.fetchData()  // Operación de red
+}
+
+withContext(Dispatchers.Default) {
+    procesarDatos(datos)  // Cálculo intensivo
+}
+```
+
+**Structured concurrency:** Las corrutinas siguen el ciclo de vida del ámbito en que se lanzan:
+```kotlin
+fun main() = runBlocking {
+    coroutineScope {
+        launch {
+            delay(1000)
+            println("Tarea 1")
+        }
+        launch {
+            delay(500)
+            println("Tarea 2")
+        }
+    }
+    println("Ambas completadas")
+}
+```
+
+**Flow (cold stream):**
+```kotlin
+fun numerosFlow(): Flow<Int> = flow {
+    for (i in 1..5) {
+        delay(500)
+        emit(i)
+    }
+}
+
+fun main() = runBlocking {
+    numerosFlow()
+        .map { it * 2 }
+        .filter { it > 5 }
+        .collect { println(it) }
+}
+```
+
+**StateFlow (hot stream para estado):**
+```kotlin
+class ViewModel {
+    private val _state = MutableStateFlow("inicial")
+    val state: StateFlow<String> = _state.asStateFlow()
+
+    fun update(value: String) {
+        _state.value = value
+    }
+}
+```
+
+**Channel (comunicación entre corrutinas):**
+```kotlin
+val channel = Channel<Int>()
+
+fun main() = runBlocking {
+    launch {
+        for (x in 1..5) {
+            channel.send(x * x)
+        }
+        channel.close()
+    }
+
+    launch {
+        for (y in channel) {
+            println(y)
+        }
+    }
+}
+```
+
+**¿Cómo se compara?**
+- **Threads (Java)**: Pesados (~1MB/hilo), difíciles de cancelar. Corrutinas: ~100 bytes/cada una, cancelación cooperativa.
+- **CompletableFuture (Java)**: Verboso, sin structured concurrency.
+- **async/await (JS/TS)**: Similar sintaxis, pero Kotlin añade `Flow`, `Channel`, `StateFlow`, `Dispatchers`.
+- **Swift concurrency**: `async/await` + `Task` + `AsyncSequence` — muy similar conceptualmente.
+
+Fuente: [Kotlin docs — Coroutines](https://kotlinlang.org/docs/coroutines-overview.html), [Kotlin Coroutines Guide](https://kotlinlang.org/docs/coroutines-guide.html)
+
+### Genéricos: Reified, Variance y Proyecciones
+
+**Reified type parameters:** Solo en `inline` functions. Permiten usar el tipo genérico en tiempo de ejecución.
+```kotlin
+inline fun <reified T> esTipo(obj: Any): Boolean = obj is T
+
+fun main() {
+    println(esTipo<String>("hola"))   // true
+    println(esTipo<Int>("hola"))      // false
+}
+```
+
+**Variance (in/out):**
+```kotlin
+// Covariante (out): solo produce T
+interface Productor<out T> {
+    fun obtener(): T
+}
+
+// Contravariante (in): solo consume T
+interface Consumidor<in T> {
+    fun procesar(valor: T)
+}
+
+// Invariante: produce y consume
+interface Caja<T> {
+    fun obtener(): T
+    fun poner(valor: T)
+}
+
+// Use site variance (star projection)
+fun imprimir(lista: List<*>) {
+    for (item in lista) println(item)
+}
+```
+
+**Covarianza en colecciones:**
+```kotlin
+val strings: List<String> = listOf("a", "b")
+val any: List<Any> = strings  // ✅ List es covariante (out)
+
+val mutStrings: MutableList<String> = mutableListOf("a", "b")
+// val mutAny: MutableList<Any> = mutStrings  // ❌ MutableList es invariante
+```
+
+**where (múltiples constraints):**
+```kotlin
+fun <T> clonarIfComparable(item: T): T
+    where T : Comparable<T>, T : Cloneable {
+    return item
+}
+```
+
+Fuente: [Kotlin docs — Generics](https://kotlinlang.org/docs/generics.html)
+
+### DSL Builders con Receiver
+
+Kotlin permite construir DSLs (Domain Specific Languages) usando lambdas con receiver. Es la base de frameworks como Ktor, Gradle Kotlin DSL, y Jetpack Compose.
+
+```kotlin
+class HTML {
+    private val children = mutableListOf<String>()
+
+    fun body(init: BODY.() -> Unit) {
+        val body = BODY()
+        body.init()
+        children.add(body.toString())
+    }
+
+    override fun toString() = "<html>${children.joinToString("")}</html>"
+}
+
+class BODY {
+    private val children = mutableListOf<String>()
+
+    fun h1(text: String) {
+        children.add("<h1>$text</h1>")
+    }
+
+    fun p(text: String) {
+        children.add("<p>$text</p>")
+    }
+
+    override fun toString() = "<body>${children.joinToString("")}</body>"
+}
+
+fun html(init: HTML.() -> Unit): HTML {
+    val html = HTML()
+    html.init()
+    return html
+}
+
+// Uso del DSL
+val pagina = html {
+    body {
+        h1("Título")
+        p("Esto es un párrafo")
+    }
+}
+println(pagina)
+```
+
+**Type-safe builders son la base de:**
+- **Jetpack Compose**: `Column { Text("Hola") }`
+- **Ktor Routing**: `routing { get("/") { ... } }`
+- **Gradle Kotlin DSL**: `dependencies { implementation(...) }`
+- **kotlinx.html**: DSL para HTML type-safe
+
+Fuente: [Kotlin docs — Type-Safe Builders](https://kotlinlang.org/docs/type-safe-builders.html)
+
+### inline, noinline, crossinline
+
+**inline functions:** El compilador reemplaza la llamada a la función con el cuerpo de la función directamente. Reduce overhead de lambdas y permite `reified` type parameters.
+
+```kotlin
+inline fun <T> medirTiempo(block: () -> T): T {
+    val inicio = System.nanoTime()
+    val resultado = block()
+    val fin = System.nanoTime()
+    println("Tardó ${(fin - inicio) / 1_000_000}ms")
+    return resultado
+}
+
+fun main() {
+    medirTiempo {
+        Thread.sleep(100)
+        "hecho"
+    }
+}
+```
+
+**noinline:** Evita que un parámetro lambda sea inlineado (útil si necesitas pasarlo a otra función).
+```kotlin
+inline fun operacion(
+    block1: () -> Unit,
+    noinline block2: () -> Unit
+) {
+    block1()
+    ejecutarLater(block2)
+}
+
+fun ejecutarLater(block: () -> Unit) { }
+```
+
+**crossinline:** La lambda no puede usar `return` no-local (pero sigue siendo inline).
+```kotlin
+inline fun operar(crossinline block: () -> Unit) {
+    ejecutarEnOtroContexto {
+        block()
+    }
+}
+```
+
+**Reglas:** Úsalas solo cuando sea necesario (medido con benchmark). El uso excesivo aumenta el tamaño del bytecode.
+
+Fuente: [Kotlin docs — Inline Functions](https://kotlinlang.org/docs/inline-functions.html)
+
+### Delegados (by)
+
+Los delegados permiten reutilizar lógica de getters/setters mediante el patrón Delegation.
+
+**by lazy (inicialización perezosa thread-safe):**
+```kotlin
+val config: Config by lazy {
+    Config.load()
+}
+```
+
+**by Delegates.observable (observar cambios):**
+```kotlin
+import kotlin.properties.Delegates
+
+var nombre: String by Delegates.observable("inicial") {
+    property, oldValue, newValue ->
+    println("${property.name} cambió de '$oldValue' a '$newValue'")
+}
+```
+
+**by Delegates.vetoable (rechazar cambios):**
+```kotlin
+var edad: Int by Delegates.vetoable(0) { _, _, newValue ->
+    newValue >= 0
+}
+```
+
+**by Map (delegar propiedades a un mapa):**
+```kotlin
+class Usuario(map: Map<String, Any?>) {
+    val nombre: String by map
+    val edad: Int by map
+}
+
+val user = Usuario(mapOf(
+    "nombre" to "Ana",
+    "edad" to 28
+))
+println(user.nombre)  // "Ana"
+```
+
+**Delegados personalizados:**
+```kotlin
+class Trimmed {
+    private var value: String = ""
+
+    operator fun getValue(thisRef: Any?, property: KProperty<*>): String = value
+
+    operator fun setValue(thisRef: Any?, property: KProperty<*>, newValue: String) {
+        value = newValue.trim()
+    }
+}
+
+var texto: String by Trimmed()
+texto = "  Hola Mundo  "
+println(texto)  // "Hola Mundo" (sin espacios)
+```
+
+Fuente: [Kotlin docs — Delegation](https://kotlinlang.org/docs/delegation.html), [Kotlin Delegated Properties](https://kotlinlang.org/docs/delegated-properties.html)
+
+---
+
+## Sistema de archivos
+
+### java.nio.file (JVM)
+
+En plataformas JVM, puedes usar la API estándar de Java:
+
+```kotlin
+import java.nio.file.*
+import java.nio.file.attribute.BasicFileAttributes
+
+// Leer archivo
+val contenido = Files.readString(Path.of("/ruta/archivo.txt"))
+
+// Escribir archivo
+Files.writeString(Path.of("salida.txt"), "Contenido")
+
+// Copiar
+Files.copy(Path.of("origen.txt"), Path.of("destino.txt"), StandardCopyOption.REPLACE_EXISTING)
+
+// Listar directorio
+Files.list(Path.of(".")).forEach { println(it) }
+
+// Walk (recursivo)
+Files.walk(Path.of("src")).filter { it.toString().endsWith(".kt") }.forEach { println(it) }
+
+// WatchService (monitorizar cambios)
+val watchService = FileSystems.getDefault().newWatchService()
+val path = Path.of(".")
+path.register(watchService,
+    StandardWatchEventKinds.ENTRY_CREATE,
+    StandardWatchEventKinds.ENTRY_MODIFY,
+    StandardWatchEventKinds.ENTRY_DELETE
+)
+```
+
+### kotlin.io (extensiones)
+
+Kotlin añade extensiones sobre `java.io.File`:
+
+```kotlin
+import java.io.File
+
+val file = File("datos.txt")
+
+// Lectura
+val texto = file.readText()                    // Archivo completo como String
+val lineas = file.readLines()                  // List<String>
+file.forEachLine { linea -> println(linea) }   // Iterar línea por línea
+
+// Escritura
+file.writeText("Nuevo contenido")              // Sobrescribe
+file.appendText("Más contenido")               // Añade al final
+
+// Uso eficiente con recursos
+file.useLines { lines ->
+    lines.filter { it.startsWith("ERROR") }.forEach { println(it) }
+}
+
+val buffered = file.bufferedReader().use { reader -> reader.readLine() }
+
+// Operaciones
+file.exists()
+file.isDirectory
+file.isFile
+file.length()  // Tamaño en bytes
+file.name
+file.extension
+file.absolutePath
+```
+
+### Path + Files (moderno, multiplataforma en KMP)
+
+Kotlin 1.9+ recomienda usar `Path` y `Files` en KMP:
+
+```kotlin
+import kotlin.io.path.*
+
+val path = Path("datos.txt")
+path.writeText("Contenido")
+val contenido = path.readText()
+
+path.exists()
+path.isDirectory()
+path.isRegularFile()
+path.name
+path.extension
+path.parent
+path.deleteIfExists()
+path.createFile()
+path.createDirectories()
+
+Path(".").listDirectoryEntries().forEach { println(it) }
+Path(".").walk().filter { it.extension == "kt" }.toList()
+
+path.copyTo(Path("copia.txt"), overwrite = true)
+path.moveTo(Path("nuevo.txt"), overwrite = true)
+path.fileSize()
+```
+
+### OkIO (Square)
+
+OkIO es la librería de I/O multiplataforma de Square, eficiente y fácil de usar. Funciona en JVM, Android, iOS, JS y Native.
+
+```kotlin
+// build.gradle.kts
+dependencies {
+    implementation("com.squareup.okio:okio:3.9.0")
+}
+
+import okio.*
+
+// Lectura/escritura idiomática
+FileSystem.SYSTEM.read(Path("datos.txt")) {
+    val texto = readUtf8()
+}
+
+FileSystem.SYSTEM.write(Path("salida.txt")) {
+    writeUtf8("Hola OkIO")
+}
+```
+
+**Ventajas de OkIO:**
+- Multiplataforma (JVM, Android, iOS, JS, Native)
+- Segmentos para copia cero
+- `FileSystem` abstracto que permite sistemas de archivos virtuales
+- Más rápido que `java.io` en muchos benchmarks
+
+### WatchService (monitorización de archivos)
+
+```kotlin
+import java.nio.file.*
+
+fun watchDirectory(path: String) {
+    val watchService = FileSystems.getDefault().newWatchService()
+    val dir = Path.of(path)
+    dir.register(watchService,
+        StandardWatchEventKinds.ENTRY_CREATE,
+        StandardWatchEventKinds.ENTRY_MODIFY,
+        StandardWatchEventKinds.ENTRY_DELETE
+    )
+
+    while (true) {
+        val key = watchService.take()
+        key.pollEvents().forEach { event ->
+            val filename = event.context() as Path
+            when (event.kind()) {
+                StandardWatchEventKinds.ENTRY_CREATE -> println("Creado: $filename")
+                StandardWatchEventKinds.ENTRY_MODIFY -> println("Modificado: $filename")
+                StandardWatchEventKinds.ENTRY_DELETE -> println("Eliminado: $filename")
+            }
+        }
+        key.reset()
+    }
+}
+```
+
+### Serialización (kotlinx.serialization)
+
+Librería oficial de JetBrains para serializar/deserializar datos. Multiplataforma por defecto.
+
+```kotlin
+// build.gradle.kts
+plugins { kotlin("plugin.serialization") version "2.1.0" }
+dependencies {
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.0")
+}
+
+import kotlinx.serialization.*
+import kotlinx.serialization.json.*
+
+@Serializable
+data class Usuario(
+    val nombre: String,
+    val email: String,
+    val edad: Int = 0,
+    @SerialName("es_activo") val activo: Boolean = true
+)
+
+val json = Json { prettyPrint = true; ignoreUnknownKeys = true }
+val usuario = Usuario("Ana", "ana@email.com", 28)
+val stringJson = json.encodeToString(usuario)
+val usuarioDes = json.decodeFromString<Usuario>(stringJson)
+
+// Archivo
+val file = File("usuario.json")
+file.writeText(json.encodeToString(usuario))
+val desdeArchivo = json.decodeFromString<Usuario>(file.readText())
+```
+
+**Formatos soportados:**
+- **JSON** — El más común, configurable
+- **ProtoBuf** — Binario, tipado, schema necesario (`.proto`)
+- **CBOR** — Binario, autodescriptivo (como JSON pero en binario)
+- **Properties** — Archivos `.properties` clásicos
+- **HOCON** — Formato de configuración de Typesafe
+
+Fuente: [Kotlin docs — Reading/Writing Files](https://kotlinlang.org/docs/reading-writing-files.html), [OkIO docs](https://square.github.io/okio/), [kotlinx.serialization docs](https://github.com/Kotlin/kotlinx.serialization)
+
+---
+
+## Algoritmos y estructuras de datos
+
+### Ordenación
+
+```kotlin
+val numeros = listOf(3, 1, 4, 1, 5, 9, 2, 6)
+
+// sort (MutableList)
+val mutable = numeros.toMutableList()
+mutable.sort()
+println(mutable)  // [1, 1, 2, 3, 4, 5, 6, 9]
+
+// sorted (List inmutable — devuelve nueva lista)
+val ordenada = numeros.sorted()
+val descendente = numeros.sortedDescending()
+
+// sortBy / sortedBy (ordenar por propiedad)
+data class Persona(val nombre: String, val edad: Int)
+val personas = listOf(Persona("Ana", 28), Persona("Luis", 35), Persona("Carlos", 22))
+
+val porNombre = personas.sortedBy { it.nombre }
+val porEdadDesc = personas.sortedByDescending { it.edad }
+
+// sortWith / sortedWith (comparador personalizado)
+val porNombreLargo = personas.sortedWith(compareBy { it.nombre.length })
+val porEdadLuegoNombre = personas.sortedWith(
+    compareBy<Persona> { it.edad }.thenBy { it.nombre }
+)
+```
+
+### binarySearch
+
+Búsqueda binaria O(log n) en listas ordenadas:
+
+```kotlin
+val lista = listOf(1, 3, 5, 7, 9, 11, 13)
+val indice = lista.binarySearch(7)        // 3
+val noEncontrado = lista.binarySearch(4)  // negativo
+
+// Con comparador personalizado
+data class Item(val id: Int, val nombre: String)
+val items = listOf(Item(1, "A"), Item(3, "B"), Item(5, "C"))
+val idx = items.binarySearch { it.id.compareTo(3) }  // 1
+```
+
+**Requisito:** La lista debe estar ordenada según el mismo criterio de comparación.
+
+### Comparable vs Comparator
+
+```kotlin
+// Comparable: orden natural (implementado por la clase)
+data class Producto(val nombre: String, val precio: Double) : Comparable<Producto> {
+    override fun compareTo(other: Producto): Int = this.precio.compareTo(other.precio)
+}
+
+// Comparator: orden externo (sin modificar la clase)
+val porNombre = Comparator<Producto> { a, b -> a.nombre.compareTo(b.nombre) }
+val porPrecioDesc = compareByDescending<Producto> { it.precio }
+```
+
+### groupingBy
+
+Agrupar elementos y aplicar operaciones a cada grupo:
+
+```kotlin
+val palabras = listOf("kotlin", "java", "python", "rust", "go", "c", "ruby")
+
+val porLetra = palabras.groupBy { it.first() }
+// {k=[kotlin], j=[java], p=[python], r=[rust, ruby], g=[go], c=[c]}
+
+val conteo = palabras.groupingBy { it.first() }.eachCount()
+// {k=1, j=1, p=1, r=2, g=1, c=1}
+
+val sumaLongitudes = palabras.groupingBy { it.first() }
+    .fold(0) { acc, palabra -> acc + palabra.length }
+// {k=6, j=4, p=6, r=7, g=2, c=1}
+```
+
+### fold vs reduce
+
+```kotlin
+val numeros = listOf(1, 2, 3, 4, 5)
+
+val suma = numeros.fold(0) { acc, i -> acc + i }         // 15
+val producto = numeros.fold(1) { acc, i -> acc * i }      // 120
+val sumaR = numeros.reduce { acc, i -> acc + i }          // 15
+val resta = numeros.foldRight(0) { i, acc -> i - acc }    // 3
+```
+
+### associateBy
+
+Crear mapas a partir de colecciones:
+
+```kotlin
+data class Usuario(val id: Int, val nombre: String)
+val usuarios = listOf(Usuario(1, "Ana"), Usuario(2, "Luis"), Usuario(3, "Carlos"))
+
+val porId = usuarios.associateBy { it.id }
+// {1=Usuario(1, Ana), 2=..., 3=...}
+
+val porIdNombre = usuarios.associate { it.id to it.nombre }
+// {1=Ana, 2=Luis, 3=Carlos}
+```
+
+### partition
+
+Dividir una colección en dos según un predicado:
+
+```kotlin
+val numeros = listOf(1, 2, 3, 4, 5, 6)
+val (pares, impares) = numeros.partition { it % 2 == 0 }
+// pares = [2, 4, 6], impares = [1, 3, 5]
+```
+
+### chunked y windowed
+
+```kotlin
+val numeros = listOf(1, 2, 3, 4, 5, 6, 7, 8)
+
+// chunked: dividir en grupos de tamaño fijo
+val grupos = numeros.chunked(3)
+// [[1, 2, 3], [4, 5, 6], [7, 8]]
+
+// windowed: ventana deslizante (con solapamiento)
+val ventanas = numeros.windowed(3)
+// [[1, 2, 3], [2, 3, 4], [3, 4, 5], [4, 5, 6], [5, 6, 7], [6, 7, 8]]
+
+// zipWithNext: parejas de elementos consecutivos
+val parejas = numeros.zipWithNext()
+// [(1, 2), (2, 3), (3, 4), (4, 5)]
+val diferencias = numeros.zipWithNext { a, b -> b - a }
+// [1, 1, 1, 1]
+```
+
+### Tabla Big O
+
+Complejidad temporal de las estructuras de datos estándar de Kotlin:
+
+| Operación | ArrayList | LinkedList | HashSet | LinkedHashSet | HashMap |
+|---|---|---|---|---|---|
+| Acceso (get) | O(1) | O(n) | O(1)* | O(1)* | O(1)* |
+| Búsqueda (contains) | O(n) | O(n) | O(1)* | O(1)* | O(1)* |
+| Inserción | O(n)† | O(1) | O(1)* | O(1)* | O(1)* |
+| Eliminación | O(n)† | O(1) | O(1)* | O(1)* | O(1)* |
+| Inserción al final | O(1)‡ | O(1) | — | O(1) | — |
+| Ordenación | O(n log n) | O(n log n) | — | — | — |
+
+\* Asumiendo una buena función hash (O(n) en el peor caso con colisiones)
+† Por el desplazamiento de elementos
+‡ Amortizado (O(n) cuando necesita redimensionar)
+
+**Notas:**
+- **ArrayList** (`listOf`, `mutableListOf` por defecto): mejor para acceso por índice
+- **LinkedList** (`linkedListOf`): mejor para inserciones/eliminaciones frecuentes
+- **HashSet** / **HashMap**: O(1) promedio, no garantiza orden
+- **LinkedHashSet** / **LinkedHashMap**: como HashSet/HashMap pero preserva orden de inserción (implementación por defecto)
+- **TreeSet** / **TreeMap**: O(log n), elementos ordenados
+
+Fuente: [Kotlin docs — Collections Overview](https://kotlinlang.org/docs/collections-overview.html), [Kotlin docs — Sorting](https://kotlinlang.org/docs/collection-ordering.html), [Kotlin docs — Collection Operations](https://kotlinlang.org/docs/collection-operations.html)
+
+---
+
+## Ejemplo completo de POO en Kotlin
+
+Este ejemplo une todos los conceptos de POO en un sistema de biblioteca multimedia. Léelo de arriba a abajo: cada clase añade una capa.
+
+```kotlin
+import kotlinx.coroutines.*
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
+// ── Data class (modelo puro) ──
+
+data class Metadatos(
+    val titulo: String,
+    val duracionSegundos: Int,
+    val tags: List<String> = emptyList(),
+    val fechaCreacion: LocalDateTime = LocalDateTime.now()
+) {
+    val duracionFormateada: String
+        get() {
+            val minutos = duracionSegundos / 60
+            val segundos = duracionSegundos % 60
+            return "$minutos:${segundos.toString().padStart(2, '0')}"
+        }
+
+    override fun toString(): String = "$titulo ($duracionFormateada)"
+}
+
+// ── Sealed class (jerarquía cerrada) ──
+
+sealed class EstadoReproduccion {
+    data class Reproduciendo(val desde: LocalDateTime) : EstadoReproduccion()
+    data class Pausado(val progreso: Int) : EstadoReproduccion()
+    object Detenido : EstadoReproduccion()
+    data class Error(val mensaje: String) : EstadoReproduccion()
+}
+
+// ── Interface base ──
+
+interface Contenido {
+    val metadatos: Metadatos
+    var estado: EstadoReproduccion
+
+    fun reproducir(): String
+    fun obtenerInfo(): String
+
+    // Método con implementación por defecto
+    fun duracionFormateada(): String = metadatos.duracionFormateada
+}
+
+// ── Clase concreta (herencia simple via interface) ──
+
+class Audio(
+    override val metadatos: Metadatos,
+    val bitrateKbps: Int
+) : Contenido {
+    override var estado: EstadoReproduccion = EstadoReproduccion.Detenido
+    private var reproducciones: Int = 0
+
+    override fun reproducir(): String {
+        reproducciones++
+        estado = EstadoReproduccion.Reproduciendo(LocalDateTime.now())
+        return "▶️ Reproduciendo ${metadatos.titulo}..."
+    }
+
+    override fun obtenerInfo(): String =
+        "🎵 ${metadatos.titulo} | ${metadatos.duracionFormateada} | ${bitrateKbps}kbps | $reproducciones reproducciones"
+}
+
+class Video(
+    override val metadatos: Metadatos,
+    val resolucion: String,
+    val formato: String
+) : Contenido {
+    override var estado: EstadoReproduccion = EstadoReproduccion.Detenido
+    var subtitulos: Boolean = false
+
+    override fun reproducir(): String {
+        estado = EstadoReproduccion.Reproduciendo(LocalDateTime.now())
+        return "▶️ Reproduciendo ${metadatos.titulo}..."
+    }
+
+    override fun obtenerInfo(): String =
+        "🎬 ${metadatos.titulo} | $resolucion | $formato | ${if (subtitulos) "CC" else "Sin subtítulos"}"
+}
+
+// ── Herencia múltiple via interfaces ──
+
+interface Exportable {
+    fun exportar(formato: String = "json"): String {
+        return if (formato == "json") {
+            "{"tipo": "${this::class.simpleName}", "titulo": "${(this as? Contenido)?.metadatos?.titulo}"}"
+        } else {
+            "Exportación a $formato no soportada"
+        }
+    }
+}
+
+// ── Object (singleton) ──
+
+object Logger {
+    var nivel: String = "INFO"
+    private val logs = mutableListOf<String>()
+
+    fun log(mensaje: String) {
+        val entrada = "[${LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_TIME)}] [$nivel] $mensaje"
+        logs.add(entrada)
+        println(entrada)
+    }
+
+    fun historial(): List<String> = logs.toList()
+}
+
+// ── Clase que implementa múltiples interfaces ──
+
+class Podcast(
+    metadatos: Metadatos,
+    bitrateKbps: Int,
+    val episodio: Int,
+    val anfitrion: String
+) : Contenido, Exportable {
+
+    private val audio = Audio(metadatos, bitrateKbps)
+
+    override val metadatos: Metadatos get() = audio.metadatos
+    override var estado: EstadoReproduccion
+        get() = audio.estado
+        set(value) { audio.estado = value }
+
+    override fun reproducir(): String = audio.reproducir()
+
+    override fun obtenerInfo(): String =
+        "🎙️ Ep.$episodio: ${metadatos.titulo} | con $anfitrion | ${audio.obtenerInfo()}"
+
+    fun emitir() {
+        Logger.log("Emitiendo podcast episodio $episodio con $anfitrion")
+    }
+}
+
+// ── Composición y genéricos ──
+
+class ListaReproduccion<T : Contenido>(val nombre: String) {
+    private val items = mutableListOf<T>()
+
+    fun agregar(item: T) {
+        items.add(item)
+        Logger.log("Añadido '${item.metadatos.titulo}' a $nombre")
+    }
+
+    fun quitar(indice: Int): T? = items.removeAtOrNull(indice)
+
+    fun reproducirTodo(): List<String> = items.map { it.reproducir() }
+
+    fun infoCompleta(): List<String> = items.map { it.obtenerInfo() }
+
+    val size: Int get() = items.size
+
+    operator fun get(indice: Int): T = items[indice]
+    operator fun iterator(): Iterator<T> = items.iterator()
+
+    override fun toString(): String = "📋 $nombre ($size items)"
+}
+
+// ── Uso del sistema ──
+
+fun main() = runBlocking {
+    val cancion = Audio(
+        Metadatos("Bohemian Rhapsody", 354, tags = listOf("rock", "clásico")),
+        bitrateKbps = 320
+    )
+
+    val pelicula = Video(
+        Metadatos("Inception", 8880, tags = listOf("ciencia ficción", "thriller")),
+        resolucion = "4K",
+        formato = "MKV"
+    ).apply {
+        subtitulos = true
+    }
+
+    val podcast = Podcast(
+        Metadatos("El futuro de la IA", 2700, tags = listOf("tecnología", "IA")),
+        bitrateKbps = 128,
+        episodio = 42,
+        anfitrion = "Ana López"
+    )
+
+    // Polimorfismo
+    listOf(cancion, pelicula, podcast).forEach {
+        println(it.obtenerInfo())
+    }
+
+    // Composición
+    val lista = ListaReproduccion("Favoritos")
+    with(lista) {
+        agregar(cancion)
+        agregar(pelicula)
+        agregar(podcast)
+    }
+    println(lista)
+    println(lista.reproducirTodo())
+
+    // Cuando exhaustivo con sealed class
+    val estado = cancion.estado
+    when (estado) {
+        is EstadoReproduccion.Reproduciendo -> println("Desde: ${estado.desde}")
+        is EstadoReproduccion.Pausado -> println("Progreso: ${estado.progreso}s")
+        is EstadoReproduccion.Detenido -> println("Detenido")
+        is EstadoReproduccion.Error -> println("Error: ${estado.mensaje}")
+    }
+
+    // Extension function + scope function
+    fun String.aSegundos(): Int {
+        val partes = this.split(":")
+        return partes[0].toInt() * 60 + partes[1].toInt()
+    }
+
+    "3:54".aSegundos().also {
+        println("Bohemian Rhapsody dura $it segundos")
+    }
+
+    // Data class copy + destructuring
+    val (titulo, _) = cancion.metadatos
+
+    // Object singleton
+    Logger.log("Sistema iniciado correctamente")
+    println(Logger.historial())
+}
+```
+
+**Conceptos demostrados:**
+
+| Concepto | Cómo aparece |
+|---|---|
+| Interface | `Contenido` con propiedades abstractas y método concreto |
+| Data class | `Metadatos` con `copy()`, destructuring, `toString()` |
+| Sealed class | `EstadoReproduccion` con pattern matching exhaustivo en `when` |
+| Object (singleton) | `Logger` con estado global y métodos |
+| Composición | `Podcast` delega en `Audio`; `ListaReproduccion` contiene `List<T>` |
+| Genéricos | `ListaReproduccion<T : Contenido>` con bound superior |
+| Operador overloading | `operator fun get()`, `operator fun iterator()` |
+| Extension property | `duracionFormateada` como propiedad computada |
+| Scope functions | `apply` para configurar `pelicula`, `with` para configurar `lista`, `also` para efectos |
+| Herencia múltiple vía interfaces | `Podcast` implementa `Contenido` y `Exportable` |
+| Polimorfismo | `obtenerInfo()` se comporta distinto según la clase concreta |
+| Corrutinas | `runBlocking` como punto de entrada |
+| Null safety | `removeAtOrNull()` devuelve `T?` |
+
+---
+
+## Patrones de diseño con ejemplos
+
+### Strategy
+En Kotlin, las funciones son ciudadanos de primera clase y las interfaces funcionales simplifican el patrón.
+
+```kotlin
+typealias EstrategiaOrdenacion = (List<Int>) -> List<Int>
+
+val ascendente: EstrategiaOrdenacion = { it.sorted() }
+val descendente: EstrategiaOrdenacion = { it.sortedDescending() }
+
+class Analizador(private val estrategia: EstrategiaOrdenacion) {
+    fun analizar(datos: List<Int>): List<Int> = estrategia(datos)
+}
+
+// Uso
+val a = Analizador(descendente)
+println(a.analizar(listOf(3, 1, 4, 1, 5, 9)))  // [9, 5, 4, 3, 1, 1]
+```
+
+**Cuándo usarlo:** Múltiples variantes de un algoritmo intercambiables sin condicionales.
+
+### Observer
+Kotlin tiene soporte nativo via `Delegates.observable` o mediante flujos reactivos.
+
+```kotlin
+import kotlin.properties.Delegates
+
+class Sensor {
+    var temperatura: Double by Delegates.observable(0.0) { _, _, nuevo ->
+        logger(nuevo)
+        dashboard(nuevo)
+    }
+}
+
+fun logger(valor: Double) = println("[LOG] Temperatura: $valor")
+fun dashboard(valor: Double) = println("[DASH] Actualizando gráfico con $valor")
+
+// Versión con StateFlow (más moderna para corrutinas)
+class SensorModerno {
+    private val _temperatura = MutableStateFlow(0.0)
+    val temperatura: StateFlow<Double> = _temperatura.asStateFlow()
+
+    fun actualizar(temp: Double) {
+        _temperatura.value = temp
+    }
+}
+```
+
+**Cuándo usarlo:** UI reactiva, eventos de dominio, cambios de configuración.
+
+### Singleton (con `object`)
+```kotlin
+object DatabaseConfig {
+    val url: String = "jdbc:postgresql://localhost/mydb"
+    val usuario: String = "admin"
+    lateinit var password: String
+
+    fun conectar() {
+        println("Conectando a $url...")
+    }
+}
+
+// Uso desde cualquier parte del código
+DatabaseConfig.conectar()
+println(DatabaseConfig.url)
+```
+
+**Comparación con otras implementaciones:**
+- **Java**: `class Singleton { private static final INSTANCE = new Singleton(); }` — 5+ líneas
+- **Kotlin**: `object` — una línea, thread-safe por definición
+
+### Factory (con companion object)
+```kotlin
+sealed class FormatoArchivo {
+    object PDF : FormatoArchivo()
+    object CSV : FormatoArchivo()
+    object JSON : FormatoArchivo()
+}
+
+interface Procesador {
+    fun procesar(contenido: String): String
+}
+
+class ProcesadorPDF : Procesador {
+    override fun procesar(contenido: String): String = "Procesando PDF: $contenido"
+}
+
+class ProcesadorCSV : Procesador {
+    override fun procesar(contenido: String): String = "Procesando CSV: $contenido"
+}
+
+class ProcesadorJSON : Procesador {
+    override fun procesar(contenido: String): String = "Procesando JSON: $contenido"
+}
+
+// Factory via companion object extension
+fun Procesador.Companion.crear(formato: FormatoArchivo): Procesador = when (formato) {
+    FormatoArchivo.PDF -> ProcesadorPDF()
+    FormatoArchivo.CSV -> ProcesadorCSV()
+    FormatoArchivo.JSON -> ProcesadorJSON()
+}
+
+// Uso
+val procesador = Procesador.crear(FormatoArchivo.JSON)
+println(procesador.procesar("datos"))
+```
+
+### Builder (con apply DSL)
+```kotlin
+data class Cafe(
+    val tipo: String = "expresso",
+    val tamano: String = "mediano",
+    val leche: String = "entera",
+    val extras: List<String> = emptyList()
+)
+
+// Builder DSL sin clases separadas
+fun cafe(init: CafeBuilder.() -> Unit): Cafe = CafeBuilder().apply(init).build()
+
+class CafeBuilder {
+    var tipo: String = "expresso"
+    var tamano: String = "mediano"
+    var leche: String = "entera"
+    private val extras = mutableListOf<String>()
+
+    fun extra(extra: String) {
+        extras.add(extra)
+    }
+
+    fun build(): Cafe = Cafe(tipo, tamano, leche, extras)
+}
+
+// Uso
+val miCafe = cafe {
+    tipo = "latte"
+    tamano = "grande"
+    leche = "avena"
+    extra("canela")
+    extra("vainilla")
+}
+println(miCafe)
+```
+
+**Cuándo usarlo:** Objetos con muchos parámetros opcionales, configuraciones complejas. Es el patrón dominante en Kotlin gracias a `apply`.
+
+### Adapter (con extension functions)
+```kotlin
+// Sistema existente
+class SistemaViejo {
+    fun query(sql: String): List<List<String>> = listOf(listOf("resultado"))
+}
+
+// Sistema nuevo
+class SistemaNuevo {
+    suspend fun execute(query: String): List<List<String>> = listOf(listOf("resultado"))
+}
+
+// Adaptador via extension function
+fun SistemaViejo.comoNuevo(): SistemaAdapter = SistemaAdapter(this)
+
+class SistemaAdapter(private val backend: Any) {
+    fun consultar(sql: String): List<List<String>> {
+        return when (backend) {
+            is SistemaViejo -> backend.query(sql)
+            is SistemaNuevo -> runBlocking { backend.execute(sql) }
+            else -> throw IllegalArgumentException("Backend no soportado")
+        }
+    }
+}
+
+// O más simple: extension function directa
+fun SistemaNuevo.query(sql: String): List<List<String>> = runBlocking { execute(sql) }
+
+// Uso
+val viejo = SistemaViejo().comoNuevo()
+println(viejo.consultar("SELECT 1"))
+
+val nuevo = SistemaNuevo()
+println(nuevo.query("SELECT 1"))  // Extension function
+```
+
+**Cuándo usarlo:** Unificar interfaces de librerías incompatibles, wrapping de APIs externas.
+
+Fuente: [Kotlin docs — Design Patterns](https://kotlinlang.org/docs/design-patterns.html)
+
+---
+
+## Polimorfismo en detalle
+
+Kotlin tiene tres formas de polimorfismo. Todas coexisten en el mismo código.
+
+### 1. Polimorfismo por subtipo (clásico POO)
+```kotlin
+interface Animal {
+    fun sonido(): String
+}
+
+class Perro : Animal {
+    override fun sonido(): String = "Guau"
+}
+
+class Gato : Animal {
+    override fun sonido(): String = "Miau"
+}
+
+fun hacerSonido(animal: Animal) {
+    println(animal.sonido())
+}
+
+hacerSonido(Perro())  // Guau
+hacerSonido(Gato())   // Miau
+```
+
+### 2. Polimorfismo paramétrico (genéricos)
+```kotlin
+interface Caja<T> {
+    fun obtener(): T
+    fun guardar(item: T)
+}
+
+class CajaSimple<T>(private var item: T) : Caja<T> {
+    override fun obtener(): T = item
+    override fun guardar(item: T) { this.item = item }
+}
+
+// Con múltiples parámetros de tipo y bounds
+fun <T : Comparable<T>> maximo(a: T, b: T): T = if (a > b) a else b
+
+println(maximo(3, 7))     // 7
+println(maximo("Ana", "Luis"))  // Luis (orden alfabético)
+```
+
+### 3. Polimorfismo ad-hoc con extension functions
+```kotlin
+interface Sonoro {
+    fun sonido(): String
+}
+
+fun Sonoro.describir(): String = "Este animal hace: ${sonido()}"
+
+class Perro : Sonoro {
+    override fun sonido(): String = "Guau"
+}
+
+class Gato : Sonoro {
+    override fun sonido(): String = "Miau"
+}
+
+fun describirAnimal(animal: Sonoro) {
+    println(animal.describir())
+}
+
+describirAnimal(Perro())  // Este animal hace: Guau
+describirAnimal(Gato())   // Este animal hace: Miau
+
+// Sin herencia: extension function sobre tipos no relacionados
+fun Int.describir(): String = "Número: $this"
+fun String.describir(): String = "Texto: $this"
+
+println(42.describir())     // Número: 42
+println("hola".describir()) // Texto: hola
+```
+
+**¿Cómo se compara con otros lenguajes?**
+
+| Tipo | Java | Kotlin | Swift |
+|---|---|---|---|
+| Subtipo | `interface` + `implements` | `interface` + `:` | `protocol` + `:` |
+| Paramétrico | `<T>` (type erasure) | `<T>` (reified disponible con inline) | `<T>` (no type erasure) |
+| Ad-hoc | No directo | Extension functions | Protocol Extensions |
+
+Fuente: [Kotlin docs — Polymorphism](https://kotlinlang.org/docs/classes.html)
+
+---
+
+## Multimedia
+
+### En JVM (Java 2D, ImageIO, JavaFX)
+
+```kotlin
+import java.awt.*
+import java.awt.image.BufferedImage
+import javax.imageio.ImageIO
+import java.io.File
+
+// Crear imagen con Java 2D
+fun crearImagen(): BufferedImage {
+    val img = BufferedImage(400, 300, BufferedImage.TYPE_INT_RGB)
+    val g = img.createGraphics()
+
+    g.color = Color.WHITE
+    g.fillRect(0, 0, 400, 300)
+
+    g.color = Color.RED
+    g.fillOval(50, 50, 100, 100)
+
+    g.color = Color.BLUE
+    g.font = Font("Arial", Font.BOLD, 24)
+    g.drawString("Hola Kotlin", 150, 150)
+
+    g.dispose()
+    return img
+}
+
+// Guardar imagen
+ImageIO.write(crearImagen(), "png", File("salida.png"))
+
+// Leer imagen
+val imagen = ImageIO.read(File("foto.jpg"))
+println("Ancho: ${imagen.width}, Alto: ${imagen.height}")
+
+// Redimensionar
+val redimensionada = BufferedImage(200, 150, BufferedImage.TYPE_INT_RGB)
+val g2d = redimensionada.createGraphics()
+g2d.drawImage(imagen, 0, 0, 200, 150, null)
+g2d.dispose()
+```
+
+**JavaFX** (aplicaciones desktop con multimedia):
+```kotlin
+// build.gradle.kts
+plugins { id("org.openjfx.javafxplugin") version "0.1.0" }
+javafx { version = "21"; modules = listOf("javafx.controls", "javafx.media") }
+
+import javafx.application.Application
+import javafx.scene.Scene
+import javafx.scene.media.Media
+import javafx.scene.media.MediaPlayer
+import javafx.scene.layout.StackPane
+import javafx.stage.Stage
+import java.io.File
+
+class ReproductorAudio : Application() {
+    override fun start(stage: Stage) {
+        val path = File("audio.mp3").absolutePath
+        val media = Media(File(path).toURI().toString())
+        val player = MediaPlayer(media)
+        player.play()
+
+        stage.scene = Scene(StackPane(), 200.0, 100.0)
+        stage.show()
+    }
+}
+
+fun main() { Application.launch(ReproductorAudio::class.java) }
+```
+
+### Multiplataforma
+
+No hay una stdlib unificada de multimedia en Kotlin Multiplatform. Cada plataforma usa sus APIs nativas:
+
+| Plataforma | API principal |
+|---|---|
+| JVM | Java 2D / JavaFX / Swing |
+| Android | Bitmap / Canvas / OpenGL ES |
+| iOS | Core Graphics / Metal / AVFoundation |
+| Web (JS) | Canvas API / WebGL |
+
+Para compartir lógica multimedia, frameworks como Compose Multiplatform ofrecen APIs unificadas de Canvas y gráficos 2D.
+
+### Android
+
+**Bitmap y Canvas (gráficos 2D):**
+```kotlin
+import android.graphics.*
+
+val bitmap = Bitmap.createBitmap(400, 300, Bitmap.Config.ARGB_8888)
+val canvas = Canvas(bitmap)
+
+val paint = Paint().apply {
+    color = Color.RED
+    style = Paint.Style.FILL
+    textSize = 48f
+}
+
+canvas.drawCircle(200f, 150f, 100f, paint)
+canvas.drawText("Hola", 160f, 160f, Paint().apply {
+    color = Color.WHITE; textSize = 32f
+})
+```
+
+**MediaPlayer (audio/video):**
+```kotlin
+import android.media.MediaPlayer
+
+val player = MediaPlayer.create(context, R.raw.mi_audio)
+player.start()
+player.isLooping = true
+
+player.setOnCompletionListener { println("Reproducción completada") }
+player.release()  // Liberar recursos
+```
+
+**CameraX (cámara moderna):**
+```kotlin
+// build.gradle.kts
+dependencies {
+    implementation("androidx.camera:camera-core:1.3.0")
+    implementation("androidx.camera:camera-camera2:1.3.0")
+    implementation("androidx.camera:camera-lifecycle:1.3.0")
+    implementation("androidx.camera:camera-view:1.3.0")
+}
+
+import androidx.camera.core.*
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
+
+val preview = Preview.Builder().build()
+val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+cameraProviderFuture.addListener({
+    val cameraProvider = cameraProviderFuture.get()
+    val camera = cameraProvider.bindToLifecycle(this, cameraSelector, preview)
+}, ContextCompat.getMainExecutor(this))
+```
+
+**ExoPlayer (reproducción avanzada de video):**
+```kotlin
+// build.gradle.kts
+dependencies {
+    implementation("androidx.media3:media3-exoplayer:1.3.0")
+}
+
+import androidx.media3.common.MediaItem
+import androidx.media3.exoplayer.ExoPlayer
+
+val player = ExoPlayer.Builder(context).build()
+val mediaItem = MediaItem.fromUri("https://example.com/video.mp4")
+player.setMediaItem(mediaItem)
+player.prepare()
+player.play()
+```
+
+**Glide (carga de imágenes):**
+```kotlin
+// build.gradle.kts
+dependencies { implementation("com.github.bumptech.glide:glide:4.16.0") }
+
+import com.bumptech.glide.Glide
+
+Glide.with(context)
+    .load("https://example.com/imagen.jpg")
+    .placeholder(R.drawable.placeholder)
+    .error(R.drawable.error)
+    .circleCrop()
+    .into(imageView)
+```
+
+**Coil (carga de imágenes, Kotlin-first, corrutinas nativas):**
+```kotlin
+// build.gradle.kts
+dependencies { implementation("io.coil-kt:coil:2.6.0") }
+
+import coil.load
+
+imageView.load("https://example.com/imagen.jpg") {
+    placeholder(R.drawable.placeholder)
+    error(R.drawable.error)
+    crossfade(true)
+    size(400, 300)
+}
+```
+
+**MPAndroidChart (gráficos):**
+```kotlin
+// build.gradle.kts
+dependencies { implementation("com.github.PhilJay:MPAndroidChart:v3.1.0") }
+
+import com.github.mikephil.charting.charts.BarChart
+import com.github.mikephil.charting.data.*
+
+val entries = listOf(BarEntry(1f, 20f), BarEntry(2f, 35f), BarEntry(3f, 15f), BarEntry(4f, 40f))
+val dataSet = BarDataSet(entries, "Ventas")
+dataSet.color = Color.BLUE
+
+val barChart = findViewById<BarChart>(R.id.chart)
+barChart.data = BarData(dataSet)
+barChart.invalidate()
+```
+
+Fuente: [Android Developer — Graphics](https://developer.android.com/develop/ui/views/graphics), [CameraX docs](https://developer.android.com/camera), [Glide docs](https://bumptech.github.io/glide/), [Coil docs](https://coil-kt.github.io/coil/)
+
+---
+
+## Bases de datos
+
+### SQL (relacionales)
+
+| Librería | Async | ORM | Para qué |
+|---|---|---|---|
+| **Exposed** | Sí (corrutinas) | DSL + ORM ligero | Framework oficial de JetBrains para SQL |
+| **Room** | Sí (corrutinas) | ORM | Estándar Android con DAOs anotados |
+| **SQLDelight** | Sí | Genera Kotlin desde SQL | Multiplataforma (Android, iOS, JVM, JS) |
+| **Spring Data JPA** | Sí (WebFlux) | ORM completo | Ecosistema Spring Boot |
+| **R2DBC** | Sí | Driver reactivo | PostgreSQL, MySQL, MariaDB con reactive streams |
+
+```kotlin
+// Exposed (DSL)
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.transactions.transaction
+
+object Usuarios : Table() {
+    val id = integer("id").autoIncrement()
+    val nombre = varchar("nombre", 100)
+    val email = varchar("email", 255).uniqueIndex()
+
+    override val primaryKey = PrimaryKey(id)
+}
+
+fun main() {
+    Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver")
+
+    transaction {
+        SchemaUtils.create(Usuarios)
+        Usuarios.insert {
+            it[nombre] = "Ana"
+            it[email] = "ana@email.com"
+        }
+        val usuarios = Usuarios.selectAll().toList()
+        println(usuarios)
+    }
+}
+```
+
+```kotlin
+// Room (Android)
+@Entity
+data class Usuario(
+    @PrimaryKey val id: Int,
+    val nombre: String,
+    val email: String
+)
+
+@Dao
+interface UsuarioDao {
+    @Query("SELECT * FROM usuario")
+    suspend fun obtenerTodos(): List<Usuario>
+
+    @Insert
+    suspend fun insertar(usuario: Usuario)
+}
+
+@Database(entities = [Usuario::class], version = 1)
+abstract class AppDatabase : RoomDatabase() {
+    abstract fun usuarioDao(): UsuarioDao
+}
+```
+
+```kotlin
+// SQLDelight (multiplataforma)
+-- src/main/sqldelight/com/example/Usuario.sq
+CREATE TABLE Usuario (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT NOT NULL,
+    email TEXT NOT NULL
+);
+
+getAll:
+SELECT * FROM Usuario;
+
+insert:
+INSERT INTO Usuario(nombre, email) VALUES (?, ?);
+```
+
+### NoSQL
+
+| Librería | BD | Async | Para qué |
+|---|---|---|---|
+| **MongoDB Kotlin Driver** | MongoDB | Sí | Driver oficial, reactive streams |
+| **kmongo** | MongoDB | Sí | Wrapper sobre driver oficial con corrutinas |
+| **redis‑kotlin** | Redis | Sí | Cliente Redis con corrutinas |
+| **spring‑data‑mongodb** | MongoDB | Sí | ORM tipo Spring Data |
+
+```kotlin
+// MongoDB Kotlin Driver
+val client = MongoClient.connect("mongodb://localhost:27017")
+val db = client.getDatabase("app")
+val coleccion = db.getCollection<Document>("usuarios")
+
+suspend fun insertar(nombre: String, email: String) {
+    coleccion.insertOne(Document("nombre", nombre).append("email", email))
+}
+
+suspend fun listar(): List<Document> =
+    coleccion.find().toList()
+```
+
+### Migraciones
+```kotlin
+// Exposed + Flyway (o usar migrations de Exposed)
+transaction {
+    SchemaUtils.createMissingTablesAndColumns(Usuarios)
+}
+
+// Gradle Liquibase/Flyway se configuran como plugins
+```
+
+Fuente: [Exposed docs](https://github.com/JetBrains/Exposed), [SQLDelight docs](https://cashapp.github.io/sqldelight/), [MongoDB Kotlin Driver](https://www.mongodb.com/docs/drivers/kotlin-coroutines/)
+
+---
+
+## WebSockets
+
+| Librería | Para qué |
+|---|---|
+| **Ktor WebSocket** | Servidor/cliente WebSocket nativo en Ktor |
+| **Spring WebSocket** | Integrado en Spring Boot |
+| **OkHttp WebSocket** | Cliente WebSocket para Android/JVM |
+| **TornadoFX WebSocket** | Para aplicaciones desktop |
+
+```kotlin
+// Ktor WebSocket (servidor)
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
+import io.ktor.websocket.*
+import io.ktor.http.*
+import io.ktor.server.routing.*
+import io.ktor.server.plugins.*
+
+fun main() {
+    embeddedServer(Netty, port = 8080) {
+        install(WebSockets)
+
+        routing {
+            webSocket("/chat") {
+                send(Frame.Text("Bienvenido al chat!"))
+
+                for (frame in incoming) {
+                    if (frame is Frame.Text) {
+                        val text = frame.readText()
+                        send(Frame.Text("Echo: $text"))
+                        broadcast("Usuario dice: $text")
+                    }
+                }
+            }
+        }
+    }.start(wait = true)
+}
+
+suspend fun DefaultWebSocketServerSession.broadcast(mensaje: String) {
+    // En producción necesitas un contenedor de sesiones
+}
+```
+
+```kotlin
+// OkHttp WebSocket (cliente Android)
+import okhttp3.*
+
+val client = OkHttpClient()
+val request = Request.Builder().url("ws://echo.websocket.org").build()
+val ws = client.newWebSocket(request, object : WebSocketListener() {
+    override fun onOpen(webSocket: WebSocket, response: Response) {
+        webSocket.send("Hola servidor!")
+    }
+
+    override fun onMessage(webSocket: WebSocket, text: String) {
+        println("Recibido: $text")
+    }
+
+    override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+        println("Error: ${t.message}")
+    }
+})
+```
+
+```kotlin
+// Spring WebSocket (servidor)
+@Configuration
+@EnableWebSocket
+class WebSocketConfig : WebSocketConfigurer {
+    override fun registerWebSocketHandlers(registry: WebSocketHandlerRegistry) {
+        registry.addHandler(MiHandler(), "/ws").setAllowedOrigins("*")
+    }
+}
+
+class MiHandler : TextWebSocketHandler() {
+    private val sessions = mutableSetOf<WebSocketSession>()
+
+    override fun afterConnectionEstablished(session: WebSocketSession) {
+        sessions.add(session)
+        session.sendMessage(TextMessage("Conectado!"))
+    }
+
+    override fun handleTextMessage(session: WebSocketSession, message: TextMessage) {
+        sessions.forEach { it.sendMessage(TextMessage("Echo: ${message.payload}")) }
+    }
+}
+```
+
+Fuente: [Ktor WebSocket docs](https://ktor.io/docs/websocket.html), [OkHttp WebSocket](https://square.github.io/okhttp/features/websockets/)
+
+---
+
+## Concurrencia con corrutinas
+
+Kotlin tiene un modelo de concurrencia unificado basado en corrutinas. Cubre desde I/O asíncrono hasta paralelismo CPU-bound, todo con la misma API.
+
+### launch vs async
+
+```kotlin
+fun main() = runBlocking {
+    // launch: disparar y olvidar (retorna Job)
+    val job: Job = launch {
+        delay(1000)
+        println("Tarea completada")
+    }
+    job.join()  // Espera a que termine
+
+    // async: calcular un valor (retorna Deferred<T>)
+    val deferred: Deferred<String> = async {
+        delay(500)
+        "Resultado"
+    }
+    println(deferred.await())  // Espera y obtiene el valor
+
+    // Paralelismo real
+    val resultados = listOf(
+        async { fetchUserData() },
+        async { fetchPosts() },
+        async { fetchComments() }
+    )
+    resultados.awaitAll()
+}
+```
+
+### Structured Concurrency
+
+El principio fundamental: las corrutinas hijas viven dentro del ámbito de la corrutina padre.
+
+```kotlin
+fun main() = runBlocking {
+    try {
+        coroutineScope {
+            launch {
+                delay(1000)
+                println("Tarea 1")
+            }
+            launch {
+                delay(500)
+                throw RuntimeException("Error en tarea 2")
+            }
+        }
+    } catch (e: Exception) {
+        println("Ámbito cancelado: ${e.message}")
+    }
+}
+
+// supervisorScope: las fallas no cancelan a las otras
+supervisorScope {
+    launch {
+        delay(1000)
+        println("Tarea 1")  // Se completa
+    }
+    launch {
+        delay(500)
+        throw RuntimeException("Error")
+    }
+}
+```
+
+### Dispatchers — tabla de usos
+
+| Dispatcher | Pool de hilos | Uso típico |
+|---|---|---|
+| `Dispatchers.Default` | Núcleos CPU (mínimo 2) | Cómputo, parsing, transformación de datos |
+| `Dispatchers.IO` | 64 hilos (por defecto) | Red, BD, archivos, cualquier I/O bloqueante |
+| `Dispatchers.Main` | UI thread | Android: actualizar vistas, Compose |
+| `Dispatchers.Unconfined` | El hilo actual | Testing, prototipos (no para prod) |
+
+```kotlin
+withContext(Dispatchers.Default) {
+    procesarDatos(datos)  // CPU-bound
+}
+
+withContext(Dispatchers.IO) {
+    api.fetchUsers()      // I/O-bound
+}
+```
+
+### Flow (cold async streams)
+
+```kotlin
+fun flujoDatos(): Flow<Int> = flow {
+    for (i in 1..5) {
+        delay(100)
+        emit(i)
+    }
+}.flowOn(Dispatchers.Default)
+
+fun main() = runBlocking {
+    flujoDatos()
+        .map { it * 2 }
+        .filter { it > 4 }
+        .catch { e -> println("Error: $e") }
+        .collect { println(it) }
+}
+```
+
+### StateFlow vs SharedFlow (hot streams)
+
+```kotlin
+class ViewModel {
+    private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
+    val uiState: StateFlow<UiState> = _uiState.asStateFlow()
+
+    private val _eventos = MutableSharedFlow<UiEvent>()
+    val eventos: SharedFlow<UiEvent> = _eventos.asSharedFlow()
+
+    fun cargarDatos() {
+        viewModelScope.launch {
+            _uiState.value = UiState.Loading
+            try {
+                val datos = api.fetchData()
+                _uiState.value = UiState.Success(datos)
+                _eventos.emit(UiEvent.DatosCargados)
+            } catch (e: Exception) {
+                _uiState.value = UiState.Error(e.message ?: "Error")
+            }
+        }
+    }
+}
+```
+
+### Channel (comunicación punto a punto)
+
+```kotlin
+val channel = Channel<String>(capacity = Channel.BUFFERED)
+
+fun main() = runBlocking {
+    launch(Dispatchers.Default) {
+        repeat(5) {
+            channel.send("Mensaje $it")
+            delay(100)
+        }
+        channel.close()
+    }
+
+    for (msg in channel) {
+        println("Recibido: $msg")
+    }
+}
+```
+
+### Tabla de usos para concurrencia
+
+| Escenario | Herramienta | Ejemplo |
+|---|---|---|
+| Llamada a API | `async` / `withContext(IO)` | `val data = async { api.getUser() }` |
+| Tareas paralelas CPU | `async` en `Dispatchers.Default` | `async { procesar(lote) }` |
+| Stream de datos en tiempo real | `Flow` | UI que reacciona a cambios de BD |
+| Estado de UI | `StateFlow` | `_uiState.value = Success(data)` |
+| Eventos de un solo disparo | `SharedFlow` | Snackbars, navegación, toasts |
+| Cola productor/consumidor | `Channel` | Procesamiento por lotes, workers |
+| Cancelación segura | `isActive` + `ensureActive()` | Bucles largos que deben responder a cancelación |
+
+### Manejo de excepciones en corrutinas
+
+```kotlin
+fun main() = runBlocking {
+    val deferred = async {
+        throw RuntimeException("Error")
+    }
+    try {
+        deferred.await()
+    } catch (e: Exception) {
+        println("Capturado: ${e.message}")
+    }
+
+    val handler = CoroutineExceptionHandler { _, exception ->
+        println("Handler capturó: ${exception.message}")
+    }
+
+    launch {
+        try {
+            delay(100)
+            throw RuntimeException("Error en launch")
+        } catch (e: Exception) {
+            println("Capturado dentro de launch: ${e.message}")
+        }
+    }
+
+    supervisorScope {
+        launch {
+            throw RuntimeException("Error 1")
+        }
+        launch {
+            delay(200)
+            println("Tarea 2 completada")
+        }
+    }
+}
+```
+
+Fuente: [Kotlin docs — Coroutines Guide](https://kotlinlang.org/docs/coroutines-guide.html), [Kotlinx Coroutines GitHub](https://github.com/Kotlin/kotlinx.coroutines)
+
+---
+
+## Escala de aprendizaje: de 0 a 100
+
+Cada nivel incluye lo que debes saber y un proyecto para fijar los conceptos.
+
+### Nivel 0–15: Fundamentos absolutos
+**Qué aprender:**
+- Sintaxis básica: `fun`, `val`/`var`, tipos (`Int`, `Long`, `Double`, `String`, `Boolean`)
+- `println()`, templates strings `"Hola $nombre"`
+- Condicionales: `if`/`else` como expresión
+- Bucles: `for` en rangos (`1..10`), `while`, `forEach`
+- Colecciones básicas: `listOf()`, `mapOf()`, `mutableListOf()`
+- Funciones: `fun`, parámetros con default, `Unit`, expresión body
+- Null safety básico: `String?`, `?.`, `?:`, `!!`
+- `when` como reemplazo de `switch`
+- **Conceptos clave**: entender `val` vs `var` — inmutabilidad de referencia. Todo nullable requiere manejo explícito. `Int` es un objeto, no un primitivo (aunque el compilador optimiza a primitivo cuando puede).
+
+**Proyecto:** *Adivina el número* — el programa elige un número aleatorio entre 1 y 100. `readln()` para entrada. Pistas "mayor/menor". Contador de intentos. Manejo de entrada no numérica con `try`/`catch` alrededor de `toInt()`. Reflexión: en Kotlin no puedes comparar con `== null` (comillas) porque no compila en tipos no-nulables.
+
+### Nivel 15–30: Funciones, colecciones y POO básica
+**Qué aprender:**
+- Lambda expressions: `{ x: Int -> x * 2 }`, `it` implícito
+- Funciones de orden superior: `map`, `filter`, `reduce`, `fold`, `forEach`
+- `Sequence` vs `List`: lazy vs eager
+- Clases: constructores primario/secundario, `init`, `this`
+- Data classes: `copy()`, destructuring, `componentN()`
+- Propiedades con getters/setters, `field` (backing field)
+- Extension functions básicas
+- `companion object` para métodos "estáticos"
+- `object` declaration para singletons
+- **Conceptos clave**: las data classes te ahorran ~100 líneas de boilerplate. Las extension functions no modifican la clase original — son sugar sintáctico para funciones estáticas. `==` es equals, `===` es identidad de referencia.
+- **Algoritmos**: `sorted`, `sortedBy`, `groupingBy`, `fold`/`reduce`, `partition`, `chunked`, Tabla Big O de colecciones
+
+**Proyecto:** *Gestor de tareas CLI* — añadir (`add "Comprar leche"`), listar (`list`), completar (`done 3`), eliminar (`rm 3`). Usa `data class Tarea`, `object GestorTareas`, `companion object` para crear tareas. Persistencia en JSON con `kotlinx.serialization`. Lambda para filtros: `tareas.filter { !it.completada }`.
+
+### Nivel 30–45: POO avanzada, genéricos y selladas
+**Qué aprender:**
+- Interfaces: propiedades abstractas, métodos con implementación por defecto
+- Sealed classes e interfaces: jerarquías cerradas, `when` exhaustivo
+- Genéricos: `<T>`, `out`/`in`, `reified`, `where`
+- Delegados: `by lazy`, `by Delegates.observable`, delegados personalizados
+- Scope functions: `let`, `run`, `with`, `apply`, `also` — cuándo usar cada uno
+- Operator overloading: `operator fun plus()`, `operator fun get()`, etc.
+- `inline`, `noinline`, `crossinline`
+- Herencia: `open class`, `abstract class`, `override`
+- **Conceptos clave**: las sealed classes son la base de `Result<T>` y `Either<L,R>` — úsalas para modelar estados. `reified` solo funciona en `inline` functions. Los delegados `by` separan la lógica de propiedades del modelo.
+
+**Proyecto:** *Sistema de inventario* — `data class Producto`, `sealed class OperacionInventario`, `class Inventario<T>`. Métodos: `agregar()`, `retirar()`, `buscar()`, `valorTotal()`. El `when` sobre OperacionInventario debe ser exhaustivo. Extension functions para formatear precios. Delegado `vetoable` para evitar stock negativo.
+
+### Nivel 45–60: Testing, corrutinas básicas y serialización
+**Qué aprender:**
+- Testing: `kotlin.test` (JUnit 5), `shouldBe`/`shouldEqual` (Hamcrest o Kotest)
+- Corrutinas: `runBlocking`, `launch`, `async`/`await`, `delay()`
+- `suspend` functions: cómo crearlas y llamarlas
+- `Dispatchers.Default` vs `Dispatchers.IO`
+- `kotlinx.serialization`: `@Serializable`, JSON, `encodeToString()`, `decodeFromString()`
+- `kotlinx.coroutines.test`: `runTest`, `TestScope`, `advanceUntilIdle()`
+- Manejo de archivos: `java.io.File` y `kotlin.io` extensiones, `java.nio.file`, OkIO, Path + Files multiplataforma, kotlinx.serialization (JSON, ProtoBuf, CBOR)
+- **Conceptos clave**: las corrutinas no son threads — son tareas que se ejecutan en threads. `delay()` no bloquea, suspende. Los tests de corrutinas necesitan `runTest` de `kotlinx-coroutines-test`.
+
+**Proyecto:** *Gestor de contraseñas* — persistencia cifrada con `kotlinx.serialization`. Data class `PasswordEntry`. Corrutinas para cifrado/descifrado. Tests parametrizados con JUnit 5. `Flow` para auto-guardado con debounce.
+
+### Nivel 60–75: Ktor, Exposed y aplicaciones web
+**Qué aprender:**
+- Ktor: routing, content negotiation, serialization, plugins
+- Exposed: DSL de tablas, queries, transactions, migraciones
+- Inyección de dependencias: Koin (ligero) o Kodein
+- Autenticación en Ktor: JWT, sesiones, OAuth
+- Testing de endpoints: `testApplication` de Ktor
+- `StatusPages` para manejo de errores global
+- Configuración: `HOCON` (typesafe config) o archivos `.properties`
+- **Conceptos clave**: Ktor es totalmente asíncrono (corrutinas desde el socket hasta el handler). Exposed tiene dos APIs: DSL (más Kotlin) y DAO (más ORM). El plugin system de Ktor usa el patrón Builder con `install {}`.
+
+**Proyecto:** *API de recetas* — Ktor + Exposed + H2/PostgreSQL. CRUD de recetas e ingredientes. Endpoints REST con autenticación JWT. Migraciones con Exposed. Tests con `testApplication` + base de datos en memoria. Documentación OpenAPI via Ktor Swagger plugin.
+
+### Nivel 75–90: Multiplataforma (KMP), Compose y producción
+**Qué aprender:**
+- Kotlin Multiplatform (KMP): estructura de módulos `common`, `android`, `ios`
+- `expect`/`actual` declarations para código específico de plataforma
+- Jetpack Compose: `@Composable`, `State`, `remember`, `LaunchedEffect`
+- Compose Multiplatform: UI compartida entre Android, iOS, Desktop, Web
+- CI/CD para Kotlin: GitHub Actions con Gradle caching
+- Docker: Dockerfile multi-etapa para Ktor, `docker-compose`
+- Gradle: tareas personalizadas, configuración de builds, version catalog
+- **Conceptos clave**: KMP comparte lógica de negocio, no UI (aunque Compose Multiplatform acerca la UI). `expect`/`actual` no es polimorfismo — es declarar qué esperas de cada plataforma. Compose es declarativo: describes el estado, no cómo llegar a él.
+- **Multimedia**: Java 2D / ImageIO en JVM, Bitmap/Canvas en Android, CameraX, ExoPlayer, Glide/Coil para image loading, MPAndroidChart para gráficos
+
+**Proyecto:** *App de notas multiplataforma* — módulo `shared` con modelos, repositorio y lógica (KMP). UI con Compose Multiplatform para Android y Desktop. Sincronización con backend Ktor + Exposed. Tests de la lógica compartida en `commonTest`.
+
+### Nivel 90–100: Arquitectura, rendimiento y sistemas distribuidos
+**Qué aprender:**
+- Arquitectura limpia en Kotlin: capas domain, data, presentation (casos de uso, repositorios, ViewModels)
+- Event-driven: Kafka cliente con corrutinas, RabbitMQ con Spring
+- GraphQL con Ktor o Spring: `graphql-kotlin`
+- gRPC: `grpc-kotlin`, protobuf, servicios streaming
+- Observabilidad: OpenTelemetry en Ktor/Spring, Prometheus metrics
+- Rendimiento: profiling con JProfiler/YourKit, optimización de corrutinas, benchmarking con JMH
+- GraalVM Native Image: compilar Ktor/Spring a binario nativo (menos RAM, arranque instantáneo)
+- Arrow.kt: programación funcional (Either, Option, IO, optics)
+- **Conceptos clave**: las corrutinas de Kotlin son la base para sistemas reactivos — `Flow` es backpressure-aware. GraalVM con Kotlin reduce el startup de ~3s a `&lt;100ms`. Arrow.kt añade tipos funcionales como `Either`, `Validated`, `IO` que complementan el sistema de tipos de Kotlin.
+
+**Proyecto:** *Sistema de notificaciones distribuidas* — microservicios con Ktor y gRPC. Kafka como event bus. GraphQL como BFF. OpenTelemetry para tracing. Compilado a GraalVM Native Image. Desplegado con Docker Compose + Prometheus + Grafana. Pruebas de carga con k6.
+
+Fuente: [Ktor docs](https://ktor.io/docs/), [Exposed docs](https://github.com/JetBrains/Exposed), [Kotlin Multiplatform docs](https://kotlinlang.org/docs/multiplatform.html), [Jetpack Compose docs](https://developer.android.com/jetpack/compose)
+
+---
+
+## Proyectos prácticos detallados
+
+### Validador de URLs CLI (nivel 30)
+```kotlin
+import java.net.URL
+import java.net.HttpURLConnection
+import kotlinx.coroutines.*
+import kotlinx.serialization.*
+import kotlinx.serialization.json.*
+
+@Serializable
+data class ResultadoUrl(
+    val url: String,
+    val codigo: Int,
+    val valida: Boolean
+)
+
+object Validador {
+    suspend fun validar(url: String): ResultadoUrl = withContext(Dispatchers.IO) {
+        try {
+            val connection = URL(url).openConnection() as HttpURLConnection
+            connection.requestMethod = "GET"
+            connection.connectTimeout = 5000
+            connection.readTimeout = 5000
+            connection.connect()
+            val codigo = connection.responseCode
+            ResultadoUrl(url, codigo, codigo in 200..399)
+        } catch (e: Exception) {
+            ResultadoUrl(url, 0, false)
+        }
+    }
+
+    suspend fun validarUrls(urls: List<String>): List<ResultadoUrl> =
+        coroutineScope {
+            urls.map { async { validar(it) } }.awaitAll()
+        }
+}
+
+fun main() = runBlocking {
+    val urls = listOf(
+        "https://kotlinlang.org",
+        "https://github.com",
+        "https://url-inexistente-12345.com"
+    )
+    val resultados = Validador.validarUrls(urls)
+    resultados.forEach { println(it) }
+}
+```
+
+### Web scraper con Ktor Client (nivel 60)
+```kotlin
+import io.ktor.client.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import kotlinx.coroutines.*
+import kotlinx.serialization.json.*
+
+data class Articulo(
+    val titulo: String,
+    val url: String,
+    val fuente: String
+)
+
+class Scraper(private val client: HttpClient) {
+    suspend fun scrapear(url: String): List<Articulo> {
+        val response = client.get(url) {
+            headers { append("User-Agent", "Mozilla/5.0") }
+        }
+        val html = response.bodyAsText()
+        return extraerArticulos(html, url)
+    }
+
+    private fun extraerArticulos(html: String, fuente: String): List<Articulo> {
+        val regex = Regex("<a[^>]*href="([^"]*)"[^>]*>([^<]*)</a>")
+        return regex.findAll(html)
+            .map { Articulo(it.groupValues[2].trim(), it.groupValues[1], fuente) }
+            .filter { it.titulo.isNotBlank() }
+            .take(10)
+            .toList()
+    }
+}
+
+suspend fun main() = runBlocking {
+    val client = HttpClient { }
+    val scraper = Scraper(client)
+    val fuentes = listOf("https://news.ycombinator.com", "https://kotlinlang.org")
+
+    val resultados = fuentes.map { async { scraper.scrapear(it) } }.awaitAll().flatten()
+    resultados.forEach { println("- [${it.fuente}] ${it.titulo}") }
+    client.close()
+}
+```
+
+---
+
+## Hacks y tips de productividad
+
+**1. Type-safe builders con `apply`**
+```kotlin
+val alertDialog = AlertDialog.Builder(context).apply {
+    setTitle("Confirmar")
+    setMessage("¿Estás seguro?")
+    setPositiveButton("Sí") { _, _ -> accion() }
+    setNegativeButton("No", null)
+    setCancelable(false)
+}.create()
+```
+
+**2. Sealed class + `when` exhaustivo**
+```kotlin
+sealed class UiState {
+    data class Success(val data: List<Item>) : UiState()
+    data class Error(val message: String) : UiState()
+    object Loading : UiState()
+}
+
+fun render(state: UiState) = when (state) {
+    is UiState.Success -> mostrarLista(state.data)
+    is UiState.Error -> mostrarError(state.message)
+    UiState.Loading -> mostrarSpinner()
+}
+```
+
+**3. `inline` + `reified` para type-safe APIs**
+```kotlin
+inline fun <reified T> Gson.fromJson(json: String): T =
+    fromJson(json, T::class.java)
+
+data class Usuario(val nombre: String, val email: String)
+val usuario: Usuario = gson.fromJson(json)
+```
+
+**4. `Result` y `runCatching`**
+```kotlin
+fun dividir(a: Int, b: Int): Result<Int> = runCatching {
+    a / b
+}
+
+dividir(10, 2)
+    .onSuccess { println("Resultado: $it") }
+    .onFailure { println("Error: ${it.message}") }
+
+val resultado = runCatching { api.fetchData() }
+    .map { it.map { transformar(it) } }
+    .getOrDefault(emptyList())
+```
+
+**5. `Sequence` vs `Iterable` — lazy processing**
+```kotlin
+val lista = (1..1_000_000).toList()
+
+// eager: procesa TODOS los elementos
+val eager = lista
+    .filter { it % 2 == 0 }   // Procesa 1M
+    .map { it * 2 }           // Procesa 500k
+    .take(5)                  // Toma 5
+
+// lazy: procesa SOLO lo necesario
+val lazy = lista.asSequence()
+    .filter { it % 2 == 0 }
+    .map { it * 2 }
+    .take(5)
+    .toList()
+```
+
+**6. Extension functions para logging**
+```kotlin
+fun Any.logInfo(mensaje: String) {
+    println("[${this::class.simpleName}] $mensaje")
+}
+
+fun Any.logError(mensaje: String, error: Throwable? = null) {
+    System.err.println("[${this::class.simpleName}] ERROR: $mensaje")
+    error?.printStackTrace()
+}
+```
+
+**7. `require()` y `check()` para precondiciones**
+```kotlin
+data class Persona(val nombre: String, val edad: Int) {
+    init {
+        require(nombre.isNotBlank()) { "El nombre no puede estar vacío" }
+        require(edad >= 0) { "La edad no puede ser negativa, era $edad" }
+    }
+}
+```
+
+**8. `takeIf` y `takeUnless`**
+```kotlin
+val numero = 42
+val par = numero.takeIf { it % 2 == 0 }  // 42 si es par, null si no
+val impar = numero.takeUnless { it % 2 == 0 }  // null si es par
+
+fun buscarUsuario(id: Int): Usuario? {
+    return usuarios.find { it.id == id }
+        ?.takeIf { it.activo }
+        ?.let { cargarPermisos(it) }
+}
+```
+
+**9. Los 3 comandos que todo proyecto Kotlin debería tener**
+```bash
+gradle build                   # Compila + tests
+gradle test                    # Solo tests
+gradle koverReport             # Cobertura (con Kover, oficial de JetBrains)
+```
+
+**10. Tip: Type aliases para tipos complejos**
+```kotlin
+typealias JsonMap = Map<String, Any>
+typealias Callback<T> = (Result<T>) -> Unit
+typealias IdUsuario = Long
+
+fun procesar(datos: JsonMap, callback: Callback<IdUsuario>) { }
+```
+
+Fuente: [Kotlin docs — Idioms](https://kotlinlang.org/docs/idioms.html), [Kotlin docs — Coding Conventions](https://kotlinlang.org/docs/coding-conventions.html)
+
+---
+
+## Canales y recursos en español
+
+### YouTube
+- **Kotlin en Español** — Curso desde cero, corrutinas, Android, Ktor
+- **Midulive** — Kotlin, desarrollo multiplataforma, proyectos prácticos
+- **Develoteca** — Kotlin para Android, Jetpack Compose, MVVM
+- **CodigoFacilito** — Kotlin desde fundamentos hasta apps Android
+- **Programación ATS** — Curso de Kotlin básico
+- **MoureDev** — Kotlin, Android, y desarrollo de apps en español
+- **Platzi** — Ruta de Kotlin con proyectos Android
+
+### Comunidades
+- **r/Kotlin** (Reddit) — Noticias, discusiones, proyectos, dudas
+- **Kotlin en Español** (Telegram) — Grupo activo de ayuda y debates
+- **Kotlin Developers** (Discord) — Comunidad internacional con canal en español
+- **Stack Overflow en español** — Etiqueta `kotlin` para dudas técnicas
+
+### Repositorios de código
+- [JetBrains/kotlin](https://github.com/JetBrains/kotlin) — Código fuente del lenguaje
+- [Kotlin/kotlinx.coroutines](https://github.com/Kotlin/kotlinx.coroutines) — Librería de corrutinas
+- [Kotlin/ktor](https://github.com/ktorio/ktor) — Framework web asíncrono
+- [JetBrains/compose-multiplatform](https://github.com/JetBrains/compose-multiplatform) — Compose Multiplatform
+- [JetBrains/Exposed](https://github.com/JetBrains/Exposed) — ORM/Database library
+- [Awesome Kotlin](https://github.com/Kotlin/awesome-kotlin) — Lista curada de librerías y frameworks
+
+### Blogs y newsletters
+- [Kotlin Weekly](https://kotlinweekly.net/) — Newsletter semanal con novedades del ecosistema
+- [JetBrains Blog — Kotlin](https://blog.jetbrains.com/kotlin/) — Anuncios oficiales, releases, tutoriales
+- [Android Developers — Kotlin](https://developer.android.com/kotlin) — Guías oficiales de Google
+
+Fuente: búsqueda en YouTube y Reddit, listas curadas de Awesome Kotlin
+
+---
+
+## Referencias y documentación oficial
+
+- **Docs oficiales**: [kotlinlang.org/docs](https://kotlinlang.org/docs/home.html) — reference, tutorial, API reference
+- **Kotlin Playground**: [play.kotlinlang.org](https://play.kotlinlang.org/) — probar código online
+- **Try Kotlin**: [try.kotlinlang.org](https://try.kotlinlang.org/) — ejercicios interactivos
+- **Kotlin by Example**: [play.kotlinlang.org/byExample](https://play.kotlinlang.org/byExample/) — ejemplos prácticos
+- **Kotlin GitHub**: [github.com/JetBrains/kotlin](https://github.com/JetBrains/kotlin) — código fuente y KEEP (Evolution)
+- **Kotlin Forum**: [discuss.kotlinlang.org](https://discuss.kotlinlang.org/) — discusiones de la comunidad
+- **Kotlin YouTube**: [youtube.com/@Kotlin](https://youtube.com/@Kotlin) — videos oficiales de JetBrains
+
+### Fuentes de esta guía
+
+Esta guía se ha elaborado a partir de las siguientes fuentes consultadas durante su desarrollo:
+
+- [Kotlin.org — Documentación oficial y reference](https://kotlinlang.org/docs/home.html)
+- [Kotlin Coroutines Guide](https://kotlinlang.org/docs/coroutines-guide.html)
+- [Ktor — Documentación oficial](https://ktor.io/docs/)
+- [Jetpack Compose docs](https://developer.android.com/jetpack/compose)
+- [Kotlin Multiplatform docs](https://kotlinlang.org/docs/multiplatform.html)
+- [Kotlin by Example](https://play.kotlinlang.org/byExample/)
+- [Kotlin in Action (Dmitry Jemerov, Svetlana Isakova)](https://www.manning.com/books/kotlin-in-action) — libro de referencia
+- [Atomic Kotlin (Bruce Eckel, Svetlana Isakova)](https://www.atomickotlin.com/)
+- [Awesome Kotlin (GitHub)](https://github.com/Kotlin/awesome-kotlin)
+- [Kotlin Weekly Newsletter](https://kotlinweekly.net/)
+- [r/Kotlin (Reddit)](https://reddit.com/r/Kotlin)
+- [JetBrains Kotlin Blog](https://blog.jetbrains.com/kotlin/)
+- [Google Android — Kotlin docs](https://developer.android.com/kotlin)
+
+---
+
+## 🏆 Retos Relacionados
 
 Pon a prueba lo aprendido con estos desafíos:
-- [Compresor De Cadenas Rle](/retos/guia-compresor-de-cadenas-rle)
-- [El Reclutador De La Banda](/retos/guia-el-reclutador-de-la-banda)
-- [Maximo De Tres Numeros](/retos/guia-maximo-de-tres-numeros)
+- [Plus Reto Inicial 06 Par O Impar](/retos/guia-plus-reto-inicial-06-par-o-impar)
+- [Fibonacci Recursivo](/retos/guia-fibonacci-recursivo)
+- [Plus Reto Intermedio 05 Generador De Contrasenas](/retos/guia-plus-reto-intermedio-05-generador-de-contrasenas)
+- [Plus Reto Intermedio 13 Contador De Palabras Unicas](/retos/guia-plus-reto-intermedio-13-contador-de-palabras-unicas)
+- [Plus Reto Avanzado 05 Asyncio Para Scrapers](/retos/guia-plus-reto-avanzado-05-asyncio-para-scrapers)

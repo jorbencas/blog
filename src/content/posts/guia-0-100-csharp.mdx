@@ -1,86 +1,4074 @@
 ---
 draft: false
 title: "Guía de C# y .NET: De 0 a 100"
-description: "Versatilidad total con .NET. Desde Unity a aplicaciones nativas."
+description: "Desde la primera línea de código hasta producción: instalación, ecosistema, frameworks, proyectos reales y recursos en español."
 pubDate: "2017-06-11"
-tags: ["csharp", "guia", "dotnet"]
+tags: ["csharp", "guia", "dotnet", "backend"]
 image: "img/guia_0_100_csharp_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 ---
 
 # Guía de C# y .NET: De 0 a 100
 
-## 🛠️ Requisitos e Instalación
+## ¿Qué es C# y .NET?
 
-**Todas las plataformas:** Descarga .NET SDK desde [dotnet.microsoft.com](https://dotnet.microsoft.com/download). Incluye runtime, compilador y CLI (`dotnet`).
-**Linux (apt):** `sudo apt install dotnet-sdk-8.0` — añade repo Microsoft primero.
-**Verificación:** `dotnet` y prueba con un `"Hola Mundo"`.
-**Herramientas recomendadas:** **Visual Studio** (Windows) o **VS Code** + C# Dev Kit. **NuGet** para paquetes. **dotnet format** para estilo.
+C# es un lenguaje de programación tipado estáticamente, multiparadigma, creado por **Anders Hejlsberg** en Microsoft y lanzado en 2000 como parte de la iniciativa .NET. Su diseño combina la potencia de C++ con la simplicidad de Visual Basic, incorporando características funcionales, orientadas a objetos y de programación asíncrona en un mismo lenguaje.
 
-## 🚀 Hola Mundo y Sintaxis Básica
+**.NET** es el ecosistema: primero fue .NET Framework (solo Windows), luego .NET Core (multiplataforma, open-source, 2016), y desde .NET 5 (2020) es una plataforma unificada que reemplaza ambos. Hoy estamos en .NET 9 (2024), con releases anuales en noviembre.
 
-**Conceptos clave:**
+**¿Dónde se usa?**
+- **Web**: ASP.NET Core — potencian Stack Overflow, Microsoft, GoDaddy, JetStream
+- **Juegos**: Unity (C# scripting), Godot (C# bindings) — estándar en desarrollo indie
+- **Desktop/ MAUI**: .NET MAUI, WPF, WinForms — aplicaciones nativas Windows/macOS/iOS/Android
+- **Cloud / Microservicios**: Azure Functions, AWS Lambda con .NET, microservicios con gRPC
+- **Bases de datos**: Entity Framework Core, Dapper — ORM y micro-ORM estándar
+- **Machine Learning**: ML.NET, TorchSharp, TensorFlow.NET
+- **IoT**: .NET nanoFramework, Windows IoT, Raspberry Pi con .NET
+- **CLI / DevOps**: PowerShell está escrito en C#, herramientas cross-platform
 
-- **Programa Principal:** `Console.WriteLine("Hola Mundo");` — top-level statements desde C# 9 (sin `class Program`). Namespaces con `using System;`.
-- **Tipos y Records:** Primitivos: `int`, `long`, `double`, `decimal`, `bool`, `string`. `var` para inferencia. Nullable: `int? edad = null`. `record Persona(string Nombre, int Edad)`.
-- **LINQ:** `numeros.Where(n => n > 5).OrderBy(n => n).Select(n => n * 2)`. Sintaxis query: `from n in numeros where n > 5 select n`. Lazy evaluation.
-- **Async/Await:** `async Task<int> FetchAsync() { var data = await http.GetStringAsync(url); ... }`. `Task<T>` para operaciones asíncronas. Evita `.Result`.
-- **POO Moderno:** Propiedades: `public string Nombre { get; set; }`. Primary constructors (C# 12). Pattern matching: `if (p is Persona { Edad: >= 18 })`.
+**¿Quién lo usa?** Stack Overflow (toda su plataforma), Unity Technologies (motor de juegos), JetBrains (Rider, ReSharper), GoDaddy (hosting), Siemens (automación industrial), Dell (aplicaciones empresariales).
 
-## 🏗️ Frameworks Populares
+Fuente: [Microsoft .NET Docs](https://learn.microsoft.com/en-us/dotnet/), [C# docs](https://learn.microsoft.com/en-us/dotnet/csharp/), [.NET GitHub](https://github.com/dotnet/core)
 
-### ASP.NET Core
-**Instalación:** `dotnet new webapi -o MiApi`
-Framework web multiplataforma. Minimal APIs (C# 6+) y controladores. Incluye DI, middleware, autenticación y OpenAPI.
+---
+
+## Instalación en todos los entornos
+
+### Windows
+1. Descarga el instalador desde [dotnet.microsoft.com/download](https://dotnet.microsoft.com/download)
+2. Ejecuta el instalador MSI — incluye SDK, runtime, CLI y ASP.NET Core
+3. Verifica: abre `cmd` o PowerShell y ejecuta `dotnet --version`
+4. Alternativa vía **winget**: `winget install Microsoft.DotNet.SDK.9`
+5. **Visual Studio**: instala Community Edition desde [visualstudio.microsoft.com](https://visualstudio.microsoft.com/) — selecciona carga de trabajo "Desarrollo de .NET" y "ASP.NET y desarrollo web"
+6. **JetBrains Rider**: IDE de pago con soporte nativo .NET (30 días trial)
+
+### macOS
+- **Instalador oficial**: descarga .pkg desde [dotnet.microsoft.com](https://dotnet.microsoft.com/download)
+- **Homebrew**: `brew install dotnet-sdk`
+- **Visual Studio for Mac** (legacy): Microsoft anunció su retiro para 2024, migrar a VS Code + C# Dev Kit o Rider
+- Verifica: `dotnet --version`
+
+### Linux (Debian/Ubuntu)
+```bash
+# Añadir repositorio Microsoft (necesario para apt)
+wget https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.deb
+sudo dpkg -i packages-microsoft-prod.deb
+sudo apt update
+sudo apt install dotnet-sdk-9.0 aspnetcore-runtime-9.0
+
+# Fedora/RHEL
+sudo dnf install dotnet-sdk-9.0
+```
+
+### SDK de versiones múltiples (no necesita pyenv)
+```bash
+# Simplemente instala múltiples SDKs — coexisten sin problema
+dotnet --list-sdks     # 6.0, 7.0, 8.0, 9.0
+dotnet --list-runtimes
+
+# El global.json en cada proyecto fija la versión
+# {
+#   "sdk": { "version": "8.0.400" }
+# }
+```
+
+### Docker
+```dockerfile
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /src
+COPY ["MiApp/MiApp.csproj", "MiApp/"]
+RUN dotnet restore "MiApp/MiApp.csproj"
+COPY . .
+WORKDIR "/src/MiApp"
+RUN dotnet publish -c Release -o /app
+
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
+WORKDIR /app
+COPY --from=build /app .
+EXPOSE 8080
+ENTRYPOINT ["dotnet", "MiApp.dll"]
+```
+Usa imágenes oficiales de `mcr.microsoft.com/dotnet`. `dotnet/aspnet` para runtime (~200 MB), `dotnet/sdk` para build (~800 MB). Multi-stage build reduce drásticamente el tamaño final.
+
+### Alias útiles
+Añade a tu `~/.bashrc` o `~/.zshrc`:
+```bash
+alias dn='dotnet'
+alias dnb='dotnet build'
+alias dnr='dotnet run'
+alias dnt='dotnet test'
+alias dnp='dotnet publish'
+alias dnn='dotnet new'
+alias dnl='dotnet list'
+alias dnw='dotnet watch'
+```
+
+Fuente: [Microsoft .NET install docs](https://learn.microsoft.com/en-us/dotnet/core/install/), [.NET Docker images](https://hub.docker.com/_/microsoft-dotnet)
+
+---
+
+## Primeros pasos y configuración del entorno
+
+### Crear un proyecto nuevo
+```bash
+dotnet new console -o MiApp     # App de consola
+dotnet new webapi -o MiApi       # ASP.NET Core Web API
+dotnet new mvc -o MiMvc          # ASP.NET Core MVC
+dotnet new sln                   # Solución (SLN) para múltiples proyectos
+```
+
+### Program.cs con top-level statements (C# 9+)
 ```csharp
+// Program.cs — ya no necesitas class Program ni Main
+using System;
+using System.Linq;
+
+string nombre = "Mundo";
+Console.WriteLine($"Hola {nombre}!");
+
+int[] numeros = [1, 2, 3, 4, 5];
+var pares = numeros.Where(n => n % 2 == 0);
+Console.WriteLine(string.Join(", ", pares));
+```
+
+### Estructura de proyecto (csproj)
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Dapper" Version="2.1.28" />
+  </ItemGroup>
+</Project>
+```
+- `Nullable`: activa nullable reference types
+- `ImplicitUsings`: `using System;`, `using System.Linq;`, etc. automáticos
+- `PackageReference`: paquetes NuGet
+
+### NuGet — gestión de paquetes
+```bash
+dotnet add package Dapper
+dotnet add package Microsoft.EntityFrameworkCore.Sqlite
+dotnet add package Newtonsoft.Json
+dotnet list package         # ver paquetes instalados
+dotnet remove package Dapper
+```
+
+### Editores recomendados
+- **VS Code**: extensión C# Dev Kit (Microsoft), incluye language server, debugging, tests. Perfil recomendado: instalar C# Dev Kit + .NET Install Tool
+- **Rider**: IDE de JetBrains, excelente para proyectos grandes, refactorización, navegación
+- **Visual Studio**: Community gratuita, Professional de pago. Mejor experiencia en Windows con WPF/MAUI
+
+### Configuración inicial del proyecto
+```bash
+dotnet new console -o MiApp --use-program-main
+cd MiApp
+dotnet add package FluentAssertions
+dotnet new tool-manifest
+dotnet tool install dotnet-format
+```
+
+Archivo `Directory.Build.props` (configuración compartida entre proyectos):
+```xml
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+</Project>
+```
+
+Fuente: [.NET CLI docs](https://learn.microsoft.com/en-us/dotnet/core/tools/), [NuGet docs](https://learn.microsoft.com/en-us/nuget/)
+
+## Paradigmas de programación
+
+C# es multiparadigma: puedes escribir POO, funcional, imperativo, async y reactivo, a menudo combinándolos en un mismo proyecto.
+
+### POO puro
+
+En C# todo es un objeto. Hasta `int` tiene métodos:
+
+```csharp
+int n = 42;
+Console.WriteLine(n.ToString("X"));    // "2A"
+Console.WriteLine(n.GetHashCode());    // 42
+```
+
+Toda clase deriva de `object`. Los value types heredan de `ValueType` → `object`. La herencia es simple (una clase base), pero puedes implementar múltiples interfaces.
+
+### Funcional
+
+LINQ trajo map/filter/reduce, inmutabilidad con `record`, funciones de primera clase y pattern matching:
+
+```csharp
+// LINQ = composición de funciones
+var nums = Enumerable.Range(1, 100);
+var resultado = nums
+    .Where(n => n % 2 == 0)
+    .Select(n => n * n)
+    .Aggregate((a, b) => a + b);
+
+// Tuples con nombre
+(int Suma, int Prod) Op(int a, int b) => (a + b, a * b);
+var r = Op(3, 4);
+Console.WriteLine($"{r.Suma}, {r.Prod}");  // 7, 12
+
+// Pattern matching como expresión
+string Clasificar(int edad) => edad switch
+{
+    < 13 => "Niño",
+    >= 13 and < 20 => "Adolescente",
+    _ => "Adulto"
+};
+
+// Record: inmutabilidad e igualdad estructural
+public record Persona(string Nombre, int Edad);
+var p1 = new Persona("Ana", 30);
+var p2 = p1 with { Edad = 31 };  // Copia inmutable, no muta p1
+```
+
+### Imperativo
+
+Bucles, statements y mutación explícita cuando el problema lo requiere:
+
+```csharp
+int suma = 0;
+for (int i = 0; i <= 100; i++)
+    if (i % 2 == 0) suma += i;
+```
+
+### Async-first
+
+C# fue pionero en hacer async parte del lenguaje con `async`/`await`. Toda API moderna de .NET expone versiones async:
+
+```csharp
+string data = await File.ReadAllTextAsync("file.txt");
+var json = await httpClient.GetStringAsync(url);
+var users = await db.Usuarios.ToListAsync();
+```
+
+No hay threads bloqueados durante la espera — el compilador transforma el método en una máquina de estados.
+
+### Reactivo (Rx.NET / System.Reactive)
+
+System.Reactive implementa el patrón Observer con streams y LINQ-style queries sobre eventos:
+
+```bash
+dotnet add package System.Reactive
+```
+
+```csharp
+using System.Reactive.Linq;
+
+var ticks = Observable.Interval(TimeSpan.FromSeconds(1))
+    .Where(t => t % 2 == 0)
+    .Subscribe(t => Console.WriteLine($"Tick {t}"));
+
+// Combinar streams
+var clicks = Observable.FromEventPattern<EventArgs>(btn, "Click");
+var moves = Observable.FromEventPattern<EventArgs>(btn, "MouseMove");
+var merged = clicks.Merge(moves);
+```
+
+Útil para UI, tiempo real y pipelines de datos asíncronos.
+
+Fuente: [Functional C#](https://learn.microsoft.com/en-us/dotnet/csharp/tutorials/functional-programming), [Rx.NET](https://github.com/dotnet/reactive), [ReactiveX](http://reactivex.io/)
+
+---
+
+## Tipos de datos y variables
+
+### Value types vs Reference types
+
+| Aspecto | Value type (`struct`) | Reference type (`class`) |
+|---|---|---|
+| Memoria | Stack o inline en heap | Heap (GC gestiona) |
+| Asignación | `int a = 5;` | `var obj = new Clase();` |
+| Copia | Copia el valor completo | Copia la referencia |
+| `null` | No por defecto (`int?` sí) | Sí |
+| Rendimiento | Menos presión GC | Más overhead |
+
+```csharp
+struct Punto { public int X, Y; }
+var p1 = new Punto { X = 1, Y = 2 };
+var p2 = p1; p2.X = 99;
+Console.WriteLine(p1.X);  // 1
+
+class Persona { public string? Nombre; }
+var a = new Persona { Nombre = "Ana" };
+var b = a; b.Nombre = "Juan";
+Console.WriteLine(a.Nombre);  // "Juan"
+```
+
+**Built-in types:**
+
+| Tipo | Alias | Tamaño | Rango |
+|---|---|---|---|
+| `byte` | `System.Byte` | 8 bits | 0–255 |
+| `int` | `System.Int32` | 32 bits | ±2.1e9 |
+| `long` | `System.Int64` | 64 bits | ±9.2e18 |
+| `float` | `System.Single` | 32 bits | ±3.4e38 |
+| `double` | `System.Double` | 64 bits | ±1.7e308 |
+| `decimal` | `System.Decimal` | 128 bits | ±7.9e28 (preciso) |
+| `char` | `System.Char` | 16 bits | Unicode UTF-16 |
+| `bool` | `System.Boolean` | 8 bits | true/false |
+
+**Nullable value types (`int?`):**
+
+```csharp
+int? edad = null;
+edad = 25;
+if (edad.HasValue)
+    Console.WriteLine(edad.Value);
+int definitivo = edad ?? 0;  // Null-coalescing
+```
+
+**Nullable reference types (C# 8+):**
+
+```csharp
+#nullable enable
+string nombre = "Ana";      // No nullable
+string? apodo = null;       // Nullable
+Console.WriteLine(apodo?.Length);  // Safe navigation
+```
+
+**`var`, `dynamic` y `object`:**
+
+```csharp
+var x = 42;          // int, tipado estático
+dynamic d = 42;      // Dynamic — resuelve en runtime
+d = "texto";
+Console.WriteLine(d.ToUpper());
+
+object o = 42;       // Boxing
+o = "texto";
+int i = (int)o;      // Unboxing (excepción si no es int)
+```
+
+### string (inmutable) y StringBuilder
+
+```csharp
+string s = "Hola";
+string t = s;
+s += " Mundo";        // Crea NUEVA cadena
+Console.WriteLine(t);  // "Hola" — inmutable
+
+// Peligro: concatenación en bucle — O(n²)
+string res = "";
+for (int i = 0; i < 1000; i++)
+    res += i;          // 1000 cadenas intermedias
+
+// Solución: StringBuilder — O(n)
+var sb = new StringBuilder();
+for (int i = 0; i < 1000; i++)
+    sb.Append(i);
+Console.WriteLine(sb.ToString());
+```
+
+### Arrays
+
+```csharp
+int[] arr = [1, 2, 3, 4, 5];
+int[,] mat = { { 1, 2 }, { 3, 4 } };
+Console.WriteLine(mat[0, 1]);  // 2
+
+int[][] jagged = [[1, 2], [3, 4, 5], [6]];  // Jagged
+Console.WriteLine(jagged[1][2]);  // 5
+
+// Covarianza (solo reference types)
+string[] strings = ["a", "b"];
+object[] objects = strings;      // OK
+```
+
+### Span&lt;T&gt; y Memory&lt;T&gt;
+
+```csharp
+int[] array = [1, 2, 3, 4, 5, 6, 7, 8];
+
+Span<int> slice = array.AsSpan(2, 3);  // Slice sin copia
+slice[0] = 99;
+Console.WriteLine(array[2]);  // 99
+
+// stackalloc — buffer en stack, cero allocations
+Span<byte> buffer = stackalloc byte[256];
+buffer[0] = 0xFF;
+
+// Memory<T> — versión heap-safe (para campos async)
+Memory<int> mem = array.AsMemory(2, 3);
+```
+
+### Colecciones
+
+```csharp
+// List<T> — array dinámico
+var lista = new List<int> { 1, 2, 3 };
+lista.Add(4);
+lista.RemoveAt(0);
+
+// Dictionary<K,V> — tabla hash O(1)
+var dict = new Dictionary<string, int>
+{
+    ["Ana"] = 30, ["Juan"] = 25
+};
+dict.TryGetValue("Ana", out int edad);
+
+// HashSet<T> — conjunto único O(1)
+var set = new HashSet<int> { 1, 2, 3, 3, 3 };
+Console.WriteLine(set.Count);  // 3
+
+// Queue<T> — FIFO
+var q = new Queue<string>();
+q.Enqueue("primero"); q.Enqueue("segundo");
+Console.WriteLine(q.Dequeue());  // "primero"
+
+// Stack<T> — LIFO
+var p = new Stack<int>();
+p.Push(1); p.Push(2);
+Console.WriteLine(p.Pop());  // 2
+```
+
+### Memoria: stack vs heap, boxing/unboxing, GC
+
+```csharp
+int x = 42;                // Stack
+var obj = new object();    // Heap (referencia en stack)
+
+// Boxing: value type → heap
+int n = 42;
+object o = n;              // Copia int al heap
+int n2 = (int)o;           // Unboxing: heap → stack
+
+// GC Generations:
+// Gen 0: objetos nuevos (~ms)
+// Gen 1: supervivientes Gen 0
+// Gen 2: objetos longevos (singletons, static)
+// LOH: objetos > 85 KB, Gen 2, no se compacta
+
+var grande = new byte[100_000];  // → LOH
+```
+
+Fuente: [Value types](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/value-types), [Span&lt;T&gt;](https://learn.microsoft.com/en-us/dotnet/standard/memory-and-spans/memory-t-usage-guidelines), [Collections](https://learn.microsoft.com/en-us/dotnet/standard/collections/), [Boxing](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/types/boxing-and-unboxing)
+
+---
+
+## Control de flujo y modularidad
+
+### Control de flujo
+
+**if/else:**
+
+```csharp
+int edad = 18;
+if (edad >= 18)
+    Console.WriteLine("Mayor");
+else if (edad >= 13)
+    Console.WriteLine("Adolescente");
+else
+    Console.WriteLine("Niño");
+```
+
+**switch:**
+
+```csharp
+// Tradicional (statement)
+switch (edad)
+{
+    case < 13:
+        Console.WriteLine("Niño"); break;
+    case < 20:
+        Console.WriteLine("Adolescente"); break;
+    default:
+        Console.WriteLine("Adulto"); break;
+}
+
+// Switch expression (C# 8+)
+string tipo = edad switch
+{
+    < 13 => "Niño",
+    >= 13 and < 20 => "Adolescente",
+    _ => "Adulto"
+};
+```
+
+**Pattern matching en switch:**
+
+```csharp
+object valor = 42;
+
+string desc = valor switch
+{
+    int i when i < 0 => $"Negativo: {i}",
+    int i => $"Entero: {i}",
+    string s => $"Texto: {s}",
+    null => "Nulo",
+    _ => "Otro"
+};
+
+// Property pattern
+if (valor is string { Length: > 5 } texto)
+    Console.WriteLine($"Largo: {texto}");
+
+// List pattern (C# 11)
+int[] nums = [1, 2, 3, 4, 5];
+var dl = nums switch
+{
+    [1, 2, .. var resto] => $"Empieza con 1,2, luego {resto.Length} más",
+    [.., 5] => "Termina en 5",
+    [] => "Vacía"
+};
+
+// Relational patterns
+string Nota(int p) => p switch
+{
+    >= 90 => "Sobresaliente",
+    >= 70 and < 90 => "Notable",
+    >= 50 and < 70 => "Aprobado",
+    < 50 => "Suspenso"
+};
+```
+
+**Bucles:**
+
+```csharp
+for (int i = 0; i < 10; i++) Console.WriteLine(i);
+foreach (var n in Enumerable.Range(1, 10)) Console.WriteLine(n);
+
+int j = 0;
+while (j < 10) { Console.WriteLine(j); j++; }
+
+int k = 0;
+do { Console.WriteLine(k); k++; } while (k < 10);
+```
+
+**break, continue, goto:**
+
+```csharp
+for (int i = 0; i < 10; i++)
+{
+    if (i == 3) continue;
+    if (i == 7) break;
+}
+
+for (int i = 0; i < 10; i++)
+    for (int j = 0; j < 10; j++)
+        if (i * j > 50) goto Salir;
+Salir: ;
+```
+
+**using (statement y declaration):**
+
+```csharp
+// using statement
+using (var file = new StreamReader("archivo.txt"))
+    Console.WriteLine(file.ReadToEnd());
+
+// using declaration (C# 8+) — se descarta al salir del ámbito
+using var reader = new StreamReader("archivo.txt");
+```
+
+**checked/unchecked:**
+
+```csharp
+int max = int.MaxValue;
+checked  { int r = max + 1; }  // OverflowException
+unchecked { int r = max + 1; }  // Silencia overflow
+```
+
+### Modularidad
+
+**Namespace y using:**
+
+```csharp
+namespace MiApp.Modelos;
+
+using System;
+using System.Collections.Generic;
+using MiApp.Services;
+using static System.Math;       // Importa métodos estáticos
+using Proj = MiApp.Models;      // Alias
+
+// Global using (C# 10+) — en GlobalUsings.cs, aplica a todo el proyecto
+global using System.Linq;
+```
+
+**File-scoped namespaces (C# 10+):**
+
+```csharp
+// Todo el archivo pertenece a este namespace sin llaves
+namespace MiApp.Modelos;
+public class Usuario { }
+```
+
+**Assemblies:**
+
+Un proyecto .NET compila a un assembly: `.exe` (ejecutable) o `.dll` (biblioteca). Cada assembly contiene IL, metadatos y recursos.
+
+```bash
+dotnet new classlib -o MiLib
+dotnet add MiApp reference MiLib
+```
+
+**Partial class/struct/interface:**
+
+```csharp
+// Archivo 1: Usuario.Part1.cs
+public partial class Usuario
+{
+    public string Nombre { get; set; }
+    public string Email { get; set; }
+}
+
+// Archivo 2: Usuario.Part2.cs
+public partial class Usuario
+{
+    public override string ToString() => $"{Nombre} <{Email}>";
+}
+
+// Partial method — declaración opcional
+public partial class Logger
+{
+    partial void LogPartial(string msg);
+    public void Log(string msg) => LogPartial(msg);
+}
+```
+
+Fuente: [Switch expression](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/switch-expression), [Pattern matching](https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/functional/pattern-matching), [Namespaces](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/namespace), [Partial classes](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/partial-classes-and-methods)
+
+---
+
+## Conceptos clave explicados a fondo
+
+### CLR, IL, JIT y Garbage Collector
+
+C# no se compila a código máquina directamente. El compilador de C# (Roslyn) genera **IL (Intermediate Language)** — código en lenguaje intermedio similar a ensamblador. En tiempo de ejecución, el **CLR (Common Language Runtime)** activa el compilador **JIT (Just-In-Time)** que traduce IL a código nativo.
+
+```csharp
+// Tu código C#:
+int suma = 2 + 2;
+
+// Se compila a IL similar a:
+//   ldc.i4.2
+//   ldc.i4.2
+//   add
+//   stloc.0
+
+// Luego JIT lo convierte a ensamblador x86_64:
+//   mov eax, 2
+//   add eax, 2
+//   mov [rbp-4], eax
+```
+
+**¿Qué hace el CLR?**
+- Carga y verifica el IL (type safety, no buffer overflows)
+- JIT compila IL a código nativo (o usa **AOT** con Native AOT en .NET 7+)
+- Gestiona memoria con el **Garbage Collector (GC)** generacional
+- Proporciona seguridad (CAS, verificaciones de tipo)
+- Maneja excepciones entre lenguajes .NET
+
+**JIT vs AOT:**
+| Estrategia | Compilación | Rendimiento | Tamaño | Deploy |
+|---|---|---|---|---|
+| JIT (default) | En runtime | Mejora con el tiempo (tiered compilation) | IL + runtime | Necesita runtime |
+| ReadyToRun (R2R) | Pre-compila parcial | Inicio más rápido | Más grande | Necesita runtime |
+| Native AOT | Todo nativo | Inicio instantáneo | ~2-3 MB | Autocontenido sin runtime |
+
+**Garbage Collector generacional:**
+El GC de .NET divide los objetos en 3 generaciones:
+- **Gen 0**: objetos recién creados, corta vida. Se recolecta frecuentemente (~milisegundos)
+- **Gen 1**: supervivientes de Gen 0. Corto-medio plazo
+- **Gen 2**: objetos longevos (singletons, static data). Recolección costosa
+
+```csharp
+void EjemploGC()
+{
+    var temporal = new byte[1024];  // Gen 0
+    var cache = new byte[1024 * 1024];  // Gen 0, pero pasa a Large Object Heap (> 85KB)
+    
+    GC.Collect();     // Forzar — no lo hagas en producción
+    GC.WaitForPendingFinalizers();
+    GC.Collect(2);    // Forzar Gen 2 — bloquea todo
+}
+```
+
+**Large Object Heap (LOH):** objetos > 85KB van al LOH, que es Gen 2 y no se compacta por defecto (puede fragmentarse). Usa `GCSettings.LargeObjectHeapCompactionMode` para forzar compactación.
+
+Fuente: [Microsoft CLR docs](https://learn.microsoft.com/en-us/dotnet/standard/clr), [Garbage Collection docs](https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/), [Pro .NET Memory Management (Konrad Kokosa)](https://prodotnetmemory.com/)
+
+### Value types vs Reference types, Boxing/Unboxing
+
+C# divide los tipos en dos categorías fundamentales:
+
+| Aspecto | Value types (`struct`) | Reference types (`class`) |
+|---|---|---|
+| Memoria | Stack (o inline en heap) | Heap (GC gestiona) |
+| Asignación | `int a = 5;` | `var obj = new MiClase();` |
+| Copia | Copia el valor completo | Copia la referencia |
+| `null` | No por defecto (nullable sí: `int?`) | Sí |
+| `==` por defecto | Compara bits | Compara referencias |
+| Performance | Más rápido (menos presión GC) | Más overhead |
+
+```csharp
+// Value type: struct
+struct Punto
+{
+    public int X { get; set; }
+    public int Y { get; set; }
+}
+
+var p1 = new Punto { X = 1, Y = 2 };
+var p2 = p1;          // Copia TODOS los bytes
+p2.X = 99;
+Console.WriteLine(p1.X);  // 1 — no se afecta
+
+// Reference type: class
+class Persona
+{
+    public string Nombre { get; set; }
+}
+
+var persona1 = new Persona { Nombre = "Ana" };
+var persona2 = persona1;  // Copia la REFERENCIA
+persona2.Nombre = "Juan";
+Console.WriteLine(persona1.Nombre);  // "Juan" — el mismo objeto
+```
+
+**Boxing y Unboxing:**
+El boxing ocurre cuando un value type se convierte a `object` o a una interfaz. Esto crea un objeto en el heap y COPIA el valor.
+
+```csharp
+int numero = 42;
+object obj = numero;          // Boxing: value → heap (copia en heap)
+int numero2 = (int)obj;       // Unboxing: heap → value (copia a stack)
+
+// Peligro: boxing en colecciones no genéricas
+var lista = new ArrayList();
+lista.Add(42);                 // Boxing — cada Add boxea
+int x = (int)lista[0];         // Unboxing
+
+// Sin boxing: genéricos
+var listaBuena = new List<int>();
+listaBuena.Add(42);            // Sin boxing — List<T> preserva el tipo
+```
+
+**¿Cuándo ocurre boxing sin querer?**
+- `Console.WriteLine($"El valor es {42}");` — boxing al llamar a `object.ToString()`
+- Pasar un `struct` a un parámetro `object`
+- Usar `IEnumerable` (no genérico) en lugar de `IEnumerable<T>`
+- Comparar structs con `Equals(object)` sin sobrecargar
+
+```csharp
+// Cómo evitarlo: sobrecargar métodos
+public void Procesar(int valor) { }  // Sin boxing
+public void Procesar(object valor) { }  // Con boxing
+
+// Usar genéricos siempre
+// ❌ ArrayList (no genérico)
+// ✅ List<T>, Dictionary<K,V>
+```
+
+Fuente: [Microsoft — Value types](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/value-types), [Boxing and Unboxing](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/types/boxing-and-unboxing)
+
+### Tipos primitivos y colecciones
+
+**Tipos primitivos:**
+| Tipo | Aliased | Tamaño | Rango | Precisión |
+|---|---|---|---|---|
+| `byte` | `System.Byte` | 8 bits | 0 a 255 | Entero |
+| `sbyte` | `System.SByte` | 8 bits | -128 a 127 | Entero |
+| `short` | `System.Int16` | 16 bits | -32,768 a 32,767 | Entero |
+| `int` | `System.Int32` | 32 bits | -2^31 a 2^31-1 | Entero |
+| `long` | `System.Int64` | 64 bits | -2^63 a 2^63-1 | Entero |
+| `float` | `System.Single` | 32 bits | ±1.5e-45 a ±3.4e38 | ~7 dígitos |
+| `double` | `System.Double` | 64 bits | ±5e-324 a ±1.7e308 | ~15 dígitos |
+| `decimal` | `System.Decimal` | 128 bits | ±1.0e-28 a ±7.9e28 | ~28 dígitos |
+| `bool` | `System.Boolean` | 8 bits | true/false | — |
+| `char` | `System.Char` | 16 bits | U+0000 a U+FFFF | Unicode UTF-16 |
+| `nint` | `System.IntPtr` | 32/64 bits | Según plataforma | Entero |
+
+**`string` (inmutable):**
+```csharp
+string s1 = "Hola";
+string s2 = s1;
+s1 += " Mundo";        // Crea NUEVA cadena — s1 ahora es "Hola Mundo"
+Console.WriteLine(s2); // "Hola" — s2 no se modifica
+
+// Internamente: s1 + " Mundo" crea un nuevo char[] en el heap
+// La original "Hola" sigue existiendo hasta que GC la recolecte
+
+// Concatenación en bucle — peligro:
+string resultado = "";
+for (int i = 0; i < 1000; i++)
+    resultado += i;      // Crea 1000 cadenas intermedias, O(n²)
+
+// Solución:
+var sb = new StringBuilder();
+for (int i = 0; i < 1000; i++)
+    sb.Append(i);        // O(n), reusa buffer interno
+string resultado2 = sb.ToString();
+
+// String interning: las cadenas literales se reúsan
+string a = "Hola";
+string b = "Hola";
+Console.WriteLine(object.ReferenceEquals(a, b));  // True (intern pool)
+
+// Raw string literals (C# 11):
+string json = """
+{
+    "nombre": "Ana",
+    "edad": 30
+}
+""";
+```
+
+**Arrays, List y Dictionary:**
+```csharp
+// Arrays — tamaño fijo
+int[] arr = [1, 2, 3, 4, 5];
+int[,] matriz = { { 1, 2 }, { 3, 4 } };
+Span<int> slice = arr.AsSpan(1, 3);  // Sin copia, acceso seguro
+
+// List<T> — array dinámico
+var lista = new List<int> { 1, 2, 3 };
+lista.Add(4);
+lista.RemoveAt(0);
+Console.WriteLine(lista[0]);  // 2
+
+// Dictionary<K,V> — tabla hash
+var dict = new Dictionary<string, int>
+{
+    ["Ana"] = 30,
+    ["Juan"] = 25
+};
+dict.Add("Luis", 40);
+if (dict.TryGetValue("Ana", out int edad))
+    Console.WriteLine(edad);
+
+// HashSet<T> — conjunto único O(1)
+var conjunto = new HashSet<int> { 1, 2, 3, 3, 3 };
+Console.WriteLine(conjunto.Count);  // 3
+
+// Queue<T> — FIFO
+var cola = new Queue<string>();
+cola.Enqueue("primero");
+cola.Enqueue("segundo");
+Console.WriteLine(cola.Dequeue());  // "primero"
+
+// Stack<T> — LIFO
+var pila = new Stack<int>();
+pila.Push(1);
+pila.Push(2);
+Console.WriteLine(pila.Pop());  // 2
+
+// ConcurrentDictionary — thread-safe
+var concurrent = new System.Collections.Concurrent.ConcurrentDictionary<int, string>();
+```
+
+Fuente: [Microsoft — Built-in types](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/), [Collections docs](https://learn.microsoft.com/en-us/dotnet/standard/collections/)
+
+### POO: clases, interfaces, abstract, sealed, records y structs
+
+**Clase y herencia simple:**
+```csharp
+// Clase base
+public class Animal
+{
+    public string Nombre { get; init; }
+    
+    public Animal(string nombre) => Nombre = nombre;
+    
+    // Virtual: puede ser sobreescrito
+    public virtual string HacerSonido() => "...";
+}
+
+// Clase derivada — herencia simple (una sola clase base)
+public class Perro : Animal
+{
+    public Perro(string nombre) : base(nombre) { }
+    
+    public override string HacerSonido() => "Guau";
+    
+    // sealed: impide que subclases sobreescriban
+    public sealed override string ToString() => $"Perro: {Nombre}";
+}
+```
+
+**Interfaces (contratos):**
+```csharp
+public interface IVolador
+{
+    void Volar();
+    
+    // Default interface methods (C# 8+)
+    int AlturaMaxima() => 100;
+}
+
+public interface INadador
+{
+    void Nadar();
+}
+
+// Implementación múltiple (C# no tiene herencia múltiple de clases)
+public class Pato : IVolador, INadador
+{
+    public void Volar() => Console.WriteLine("Pato volando");
+    public void Nadar() => Console.WriteLine("Pato nadando");
+}
+```
+
+**Abstract y sealed:**
+```csharp
+// Abstract: no se puede instanciar, obliga a implementar
+public abstract class Forma
+{
+    public abstract double Area();     // Sin implementación
+    public virtual string Descripcion() => "Una forma";  // Con default
+}
+
+// Sealed: no se puede heredar
+public sealed class Circulo : Forma
+{
+    public double Radio { get; }
+    public Circulo(double radio) => Radio = radio;
+    
+    public override double Area() => Math.PI * Radio * Radio;
+}
+
+// class CirculoHijo : Circulo { }  // ❌ Error: Circulo es sealed
+```
+
+**Records (C# 9+):**
+```csharp
+// Record posicional — inmutable, value-based equality
+public record Persona(string Nombre, int Edad);
+
+// Equivalente a:
+public record Persona
+{
+    public string Nombre { get; init; }
+    public int Edad { get; init; }
+    
+    public Persona(string nombre, int edad) 
+    {
+        Nombre = nombre;
+        Edad = edad;
+    }
+    
+    // Genera automáticamente: Equals, GetHashCode, ToString, Deconstruct
+}
+
+// Uso
+var p1 = new Persona("Ana", 30);
+var p2 = p1 with { Edad = 31 };  // Non-destructive mutation
+Console.WriteLine(p1);           // Persona { Nombre = Ana, Edad = 30 }
+Console.WriteLine(p1 == p2);     // False (Edad cambió)
+
+// Record struct (C# 10+)
+public readonly record struct Punto(double X, double Y);
+
+// Record con herencia
+public abstract record Empleado(string Nombre, string Departamento);
+public record Ingeniero(string Nombre, string Departamento, string Lenguaje) 
+    : Empleado(Nombre, Departamento);
+public record Manager(string Nombre, string Departamento, List<string> Equipo) 
+    : Empleado(Nombre, Departamento);
+```
+
+**Structs:**
+```csharp
+// Value type — recomendado para datos pequeños (< 16 bytes)
+public readonly struct Coordenadas
+{
+    public double Latitud { get; }
+    public double Longitud { get; }
+    
+    public Coordenadas(double lat, double lon)
+    {
+        Latitud = lat;
+        Longitud = lon;
+    }
+}
+
+// ref struct — solo en stack, no puede ir al heap
+public ref struct SpanWrapper
+{
+    private readonly Span<byte> _buffer;
+    public SpanWrapper(Span<byte> buffer) => _buffer = buffer;
+}
+```
+
+Fuente: [Microsoft — Classes](https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/classes), [Records](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/record), [Interfaces](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/interface)
+
+### Propiedades y fields
+
+```csharp
+public class Producto
+{
+    // Field (campo privado)
+    private decimal _precio;
+    
+    // Auto-propiedad (C# 3+): el compilador genera el field
+    public string Nombre { get; set; }
+    
+    // Auto-propiedad de solo lectura
+    public string Codigo { get; }  // Solo se asigna en constructor
+    
+    // Init-only setter (C# 9+): solo asigna en inicialización
+    public DateTime FechaCreacion { get; init; }
+    
+    // Propiedad con lógica
+    public decimal Precio
+    {
+        get => _precio;
+        set => _precio = value >= 0 ? value 
+            : throw new ArgumentException("El precio no puede ser negativo");
+    }
+    
+    // Propiedad calculada (solo getter)
+    public decimal PrecioConIVA => Precio * 1.21m;
+    
+    // Required (C# 11): obligatorio en inicialización
+    public required string SKU { get; init; }
+}
+
+// Uso con init y required
+var producto = new Producto
+{
+    Nombre = "Laptop",
+    Codigo = "LAP-001",
+    Precio = 1000,
+    SKU = "SKU-12345",
+    FechaCreacion = DateTime.UtcNow
+};
+```
+
+Fuente: [Properties docs](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/properties)
+
+### Delegados, eventos y lambdas
+
+**Delegados:**
+```csharp
+// Declaración de un delegado
+public delegate int Operacion(int a, int b);
+
+// Métodos que coinciden con la firma
+static int Sumar(int x, int y) => x + y;
+static int Restar(int x, int y) => x - y;
+
+// Uso
+Operacion op = Sumar;
+Console.WriteLine(op(3, 4));  // 7
+
+op = Restar;
+Console.WriteLine(op(3, 4));  // -1
+
+// Delegados genéricos predefinidos (no necesitas crear los tuyos)
+Func<int, int, int> funcion = (a, b) => a * b;  // Recibe, devuelve
+Action<string> accion = msg => Console.WriteLine(msg);  // Recibe, void
+Predicate<int> predicado = x => x > 0;  // Recibe, bool
+```
+
+**Eventos:**
+```csharp
+public class Sensor
+{
+    // Declaración del evento (basado en delegado EventHandler)
+    public event EventHandler<double>? TemperaturaExcedida;
+    
+    private double _temperatura;
+    public double Temperatura
+    {
+        get => _temperatura;
+        set
+        {
+            _temperatura = value;
+            if (value > 50)
+                TemperaturaExcedida?.Invoke(this, value);
+        }
+    }
+}
+
+// Suscripción
+var sensor = new Sensor();
+sensor.TemperaturaExcedida += (sender, temp) => 
+    Console.WriteLine($"¡Alarma! Temperatura: {temp}°C");
+
+sensor.Temperatura = 55;  // Dispara el evento
+
+// EventHandler<TEventArgs> es el estándar
+// sender: quien emitió el evento
+// TEventArgs: datos del evento
+```
+
+**Lambdas:**
+```csharp
+// Expresión lambda básica
+var cuadrado = (int x) => x * x;
+
+// Lambda con múltiples líneas
+var procesar = (List<int> nums) =>
+{
+    var resultado = nums.Where(n => n > 0).ToList();
+    return resultado.Sum();
+};
+
+// Lambdas con tipos explícitos
+var sumar = (int a, int b) => a + b;
+
+// Lambda static (C# 9): no captura variables del contexto
+Func<int, int, int> sumarStatic = static (a, b) => a + b;
+
+// Lambda natural (C# 10): el compilador infiere el tipo delegado
+var filtrar = (int[] items, int min) => items.Where(i => i >= min).ToArray();
+
+// Callback con lambda
+void EjecutarConLog(Func<int, int> operacion, int valor)
+{
+    Console.WriteLine($"Ejecutando con {valor}");
+    var resultado = operacion(valor);
+    Console.WriteLine($"Resultado: {resultado}");
+}
+
+EjecutarConLog(x => x * x, 5);  // 25
+```
+
+Fuente: [Delegates](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/delegates/), [Events](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/events/), [Lambda expressions](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/lambda-expressions)
+
+### LINQ (Language Integrated Query)
+
+LINQ es el sistema de consultas integrado en C#. Puedes consultar colecciones en memoria (LINQ to Objects), bases de datos (LINQ to SQL/EF), XML, y más.
+
+**Method syntax (fluent):**
+```csharp
+var numeros = new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+
+var resultado = numeros
+    .Where(n => n % 2 == 0)           // Filtra pares
+    .Select(n => n * 10)              // Transforma
+    .OrderByDescending(n => n)        // Ordena descendente
+    .Take(3)                          // Toma 3
+    .ToList();                        // Materializa
+
+// resultado: [100, 80, 60]
+```
+
+**Query syntax (SQL-like):**
+```csharp
+var resultado = from n in numeros
+                where n % 2 == 0
+                orderby n descending
+                select n * 10;
+```
+
+**Operadores esenciales:**
+```csharp
+// Filtrado
+.Where(n => n > 5)
+.OfType<string>()        // Filtra por tipo
+
+// Proyección
+.Select(n => new { Valor = n, Cuadrado = n * n })
+.SelectMany(lista => lista)  // Aplana colecciones anidadas
+
+// Partición
+.Take(5)                 // Primeros 5
+.Skip(5)                 // Salta 5
+.TakeLast(5)             // Últimos 5
+.Chunk(3)                // Divide en grupos de 3
+
+// Ordenación
+.OrderBy(p => p.Nombre)
+.ThenBy(p => p.Edad)
+.OrderByDescending(p => p.Fecha)
+
+// Agregación
+.Count()
+.Sum(p => p.Precio)
+.Average()
+.Min(), .Max()
+.Aggregate((a, b) => a + b)  // Acumulador personalizado
+
+// Cuantificadores
+.Any(p => p.Edad > 18)
+.All(p => p.Activo)
+.Contains(42)
+
+// Conjuntos
+.Distinct()
+.Union(otra)
+.Intersect(otra)
+.Except(otra)
+
+// Agrupación
+.GroupBy(p => p.Categoria)
+    .Select(g => new { Categoria = g.Key, Total = g.Sum(p => p.Precio) })
+
+// Joins
+var join = from p in personas
+           join d in departamentos on p.DeptId equals d.Id
+           select new { p.Nombre, d.NombreDepartamento };
+
+// Zip — combina dos secuencias
+var nums = new[] { 1, 2, 3 };
+var letras = new[] { "A", "B", "C" };
+var zipped = nums.Zip(letras, (n, l) => $"{n}{l}");
+// ["1A", "2B", "3C"]
+```
+
+**Lazy evaluation:**
+```csharp
+var query = numeros.Where(n =>
+{
+    Console.WriteLine($"Evaluando {n}");
+    return n > 3;
+});
+
+// Hasta aquí NO se ejecuta nada (diferido)
+
+var lista = query.ToList();  // Aquí se ejecuta — "Evaluando 1", "Evaluando 2", ...
+
+// Importante: la query se re-ejecuta cada vez
+var count1 = query.Count();  // Vuelve a evaluar TODA la colección
+var count2 = query.Count();  // Otra vez
+
+// Materializa para evitar re-evaluación:
+var cache = query.ToList();
+```
+
+Fuente: [LINQ docs](https://learn.microsoft.com/en-us/dotnet/csharp/linq/), [LINQ 101 samples](https://learn.microsoft.com/en-us/samples/dotnet/try-samples/101-linq-samples/)
+
+### Genéricos, constraints, covarianza/contravarianza
+
+**Genéricos básicos:**
+```csharp
+// Clase genérica
+public class Repositorio<T>
+{
+    private readonly List<T> _items = [];
+    
+    public void Agregar(T item) => _items.Add(item);
+    public T Obtener(int index) => _items[index];
+    public IEnumerable<T> Todos() => _items;
+}
+
+var repo = new Repositorio<int>();
+repo.Agregar(42);
+
+// Método genérico
+public T Max<T>(T a, T b) where T : IComparable<T>
+{
+    return a.CompareTo(b) > 0 ? a : b;
+}
+```
+
+**Constraints (restricciones):**
+```csharp
+// where T : class        — reference type
+// where T : struct       — value type (no nullable)
+// where T : new()        — debe tener constructor sin parámetros
+// where T : BaseClass    — debe heredar de BaseClass
+// where T : IInterface   — debe implementar IInterface
+// where T : notnull      — no nullable (C# 8+)
+// where T : unmanaged    — tipo no gestionado (C# 7.3+)
+// where T : Enum         — tipo enum (C# 7.3+)
+// where T : Delegate     — tipo delegado (C# 7.3+)
+
+public class Fabrica<T> where T : new()
+{
+    public T Crear() => new T();
+}
+
+public class Procesador<T> where T : class, IDisposable, new()
+{
+    public void Procesar()
+    {
+        using var item = new T();
+        // ...
+    }
+}
+```
+
+**Covarianza y contravarianza:**
+```csharp
+// Covarianza: out — puedo usar un tipo más derivado del declarado
+// IEnumerable<out T> → IEnumerable<object> acepta IEnumerable<string>
+IEnumerable<string> cadenas = ["hola", "mundo"];
+IEnumerable<object> objetos = cadenas;  // OK — covarianza
+
+// Contravarianza: in — puedo usar un tipo más base del declarado
+// Action<in T> → Action<string> acepta Action<object>
+Action<object> accionObj = obj => Console.WriteLine(obj);
+Action<string> accionStr = accionObj;  // OK — contravarianza
+
+// Ejemplo con interfaces personalizadas
+interface IProductor<out T> { T Producir(); }     // Covariante
+interface IConsumidor<in T> { void Consumir(T item); }  // Contravariante
+
+class Productor<T> : IProductor<T>
+{
+    private readonly T _item;
+    public Productor(T item) => _item = item;
+    public T Producir() => _item;
+}
+
+class Consumidor<T> : IConsumidor<T>
+{
+    public void Consumir(T item) => Console.WriteLine(item);
+}
+
+// Uso
+IProductor<string> productorStr = new Productor<string>("Hola");
+IProductor<object> productorObj = productorStr;  // Covarianza
+
+IConsumidor<object> consumidorObj = new Consumidor<object>();
+IConsumidor<string> consumidorStr = consumidorObj;  // Contravarianza
+```
+
+Fuente: [Generics docs](https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/generics), [Covariance and Contravariance](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/covariance-contravariance/)
+
+### async/await, Task, ValueTask, IAsyncEnumerable
+
+```csharp
+// async/await básico
+public async Task<string> ObtenerDatosAsync(string url)
+{
+    using var client = new HttpClient();
+    string contenido = await client.GetStringAsync(url);
+    return contenido;
+}
+
+// Task es como un "Future" o "Promise"
+// await extrae el resultado sin bloquear el hilo
+```
+
+**Task vs ValueTask:**
+```csharp
+// Task — para operaciones que suelen ser asíncronas
+public async Task<int> LeerArchivoAsync(string path)
+{
+    string contenido = await File.ReadAllTextAsync(path);
+    return contenido.Length;
+}
+
+// ValueTask — para resultados que suelen ser síncronos
+// ValueTask es un struct, evita asignación en heap
+private readonly Dictionary<string, int> _cache = [];
+
+public ValueTask<int> ObtenerValorAsync(string key)
+{
+    if (_cache.TryGetValue(key, out int valor))
+        return new ValueTask<int>(valor);  // Síncrono, sin Task
+    
+    return new ValueTask<int>(CalcularAsync(key));  // Asíncrono
+}
+
+private async Task<int> CalcularAsync(string key)
+{
+    await Task.Delay(100);
+    return 42;
+}
+```
+
+**Múltiples llamadas concurrentes:**
+```csharp
+public async Task ProcesarMultipleAsync()
+{
+    var tareas = new List<Task<string>>();
+    
+    for (int i = 0; i < 10; i++)
+    {
+        tareas.Add(ObtenerDatosAsync($"https://api.example.com/{i}"));
+    }
+    
+    // Espera a TODAS
+    string[] resultados = await Task.WhenAll(tareas);
+    
+    // Espera la primera en completar
+    Task<string> primero = await Task.WhenAny(tareas);
+    
+    // Procesa según completan
+    var tareasEnProgreso = new List<Task<string>>(tareas);
+    while (tareasEnProgreso.Count > 0)
+    {
+        Task<string> completada = await Task.WhenAny(tareasEnProgreso);
+        tareasEnProgreso.Remove(completada);
+        Console.WriteLine(completada.Result);
+    }
+}
+```
+
+**Cancelación:**
+```csharp
+public async Task ProcesarConCancelacionAsync(CancellationToken ct)
+{
+    // Lanza OperationCanceledException si se cancela
+    await Task.Delay(5000, ct);
+    
+    // Verificar manualmente
+    ct.ThrowIfCancellationRequested();
+    
+    // O verificar sin excepción
+    if (ct.IsCancellationRequested)
+        return;
+}
+
+// Uso
+var cts = new CancellationTokenSource();
+cts.CancelAfter(TimeSpan.FromSeconds(3));
+
+try
+{
+    await ProcesarConCancelacionAsync(cts.Token);
+}
+catch (OperationCanceledException)
+{
+    Console.WriteLine("Operación cancelada");
+}
+```
+
+**IAsyncEnumerable&lt;T&gt; (C# 8+):**
+```csharp
+// Iteración asíncrona — yield return async
+public async IAsyncEnumerable<int> GenerarNumerosAsync()
+{
+    for (int i = 0; i < 10; i++)
+    {
+        await Task.Delay(100);  // Simula trabajo async
+        yield return i;
+    }
+}
+
+// Consumo
+await foreach (int numero in GenerarNumerosAsync())
+{
+    Console.WriteLine(numero);
+}
+
+// Procesamiento con LINQ async
+await foreach (int par in GenerarNumerosAsync()
+    .WhereAwait(async n => { await Task.Delay(1); return n % 2 == 0; }))
+{
+    Console.WriteLine(par);
+}
+```
+
+**Parallel LINQ (PLINQ):**
+```csharp
+var numeros = Enumerable.Range(0, 100_000);
+
+// Parallel query — usa múltiples hilos automáticamente
+var resultado = numeros
+    .AsParallel()
+    .Where(n => EsPrimo(n))
+    .OrderBy(n => n)
+    .ToArray();
+
+// Control de paralelismo
+var lento = numeros
+    .AsParallel()
+    .WithDegreeOfParallelism(4)  // Limita a 4 hilos
+    .Select(n => OperacionCostosa(n));
+```
+
+Fuente: [Async/await docs](https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/), [Task-based async pattern](https://learn.microsoft.com/en-us/dotnet/standard/asynchronous-programming-patterns/task-based-asynchronous-pattern-tap)
+
+### Pattern matching
+
+C# tiene pattern matching cada vez más potente desde C# 7:
+
+```csharp
+object valor = 42;
+
+// Type pattern
+if (valor is int entero)
+    Console.WriteLine(entero);
+
+// Switch expression (C# 8+)
+string descripcion = valor switch
+{
+    int i when i > 0 => $"Entero positivo: {i}",
+    int i => $"Entero: {i}",
+    string s => $"Cadena: {s}",
+    null => "Nulo",
+    _ => "Otro tipo"  // discard pattern
+};
+
+// Property pattern (C# 8+)
+if (valor is string { Length: > 5 } texto)
+    Console.WriteLine($"Texto largo: {texto}");
+
+// Positional pattern (deconstruct)
+if (valor is (int x, int y))
+    Console.WriteLine($"Coordenadas: {x}, {y}");
+
+// List patterns (C# 11)
+int[] numeros = [1, 2, 3, 4, 5];
+
+// Match patrones en listas
+var resultado = numeros switch
+{
+    [1, 2, .. var resto] => $"Empieza con 1, 2, luego {resto.Length} más",
+    [.., 5] => "Termina en 5",
+    [var primero, .., var ultimo] => $"Primero: {primero}, último: {ultimo}",
+    [] => "Vacía",
+    [var unico] => $"Un solo elemento: {unico}"
+};
+
+// Pattern matching en records
+var persona = new Persona("Ana", 30);
+var info = persona switch
+{
+    { Nombre: "Ana", Edad: >= 18 } => "Ana, mayor de edad",
+    { Edad: < 18 } => "Menor de edad",
+    _ => "Otra persona"
+};
+
+// Relational patterns (C# 9+)
+string clasificar(int n) => n switch
+{
+    < 0 => "Negativo",
+    >= 0 and <= 10 => "Entre 0 y 10",
+    > 10 and <= 100 => "Entre 11 y 100",
+    > 100 => "Grande"
+};
+```
+
+Fuente: [Pattern matching docs](https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/functional/pattern-matching), [C# 11 list patterns](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/patterns#list-patterns)
+
+### Nullable reference types (C# 8+)
+
+```csharp
+#nullable enable
+
+public class Usuario
+{
+    public string Nombre { get; set; }        // No nullable — no puede ser null
+    public string? Email { get; set; }        // Nullable — puede ser null
+    public string Apodo { get; set; } = "";   // Valor por defecto
+    
+    public Usuario(string nombre) => Nombre = nombre;
+}
+
+// Operadores null-condicionales
+string? texto = ObtenerTexto();
+int? longitud = texto?.Length;     // Si texto es null, longitud es null
+char? primera = texto?[0];         // ?[] para indexación
+string saludo = texto ?? "default"; // Null-coalescing
+texto ??= "valor por defecto";      // Null-coalescing assignment (C# 8+)
+
+// Análisis de flujo null
+void Procesar(string? cadena)
+{
+    if (cadena is null)
+        return;
+    
+    // Aquí el compilador SABE que cadena no es null
+    Console.WriteLine(cadena.Length);
+}
+
+// Operador ! (null-forgiving) — confía al compilador
+string nombre = ObtenerNombre()!;  // "Sé que no es null, confía en mí"
+
+// Nullable y genéricos
+// T? solo funciona si T es struct o tiene constraint
+public T? Buscar<T>(int id) where T : class => null;
+public T? BuscarValor<T>(int id) where T : struct => null;
+```
+
+Fuente: [Nullable reference types](https://learn.microsoft.com/en-us/dotnet/csharp/nullable-references), [Null safety](https://learn.microsoft.com/en-us/dotnet/csharp/tutorials/nullable-reference-types)
+
+### Extension methods y partial classes
+
+**Extension methods:**
+```csharp
+// Los extension methods "añaden" métodos a tipos existentes
+public static class StringExtensions
+{
+    public static bool EsPalindromo(this string texto)
+    {
+        if (string.IsNullOrEmpty(texto)) return false;
+        var limpio = texto.ToLower().Replace(" ", "");
+        return limpio.SequenceEqual(limpio.Reverse());
+    }
+    
+    public static string Truncar(this string texto, int maxLength)
+    {
+        return texto?.Length > maxLength 
+            ? texto[..maxLength] + "..." 
+            : texto;
+    }
+}
+
+// Uso
+string frase = "Anita lava la tina";
+Console.WriteLine(frase.EsPalindromo());  // True
+Console.WriteLine(frase.Truncar(10));     // "Anita lava..."
+
+// LINQ son extension methods
+// Where, Select, OrderBy, etc. son extension methods de IEnumerable<T>
+```
+
+**Partial classes/records:**
+```csharp
+// Archivo 1: Persona.Part1.cs
+public partial class Persona
+{
+    public string Nombre { get; set; }
+    public string Email { get; set; }
+}
+
+// Archivo 2: Persona.Part2.cs
+public partial class Persona
+{
+    public override string ToString() => $"{Nombre} <{Email}>";
+}
+
+// Partial methods — declaración en un archivo, implementación opcional en otro
+// Archivo 1
+public partial class Logger
+{
+    partial void LogPartial(string mensaje);  // Puede no implementarse
+    
+    public void Log(string msg)
+    {
+        Console.WriteLine($"LOG: {msg}");
+        LogPartial(msg);  // Si no hay implementación, el compilador la elimina
+    }
+}
+
+// Archivo 2
+public partial class Logger
+{
+    partial void LogPartial(string mensaje)
+    {
+        File.AppendAllText("log.txt", mensaje + "\n");
+    }
+}
+
+// Partial records (C# 9+)
+public partial record Empleado(string Nombre, decimal Salario);
+public partial record Empleado
+{
+    public decimal SalarioAnual => Salario * 12;
+}
+```
+
+### Top-level statements, global usings, file-scoped namespaces
+
+**Top-level statements (C# 9+):**
+```csharp
+// Program.cs — sin class, sin Main
+using System;
+using System.Linq;
+
+var numeros = new[] { 1, 2, 3, 4, 5 };
+Console.WriteLine(numeros.Sum());
+
+// Puedes tener funciones locales
+static string Saludar(string nombre) => $"Hola {nombre}";
+Console.WriteLine(Saludar("Mundo"));
+```
+
+**Global usings (C# 10+):**
+```csharp
+// GlobalUsings.cs — aplica a TODOS los archivos del proyecto
+global using System;
+global using System.Collections.Generic;
+global using System.Linq;
+global using System.Threading.Tasks;
+
+// Con ImplicitUsings habilitado, ya tienes:
+// System, System.Collections.Generic, System.IO, System.Linq,
+// System.Net.Http, System.Threading, System.Threading.Tasks
+```
+
+**File-scoped namespaces (C# 10+):**
+```csharp
+// Antes (C# < 10):
+namespace MiApp.Modelos
+{
+    public class Usuario { }
+}
+
+// Ahora (C# 10+):
+namespace MiApp.Modelos;
+
+public class Usuario { }
+// Ya no necesitas llaves ni indentación extra
+```
+
+### Source generators (metaprogramación en compilación)
+
+Los source generators (C# 9+) son piezas de código que se ejecutan durante la compilación para generar código fuente adicional. Son la alternativa moderna a T4 templates y Reflection pesada.
+
+```csharp
+// Un source generator es una clase que implementa ISourceGenerator
+// Ejemplo minimalista:
+[Generator]
+public class HelloGenerator : ISourceGenerator
+{
+    public void Initialize(GeneratorInitializationContext context) { }
+    
+    public void Execute(GeneratorExecutionContext context)
+    {
+        var source = """
+namespace GeneratedCode;
+
+public static class HelloWorld
+{
+    public static string GetMessage() => "Generado en compilación!";
+}
+""";
+        context.AddSource("HelloWorld.g.cs", source);
+    }
+}
+
+// Uso (el generador crea esta clase en compilación):
+Console.WriteLine(GeneratedCode.HelloWorld.GetMessage());
+```
+
+**Source generators famosos:**
+| Generador | Para qué |
+|---|---|
+| **System.Text.Json** | Genera serializadores JSON en compilación (evita Reflection) |
+| **MediatR** | Registra handlers automáticamente |
+| **Regex Source Generator** | Compila regex en compile-time (`[GeneratedRegex]`) |
+| **Protobuf** | Genera bindings C# de .proto |
+| **Fody** | IL weaving en build |
+
+```csharp
+// Regex source generator (C# 11+)
+public partial class EmailValidator
+{
+    [GeneratedRegex(@"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$")]
+    public static partial Regex EmailRegex();
+    
+    public static bool EsValido(string email) => EmailRegex().IsMatch(email);
+}
+// Sin reflexión, sin compilación en runtime — genera el código en build
+```
+
+Fuente: [Source Generators docs](https://learn.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/source-generators-overview), [C# 9 features](https://learn.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-9)
+
+## Sistema de archivos
+
+### System.IO — clases principales
+
+```csharp
+using System.IO;
+
+// File — métodos estáticos
+string contenido = File.ReadAllText("archivo.txt");
+File.WriteAllText("salida.txt", "Hola Mundo");
+File.Copy("origen.txt", "destino.txt", overwrite: true);
+File.Delete("temporal.txt");
+bool existe = File.Exists("archivo.txt");
+
+// FileInfo — instancia, útil para múltiples operaciones
+var fi = new FileInfo("archivo.txt");
+Console.WriteLine($"{fi.Name}, {fi.Length} bytes, {fi.CreationTime}");
+
+// Directory — estático
+string[] archivos = Directory.GetFiles("./", "*.txt");
+Directory.CreateDirectory("MisDatos");
+
+// DirectoryInfo — instancia
+var di = new DirectoryInfo("./");
+foreach (var f in di.GetFiles("*.cs"))
+    Console.WriteLine(f.Name);
+
+// Path — manipulación de rutas
+string combo = Path.Combine("carpeta", "sub", "archivo.txt");
+string ext = Path.GetExtension("archivo.txt");     // ".txt"
+string sinExt = Path.GetFileNameWithoutExtension("archivo.txt");
+string temp = Path.GetTempPath();
+string tempFile = Path.GetTempFileName();
+string randName = Path.GetRandomFileName();
+```
+
+### StreamReader/Writer y FileStream
+
+```csharp
+// StreamReader — lectura de texto por líneas
+using var reader = new StreamReader("archivo.txt");
+string? linea;
+while ((linea = await reader.ReadLineAsync()) != null)
+    Console.WriteLine(linea);
+
+// StreamWriter — escritura de texto
+using var writer = new StreamWriter("salida.txt", append: true);
+await writer.WriteLineAsync("Nueva línea");
+
+// FileStream — lectura/escritura binaria
+using var fs = new FileStream("datos.bin", FileMode.OpenOrCreate);
+byte[] buffer = new byte[4096];
+int bytesRead = await fs.ReadAsync(buffer, 0, buffer.Length);
+await fs.WriteAsync(buffer, 0, bytesRead);
+
+// BinaryReader/Writer
+using var bw = new BinaryWriter(File.Open("datos.bin", FileMode.Create));
+bw.Write(42);
+bw.Write(3.14);
+bw.Write("Hola");
+
+using var br = new BinaryReader(File.OpenRead("datos.bin"));
+int entero = br.ReadInt32();
+double doble = br.ReadDouble();
+string texto = br.ReadString();
+```
+
+### Async I/O
+
+```csharp
+await File.WriteAllTextAsync("archivo.txt", "contenido");
+string texto = await File.ReadAllTextAsync("archivo.txt");
+
+await using var source = File.OpenRead("origen.bin");
+await using var dest = File.OpenWrite("destino.bin");
+await source.CopyToAsync(dest);
+```
+
+### FileSystemWatcher
+
+```csharp
+using var watcher = new FileSystemWatcher("./")
+{
+    NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite,
+    Filter = "*.txt",
+    EnableRaisingEvents = true
+};
+
+watcher.Created += (s, e) => Console.WriteLine($"Creado: {e.Name}");
+watcher.Changed += (s, e) => Console.WriteLine($"Modificado: {e.Name}");
+watcher.Deleted += (s, e) => Console.WriteLine($"Eliminado: {e.Name}");
+watcher.Renamed += (s, e) => Console.WriteLine($"Renombrado: {e.OldName} → {e.Name}");
+
+Console.WriteLine("Esperando cambios... (Enter para salir)");
+Console.ReadLine();
+```
+
+### Compresión (System.IO.Compression)
+
+```bash
+dotnet add package System.IO.Compression
+```
+
+```csharp
+using System.IO.Compression;
+
+using var archivo = ZipFile.Open("backup.zip", ZipArchiveMode.Create);
+archivo.CreateEntryFromFile("datos.txt", "datos.txt");
+archivo.CreateEntryFromFile("imagen.jpg", "fotos/imagen.jpg");
+
+ZipFile.ExtractToDirectory("backup.zip", "./restaurado");
+
+using var original = File.OpenRead("grande.txt");
+using var comprimido = File.Create("grande.gz");
+using var gzip = new GZipStream(comprimido, CompressionMode.Compress);
+await original.CopyToAsync(gzip);
+
+using var deflate = new DeflateStream(File.Create("datos.deflate"), CompressionLevel.Optimal);
+```
+
+### JSON (System.Text.Json)
+
+```csharp
+using System.Text.Json;
+
+public record Producto(string Nombre, decimal Precio, int Stock);
+
+var producto = new Producto("Laptop", 999.99m, 10);
+string json = JsonSerializer.Serialize(producto);
+
+var options = new JsonSerializerOptions
+{
+    WriteIndented = true,
+    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+};
+json = JsonSerializer.Serialize(producto, options);
+
+var deserializado = JsonSerializer.Deserialize<Producto>(json);
+Console.WriteLine(deserializado?.Nombre);
+
+// JsonDocument — acceso sin tipado
+using var doc = JsonDocument.Parse(json);
+string nombre = doc.RootElement.GetProperty("nombre").GetString()!;
+
+// Source generator (C# 9+)
+[JsonSerializable(typeof(Producto[]))]
+partial class AppJsonContext : JsonSerializerContext { }
+string jsonSG = JsonSerializer.Serialize(new[] { producto }, AppJsonContext.Default.ProductoArray);
+```
+
+### CSV (CsvHelper)
+
+```bash
+dotnet add package CsvHelper
+```
+
+```csharp
+using CsvHelper;
+using System.Globalization;
+
+var records = new List<Producto>
+{
+    new("Laptop", 999.99m, 10),
+    new("Mouse", 29.99m, 50)
+};
+
+using var writer = new StreamWriter("productos.csv");
+using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
+csv.WriteRecords(records);
+
+using var reader = new StreamReader("productos.csv");
+using var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture);
+var productos = csvReader.GetRecords<Producto>().ToList();
+```
+
+### YAML (YamlDotNet)
+
+```bash
+dotnet add package YamlDotNet
+```
+
+```csharp
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
+
+var producto = new Producto("Laptop", 999.99m, 10);
+
+var serializer = new SerializerBuilder()
+    .WithNamingConvention(CamelCaseNamingConvention.Instance)
+    .Build();
+string yaml = serializer.Serialize(producto);
+
+var deserializer = new DeserializerBuilder()
+    .WithNamingConvention(CamelCaseNamingConvention.Instance)
+    .Build();
+var p = deserializer.Deserialize<Producto>(yaml);
+```
+
+Fuente: [System.IO docs](https://learn.microsoft.com/en-us/dotnet/standard/io/), [System.Text.Json](https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/), [CsvHelper](https://joshclose.github.io/CsvHelper/), [YamlDotNet](https://github.com/aaubry/YamlDotNet), [IO.Compression](https://learn.microsoft.com/en-us/dotnet/standard/io/compression)
+
+---
+
+## Algoritmos y estructuras de datos
+
+### Ordenación
+
+```csharp
+int[] arr = [5, 3, 8, 1, 9, 2, 7, 4, 6];
+
+// Array.Sort — Introsort (QuickSort + HeapSort + InsertionSort)
+Array.Sort(arr);
+Console.WriteLine(string.Join(", ", arr));  // 1, 2, 3, 4, 5, 6, 7, 8, 9
+
+Array.Sort(arr, (a, b) => b.CompareTo(a));  // Descendente
+
+var lista = new List<int> { 5, 3, 8, 1 };
+lista.Sort();
+lista.Sort((a, b) => b.CompareTo(a));
+```
+
+**LINQ para ordenación:**
+
+```csharp
+var ordenado = arr.OrderBy(x => x).ToArray();
+var descendente = arr.OrderByDescending(x => x);
+
+var personas = new[]
+{
+    new { Nombre = "Ana", Edad = 30 },
+    new { Nombre = "Juan", Edad = 25 },
+    new { Nombre = "Ana", Edad = 20 }
+};
+
+var compuesto = personas
+    .OrderBy(p => p.Nombre)
+    .ThenByDescending(p => p.Edad);
+// Ana 30, Ana 20, Juan 25
+```
+
+### Búsqueda
+
+```csharp
+int[] nums = [1, 3, 5, 7, 9, 11, 13];
+
+int index = Array.BinarySearch(nums, 7);
+Console.WriteLine(index);  // 3
+
+var list = new List<int>(nums);
+int idx = list.BinarySearch(7);
+
+int? encontrado = nums.FirstOrDefault(n => n > 5);
+int? ultimo = nums.LastOrDefault(n => n < 10);
+var rango = nums.Where(n => n > 3 && n < 11).ToList();
+```
+
+### Comparadores
+
+```csharp
+class ComparadorInverso : IComparer<int>
+{
+    public int Compare(int x, int y) => y.CompareTo(x);
+}
+
+Array.Sort(nums, new ComparadorInverso());
+
+Comparison<int> desc = (a, b) => b.CompareTo(a);
+Array.Sort(nums, desc);
+```
+
+### Colecciones y Big O
+
+```csharp
+// HashSet<T> — O(1)
+var hashSet = new HashSet<int> { 1, 2, 3 };
+hashSet.Add(4);
+bool existe = hashSet.Contains(2);
+
+// Dictionary<K,V> — O(1) promedio
+var dict = new Dictionary<string, int>
+{
+    ["Ana"] = 30,
+    ["Juan"] = 25
+};
+dict["Luis"] = 40;
+dict.TryGetValue("Ana", out int edad);
+
+// SortedDictionary<K,V> — árbol rojo-negro, O(log n)
+var sorted = new SortedDictionary<int, string>
+{
+    [3] = "tres",
+    [1] = "uno",
+    [2] = "dos"
+};
+
+// SortedSet<T> — árbol rojo-negro, O(log n)
+var sortedSet = new SortedSet<int> { 5, 1, 3, 2, 4 };
+
+// PriorityQueue<TElement, TPriority> (.NET 6+)
+var pq = new PriorityQueue<string, int>();
+pq.Enqueue("bajo", 3);
+pq.Enqueue("alto", 1);
+pq.Enqueue("medio", 2);
+Console.WriteLine(pq.Dequeue());  // "alto"
+Console.WriteLine(pq.Dequeue());  // "medio"
+
+// LINQ
+var suma = nums.Aggregate((a, b) => a + b);
+var producto = nums.Aggregate(1, (a, b) => a * b);
+
+var agrupado = personas.GroupBy(p => p.Nombre)
+    .Select(g => new { Nombre = g.Key, Count = g.Count() });
+
+var pedidos = new[] { new { Id = 1, ClienteId = 1, Total = 100m } };
+var clientes = new[] { new { Id = 1, Nombre = "Ana" } };
+var join = from p in pedidos
+           join c in clientes on p.ClienteId equals c.Id
+           select new { c.Nombre, p.Total };
+```
+
+### Tabla Big O de colecciones
+
+| Operación | `List<T>` | `HashSet<T>` | `Dictionary<K,V>` | `SortedDictionary<K,V>` | `SortedSet<T>` | `PriorityQueue<T>` |
+|---|---|---|---|---|---|---|
+| Add | O(1)* | O(1) | O(1) | O(log n) | O(log n) | O(log n) |
+| Remove | O(n) | O(1) | O(1) | O(log n) | O(log n) | O(log n) |
+| Contains | O(n) | O(1) | O(1) | O(log n) | O(log n) | - |
+| Access by index | O(1) | - | - | - | - | - |
+| Search by key | O(n) | - | O(1) | O(log n) | - | - |
+| Min/Max | O(n) | O(n) | O(n) | O(log n) | O(log n) | O(1) peek |
+
+*O(n) cuando el array interno necesita redimensionarse.
+
+Fuente: [Array.Sort](https://learn.microsoft.com/en-us/dotnet/api/system.array.sort), [Big O cheat sheet](https://www.bigocheatsheet.com/), [Collections complexity](https://learn.microsoft.com/en-us/dotnet/standard/collections/), [PriorityQueue](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.priorityqueue-2)
+
+---
+
+## Ejemplo completo de POO en C#
+
+Este ejemplo une todos los conceptos de POO explicados arriba en un sistema realista de biblioteca multimedia. Léelo de arriba a abajo: cada clase añade una capa.
+
+```csharp
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
+// ── Enum y Records (modelos de datos) ──
+
+enum FormatoVideo
+{
+    MP4,
+    WEBM,
+    AVI,
+    MKV
+}
+
+record Metadatos
+{
+    public string Titulo { get; init; }
+    public int DuracionSegundos { get; init; }
+    public DateTime FechaCreacion { get; init; } = DateTime.Now;
+    public List<string> Tags { get; init; } = [];
+    
+    public Metadatos(string titulo, int duracionSegundos)
+    {
+        Titulo = titulo;
+        DuracionSegundos = duracionSegundos;
+    }
+    
+    public string DuracionFormateada => 
+        $"{DuracionSegundos / 60}:{DuracionSegundos % 60:D2}";
+    
+    public override string ToString() => $"{Titulo} ({DuracionFormateada})";
+}
+
+// ── Clase abstracta base ──
+
+abstract class Contenido
+{
+    public Metadatos Metadatos { get; }
+    public int Reproducciones { get; private set; }
+    
+    protected Contenido(Metadatos metadatos)
+    {
+        Metadatos = metadatos;
+    }
+    
+    public string Reproducir()
+    {
+        Reproducciones++;
+        return $"▶️ Reproduciendo {Metadatos.Titulo}...";
+    }
+    
+    public abstract string ObtenerInfo();
+    
+    public override string ToString() => $"[{GetType().Name}] {Metadatos}";
+}
+
+// ── Herencia simple ──
+
+sealed class Audio : Contenido
+{
+    public int BitrateKbps { get; }
+    
+    public Audio(Metadatos metadatos, int bitrateKbps) : base(metadatos)
+    {
+        BitrateKbps = bitrateKbps;
+    }
+    
+    public override string ObtenerInfo() =>
+        $"🎵 {Metadatos.Titulo} | {Metadatos.DuracionFormateada} | {BitrateKbps}kbps | {Reproducciones} reproducciones";
+}
+
+class Video : Contenido
+{
+    public string Resolucion { get; }
+    public FormatoVideo Formato { get; }
+    public bool Subtitulos { get; set; }
+    
+    public Video(Metadatos metadatos, string resolucion, FormatoVideo formato) 
+        : base(metadatos)
+    {
+        Resolucion = resolucion;
+        Formato = formato;
+    }
+    
+    public override string ObtenerInfo() =>
+        $"🎬 {Metadatos.Titulo} | {Resolucion} | {Formato} | {(Subtitulos ? "CC" : "Sin subtítulos")}";
+}
+
+// ── Interfaz (contrato) ──
+
+interface IExportable
+{
+    string Exportar(string formato = "json");
+}
+
+// ── Herencia + interfaz ──
+
+class Podcast : Audio, IExportable
+{
+    public int Episodio { get; }
+    public string Anfitrion { get; }
+    
+    public Podcast(Metadatos metadatos, int bitrateKbps, int episodio, string anfitrion)
+        : base(metadatos, bitrateKbps)
+    {
+        Episodio = episodio;
+        Anfitrion = anfitrion;
+    }
+    
+    public override string ObtenerInfo() =>
+        $"🎙️ Ep.{Episodio}: {Metadatos.Titulo} | con {Anfitrion} | {base.ObtenerInfo()}";
+    
+    public string Exportar(string formato = "json")
+    {
+        if (formato == "json")
+            return JsonSerializer.Serialize(this, new JsonSerializerOptions 
+            { 
+                WriteIndented = true 
+            });
+        return $"Exportación a {formato} no soportada";
+    }
+}
+
+// ── Composición: un objeto contiene otros objetos ──
+
+class ListaReproduccion
+{
+    public string Nombre { get; }
+    private readonly List<Contenido> _items = [];
+    
+    public ListaReproduccion(string nombre) => Nombre = nombre;
+    
+    public void Agregar(Contenido item) => _items.Add(item);
+    public bool Quitar(int indice)
+    {
+        if (indice < 0 || indice >= _items.Count) return false;
+        _items.RemoveAt(indice);
+        return true;
+    }
+    
+    public List<string> ReproducirTodo() =>
+        _items.Select(item => item.Reproducir()).ToList();
+    
+    public List<string> InfoCompleta() =>
+        _items.Select(item => item.ObtenerInfo()).ToList();
+    
+    public int Count => _items.Count;
+    public Contenido this[int index] => _items[index];
+    
+    public override string ToString() => $"📋 {Nombre} ({_items.Count} items)";
+}
+
+// ── Interfaz para polimorfismo estructural ──
+
+interface IReproducible
+{
+    string Reproducir();
+    Metadatos Metadatos { get; }
+}
+
+// Método que acepta cualquier IReproducible
+void Emitir(IReproducible contenido)
+{
+    Console.WriteLine($"📡 Emitiendo: {contenido.Reproducir()}");
+}
+
+// ── Uso del sistema ──
+
+// Crear contenido de distintos tipos
+var cancion = new Audio(
+    new Metadatos("Bohemian Rhapsody", 354) 
+    { 
+        Tags = ["rock", "clásico"] 
+    },
+    bitrateKbps: 320
+);
+
+var pelicula = new Video(
+    new Metadatos("Inception", 8880) 
+    { 
+        Tags = ["ciencia ficción", "thriller"] 
+    },
+    resolucion: "4K",
+    formato: FormatoVideo.MKV
+)
+{
+    Subtitulos = true
+};
+
+var podcast = new Podcast(
+    new Metadatos("El futuro de la IA", 2700) 
+    { 
+        Tags = ["tecnología", "IA"] 
+    },
+    bitrateKbps: 128,
+    episodio: 42,
+    anfitrion: "Ana López"
+);
+
+// Polimorfismo: cada uno implementa ObtenerInfo() a su manera
+foreach (var contenido in new Contenido[] { cancion, pelicula, podcast })
+    Console.WriteLine(contenido.ObtenerInfo());
+
+// Composición
+var lista = new ListaReproduccion("Favoritos");
+lista.Agregar(cancion);
+lista.Agregar(pelicula);
+lista.Agregar(podcast);
+Console.WriteLine(lista);
+Console.WriteLine(string.Join("\n", lista.ReproducirTodo()));
+Console.WriteLine(string.Join("\n", lista.InfoCompleta()));
+
+// Interfaz
+Emitir(pelicula);  // Funciona porque Video implementa IReproducible
+
+// Record + método
+Console.WriteLine(podcast.Metadatos.DuracionFormateada);  // "45:00"
+
+// Interfaz: exportación
+Console.WriteLine(podcast.Exportar("json"));
+
+// Pattern matching
+foreach (var item in new Contenido[] { cancion, pelicula, podcast })
+{
+    string tipo = item switch
+    {
+        Podcast p => $"Podcast Ep.{p.Episodio}",
+        Video v => $"Video {v.Resolucion}",
+        Audio a => $"Audio {a.BitrateKbps}kbps",
+        _ => "Desconocido"
+    };
+    Console.WriteLine(tipo);
+}
+```
+
+**Conceptos demostrados:**
+
+| Concepto | Cómo aparece |
+|---|---|
+| Clase abstracta | `Contenido` con `abstract string ObtenerInfo()` |
+| Herencia simple | `Audio(Contenido)`, `Video(Contenido)` |
+| Clase sealed | `sealed class Audio` — no se puede heredar |
+| Interfaz | `IExportable`, `IReproducible` |
+| Record | `Metadatos` con `init` properties |
+| Encapsulación | `Reproducciones { get; private set; }` |
+| Polimorfismo | `ObtenerInfo()` se comporta distinto según la clase concreta |
+| Composición | `ListaReproduccion` contiene `List<Contenido>` |
+| Pattern matching | `item switch { Podcast p => ... }` |
+| Propiedades calculadas | `DuracionFormateada` (expression-bodied) |
+| Colecciones con initializers | `Tags = ["rock", "clásico"]` (collection expressions C# 12) |
+
+---
+
+## Patrones de diseño con ejemplos
+
+### Strategy
+Permite intercambiar algoritmos en tiempo de ejecución. En C# puedes usar delegados o interfaces.
+
+```csharp
+// Con delegados (simplificado)
+var ordenarAscendente = (List<int> datos) => datos.OrderBy(x => x).ToList();
+var ordenarDescendente = (List<int> datos) => datos.OrderByDescending(x => x).ToList();
+
+class Analizador
+{
+    private readonly Func<List<int>, List<int>> _estrategia;
+    
+    public Analizador(Func<List<int>, List<int>> estrategia)
+    {
+        _estrategia = estrategia;
+    }
+    
+    public List<int> Analizar(List<int> datos) => _estrategia(datos);
+}
+
+var a = new Analizador(ordenarDescendente);
+Console.WriteLine(string.Join(", ", a.Analizar([3, 1, 4, 1, 5, 9])));
+
+// Con interfaz (más formal)
+interface IEstrategiaOrdenacion
+{
+    List<int> Ordenar(List<int> datos);
+}
+
+class OrdenacionAscendente : IEstrategiaOrdenacion
+{
+    public List<int> Ordenar(List<int> datos) =>
+        [.. datos.OrderBy(x => x)];
+}
+
+class OrdenacionDescendente : IEstrategiaOrdenacion
+{
+    public List<int> Ordenar(List<int> datos) =>
+        [.. datos.OrderByDescending(x => x)];
+}
+
+class AnalizadorStrategy
+{
+    private readonly IEstrategiaOrdenacion _estrategia;
+    public AnalizadorStrategy(IEstrategiaOrdenacion estrategia) => _estrategia = estrategia;
+    public List<int> Analizar(List<int> datos) => _estrategia.Ordenar(datos);
+}
+```
+
+**Cuándo usarlo**: tienes múltiples variantes de un algoritmo y quieres cambiarlas sin condicionales. En C#, los delegados `Func<>` y `Action<>` hacen que a menudo no necesites la interfaz.
+
+### Observer
+Un objeto (sujeto) notifica a múltiples dependientes (observadores) cuando cambia su estado.
+
+```csharp
+// Con eventos de C#
+class Sensor
+{
+    public event EventHandler<double>? OnTemperaturaCambio;
+    
+    private double _temperatura;
+    public double Temperatura
+    {
+        get => _temperatura;
+        set
+        {
+            _temperatura = value;
+            OnTemperaturaCambio?.Invoke(this, value);
+        }
+    }
+}
+
+// Observadores
+void Logger(object? sender, double temp) =>
+    Console.WriteLine($"[LOG] Temperatura: {temp}°C");
+
+void Dashboard(object? sender, double temp) =>
+    Console.WriteLine($"[DASH] Actualizando gráfico con {temp}°C");
+
+// Uso
+var sensor = new Sensor();
+sensor.OnTemperaturaCambio += Logger;
+sensor.OnTemperaturaCambio += Dashboard;
+sensor.Temperatura = 23.5;
+```
+
+**Cuándo usarlo**: eventos del sistema, notificaciones en tiempo real, desacoplamiento de componentes. Los eventos de C# ya implementan el patrón Observer de serie.
+
+### Singleton (con Lazy&lt;T&gt;)
+```csharp
+// La forma moderna y thread-safe
+public sealed class Configuracion
+{
+    private static readonly Lazy<Configuracion> _instancia = 
+        new(() => new Configuracion());
+    
+    public static Configuracion Instance => _instancia.Value;
+    
+    private Configuracion() 
+    {
+        Console.WriteLine("Cargando configuración (una sola vez)");
+    }
+    
+    public string DbConnection { get; set; } = "Server=localhost;Database=myapp";
+    public bool Debug { get; set; } = false;
+}
+
+// Uso
+var config = Configuracion.Instance;
+config.Debug = true;
+```
+
+`Lazy<T>` garantiza inicialización thread-safe sin locks explícitos. Es la implementación recomendada en C# moderno.
+
+### Factory (con DI)
+```csharp
+interface IPlugin
+{
+    string Ejecutar();
+}
+
+class PluginPDF : IPlugin
+{
+    public string Ejecutar() => "Procesando PDF";
+}
+
+class PluginCSV : IPlugin
+{
+    public string Ejecutar() => "Procesando CSV";
+}
+
+class PluginFactory
+{
+    private readonly Dictionary<string, Func<IPlugin>> _registro = new()
+    {
+        ["pdf"] = () => new PluginPDF(),
+        ["csv"] = () => new PluginCSV()
+    };
+    
+    public IPlugin Crear(string tipo) =>
+        _registro.TryGetValue(tipo.ToLower(), out var factory)
+            ? factory()
+            : throw new ArgumentException($"Plugin '{tipo}' no encontrado");
+}
+
+// Uso
+var factory = new PluginFactory();
+var plugin = factory.Crear("pdf");
+Console.WriteLine(plugin.Ejecutar());
+```
+
+### Builder (fluent)
+```csharp
+class Pedido
+{
+    public string Cliente { get; set; }
+    public List<string> Productos { get; set; } = [];
+    public string Direccion { get; set; }
+    public bool EnvioGratis { get; set; }
+    
+    public override string ToString() =>
+        $"Pedido de {Cliente}: {string.Join(", ", Productos)} a {Direccion}";
+}
+
+class PedidoBuilder
+{
+    private readonly Pedido _pedido = new();
+    
+    public PedidoBuilder Para(string cliente)
+    {
+        _pedido.Cliente = cliente;
+        return this;
+    }
+    
+    public PedidoBuilder AgregarProducto(string producto)
+    {
+        _pedido.Productos.Add(producto);
+        return this;
+    }
+    
+    public PedidoBuilder ConDireccion(string direccion)
+    {
+        _pedido.Direccion = direccion;
+        return this;
+    }
+    
+    public PedidoBuilder EnvioGratuito(bool gratis)
+    {
+        _pedido.EnvioGratis = gratis;
+        return this;
+    }
+    
+    public Pedido Build() => _pedido;
+}
+
+// Uso
+var pedido = new PedidoBuilder()
+    .Para("Ana López")
+    .AgregarProducto("Laptop")
+    .AgregarProducto("Mouse")
+    .ConDireccion("Calle Mayor 123")
+    .EnvioGratuito(true)
+    .Build();
+
+Console.WriteLine(pedido);
+```
+
+### Adapter
+```csharp
+// Sistema existente (viejo)
+class SistemaViejo
+{
+    public List<string[]> Query(string sql)
+    {
+        return [["resultado"]];
+    }
+}
+
+// Sistema nuevo (async)
+class SistemaNuevo
+{
+    public async Task<List<string[]>> ExecuteAsync(string query)
+    {
+        await Task.Delay(10);
+        return [["resultado"]];
+    }
+}
+
+// Target interface
+interface IDBAdapter
+{
+    List<string[]> Query(string sql);
+}
+
+// Adapter para SistemaViejo
+class AdaptadorViejo : IDBAdapter
+{
+    private readonly SistemaViejo _backend;
+    public AdaptadorViejo(SistemaViejo backend) => _backend = backend;
+    public List<string[]> Query(string sql) => _backend.Query(sql);
+}
+
+// Adapter para SistemaNuevo
+class AdaptadorNuevo : IDBAdapter
+{
+    private readonly SistemaNuevo _backend;
+    public AdaptadorNuevo(SistemaNuevo backend) => _backend = backend;
+    public List<string[]> Query(string sql) =>
+        _backend.ExecuteAsync(sql).GetAwaiter().GetResult();
+}
+
+// Uso
+IDBAdapter db = new AdaptadorViejo(new SistemaViejo());
+Console.WriteLine(db.Query("SELECT 1")[0][0]);
+
+db = new AdaptadorNuevo(new SistemaNuevo());
+Console.WriteLine(db.Query("SELECT 1")[0][0]);
+```
+
+---
+
+## Polimorfismo en detalle
+
+C# tiene varias formas de polimorfismo. Todas coexisten en el mismo código.
+
+### 1. Polimorfismo por herencia (virtual/override)
+```csharp
+class Animal
+{
+    public virtual string Sonido() => "...";
+}
+
+class Perro : Animal
+{
+    public override string Sonido() => "Guau";
+}
+
+class Gato : Animal
+{
+    public override string Sonido() => "Miau";
+}
+
+// Dynamic dispatch en runtime
+void HacerSonido(Animal animal)
+{
+    Console.WriteLine(animal.Sonido());  // Llama al método correcto según el tipo real
+}
+
+HacerSonido(new Perro());  // Guau
+HacerSonido(new Gato());   // Miau
+```
+
+### 2. Polimorfismo por interfaz
+```csharp
+interface IForma
+{
+    double Area();
+}
+
+class Circulo : IForma
+{
+    public double Radio { get; }
+    public Circulo(double radio) => Radio = radio;
+    public double Area() => Math.PI * Radio * Radio;
+}
+
+class Rectangulo : IForma
+{
+    public double Ancho { get; }
+    public double Alto { get; }
+    public Rectangulo(double ancho, double alto) => (Ancho, Alto) = (ancho, alto);
+    public double Area() => Ancho * Alto;
+}
+
+void MostrarArea(IForma forma)
+{
+    Console.WriteLine($"Área: {forma.Area():F2}");
+}
+
+MostrarArea(new Circulo(5));       // Área: 78.54
+MostrarArea(new Rectangulo(3, 4)); // Área: 12.00
+```
+
+### 3. Polimorfismo paramétrico (genéricos)
+```csharp
+// Un método que funciona para cualquier tipo T
+T Max<T>(T a, T b) where T : IComparable<T>
+{
+    return a.CompareTo(b) > 0 ? a : b;
+}
+
+Console.WriteLine(Max(3, 7));       // 7 (int)
+Console.WriteLine(Max("Ana", "Juan"));  // "Juan" (string)
+```
+
+### 4. Ad-hoc polymorphism (sobrecarga)
+```csharp
+class Calculadora
+{
+    public int Sumar(int a, int b) => a + b;
+    public double Sumar(double a, double b) => a + b;
+    public string Sumar(string a, string b) => a + b;
+    public int Sumar(params int[] nums) => nums.Sum();
+}
+```
+
+### 5. Dynamic dispatch con virtual/override (en detalle)
+
+```csharp
+class Base
+{
+    public virtual void MetodoVirtual() => Console.WriteLine("Base.Virtual");
+    public void MetodoNoVirtual() => Console.WriteLine("Base.NoVirtual");
+}
+
+class Derivada : Base
+{
+    public override void MetodoVirtual() => Console.WriteLine("Derivada.Virtual");
+    public new void MetodoNoVirtual() => Console.WriteLine("Derivada.NoVirtual"); // Shadowing
+}
+
+// Uso
+Base b = new Derivada();
+b.MetodoVirtual();     // "Derivada.Virtual" — dynamic dispatch (vtable)
+b.MetodoNoVirtual();   // "Base.NoVirtual" — static dispatch (tipo compile-time)
+
+Derivada d = new Derivada();
+d.MetodoNoVirtual();   // "Derivada.NoVirtual"
+```
+
+La **vtable** (virtual method table) es el mecanismo interno: cada clase tiene una tabla con punteros a las implementaciones virtuales. `override` actualiza la entrada en la vtable. `new` crea una nueva entrada separada.
+
+---
+
+## Multimedia y gráficos
+
+### System.Drawing (solo Windows)
+
+System.Drawing es la API clásica de GDI+ para Windows. No es multiplataforma (solo funciona en Windows).
+
+```csharp
+using System.Drawing;
+
+// Cargar y redimensionar imagen
+using var original = Image.FromFile("foto.jpg");
+using var thumbnail = new Bitmap(200, 200);
+using var graphics = Graphics.FromImage(thumbnail);
+graphics.DrawImage(original, 0, 0, 200, 200);
+thumbnail.Save("thumb.jpg");
+
+// Dibujar formas
+using var bmp = new Bitmap(400, 300);
+using var g = Graphics.FromImage(bmp);
+g.Clear(Color.White);
+using var pen = new Pen(Color.Blue, 3);
+g.DrawRectangle(pen, 50, 50, 200, 100);
+g.DrawLine(pen, 0, 0, 400, 300);
+g.FillEllipse(Brushes.Red, 150, 100, 100, 100);
+bmp.Save("dibujo.png", System.Drawing.Imaging.ImageFormat.Png);
+```
+
+**⚠️ Advertencia:** System.Drawing solo funciona en Windows. Para servidores Linux/macOS usa SkiaSharp o ImageSharp.
+
+### SkiaSharp (multiplataforma)
+
+SkiaSharp es el binding .NET de Skia, el motor gráfico de Google Chrome y Android. Funciona en Windows, Linux, macOS, iOS y Android.
+
+```bash
+dotnet add package SkiaSharp
+```
+
+```csharp
+using SkiaSharp;
+
+// Crear un canvas y dibujar
+using var surface = SKSurface.Create(new SKImageInfo(400, 300));
+var canvas = surface.Canvas;
+
+canvas.Clear(SKColors.White);
+
+// Paint (estilo de dibujo)
+using var paint = new SKPaint
+{
+    Color = SKColors.Blue,
+    Style = SKPaintStyle.Fill,
+    StrokeWidth = 3
+};
+
+// Formas
+canvas.DrawRect(new SKRect(50, 50, 250, 150), paint);
+
+paint.Color = SKColors.Red;
+canvas.DrawCircle(200, 150, 50, paint);
+
+// Texto
+paint.Color = SKColors.Black;
+paint.TextSize = 24;
+canvas.DrawText("Hola SkiaSharp", 50, 250, paint);
+
+// Guardar como PNG
+using var image = surface.Snapshot();
+using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+using var stream = File.OpenWrite("salida.png");
+data.SaveTo(stream);
+
+// Cargar imagen
+using var original = SKBitmap.Decode("foto.jpg");
+using var redimensionado = original.Resize(new SKImageInfo(200, 200), SKFilterQuality.Medium);
+```
+
+### ImageSharp (SixLabors)
+
+ImageSharp es una librería puramente .NET, sin dependencias nativas. Multiplataforma, API moderna.
+
+```bash
+dotnet add package SixLabors.ImageSharp
+```
+
+```csharp
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
+
+// Cargar y procesar
+using var img = await Image.LoadAsync("foto.jpg");
+img.Mutate(ctx => ctx
+    .Resize(200, 200)
+    .Grayscale()
+    .Contrast(1.2f));
+
+await img.SaveAsPngAsync("procesada.png");
+
+// Dibujar texto
+img.Mutate(ctx => ctx
+    .DrawText("Watermark", new Font("Arial", 24), Color.White, new PointF(10, 10)));
+```
+
+### OpenTK (OpenGL)
+
+OpenTK provee bindings de OpenGL, OpenAL y GLFW para .NET.
+
+```bash
+dotnet add package OpenTK
+```
+
+```csharp
+using OpenTK.Graphics.OpenGL4;
+using OpenTK.Windowing.Common;
+using OpenTK.Windowing.Desktop;
+
+public class Ventana : GameWindow
+{
+    public Ventana() : base(new GameWindowSettings(), new NativeWindowSettings
+    {
+        Size = (800, 600),
+        Title = "Hola OpenTK"
+    }) { }
+
+    protected override void OnLoad()
+    {
+        GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        base.OnLoad();
+    }
+
+    protected override void OnRenderFrame(FrameEventArgs args)
+    {
+        GL.Clear(ClearBufferMask.ColorBufferBit);
+        SwapBuffers();
+        base.OnRenderFrame(args);
+    }
+}
+
+// Program.cs
+using var ventana = new Ventana();
+ventana.Run();
+```
+
+### FFmpeg.Autogen
+
+Bindings para FFmpeg desde C#. Permite manipular audio/video a nivel de frames y codecs.
+
+```bash
+dotnet add package FFmpeg.Autogen
+```
+
+Requiere binarios de FFmpeg nativos (`ffmpeg`, `ffprobe`).
+
+### NAudio (audio)
+
+Librería para reproducción, grabación y procesamiento de audio en Windows.
+
+```bash
+dotnet add package NAudio
+```
+
+```csharp
+using NAudio.Wave;
+
+// Reproducir archivo WAV
+using var reader = new AudioFileReader("sonido.wav");
+using var output = new WaveOutEvent();
+output.Init(reader);
+output.Play();
+
+// Generar tono
+var signal = new SignalGenerator
+{
+    Type = SignalGeneratorType.Sin,
+    Frequency = 440,
+    Gain = 0.5,
+    Duration = TimeSpan.FromSeconds(2)
+};
+```
+
+### OpenCVSharp (visión artificial)
+
+OpenCVSharp es el binding de OpenCV para C#.
+
+```bash
+dotnet add package OpenCvSharp4
+```
+
+```csharp
+using OpenCvSharp;
+
+// Cargar y mostrar imagen
+using var img = Cv2.ImRead("foto.jpg");
+Cv2.ImShow("Ventana", img);
+Cv2.WaitKey(0);
+
+// Detección de bordes (Canny)
+using var gray = img.CvtColor(ColorConversionCodes.BGR2GRAY);
+using var edges = gray.Canny(50, 150);
+Cv2.ImWrite("bordes.jpg", edges);
+```
+
+### Comparativa
+
+| Librería | Plataforma | Ideal para |
+|---|---|---|
+| **System.Drawing** | Solo Windows | Legacy, apps Windows Forms/WPF |
+| **SkiaSharp** | Multiplataforma (Win, Linux, macOS, mobile) | Gráficos 2D, UI personalizada, servidores |
+| **ImageSharp** | Multiplataforma (puro .NET) | Procesamiento de imágenes en servidores |
+| **OpenTK** | Multiplataforma | Juegos 3D, gráficos OpenGL |
+| **FFmpeg.Autogen** | Multiplataforma (necesita FFmpeg) | Procesamiento de video, transcodificación |
+| **NAudio** | Solo Windows | Reproducción/grabación de audio |
+| **OpenCVSharp** | Multiplataforma (necesita OpenCV) | Visión artificial, detección facial, OCR |
+
+Fuente: [SkiaSharp docs](https://learn.microsoft.com/en-us/dotnet/maui/graphics/skiasharp), [ImageSharp](https://docs.sixlabors.com/index.html), [OpenTK](https://opentk.net/), [NAudio](https://github.com/naudio/NAudio), [OpenCVSharp](https://github.com/shimat/opencvsharp), [FFmpeg.Autogen](https://github.com/Ruslan-B/FFmpeg.Autogen)
+
+---
+
+## Bases de datos
+
+### Entity Framework Core
+
+EF Core es el ORM oficial de Microsoft. Code-first, migrations, soporte para múltiples bases de datos.
+
+```bash
+dotnet add package Microsoft.EntityFrameworkCore.Sqlite
+dotnet add package Microsoft.EntityFrameworkCore.SqlServer
+dotnet add package Npgsql.EntityFrameworkCore.PostgreSQL
+dotnet add package Pomelo.EntityFrameworkCore.MySql
+```
+
+```csharp
+using Microsoft.EntityFrameworkCore;
+
+// Modelo
+public class Usuario
+{
+    public int Id { get; set; }
+    public required string Nombre { get; set; }
+    public required string Email { get; set; }
+    public List<Post> Posts { get; set; } = [];
+}
+
+public class Post
+{
+    public int Id { get; set; }
+    public required string Titulo { get; set; }
+    public required string Contenido { get; set; }
+    public int UsuarioId { get; set; }
+    public Usuario? Usuario { get; set; }
+}
+
+// DbContext
+public class AppDbContext : DbContext
+{
+    public DbSet<Usuario> Usuarios => Set<Usuario>();
+    public DbSet<Post> Posts => Set<Post>();
+    
+    protected override void OnConfiguring(DbContextOptionsBuilder options)
+        => options.UseSqlite("Data Source=app.db");
+    
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Post>()
+            .HasOne(p => p.Usuario)
+            .WithMany(u => u.Posts)
+            .HasForeignKey(p => p.UsuarioId);
+    }
+}
+
+// Migrations
+// dotnet tool install --global dotnet-ef
+// dotnet ef migrations add InitialCreate
+// dotnet ef database update
+
+// CRUD
+using var db = new AppDbContext();
+db.Database.EnsureCreated();
+
+var usuario = new Usuario { Nombre = "Ana", Email = "ana@email.com" };
+db.Usuarios.Add(usuario);
+db.SaveChanges();
+
+var usuarios = db.Usuarios
+    .Where(u => u.Email.Contains("@"))
+    .OrderBy(u => u.Nombre)
+    .ToList();
+
+// Con relaciones (eager loading)
+var posts = db.Posts
+    .Include(p => p.Usuario)
+    .Where(p => p.Titulo.Contains("C#"))
+    .ToList();
+```
+
+### Dapper (micro-ORM)
+
+Dapper es un micro-ORM desarrollado por Stack Overflow. Extremadamente rápido, queries SQL manuales.
+
+```bash
+dotnet add package Dapper
+```
+
+```csharp
+using Dapper;
+using System.Data.SQLite;
+
+// Dapper no necesita modelos mapeados — usa tipos C# directamente
+public record UsuarioDTO(int Id, string Nombre, string Email);
+
+using var conn = new SQLiteConnection("Data Source=app.db");
+
+// Query → lista de objetos
+var usuarios = conn.Query<UsuarioDTO>("SELECT Id, Nombre, Email FROM Usuarios");
+
+// Query con parámetros (seguro, sin SQL injection)
+var usuario = conn.QueryFirstOrDefault<UsuarioDTO>(
+    "SELECT * FROM Usuarios WHERE Id = @Id",
+    new { Id = 1 });
+
+// Execute (INSERT/UPDATE/DELETE)
+conn.Execute(
+    "INSERT INTO Usuarios (Nombre, Email) VALUES (@Nombre, @Email)",
+    new { Nombre = "Luis", Email = "luis@email.com" });
+
+// Multiples rows en una llamada
+conn.Execute(@"
+    INSERT INTO Usuarios (Nombre, Email) VALUES (@Nombre, @Email)",
+    new[] {
+        new { Nombre = "A", Email = "a@e.com" },
+        new { Nombre = "B", Email = "b@e.com" }
+    });
+
+// Stored procedures
+var result = conn.Query("usp_ObtenerUsuarios", 
+    commandType: CommandType.StoredProcedure);
+```
+
+### ADO.NET (driver puro)
+
+```csharp
+using System.Data.SQLite;
+
+using var conn = new SQLiteConnection("Data Source=app.db");
+conn.Open();
+
+using var cmd = new SQLiteCommand("SELECT * FROM Usuarios WHERE Id = @id", conn);
+cmd.Parameters.AddWithValue("@id", 1);
+
+using var reader = cmd.ExecuteReader();
+while (reader.Read())
+{
+    Console.WriteLine($"{reader["Nombre"]} - {reader["Email"]}");
+}
+```
+
+### PostgreSQL con Npgsql
+
+```bash
+dotnet add package Npgsql
+dotnet add package Npgsql.EntityFrameworkCore.PostgreSQL
+```
+
+```csharp
+// Configuración EF Core con PostgreSQL
+public class AppDbContext : DbContext
+{
+    protected override void OnConfiguring(DbContextOptionsBuilder options)
+        => options.UseNpgsql("Host=localhost;Database=mydb;Username=user;Password=pass");
+}
+
+// Dapper + Npgsql
+using var conn = new NpgsqlConnection("Host=localhost;Database=mydb;Username=user;Password=pass");
+var usuarios = conn.Query("SELECT * FROM Usuarios");
+
+// PostgreSQL específico: arrays, JSON, PostGIS
+var resultado = conn.Query<string>(
+    "SELECT array_agg(nombre) FROM usuarios");
+```
+
+### Comparativa de opciones
+
+| Librería | Async | ORM | Para qué |
+|---|---|---|---|
+| **EF Core** | Sí | ORM completo | Aplicaciones con modelo de datos complejo, migraciones automáticas |
+| **Dapper** | Sí | No (micro-ORM) | Rendimiento máximo, queries SQL manuales, APIs de alto tráfico |
+| **ADO.NET** | Sí | No (driver puro) | Control total, acceso raw a BD, legacy |
+| **Npgsql** | Sí | No (driver PgSQL) | Conexión directa a PostgreSQL, features específicas de Pg |
+| **SqlKata** | Sí | Query builder | Entre Dapper y EF, construye queries sin SQL bruto |
+| **RepoTools** | Sí | Scaffolding | Genera código de repositorio a partir de esquema BD |
+
+### Migraciones con EF Core
+
+```bash
+# Instalar herramienta global
+dotnet tool install --global dotnet-ef
+
+# Crear migración
+dotnet ef migrations add AgregarUsuarios
+
+# Aplicar a BD
+dotnet ef database update
+
+# Revertir
+dotnet ef database update UltimaMigracionBuena
+
+# Generar script SQL
+dotnet ef migrations script -o migracion.sql
+
+# En producción:
+dotnet ef database update --connection "ConnectionString"
+```
+
+Fuente: [EF Core docs](https://learn.microsoft.com/en-us/ef/), [Dapper GitHub](https://github.com/DapperLib/Dapper), [Npgsql docs](https://www.npgsql.org/doc/)
+
+---
+
+## WebSockets
+
+### ASP.NET Core SignalR
+
+SignalR es la librería oficial de Microsoft para comunicación en tiempo real. Soporta WebSocket, Server-Sent Events, y Long Polling con fallback automático.
+
+```csharp
+// Hub — componente central de SignalR
+public class ChatHub : Hub
+{
+    public async Task EnviarMensaje(string usuario, string mensaje)
+    {
+        // Broadcast a todos los clientes conectados
+        await Clients.All.SendAsync("RecibirMensaje", usuario, mensaje);
+    }
+    
+    public async Task EnviarAPrincipal(string mensaje)
+    {
+        // Enviar solo al grupo "Principal"
+        await Clients.Group("Principal").SendAsync("MensajeGrupo", mensaje);
+    }
+    
+    public override async Task OnConnectedAsync()
+    {
+        await Groups.AddToGroupAsync(Context.ConnectionId, "Principal");
+        await base.OnConnectedAsync();
+    }
+}
+
+// Program.cs — configuración
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddSignalR();
 var app = builder.Build();
 
-app.MapGet("/", () => "Hola Mundo");
+app.MapHub<ChatHub>("/chat");
 
 app.Run();
 ```
-### Entity Framework Core
-**Instalación:** `dotnet add package Microsoft.EntityFrameworkCore.Sqlite`
-ORM moderno. Code-first, migraciones, lazy loading. Soporta SQL Server, SQLite, PostgreSQL, MySQL.
-```csharp
-public class BlogContext : DbContext {
-    public DbSet<Post> Posts => Set<Post>();
-}
 
-public record Post(int Id, string Titulo, string Contenido);
+```javascript
+// Cliente JavaScript
+const connection = new signalR.HubConnectionBuilder()
+    .withUrl("/chat")
+    .build();
+
+connection.on("RecibirMensaje", (usuario, mensaje) => {
+    console.log(`${usuario}: ${mensaje}`);
+});
+
+await connection.start();
+await connection.invoke("EnviarMensaje", "Ana", "Hola!");
 ```
 
-## 📝 Ejercicios Prácticos
+### WebSocket nativo (sin SignalR)
 
-1. **LINQ** 🟢 `[Fácil]` — Filtra pares de una lista, ordénalos descendente, toma los 5 primeros. Hazlo con method y query syntax.
-2. **Minimal API** 🟡 `[Intermedio]` — CRUD de productos con endpoints GET/POST/PUT/DELETE usando List&lt;Producto&gt; estática.
-3. **Async I/O** 🟡 `[Intermedio]` — Lee archivo grande asincrónicamente con StreamReader, procesa línea por línea, escribe resultados.
-4. **EF Core + SQLite** 🔴 `[Avanzado]` — Configura BD SQLite con EF Core, migraciones, CRUD completo con ASP.NET Core.
+```csharp
+// Servidor WebSocket con ASP.NET Core
+var builder = WebApplication.CreateBuilder(args);
+var app = builder.Build();
 
-## ⚡ Buenas Prácticas y Complejidad
+app.UseWebSockets();
 
-**Buenas prácticas:**
+var conexiones = new HashSet<WebSocket>();
 
-- Usa `record` para modelos de datos inmutables.
-- Prefiere `async Task` sobre `async void` (excepto event handlers).
-- Configura nullable reference types (`<Nullable>enable</Nullable>`) desde el inicio.
-- Usa `StringBuilder` para concatenaciones en bucles grandes.
-- Implementa `IEquatable<T>` para comparaciones personalizadas.
+app.Map("/ws", async (HttpContext context) =>
+{
+    if (!context.WebSockets.IsWebSocketRequest)
+    {
+        context.Response.StatusCode = 400;
+        return;
+    }
+    
+    var ws = await context.WebSockets.AcceptWebSocketAsync();
+    conexiones.Add(ws);
+    
+    try
+    {
+        var buffer = new byte[1024];
+        while (ws.State == WebSocketState.Open)
+        {
+            var result = await ws.ReceiveAsync(buffer, CancellationToken.None);
+            
+            if (result.MessageType == WebSocketMessageType.Close)
+                break;
+            
+            // Broadcast a todos
+            foreach (var conn in conexiones.Where(c => c.State == WebSocketState.Open))
+            {
+                await conn.SendAsync(buffer[..result.Count], 
+                    result.MessageType, true, CancellationToken.None);
+            }
+        }
+    }
+    finally
+    {
+        conexiones.Remove(ws);
+        if (ws.State != WebSocketState.Closed)
+            await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closed", CancellationToken.None);
+    }
+});
 
-**Complejidad algorítmica (Big O):**
+app.Run();
+```
 
-List&lt;T&gt;: acceso O(1), inserción O(n). Dictionary&lt;K,V&gt;: O(1) promedio. HashSet&lt;T&gt;: O(1). LINQ Where/Select: O(n). OrderBy: O(n log n). GroupBy: O(n).
+### Cliente WebSocket nativo
 
-## 📚 Recursos y Documentación
+```csharp
+using System.Net.WebSockets;
 
-- 📖 [Microsoft .NET Docs](https://learn.microsoft.com/en-us/dotnet/)
-- 📖 [ASP.NET Core Docs](https://learn.microsoft.com/en-us/aspnet/core/)
-- 📖 [C# en GitHub](https://github.com/dotnet/csharplang)
-- 📖 [.NET Blog](https://devblogs.microsoft.com/dotnet/)
-- 📖 [Entity Framework Docs](https://learn.microsoft.com/en-us/ef/)
+async Task EscucharWebSocket()
+{
+    using var ws = new ClientWebSocket();
+    await ws.ConnectAsync(new Uri("wss://ejemplo.com/ws"), CancellationToken.None);
+    
+    // Enviar mensaje
+    var enviar = "Hola servidor"u8.ToArray();
+    await ws.SendAsync(enviar, WebSocketMessageType.Text, true, CancellationToken.None);
+    
+    // Recibir respuesta
+    var buffer = new byte[1024];
+    var result = await ws.ReceiveAsync(buffer, CancellationToken.None);
+    var mensaje = System.Text.Encoding.UTF8.GetString(buffer, 0, result.Count);
+    Console.WriteLine($"Recibido: {mensaje}");
+    
+    await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "Adios", CancellationToken.None);
+}
+```
 
-### 🏆 Retos Relacionados
+### ¿Cuándo usar qué?
+
+| Tecnología | Para qué |
+|---|---|
+| **SignalR** | Comunicación en tiempo real con fallback automático (WSS → SSE → Long Polling), broadcasting, grupos, escalabilidad con Redis backplane |
+| **WebSocket nativo** | Control total sobre el protocolo, bajo nivel, integración con servicios que no son .NET |
+| **gRPC streaming** | Comunicación bidireccional entre microservicios, contratos con protobuf |
+| **Azure SignalR Service** | Escalar SignalR a miles de conexiones sin gestionar servidores propios |
+
+Fuente: [SignalR docs](https://learn.microsoft.com/en-us/aspnet/core/signalr/), [WebSocket docs](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/websockets)
+
+---
+
+## Concurrencia y paralelismo
+
+### Task Parallel Library (TPL)
+
+TPL es el marco de trabajo base para concurrencia en .NET. `Task` representa una operación asíncrona.
+
+```csharp
+// Task.Run — ejecuta en ThreadPool
+Task tarea = Task.Run(() =>
+{
+    Thread.Sleep(1000);
+    Console.WriteLine("Tarea completada");
+});
+
+// Task<T> con resultado
+Task<int> calculo = Task.Run(() =>
+{
+    int suma = 0;
+    for (int i = 0; i < 100; i++) suma += i;
+    return suma;
+});
+
+int resultado = await calculo;  // async/await
+// O: int resultado = calculo.Result;  // BLOQUEA (evitar)
+
+// Esperar múltiples tareas
+var tareas = new Task[3];
+for (int i = 0; i < 3; i++)
+{
+    int id = i;
+    tareas[i] = Task.Run(() => ProcessItem(id));
+}
+await Task.WhenAll(tareas);
+```
+
+### Parallel.For, Parallel.ForEach
+
+```csharp
+// Parallel.For — iteración paralela (CPU-bound)
+Parallel.For(0, 100, i =>
+{
+    Console.WriteLine($"Procesando {i} en hilo {Environment.CurrentManagedThreadId}");
+});
+
+// Parallel.ForEach
+var items = Enumerable.Range(0, 100);
+Parallel.ForEach(items, item =>
+{
+    var resultado = OperacionCostosa(item);
+});
+
+// Control de grado de paralelismo
+var options = new ParallelOptions { MaxDegreeOfParallelism = 4 };
+Parallel.ForEach(items, options, item => Process(item));
+```
+
+### PLINQ (Parallel LINQ)
+
+```csharp
+var numeros = Enumerable.Range(1, 10_000_000);
+
+// Automáticamente paralelizado
+var pares = numeros
+    .AsParallel()
+    .Where(n => n % 2 == 0)
+    .Select(n => Math.Sqrt(n))
+    .ToArray();
+
+// Forzar orden (más lento pero predecible)
+var ordenado = numeros
+    .AsParallel()
+    .AsOrdered()
+    .Where(n => n > 1_000_000)
+    .ToArray();
+
+// Parallel query con merge options
+var resultado = numeros
+    .AsParallel()
+    .WithMergeOptions(ParallelMergeOptions.NotBuffered)  // Resultados tan pronto como estén listos
+    .Where(EsPrimo)
+    .Take(10);
+```
+
+### Channel&lt;T&gt; (System.Threading.Channels)
+
+Channels es la implementación .NET del patrón productor-consumidor, similar a Go channels.
+
+```bash
+dotnet add package System.Threading.Channels
+```
+
+```csharp
+using System.Threading.Channels;
+
+var channel = Channel.CreateUnbounded<int>();
+
+// Productor
+async Task ProductorAsync(ChannelWriter<int> writer)
+{
+    for (int i = 0; i < 10; i++)
+    {
+        await writer.WriteAsync(i);
+        await Task.Delay(100);
+    }
+    writer.Complete();
+}
+
+// Consumidor
+async Task ConsumidorAsync(ChannelReader<int> reader)
+{
+    await foreach (int item in reader.ReadAllAsync())
+    {
+        Console.WriteLine($"Consumido: {item}");
+    }
+}
+
+// Ejecutar productor y consumidor en paralelo
+var productor = ProductorAsync(channel.Writer);
+var consumidor = ConsumidorAsync(channel.Reader);
+await Task.WhenAll(productor, consumidor);
+```
+
+### lock y sincronización básica
+
+```csharp
+class ContadorSeguro
+{
+    private int _contador;
+    private readonly object _lock = new();
+    
+    public void Incrementar()
+    {
+        lock (_lock)
+        {
+            _contador++;
+        }
+    }
+    
+    public int Obtener()
+    {
+        lock (_lock)
+        {
+            return _contador;
+        }
+    }
+}
+
+// Alternativas modernas:
+// - Monitor (lock es sugar syntax para Monitor.Enter/Exit)
+// - Mutex (entre procesos)
+// - SemaphoreSlim (para limitar acceso concurrente)
+// - ReaderWriterLockSlim (lectores múltiples, escritor exclusivo)
+// - SpinLock (para esperas muy cortas, evita cambio de contexto)
+```
+
+### Interlocked (operaciones atómicas)
+
+```csharp
+class Estadisticas
+{
+    private long _llamadas;
+    private long _errores;
+    
+    public void RegistrarLlamada()
+    {
+        Interlocked.Increment(ref _llamadas);
+    }
+    
+    public void RegistrarError()
+    {
+        Interlocked.Increment(ref _errores);
+    }
+    
+    public (long Llamadas, long Errores) Obtener()
+    {
+        return (Interlocked.Read(ref _llamadas), Interlocked.Read(ref _errores));
+    }
+}
+
+// Otros métodos de Interlocked:
+Interlocked.Add(ref valor, 5);        // Suma atómica
+Interlocked.Exchange(ref valor, 10);  // Asignación atómica
+Interlocked.CompareExchange(ref valor, nuevo, comparacion);  // CAS (Compare-And-Swap)
+Interlocked.Decrement(ref valor);     // Decremento atómico
+```
+
+### Tabla de usos de concurrencia
+
+| Escenario | Herramienta | Ejemplo |
+|---|---|---|
+| I/O-bound (HTTP, BD, archivos) | `async/await` + `Task` | Llamadas a API, consultas BD |
+| CPU-bound (cálculos) | `Parallel.For` / PLINQ | Procesamiento de imágenes, álgebra |
+| Productor-consumidor | `Channel<T>` | Procesamiento de streams, colas en memoria |
+| Exclusión mutua (recurso compartido) | `lock` o `Monitor` | Contadores, cachés simples |
+| Operaciones atómicas | `Interlocked` | Contadores de rendimiento, flags |
+| Sincronización entre procesos | `Mutex`, `Semaphore` | Archivos compartidos, IPCs |
+| Lectura/escritura (muchos lectores) | `ReaderWriterLockSlim` | Cachés concurrentes |
+| Cola thread-safe para productores múltiples | `ConcurrentQueue<T>` | Logging, eventos |
+| Diccionario thread-safe | `ConcurrentDictionary<K,V>` | Cachés compartidos |
+| Tareas con timeout | `CancellationTokenSource` | Cancelación de operaciones largas |
+| Streams asíncronos | `IAsyncEnumerable<T>` | Paginación, streaming de datos |
+
+### Buenas prácticas de concurrencia
+
+```csharp
+// ✅ Hacer: async/await de arriba a abajo
+public async Task<string> ObtenerDatosAsync()
+{
+    using var client = new HttpClient();
+    return await client.GetStringAsync("https://api.example.com");
+}
+
+// ✅ Hacer: usar Task.WhenAll para concurrencia independiente
+var t1 = Task1Async();
+var t2 = Task2Async();
+await Task.WhenAll(t1, t2);
+
+// ✅ Hacer: CancellationToken para operaciones largas
+await operacionAsync(cts.Token);
+
+// ❌ Evitar: .Result o .Wait() (deadlock)
+// var r = tarea.Result;  // ❌
+
+// ❌ Evitar: async void (excepto eventos)
+// public async void Procesar() { }  // ❌
+
+// ❌ Evitar: Task.Run para operaciones que ya son async
+// await Task.Run(() => MetodoAsync());  // ❌
+
+// ❌ Evitar: lock en código async (no compila)
+// lock (_lock) { await Something(); }  // ❌
+```
+
+Fuente: [Task Parallel Library docs](https://learn.microsoft.com/en-us/dotnet/standard/parallel-programming/task-parallel-library-tpl), [Parallel Programming](https://learn.microsoft.com/en-us/dotnet/standard/parallel-programming/), [Channels docs](https://learn.microsoft.com/en-us/dotnet/core/extensions/channels)
+
+---
+
+## Escala de aprendizaje: de 0 a 100
+
+Cada nivel incluye lo que debes saber y un proyecto para fijar los conceptos.
+
+### Nivel 0–15: Fundamentos absolutos
+**Qué aprender:**
+- Sintaxis básica: `Console.WriteLine()`, variables, tipos (`int`, `string`, `double`, `bool`, `decimal`)
+- Control de flujo: `if`/`else if`/`else`, `switch` (tradicional y expression), `for`, `foreach`, `while`, `do-while`
+- Pattern matching básico: type pattern, switch expression, property pattern
+- Arrays y `List<T>`: acceso por índice, `Add()`, `Remove()`, `Count`
+- Métodos: `static`, parámetros, `return`, sobrecarga
+- Paradigmas: qué significa multiparadigma, diferencia entre imperativo, POO y funcional
+- **Conceptos clave**: diferencia entre value type (`int`, `struct`) y reference type (`class`, `string`). `string` es inmutable — cada concatenación crea una nueva. `var` infiere el tipo pero es tipado estático. `using` para recursos.
+
+**Proyecto:** *Calculadora CLI* — suma, resta, multiplica, divide. Bucle `while` para repetir. Manejo de división por cero con `try/catch`. Menú con `switch` expression. Pattern matching para clasificar resultados. Muestra resultados con formato `$"Resultado: {resultado:F2}"`.
+
+### Nivel 15–30: POO, tipos avanzados y colecciones
+**Qué aprender:**
+- Clases: constructores, fields, propiedades (`{ get; set; }`), métodos
+- Encapsulación: `private`, `public`, `protected`, propiedades con lógica
+- Namespaces, `using` (global, static, alias), file-scoped namespaces
+- `enum` para constantes con nombre
+- `record` para datos inmutables (C# 9+)
+- `struct` para tipos de valor pequeños
+- Tipos de datos: value types vs reference types, built-in (`int`, `long`, `float`, `double`, `decimal`, `char`, `bool`), nullable value types (`int?`), nullable reference types (`string?`), `var`, `dynamic`, `object`
+- `string`: inmutabilidad, `Split()`, `Join()`, `Replace()`, `Contains()`, `StringBuilder`
+- Arrays: multidimensional, jagged, covarianza
+- Colecciones: `List<T>`, `Dictionary<K,V>`, `HashSet<T>`, `Queue<T>`, `Stack<T>`
+- `DateTime` y `TimeSpan`
+- **Conceptos clave**: `readonly` vs `const`. Boxing/unboxing — cuándo ocurre y cómo evitarlo. Stack vs heap. Propiedades auto-implementadas. Inicializadores de objeto.
+
+**Proyecto:** *Gestor de tareas CLI* — clase `Tarea` con `Id`, `Titulo`, `Completada`, `FechaCreacion`. `List<Tarea>` como almacenamiento. `Dictionary<string, Tarea>` para búsquedas rápidas. Comandos: `add`, `list`, `done`, `delete`. Persistencia con `System.Text.Json`. Switch expression para procesar comandos. Nullable reference types para manejar valores opcionales.
+
+### Nivel 30–45: Herencia, interfaces, LINQ, archivos y algoritmos
+**Qué aprender:**
+- Herencia: `class Derivada : Base`, `base()`, `virtual/override`, `sealed`
+- Clases abstractas vs interfaces: cuándo usar cada una
+- Interfaces: `IComparable<T>`, `IDisposable`, `IEnumerable<T>`, interfaces propias
+- LINQ: method syntax (`Where`, `Select`, `OrderBy`, `GroupBy`, `Join`, `Aggregate`) y query syntax
+- Delegados: `Func<>`, `Action<>`, `Predicate<>`
+- Lambdas: `(x, y) => x + y`, lambdas estáticas y naturales
+- Sistema de archivos: `System.IO` (`File`, `FileInfo`, `Directory`, `Path`), `StreamReader`/`Writer`, `FileStream`
+- Algoritmos: `Array.Sort` (Introsort), `List.Sort`, `BinarySearch`, `Comparer<T>`, `Comparison<T>`
+- Big O de colecciones: `List<T>`, `Dictionary<K,V>`, `HashSet<T>`, `SortedDictionary<K,V>`, `SortedSet<T>`, `PriorityQueue<T>`
+- **Conceptos clave**: `IEnumerable<T>` es lazy — no se ejecuta hasta que iteres. LINQ Where/Select no modifican la colección original. Las interfaces permiten polimorfismo sin herencia. `IDisposable` + `using` para recursos no gestionados.
+
+**Proyecto:** *Sistema de inventario* — clases `Producto`, `Inventario` con `List<Producto>`. Interfaz `IAlmacenable`. LINQ para búsquedas (`Where`, `FirstOrDefault`, `OrderBy`, `GroupBy`). `IComparable<Producto>` y `Comparer<T>` para ordenación. Serialización JSON a archivo con `System.Text.Json`. `BinarySearch` para búsqueda eficiente.
+
+### Nivel 45–60: Async, genéricos y testing
+**Qué aprender:**
+- `async/await`: `Task`, `Task<T>`, `WhenAll`, `WhenAny`
+- `HttpClient` para peticiones web
+- Genéricos: clases y métodos genéricos, constraints (`where T : class`)
+- Pattern matching: switch expressions, property patterns, type patterns
+- Nullable reference types: `string?`, `??`, `?.`, `??=`
+- Testing: xUnit, NUnit, MSTest — `[Fact]`, `[Theory]`, `Assert`
+- **Conceptos clave**: async es "I/O-bound" — no crea hilos nuevos, usa el threadpool eficientemente. Evita `.Result` y `.Wait()` (deadlock). Los nullable reference types son una feature de análisis en compilación, no en runtime. Pattern matching hace el código más legible que if/else anidados.
+
+**Proyecto:** *Cliente de clima API* — llama a OpenWeatherMap o API similar con `HttpClient`. Deserializa JSON response con `System.Text.Json`. Tests unitarios con xUnit (usa `ITestOutputHelper` para debug). `CancellationToken` para timeout. Genéricos para un `IRepositorio`&lt;T&gt; base. Pattern matching para categorizar condiciones climáticas.
+
+### Nivel 60–75: ASP.NET Core, EF Core, archivos y serialización
+**Qué aprender:**
+- Minimal APIs (C# 6+): `app.MapGet/MapPost/MapPut/MapDelete`
+- Inyección de dependencias (DI): `AddScoped`, `AddTransient`, `AddSingleton`
+- Entity Framework Core: DbContext, DbSet, migraciones, LINQ queries
+- Modelos con `required` (C# 11), `init` properties, data annotations
+- Middleware pipeline: logging, autenticación, CORS
+- Configuración: `appsettings.json`, `IOptions<T>`, environment variables
+- Sistema de archivos avanzado: `FileStream` async, `StreamReader`/`Writer` async, `FileSystemWatcher`
+- Serialización: `System.Text.Json` (con Source generators), CSV con CsvHelper, YAML con YamlDotNet
+- Compresión: `System.IO.Compression` (`ZipArchive`, `GZipStream`, `DeflateStream`)
+- **Conceptos clave**: DI es nativa en ASP.NET Core — no necesitas contenedor externo. EF Core usa change tracking — `AsNoTracking()` para solo lectura. Las migraciones generan SQL, revísalo antes de aplicarlo en producción. Los middlewares son como tuberías (pipeline de request).
+
+**Proyecto:** *API de recetas* — Minimal API con endpoints CRUD para recetas e ingredientes. EF Core + SQLite. Migraciones. DI para servicios y repositorios. Búsqueda por ingrediente con LINQ. Exportación a CSV con CsvHelper. Importación desde YAML con YamlDotNet. Compresión de imágenes con `GZipStream`.
+
+### Nivel 75–90: SignalR, Dapper, multimedia y producción
+**Qué aprender:**
+- SignalR: Hubs, `Clients.All`, grupos, escalabilidad con Redis backplane
+- Dapper: queries SQL manuales, `Query<T>`, `Execute`, multi-mapping
+- Docker: Dockerfile multi-stage, docker-compose con app + db + redis
+- Caching: `IMemoryCache`, `IDistributedCache` con Redis
+- Background services: `BackgroundService` para tareas programadas
+- Health checks: `AddHealthChecks()` para monitoreo
+- OpenAPI/Swagger: documentación automática de endpoints
+- Multimedia: SkiaSharp (gráficos 2D multiplataforma), ImageSharp (procesamiento de imágenes), OpenTK (OpenGL), NAudio (audio), OpenCVSharp (visión artificial)
+- **Conceptos clave**: SignalR escala con un backplane (Redis, Azure SignalR Service). Dapper es 10-50x más rápido que EF Core para lecturas simples. SkiaSharp funciona en Windows, Linux, macOS y mobile. ImageSharp es puro .NET sin dependencias nativas. `BackgroundService` es la forma correcta de ejecutar tareas en background. Los health checks permiten a Kubernetes/orquestadores saber si la app está viva.
+
+**Proyecto:** *Dashboard de monitorización en tiempo real* — API que recolecta métricas del sistema (CPU, RAM, disco). SignalR para streaming de métricas a clientes web. Dapper para almacenar histórico en PostgreSQL. BackgroundService que recolecta métricas cada 5 segundos. Docker Compose (api + postgres + redis). Health checks + Swagger. Generación de gráficos en tiempo real con SkiaSharp.
+
+### Nivel 90–100: Arquitectura y sistemas distribuidos
+**Qué aprender:**
+- Arquitectura limpia / hexagonal en .NET: separación en capas (Domain, Application, Infrastructure, API)
+- gRPC: servicios con `protobuf`, streaming bidireccional, `Grpc.Net.Client`
+- RabbitMQ / Azure Service Bus: mensajería entre microservicios
+- Polly: resiliencia (retry, circuit breaker, timeout, bulkhead)
+- OpenTelemetry: distributed tracing, métricas, logs
+- Native AOT: `dotnet publish -aot`, aplicaciones sin runtime
+- Source generators: metaprogramación en compilación
+- Performance: BenchmarkDotNet para benchmarks, Memory diagnoser, `Span<T>` y `Memory<T>` para evitar allocations
+- **Conceptos clave**: Native AOT produce binarios de ~2-3 MB que arrancan en milisegundos (ideal para serverless/containers). `Span<T>` permite manipular memoria sin copias ni GC allocations. Polly con circuit breaker evita cascading failures. OpenTelemetry es el estándar para observabilidad.
+
+**Proyecto:** *Sistema de notificaciones distribuidas* — microservicios con Clean Architecture. gRPC para comunicación interna. RabbitMQ como event bus. SignalR como BFF para clientes. Polly para resiliencia en llamadas externas. OpenTelemetry (Jaeger + Prometheus). Native AOT para el servicio de notificaciones. BenchmarkDotNet para asegurar rendimiento.
+
+Fuente: [ASP.NET Core docs](https://learn.microsoft.com/en-us/aspnet/core/), [Clean Architecture (Steve Smith)](https://learn.microsoft.com/en-us/dotnet/architecture/modern-web-apps-azure/), [gRPC for .NET](https://learn.microsoft.com/en-us/aspnet/core/grpc/), [Polly docs](https://github.com/App-vNext/Polly)
+
+---
+
+## Proyectos prácticos detallados
+
+### Gestor de contraseñas CLI (nivel 30)
+```csharp
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+
+record Entry(string Service, string Username, string Password);
+
+class Vault
+{
+    private readonly string _path;
+    private readonly byte[] _key;
+    
+    public Vault(string path = "vault.enc")
+    {
+        _path = path;
+        _key = LoadOrCreateKey();
+    }
+    
+    private byte[] LoadOrCreateKey()
+    {
+        var keyFile = "vault.key";
+        if (File.Exists(keyFile))
+            return File.ReadAllBytes(keyFile);
+        
+        var key = RandomNumberGenerator.GetBytes(32);
+        File.WriteAllBytes(keyFile, key);
+        return key;
+    }
+    
+    public void Add(Entry entry)
+    {
+        var store = new Dictionary<string, Entry>();
+        if (File.Exists(_path))
+        {
+            var encrypted = File.ReadAllBytes(_path);
+            var decrypted = Decrypt(encrypted);
+            store = JsonSerializer.Deserialize<Dictionary<string, Entry>>(decrypted) ?? [];
+        }
+        
+        store[entry.Service] = entry;
+        var json = JsonSerializer.Serialize(store);
+        File.WriteAllBytes(_path, Encrypt(json));
+    }
+    
+    public Entry? Get(string service)
+    {
+        if (!File.Exists(_path)) return null;
+        
+        var encrypted = File.ReadAllBytes(_path);
+        var decrypted = Decrypt(encrypted);
+        var store = JsonSerializer.Deserialize<Dictionary<string, Entry>>(decrypted);
+        
+        return store?.TryGetValue(service, out var entry) == true ? entry : null;
+    }
+    
+    private byte[] Encrypt(string plaintext)
+    {
+        using var aes = Aes.Create();
+        aes.Key = _key;
+        aes.GenerateIV();
+        
+        using var encryptor = aes.CreateEncryptor();
+        var plaintextBytes = Encoding.UTF8.GetBytes(plaintext);
+        var ciphertext = encryptor.TransformFinalBlock(plaintextBytes, 0, plaintextBytes.Length);
+        
+        var result = new byte[aes.IV.Length + ciphertext.Length];
+        Buffer.BlockCopy(aes.IV, 0, result, 0, aes.IV.Length);
+        Buffer.BlockCopy(ciphertext, 0, result, aes.IV.Length, ciphertext.Length);
+        
+        return result;
+    }
+    
+    private string Decrypt(byte[] ciphertext)
+    {
+        using var aes = Aes.Create();
+        aes.Key = _key;
+        var iv = new byte[aes.IV.Length];
+        Buffer.BlockCopy(ciphertext, 0, iv, 0, iv.Length);
+        aes.IV = iv;
+        
+        using var decryptor = aes.CreateDecryptor();
+        var decrypted = decryptor.TransformFinalBlock(ciphertext, iv.Length, ciphertext.Length - iv.Length);
+        return Encoding.UTF8.GetString(decrypted);
+    }
+}
+```
+
+### Web scraper con async (nivel 60)
+```csharp
+using System;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Text.Json;
+using System.Threading.Tasks;
+using System.Text.RegularExpressions;
+
+record Article(string Title, string Url, string Source);
+
+class WebScraper
+{
+    private readonly HttpClient _http;
+    
+    public WebScraper()
+    {
+        _http = new HttpClient();
+        _http.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0");
+    }
+    
+    public async Task<List<Article>> ScrapeNewsAsync(string url)
+    {
+        var response = await _http.GetStringAsync(url);
+        var articles = new List<Article>();
+        
+        // Extraer títulos de enlaces (HTML simplificado)
+        var matches = Regex.Matches(response, 
+            @"<a[^>]*href=""([^""]+)""[^>]*>([^<]+)</a>",
+            RegexOptions.IgnoreCase);
+        
+        foreach (Match match in matches)
+        {
+            var href = match.Groups[1].Value;
+            var title = match.Groups[2].Value.Trim();
+            
+            if (!string.IsNullOrEmpty(title) && title.Length > 10)
+            {
+                var fullUrl = href.StartsWith("http") ? href : new Uri(new Uri(url), href).ToString();
+                articles.Add(new Article(title, fullUrl, url));
+            }
+        }
+        
+        return articles;
+    }
+    
+    public async Task<List<Article>> ScrapeMultipleAsync(string[] sources)
+    {
+        var tasks = new List<Task<List<Article>>>();
+        foreach (var source in sources)
+            tasks.Add(ScrapeNewsAsync(source));
+        
+        var results = await Task.WhenAll(tasks);
+        var all = new List<Article>();
+        foreach (var r in results)
+            all.AddRange(r);
+        
+        return all;
+    }
+}
+
+// Uso
+var scraper = new WebScraper();
+var articles = await scraper.ScrapeMultipleAsync([
+    "https://news.ycombinator.com",
+    "https://www.python.org/blogs/"
+]);
+
+foreach (var a in articles[..10])
+    Console.WriteLine($"[{a.Source}] {a.Title}");
+```
+
+---
+
+## Hacks y tips de productividad
+
+**1. Primary constructors (C# 12)**
+```csharp
+// Antes:
+public class Persona
+{
+    public string Nombre { get; }
+    public int Edad { get; }
+    public Persona(string nombre, int edad) { Nombre = nombre; Edad = edad; }
+}
+
+// Ahora:
+public class Persona(string nombre, int edad)
+{
+    public string Nombre => nombre;
+    public int Edad => edad;
+    public string Saludar() => $"Hola, soy {nombre}";
+}
+
+// También funciona con structs y records
+public struct Punto(double x, double y)
+{
+    public double DistanciaAlOrigen => Math.Sqrt(x * x + y * y);
+}
+```
+
+**2. Raw string literals (C# 11)**
+```csharp
+// Sin escapes, ideal para JSON, SQL, XML
+var json = """
+{
+    "nombre": "Ana",
+    "edad": 30,
+    "direccion": {
+        "calle": "Calle Mayor",
+        "numero": 123
+    }
+}
+""";
+
+// Con interpolación ($$ para distinguir de { })
+var nombre = "Ana";
+var saludo = $$"""
+{
+    "mensaje": "Hola {{nombre}}",
+    "fecha": "{{DateTime.Now:yyyy-MM-dd}}"
+}
+""";
+```
+
+**3. List patterns y slice patterns (C# 11)**
+```csharp
+int[] numeros = [1, 2, 3, 4, 5];
+
+// Comprobar inicio/final
+if (numeros is [1, 2, ..])  // Empieza con 1, 2
+    Console.WriteLine("Empieza con 1, 2");
+
+if (numeros is [.., 4, 5])  // Termina con 4, 5
+    Console.WriteLine("Termina con 4, 5");
+
+// Extraer elementos
+if (numeros is [var primero, .., var ultimo])
+    Console.WriteLine($"Primero: {primero}, último: {ultimo}");
+
+// Match en switches
+string Describir(int[] nums) => nums switch
+{
+    [] => "Vacío",
+    [var n] => $"Un elemento: {n}",
+    [var a, var b] => $"Dos elementos: {a} y {b}",
+    [..] and [_, _, ..] => "Tres o más elementos"
+};
+```
+
+**4. Collection expressions (C# 12)**
+```csharp
+// Antes:
+var lista = new List<int> { 1, 2, 3 };
+int[] arr = new int[] { 1, 2, 3 };
+
+// Ahora — sintaxis unificada con []
+List<int> lista = [1, 2, 3];
+int[] arr = [1, 2, 3];
+Span<int> span = [1, 2, 3];
+IEnumerable<int> enumerable = [1, 2, 3];
+
+// Spread operator (..)
+List<int> otros = [.. lista, 4, 5, .. arr];
+// [1, 2, 3, 4, 5, 1, 2, 3]
+
+// Inicializadores de diccionario
+Dictionary<string, int> dict = [
+    ["Ana"] = 30,
+    ["Juan"] = 25
+];
+```
+
+**5. File-scoped namespaces (C# 10)**
+```csharp
+// Todo el archivo está en este namespace — menos indentación
+namespace MiApp.Modelos;
+
+public class Usuario { }
+public class Producto { }
+```
+
+**6. Required members (C# 11)**
+```csharp
+public class Producto
+{
+    public required string Nombre { get; init; }
+    public required decimal Precio { get; init; }
+    public string? Descripcion { get; init; }
+}
+
+// El compilador OBLIGA a inicializar Nombre y Precio
+var p = new Producto
+{
+    Nombre = "Laptop",  // Obligatorio
+    Precio = 1000m      // Obligatorio
+};
+```
+
+**7. Alias global para tipos**
+```csharp
+// GlobalUsings.cs
+global using Sys = System;
+global using Json = System.Text.Json;
+global using Cts = System.Threading.CancellationToken;
+
+// En cualquier archivo:
+Sys.Console.WriteLine("Hola");
+var json = Json.JsonSerializer.Serialize(obj);
+```
+
+**8. `[GeneratedRegex]` — Regex en compile-time (C# 11)**
+```csharp
+public partial class EmailHelper
+{
+    [GeneratedRegex(@"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$")]
+    public static partial Regex EmailRegex();
+    
+    public static bool EsValido(string email) => EmailRegex().IsMatch(email);
+}
+// Sin reflexión, sin compilación runtime — el patrón se compila en build
+```
+
+**9. `BenchmarkDotNet` — medir rendimiento**
+```bash
+dotnet add package BenchmarkDotNet
+```
+
+```csharp
+using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Running;
+
+[MemoryDiagnoser]
+public class Benchmarks
+{
+    private readonly int[] _data = Enumerable.Range(0, 1000).ToArray();
+    
+    [Benchmark(Baseline = true)]
+    public int ForLoop()
+    {
+        int sum = 0;
+        for (int i = 0; i < _data.Length; i++)
+            sum += _data[i];
+        return sum;
+    }
+    
+    [Benchmark]
+    public int ForEachLoop()
+    {
+        int sum = 0;
+        foreach (var n in _data)
+            sum += n;
+        return sum;
+    }
+    
+    [Benchmark]
+    public int LinqSum() => _data.Sum();
+}
+
+// Program.cs
+BenchmarkRunner.Run<Benchmarks>();
+```
+
+**10. `dotnet format` y análisis estático**
+```bash
+# Formatear código
+dotnet format
+
+# Análisis de estilo y calidad
+dotnet format --verify-no-changes  # CI: error si no está formateado
+dotnet analyze                     # Análisis Roslyn
+
+# En csproj:
+# <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+# <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+```
+
+Fuente: [C# 12 features](https://learn.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-12), [BenchmarkDotNet docs](https://benchmarkdotnet.org/), [C# 11 features](https://learn.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-11)
+
+---
+
+## Canales y recursos en español
+
+### YouTube
+- **Hector de Leon** ([@hector-de-leon](https://youtube.com/@hector-de-leon)) — Tutoriales de .NET, ASP.NET Core, Azure, C# moderno. Explica conceptos complejos de forma clara y con ejemplos prácticos
+- **.NET Dev** ([@dotnetdev](https://youtube.com/@dotnetdev)) — Contenido variado sobre desarrollo .NET, desde fundamentos hasta arquitectura
+- **CodigoDotNet** ([@codigodotnet](https://youtube.com/@codigodotnet)) — C#, .NET Core, Entity Framework, patrones de diseño, buenas prácticas
+- **dotNet Argentina** ([@dotnetargentina](https://youtube.com/@dotnetargentina)) — Canal argentino con streams, tutoriales, y contenido de la comunidad .NET en español
+- **MoureDev** — Aunque es multi-lenguaje, tiene contenido sobre C# y .NET
+- **Midulive** — Desarrollo en general, incluye contenido de C# y .NET
+
+### Comunidades
+- **r/csharp** (Reddit) — Comunidad global de C#, noticias, preguntas, proyectos. En inglés pero muy activa y útil
+- **r/dotnet** (Reddit) — Noticias y discusiones sobre el ecosistema .NET
+- **Discord .NET en español** — Canales de ayuda, proyectos, mentoría en tiempo real
+- **Stack Overflow en español** — Etiqueta `c#` para dudas técnicas
+- **.NET España** — Asociación, eventos, conferencias (dotnetspain.com)
+
+### Repositorios y blogs
+- [dotnet/csharplang](https://github.com/dotnet/csharplang) — Repositorio oficial del lenguaje C#, propuestas (RFCs), discusiones de diseño
+- [dotnet/aspnetcore](https://github.com/dotnet/aspnetcore) — Código fuente de ASP.NET Core
+- [dotnet/efcore](https://github.com/dotnet/efcore) — Entity Framework Core
+- [Nick Chapsas YouTube](https://youtube.com/@nickchapsas) — Mejor canal inglés sobre performance y C# moderno
+- [C# in Depth (Jon Skeet)](https://csharpindepth.com/) — Libro de referencia sobre la evolución de C#
+- [Awesome .NET](https://github.com/quozd/awesome-dotnet) — Lista curada de frameworks, librerías y recursos .NET
+
+Fuente: búsqueda en YouTube y Reddit, listas curadas de Awesome .NET
+
+---
+
+## Referencias y documentación oficial
+
+- **Docs oficiales**: [learn.microsoft.com/en-us/dotnet/csharp](https://learn.microsoft.com/en-us/dotnet/csharp/) — tutorial, language reference, API reference
+- **.NET API Browser**: [learn.microsoft.com/en-us/dotnet/api](https://learn.microsoft.com/en-us/dotnet/api/) — busca cualquier clase/método de .NET
+- **Roslyn (compilador)**: [github.com/dotnet/roslyn](https://github.com/dotnet/roslyn) — código fuente del compilador de C#
+- **.NET Runtime**: [github.com/dotnet/runtime](https://github.com/dotnet/runtime) — CLR, BCL, GC, JIT
+- **ASP.NET Core**: [learn.microsoft.com/en-us/aspnet/core](https://learn.microsoft.com/en-us/aspnet/core/) — documentación oficial del framework web
+- **Entity Framework Core**: [learn.microsoft.com/en-us/ef](https://learn.microsoft.com/en-us/ef/) — ORM oficial
+- **NuGet**: [nuget.org](https://www.nuget.org/) — gestor de paquetes oficial
+- **C# Language Design**: [github.com/dotnet/csharplang](https://github.com/dotnet/csharplang) — propuestas (RFCs), meetings, decisiones de diseño
+- **.NET Blog**: [devblogs.microsoft.com/dotnet](https://devblogs.microsoft.com/dotnet/) — novedades, releases, artículos técnicos
+- **Andreas Nesheim (.NET Blog)**: Artículos sobre concurrencia, async, y patrones avanzados en C#
+
+### Fuentes de esta guía
+
+Esta guía se ha elaborado a partir de las siguientes fuentes consultadas durante su desarrollo:
+
+- [Microsoft .NET Docs — Documentación oficial](https://learn.microsoft.com/en-us/dotnet/)
+- [ASP.NET Core Docs](https://learn.microsoft.com/en-us/aspnet/core/)
+- [Entity Framework Core Docs](https://learn.microsoft.com/en-us/ef/)
+- [C# Language Reference](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/)
+- [.NET API Reference](https://learn.microsoft.com/en-us/dotnet/api/)
+- [C# in Depth (Jon Skeet)](https://csharpindepth.com/) — referencia sobre la evolución del lenguaje
+- [Pro .NET Memory Management (Konrad Kokosa)](https://prodotnetmemory.com/) — gestión de memoria y GC
+- [Architecture Patterns with .NET](https://www.dotnetarchitectures.com/) — guías de arquitectura
+- [Clean Architecture (Steve Smith)](https://learn.microsoft.com/en-us/dotnet/architecture/modern-web-apps-azure/) — Microsoft's guide
+- [Awesome .NET (GitHub)](https://github.com/quozd/awesome-dotnet) — lista curada de recursos
+- [r/csharp](https://reddit.com/r/csharp) — comunidad, debates y proyectos destacados
+- [r/dotnet](https://reddit.com/r/dotnet) — comunidad del ecosistema .NET
+- [Nick Chapsas YouTube](https://youtube.com/@nickchapsas) — C# moderno y performance
+- [Andreas Nesheim Blog](https://andreasnesheim.no/) — concurrencia y patrones avanzados
+- [.NET Blog (Microsoft)](https://devblogs.microsoft.com/dotnet/) — novedades oficiales
+- [dotnet/csharplang (GitHub)](https://github.com/dotnet/csharplang) — diseño y evolución del lenguaje
+
+---
+
+## 🏆 Retos Relacionados
 
 Pon a prueba lo aprendido con estos desafíos:
 - [Cifrado Cesar Basico](/retos/guia-cifrado-cesar-basico)

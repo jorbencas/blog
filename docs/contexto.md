@@ -1,189 +1,56 @@
 # Contexto del proyecto — Blog
 
-**Última actualización**: 2026-06-27 (sesión: anti-flash, CopyPost refactor, query Unsplash con tags)
-**Stack**: Astro 6.4 + Svelte 5 + Tailwind CSS 4.3
-**Deploy**: Vercel (`blog-jorbencas.vercel.app`)
+**Última actualización**: 2026-06-28 (UI/UX audit fases 1-4 completadas)
+**Stack**: Astro 6.4 + Svelte 5 + Tailwind CSS 4.3 | Vercel static | Node >= 18
 **Idioma**: Español
-**Node**: >= 18
+**Deploy**: `blog-jorbencas.vercel.app`
+**Guía detallada de diseño/componentes**: `AGENTS.md` (Design System, Component Patterns, MDX Syntax, Build Verification)
 
-## Mejoras implementadas
+## Timeline de cambios significativos
 
-### 1. Recursos masivo + Hacking + Certificaciones ✅
-- **`resources.mdx`**: reescrito completamente con 482+ tarjetas en 36 categorías. Diseño card grid con `not-prose`, favicons, hover effects. Categorías nuevas: Hacking/Ciberseguridad (24 tarjetas), Certificaciones (23 tarjetas), más las existentes expandidas.
-- Summary box actualizado a "más de 500 recursos en más de 35 categorías".
-- Build verificado sin errores.
-
-### 2. Pagefind / Buscador fix ✅
-- **`Buscador.astro`**: extraída función `initSearch()` llamada inmediatamente + registrada en `astro:page-load`. Eliminada inyección via `<script>`. Usa `import("/pagefind/pagefind.js")` directamente.
-- Search tests actualizados: eliminada dependencia de `window.pagefind` (ya no existe). Tests usan solo DOM assertions.
-
-### 3. Overflow safety + Navbar mobile ✅
-- **`global.css`**: reglas overflow-safe para `iframe`, `video`, `pre`, `p`, `li`, `blockquote`, `td`, `th`. Añadido `.video-wrapper` utility.
-- **`header.astro`**: `pr-14 lg:pr-0` + `text-sm sm:text-lg` para evitar solapamiento del hamburger.
-
-### 4. Tags simplificado ✅
-- **`tags.json`**: eliminado (estaba desactualizado, lógica de filtrado rota).
-- **`TagsPosts.astro`**: simplificado, sin dependencia de tags.json.
-- **`tags/index.astro`**: simplificado, eliminado import de `Information` y condicional vacío.
-
-### 5. AGENTS.md reestructurado ✅
-- Reglas críticas (pedir permiso antes de borrar/modificar) movidas al inicio.
-- Testing rules movidas al final como referencia.
-
-### 6. `.gitignore` y `.vercelignore` actualizados ✅
-- **`.gitignore`**: añadidos `__pycache__/`, `*.pyc`, `.venv/`, `venv/`, `.env.local`, `.env.*.local`
-- **`.vercelignore`**: añadidos `tests/`, `node_modules/`, `.git/`, `.env`, `.env.production` (sin eliminar nada existente)
-
-### 7. AGENTS.md — reglas unificadas + design system ✅
-- Reglas de modificar/borrar archivos, carpetas y configs fusionadas en un solo bloque
-- Reglas de añadir dependencias (npm + Python) fusionadas en una sola
-- Nueva regla: nunca borrar carpetas sin explicación + confirmación
-- Nueva regla: investigar componentes existentes antes de crear uno nuevo
-- Añadida sección **Design System** completa: colores por tipo de card, patrones de badges, cards, nav links, tipografía, iconos, layout y prose overrides
-
-### 9. n8n + recursos del blog ✅
-- **`n8n.mdx`**: añadida sección "Más Automatizaciones con los Recursos del Blog" que conecta herramientas de `resources.mdx` (IA, productividad, comunidad, devops, multimedia, seguridad) con workflows concretos de n8n. Incluye mini proyecto completo "Bot de Estudio Semanal" que combina 5+ servicios en un solo workflow.
-
-### 10. TOC con fallback DOM ✅
-- **`TableOfContents.astro`**: ahora siempre se renderiza (sin depender de `headings.length > 1`). Si Astro no extrajo headings (como en páginas con HTML directo), el script los construye desde el DOM al cargar la página.
-
-### 11. Iconos SVG sin CDN ✅
-- **`CodeEnhancer.astro`**: reemplazadas imágenes cargadas desde `simpleicons.org` por SVGs inline con el color del lenguaje. Ya no dependen de CDN externa ni fallan si hay problemas de red.
-
-### 12. Build pagefind ✅
-- **`package.json`**: comando `pagefind --site .vercel/output/static` en vez de `dist`. Copia de salida a `dist/pagefind/` y `public/pagefind/`.
-
-### 14. Anti-flash fix — tema oscuro sin destello ✅
-- **Layout.astro**: `<script>` de tema movido a primer elemento de `<head>` (antes de meta/link). Añadido `<style>` inline para `background-color` inmediato en `<html>`. Eliminado `transition-colors duration-500` del `<body>`.
-
-### 15. Dark mode code text — sin forzar cyan ✅
-- **PostLayout/ChallengesLayout/ProjectLayout**: eliminado `dark:prose-code:text-cyan-[300/400]`. Cambiado a `text-inherit` para que el syntax highlighter de Expressive Code muestre sus colores reales.
-
-### 16. CopyPost — dropdown → botones independientes ✅
-- **CopyPost.astro**: reemplazado menú dropdown por 3 botones (MD, TXT, IA) siempre visibles. Layout con `flex-wrap` para móvil.
-
-### 17. Light theme background más suave ✅
-- **Layout.astro**: `bg-slate-50` → `bg-slate-100` para un gris de fondo ligeramente más visible.
-
-### 18. Botones "Ver más" visibles en móvil ✅
-- **index.astro**: `linkBase` mejorado con `bg-slate-200`, `border`, `shadow-sm`, `py-2.5` para que los botones de sección se vean bien en fondo claro móvil.
-
-### 19. Query Unsplash mejorada con tags + título ✅
-- **fix_images.py**: nueva función `build_unsplash_query()` que combina:
-  - Tags extraídos del frontmatter (hasta 3)
-  - Título real del post (sin stopwords genéricas)
-  - Tech hints contextuales según tecnologías detectadas en el contenido (programming, devops, design...)
-- `clean_query()` mejorada: ya no elimina palabras cortas útiles (0, 100, js, ts)
-- `search_all_providers()` ahora recibe título, tags y contenido para construir queries ricas
-
-### 13. Fixes post-sesión ✅
-- **Navbar**: clases `peer-checked:[&>span]:rotate-45` movidas de atributos HTML separados a un solo `class` con template literal — arreglada "ventanita de CSS" en menú móvil
-- **Summary box resources.mdx**: `from-sky-50→from-sky-100`, `slate-750→slate-700`, borde `border-2`, `font-semibold` en descripción
-- **PostLayout description**: añadidos `px-5 sm:px-6 py-3 sm:py-4` + dark mode variants
-- **TOC móvil**: eliminado (el usuario no quiere que resources.mdx sea especial)
-- **pubDate resources.mdx**: restaurado a `"2025-04-01"` (era el original)
-- **Section headers a `<h2>`/`<h3>` reales**: los 36 + 5 headers usaban `<span>` con `id` — Astro solo extrae headings reales para el TOC. Cambiados a `<h2>`/`<h3>` manteniendo el mismo estilo visual.
-- **AGENTS.md Design System**: actualizado para especificar que los badges de sección deben usar `<h2>`/`<h3>` reales, no `<span>`
+| Fecha | Cambio |
+|---|---|
+| 2025-04 | Recursos masivo (482+ cards), Pagefind, overflow safety, tags simplificado |
+| 2025-04 | n8n integrado, TOC con fallback DOM, iconos SVG sin CDN |
+| 2025-04 | Anti-flash dark mode, CopyPost dropdown→botones, light theme bg más suave |
+| 2025-04 | Botones "Ver más" en móvil, Query Unsplash mejorada |
+| 2025-05 | 15 guías 0-100 expandidas (~1500–3700 líneas c/u), skill de formato creada |
+| 2025-05 | Errores MDX preexistentes fixeados (`<Fragment>`, `<1ms`, `<T>`, `<100ms`) |
+| 2025-06 | **UI/UX audit**: Fase 1 (TOC colapsable mobile, breadcrumbs, max-w-4xl), Fase 2 (footer opacidad, cards sin quotes), Fase 3 (transición main, archive limitado), Fase 4 (buscador en hamburguesa, scroll-to-top desktop) |
 
 ## Contenido
 
 5 colecciones MDX en `src/content/`:
-- `posts/` — posts del blog (incluye `resources.mdx` con 482+ recursos, `n8n.mdx` con guía completa, etc.)
+- `posts/` — incluye `resources.mdx` (482+ recursos), `n8n.mdx`, 15 guías 0-100, etc.
 - `auto-news/` — noticias automáticas
-- `auto-challenges/` — retos de programación (+140 guías)
+- `auto-challenges/` — +140 retos
 - `myprojects/` — proyectos personales
-- `tools/` — herramientas interactivas (listado en `/herramientas`)
+- `tools/` — herramientas interactivas
 
-Configuradas con Zod schemas en `src/content.config.ts` usando `astro/loaders` (glob) y `astro/zod`.
+`draft: true` filtra en desarrollo. Schemas con `astro/zod` en `src/content.config.ts`.
 
-`draft: true` filtra posts en desarrollo. `getSortedPosts()` en `src/utils.js`.
+## Página de inicio (`index.astro`)
 
-## Página de inicio (`src/pages/index.astro`)
-
-Secciones en orden:
-1. **Mis_Proyectos** — grid de ProjectCard (3 últimos, primero abarca 2 cols en md+)
-2. **Mini_Herramientas** — grid de ToolCard (3 últimas, oculto si vacío)
-3. **Retos** — grid de ChallengeCard (3 últimos)
-4. **Últimos_Posts** — grid de PreviewPost (3 últimos)
-5. **Resúmenes_Semanales** — grid Weekly (6 últimos, first card abarca 2 cols)
-
-### Navbar (`src/components/Navbar.astro`)
-- Menú responsive: hamburguesa → X animado en móvil, horizontal en lg+
-- Body scroll lock con `position: fixed` + `scrollY` para evitar salto por scrollbar
-- Botón hamburguesa/X en móvil: `fixed top-3 right-3 z-50`
-- Escape cierra menú; resize >1024px lo cierra automáticamente
-- 5 links: Proyectos, Retos, Blog, Mini Herramientas, Aportaciones/Bugs
-
-### Header (`src/components/header.astro`)
-- Título con `pr-14 lg:pr-0` para evitar solapamiento con hamburger en móvil
-- `text-sm sm:text-lg` en el h2 del título
+Orden de secciones: Mis_Proyectos → Mini_Herramientas → Retos → Últimos_Posts → Resúmenes_Semanales. Cada sección muestra 3-6 items con su card type correspondiente.
 
 ## Pipeline de imágenes
 
-- `scripts/fix_images.py` (Python) — obtiene imágenes Unsplash + genera banners con Gemini
-- Convierte a WebP/AVIF con compresión adaptativa SSIM
-- Cache en `image_cache.json` — auto-pruning: descarta entradas >365 días, máximo 200
-- Dependencias: `requirements.txt` (Pillow, aiohttp, google-genai)
+`scripts/fix_images.py`: Unsplash + Gemini banners → WebP/AVIF con compresión SSIM. Cachea en `image_cache.json` (auto-pruning: >365 días, max 200 entradas). `build_unsplash_query()` combina tags + título + tech hints contextuales.
 
-## Tailwind v4
+## Tailwind v4 (notas clave)
 
-- Configuración CSS-first en `src/styles/global.css`
-- `@plugin "@tailwindcss/typography"` para prose
-- `@custom-variant dark (&:where(.dark, .dark *))`
-- `html { scrollbar-gutter: stable; }` evita layout shift al abrir menú móvil
+- CSS-first: `src/styles/global.css` con `@plugin "@tailwindcss/typography"` + `@custom-variant dark`
+- `html { scrollbar-gutter: stable }` evita layout shift en menú móvil
 - Sin `tailwind.config.mjs` ni `postcss.config.mjs`
-- Vite plugin: `@tailwindcss/vite` en `astro.config.mjs > vite.plugins`
-
-## Componentes destacados
-
-### Buscador (`src/components/Buscador.astro`)
-- Pagefind importado via `import("/pagefind/pagefind.js")` directo (no `<script>`)
-- `initSearch()` se ejecuta inmediatamente y también en `astro:page-load`
-
-### TagsPosts (`src/components/TagsPosts.astro`)
-- Renderiza tags como links, recibe JSON string via prop `tagsList`
-- Sin dependencia de `tags.json` (eliminado)
-
-### CopyPost (`src/components/CopyPost.astro`)
-- 3 botones independientes siempre visibles: Markdown, Texto plano, Para IA
-- Layout `flex-wrap` para adaptarse a móvil
-- Datos via `<script type="application/json">`
-- Ubicado en el header de PostLayout, tras AudioPlayer
-
-### Cards hover pattern (unificado)
-- **ProjectCard** → `hover:border-purple-500/50`
-- **ToolCard** → `hover:border-emerald-500/50`
-- **PreviewPost** → `hover:border-cyan-500/50`
-- **ChallengeCard** → `hover:border-cyan-500/50`
-- **Weekly** → wrapper gradient con `hover:shadow-[0_0_40px_rgba(6,182,212,0.25)]`
-- Overlay imagen: `opacity-70 → opacity-40`, imagen: `opacity-80 → opacity-100`
-
-### solution.css
-- `details` sin padding propio; `summary` (1rem) y `.details-content` manejan espaciado
-- Botón DESCIFRAR con gradient
+- `@apply` **no soportado** en `<style>` blocks de componentes
 
 ## Archivos relevantes
 
-### Config
-- `astro.config.mjs`, `tsconfig.json`, `AGENTS.md`
-- `.opencode/skills/customize-opencode/SKILL.md`
-
-### CI/CD
-- `.github/workflows/spelling.yml`, `fixing_img.yml`, `issues_handel.yml`
-- `.languagetool-ignore.txt`
-- `docs/ci-cd.md`
-
-### Layouts
-- `src/layouts/PostLayout.astro`, `src/layouts/Layout.astro`, `src/layouts/ProjectLayout.astro`
-
-### Páginas
-- `src/pages/posts/index.astro`, `src/pages/proyectos/index.astro`, `src/pages/herramientas/[slug].astro`
-- `src/pages/tags/index.astro` (simplificado, sin componente Information)
-
-### Scripts
-- `scripts/fix_images.py` (incluye `clean_query`, `build_unsplash_query`, `search_unsplash`, `search_all_providers`, `process_file`), `image_cache.json`
-
-### Tests
-- `tests/specs/search.spec.mjs` (sin dependencia de window.pagefind)
-- `tests/specs/visual-regression.spec.mjs`
-- `.gitignore` incluye `test-results/`
+- **Layouts**: `PostLayout.astro` (TOC en grid), `Layout.astro` (tema, anti-flash), `ProjectLayout.astro`
+- **Componentes clave**: `TableOfContents.astro` (mobile details + desktop sidebar), `Breadcrumbs.astro`, `Navbar.astro` (slot para buscador mobile), `Header.astro`, `Buscador.astro`, `CopyPost.astro` (3 botones), `ScrollToTop.astro`, `Archive.astro` (2 años + link completo)
+- **Cards**: `PreviewPost`, `ChallengeCard`, `ToolCard`, `ProjectCard` — sin quotes/italics en descripciones
+- **Guías**: 15 archivos `src/content/posts/guia-0-100-*.mdx`
+- **Scripts**: `fix_images.py`, `image_cache.json`
+- **CI/CD**: `fixing_img.yml`, `spelling.yml`, `issues_handel.yml`
+- **Skills**: `.opencode/skills/expand-guia-formato/SKILL.md`
+- **Tests**: `tests/specs/search.spec.mjs`, `visual-regression.spec.mjs`

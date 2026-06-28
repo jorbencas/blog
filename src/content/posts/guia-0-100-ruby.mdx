@@ -1,103 +1,3574 @@
 ---
 draft: false
 title: "Guía de Ruby: De 0 a 100"
-description: "El lenguaje de la felicidad del programador. Ruby on Rails."
+description: "Desde la primera línea de código hasta producción: instalación, ecosistema, frameworks, proyectos reales y recursos en español."
 pubDate: "2017-06-11"
-tags: ["ruby", "guia", "backend"]
+tags: ["ruby", "guia", "backend", "rails"]
 image: "img/guia_0_100_ruby_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 ---
 
 # Guía de Ruby: De 0 a 100
 
-## 🛠️ Requisitos e Instalación
+## ¿Qué es Ruby?
 
-**Linux/macOS:** Usa **rbenv**: `git clone https://github.com/rbenv/rbenv.git ~/.rbenv && ~/.rbenv/bin/rbenv init`. O **RVM**: `curl -sSL https://get.rvm.io | bash`.
-**Windows:** [RubyInstaller](https://rubyinstaller.org/) — incluye Ruby, gems, y MSYS2.
-**Directo (Linux):** `sudo apt install ruby-full` — pero version manager es preferible.
-**Verificación:** `git clone https://github.com/rbenv/rbenv.git ~/.rbenv && ~/.rbenv/bin/rbenv init` y prueba con un `"Hola Mundo"`.
-**Herramientas recomendadas:** **Bundler** (`gem install bundler`) para dependencias. **RSpec** para tests. **rubocop** para linting. **pry** para debugging interactivo.
+Ruby es un lenguaje de programación interpretado, de tipado dinámico y multiparadigma, creado por **Yukihiro "Matz" Matsumoto** y lanzado por primera vez en 1995. Su filosofía se centra en la **productividad del programador** y el **Principle of Least Surprise** (POLS): el lenguaje debería comportarse como el programador espera, minimizando la fricción mental.
 
-## 🚀 Hola Mundo y Sintaxis Básica
+**¿Dónde se usa?**
+- **Web**: Ruby on Rails — potenció GitHub, Shopify, Basecamp, Airbnb (en sus inicios), GitLab
+- **Startups**: Rails fue el framework que definió la era startup 2005–2015 por su velocidad de prototipado
+- **DevOps**: Chef, Puppet, Vagrant están escritos en Ruby; Capistrano para deploys
+- **Automatización / scripting**: tareas de sistema, ETL, scraping (Nokogiri), procesamiento de texto
+- **CLI tools**: Homebrew (macOS), Jekyll (generador de sitios estáticos), Metasploit (seguridad)
+- **Juegos**: Ruby2D, Gosu — pequeños juegos 2D con Ruby
 
-**Conceptos clave:**
+**¿Quién lo usa?** GitHub (backend original en Rails), Shopify (tienda completa en Rails), Basecamp (creadores de Rails), GitLab (plataforma DevOps en Rails), Airbnb (usó Rails en sus inicios), Hulu, Twitch (en parte), Coinbase, Stripe (partes iniciales).
 
-- **Todo es Objeto:** `42.class` → Integer. `"hola".class` → String. No hay primitivos. `nil` es un objeto (NilClass).
-- **Métodos y Bloques:** `def saludar(nombre) "Hola, #{nombre}" end`. Bloques: `[1,2,3].each { |n| puts n }`. `yield` invoca un bloque desde un método.
-- **Símbolos y Strings:** Símbolos `:nombre` — inmutables, únicos, ideales para keys. Strings mutables. Interpolación: `"Hola #{nombre}"`.
-- **POO Dinámico:** Módulos como mixins (`include`, `extend`). `attr_accessor :nombre`. Duck typing. `method_missing` para delegación dinámica.
-- **Enumerable:** `.map`, `.select`, `.reduce`, `.any?`, `.all?`, `.group_by`. Rangos `(1..10)`. Blocks + enumerables = máximo poder expresivo.
+**Filosofía clave:** Ruby prioriza la felicidad del desarrollador sobre el rendimiento de la máquina. Matz dijo: "Ruby está diseñado para hacer felices a los programadores". Esto se traduce en sintaxis expresiva, convenciones sobre configuración (CoC), y metaprogramación elegante.
 
-## 🏗️ Frameworks Populares
+Fuente: [Ruby-lang.org — About](https://www.ruby-lang.org/en/about/), [Ruby-Doc.org — History](https://ruby-doc.org/docs/ruby-doc-bundle/FAQ/FAQ.html)
 
-### Ruby on Rails
-**Instalación:** `gem install rails && rails new mi_app`
-Framework full-stack que popularizó CoC. ActiveRecord ORM, Action Cable (WebSockets), Active Storage, testing integrado. Ideal para prototipado rápido.
+
+---
+
+## Instalación
+
+### Windows
+1. Descarga el instalador desde [rubyinstaller.org](https://rubyinstaller.org/)
+2. Elige la versión con **MSYS2** incluido (necesario para compilar gems nativas)
+3. Ejecuta el instalador y marca "Add Ruby executables to your PATH"
+4. Al final, el instalador te preguntará si ejecutar `ridk install` — elige la opción 3 (MSYS2 + MINGW + development toolchain)
+5. Verifica: abre `cmd` o PowerShell y ejecuta `ruby --version`
+6. Alternativa vía **winget**: `winget install Ruby`
+
+### macOS
+- **rbenv** (recomendado): `brew install rbenv ruby-build`
+- **Xcode Command Line Tools**: `xcode-select --install` (necesario para compilar gems nativas)
+- Verifica: `ruby --version`
+
+### Linux (Debian/Ubuntu)
+```bash
+sudo apt update
+sudo apt install ruby-full ruby-dev build-essential
+```
+Para Fedora/RHEL: `sudo dnf install ruby ruby-devel`
+
+### rbenv (Linux/macOS/WSL) — versión múltiple
+```bash
+# rbenv es el version manager más adoptado
+git clone https://github.com/rbenv/rbenv.git ~/.rbenv
+# ruby-build plugin para instalar versiones
+git clone https://github.com/rbenv/ruby-build.git ~/.rbenv/plugins/ruby-build
+
+# Añade al ~/.bashrc o ~/.zshrc:
+echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bashrc
+echo 'eval "$(rbenv init -)"' >> ~/.bashrc
+exec $SHELL
+
+rbenv install 3.3 3.2 3.1
+rbenv global 3.3   # Establece versión por defecto
+```
+
+### RVM (alternativa popular)
+```bash
+curl -sSL https://get.rvm.io | bash
+rvm install 3.3
+rvm use 3.3 --default
+```
+
+### asdf (multi-lenguaje)
+```bash
+git clone https://github.com/asdf-vm/asdf.git ~/.asdf
+echo '. "$HOME/.asdf/asdf.sh"' >> ~/.bashrc
+asdf plugin add ruby https://github.com/asdf-vm/asdf-ruby.git
+asdf install ruby 3.3.0
+asdf global ruby 3.3.0
+```
+
+### Docker
+```dockerfile
+FROM ruby:3.3-slim
+WORKDIR /app
+COPY Gemfile Gemfile.lock .
+RUN bundle install
+COPY . .
+CMD ["ruby", "main.rb"]
+```
+Usa `ruby:3.3-slim` como base (~150 MB). Las imágenes `ruby:3.3-alpine` son más pequeñas (~50 MB) pero requieren compilar gems nativas.
+
+### Alias útiles para el día a día
+Añade a tu `~/.bashrc` o `~/.zshrc`:
+```bash
+alias r='ruby'
+alias ri='irb'
+alias be='bundle exec'
+alias bi='bundle install'
+alias bu='bundle update'
+alias rspec='bundle exec rspec'
+alias rcop='bundle exec rubocop'
+alias rfind='find . -name "*.rb" -not -path "./vendor/*"'
+```
+
+Fuente: [rbenv GitHub](https://github.com/rbenv/rbenv), [RVM](https://rvm.io/), [Docker Official Images — Ruby](https://hub.docker.com/_/ruby/)
+
+
+---
+
+## Primeros pasos
+
+### IRB — El REPL de Ruby
+Ruby incluye un intérprete interactivo llamado IRB (Interactive Ruby). Ejecuta `irb` en terminal y escribe directamente:
 ```ruby
-# config/routes.rb
-Rails.application.routes.draw do
-  root 'home#index'
-  get '/saludo/:nombre', to: 'home#saludo'
+irb> puts "Hola mundo"
+irb> 2 + 2
+irb> [1,2,3].map { |n| n ** 2 }
+irb> "ruby".upcase
+```
+Para salir: `exit` o Ctrl+D.
+
+### Pry — REPL mejorado
+Pry es un REPL más potente con coloreado, depuración, navegación de código y editing de live code.
+```bash
+gem install pry
+```
+```ruby
+require 'pry'
+
+def calcular(x, y)
+  binding.pry  # Pausa aquí — modo interactivo
+  x / y
+end
+```
+Desde Pry puedes navegar con `ls`, `show-source`, `edit`, `cd` entre objetos.
+
+### Scripts y estructura de proyecto
+```ruby
+#!/usr/bin/env ruby
+# hola.rb
+def main
+  puts "Hola mundo"
 end
 
-# app/controllers/home_controller.rb
-class HomeController < ApplicationController
-  def index
-    render plain: 'Hola Mundo'
+main if __FILE__ == $PROGRAM_NAME
+```
+Ejecuta: `ruby hola.rb`
+
+### Bundler — Gestor de dependencias
+```bash
+gem install bundler
+bundle init  # Crea Gemfile
+```
+Archivo `Gemfile` básico:
+```ruby
+source "https://rubygems.org"
+
+gem "sinatra"
+gem "puma"
+gem "rspec", group: :test
+gem "rubocop", group: :development
+```
+
+Comandos:
+```bash
+bundle install              # Instala gems del Gemfile
+bundle exec ruby main.rb    # Ejecuta con gems del contexto
+bundle update               # Actualiza gems
+bundle outdated             # Muestra gems desactualizadas
+```
+
+### Editores recomendados
+- **VSCode**: extensión Ruby de Shopify (mejor LSP), Ruby Solargraph para autocompletado. Instala también Endwise (auto-end), Sorbet (type checking).
+- **RubyMine**: IDE dedicado de JetBrains, depurador visual excelente, refactors automáticos. De pago pero con trial.
+- **Neovim**: con nvim-lspconfig + solargraph, ruby-lsp, o el LSP de Shopify. `vim-endwise` para `end` automático.
+
+### Configuración inicial del proyecto
+```bash
+mkdir mi-proyecto && cd mi-proyecto
+bundle init
+```
+
+Añade al `Gemfile`:
+```ruby
+source "https://rubygems.org"
+
+gem "rubocop", require: false
+gem "rspec", require: false
+```
+
+```bash
+bundle install
+rubocop --init  # Crea .rubocop.yml
+rspec --init    # Crea spec/spec_helper.rb
+```
+
+Archivo `.rubocop.yml` básico:
+```yaml
+AllCops:
+  TargetRubyVersion: 3.3
+  NewCops: enable
+
+Style/Documentation:
+  Enabled: false
+
+Metrics/LineLength:
+  Max: 100
+
+Layout/SpaceInsideHashLiteralBraces:
+  EnforcedStyle: no_space
+```
+
+Fuente: [Bundler docs](https://bundler.io/), [Pry docs](https://github.com/pry/pry), [RuboCop docs](https://docs.rubocop.org/)
+
+
+---
+
+## Paradigmas
+
+Ruby es un lenguaje **multiparadigma**. No te fuerza a un solo estilo: puedes mezclar POO, funcional, imperativo y metaprogramación en el mismo archivo.
+
+### POO (Programación Orientada a Objetos) puro
+
+En Ruby **todo es un objeto**. No hay tipos primitivos. Esto convierte a Ruby en uno de los lenguajes POO más puros que existen:
+
+```ruby
+42.class                    # Integer
+"hola".class                # String
+true.class                  # TrueClass
+nil.class                   # NilClass
+[].class                    # Array
+{}.class                    # Hash
+
+42.even?                    # true
+3.14.round                  # 3
+```
+
+**Clases, herencia y mixins:**
+
+```ruby
+class Animal
+  def respirar
+    "respirando..."
   end
+end
+
+class Perro < Animal
+  def ladrar
+    "Guau!"
+  end
+end
+
+module Volador
+  def volar
+    "volando!"
+  end
+end
+
+class Pato < Animal
+  include Volador
+end
+
+Perro.new.respirar  # "respirando..."
+Pato.new.volar      # "volando!"
+```
+
+### Programación funcional
+
+Ruby soporta programación funcional con **bloques, procs, lambdas** y el módulo `Enumerable`:
+
+```ruby
+[1, 2, 3].map { |n| n * 2 }           # [2, 4, 6]
+[1, 2, 3].select(&:even?)              # [2]
+
+doble = ->(x) { x * 2 }
+doble.call(5)                          # 10
+
+punto = { x: 10, y: 20 }.freeze
+# punto[:x] = 30  # FrozenError
+
+[1, 2, 3, 4, 5].reduce(:+)             # 15
+[1, 2, 3, 4, 5].group_by(&:even?)     # {false=>[1,3,5], true=>[2,4]}
+```
+
+### Programación imperativa
+
+Ruby también soporta el estilo imperativo clásico con `if`, `while`, `for`, asignación mutable y efectos secundarios:
+
+```ruby
+suma = 0
+i = 0
+while i < 10
+  suma += i
+  i += 1
+end
+```
+
+Aunque en la práctica la comunidad Ruby prefiere el estilo funcional/declarativo con `Enumerable`.
+
+### Metaprogramación como paradigma
+
+Ruby trata la metaprogramación como un **paradigma ciudadano de primera clase**, no como un truco avanzado:
+
+```ruby
+class Usuario
+  %w[nombre email edad].each do |campo|
+    define_method("#{campo}=") do |valor|
+      instance_variable_set("@#{campo}", valor)
+    end
+
+    define_method(campo) do
+      instance_variable_get("@#{campo}")
+    end
+  end
+end
+
+class Config
+  def method_missing(name, *args)
+    if name.to_s.end_with?("=")
+      @config ||= {}
+      @config[name.to_s.chomp("=").to_sym] = args.first
+    else
+      @config[name]
+    end
+  end
+
+  def respond_to_missing?(name, include_private = false)
+    true
+  end
+end
+
+cfg = Config.new
+cfg.puerto = 3000
+cfg.db = "postgres"
+puts cfg.puerto  # 3000
+```
+
+**DSLs (Domain Specific Languages):** Ruby es famoso por crear DSLs elegantes. Rails, RSpec, Rake, Capistrano son ejemplos:
+
+```ruby
+RSpec.describe Calculadora do
+  it "suma dos números" do
+    expect(2 + 2).to eq(4)
+  end
+end
+
+task :default => :test
+task :test do
+  ruby "test/*_test.rb"
+end
+```
+
+La metaprogramación en Ruby permite escribir **código que escribe código** en tiempo de ejecución, lo que reduce la repetición y permite crear APIs muy expresivas.
+
+Fuente: [Ruby-Lang — About](https://www.ruby-lang.org/en/about/), [Metaprogramming Ruby 2 (Paolo Perrotta)](https://pragprog.com/titles/ppmetr2/metaprogramming-ruby-2/), [Ruby Docs — Proc](https://ruby-doc.org/core/Proc.html)
+---
+
+## Tipos de datos y variables
+
+### Variables en Ruby
+
+| Tipo | Scope | Sintaxis | Ejemplo |
+|------|-------|----------|---------|
+| Local | Método/bloque | `nombre` | `edad = 25` |
+| Instancia | Objeto | `@nombre` | `@edad = 25` |
+| Clase | Clase y sus instancias | `@@nombre` | `@@cuenta = 0` |
+| Global | Todo el programa | `$nombre` | `$debug = true` |
+| Constante | Léxico (clase/módulo) | `NOMBRE` | `PI = 3.1416` |
+
+```ruby
+local = "solo en este método"
+@instancia = "pertenece al objeto"
+@@clase = "compartida por todas las instancias"
+$global = "accesible desde cualquier lugar"
+CONSTANTE = "puede reasignarse pero con warning"
+```
+
+### Tipos built-in
+
+**Integer — precisión arbitraria:**
+
+```ruby
+42                             # Integer
+1_000_000                      # guiones bajos como separador
+2_147_483_648                  # Más grande que 32-bit — Ruby lo maneja
+(2 ** 1000).to_s.length        # 302 dígitos — precisión arbitraria
+```
+
+**Float:**
+
+```ruby
+3.1416                         # Float (double precision IEEE 754)
+1.5e-3                         # 0.0015 notación científica
+0.1 + 0.2                      # 0.30000000000000004 (típico de IEEE 754)
+```
+
+**Complex y Rational:**
+
+```ruby
+Complex(1, 2)                  # 1+2i
+Rational(1, 3)                 # 1/3
+Rational(1, 3) + Rational(1, 3)  # 2/3
+```
+
+**BigDecimal** (requiere `require "bigdecimal"`):
+
+```ruby
+require "bigdecimal"
+BigDecimal("0.1") + BigDecimal("0.2")  # 0.3 exacto
+```
+
+**String:**
+
+Las strings en Ruby son **mutables por defecto**. Para inmutabilidad usa `freeze`:
+
+```ruby
+s = "hola"
+s << " mundo"                  # "hola mundo" — muta el mismo objeto
+
+s = "hola".freeze
+# s << " mundo"                # FrozenError
+
+"café".bytesize                # 5 (caracter acentuado ocupa 2 bytes)
+"café".length                  # 4 (caracteres)
+
+nombre = "Ana"
+"Hola, #{nombre}"              # "Hola, Ana"
+"2 + 2 = #{2 + 2}"            # "2 + 2 = 4"
+
+texto = <<~TEXTO
+  Esto es un heredoc
+  con sangría eliminada
+TEXTO
+
+%q(no interpolado)             # como comillas simples
+%Q(interpolado #{x})          # como comillas dobles
+%w(uno dos tres)               # ["uno", "dos", "tres"]
+```
+
+**Symbol:**
+
+Los símbolos son **inmutables e internados** (únicos en memoria):
+
+```ruby
+:nombre                        # símbolo
+:"nombre_#{id}"                # interpolación de símbolos
+
+"nombre".object_id == "nombre".object_id  # false
+:nombre.object_id == :nombre.object_id    # true
+
+usuario = { nombre: "Ana", edad: 30 }     # keys de hash
+respond_to?(:nombre)                      # introspección
+```
+
+**Array:**
+
+Los arrays son **dinámicos y pueden contener tipos mixtos**:
+
+```ruby
+arr = [1, "dos", :tres, 4.0]   # tipos mixtos
+arr = %w[a b c]                 # ["a", "b", "c"]
+arr = Array.new(3, 0)           # [0, 0, 0]
+
+[1, 2, 3] + [4, 5]             # [1, 2, 3, 4, 5]  (concatenación)
+[1, 2, 3] - [2]                # [1, 3]            (diferencia)
+[1, 2, 2, 3] & [2, 3, 4]       # [2, 3]            (intersección)
+[1, 2, 3] | [2, 3, 4]          # [1, 2, 3, 4]      (unión)
+
+[1, 2, 3].push(4)              # [1, 2, 3, 4]
+[1, 2, 3].pop                  # 3
+[1, 2, 3].shift                # 1
+[1, 2, 3].unshift(0)           # [0, 1, 2, 3]
+[1, 2, 3].first(2)             # [1, 2]
+[1, 2, 3].last(2)              # [2, 3]
+[1, 2, 3].include?(2)          # true
+[3, 1, 2].sort                 # [1, 2, 3]
+[1, 2, 3].reverse              # [3, 2, 1]
+```
+
+**Hash:**
+
+```ruby
+h = { "nombre" => "Ana", "edad" => 30 }  # hash-rocket
+h = { nombre: "Ana", edad: 30 }           # JSON-like (Ruby 1.9+)
+
+h = Hash.new(0)                  # valor por defecto 0
+h[:clave]                        # 0
+
+h = Hash.new { |hash, key| hash[key] = key.to_s.upcase }
+h[:hola]                         # "HOLA"
+
+h.keys                           # [:nombre, :edad]
+h.values                         # ["Ana", 30]
+h.fetch(:nombre)                 # "Ana"
+h.fetch(:no_existe, "default")  # "default"
+h.merge({ ciudad: "Madrid" })   # no muta
+h.merge!({ ciudad: "Madrid" })  # muta
+h.transform_keys(&:to_s)
+h.transform_values(&:to_s)
+```
+
+**Range:**
+
+```ruby
+(1..5).to_a                      # [1, 2, 3, 4, 5]  inclusivo
+(1...5).to_a                     # [1, 2, 3, 4]     exclusivo
+("a".."e").to_a                  # ["a", "b", "c", "d", "e"]
+
+case nota
+when 90..100 then "Sobresaliente"
+when 70..89  then "Notable"
+else "Suspenso"
+end
+```
+
+**nil:**
+
+`nil` es el **único objeto de NilClass**. Representa la ausencia de valor:
+
+```ruby
+nil.class                        # NilClass
+nil.nil?                         # true
+false.nil?                       # false
+
+if nil
+  "no se ejecuta"
+end
+```
+
+### Gestión de memoria
+
+Ruby usa **GC generacional (mark-and-sweep)** desde Ruby 2.1:
+
+```ruby
+ObjectSpace.count_objects[:T_STRING]  # strings en heap
+
+GC.start                         # forzar recolección
+GC.disable                       # no recomendado
+GC.stat                          # estadísticas
+```
+
+**Todo es referencia a objeto:** Ruby no tiene tipos por valor. Cada variable guarda una referencia:
+
+```ruby
+a = "hola"
+b = a
+a << " mundo"
+puts b  # "hola mundo"
+
+a = "hola"
+b = a.dup       # copia superficial
+c = a.clone     # copia más profunda
+```
+
+Fuente: [Ruby-Doc — Core](https://ruby-doc.org/core/), [Ruby-Doc — GC](https://ruby-doc.org/core/GC.html), [ObjectSpace](https://ruby-doc.org/core/ObjectSpace.html)
+---
+
+## Control de flujo y modularidad
+
+### Control de flujo
+
+**if/unless:**
+
+```ruby
+if edad >= 18
+  puts "Mayor de edad"
+elsif edad >= 13
+  puts "Adolescente"
+else
+  puts "Menor"
+end
+
+unless edad >= 18
+  puts "Menor de edad"
+end
+
+puts "Mayor" if edad >= 18
+puts "Menor" unless edad >= 18
+```
+
+**case/when** (usa el operador `===`):
+
+```ruby
+case valor
+when String
+  puts "Es un string"
+when 0..50
+  puts "Entre 0 y 50"
+when /^[A-Z]/
+  puts "Empieza con mayúscula"
+when ->(n) { n.even? }
+  puts "Es par"
+else
+  puts "No identificado"
+end
+
+# El operador === manualmente:
+String === "hola"     # true
+(1..10) === 5         # true
+/oo/ === "foo"        # true
+```
+
+**while/until:**
+
+```ruby
+i = 0
+while i < 5
+  puts i
+  i += 1
+end
+
+i = 0
+until i >= 5
+  puts i
+  i += 1
+end
+
+x = 0
+puts x while x < 3   # modifica
+```
+
+**for** (poco usado, la comunidad prefiere `each`):
+
+```ruby
+for i in [1, 2, 3]
+  puts i
+end
+```
+
+**times/upto/downto/step:**
+
+```ruby
+3.times { puts "Ruby" }
+1.upto(5) { |i| puts i }
+5.downto(1) { |i| puts i }
+0.step(10, 2) { |i| puts i }
+```
+
+**Excepciones:**
+
+```ruby
+begin
+  resultado = 10 / 0
+rescue ZeroDivisionError => e
+  puts "Error: #{e.message}"
+  resultado = 0
+else
+  puts "Sin errores"
+ensure
+  puts "Siempre se ejecuta"
+end
+
+def dividir(a, b)
+  raise ArgumentError, "b no puede ser cero" if b.zero?
+  a / b
+end
+
+# retry
+intentos = 0
+begin
+  resultado = servicio_externo.call
+rescue Timeout::Error
+  intentos += 1
+  retry if intentos < 3
+  raise
+end
+
+# catch/throw (no excepcional)
+catch(:salir) do
+  loop do
+    [1, 2, 3].each do |i|
+      throw(:salir, "encontrado #{i}") if i == 2
+    end
+  end
+end
+```
+
+### Modularidad: Módulos, requires y gems
+
+**Módulos como namespacing y mixins:**
+
+```ruby
+module Aplicacion
+  module Modelos
+    class Usuario
+      def saludo
+        "Hola"
+      end
+    end
+  end
+end
+
+Aplicacion::Modelos::Usuario.new.saludo
+```
+
+**include/extend/prepend:**
+
+```ruby
+module M
+  def foo
+    "M#foo"
+  end
+end
+
+class Base
+  def foo
+    "Base#foo"
+  end
+end
+
+class A < Base
+  include M
+end
+A.new.foo  # "M#foo"
+
+class B < Base
+  prepend M
+end
+B.new.foo  # "M#foo"
+
+class C
+  extend M
+end
+C.foo  # "M#foo"
+```
+
+**Sistema de carga:**
+
+```ruby
+require "json"
+require_relative "lib/usuario"
+load "config.rb"
+
+puts $LOAD_PATH  # lista de directorios
+$LOAD_PATH << "/ruta/personalizada"
+```
+
+**Gemas (Bundler):**
+
+```bash
+gem install sinatra puma
+gem list
+```
+
+```ruby
+# Gemfile
+source "https://rubygems.org"
+gem "sinatra"
+gem "puma"
+gem "rspec", group: :test
+```
+
+```bash
+bundle install
+bundle exec ruby main.rb
+bundle update
+bundle outdated
+```
+
+**require vs load vs autoload:**
+
+| Método | ¿Duplica? | ¿Relativo? | ¿Deprecated? | Uso |
+|--------|-----------|------------|------------|-----|
+| `require` | No (carga una vez) | No ($LOAD_PATH) | No | Estándar |
+| `require_relative` | No (carga una vez) | Sí (relativo) | No | Propio código |
+| `load` | Sí (carga siempre) | No | No | Recarga en desarrollo |
+| `autoload` | No | No | Sí (Ruby 3+) | Carga perezosa (evitar) |
+
+Fuente: [Ruby-Doc — Syntax](https://ruby-doc.org/core/doc/syntax/), [Ruby-Doc — Kernel](https://ruby-doc.org/core/Kernel.html), [Bundler docs](https://bundler.io/), [RubyGems docs](https://guides.rubygems.org/)
+---
+
+## Conceptos clave
+
+### Todo es objeto — Mensajes vs Métodos
+
+En Ruby, **todo es un objeto**, sin excepción. No hay primitivos como en otros lenguajes. Los números, `nil`, `true`, `false`, y los símbolos son objetos con clase y métodos.
+
+```ruby
+42.class          # Integer
+"hola".class      # String
+nil.class         # NilClass
+true.class        # TrueClass
+false.class       # FalseClass
+:symbol.class     # Symbol
+[].class          # Array
+{}.class          # Hash
+
+# Los números tienen métodos
+42.even?          # true
+42.times { |i| print i }  # 0..41
+3.14.round        # 3
+```
+
+**Mensajes vs Métodos:** En Ruby no "llamas a métodos", **envías mensajes a objetos**. El objeto decide cómo responder:
+
+```ruby
+# Esto:
+objeto.metodo(args)
+
+# Es equivalente a:
+objeto.send(:metodo, args)
+
+# method_missing captura mensajes no definidos:
+class Saludador
+  def method_missing(name, *args)
+    if name.to_s.start_with?("saludar_")
+      puts "Hola, #{name.to_s.split('_').last}!"
+    else
+      super
+    end
+  end
+
+  def respond_to_missing?(name, include_private = false)
+    name.to_s.start_with?("saludar_") || super
+  end
+end
+
+s = Saludador.new
+s.saludar_mundo   # "Hola, mundo!"
+s.saludar_ruby    # "Hola, ruby!"
+s.respond_to?(:saludar_mundo)  # true
+```
+
+Esta distinción es fundamental para entender la metaprogramación en Ruby: `send`, `respond_to?`, `method_missing`, `define_method` — todos operan sobre el sistema de mensajes, no de métodos.
+
+### Variables, ámbito y tipos
+
+**Tipos de variables en Ruby:**
+
+| Tipo | Scope | Sintaxis | Ejemplo |
+|---|---|---|---|
+| Local | Método/bloque | `nombre` | `edad = 25` |
+| Instancia | Objeto | `@nombre` | `@edad = 25` |
+| Clase | Clase y sus instancias | `@@nombre` | `@@cuenta = 0` |
+| Global | Todo el programa | `$nombre` | `$debug = true` |
+| Constante | Léxico (clase/módulo) | `NOMBRE` | `PI = 3.1416` |
+
+**Tipado dinámico fuerte:**
+Ruby es de tipado dinámico (no declaras tipos) y fuerte (no hay coerción implícita entre tipos incompatibles):
+
+```ruby
+x = 42        # Integer
+x = "ruby"    # String — reasignación válida
+x + 1         # TypeError: String can't be coerced into Integer
+"ruby" + 42   # TypeError (coerción implícita no ocurre)
+42.to_s + "ruby"  # "42ruby" — conversión explícita
+```
+
+**Duck typing:**
+```ruby
+class Pato
+  def hablar
+    "Cuac"
+  end
+end
+
+class Persona
+  def hablar
+    "Hola"
+  end
+end
+
+def hacer_hablar(cosa)
+  puts cosa.hablar  # No importa la clase, mientras tenga .hablar
+end
+
+hacer_hablar(Pato.new)     # Cuac
+hacer_hablar(Persona.new)  # Hola
+```
+
+**Truthy y falsy:**
+En Ruby, solo `nil` y `false` son falsy. **Todo lo demás es truthy**, incluyendo `0`, `""`, `[]`, `{}`:
+
+```ruby
+if 0
+  puts "0 es truthy en Ruby"  # Esto se ejecuta
+end
+
+if ""
+  puts "string vacío es truthy en Ruby"  # Esto se ejecuta
+end
+
+if nil
+  puts "Esto no se ejecuta"
+end
+
+# nil? para verificar nil
+"ruby".nil?    # false
+nil.nil?       # true
+```
+
+Esto es diferente de JavaScript (donde `0` y `""` son falsy) y Python (donde `0`, `""`, `[]` son falsy). Es una decisión de diseño de Matz: menos sorpresas.
+
+### Bloques, Procs y Lambdas
+
+Los **bloques** son la característica más distintiva de Ruby. Son fragmentos de código anónimo que se pasan a métodos.
+
+**Bloques con `do..end` (multilínea) y `{}` (una línea):**
+```ruby
+# do..end para múltiples líneas
+[1, 2, 3].each do |n|
+  puts n * 2
+end
+
+# {} para una línea
+[1, 2, 3].map { |n| n ** 2 }
+```
+
+**`yield` — invocar un bloque desde un método:**
+```ruby
+def tres_veces
+  yield(1) if block_given?
+  yield(2) if block_given?
+  yield(3) if block_given?
+end
+
+tres_veces { |n| puts "Número: #{n}" }
+
+# Con block_given? para seguridad
+def saludar(nombre)
+  if block_given?
+    yield(nombre)
+  else
+    puts "Hola, #{nombre}"
+  end
+end
+```
+
+**Proc.new vs lambda — las diferencias críticas:**
+
+```ruby
+# Proc (Proc.new)
+p = Proc.new { |a, b| puts "a=#{a}, b=#{b}" }
+p.call(1)           # a=1, b=nil (no error por argumentos faltantes)
+p.call(1, 2, 3)     # a=1, b=2 (ignora el extra)
+
+def metodo_con_proc
+  p = Proc.new { return "salida" }  # return sale del método
+  p.call
+  "nunca llega"
+end
+puts metodo_con_proc  # "salida" — el return del Proc sale del método contenedor
+
+# Lambda
+l = lambda { |a, b| puts "a=#{a}, b=#{b}" }
+l.call(1)           # ArgumentError: wrong number of arguments
+l.call(1, 2, 3)     # ArgumentError
+
+def metodo_con_lambda
+  l = lambda { return "salida" }  # return solo sale de la lambda
+  l.call
+  "llega aquí"  # Sí llega
+end
+puts metodo_con_lambda  # "llega aquí"
+```
+
+**Diferencias clave:**
+
+| Aspecto | Proc | Lambda |
+|---|---|---|
+| Aridad | Flexible (argumentos extra se ignoran, faltantes → nil) | Estricta (error si no coinciden) |
+| `return` | Sale del método contenedor | Sale solo de la lambda |
+| `break` | Error si está fuera de un iterador | Sale de la lambda |
+| Comportamiento | Como un bloque | Como un método anónimo |
+| Sintaxis | `Proc.new { ... }` o `proc { ... }` | `lambda { ... }` o `->(a) { ... }` |
+
+**Sintaxis stabby lambda `->`:**
+```ruby
+doble = ->(x) { x * 2 }
+doble.call(5)  # 10
+# También: doble[5] o doble.(5)
+```
+
+**Bloques como closures (cierres):**
+```ruby
+def crear_contador(inicial)
+  contador = inicial
+  -> { contador += 1 }  # La lambda captura la variable local
+end
+
+contar = crear_contador(10)
+puts contar.call  # 11
+puts contar.call  # 12
+puts contar.call  # 13
+```
+
+### Símbolos vs Strings
+
+Los **símbolos** (`:nombre`) son inmutables, únicos en memoria, y se usan como identificadores. Las strings son mutables.
+
+```ruby
+"nombre".object_id == "nombre".object_id  # false (distintos objetos)
+:nombre.object_id == :nombre.object_id     # true (mismo objeto)
+
+# Los símbolos son ideales para keys de hash
+usuario = { nombre: "Ana", edad: 30 }     # Sintaxis moderna (Ruby 1.9+)
+# Equivalente a:
+usuario = { :nombre => "Ana", :edad => 30 }  # Sintaxis hash-rocket
+
+# Conversión entre símbolos y strings
+"nombre".to_sym    # :nombre
+:nombre.to_s       # "nombre"
+
+# Interpolación de símbolos
+:"usuario_#{id}"   # :usuario_42
+```
+
+**¿Cuándo usar cada uno?**
+- **Símbolos**: keys de hash, nombres de métodos, identificadores, enum values, opciones de configuración
+- **Strings**: datos de usuario, texto que se va a mostrar, contenido que se modifica
+
+### Módulos como Mixins (include, extend, prepend)
+
+Los módulos en Ruby son contenedores de métodos y constantes. No se pueden instanciar, pero se pueden **mezclar** en clases.
+
+```ruby
+module Loggable
+  def log(mensaje)
+    puts "[#{Time.now}] #{self.class}: #{mensaje}"
+  end
+end
+
+class Usuario
+  include Loggable  # Métodos de instancia (como herencia)
+end
+
+class Aplicacion
+  extend Loggable   # Métodos de clase
+end
+
+Usuario.new.log("inicio sesión")  # [2026-06-28] Usuario: inicio sesión
+Aplicacion.log("iniciando")       # [2026-06-28] Aplicacion: iniciando
+```
+
+**`include` vs `prepend` vs `extend`:**
+
+```ruby
+module M
+  def foo
+    "M#foo"
+  end
+end
+
+class Base
+  def foo
+    "Base#foo"
+  end
+end
+
+# include: M en medio de la cadena de herencia
+class A < Base
+  include M
+end
+A.new.foo  # "M#foo" — M está entre A y Base
+
+# prepend: M ANTES de la clase (puede sobrescribir métodos de la clase)
+class B < Base
+  prepend M
+end
+B.new.foo  # "M#foo" — M está antes que B
+
+# extend: métodos de clase
+class C
+  extend M
+end
+C.foo  # "M#foo"
+```
+
+**Módulos de la stdlib incluidos en clases:**
+
+```ruby
+# Comparable: requiere <=> (spaceship operator)
+class Persona
+  include Comparable
+  attr_reader :edad
+
+  def initialize(edad)
+    @edad = edad
+  end
+
+  def <=>(other)
+    @edad <=> other.edad
+  end
+end
+
+p1 = Persona.new(25)
+p2 = Persona.new(30)
+p1 < p2    # true (Comparable da <, >, <=, >=, ==, between?)
+p1.between?(Persona.new(20), Persona.new(35))  # true
+
+# Enumerable: requiere each
+class Lista
+  include Enumerable
+
+  def initialize(*items)
+    @items = items
+  end
+
+  def each(&block)
+    @items.each(&block)
+  end
+end
+
+lista = Lista.new(3, 1, 4, 1, 5)
+lista.map { |n| n * 2 }      # [6, 2, 8, 2, 10]
+lista.select(&:even?)         # [4]
+lista.reduce(:+)              # 14
+lista.any? { |n| n > 4 }     # true
+```
+
+### Open Classes y Monkey Patching
+
+Ruby permite **reabrir cualquier clase** (incluso built-in) en cualquier momento y añadir o modificar métodos:
+
+```ruby
+# Abrimos String y añadimos un método
+class String
+  def palindrome?
+    self == reverse
+  end
+end
+
+"ana".palindrome?      # true
+"ruby".palindrome?     # false
+```
+
+**Riesgos del monkey patching:**
+1. Si dos gems modifican el mismo método, una sobreescribe a la otra
+2. El comportamiento global cambia sin que otros módulos lo esperen
+3. Depuración difícil: ¿quién modificó `String#capitalize`?
+
+**Refinements (Ruby 2.0+) — alternativa segura:**
+```ruby
+module Palindromos
+  refine String do
+    def palindrome?
+      self == reverse
+    end
+  end
+end
+
+using Palindromos  # Solo afecta al ámbito actual
+
+"ana".palindrome?  # true
+# Fuera de este ámbito, String no tiene palindrome?
+```
+
+### attr_reader/writer/accessor, initialize, self
+
+```ruby
+class Usuario
+  # Atajos para crear getters y setters
+  attr_reader :id           # Solo lectura (getter)
+  attr_writer :password     # Solo escritura (setter)
+  attr_accessor :nombre, :email  # Lectura y escritura
+
+  def initialize(nombre, email)
+    @nombre = nombre
+    @email = email
+    @id = SecureRandom.uuid
+  end
+
+  # Equivalente manual de attr_reader :id
+  # def id
+  #   @id
+  # end
+
+  # Equivalente manual de attr_writer :password
+  # def password=(valor)
+  #   @password = valor
+  # end
+
   def saludo
-    render json: { mensaje: "Hola, #{params[:nombre]}" }
+    "Hola, soy #{@nombre}"
+  end
+
+  # self para métodos de clase o para desambiguar
+  def self.buscar_por_email(email)
+    # Simulación de búsqueda
+    new("Encontrado", email)
+  end
+
+  def actualizar_email(nuevo_email)
+    self.email = nuevo_email  # self necesario para llamar al setter
+    # email = nuevo_email     # Esto crearía una variable local, no llama al setter
   end
 end
 ```
-### Sinatra
-**Instalación:** `gem install sinatra`
-Microframework web minimalista. DSL elegante, perfecto para APIs pequeñas y prototipos.
-```ruby
-require 'sinatra'
 
-get '/' do
-  'Hola Mundo'
+### Excepciones: begin/rescue/ensure/raise
+
+```ruby
+# begin/rescue/else/ensure
+begin
+  resultado = 10 / 0
+rescue ZeroDivisionError => e
+  puts "Error: #{e.message}"  # Error: divided by 0
+  resultado = 0
+rescue TypeError => e
+  puts "Tipo incorrecto: #{e.message}"
+else
+  puts "Sin errores!"  # Solo se ejecuta si no hay excepción
+ensure
+  puts "Siempre se ejecuta (como finally)"
 end
 
-get '/saludo/:nombre' do
-  content_type :json
-  { mensaje: "Hola, #{params[:nombre]}" }.to_json
+# raise para lanzar excepciones
+def dividir(a, b)
+  raise ArgumentError, "b no puede ser cero" if b.zero?
+  raise TypeError, "a debe ser numérico" unless a.is_a?(Numeric)
+  a / b
+end
+
+# Excepciones personalizadas
+class ErrorDeAplicacion < StandardError; end
+class SaldoInsuficiente < ErrorDeAplicacion; end
+class CuentaBloqueada < ErrorDeAplicacion; end
+
+def retirar(cuenta, monto)
+  raise CuentaBloqueada, "Cuenta bloqueada" if cuenta.bloqueada?
+  raise SaldoInsuficiente, "Saldo insuficiente" if cuenta.saldo < monto
+  cuenta.saldo -= monto
+end
+
+# retry — reintenta el bloque (¡cuidado con bucles infinitos!)
+intentos = 0
+begin
+  resultado = servicio_externo.call
+rescue Timeout::Error
+  intentos += 1
+  retry if intentos < 3
+  raise
 end
 ```
 
-## 📝 Ejercicios Prácticos
+### Enumerable: el corazón de Ruby
 
-1. **Enumerable** 🟢 `[Fácil]` — De un array de números, filtra pares, calcula cuadrado, suma resultado. Una línea con métodos Enumerable.
-2. **Mixins** 🟢 `[Fácil]` — Módulo `Loggable` que añada método `log` imprimiendo clase y timestamp.
-3. **API con Rails** 🟡 `[Intermedio]` — API REST para blog con ActiveRecord y serialización JSON.
-4. **CLI con OptionParser** 🟡 `[Intermedio]` — Herramienta CLI que lea archivos, procese texto y genere informes.
+El módulo `Enumerable` es probablemente el más importante de Ruby. Cuando una clase implementa `each`, obtiene docenas de métodos gratis:
 
-## ⚡ Buenas Prácticas y Complejidad
+```ruby
+numeros = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
-**Buenas prácticas:**
+# Map / Collect
+numeros.map { |n| n * 2 }          # [2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
+numeros.collect(&:even?)            # [false, true, false, true, ...]
 
-- Sigue Ruby Style Guide. Usa RuboCop para verificación automática.
-- Prefiere bloques de una línea con `{}` y multínea con `do..end`.
-- Usa `symbol` en lugar de `string` para identificadores y keys de hash.
-- Escribe tests con RSpec — describe context it expect.
-- Usa `||=` para memoización: `@cache ||= compute_heavy`.
+# Select / Reject
+numeros.select(&:even?)             # [2, 4, 6, 8, 10]
+numeros.reject(&:even?)             # [1, 3, 5, 7, 9]
+numeros.select { |n| n > 5 }       # [6, 7, 8, 9, 10]
 
-**Complejidad algorítmica (Big O):**
+# Reduce / Inject
+numeros.reduce(:+)                  # 55 (suma total)
+numeros.reduce(1, :*)               # 3628800 (factorial)
+numeros.inject({}) { |h, n| h[n] = n**2; h }  # {1=>1, 2=>4, 3=>9, ...}
 
-Arrays: acceso O(1), búsqueda O(n), push/pop O(1). Hashes: O(1) promedio. Enumerable#sort: O(n log n). Range#include?: O(1) para rangos numéricos.
+# Group By
+palabras = %w[manzana pera banana uva mango pera manzana]
+palabras.group_by { |p| p.length }  # {7=>["manzana"], 4=>["pera", "uva"], 6=>["banana"], 5=>["mango"]}
 
-## 📚 Recursos y Documentación
+# Partition
+numeros.partition(&:even?)          # [[2, 4, 6, 8, 10], [1, 3, 5, 7, 9]]
 
-- 📖 [Ruby Lang](https://www.ruby-lang.org/)
-- 📖 [Ruby en GitHub](https://github.com/ruby/ruby)
-- 📖 [Ruby on Rails](https://rubyonrails.org/)
-- 📖 [Ruby Docs](https://ruby-doc.org/)
-- 🌐 [Ruby Guides](https://www.rubyguides.com/)
+# Chunk — agrupa elementos consecutivos que cumplen una condición
+[1, 2, 2, 3, 3, 3, 4].chunk { |n| n }.to_a
+# [[1, [1]], [2, [2, 2]], [3, [3, 3, 3]], [4, [4]]]
 
-### 🏆 Retos Relacionados
+# All? / Any? / None? / One?
+numeros.all?(&:positive?)           # true
+numeros.any?(&:odd?)                # true
+numeros.none?(&:zero?)              # true
+numeros.one?(&:even?)               # false (hay varios pares)
+
+# Sort / Sort_by
+%w[manzana pera banana uva].sort                           # ["banana", "manzana", "pera", "uva"]
+%w[manzana pera banana uva].sort_by(&:length)              # ["pera", "uva", "manzana", "banana"]
+
+# First / Take / Drop
+numeros.first(3)                    # [1, 2, 3]
+numeros.take(4)                     # [1, 2, 3, 4]
+numeros.drop(5)                     # [6, 7, 8, 9, 10]
+
+# Flat_map
+[1, 2, 3].flat_map { |n| [n, -n] }  # [1, -1, 2, -2, 3, -3]
+
+# Lazy enumerators (evita crear arrays intermedios)
+(1..Float::INFINITY).lazy
+  .select(&:even?)
+  .first(5)                         # [2, 4, 6, 8, 10]
+
+# Each_with_object (similar a reduce pero devuelve el objeto)
+numeros.each_with_object([]) { |n, arr| arr << n * 2 }  # [2, 4, 6, ...]
+```
+
+### Metaprogramación
+
+Ruby permite escribir código que escribe código en tiempo de ejecución. Es una de sus características más poderosas.
+
+**`define_method` — definir métodos dinámicamente:**
+```ruby
+class Administrador
+  %w[crear leer actualizar eliminar].each do |accion|
+    define_method("#{accion}_usuario") do |usuario|
+      puts "#{accion.capitalize} usuario #{usuario}"
+    end
+  end
+end
+
+admin = Administrador.new
+admin.crear_usuario("Ana")    # Crear usuario Ana
+admin.eliminar_usuario("Bob") # Eliminar usuario Bob
+```
+
+**`class_eval` y `instance_eval`:**
+```ruby
+class_eval: evalúa código en el contexto de una clase (define métodos de instancia)
+instance_eval: evalúa código en el contexto de una instancia
+
+class Usuario; end
+
+# class_eval — define métodos de instancia
+Usuario.class_eval do
+  def saludar
+    "Hola!"
+  end
+end
+
+Usuario.new.saludar  # "Hola!"
+
+# instance_eval — define métodos singleton (solo para esa instancia)
+usuario = Usuario.new
+usuario.instance_eval do
+  def saludo_personalizado
+    "Hola, soy único!"
+  end
+end
+
+usuario.saludo_personalizado  # "Hola, soy único!"
+Usuario.new.saludo_personalizado  # NoMethodError
+```
+
+**`method_missing` — captura mensajes no definidos:**
+```ruby
+class HashWrapper
+  def initialize(data = {})
+    @data = data
+  end
+
+  def method_missing(name, *args, &block)
+    if @data.key?(name)
+      @data[name]
+    elsif name.to_s.end_with?("=")
+      key = name.to_s.chomp("=").to_sym
+      @data[key] = args.first
+    else
+      super
+    end
+  end
+
+  def respond_to_missing?(name, include_private = false)
+    @data.key?(name) || name.to_s.end_with?("=") || super
+  end
+end
+
+hw = HashWrapper.new(nombre: "Ana", edad: 30)
+hw.nombre     # "Ana"
+hw.edad       # 30
+hw.pais = "Chile"
+hw.pais       # "Chile"
+hw.respond_to?(:nombre)  # true
+```
+
+**`const_missing` — captura constantes no definidas:**
+```ruby
+class ModuloDinamico
+  def self.const_missing(name)
+    const_set(name, Module.new)
+  end
+end
+
+ModuloDinamico::PluginA  # Crea automáticamente el módulo
+```
+
+### RSpec Testing (Básico)
+
+RSpec es el framework de testing estándar en Ruby:
+
+```ruby
+# spec/calculadora_spec.rb
+require_relative "../calculadora"
+
+RSpec.describe Calculadora do
+  subject(:calc) { Calculadora.new }
+
+  describe "#sumar" do
+    it "suma dos números positivos" do
+      expect(calc.sumar(2, 3)).to eq(5)
+    end
+
+    it "suma números negativos" do
+      expect(calc.sumar(-1, -2)).to eq(-3)
+    end
+  end
+
+  describe "#dividir" do
+    it "divide correctamente" do
+      expect(calc.dividir(10, 2)).to eq(5)
+    end
+
+    it "lanza error al dividir por cero" do
+      expect { calc.dividir(10, 0) }.to raise_error(ZeroDivisionError)
+    end
+  end
+
+  # Context con setup
+  describe "#memoria" do
+    before { calc.guardar(42) }
+
+    it "recuerda el valor guardado" do
+      expect(calc.recuperar).to eq(42)
+    end
+  end
+
+  # Matchers comunes
+  describe "matchers" do
+    it "compara valores" do
+      expect("hola").to eq("hola")
+      expect(5).to be > 3
+      expect([1, 2]).to include(1)
+      expect("mundo").to match(/mun/)
+      expect(nil).to be_nil
+      expect([]).to be_empty
+    end
+  end
+end
+```
+
+Fuente: [Ruby docs — Enumerable](https://ruby-doc.org/core/Enumerable.html), [Ruby docs — Proc](https://ruby-doc.org/core/Proc.html), [RSpec docs](https://rspec.info/documentation/), [Metaprogramming Ruby (Paolo Perrotta)](https://pragprog.com/titles/ppmetr2/metaprogramming-ruby-2/)
+
+
+---
+
+## Peculiaridades del lenguaje que debes conocer
+
+**1. El `unless` — condicional inverso**
+
+Ruby tiene `unless` como inverso de `if`:
+
+```ruby
+# En lugar de:
+if !usuario.activo?
+  puts "Usuario inactivo"
+end
+
+# Usa:
+unless usuario.activo?
+  puts "Usuario inactivo"
+end
+
+# También como modificador:
+puts "Usuario inactivo" unless usuario.activo?
+```
+
+**2. Modificadores `if`/`unless` al final de la línea**
+
+```ruby
+puts "Es mayor" if edad >= 18
+puts "Menor" unless edad >= 18
+```
+
+**3. Operador `&.` (safe navigation, Ruby 2.3+)**
+
+```ruby
+# En lugar de:
+usuario && usuario.perfil && usuario.perfil.nombre
+
+# Usa:
+usuario&.perfil&.nombre  # nil si usuario o perfil es nil
+```
+
+**4. Operador `||=` para memoización**
+
+```ruby
+# Si @cache es nil o false, asigna el valor
+@cache ||= calcular_algo_pesado
+
+# Equivalente a:
+@cache = calcular_algo_pesado if @cache.nil? || @cache == false
+```
+
+**5. `case` con múltiples condiciones**
+
+```ruby
+case puntuacion
+when 90..100 then "Excelente"
+when 70..89  then "Notable"
+when 50..69  then "Aprobado"
+else "Suspenso"
+end
+```
+
+**6. La asignación condicional con `&&=`**
+
+```ruby
+usuario = usuario && usuario.activo?  # nil si usuario es nil
+# Equivalente:
+usuario &&= usuario.activo?
+```
+
+**7. Rango como array**
+
+```ruby
+(1..5).to_a        # [1, 2, 3, 4, 5] (rango inclusivo)
+(1...5).to_a       # [1, 2, 3, 4]    (rango exclusivo)
+("a".."e").to_a    # ["a", "b", "c", "d", "e"]
+```
+
+**8. Interpolación en strings**
+
+```ruby
+nombre = "Ana"
+edad = 30
+puts "#{nombre} tiene #{edad} años"  # "Ana tiene 30 años"
+# También evalúa expresiones:
+puts "2 + 2 = #{2 + 2}"              # "2 + 2 = 4"
+```
+
+**9. `__FILE__` y `__LINE__`**
+
+```ruby
+puts __FILE__    # "/ruta/al/archivo.rb"
+puts __LINE__    # 42 (línea actual)
+```
+
+**10. `__END__` y `DATA`**
+
+```ruby
+puts DATA.read  # Lee el contenido después de __END__
+
+__END__
+Este texto no se ejecuta como código.
+Es accesible mediante la constante DATA.
+```
+
+**11. `BEGIN` y `END`**
+
+```ruby
+BEGIN {
+  puts "Esto se ejecuta primero"
+}
+
+puts "Esto en medio"
+
+END {
+  puts "Esto se ejecuta al final (incluso si hay excepción)"
+}
+```
+
+**12. Parallel assignment (asignación múltiple)**
+
+```ruby
+a, b = 1, 2           # a=1, b=2
+a, b = b, a           # Swap sin variable temporal
+a, *resto, c = 1,2,3,4,5  # a=1, resto=[2,3,4], c=5
+```
+
+**13. El operador splat `*`**
+
+```ruby
+def sumar_todos(*numeros)
+  numeros.reduce(:+)
+end
+
+sumar_todos(1, 2, 3, 4)  # 10
+
+# Para expandir arrays en argumentos
+args = [1, 2, 3]
+sumar_todos(*args)  # Equivalente a sumar_todos(1, 2, 3)
+
+# Doble splat para hashes
+def configurar(**opts)
+  opts
+end
+
+configurar(db: "postgres", puerto: 5432)  # {db: "postgres", puerto: 5432}
+```
+
+**14. `tap` y `then`**
+
+```ruby
+# tap — pasa el objeto al bloque y devuelve el objeto original
+"hola".tap { |s| puts s.upcase }  # Imprime "HOLA", devuelve "hola"
+
+# Útil para depuración en cadenas de métodos:
+[1, 2, 3]
+  .map { |n| n * 2 }
+  .tap { |r| puts "Después de map: #{r}" }
+  .select(&:even?)
+
+# then — pasa el objeto al bloque y devuelve el resultado del bloque
+"hola".then { |s| s.upcase }  # Devuelve "HOLA"
+```
+
+**15. El operador `<=>` (spaceship)**
+
+```ruby
+1 <=> 2    # -1 (menor que)
+2 <=> 2    # 0  (igual)
+3 <=> 2    # 1  (mayor que)
+nil <=> 2  # nil (no comparable)
+
+# Fundamental para Comparable y sort personalizado
+["b", "a", "c"].sort { |a, b| b <=> a }  # ["c", "b", "a"]
+```
+
+Fuente: [Ruby docs — Syntax](https://ruby-doc.org/core/doc/syntax/), [Ruby Style Guide](https://rubystyle.guide/)
+
+
+---
+
+## Sistema de archivos
+
+### File — clase estándar
+
+```ruby
+File.read("archivo.txt")            # todo el contenido
+File.readlines("archivo.txt")       # array de líneas
+File.foreach("archivo.txt") { |line| puts line }
+
+File.write("salida.txt", "contenido")
+File.open("salida.txt", "w") { |f| f.write("contenido") }
+
+File.rename("viejo.txt", "nuevo.txt")
+File.delete("archivo.txt")
+File.size("archivo.txt")
+File.exist?("archivo.txt")
+File.directory?("carpeta")
+File.file?("archivo.txt")
+File.mtime("archivo.txt")
+
+# Modos: "r" lectura, "w" escritura (trunca), "a" append, "r+" lectura/escritura
+```
+
+### Dir — directorios
+
+```ruby
+Dir.entries(".")                # [".", "..", "archivo.rb", ...]
+Dir.glob("*.rb")                # ["main.rb", "config.rb"]
+Dir.glob("**/*.rb")             # recursivo
+Dir.mkdir("nueva_carpeta")
+Dir.rmdir("carpeta_vacia")
+Dir.chdir("/tmp")
+Dir.home                        # "/home/usuario"
+Dir.home("root")                # "/root"
+Dir.tmpdir                      # "/tmp"
+```
+
+### FileUtils — operaciones avanzadas
+
+```ruby
+require "fileutils"
+
+FileUtils.cp("origen.txt", "destino.txt")
+FileUtils.cp_r("carpeta/", "backup/")
+FileUtils.mv("viejo.txt", "nuevo.txt")
+FileUtils.rm_rf("carpeta")
+FileUtils.mkdir_p("a/b/c/d")
+FileUtils.touch("archivo.txt")
+FileUtils.compare_stream(io1, io2)
+```
+
+### Pathname — rutas elegantes (stdlib desde Ruby 1.8)
+
+```ruby
+require "pathname"
+
+path = Pathname.new("/usr/local/bin/ruby")
+path.basename                    # #<Pathname:ruby>
+path.dirname                     # #<Pathname:/usr/local/bin>
+path.extname                     # ""
+path.join("bin", "ruby")
+path.relative_path_from(Pathname.new("/usr/local"))
+path.cleanpath
+path.realpath
+```
+
+### Tempfile — archivos temporales
+
+```ruby
+require "tempfile"
+
+Tempfile.create("prefijo") do |f|
+  f.write("contenido temporal")
+  f.rewind
+  puts f.read
+end
+
+tmp = Tempfile.new("prefijo")
+tmp.write("datos")
+tmp.path
+tmp.close
+tmp.unlink
+```
+
+### IO — entrada/salida
+
+```ruby
+puts "salida estándar"
+$stdout.puts "explícito"
+$stderr.puts "error"
+
+$stdin.gets                  # leer una línea
+
+IO.popen("ls -la") { |io| puts io.read }
+IO.copy_stream(File.open("grande.bin"), File.open("copia.bin"))
+IO.select([$stdin], nil, nil, 5)
+```
+
+### StringIO — IO en memoria
+
+```ruby
+require "stringio"
+
+io = StringIO.new
+io.puts "línea 1"
+io.puts "línea 2"
+io.rewind
+io.read  # "línea 1\\nlínea 2\\n"
+```
+
+### CSV
+
+```ruby
+require "csv"
+
+CSV.foreach("datos.csv") do |row|
+  puts row[0]
+end
+
+CSV.parse("nombre,edad\\nAna,30\\nBob,25", headers: true) do |row|
+  puts row["nombre"]
+end
+
+CSV.generate do |csv|
+  csv << ["nombre", "edad"]
+  csv << ["Ana", 30]
+end
+```
+
+### JSON
+
+```ruby
+require "json"
+
+data = JSON.parse('{"nombre": "Ana", "edad": 30}')
+data["nombre"]
+
+JSON.generate({ nombre: "Ana", edad: 30 })
+JSON.pretty_generate({ nombre: "Ana", edad: 30, tags: ["ruby", "json"] })
+```
+
+### YAML
+
+```ruby
+require "yaml"
+
+config = YAML.load(File.read("config.yml"))
+# YAML.safe_load — más seguro
+
+YAML.dump({ nombre: "Ana", edad: 30 })
+```
+
+Fuente: [Ruby-Doc — File](https://ruby-doc.org/core/File.html), [Ruby-Doc — Dir](https://ruby-doc.org/core/Dir.html), [Ruby-Doc — Pathname](https://ruby-doc.org/stdlib-3.0.0/libdoc/pathname/rdoc/Pathname.html), [Ruby-Doc — Tempfile](https://ruby-doc.org/stdlib-3.0.0/libdoc/tempfile/rdoc/Tempfile.html), [FileUtils](https://ruby-doc.org/stdlib-3.0.0/libdoc/fileutils/rdoc/FileUtils.html), [CSV](https://ruby-doc.org/stdlib-3.0.0/libdoc/csv/rdoc/CSV.html), [JSON](https://ruby-doc.org/stdlib-3.0.0/libdoc/json/rdoc/JSON.html), [YAML](https://ruby-doc.org/stdlib-3.0.0/libdoc/yaml/rdoc/YAML.html)
+---
+
+## Algoritmos
+
+### Ordenación
+
+```ruby
+[3, 1, 4, 1, 5, 9].sort             # [1, 1, 3, 4, 5, 9]
+
+%w[manzana pera banana uva kiwi].sort_by(&:length)
+# ["uva", "kiwi", "pera", "banana", "manzana"]
+
+[3, 1, 4].sort { |a, b| b <=> a }    # [4, 3, 1]
+```
+
+`sort_by` implementa la **Schwartzian Transform**: transforma cada elemento una vez, ordena, y restaura. Es más eficiente que `sort` con bloque cuando la transformación es costosa.
+
+### Búsqueda binaria (Ruby 2.0+)
+
+```ruby
+arr = [1, 3, 5, 7, 9, 11]
+arr.bsearch { |x| x >= 7 }           # 7 (primer elemento que cumple)
+arr.bsearch_index { |x| x >= 7 }     # 3 (índice, Ruby 3.0+)
+```
+
+Requiere array ordenado. `Array#bsearch` está disponible desde Ruby 2.0.
+
+### Enumerable avanzado
+
+```ruby
+[3, 1, 4, 1, 5].sort                # [1, 1, 3, 4, 5]
+
+[1, 2, 3, 4, 5, 6].group_by(&:even?)
+# {false=>[1,3,5], true=>[2,4,6]}
+
+[1, 2, 3, 4, 5, 6].partition(&:even?)
+# [[2, 4, 6], [1, 3, 5]]
+
+[1, 1, 2, 2, 2, 3, 3].chunk(&:itself).to_a
+# [[1, [1, 1]], [2, [2, 2, 2]], [3, [3, 3]]]
+
+[1, 2, 3, 4, 5].slice_when { |a, b| b - a > 1 }.to_a
+# [[1, 2, 3], [5]]
+
+(1..5).each_with_object([]) { |n, arr| arr << n * 2 }
+# [2, 4, 6, 8, 10]
+
+(1..5).inject(:+)                    # 15
+(1..5).reduce(1, :*)                 # 120
+
+(1..5).map { |n| n ** 2 }           # [1, 4, 9, 16, 25]
+(1..10).select(&:even?)              # [2, 4, 6, 8, 10]
+(1..10).reject(&:even?)             # [1, 3, 5, 7, 9]
+
+["ruby", "python", "rust", "java"].grep(/^r/)
+# ["ruby", "rust"]
+(1..20).grep(10..15)                # [10, 11, 12, 13, 14, 15]
+["ruby", "python", "rust"].grep(/^r/) { |s| s.upcase }
+# ["RUBY", "RUST"]
+
+[3, 1, 4, 1, 5].min                 # 1
+[3, 1, 4, 1, 5].max                 # 5
+[3, 1, 4, 1, 5].minmax              # [1, 5]
+
+%w[ana pedro bea].min_by(&:length)  # "bea"
+%w[ana pedro bea].max_by(&:length)  # "pedro"
+
+["a", "b", "a", "c", "b", "a"].tally
+# {"a"=>3, "b"=>2, "c"=>1}          # Ruby 2.7+
+```
+
+### Combinaciones y permutaciones
+
+```ruby
+[1, 2, 3].combination(2).to_a
+# [[1, 2], [1, 3], [2, 3]]
+
+[1, 2, 3].permutation(2).to_a
+# [[1, 2], [1, 3], [2, 1], [2, 3], [3, 1], [3, 2]]
+
+[1, 2].repeated_combination(2).to_a
+# [[1, 1], [1, 2], [2, 2]]
+
+[1, 2, 3].product([4, 5])
+# [[1, 4], [1, 5], [2, 4], [2, 5], [3, 4], [3, 5]]
+```
+
+### Tabla Big O de estructuras de datos
+
+| Operación | Array | Hash | Set (require 'set') | SortedSet |
+|-----------|-------|------|---------------------|-----------|
+| Acceso por índice | O(1) | N/A | N/A | N/A |
+| Búsqueda | O(n) | O(1) avg | O(1) avg | O(log n) |
+| Inserción | O(n)* | O(1) avg | O(1) avg | O(log n) |
+| Eliminación | O(n)* | O(1) avg | O(1) avg | O(log n) |
+| Inserción al final | O(1) amortizado | N/A | N/A | N/A |
+
+* A menos que sea al final (amortizado O(1)). Set requiere `require "set"`.
+
+```ruby
+require "set"
+set = Set.new([1, 2, 3, 2, 1])  # #<Set: {1, 2, 3}>
+set.include?(2)                  # true (O(1))
+set << 4
+```
+
+Fuente: [Ruby-Doc — Array](https://ruby-doc.org/core/Array.html), [Ruby-Doc — Enumerable](https://ruby-doc.org/core/Enumerable.html), [Ruby-Doc — Set](https://ruby-doc.org/stdlib-3.0.0/libdoc/set/rdoc/Set.html), [TheAlgorithms/Ruby](https://github.com/TheAlgorithms/Ruby)
+---
+
+## POO
+
+Este ejemplo une todos los conceptos de POO explicados arriba en un sistema realista de biblioteca multimedia. Léelo de arriba a abajo: cada clase añade una capa.
+
+```ruby
+require "json"
+require "securerandom"
+
+# ── Módulo mixin (Comparable + funcionalidad extra) ──
+
+module Exportable
+  def exportar(formato = "json")
+    case formato
+    when "json"
+      hash = {}
+      instance_variables.each do |var|
+        hash[var.to_s.delete("@")] = instance_variable_get(var)
+      end
+      JSON.pretty_generate(hash)
+    else
+      "Exportación a #{formato} no soportada"
+    end
+  end
+end
+
+# ── Clase base con template method ──
+
+class Contenido
+  include Comparable
+  attr_reader :metadatos, :reproducciones
+
+  def initialize(titulo, duracion_segundos, tags: [])
+    @metadatos = {
+      titulo: titulo,
+      duracion_segundos: duracion_segundos,
+      tags: tags,
+      creado: Time.now
+    }
+    @reproducciones = 0
+  end
+
+  def reproducir
+    @reproducciones += 1
+    "▶️ Reproduciendo #{@metadatos[:titulo]}..."
+  end
+
+  # Template method: subclases implementan obtener_info
+  def obtener_info
+    raise NotImplementedError, "Subclase debe implementar obtener_info"
+  end
+
+  # Comparable con <=>
+  def <=>(other)
+    @metadatos[:duracion_segundos] <=> other.metadatos[:duracion_segundos]
+  end
+
+  def to_s
+    "[#{self.class}] #{@metadatos[:titulo]}"
+  end
+
+  def duracion_formateada
+    minutos = @metadatos[:duracion_segundos] / 60
+    segundos = @metadatos[:duracion_segundos] % 60
+    "#{minutos}:#{segundos.to_s.rjust(2, "0")}"
+  end
+end
+
+# ── Herencia simple ──
+
+class Audio < Contenido
+  def initialize(titulo, duracion_segundos, bitrate_kbps, tags: [])
+    super(titulo, duracion_segundos, tags: tags)
+    @bitrate_kbps = bitrate_kbps
+  end
+
+  def obtener_info
+    "🎵 #{@metadatos[:titulo]} | #{duracion_formateada} | #{@bitrate_kbps}kbps | #{@reproducciones} reproducciones"
+  end
+end
+
+class Video < Contenido
+  attr_accessor :subtitulos
+
+  def initialize(titulo, duracion_segundos, resolucion, formato, tags: [])
+    super(titulo, duracion_segundos, tags: tags)
+    @resolucion = resolucion
+    @formato = formato
+    @subtitulos = false
+  end
+
+  def obtener_info
+    "🎬 #{@metadatos[:titulo]} | #{@resolucion} | #{@formato} | #{@subtitulos ? "CC" : "Sin subtítulos"}"
+  end
+end
+
+# ── Herencia múltiple con módulo mixin ──
+
+class Podcast < Audio
+  include Exportable  # Mixin: añade exportar()
+
+  def initialize(titulo, duracion_segundos, bitrate_kbps, episodio, anfitrion, tags: [])
+    super(titulo, duracion_segundos, bitrate_kbps, tags: tags)
+    @episodio = episodio
+    @anfitrion = anfitrion
+  end
+
+  def obtener_info
+    "🎙️ Ep.#{@episodio}: #{@metadatos[:titulo]} | con #{@anfitrion} | #{super()}"
+  end
+
+  # Uso de super en método regular
+  def reproducir
+    "[PODCAST] #{super()}"
+  end
+end
+
+# ── Composición: un objeto contiene otros objetos ──
+
+class ListaReproduccion
+  include Enumerable  # Polimorfismo: podemos iterar con each
+
+  def initialize(nombre)
+    @nombre = nombre
+    @items = []
+  end
+
+  def agregar(item)
+    @items << item
+  end
+
+  def quitar(indice)
+    @items.delete_at(indice) if indice.between?(0, @items.length - 1)
+  end
+
+  def reproducir_todo
+    @items.map(&:reproducir)  # Polimorfismo: cada item se reproduce según su tipo
+  end
+
+  def info_completa
+    @items.map(&:obtener_info)
+  end
+
+  # Enumerable requiere each
+  def each(&block)
+    @items.each(&block)
+  end
+
+  def to_s
+    "📋 #{@nombre} (#{@items.length} items)"
+  end
+end
+
+# ── Duck typing (sin herencia, solo interfaz) ──
+
+class ReproductorDeAudio
+  def reproducir
+    "🎧 Reproduciendo desde reproductor externo"
+  end
+
+  def metadatos
+    { titulo: "Stream externo" }
+  end
+end
+
+def emitir(contenido)
+  # Acepta cualquier objeto que responda a .reproducir y .metadatos
+  puts "📡 Emitiendo: #{contenido.reproducir}"
+end
+
+# ── Singleton con require "singleton" ──
+
+require "singleton"
+
+class Configuracion
+  include Singleton
+
+  attr_accessor :debug, :db_url
+
+  def initialize
+    @debug = true
+    @db_url = "postgres://localhost:5432/mydb"
+  end
+
+  def info
+    "Debug: #{@debug} | BD: #{@db_url}"
+  end
+end
+
+# ── Uso del sistema ──
+
+if __FILE__ == $PROGRAM_NAME
+  # Crear contenido de distintos tipos
+  cancion = Audio.new("Bohemian Rhapsody", 354, 320, tags: ["rock", "clásico"])
+  pelicula = Video.new("Inception", 8880, "4K", "MKV", tags: ["ciencia ficción"])
+  pelicula.subtitulos = true
+
+  podcast = Podcast.new(
+    "El futuro de la IA", 2700, 128,
+    42, "Ana López",
+    tags: ["tecnología", "IA"]
+  )
+
+  # Polimorfismo: cada uno implementa obtener_info a su manera
+  [cancion, pelicula, podcast].each do |contenido|
+    puts contenido.obtener_info
+  end
+
+  # Comparación (Comparable)
+  puts cancion < pelicula  # true (354 < 8880)
+
+  # Composición
+  lista = ListaReproduccion.new("Favoritos")
+  lista.agregar(cancion)
+  lista.agregar(pelicula)
+  lista.agregar(podcast)
+  puts lista
+  puts lista.reproducir_todo
+  puts lista.info_completa
+
+  # Enumerable
+  lista.each { |item| puts " - #{item}" }
+
+  # Duck typing
+  emitir(ReproductorDeAudio.new)  # Funciona sin herencia
+  emitir(pelicula)                # También funciona
+
+  # Mixin Exportable
+  puts podcast.exportar("json")
+
+  # Singleton
+  cfg1 = Configuracion.instance
+  cfg2 = Configuracion.instance
+  puts cfg1.equal?(cfg2)  # true
+  cfg1.debug = false
+  puts cfg2.debug         # false (mismo objeto)
+
+  # Metadatos
+  puts cancion.metadatos[:titulo]  # "Bohemian Rhapsody"
+  puts cancion.duracion_formateada  # "5:54"
+end
+```
+
+**Conceptos demostrados:**
+
+| Concepto | Cómo aparece |
+|---|---|
+| Clase base con método abstracto | `Contenido` con `raise NotImplementedError` |
+| Herencia simple | `Audio < Contenido`, `Video < Contenido` |
+| Herencia con módulo | `Podcast < Audio` + `include Exportable` |
+| `super()` | `super()` llama al constructor padre; `super()` reusa `obtener_info` |
+| Encapsulación | `attr_reader :metadatos` (solo lectura), variables de instancia `@` |
+| Polimorfismo | `obtener_info` da resultados distintos según la clase concreta |
+| Mixin | `Exportable` aporta `exportar()`; `Comparable` da `<`, `>`, etc. |
+| Composición | `ListaReproduccion` contiene `@items` array de `Contenido` |
+| `Enumerable` | `ListaReproduccion` incluye `Enumerable` e implementa `each` |
+| Duck typing | `emitir()` acepta cualquier objeto con `.reproducir` |
+| Singleton | `Configuracion` con `include Singleton` |
+| Métodos mágicos | `to_s`, `<=>`, `each` |
+
+
+---
+
+## Patrones de diseño con ejemplos
+
+### Strategy (con Procs y lambdas)
+Ruby permite pasar comportamiento como bloques, procs o lambdas. El patrón Strategy se vuelve natural:
+
+```ruby
+# Estrategias como lambdas
+ordenar_ascendente = ->(datos) { datos.sort }
+ordenar_descendente = ->(datos) { datos.sort.reverse }
+ordenar_mitades = ->(datos) {
+  mid = datos.length / 2
+  datos[0...mid].sort + datos[mid..-1].sort.reverse
+}
+
+# Contexto que recibe la estrategia
+class Analizador
+  def initialize(&estrategia)
+    @estrategia = estrategia
+  end
+
+  def analizar(datos)
+    @estrategia.call(datos)
+  end
+end
+
+# Uso
+a = Analizador.new(&ordenar_descendente)
+p a.analizar([3, 1, 4, 1, 5, 9])  # [9, 5, 4, 3, 1, 1]
+
+# También se puede pasar un bloque directamente
+b = Analizador.new { |datos| datos.select(&:even?) }
+p b.analizar([1, 2, 3, 4, 5])  # [2, 4]
+```
+
+**Cuándo usarlo:** tienes múltiples variantes de un algoritmo y quieres cambiarlas sin condicionales. En Rails se usa mucho en validaciones personalizadas, scopes, y callbacks.
+
+### Observer (con Observable de la stdlib)
+Ruby incluye `Observable` en su stdlib:
+
+```ruby
+require "observer"
+
+class Sensor
+  include Observable
+
+  def medir(temperatura, humedad)
+    datos = { temperatura: temperatura, humedad: humedad }
+    puts "Sensor: midiendo #{datos}"
+    changed              # Marca que hubo cambio
+    notify_observers(datos)  # Notifica a todos
+  end
+end
+
+class Logger
+  def update(datos)
+    puts "[LOG] Temperatura: #{datos[:temperatura]}°C, Humedad: #{datos[:humedad]}%"
+  end
+end
+
+class Dashboard
+  def update(datos)
+    puts "[DASH] Actualizando gráfico con #{datos[:temperatura]}°C"
+  end
+end
+
+sensor = Sensor.new
+sensor.add_observer(Logger.new)
+sensor.add_observer(Dashboard.new)
+
+sensor.medir(23.5, 60)
+```
+
+**Cuándo usarlo:** eventos, señales, sistemas de plugins, notificaciones en tiempo real. Rails usa `ActiveSupport::Notifications` para un patrón Observer más sofisticado.
+
+### Singleton (con `require "singleton"`)
+Ruby tiene el módulo `Singleton` en la stdlib:
+
+```ruby
+require "singleton"
+
+class DatabasePool
+  include Singleton
+
+  attr_reader :conexiones
+
+  def initialize
+    @conexiones = []
+    @pool_size = 5
+    @pool_size.times { |i| @conexiones << "Conexión-#{i}" }
+    puts "Pool creado con #{@pool_size} conexiones"
+  end
+
+  def obtener_conexion
+    @conexiones.pop || raise("No hay conexiones disponibles")
+  end
+
+  def liberar_conexion(conn)
+    @conexiones << conn
+  end
+end
+
+# Uso — siempre la misma instancia
+pool1 = DatabasePool.instance
+pool2 = DatabasePool.instance
+puts pool1.equal?(pool2)  # true
+```
+
+**Cuándo usarlo:** pools de conexiones, configuración global, logging, caching. Los módulos Ruby también son singletons (solo existe una instancia del módulo), así que a veces basta con un módulo.
+
+### Factory (con metaprogramación)
+
+```ruby
+# Factory con registro automático vía inherited
+class Plugin
+  @registry = {}
+
+  class << self
+    attr_reader :registry
+
+    def inherited(subclass)
+      key = subclass.name.gsub(/([a-z])([A-Z])/, '\1_\2').downcase
+      @registry[key] = subclass
+      puts "Plugin registrado: #{key}"
+    end
+  end
+
+  def ejecutar
+    raise NotImplementedError
+  end
+end
+
+class PluginPDF < Plugin
+  def ejecutar
+    "Procesando PDF"
+  end
+end
+
+class PluginCSV < Plugin
+  def ejecutar
+    "Procesando CSV"
+  end
+end
+
+# Factory dinámica
+def crear_plugin(tipo)
+  klass = Plugin.registry[tipo]
+  raise "Plugin '#{tipo}' no existe. Disponibles: #{Plugin.registry.keys}" unless klass
+  klass.new
+end
+
+# Uso
+puts crear_plugin("plugin_pdf").ejecutar  # Procesando PDF
+```
+
+### Builder (con block como DSL)
+El patrón Builder en Ruby se implementa elegantemente con bloques:
+
+```ruby
+class QueryBuilder
+  def initialize(tabla)
+    @tabla = tabla
+    @selects = ["*"]
+    @where = []
+    @joins = []
+    @order = nil
+    @limit = nil
+  end
+
+  def select(*columnas)
+    @selects = columnas
+    self
+  end
+
+  def where(condicion)
+    @where << condicion
+    self
+  end
+
+  def join(tabla, on)
+    @joins << "JOIN #{tabla} ON #{on}"
+    self
+  end
+
+  def order(orden)
+    @order = orden
+    self
+  end
+
+  def limit(n)
+    @limit = n
+    self
+  end
+
+  def to_sql
+     <<~SQL
+       SELECT #{@selects.join(", ")}
+       FROM #{@tabla}
+       #{@joins.join("\n")}
+       #{@where.any? ? "WHERE #{@where.join(" AND ")}" : ""}
+       #{@order ? "ORDER BY #{@order}" : ""}
+       #{@limit ? "LIMIT #{@limit}" : ""}
+     SQL
+  end
+end
+
+# Uso con encadenamiento
+query = QueryBuilder.new("usuarios")
+  .select("id", "nombre", "email")
+  .where("activo = true")
+  .where("edad >= 18")
+  .order("nombre ASC")
+  .limit(10)
+  .to_sql
+```
+
+### Adapter (duck typing)
+
+```ruby
+class SistemaViejo
+  def query(sql)
+    [["resultado"]]
+  end
+end
+
+require "net/http"
+class SistemaNuevo
+  def execute(query)
+    # Simula API remota
+    [{ resultado: "ok" }]
+  end
+end
+
+# Adaptador: unifica la interfaz via duck typing
+class DBAdapter
+  def initialize(backend)
+    @backend = backend
+  end
+
+  def query(sql)
+    if @backend.respond_to?(:query)
+      @backend.query(sql)
+    elsif @backend.respond_to?(:execute)
+      @backend.execute(sql)
+    else
+      raise "Backend no soportado"
+    end
+  end
+end
+
+# Uso: ambos se usan igual gracias al adaptador
+viejo = DBAdapter.new(SistemaViejo.new)
+nuevo = DBAdapter.new(SistemaNuevo.new)
+p viejo.query("SELECT 1")
+p nuevo.query("SELECT 1")
+```
+
+
+---
+
+## Polimorfismo
+
+Ruby tiene tres formas de polimorfismo. Todas coexisten en el mismo código.
+
+### 1. Duck typing (el original de Ruby)
+```ruby
+class Perro
+  def sonido; "Guau"; end
+end
+
+class Gato
+  def sonido; "Miau"; end
+end
+
+class Coche
+  def sonido; "Brum"; end
+end
+
+def hacer_sonido(cualquier_cosa)
+  puts cualquier_cosa.sonido  # mientras tenga .sonido, funciona
+end
+
+hacer_sonido(Perro.new)  # Guau
+hacer_sonido(Gato.new)   # Miau
+hacer_sonido(Coche.new)  # Brum (¡no es un animal!)
+```
+
+### 2. Polimorfismo por herencia (clásico)
+```ruby
+class Forma
+  def area
+    raise NotImplementedError
+  end
+end
+
+class Circulo < Forma
+  def initialize(radio)
+    @radio = radio
+  end
+
+  def area
+    Math::PI * @radio ** 2
+  end
+end
+
+class Rectangulo < Forma
+  def initialize(ancho, alto)
+    @ancho = ancho
+    @alto = alto
+  end
+
+  def area
+    @ancho * @alto
+  end
+end
+
+def mostrar_area(forma)
+  puts "Área: #{forma.area.round(2)}"
+end
+
+mostrar_area(Circulo.new(5))       # Área: 78.54
+mostrar_area(Rectangulo.new(3, 4)) # Área: 12.00
+```
+
+### 3. Polimorfismo por módulos (mixin)
+```ruby
+module Imprimible
+  def imprimir
+    raise NotImplementedError
+  end
+end
+
+class Documento
+  include Imprimible
+
+  def imprimir
+    "Imprimiendo documento..."
+  end
+end
+
+class Foto
+  include Imprimible
+
+  def imprimir
+    "Imprimiendo foto 4x6..."
+  end
+end
+
+class Impresora
+  include Imprimible
+
+  def imprimir
+    "Imprimiendo informe de estado..."
+  end
+end
+
+def enviar_a_impresion(objeto)
+  puts objeto.imprimir
+end
+
+enviar_a_impresion(Documento.new)  # Imprimiendo documento...
+enviar_a_impresion(Foto.new)       # Imprimiendo foto 4x6...
+enviar_a_impresion(Impresora.new)  # Imprimiendo informe de estado...
+```
+
+El duck typing se resuelve en runtime, la herencia requiere relación explícita de clases, y los módulos permiten compartir comportamiento sin herencia vertical. Los tres son polimorfismo: el mismo interfaz, comportamientos distintos.
+
+
+---
+
+## Multimedia
+
+### RMagick — ImageMagick bindings
+
+```ruby
+require "rmagick"
+
+img = Magick::Image.read("foto.jpg").first
+img.resize!(200, 200)
+img.crop!(50, 50, 100, 100)
+img.write("thumb.jpg")
+
+overlay = Magick::Image.read("watermark.png").first
+img.composite!(overlay, Magick::CenterGravity, Magick::OverCompositeOp)
+
+draw = Magick::Draw.new
+draw.annotate(img, 0, 0, 10, 10, "Texto") do
+  self.font_family = "Arial"
+  self.fill = "white"
+  self.pointsize = 24
+end
+
+img.format = "png"
+img.write("salida.png")
+
+img.blur_image(0, 2)
+```
+
+### mini_magick — ImageMagick CLI wrapper (más ligero)
+
+```ruby
+require "mini_magick"
+
+img = MiniMagick::Image.open("foto.jpg")
+img.resize("200x200")
+img.crop("100x100+50+50")
+img.format("png")
+img.write("salida.png")
+
+img.width       # 200
+img.height      # 200
+img.type        # "PNG"
+```
+
+### ChunkyPNG — PNG puro Ruby
+
+```ruby
+require "chunky_png"
+
+img = ChunkyPNG::Image.new(200, 200, ChunkyPNG::Color::TRANSPARENT)
+img.rect(10, 10, 190, 190, ChunkyPNG::Color('black'), ChunkyPNG::Color('white'))
+img.save("cuadro.png")
+
+img = ChunkyPNG::Image.from_file("cuadro.png")
+img[10, 10]
+```
+
+### streamio-ffmpeg — FFmpeg wrapper
+
+```ruby
+require "streamio-ffmpeg"
+
+movie = FFMPEG::Movie.new("video.mp4")
+
+movie.duration       # 120.5 (segundos)
+movie.resolution     # "1920x1080"
+movie.video_codec    # "h264"
+
+movie.transcode("output.mp4", { video_codec: "libx264", audio_codec: "aac" })
+movie.screenshot("thumb.jpg", seek_time: 30)
+```
+
+### ruby-audio — Wave file read/write
+
+```ruby
+require "ruby-audio"
+
+buffer = RubyAudio::Buffer.new("audio.wav")
+puts buffer.sample_rate  # 44100
+```
+
+### gosu — Juegos 2D
+
+```ruby
+require "gosu"
+
+class Juego < Gosu::Window
+  def initialize
+    super(640, 480)
+    self.caption = "Mi Juego"
+    @x = @y = 320
+  end
+
+  def update
+    @x -= 5 if Gosu.button_down?(Gosu::KB_LEFT)
+    @x += 5 if Gosu.button_down?(Gosu::KB_RIGHT)
+  end
+
+  def draw
+    Gosu.draw_rect(@x, @y, 50, 50, Gosu::Color::RED)
+  end
+end
+
+Juego.new.show
+```
+
+### ruby2d — 2D cross-platform
+
+```ruby
+require "ruby2d"
+
+set title: "Hola Ruby2D", width: 400, height: 300
+
+square = Square.new(x: 100, y: 100, size: 50, color: "blue")
+
+on :key_down do |event|
+  square.x -= 10 if event.key == "left"
+  square.x += 10 if event.key == "right"
+end
+
+show
+```
+
+### gruff — Charting/Graphing
+
+```ruby
+require "gruff"
+
+g = Gruff::Bar.new
+g.title = "Ventas por Mes"
+g.data(:Enero, 100)
+g.data(:Febrero, 150)
+g.data(:Marzo, 80)
+g.write("ventas.png")
+```
+
+Fuente: [RMagick docs](https://rmagick.github.io/), [mini_magick](https://github.com/minimagick/minimagick), [ChunkyPNG](https://github.com/wvanbergen/chunky_png), [streamio-ffmpeg](https://github.com/streamio/streamio-ffmpeg), [gosu](https://www.libgosu.org/), [ruby2d](https://www.ruby2d.com/), [gruff](https://github.com/topfunky/gruff)
+---
+
+## Bases de datos
+
+### SQL (relacionales)
+
+| Librería | Async | ORM | Para qué |
+|---|---|---|---|
+| **ActiveRecord** | No (thread-safe) | ORM completo | Estándar de Rails. PostgreSQL, MySQL, SQLite |
+| **Sequel** | No | ORM completo | Más ligero que AR, thread-safe, multi-BD |
+| **ROM.rb** | No | ORM (composición) | Desacoplado, functional, persistencia abstracta |
+| **pg** | No | Driver PostgreSQL puro | Conexión directa a PostgreSQL, raw SQL |
+| **mysql2** | No | Driver MySQL puro | Conexión directa a MySQL |
+| **sqlite3** | No | Driver SQLite | Perfecto para prototipos y tests |
+
+```ruby
+# ActiveRecord (Sinatra sin Rails)
+require "sinatra"
+require "active_record"
+
+ActiveRecord::Base.establish_connection(
+  adapter: "sqlite3",
+  database: "db.sqlite3"
+)
+
+class Usuario < ActiveRecord::Base
+  validates :nombre, presence: true
+  validates :email, uniqueness: true
+
+  scope :activos, -> { where(activo: true) }
+end
+
+# Migración
+ActiveRecord::Schema.define do
+  create_table :usuarios do |t|
+    t.string :nombre, null: false
+    t.string :email, null: false
+    t.boolean :activo, default: true
+    t.timestamps
+  end
+end
+
+# Uso
+usuario = Usuario.create(nombre: "Ana", email: "ana@email.com")
+puts Usuario.activos.where("created_at > ?", 1.day.ago).to_a
+```
+
+```ruby
+# Sequel — más ligero, thread-safe
+require "sequel"
+DB = Sequel.sqlite("db.sqlite3")
+
+DB.create_table(:usuarios) do
+  primary_key :id
+  String :nombre, null: false
+  String :email, null: false, unique: true
+  TrueClass :activo, default: true
+  DateTime :created_at, default: Sequel::CURRENT_TIMESTAMP
+end
+
+class Usuario < Sequel::Model
+  plugin :validation_helpers
+
+  def validate
+    super
+    validates_presence [:nombre, :email]
+    validates_unique :email
+  end
+end
+
+# Uso
+usuario = Usuario.create(nombre: "Ana", email: "ana@email.com")
+puts DB[:usuarios].where(activo: true).all
+```
+
+### NoSQL
+
+| Librería | Base de datos | Para qué |
+|---|---|---|
+| **redis-rb** | Redis | Caché, sesiones, colas, pub/sub |
+| **mongo** | MongoDB | Driver oficial de MongoDB |
+| **mongoid** | MongoDB | ODM completo tipo ActiveRecord |
+| **elasticsearch-ruby** | Elasticsearch | Cliente oficial para búsqueda |
+| **connection_pool** | Genérica | Pool de conexiones (redis, mongo) |
+
+### Migraciones
+
+```bash
+# ActiveRecord migrations (Rails)
+rails generate migration crear_usuarios
+rails db:migrate
+
+# Sequel migrations
+sequel -m migrations sqlite://db.sqlite3
+
+# Sin ActiveRecord standalone (con sinatra-activerecord gem o standalone-migrations)
+```
+
+Fuente: [ActiveRecord docs](https://guides.rubyonrails.org/active_record_basics.html), [Sequel docs](https://sequel.jeremyevans.net/), [Redis-rb docs](https://github.com/redis/redis-rb)
+
+
+---
+
+## WebSockets
+
+### ActionCable (Rails nativo)
+```ruby
+# app/channels/chat_channel.rb
+class ChatChannel < ApplicationCable::Channel
+  def subscribed
+    stream_from "chat_#{params[:sala]}"
+  end
+
+  def speak(data)
+    mensaje = {
+      usuario: current_user.nombre,
+      texto: data["mensaje"],
+      hora: Time.current
+    }
+    ActionCable.server.broadcast("chat_#{params[:sala]}", mensaje)
+  end
+end
+```
+
+```javascript
+// app/javascript/channels/chat.js
+import consumer from "./consumer"
+
+consumer.subscriptions.create(
+  { channel: "ChatChannel", sala: "general" },
+  {
+    received(data) {
+      console.log(`${data.usuario}: ${data.texto}`)
+    },
+    speak(mensaje) {
+      this.perform("speak", { mensaje: mensaje })
+    }
+  }
+)
+```
+
+### faye-websocket (Sinatra / Rack)
+```ruby
+require "faye/websocket"
+require "sinatra"
+
+Faye::WebSocket.load_adapter("puma")
+
+App = lambda do |env|
+  if Faye::WebSocket.websocket?(env)
+    ws = Faye::WebSocket.new(env)
+
+    ws.on :message do |event|
+      ws.send("Echo: #{event.data}")
+    end
+
+    ws.on :close do |event|
+      ws = nil
+    end
+
+    ws.rack_response
+  else
+    [200, { "Content-Type" => "text/html" }, ["WebSocket server"]]
+  end
+end
+
+run App
+```
+
+### sinatra-websocket
+```ruby
+require "sinatra"
+require "sinatra/websocket"
+
+set :server, :thin
+
+connections = []
+
+get "/chat" do
+  if request.websocket?
+    request.websocket do |ws|
+      ws.onopen do
+        connections << ws
+        ws.send("Conectado!")
+      end
+
+      ws.onmessage do |msg|
+        connections.each { |c| c.send(msg) }
+      end
+
+      ws.onclose do
+        connections.delete(ws)
+      end
+    end
+  end
+end
+```
+
+**Cuándo usar cada uno:**
+- **ActionCable**: si usas Rails, es la solución integrada y más madura
+- **faye-websocket**: para aplicaciones Rack puras (Sinatra, Roda) o cuando necesitas control fino
+- **sinatra-websocket**: para prototipos rápidos con Sinatra
+
+Fuente: [ActionCable docs](https://guides.rubyonrails.org/action_cable_overview.html), [faye-websocket](https://github.com/faye/faye-websocket-ruby)
+
+
+---
+
+## Concurrencia
+
+Ruby tiene varios modelos de concurrencia. Cada uno sirve para un escenario distinto.
+
+### Thread (I/O-bound, GIL presente)
+```ruby
+require "net/http"
+require "json"
+
+urls = [
+  "https://httpbin.org/delay/2",
+  "https://httpbin.org/delay/1",
+  "https://httpbin.org/delay/3"
+]
+
+def descargar(url)
+  puts "Iniciando #{url}"
+  Net::HTTP.get(URI(url))
+  puts "Completado #{url}"
+end
+
+# Secuencial: ~6 segundos
+inicio = Time.now
+urls.each { |u| descargar(u) }
+puts "Secuencial: #{Time.now - inicio}s"
+
+# Con threads: ~3 segundos (I/O-bound, GIL cede en I/O)
+inicio = Time.now
+threads = urls.map { |u| Thread.new { descargar(u) } }
+threads.each(&:join)
+puts "Threads: #{Time.now - inicio}s"
+```
+
+### Fiber (cooperativo, lightweight)
+Los fibers son unidades de ejecución cooperativas. No se ejecutan en paralelo, sino que ceden el control explícitamente:
+
+```ruby
+fiber = Fiber.new do
+  puts "Fiber: paso 1"
+  Fiber.yield 42
+  puts "Fiber: paso 2"
+  "resultado"
+end
+
+puts fiber.resume  # "Fiber: paso 1", devuelve 42
+puts fiber.resume  # "Fiber: paso 2", devuelve "resultado"
+# puts fiber.resume  # FiberError: dead fiber called
+```
+
+### Ractor (Ruby 3.0+ — paralelismo real sin GIL)
+Ractor (Ruby Actor) permite paralelismo real en Ruby. Cada Ractor tiene su propio GIL:
+
+```ruby
+# Sin Ractor (secuencial)
+def calcular_primo(n)
+  return false if n < 2
+  (2..Math.sqrt(n)).none? { |i| n % i == 0 }
+end
+
+rango = (10_000_000..10_001_000)
+
+inicio = Time.now
+rango.each { |n| calcular_primo(n) }
+puts "Secuencial: #{Time.now - inicio}s"
+
+# Con Ractor (paralelo, múltiples núcleos)
+inicio = Time.now
+ractors = rango.map do |n|
+  Ractor.new(n) do |num|
+    { num: num, primo: calcular_primo(num) }
+  end
+end
+
+resultados = ractors.map(&:take)
+puts "Ractors: #{Time.now - inicio}s"
+```
+
+### Async gem (asyncio-style, Ruby 3.1+)
+La gema `async` proporciona un modelo similar a asyncio de Python:
+
+```ruby
+require "async"
+require "async/http/internet"
+
+def descargar_async(url)
+  internet = Async::HTTP::Internet.new
+  response = internet.get(url)
+  response.read
+ensure
+  internet&.close
+end
+
+Async do |task|
+  tareas = urls.map { |url| task.async { descargar_async(url) } }
+  resultados = tareas.map(&:wait)
+  puts "Descargas completadas: #{resultados.length}"
+end
+```
+
+### Concurrent-Ruby (framework de concurrencia)
+```ruby
+require "concurrent"
+
+# Future (promesa)
+future = Concurrent::Future.execute {
+  sleep 2
+  "Resultado del cálculo"
+}
+
+puts "Haciendo otras cosas..."
+puts future.value  # Espera y obtiene el resultado
+
+# Promise (encadenable)
+promise = Concurrent::Promise.new { 10 }
+  .then { |v| v * 2 }
+  .then { |v| v + 5 }
+  .execute
+
+puts promise.value  # 25
+
+# ThreadPool
+pool = Concurrent::ThreadPoolExecutor.new(
+  min_threads: 2,
+  max_threads: 5,
+  max_queue: 10
+)
+
+pool.post { descargar(urls[0]) }
+pool.post { descargar(urls[1]) }
+pool.shutdown
+pool.wait_for_termination
+
+# Agent (estado compartido consistente)
+agente = Concurrent::Agent.new(0)
+agente.update { |v| v + 1 }
+agente.update { |v| v + 2 }
+puts agente.value  # 3
+```
+
+### ¿Cuál usar?
+
+| Escenario | Modelo | Ejemplo |
+|---|---|---|
+| Llamadas HTTP, BD, API externas | Thread / Concurrent-Ruby | Microservicios, scrapers |
+| I/O con muchas conexiones | Async gem | Servidores web, WebSockets |
+| Cálculo intensivo (CPU) | Ractor | Procesamiento de datos, ML |
+| Control manual de ejecución | Fiber | Streams, generadores |
+| Tareas programadas | Concurrent-Ruby | Workers, schedulers |
+| Scripts simples | Thread | Automatizaciones pequeñas |
+
+### Limitaciones del GIL en Ruby (CRuby/MRI)
+El GIL en Ruby existe desde siempre. Significa que **Thread.new NO da paralelismo real** para código CPU-bound. Sin embargo:
+- **I/O-bound**: el GIL se libera durante operaciones de I/O (HTTP, BD, archivos), así que threads son útiles
+- **CPU-bound**: necesitas Ractor o procesos separados
+- **Alternativas**: JRuby y TruffleRuby no tienen GIL y ofrecen paralelismo real con threads
+
+```ruby
+# Verificar si el GIL está activo
+# En CRuby, siempre hay GIL (excepto en Ractors)
+```
+
+Fuente: [Ruby docs — Thread](https://ruby-doc.org/core/Thread.html), [Ruby 3.0 — Ractor](https://docs.ruby-lang.org/en/3.0/ractor_md.html), [Async gem](https://github.com/socketry/async), [Concurrent-Ruby](https://github.com/ruby-concurrency/concurrent-ruby)
+
+
+---
+
+## Librerías esenciales por categoría
+
+### Desarrollo web
+| Librería | Para qué |
+|---|---|
+| **Ruby on Rails** | Framework full-stack, ORM, admin, auth, WebSockets |
+| **Sinatra** | Microframework minimalista, DSL elegante |
+| **Roda** | Routing tree, más rápido que Sinatra |
+| **Grape** | APIs REST-like puras |
+| **Hanami** | Framework alternativo a Rails, más modular |
+| **Puma** | Servidor web multi-thread (estándar) |
+| **Rack** | Interfaz servidor/aplicación (base de todo) |
+
+### Testing
+| Librería | Para qué |
+|---|---|
+| **RSpec** | Framework de testing estándar (BDD) |
+| **Minitest** | Testing incluido en stdlib, más simple |
+| **FactoryBot** | Creación de datos de prueba (reemplaza fixtures) |
+| **Capybara** | Testing de integración / navegador |
+| **VCR** | Graba y reproduce respuestas HTTP |
+| **Shoulda Matchers** | Matchers adicionales para RSpec |
+| **SimpleCov** | Cobertura de código |
+
+### CLI y herramientas
+| Librería | Para qué |
+|---|---|
+| **Thor** | Framework CLI con comandos y opciones |
+| **TTY** | Suite de herramientas para terminal (colores, tablas) |
+| **OptionParser** | Stdlib para parsear argumentos CLI |
+| **HighLine** | Input de usuario con validación |
+
+### Procesamiento de datos
+| Librería | Para qué |
+|---|---|
+| **Nokogiri** | Parseo de HTML/XML (estándar de facto) |
+| **httparty** | Cliente HTTP simple |
+| **faraday** | Cliente HTTP con middlewares |
+| **csv** | Stdlib para archivos CSV |
+| **json** | Stdlib para JSON |
+| **ox** | Procesamiento XML más rápido que Nokogiri |
+
+Fuente: [Ruby Toolbox](https://www.ruby-toolbox.com/), [Awesome Ruby](https://github.com/markets/awesome-ruby)
+
+
+---
+
+## Escala 0-100
+
+Cada nivel incluye lo que debes saber y un proyecto para fijar los conceptos.
+
+### Nivel 0–15: Fundamentos absolutos
+**Qué aprender:**
+- Sintaxis básica: variables, tipos (`Integer`, `String`, `Float`, `Symbol`, `Array`, `Hash`), `puts`, `gets`
+- Condicionales: `if`/`elsif`/`else`/`unless`, operadores de comparación
+- Bucles: `each`, `times`, `while`, `until`, `loop`
+- Métodos: `def`, `return`, parámetros, `puts` vs `p` vs `pp`
+- Strings: interpolación `"#{var}"`, métodos `upcase`, `downcase`, `reverse`, `split`, `strip`
+- Arrays: `[]`, `push`, `pop`, `shift`, `unshift`, `include?`, `join`
+- Símbolos: qué son y por qué se usan como keys
+- **Conceptos clave**: todo es objeto — `42.class`, `"hola".methods`. Solo `nil` y `false` son falsy. `||=` para memoización. `puts` imprime con salto de línea, `p` imprime con `inspect`.
+
+**Proyecto:** *Adivina el número* — el programa elige un número aleatorio entre 1 y 100, el usuario intenta adivinarlo. Pistas de "mayor/menor". Contador de intentos. Manejo de entrada con `gets.chomp.to_i`. Reflexión: ¿por qué `:nombre.object_id == :nombre.object_id` da True pero `"nombre".object_id == "nombre".object_id` da False?
+
+### Nivel 15–30: Bloques, Enumerable y Hash
+**Qué aprender:**
+- Bloques: `do..end` vs `{}`, `yield`, `block_given?`
+- Enumerable: `map`, `select`, `reject`, `reduce`, `group_by`, `partition`, `sort_by`
+- Rangos: `(1..10)`, `("a".."z")`, rango como array
+- Hash: creación, acceso, `symbol keys`, `fetch`, `merge`, `transform_keys`, `transform_values`
+- Símbolos en profundidad: inmutabilidad, memoria única, conversión `to_sym`/`to_s`
+- Argumentos de método: valores por defecto, `*args` (splat), `**kwargs` (doble splat)
+- `each` vs `map` — ¿cuándo usar cada uno?
+- **Conceptos clave**: los bloques son closures — capturan variables del ámbito donde se definen. `each` itera pero no transforma, `map` transforma. `reduce(:+)` es suma total. `group_by` crea un hash agrupado. Los símbolos hacen que los hashes sean eficientes porque la comparación es por ID, no por valor.
+
+**Proyecto:** *Analizador de texto CLI* — lee un archivo de texto, cuenta palabras, líneas, caracteres. Frecuencia de palabras con `group_by` + `map` + `sort_by`. Filtra palabras vacías. Muestra top 10 palabras más frecuentes. Usa `--help` con `OptionParser` para argumentos. Usa `File.read` para leer el archivo.
+
+### Nivel 30–45: POO, módulos y excepciones
+**Qué aprender:**
+- Clases: `class`, `initialize`, `attr_reader/writer/accessor`
+- Variables de instancia (`@`), clase (`@@`), métodos de clase (`self.metodo`)
+- Módulos como mixins: `include`, `extend`, `prepend`
+- `Comparable` (implementar `<=>`), `Enumerable` (implementar `each`)
+- Excepciones: `begin/rescue/ensure/raise`, excepciones personalizadas, `retry`
+- Herencia: `<`, `super`, redefinición de métodos
+- Métodos de acceso: `public`, `protected`, `private`
+- `self`: qué es y cuándo es necesario
+- **Conceptos clave**: `include` añade métodos de instancia, `extend` añade métodos de clase. `Comparable` da `<`, `>`, `<=`, `>=`, `==`, `between?` solo con implementar `<=>`. `private` en Ruby significa "solo se puede llamar sin receptor explícito". `retry` reintenta todo el bloque `begin` — cuidado con bucles infinitos.
+
+**Proyecto:** *Sistema de inventario* — clases `Producto`, `Inventario`. Métodos: `agregar`, `retirar`, `buscar`, `valor_total`. Persistencia con JSON. Excepciones personalizadas (`StockInsuficiente`, `ProductoNoExiste`). `Comparable` en Producto para ordenar por precio. Módulo `Loggable` para registrar operaciones. `Enumerable` en Inventario para poder iterar productos.
+
+### Nivel 45–60: Testing, gemas y metaprogramación básica
+**Qué aprender:**
+- RSpec: `describe`, `context`, `it`, `expect`, `let`, `subject`, `before`
+- RSpec matchers: `eq`, `be`, `include`, `match`, `raise_error`, `change`, `respond_to`
+- `FactoryBot` para datos de prueba
+- `SimpleCov` para cobertura
+- Crear una gema: `bundle gem mi_gema`, estructura, gemspec
+- Metaprogramación básica: `define_method`, `send`, `respond_to?`
+- `method_missing` + `respond_to_missing?` para delegación
+- **Conceptos clave**: `&&=` para condicionales. `send` permite llamar métodos dinámicamente. `respond_to_missing?` debe siempre acompañar a `method_missing` para que `respond_to?` funcione correctamente. Las gems tienen nomenclatura: `gem_name` (snake_case). RSpec usa `expect { ... }.to change { ... }` para mutaciones.
+
+**Proyecto:** *Gema de validación* — gema Ruby instalable con validaciones tipo ActiveRecord pero standalone. `Validator` con `validate`, `valid?`, errores. Metaprogramación con `define_method` para declarar validaciones: `validates_presence_of :nombre`. Tests con RSpec. Cobertura con SimpleCov. Gemfile + gemspec para distribución.
+
+### Nivel 60–75: Rails, APIs y bases de datos
+**Qué aprender:**
+- Ruby on Rails: `rails new`, MVC, rutas, controladores, vistas
+- ActiveRecord: modelos, migraciones, validaciones, asociaciones (`belongs_to`, `has_many`)
+- Rails API mode: `rails new --api`
+- Serialización: `jbuilder`, `active_model_serializers`, `blueprinter`
+- Autenticación: `devise`, `jwt` (gem `jwt`)
+- Background jobs: `sidekiq` + Redis, `good_job` (PostgreSQL)
+- Mailers: `ActionMailer`
+- **Conceptos clave**: Convention over Configuration — Rails asume nombres y estructuras. `belongs_to :usuario` espera `usuario_id`. Migraciones son versiones de esquema, no datos. `includes(:usuario)` para eager loading y evitar N+1. Sidekiq usa Redis como cola, procesa jobs en threads.
+
+**Proyecto:** *API de recetas* — Rails API + PostgreSQL. Endpoints CRUD para recetas e ingredientes. Autenticación JWT con `devise-jwt`. Búsqueda por ingrediente con scopes. Background job que genera PDF de receta con `prawn`. Tests de request con RSpec + FactoryBot. Docker Compose (api + postgres + redis).
+
+### Nivel 75–90: Arquitectura Rails, WebSockets y producción
+**Qué aprender:**
+- Rails avanzado: concerns, service objects, form objects, query objects
+- ActionCable: WebSockets en Rails, canales, broadcasting
+- ActiveStorage: subida de archivos a S3/GCS/local
+- Caching: `Russian Doll Caching`, `Rails.cache`, `Redis`, `etag`, `stale?`
+- Rendimiento: N+1 queries, eager loading, bullet gem, rack-mini-profiler
+- Despliegue: Capistrano, Docker, Kamal (antes MRSK)
+- Monitorización: Sentry, New Relic, Scout, logs estructurados
+- **Conceptos clave**: `includes` vs `preload` vs `eager_load` — controla cómo se cargan las asociaciones. Service Objects encapsulan lógica de negocio. `ActiveRecord::Base.transaction` para operaciones atómicas. `lock!` para optimistic/pessimistic locking. ActionCable requiere Redis como adapter de pub/sub en producción.
+
+**Proyecto:** *Dashboard de monitorización en Rails* — API Rails que recolecta métricas del sistema. Sidekiq para workers de recolección. ActionCable para WebSockets en tiempo real. Caché con Redis para datos agregados. ActiveStorage para screenshots. Tests de integración con sistema. Docker Compose + Kamal para deploy.
+
+### Nivel 90–100: Microservicios, sistemas distribuidos y performance
+**Qué aprender:**
+- Microservicios con Rails/Sinatra + RabbitMQ/Kafka
+- GraphQL: `graphql-ruby`, subscriptions
+- Event Sourcing: `rails_event_store`, `sequent`
+- Performance: profiling con `ruby-prof`, `stackprof`, `rack-mini-profiler`
+- Optimización: evitar object allocations, frozen string literals, `GC` tuning
+- JRuby / TruffleRuby: para proyectos que necesitan paralelismo real
+- Ractor avanzado: canales de comunicación, shareable objects
+- Ruby 3.x: refinements, pattern matching (`case...in`), Ractor, Fiber Scheduler
+- **Conceptos clave**: el GIL en CRuby no es problema si usas Ractor o procesos separados. JRuby no tiene GIL y puede usar threads de Java. Pattern matching en Ruby 3.0+ (`case obj in [a, *] then a end`). Fiber Scheduler permite async I/O nativo sin gems externas. `frozen_string_literal: true` reduce allocations de strings.
+
+**Proyecto:** *Sistema de notificaciones distribuidas* — microservicios con Rails API (usuarios) + Sinatra (notificaciones) + RabbitMQ como event bus. GraphQL como BFF con subscriptions para tiempo real. Workers en Sidekiq para procesar colas. Ractor para procesamiento paralelo de notificaciones. Stackprof para profiling. Docker Compose multi-servicio + Kamal para deploy.
+
+Fuente: [Rails Guides](https://guides.rubyonrails.org/), [Ruby API docs](https://ruby-doc.org/), [Ruby 3.0 — Ractor](https://docs.ruby-lang.org/en/3.0/ractor_md.html)
+
+
+---
+
+## Proyectos prácticos detallados
+
+### Gestor de contraseñas CLI (nivel 30)
+```ruby
+#!/usr/bin/env ruby
+# password_manager.rb
+require "json"
+require "securerandom"
+require "openssl"
+
+class PasswordManager
+  KEY_FILE = "vault.key"
+  VAULT_FILE = "vault.enc"
+
+  def initialize
+    @key = load_or_create_key
+  end
+
+  def add(service, username, password = generate_password)
+    vault = load_vault
+    vault[service] = { username: username, password: password }
+    save_vault(vault)
+    puts "✓ #{service} guardado"
+    password
+  end
+
+  def get(service)
+    vault = load_vault
+    if vault[service]
+      entry = vault[service]
+      puts "Servicio: #{service}"
+      puts "Usuario:  #{entry["username"]}"
+      puts "Password: #{entry["password"]}"
+    else
+      puts "✗ #{service} no encontrado"
+    end
+  end
+
+  def list
+    vault = load_vault
+    vault.each_key { |s| puts " - #{s}" }
+  end
+
+  private
+
+  def load_or_create_key
+    if File.exist?(KEY_FILE)
+      File.binread(KEY_FILE)
+    else
+      key = SecureRandom.random_bytes(32)
+      File.binwrite(KEY_FILE, key)
+      key
+    end
+  end
+
+  def cipher
+    OpenSSL::Cipher.new("aes-256-gcm")
+  end
+
+  def load_vault
+    return {} unless File.exist?(VAULT_FILE)
+
+    data = File.binread(VAULT_FILE)
+    c = cipher
+    c.decrypt
+    c.key = @key
+    # Primeros 12 bytes son el nonce, últimos 16 son el auth tag
+    nonce = data[0...12]
+    tag = data[-16..-1]
+    encrypted = data[12..-17]
+    c.auth_tag = tag
+    c.auth_data = ""
+    JSON.parse(c.update(encrypted) + c.final)
+  rescue => e
+    puts "Error descifrando: #{e.message}"
+    {}
+  end
+
+  def save_vault(vault)
+    c = cipher
+    c.encrypt
+    c.key = @key
+    nonce = c.random_iv
+    encrypted = c.update(vault.to_json) + c.final
+    File.binwrite(VAULT_FILE, nonce + encrypted + c.auth_tag)
+  end
+
+  def generate_password(length = 20)
+    chars = [*"a".."z", *"A".."Z", *"0".."9", "!", "@", "#", "$", "%", "&"]
+    Array.new(length) { chars.sample }.join
+  end
+end
+
+# CLI
+if __FILE__ == $PROGRAM_NAME
+  pm = PasswordManager.new
+
+  case ARGV[0]
+  when "add"
+    pm.add(ARGV[1], ARGV[2])
+  when "get"
+    pm.get(ARGV[1])
+  when "list"
+    pm.list
+  when "generate"
+    puts pm.send(:generate_password, (ARGV[1] || 20).to_i)
+  else
+    puts "Uso: ruby password_manager.rb <add|get|list|generate> [args]"
+  end
+end
+```
+
+### Web scraper con Nokogiri (nivel 45)
+```ruby
+require "net/http"
+require "nokogiri"
+require "json"
+require "uri"
+
+Article = Struct.new(:title, :url, :source, keyword_init: true)
+
+def fetch_page(url)
+  uri = URI(url)
+  response = Net::HTTP.get_response(uri)
+  response.body if response.code.to_i == 200
+end
+
+def parse_news(html, source_url)
+  doc = Nokogiri::HTML(html)
+  articles = []
+
+  doc.css("article h2 a, .headline a, .storylink").each do |link|
+    href = link["href"]
+    next unless href
+    url = href.start_with?("http") ? href : URI.join(source_url, href).to_s
+
+    articles << Article.new(
+      title: link.text.strip,
+      url: url,
+      source: source_url
+    )
+  end
+
+  articles
+end
+
+def scrape_sources(sources)
+  threads = sources.map do |url|
+    Thread.new do
+      html = fetch_page(url)
+      next [] unless html
+      puts "✓ #{url} — #{html.length} bytes"
+      parse_news(html, url)
+    end
+  end
+
+  threads.flat_map(&:value)
+end
+
+if __FILE__ == $PROGRAM_NAME
+  sources = [
+    "https://news.ycombinator.com",
+    "https://www.ruby-lang.org/en/news/"
+  ]
+
+  articles = scrape_sources(sources)
+  articles.first(10).each do |article|
+    puts "[#{article.source}] #{article.title}"
+    puts "  #{article.url}"
+    puts
+  end
+
+  puts "Total: #{articles.length} artículos"
+end
+```
+
+
+---
+
+## Hacks y tips de productividad
+
+**1. `try` en Rails — llamada segura a métodos**
+```ruby
+# Rails (ActiveSupport)
+usuario.try(:perfil).try(:nombre)
+# vs safe navigation (Ruby 2.3+)
+usuario&.perfil&.nombre
+```
+
+**2. `&.` — safe navigation operator (Ruby 2.3+)**
+```ruby
+# En lugar de:
+if usuario && usuario.perfil && usuario.perfil.nombre
+  puts usuario.perfil.nombre
+end
+
+# Usa:
+puts usuario&.perfil&.nombre
+```
+
+**3. Refinements para monkey patching seguro**
+```ruby
+module StringExtensions
+  refine String do
+    def palindrome?
+      self == reverse
+    end
+  end
+end
+
+using StringExtensions
+puts "ana".palindrome?  # true
+```
+
+**4. `method_missing` para DSLs**
+```ruby
+class DSL
+  def method_missing(name, *args, &block)
+    puts "Ejecutando comando: #{name} (#{args.join(', ')})"
+    if block
+      instance_eval(&block)
+    end
+  end
+end
+
+DSL.new.instance_eval do
+  servidor "web-01" do
+    puerto 3000
+    entorno "production"
+  end
+end
+```
+
+**5. `tap` para depuración en cadenas**
+```ruby
+[1, 2, 3]
+  .map { |n| n * 2 }
+  .tap { |r| puts "Después de map: #{r}" }
+  .select(&:even?)
+  .tap { |r| puts "Después de select: #{r}" }
+  .reduce(:+)
+```
+
+**6. `then` para transformaciones (Ruby 2.5+)**
+```ruby
+"42".then { |s| Integer(s) }
+     .then { |n| n * 2 }
+     .then { |n| "Resultado: #{n}" }
+# "Resultado: 84"
+```
+
+**7. Ruby2D — juegos 2D simples**
+```ruby
+require "ruby2d"
+
+set title: "Hola Ruby2D", width: 400, height: 300
+
+square = Square.new(x: 100, y: 100, size: 50, color: "blue")
+
+on :key_down do |event|
+  case event.key
+  when "left" then square.x -= 10
+  when "right" then square.x += 10
+  when "up" then square.y -= 10
+  when "down" then square.y += 10
+  end
+end
+
+show
+```
+
+**8. Pattern Matching (Ruby 3.0+)**
+```ruby
+case [1, 2, 3]
+in [a, b, c]
+  puts "Tres elementos: #{a}, #{b}, #{c}"
+in [a, *rest]
+  puts "Primero: #{a}, resto: #{rest}"
+end
+
+# Pattern matching en hashes
+case { nombre: "Ana", edad: 30 }
+in { nombre:, edad: } if edad >= 18
+  puts "#{nombre} es mayor de edad"
+end
+```
+
+**9. `String#-@` para strings frozen (optimización de memoria)**
+```ruby
+# -@"string" devuelve el string frozen (deduplicado en memoria)
+a = -"hola"
+b = -"hola"
+puts a.object_id == b.object_id  # true
+```
+
+**10. Comandos de terminal desde Ruby**
+```ruby
+# Backticks para ejecutar comandos
+salida = `ls -la`
+puts salida
+
+# system() para ejecutar y obtener código de salida
+system("mkdir -p temp")
+
+# Open3 para control completo
+require "open3"
+stdout, stderr, status = Open3.capture3("ruby -c main.rb")
+```
+
+Fuente: [Ruby 3.0 Pattern Matching](https://docs.ruby-lang.org/en/3.0/syntax/pattern_matching_rdoc.html), [ActiveSupport try](https://api.rubyonrails.org/classes/Object.html#method-i-try), [Ruby2D](https://www.ruby2d.com/)
+
+
+---
+
+## Canales y recursos en español
+
+### YouTube
+- **Ruby De Colombia** — Comunidad activa con streams, tutoriales y eventos en español
+- **CodigoFacilito** — Curso de Ruby y Ruby on Rails desde cero, muy estructurado
+- **HolaMundo** — Ruby básico, comparativas entre lenguajes
+- **Fazt** — Ruby y Rails en tutoriales prácticos
+- **makigas** — Ruby y Rails en vídeos cortos y enfocados
+- **midulive** — Ruby, Rails, desarrollo web en general
+- **Platzi** — Ruta de aprendizaje de Ruby y Rails con proyectos
+
+### Comunidades
+- **r/ruby** (Reddit) — Comunidad global, dudas, proyectos, noticias
+- **Ruby Telegram en español** — Grupos activos de ayuda y discusión
+- **RubyDeColombia** (Telegram/Discord) — Comunidad latinoamericana muy activa
+- **Stack Overflow en español** — Etiqueta `ruby` para dudas técnicas
+- **Ruby Argentina** — Comunidad con meetups y eventos
+
+### Repositorios de código
+- [markets/awesome-ruby](https://github.com/markets/awesome-ruby) — Lista curada de frameworks, librerías y recursos
+- [TheAlgorithms/Ruby](https://github.com/TheAlgorithms/Ruby) — Algoritmos implementados en Ruby (educativo)
+- [rails/rails](https://github.com/rails/rails) — Código fuente del framework
+- [jekyll/jekyll](https://github.com/jekyll/jekyll) — Generador de sitios estáticos en Ruby
+- [ruby/ruby](https://github.com/ruby/ruby) — Código fuente del lenguaje
+
+### Blogs y newsletters
+- [Ruby Weekly](https://rubyweekly.com/) — Newsletter semanal con lo mejor del ecosistema Ruby
+- [RubyGuides](https://www.rubyguides.com/) — Tutoriales prácticos de Ruby (inglés, pero muy claros)
+- [Ruby Tapas](https://www.rubytapas.com/) — Vídeos cortos sobre conceptos específicos de Ruby (de pago, pero hay gratis)
+- [Shopify Engineering](https://shopify.engineering/) — Blog técnico de Shopify (gran usuario de Ruby)
+
+Fuente: búsqueda en YouTube y Reddit, listas curadas de Awesome Ruby
+
+
+---
+
+## Referencias y documentación oficial
+
+- **Docs oficiales**: [ruby-doc.org](https://ruby-doc.org/) — documentación completa del lenguaje y stdlib
+- **Ruby Lang**: [ruby-lang.org](https://www.ruby-lang.org/es/) — sitio oficial, tutorial, descargas
+- **Ruby Core**: [docs.ruby-lang.org/en/master](https://docs.ruby-lang.org/en/master/) — versiones más recientes
+- **Ruby on Rails**: [guides.rubyonrails.org](https://guides.rubyonrails.org/) — guías oficiales del framework
+- **RubyGems**: [rubygems.org](https://rubygems.org/) — índice oficial de gemas
+- **Ruby Style Guide**: [rubystyle.guide](https://rubystyle.guide/) — guía de estilo comunitaria
+- **Ruby API**: [api.rubyonrails.org](https://api.rubyonrails.org/) — API de Rails
+- **CRuby en GitHub**: [github.com/ruby/ruby](https://github.com/ruby/ruby)
+- **RSpec**: [rspec.info](https://rspec.info/) — documentación del framework de testing
+
+### Fuentes de esta guía
+
+Esta guía se ha elaborado a partir de las siguientes fuentes consultadas durante su desarrollo:
+
+- [Ruby-lang.org — Documentación oficial y tutorial](https://www.ruby-lang.org/es/)
+- [Ruby-Doc.org — Core y stdlib](https://ruby-doc.org/)
+- [Ruby on Rails — Guías oficiales](https://guides.rubyonrails.org/)
+- [RSpec — Documentación](https://rspec.info/documentation/)
+- [RubyGuides — Tutoriales prácticos](https://www.rubyguides.com/)
+- [Ruby Tapas — Vídeos de conceptos](https://www.rubytapas.com/)
+- [Awesome Ruby (GitHub)](https://github.com/markets/awesome-ruby) — lista curada de recursos
+- [Ruby Weekly — Newsletter](https://rubyweekly.com/)
+- [r/ruby — Comunidad](https://reddit.com/r/ruby)
+- [Metaprogramming Ruby 2 (Paolo Perrotta)](https://pragprog.com/titles/ppmetr2/metaprogramming-ruby-2/) — referencia de metaprogramación
+- [The Ruby Programming Language (Flanagan & Matsumoto)](https://www.oreilly.com/library/view/the-ruby-programming/9780596516178/) — libro de referencia por el creador
+- [Practical Object-Oriented Design in Ruby (Sandi Metz)](https://www.poodr.com/) — POO avanzada en Ruby
+- [Ruby Science (thoughtbot)](https://github.com/thoughtbot/ruby-science) — patrones de diseño en Ruby
+- [Ruby Style Guide](https://rubystyle.guide/) — convenciones de estilo
+- [Hacker News](https://news.ycombinator.com/) — discusiones y tendencias del ecosistema
+- [Ruby Toolbox](https://www.ruby-toolbox.com/) — catálogo de gemas por popularidad
+
+
+
+---
+
+## 🏆 Retos Relacionados
 
 Pon a prueba lo aprendido con estos desafíos:
 - [Contador De Vocales](/retos/guia-contador-de-vocales)
 - [Filtro De Spam Por Keywords](/retos/guia-filtro-de-spam-por-keywords)
 - [Ordenamiento Por Burbuja](/retos/guia-ordenamiento-por-burbuja)
+

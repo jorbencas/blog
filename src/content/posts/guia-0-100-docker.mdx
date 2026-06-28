@@ -1,106 +1,3023 @@
 ---
 draft: false
 title: "Guía de Docker: De 0 a 100"
-description: "Contenerización de aplicaciones desde cero hasta producción."
-pubDate: "2017-06-11"
-tags: ["docker", "guia", "devops"]
+description: "Desde el primer contenedor hasta producción: instalación, Dockerfile, compose, Swarm, K8s, patrones, seguridad y recursos en español."
+pubDate: "2025-06-28"
+tags: ["docker", "guia", "devops", "contenedores"]
 image: "img/guia_0_100_docker_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 ---
 
 # Guía de Docker: De 0 a 100
 
-## 🛠️ Requisitos e Instalación
+## ¿Qué es Docker?
 
-**Windows/macOS:** Descarga [Docker Desktop](https://www.docker.com/products/docker-desktop/). Incluye Docker Engine, CLI, Compose y una interfaz gráfica. Windows requiere WSL2.
-**Linux:** `sudo apt install docker.io docker-compose-v2 && sudo usermod -aG docker $USER` — añade tu usuario al grupo docker para evitar `sudo`. Luego cierra sesión y vuelve a entrar.
-**Verificación:** `docker --version && docker compose version`. Ejecuta `docker run hello-world` para verificar que todo funciona correctamente.
-**Verificación:** `--version` y prueba con un `"Hola Mundo"`.
-**Herramientas recomendadas:** **Docker CLI** para comandos. **Docker Desktop** UI. **Docker Hub** para imágenes públicas. **Portainer** para gestión web alternativa. **LazyDocker** para terminal TUI.
+Docker es una plataforma de contenerización que permite empaquetar aplicaciones con todas sus dependencias en **contenedores** ligeros y portables. Fue lanzado por Docker Inc. (entonces dotCloud) en 2013, obra de Solomon Hykes, y revolucionó la forma en que desplegamos software.
 
-## 🚀 Hola Mundo y Sintaxis Básica
+**¿Qué lo hace diferente de una máquina virtual?**
 
-**Conceptos clave:**
+| Aspecto | Contenedor Docker | Máquina Virtual |
+|---|---|---|
+| Kernel | Comparte el kernel del host | Kernel propio (huésped) |
+| Arranque | Milisegundos | Minutos |
+| Aislamiento | Namespaces + cgroups (nivel proceso) | Hypervisor (nivel hardware) |
+| Tamaño | MB (solo app + librerías) | GB (SO completo) |
+| Overhead | ~0% CPU/RAM | 5–15% CPU/RAM |
+| Migración | Trivial (imagen portable) | Compleja (snapshots grandes) |
 
-- **Dockerfile:** Archivo de instrucciones para construir una imagen. `FROM` define la imagen base. `COPY` copia archivos. `RUN` ejecuta comandos. `CMD` o `ENTRYPOINT` definen el comando por defecto. Cada instrucción crea una capa (layer) cacheable.
-- **Imágenes y Contenedores:** **Imagen**: plantilla inmutable con el sistema de archivos y configuración. **Contenedor**: instancia ejecutable de una imagen. `docker build -t nombre .` construye. `docker run nombre` ejecuta. `docker ps` lista contenedores activos.
-- **Volúmenes y Redes:** **Volúmenes**: `docker volume create datos` o `-v host:container` para persistir datos. **Redes**: `docker network create miapp` para comunicación entre contenedores. Bridge, host y overlay son los drivers principales.
-- **docker-compose.yml:** Define servicios, redes y volúmenes en YAML. `services:` lista los contenedores. Cada servicio tiene `image`, `build`, `ports`, `volumes`, `environment`, `depends_on`. Un solo comando: `docker compose up -d` levanta todo.
-- **Registro y Distribución:** `docker tag mi-app usuario/mi-app:latest` etiqueta. `docker push usuario/mi-app` sube a Docker Hub. `docker pull usuario/mi-app` descarga. Usa tags semánticos (`v1.0.0`, `latest`, `sha-...`) para versionado.
+Los contenedores usan **namespaces** (pid, net, mnt, uts, ipc, user) para aislar procesos y **cgroups** para limitar recursos (CPU, RAM, disco). Esto es posible porque todos los contenedores sobre una misma máquina comparten el **kernel del host**, a diferencia de las VMs que virtualizan hardware completo.
 
-## 🏗️ Frameworks Populares
+**¿Dónde se usa Docker?**
+- **Desarrollo**: entornos idénticos en local para todo el equipo, eliminando el "en mi máquina funciona"
+- **CI/CD**: builds y tests reproducibles en pipelines (GitHub Actions, GitLab CI, Jenkins)
+- **Producción**: despliegues escalables con Swarm o Kubernetes, microservicios, serverless
+- **Edge/IoT**: contenedores ligeros en dispositivos con recursos limitados
+- **Data Science**: notebooks, modelos ML, pipelines reproducibles
+- **Monolíticos a microservicios**: dockerizar una app existente y partirla gradualmente
 
-### Docker Compose
-**Instalación:** `Incluido en Docker Desktop. Linux: `sudo apt install docker-compose-v2`.`
-Herramienta para definir y ejecutar aplicaciones multi-contenedor. Un solo archivo `compose.yml` describe servicios, redes, volúmenes y dependencias. Comandos: `up -d` (iniciar), `down` (detener), `logs -f` (logs en vivo), `exec` (ejecutar comando en contenedor).
-```docker
-version: '3.8'
+**¿Quién lo usa?** Google (todo corre en contenedores), Netflix (orquestación masiva), Spotify (microservicios en K8s), Uber (cientos de servicios), Airbnb (infraestructura con Docker + K8s).
+
+Fuente: [Docker — What is a Container?](https://www.docker.com/resources/what-container/), [Docker Overview docs.docker.com](https://docs.docker.com/get-started/overview/), [Containers vs VMs (IBM)](https://www.ibm.com/cloud/blog/containers-vs-vms)
+
+---
+
+## ¿Cómo empezar? Instalación en todos los entornos
+
+### Windows
+1. Activa **WSL2** (Windows Subsystem for Linux): `wsl --install` en PowerShell como administrador
+2. Descarga [Docker Desktop](https://www.docker.com/products/docker-desktop/) — incluye Docker Engine, CLI, Compose, BuildKit y UI
+3. Durante la instalación, marca "Use WSL 2 instead of Hyper-V"
+4. Verifica: abre terminal (`cmd`, PowerShell o WSL) y ejecuta `docker --version`
+5. Alternativa ligera: **Docker Engine en WSL2** sin Docker Desktop (instala `docker.io` dentro de tu distro WSL)
+
+### macOS
+- **Docker Desktop** (recomendado): descarga de [docker.com](https://www.docker.com/products/docker-desktop/), incluye todo
+- **Colima** (alternativa open-source): `brew install colima && colima start` — solo el Engine, sin GUI
+- **OrbStack** (alternativa rápida): `brew install orbstack` — nativa Apple Silicon, más rápida que Docker Desktop
+- Verifica: `docker --version && docker compose version`
+
+### Linux (Debian/Ubuntu)
+```bash
+# Eliminar paquetes antiguos si existen
+sudo apt remove docker docker-engine docker.io containerd runc
+
+# Dependencias
+sudo apt update
+sudo apt install ca-certificates curl gnupg
+
+# Añadir repositorio oficial Docker
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Instalar Docker Engine + Compose
+sudo apt update
+sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# Añadir usuario al grupo docker (evitar sudo)
+sudo usermod -aG docker $USER
+newgrp docker  # o cierra sesión y vuelve a entrar
+
+# Verificar
+docker run hello-world
+```
+
+Para Fedora/RHEL:
+```bash
+sudo dnf -y install dnf-plugin
+sudo dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
+sudo dnf install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+sudo systemctl enable --now docker
+sudo usermod -aG docker $USER
+```
+
+### Docker Engine vs Docker Desktop
+
+| Aspecto | Docker Engine | Docker Desktop |
+|---|---|---|
+| Componentes | Engine + CLI + Containerd + BuildKit | Engine + CLI + UI + Compose + BuildKit + Extensions |
+| Plataforma | Linux | Windows, macOS (Linux vía VM) |
+| Licencia | Apache 2.0 | Free para pequeñas empresas, pago para grandes |
+| Consumo RAM | ~50–100 MB | ~1–2 GB (la VM come recursos) |
+| Instalación | Repositorio oficial / apt / dnf | Installer con GUI |
+| Ideal para | Servidores, CI/CD, producción | Desarrollo local en Win/Mac |
+
+### Rootless mode (Linux)
+
+Ejecuta el daemon Docker sin privilegios de root para mayor seguridad:
+
+```bash
+# Instalar dependencias del modo rootless
+sudo apt install -y uidmap dbus-user-system
+
+# Instalar rootless (después de tener docker instalado)
+dockerd-rootless-setuptool.sh install
+
+# Variables de entorno (añadir a ~/.bashrc)
+export PATH=/usr/bin:$PATH
+export DOCKER_HOST=unix:///run/user/$UID/docker.sock
+
+# systemd --user
+systemctl --user enable docker --now
+```
+
+Con rootless, los contenedores se ejecutan con el UID del usuario. No necesitas `sudo` ni estar en el grupo `docker`. Limitaciones: ciertas configuraciones de red (bridge por defecto solo funciona con `slirp4netns`) y monturas `--privileged` no disponibles.
+
+### Alias útiles para el día a día
+
+Añade a tu `~/.bashrc` o `~/.zshrc`:
+
+```bash
+alias dkps='docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"'
+alias dkls='docker image ls --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}"'
+alias dkrm='docker rm -f $(docker ps -aq) 2>/dev/null; echo "Contenedores eliminados"'
+alias dklog='docker logs -f --tail 100'
+alias dkexec='docker exec -it'
+alias dkprune='docker system prune -af --volumes'
+alias dcup='docker compose up -d --build'
+alias dcdown='docker compose down'
+alias dclogs='docker compose logs -f'
+alias dki='docker images'
+alias dkinspect='docker inspect'
+alias dkstats='docker stats --no-stream'
+alias dktop='docker top'
+alias dknetwork='docker network ls'
+alias dkvolume='docker volume ls'
+alias dkbuild='docker build -t'
+alias dkrun='docker run -it --rm'
+```
+
+Fuente: [Docker Engine installation docs](https://docs.docker.com/engine/install/), [Docker Desktop docs](https://docs.docker.com/desktop/), [Rootless mode docs](https://docs.docker.com/engine/security/rootless/)
+
+---
+
+## Primeros pasos y configuración del entorno
+
+### El primer contenedor ("Hola Mundo")
+
+```bash
+docker run hello-world
+```
+
+Este comando: (1) Docker busca la imagen `hello-world` localmente; (2) no la encuentra, la descarga de Docker Hub; (3) crea un contenedor a partir de la imagen; (4) ejecuta el binario `hello` que imprime el mensaje de bienvenida; (5) el contenedor se detiene (exit 0). Has ejecutado tu primer contenedor.
+
+### Dockerfile básico
+
+Un Dockerfile es un script de instrucciones para construir una imagen. Cada instrucción crea una **capa** (layer) que se cachea.
+
+```dockerfile
+# app/Dockerfile
+FROM node:20-alpine        # Imagen base: Node 20 sobre Alpine Linux (~120 MB)
+WORKDIR /app               # Directorio de trabajo dentro del contenedor
+COPY package*.json ./      # Copia solo los archivos de dependencias (capa 1)
+RUN npm ci --omit=dev      # Instala dependencias de producción (capa 2)
+COPY . .                   # Copia el código fuente (capa 3)
+EXPOSE 3000                # Documenta el puerto (no lo abre)
+CMD ["node", "server.js"]  # Comando por defecto al arrancar el contenedor
+```
+
+Construye y ejecuta:
+
+```bash
+docker build -t mi-app .       # Construye la imagen (-t = tag)
+docker run -p 3000:3000 mi-app # Ejecuta: mapea puerto 3000 host → 3000 contenedor
+```
+
+### .dockerignore
+
+Excluye archivos del contexto de build para acelerar y evitar leaks de secretos:
+
+```dockerignore
+node_modules
+.git
+.env
+*.md
+.gitignore
+Dockerfile
+.dockerignore
+dist
+.cache
+npm-debug.log
+```
+
+### docker compose
+
+Define múltiples servicios en YAML y los levanta con un solo comando:
+
+```yaml
+# compose.yml
 services:
   web:
     build: .
     ports:
       - "3000:3000"
     volumes:
-      - .:/app
-      - /app/node_modules
+      - .:/app          # bind mount para hot reload
+      - /app/node_modules # anula el mount de node_modules (usa el del contenedor)
     environment:
       - NODE_ENV=development
     depends_on:
       - db
+
   db:
-    image: "img/guia_0_100_docker_cover-1200.webp"
+    image: postgres:16-alpine
     volumes:
       - pgdata:/var/lib/postgresql/data
     environment:
-      POSTGRES_PASSWORD: secret
+      POSTGRES_PASSWORD: devpassword
+      POSTGRES_DB: miapp
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
 volumes:
   pgdata:
 ```
-### Docker Swarm / Kubernetes
-**Instalación:** `Swarm: `docker swarm init` (incluido en Docker). K8s: `minikube start` o `kubectl`.`
-**Swarm**: orquestador nativo de Docker. Clúster de nodos, servicios con réplicas, redes overlay, balanceo de carga integrado. **Kubernetes**: estándar de la industria para orquestación. Minikube para desarrollo local, managed K8s (EKS, GKE, AKS) para producción.
-```docker
-# Swarm
-# docker swarm init
-docker service create --name web --replicas 3 -p 80:80 nginx
 
-# Kubernetes (minikube)
-kubectl create deployment web --image=nginx --replicas=3
-kubectl expose deployment web --port=80 --type=LoadBalancer
+```bash
+docker compose up -d      # Levanta todo en background
+docker compose logs -f    # Logs en vivo
+docker compose exec web sh # Terminal interactiva dentro del contenedor web
+docker compose down -v    # Baja todo y elimina volúmenes
 ```
 
-## 📝 Ejercicios Prácticos
+Fuente: [Dockerfile reference](https://docs.docker.com/engine/reference/builder/), [Compose specification](https://docs.docker.com/compose/compose-file/)
 
-1. **Hola Mundo Docker** 🟢 `[Fácil]` — Crea un Dockerfile simple para una app Node.js/Express que sirva "Hola Mundo". Construye la imagen, ejecuta el contenedor y accede en localhost.
-2. **Multi-stage build** 🟡 `[Intermedio]` — Escribe un Dockerfile multi-etapa que compile una app Go o Rust en la primera etapa y copie solo el binario a la imagen final. Compara tamaños de imagen.
-3. **App con Compose** 🟡 `[Intermedio]` — Crea un `compose.yml` con un servicio web (Node.js/Python), una base de datos (PostgreSQL) y un caché (Redis). Usa volúmenes para persistencia y redes para comunicación.
-4. **CI/CD con Docker** 🔴 `[Avanzado]` — Configura un GitHub Action que construya la imagen Docker, la etiquete con el SHA del commit y la publique en Docker Hub al hacer push a main.
-5. **Cluster Swarm local** 🔴 `[Avanzado]` — Inicia un clúster Swarm con 3 nodos (1 manager + 2 workers) usando `docker swarm init` y `docker swarm join`. Despliega un servicio con réplicas.
+---
 
-## ⚡ Buenas Prácticas y Complejidad
+## Paradigmas en Docker
 
-**Buenas prácticas:**
+Docker no es un lenguaje de programación, pero tiene una filosofía y paradigmas propios que definen cómo se construye y despliega software.
 
-- Usa imágenes base oficiales y específicas (`python:3.12-slim` no `python:latest`).
-- Minimiza el número de capas combinando comandos `RUN` con `&&`.
-- Ordena las instrucciones de menos a más cambiantes para maximizar el cache de capas.
-- Nunca almacenes secrets en imágenes — usa variables de entorno o secret mounts.
-- Usa `.dockerignore` para excluir archivos innecesarios del contexto de build.
-- Ejecuta el contenedor como usuario no root (`USER appuser`) por seguridad.
+### Declarativo (no imperativo)
 
-**Complejidad algorítmica (Big O):**
+En el enfoque **imperativo** escribes *cómo* hacer algo paso a paso. En Docker escribes *qué* quieres — el estado deseado.
 
-El build de imágenes es O(n) donde n es el número de capas, pero el cache reduce drásticamente builds repetidos (O(1) si solo cambia la última capa). La ejecución de contenedores tiene overhead mínimo (~0%). Docker Compose añade complejidad O(s) para la resolución de dependencias entre servicios.
+**Imperativo** (scripts de shell para configurar un servidor):
+```bash
+# Script imperativo: paso a paso
+apt update
+apt install -y nginx
+echo '<h1>Hola</h1>' > /var/www/html/index.html
+systemctl enable nginx
+systemctl start nginx
+```
 
-## 📚 Recursos y Documentación
+**Declarativo** (Dockerfile — describes el estado final):
+```dockerfile
+FROM nginx:alpine
+COPY index.html /usr/share/nginx/html/
+# Docker se encarga de construir y ejecutar esto
+```
 
-- 📖 [Docker Documentación](https://docs.docker.com/)
-- 🔧 [Docker Hub](https://hub.docker.com/)
-- 📖 [Docker en GitHub](https://github.com/docker)
-- 🔧 [Play with Docker](https://labs.play-with-docker.com/)
-- 🌐 [Docker Curriculum](https://docker-curriculum.com/)
+Un `compose.yml` también es declarativo: describes servicios, redes y volúmenes, y Docker los materializa. No dices 'crea una red, luego crea un contenedor, luego conéctalo'. Dices 'quiero un servicio web con esta imagen, conectado a esta red'.
 
-### 🏆 Retos Relacionados
+### Inmutabilidad
+
+Las imágenes Docker son **inmutables**: una vez construidas, no cambian. Si necesitas una modificación, construyes una imagen nueva. Esto garantiza:
+
+- **Reproducibilidad**: la misma imagen produce el mismo comportamiento siempre
+- **Versionado**: cada imagen tiene un digest (SHA256) único
+- **Rollbacks**: volver a una versión anterior es tan simple como desplegar la imagen anterior
+- **Seguridad**: si una imagen está comprometida, construyes una nueva, no parcheas la existente
+
+```bash
+docker pull nginx:alpine
+docker inspect nginx:alpine --format='{{.RepoDigests}}'
+# [nginx@sha256:...] — digest único e inmutable
+```
+
+### Composición
+
+Docker Compose implementa **composición sobre herencia**: en lugar de tener una imagen monolítica que hace de todo, compones servicios pequeños y especializados:
+
+```yaml
+services:
+  api:      # Hace una cosa bien
+  db:       # Hace otra cosa bien
+  cache:    # Hace otra cosa bien
+  worker:   # Hace otra cosa bien
+```
+
+Cada servicio es independiente, intercambiable y escalable por separado. Esto es **composición**: un todo (la app) formado por partes (servicios) que pueden reemplazarse individualmente.
+
+### Infraestructura como Código (IaC)
+
+Docker es una herramienta fundamental de IaC. Tu infraestructura se define en archivos (Dockerfile, compose.yml) que:
+
+- Se versionan en Git
+- Se revisan en pull requests
+- Se prueban en CI/CD
+- Se despliegan automáticamente
+
+```bash
+# La infraestructura vive en el repositorio
+git log --oneline docker/Dockerfile
+git diff docker/compose.yml
+```
+
+**Contraste con el enfoque tradicional:**
+| Aspecto | Tradicional (shell) | Docker (IaC) |
+|---|---|---|
+| Configuración | Scripts manuales | Dockerfile + compose.yml |
+| Consistencia | Depende del operador | Garantizada por la imagen |
+| Versionado | No versionado | Git + tags semánticos |
+| Reproducibilidad | Frágil | Garantizada (imagen inmutable) |
+| Rollback | Complejo | `docker pull imagen:anterior` |
+
+Fuente: [Infrastructure as Code (Martin Fowler)](https://martinfowler.com/bliki/InfrastructureAsCode.html), [Docker overview](https://docs.docker.com/get-started/overview/)
+
+---
+
+## Tipos de datos y variables
+
+Docker no tiene variables en el sentido de un lenguaje de programación, pero tiene mecanismos equivalentes para parametrizar builds y ejecuciones.
+
+### ARG vs ENV (build-time vs runtime)
+
+| Directiva | Ámbito | Persiste en imagen | Se sobreescribe |
+|---|---|---|---|
+| `ARG` | Solo durante el build | No (a menos que se asigne a ENV) | `--build-arg` |
+| `ENV` | Build + runtime | Sí | `-e` en docker run |
+
+```dockerfile
+# ARG — solo existe mientras se construye
+ARG VERSION=latest
+ARG BUILD_NUMBER
+RUN echo "Versión: $VERSION, Build: $BUILD_NUMBER"
+
+# ENV — disponible en el contenedor en ejecución
+ENV NODE_ENV=production
+ENV DATABASE_URL=postgres://localhost:5432/db
+
+# ARG -> ENV (persistir un ARG en runtime)
+ARG VERSION
+ENV APP_VERSION=$VERSION
+```
+
+```bash
+# Pasar ARG en build
+docker build --build-arg VERSION=1.2.3 --build-arg BUILD_NUMBER=42 -t mi-app .
+
+# Pasar ENV en runtime
+docker run -e NODE_ENV=development -e DATABASE_URL=... mi-app
+```
+
+### Variables en docker-compose y .env
+
+Compose interpola variables del entorno y del archivo `.env`:
+
+```yaml
+# compose.yml
+services:
+  web:
+    image: mi-app:${TAG:-latest}
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - DATABASE_URL=postgres://${DB_USER}:${DB_PASS}@db:5432/miapp
+```
+
+```bash
+# .env (automáticamente leído por compose)
+TAG=1.0.0
+PORT=8080
+DB_USER=admin
+DB_PASS=secreto
+```
+
+Reglas de interpolación en YAML:
+- `${VAR}` — usa el valor de VAR, error si no está definida
+- `${VAR:-default}` — usa 'default' si VAR no está definida
+- `${VAR:?error}` — error personalizado si VAR no está definida
+
+### Tipos en YAML
+
+Compose usa YAML, que tiene estos tipos:
+
+```yaml
+# Strings (con o sin comillas)
+nombre: mi-app
+version: '1.0'
+descripcion: sin comillas también funciona
+
+# Numbers
+puerto: 3000
+replicas: 3
+limite_cpu: 0.5
+
+# Booleans
+activo: true
+ssl: false
+produccion: yes
+
+# Lists
+ports:
+  - "3000:3000"
+  - "443:443"
+
+# Maps (diccionarios)
+labels:
+  app: mi-app
+  env: production
+
+# YAML Anchors & Aliases (reutilizar bloques)
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  web:
+    logging: *default-logging
+  worker:
+    logging: *default-logging
+```
+
+### JSON, exec form y shell form
+
+Docker distingue dos formas de escribir comandos:
+
+```dockerfile
+# EXEC FORM (JSON array) — PREFERIDA
+# No invoca shell, recibe señales directamente
+CMD ["python", "app.py"]
+ENTRYPOINT ["docker-entrypoint.sh"]
+RUN ["apt", "install", "-y", "nginx"]
+
+# SHELL FORM (string) — invoca /bin/sh -c
+# El shell procesa variables, pero no reenvía señales correctamente
+CMD python app.py
+ENTRYPOINT docker-entrypoint.sh
+RUN apt install -y nginx
+```
+
+| Forma | Shell | Variables | Señales (SIGTERM) | Uso |
+|---|---|---|---|---|
+| Exec | No | No expande | Pasan al proceso directo | Preferida para CMD/ENTRYPOINT |
+| Shell | Sí | Expande | Las recibe el shell | Útil para RUN con pipes |
+
+### Tipos de imágenes
+
+Docker ofrece variantes de imágenes base para diferentes necesidades:
+
+| Tipo | Base | Tamaño | Caso de uso |
+|---|---|---|---|
+| **Full** | SO completo | ~1-3 GB | Compatibilidad máxima |
+| **Slim** | SO mínimo | ~100-300 MB | Balance tamaño/funcionalidad |
+| **Alpine** | Alpine Linux (musl libc) | ~5-50 MB | Imágenes mínimas, seguridad |
+| **Distroless** | Solo app + runtime | ~20-100 MB | Máxima seguridad (sin shell) |
+| **Scratch** | Imagen vacía | ~0-10 MB | Binarios estáticos (Go, Rust) |
+
+```dockerfile
+# Alpine: pequeña, rápida, segura
+FROM node:20-alpine
+
+# Slim: Debian mínimo, compatible con glibc
+FROM python:3.12-slim
+
+# Distroless: sin shell, sin apt, solo runtime
+FROM gcr.io/distroless/java21-debian12
+
+# Scratch: puro binario estático
+FROM scratch
+COPY --from=builder /bin/app /app
+CMD ["/app"]
+```
+
+Alpine usa `musl libc` en lugar de `glibc`. Es más pequeña pero puede causar problemas con extensiones nativas. Distroless es la opción más segura: no tiene shell, ni `apt`, ni utilidades — solo tu app y sus dependencias.
+
+Fuente: [Dockerfile reference — ARG](https://docs.docker.com/engine/reference/builder/#arg), [Dockerfile reference — ENV](https://docs.docker.com/engine/reference/builder/#env), [Compose variable substitution](https://docs.docker.com/compose/compose-file/#variable-substitution), [Alpine Linux](https://alpinelinux.org/), [Distroless images (Google)](https://github.com/GoogleContainerTools/distroless), [Scratch image](https://hub.docker.com/_/scratch)
+
+---
+
+## Control de flujo y modularidad
+
+Docker no tiene estructuras de control de programación (if, for, while), pero tiene su propio flujo de construcción y ejecución basado en instrucciones del Dockerfile, multi-stage builds, BuildKit, y docker-compose.
+
+### Instrucciones del Dockerfile como sentencias
+
+Cada instrucción en un Dockerfile es una sentencia que modifica el sistema de archivos o la configuración de la imagen:
+
+```dockerfile
+# COPY con --chown: copia y cambia propietario en un solo paso
+COPY --chown=appuser:appgroup . /app
+
+# RUN: ejecuta comandos en una nueva capa
+RUN apt update && apt install -y curl && rm -rf /var/lib/apt/lists/*
+
+# WORKDIR: establece el directorio de trabajo (mkdir -p si no existe)
+WORKDIR /app/src
+
+# USER: cambia de usuario para siguientes instrucciones
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+
+# EXPOSE: documenta puertos (solo documentación)
+EXPOSE 3000
+```
+
+**Orden importa:** las instrucciones se ejecutan secuencialmente. El orden óptimo es de lo que menos cambia a lo que más cambia para maximizar el cache.
+
+### Multi-stage builds (modularidad entre etapas)
+
+Los multi-stage builds son el equivalente a funciones o módulos: cada etapa produce un artefacto, y puedes copiar selectivamente entre etapas:
+
+```dockerfile
+# Etapa 1: compilación
+FROM golang:1.22 AS builder
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 go build -o /app .
+
+# Etapa 2: pruebas (opcional, solo si se necesita)
+FROM builder AS tester
+RUN go test ./...
+
+# Etapa 3: imagen final mínima
+FROM scratch
+COPY --from=builder /app /app
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+EXPOSE 8080
+ENTRYPOINT ["/app"]
+```
+
+```bash
+# Construir hasta una etapa específica
+docker build --target builder -t mi-app:builder .
+docker build --target tester -t mi-app:tester .
+
+# Solo construir la etapa final
+docker build -t mi-app .
+```
+
+### BuildKit: monturas y heredocs
+
+BuildKit (activado por defecto desde Docker 23.0) añade capacidades avanzadas de modularidad:
+
+```dockerfile
+# syntax=docker/dockerfile:1
+
+FROM python:3.12-slim
+
+# Cache persistente entre builds (no se pierde al hacer docker build)
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install -r requirements.txt
+
+# Montar bind de directorio del host (sin COPY)
+RUN --mount=type=bind,source=./scripts,target=/scripts \
+    /scripts/setup.sh
+
+# Heredocs (Dockerfile con sintaxis heredoc, >= Dockerfile 1.4)
+RUN <<EOF
+apt update
+apt install -y curl git
+rm -rf /var/lib/apt/lists/*
+EOF
+```
+
+```bash
+# Activar BuildKit explícitamente
+DOCKER_BUILDKIT=1 docker build .
+```
+
+### docker-compose: profiles, depends_on, healthcheck
+
+Compose ofrece control de flujo para entornos modulares:
+
+```yaml
+# Profiles: activar/desactivar servicios según el entorno
+services:
+  app:
+    image: mi-app
+    profiles: [prod, staging, dev]
+
+  adminer:
+    image: adminer
+    profiles: [dev]  # Solo en desarrollo
+
+  backup:
+    image: mi-backup
+    profiles: [prod]  # Solo en producción
+
+# depends_on con condiciones
+  worker:
+    build: .
+    depends_on:
+      redis:
+        condition: service_started
+      db:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+
+# healthcheck: monitoreo de estado
+  db:
+    image: postgres:16-alpine
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+```
+
+```bash
+# Activar por perfil
+docker compose --profile prod up -d
+docker compose --profile dev up -d
+
+# Condiciones
+docker compose up -d --wait  # Espera a que todos estén healthy
+```
+
+### YAML anchors vs extends
+
+`extends` está deprecado. Usa anclas YAML para reutilizar configuraciones:
+
+```yaml
+# Moderno: YAML anchors
+x-app-defaults: &app-defaults
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+
+services:
+  web:
+    <<: *app-defaults
+    build: .
+
+  worker:
+    <<: *app-defaults
+    build: ./worker
+```
+
+### Docker Bake (HCL)
+
+Para builds complejos, Docker Bake usa archivos HCL:
+
+```hcl
+# docker-bake.hcl
+variable "TAG" {
+  default = "latest"
+}
+
+group "default" {
+  targets = ["app", "worker"]
+}
+
+target "app" {
+  context = "./app"
+  dockerfile = "Dockerfile"
+  tags = ["ghcr.io/mi-org/app:${TAG}"]
+  cache-from = ["type=gha"]
+  cache-to = ["type=gha,mode=max"]
+  platforms = ["linux/amd64", "linux/arm64"]
+}
+```
+
+```bash
+# Build con Bake
+docker buildx bake
+docker buildx bake app
+docker buildx bake --set app.tags=mi-app:v2
+```
+
+Fuente: [Dockerfile reference](https://docs.docker.com/engine/reference/builder/), [BuildKit docs](https://docs.docker.com/build/buildkit/), [Multi-stage builds](https://docs.docker.com/build/multi-stage/), [Compose profiles](https://docs.docker.com/compose/profiles/), [Docker Bake](https://docs.docker.com/build/bake/)
+
+---
+
+## Conceptos clave explicados a fondo
+
+### Imágenes vs Contenedores
+
+Una **imagen** es una plantilla inmutable de solo lectura que contiene el sistema de archivos y la configuración de la aplicación. Un **contenedor** es una instancia ejecutable de una imagen: una capa de lectura/escritura (capa de contenedor) se añade sobre las capas de solo lectura de la imagen.
+
+```bash
+# Una imagen puede crear múltiples contenedores
+docker build -t mi-app:v1 .     # Crea la imagen
+docker run -d --name c1 mi-app:v1
+docker run -d --name c2 mi-app:v1  # Dos contenedores distintos, misma imagen
+```
+
+### Capas (Layer Caching)
+
+Cada instrucción en el Dockerfile crea una capa. Docker cachea cada capa por su hash. Si una capa no ha cambiado, Docker reusa la cacheada.
+
+```dockerfile
+# ORDEN ÓPTIMO: de lo que menos cambia a lo que más cambia
+FROM python:3.12-slim           # Capa 0 — cambia raramente
+WORKDIR /app                    # Capa 1 — cambia raramente
+COPY requirements.txt .         # Capa 2 — cambia con dependencias
+RUN pip install -r requirements.txt  # Capa 3 — se reconstruye si cambia requirements.txt
+COPY . .                        # Capa 4 — cambia en cada commit
+CMD ["python", "main.py"]       # Capa 5 — metadatos
+```
+
+Si cambias `main.py` pero no `requirements.txt`, Docker reusa las capas 0–3 y solo reconstruye capa 4 en adelante. Esto hace que builds repetidos sean ~O(1) en el caso ideal.
+
+Para maximizar el cache:
+1. Ordena instrucciones de menos a más cambiantes
+2. Usa `.dockerignore` para no mandar archivos que no necesitas
+3. Separa dependencias del código (`COPY requirements.txt` antes de `COPY .`)
+4. Usa `--cache-from` en CI para reusar imágenes previas como caché
+5. Combina `RUN` comandos con `&&` para no crear capas extra
+6. Ten cuidado con `COPY .`: si cualquier archivo en el contexto cambia, invalida la caché de esa capa
+
+### COPY vs ADD
+
+```dockerfile
+COPY archivo.txt /destino/      # Copia archivos locales al contenedor
+ADD archivo.tar.gz /destino/    # COPY + extracción automática de tarballs + URLs
+```
+
+**Regla: usa siempre `COPY`** a menos que necesites específicamente la extracción automática de `ADD`. `ADD` con URLs es considerado mala práctica porque las URLs deberían descargarse con `curl` dentro de `RUN` para mejor control de caché y limpieza.
+
+### ENTRYPOINT vs CMD
+
+Ambos definen el comando que se ejecuta al arrancar el contenedor. La diferencia está en cómo se combinan con los argumentos de `docker run`:
+
+```dockerfile
+# Formas de CMD:
+CMD ["python", "app.py"]          # exec form (JSON array) — PREFERIDA
+CMD python app.py                  # shell form — invoca /bin/sh -c
+CMD ["python"]                     # solo el ejecutable, args por docker run
+
+# Formas de ENTRYPOINT:
+ENTRYPOINT ["python"]              # exec form — PREFERIDA
+ENTRYPOINT python app.py           # shell form — no acepta args de docker run
+```
+
+**Comportamiento combinado:**
+
+| Dockerfile | `docker run imagen` | `docker run imagen --help` |
+|---|---|---|
+| `CMD ["python", "app.py"]` | Ejecuta `python app.py` | Ejecuta `python app.py --help` (args sustituyen a CMD) |
+| `ENTRYPOINT ["python"]` + `CMD ["app.py"]` | Ejecuta `python app.py` | Ejecuta `python --help` (args sustituyen a CMD, no a ENTRYPOINT) |
+| `ENTRYPOINT ["python"]` (sin CMD) | Error — falta argumento | Ejecuta `python --help` |
+
+**Patrón recomendado:** `ENTRYPOINT` para el ejecutable fijo y `CMD` para los argumentos por defecto. Así puedes sobreescribir args con `docker run imagen --version`.
+
+### Dockerfile multi-stage
+
+Permite usar múltiples imágenes base en un mismo Dockerfile. La etapa final solo contiene lo necesario para ejecutar la app, reduciendo drásticamente el tamaño.
+
+```dockerfile
+# ETAPA 1: build — imagen pesada con compiladores
+FROM golang:1.22 AS builder
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 go build -o /bin/app .
+
+# ETAPA 2: runtime — imagen mínima solo con el binario
+FROM scratch
+COPY --from=builder /bin/app /bin/app
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+EXPOSE 8080
+ENTRYPOINT ["/bin/app"]
+```
+
+```bash
+docker build -t go-app .
+docker images go-app  # ~10 MB en lugar de ~800 MB (golang:1.22 pesa ~800 MB)
+```
+
+Para Node.js:
+
+```dockerfile
+# ETAPA 1: build
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+# ETAPA 2: runtime con solo assets compilados
+FROM node:20-alpine
+WORKDIR /app
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+COPY --from=builder --chown=appuser:appgroup /app/dist ./dist
+COPY --from=builder --chown=appuser:appgroup /app/package*.json ./
+RUN npm ci --omit=dev --ignore-scripts
+USER appuser
+EXPOSE 3000
+CMD ["node", "dist/server.js"]
+```
+
+Para Python:
+
+```dockerfile
+FROM python:3.12-slim AS builder
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir --user -r requirements.txt
+
+FROM python:3.12-slim
+WORKDIR /app
+RUN adduser --disabled-password --no-create-home appuser
+COPY --from=builder /root/.local /home/appuser/.local
+COPY --chown=appuser:appuser . .
+ENV PATH=/home/appuser/.local/bin:$PATH
+USER appuser
+CMD ["python", "main.py"]
+```
+
+### ARG vs ENV
+
+```dockerfile
+# ARG: solo disponible durante el build
+ARG VERSION=latest
+RUN echo "Construyendo versión $VERSION"
+
+# ENV: disponible en build y en runtime
+ENV NODE_ENV=production
+ENV DATABASE_URL=postgres://localhost:5432/db
+
+# ARG con valor por defecto desde --build-arg
+ARG BUILD_NUMBER
+RUN echo "Build #$BUILD_NUMBER" > /build.txt
+```
+
+```bash
+docker build --build-arg VERSION=1.2.3 -t mi-app .
+```
+
+- **ARG**: se pasa con `--build-arg` en `docker build`. No persiste en la imagen final (a menos que se use `ENV`). Útil para versiones, tokens de build, mirrors.
+- **ENV**: persiste en el contenedor en runtime. Útil para configuración de la app.
+- **Seguridad**: nunca pongas secrets en `ENV` — la imagen los expone. Usa `--secret` de BuildKit o mounts de secrets en runtime.
+
+### EXPOSE
+
+`EXPOSE` es puramente documentación: no abre ningún puerto. Solo indica qué puertos espera la aplicación:
+
+```dockerfile
+EXPOSE 8080  # Documenta que la app escucha en 8080
+```
+
+Para realmente abrir puertos, usa `-p` en `docker run` o `ports:` en compose:
+
+```bash
+docker run -p 8080:8080 mi-app   # Abre 8080 en host → 8080 en contenedor
+```
+
+### HEALTHCHECK
+
+Permite que Docker monitoree la salud del contenedor:
+
+```dockerfile
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:8080/health || exit 1
+```
+
+Estados: `starting` → `healthy` → `unhealthy`. Swarm y K8s usan esto para reiniciar contenedores o redirigir tráfico. En compose:
+
+```yaml
+services:
+  app:
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+```
+
+### Volúmenes: bind mount, volume, tmpfs
+
+Tres formas de montar datos en contenedores:
+
+```bash
+# 1. VOLUMEN (gestionado por Docker, persistente)
+docker volume create mis-datos
+docker run -v mis-datos:/data ubuntu
+
+# 2. BIND MOUNT (directorio del host, para desarrollo)
+docker run -v /host/ruta:/container/ruta ubuntu
+docker run --mount type=bind,src=/host/ruta,target=/container/ruta ubuntu
+
+# 3. TMPFS (en memoria, no persiste, para datos efímeros)
+docker run --tmpfs /app/temp ubuntu
+```
+
+| Tipo | Persistencia | Rendimiento | Caso de uso |
+|---|---|---|---|
+| Volume | Sí (en `/var/lib/docker/volumes`) | Excelente | BD, datos de producción |
+| Bind mount | Sí (en el host) | Excelente | Desarrollo, hot reload |
+| tmpfs | No (se pierde al parar) | Muy rápido (RAM) | Caché, sesiones, tmp |
+
+En compose:
+
+```yaml
+services:
+  app:
+    volumes:
+      - type: volume
+        source: datos
+        target: /data
+      - type: bind
+        source: ./src
+        target: /app/src
+      - type: tmpfs
+        target: /tmp
+
+volumes:
+  datos:
+```
+
+### Redes: bridge, host, overlay, macvlan
+
+```bash
+# Bridge (por defecto): contenedores en el mismo host se comunican por IP
+docker network create --driver bridge mi-red
+docker run --network mi-red --name web nginx
+docker run --network mi-red --name api node  # api puede resolver "web" por DNS
+
+# Host: el contenedor usa la pila de red del host (sin aislamiento)
+docker run --network host nginx  # Accesible en localhost:80 directamente
+
+# Overlay: multi-host, para Swarm
+docker network create --driver overlay --attachable mi-red-overlay
+
+# Macvlan: asigna IP real de la LAN al contenedor
+docker network create --driver macvlan --subnet=192.168.1.0/24 --gateway=192.168.1.1 -o parent=eth0 macvlan-red
+```
+
+En compose:
+
+```yaml
+services:
+  web:
+    networks:
+      - frontend
+  api:
+    networks:
+      - frontend
+      - backend
+  db:
+    networks:
+      - backend
+
+networks:
+  frontend:
+    driver: bridge
+  backend:
+    driver: bridge
+    internal: true  # Sin acceso externo
+```
+
+### docker-compose.yml en profundidad
+
+```yaml
+services:
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile.prod
+      args:
+        - NODE_ENV=production
+    image: ghcr.io/mi-org/api:${TAG:-latest}
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - DATABASE_URL=postgres://${DB_USER}:${DB_PASS}@db:5432/miapp
+    env_file:
+      - .env.prod
+    volumes:
+      - uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "256M"
+        reservations:
+          cpus: "0.25"
+          memory: "128M"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    profiles:
+      - prod
+      - staging
+
+  db:
+    image: postgres:16-alpine
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      POSTGRES_DB: miapp
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    secrets:
+      - db_password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    profiles:
+      - dev
+      - staging
+      - prod
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  adminer:
+    image: adminer
+    ports:
+      - "8080:8080"
+    profiles:
+      - dev  # Solo se levanta en desarrollo
+
+secrets:
+  db_password:
+    file: ./secrets/db_password.txt
+
+volumes:
+  pgdata:
+  redis-data:
+  uploads:
+```
+
+**`depends_on` opciones:**
+
+- `service_started`: espera a que el contenedor arranque (por defecto)
+- `service_healthy`: espera a que pase el healthcheck (requiere `healthcheck:`)
+- `service_completed_successfully`: espera a que termine exitosamente (para init containers)
+
+**`profiles`**: define qué servicios se levantan según el perfil:
+
+```bash
+docker compose --profile prod up -d   # Solo servicios con profile: prod
+docker compose --profile dev up -d    # Solo servicios con profile: dev
+docker compose up -d                  # Servicios sin profile (siempre se ejecutan)
+```
+
+### Registro: Docker Hub, GHCR, Harbor
+
+```bash
+# Docker Hub (público por defecto)
+docker login
+docker tag mi-app usuario/mi-app:1.0.0
+docker push usuario/mi-app:1.0.0
+
+# GitHub Container Registry (GHCR)
+docker login ghcr.io -u USERNAME --password-stdin < token.txt
+docker tag mi-app ghcr.io/mi-org/mi-app:1.0.0
+docker push ghcr.io/mi-org/mi-app:1.0.0
+
+# Harbor (privado, on-premise)
+docker login harbor.miempresa.com
+docker tag mi-app harbor.miempresa.com/proyecto/mi-app:1.0.0
+docker push harbor.miempresa.com/proyecto/mi-app:1.0.0
+```
+
+**Tags semánticos:**
+
+| Tag | Ejemplo | Cuándo usarlo |
+|---|---|---|
+| `latest` | `mi-app:latest` | Nunca en producción. Solo para desarrollo local |
+| Semántico | `mi-app:1.2.3` | Releases estables: `MAJOR.MINOR.PATCH` |
+| SHA | `mi-app:a1b2c3d4` | Trazabilidad exacta: commit SHA del build |
+| Git tag | `mi-app:v1.2.3` | Alineado con etiquetas de Git |
+| Fecha | `mi-app:2025-06-28` | Builds nocturnos, snapshots diarios |
+
+**Mejor práctica:** etiqueta siempre con SHA + semántico en CI:
+
+```bash
+docker tag mi-app ghcr.io/mi-org/mi-app:${GITHUB_SHA::8}
+docker tag mi-app ghcr.io/mi-org/mi-app:${GITHUB_REF_NAME#v}
+docker push --all-tags ghcr.io/mi-org/mi-app
+```
+
+### Seguridad
+
+**1. No ejecutar como root**
+
+```dockerfile
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+```
+
+En Alpine:
+```dockerfile
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+```
+
+En Debian/Ubuntu:
+```dockerfile
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser
+USER appuser
+```
+
+**2. Secrets: nunca en imágenes**
+
+```bash
+# BuildKit: pasa secretos en build sin que queden en la imagen
+docker build --secret id=mysecret,src=./secret.txt -t mi-app .
+```
+
+```dockerfile
+# Dockerfile
+RUN --mount=type=secret,id=mysecret cat /run/secrets/mysecret
+```
+
+En runtime, usa monturas de secrets (Docker Swarm) o archivos externos:
+
+```yaml
+services:
+  app:
+    secrets:
+      - api_key
+    environment:
+      - API_KEY_FILE=/run/secrets/api_key
+
+secrets:
+  api_key:
+    file: ./secrets/api_key.txt
+```
+
+**3. Capabilities: `--cap-drop`**
+
+Por defecto, Docker da un conjunto restringido de capabilities Linux al contenedor. Reduce aún más:
+
+```bash
+docker run --cap-drop=ALL --cap-add=NET_BIND_SERVICE mi-app
+```
+
+En compose:
+```yaml
+services:
+  app:
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+```
+
+**4. Seccomp y AppArmor**
+
+Docker aplica un perfil seccomp por defecto que bloquea ~44 syscalls peligrosas. Puedes personalizarlo:
+
+```bash
+docker run --security-opt seccomp=./custom-seccomp.json mi-app
+docker run --security-opt apparmor=my-custom-profile mi-app
+```
+
+Para máximo aislamiento (pero menos compatible):
+
+```yaml
+services:
+  app:
+    security_opt:
+      - no-new-privileges:true
+      - seccomp=./seccomp.json
+    read_only: true
+    tmpfs:
+      - /tmp
+```
+
+**5. Análisis de vulnerabilidades**
+
+```bash
+# Docker Scout (integrado en Docker Desktop)
+docker scout quickview mi-app
+docker scout cves mi-app
+
+# Alternativas: Trivy, Snyk, Grype
+trivy image mi-app
+```
+
+Fuente: [Docker security best practices](https://docs.docker.com/engine/security/), [Docker Scout docs](https://docs.docker.com/scout/), [OWASP Docker Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Docker_Security_Cheat_Sheet.html)
+
+---
+
+## Sistema de archivos
+
+Docker tiene su propio sistema de archivos en capas (overlay2) que permite compartir datos entre el host y los contenedores, entre contenedores, y gestionar el almacenamiento eficientemente.
+
+### Tipos de monturas
+
+| Tipo | Persistencia | Rendimiento | Uso principal |
+|---|---|---|---|
+| **Named volume** | Sí (gestionado por Docker) | Excelente | Datos de producción (BD, uploads) |
+| **Bind mount** | Sí (ruta del host) | Excelente | Desarrollo, hot reload |
+| **tmpfs** | No (en RAM) | Muy rápido | Caché, sesiones, datos temporales |
+
+```bash
+# Named volume (Docker gestiona la ruta)
+docker volume create mis-datos
+docker run -v mis-datos:/data ubuntu
+docker volume inspect mis-datos  # Ruta real en /var/lib/docker/volumes/
+
+# Bind mount (ruta explícita del host)
+docker run -v /ruta/host:/ruta/contenedor ubuntu
+docker run --mount type=bind,source=/ruta/host,target=/ruta/contenedor ubuntu
+
+# tmpfs (solo en RAM)
+docker run --tmpfs /app/temp:noexec,nosuid,size=64M ubuntu
+```
+
+### docker cp: copiar archivos
+
+```bash
+# Del host al contenedor
+docker cp ./archivo.conf contenedor:/etc/app/config.conf
+
+# Del contenedor al host
+docker cp contenedor:/var/log/app.log ./app.log
+
+# Copiar directorios completos
+docker cp ./data/ contenedor:/app/data/
+docker cp contenedor:/app/backup/ ./backup/
+```
+
+### COPY vs ADD en Dockerfile
+
+```dockerfile
+# COPY: solo copia archivos locales al contenedor
+COPY archivo.txt /destino/
+COPY --chown=appuser:appgroup . /app
+
+# ADD: COPY + extracción automática de tarballs + URLs
+ADD archivo.tar.gz /destino/   # Extrae automáticamente
+ADD https://ejemplo.com/file /destino/  # Descarga (mala práctica)
+```
+
+**Regla:** usa siempre `COPY`. `ADD` con URLs es mala práctica (mejor `curl` en `RUN`). `ADD` con tarballs es aceptable pero prefiere `COPY` + `RUN tar -xf`.
+
+### Contexto de build y .dockerignore
+
+El **contexto** es todo lo que envías al daemon de Docker para construir. El `.dockerignore` excluye archivos:
+
+```dockerignore
+node_modules
+.git
+.env
+*.md
+.gitignore
+Dockerfile
+.dockerignore
+dist
+.cache
+*.log
+```
+
+```bash
+# Ver el tamaño del contexto antes de build
+docker build -t mi-app .  # Muestra 'Sending build context...'
+
+# Solo enviar lo necesario
+docker build -f ./app/Dockerfile ./app  # Contexto = ./app
+```
+
+### docker import/export (contenedores a tarballs)
+
+```bash
+# Exportar contenedor a tarball (incluye capa de escritura)
+docker export mi-contenedor > mi-contenedor.tar
+docker export mi-contenedor | gzip > mi-contenedor.tar.gz
+
+# Importar tarball como imagen
+cat mi-contenedor.tar | docker import - mi-imagen:importada
+docker import http://ejemplo.com/imagen.tar.gz mi-imagen:importada
+```
+
+### docker save/load (imágenes a tarballs)
+
+```bash
+# Guardar imagen como tarball (preserva capas y metadatos)
+docker save mi-app:latest > mi-app.tar
+docker save mi-app:latest | gzip > mi-app.tar.gz
+
+# Cargar imagen desde tarball
+docker load < mi-app.tar
+docker load -i mi-app.tar.gz
+
+# Transferir imágenes sin registry
+docker save mi-app:latest | ssh servidor docker load
+```
+
+| Comando | Origen | Destino | Preserva capas | Caso de uso |
+|---|---|---|---|---|
+| `export` | Contenedor | Tarball | No (una sola capa) | Snapshots, debugging |
+| `import` | Tarball | Imagen | No | Crear imagen desde export |
+| `save` | Imagen | Tarball | Sí | Transferir imágenes, backups |
+| `load` | Tarball | Imagen | Sí | Restaurar imágenes desde save |
+
+### docker diff: cambios en el contenedor
+
+```bash
+# Muestra archivos añadidos, modificados y eliminados en la capa de escritura
+docker diff mi-contenedor
+
+# Formato: A (añadido), C (modificado), D (eliminado)
+# A /app/logs/access.log
+# C /app/config.json
+# D /app/temp/cache.tmp
+```
+
+Útil para debugging: ver qué archivos modificó un proceso dentro del contenedor.
+
+### Overlay2: el sistema de archivos en capas
+
+Docker usa el driver **overlay2** (Linux nativo) para unir capas en un sistema de archivos único:
+
+```text
+Capa superior (contenedor, r/w)
+---
+Capa N (última instrucción Dockerfile, r/o)
+---
+Capa 3 (RUN pip install, r/o)
+---
+Capa 2 (COPY requirements.txt, r/o)
+---
+Capa 1 (WORKDIR, r/o)
+---
+Capa 0 (FROM python:3.12-slim, r/o)
+```
+
+- **Copy-on-Write (CoW)**: si un contenedor modifica un archivo de una capa inferior, overlay2 lo copia a la capa superior (r/w) antes de modificarlo
+- **Compartición**: si dos contenedores usan la misma imagen base, comparten las mismas capas en disco
+- **Eficiencia**: las capas comunes se descargan una sola vez, aunque las usen varias imágenes
+
+```bash
+# Ver capas de una imagen
+docker history mi-app:latest
+docker inspect mi-app:latest --format '{{.RootFS.Layers}}'
+
+# Ver uso de disco por capas
+docker system df
+```
+
+### Build cache
+
+Docker cachea cada capa por el hash de su instrucción y archivos. La caché se invalida cuando:
+
+1. Cambia el contenido de un archivo `COPY` o `ADD`
+2. Cambia el comando de un `RUN`
+3. Cambia la imagen base (`FROM`)
+4. Una capa anterior se invalida (cascada)
+
+```bash
+# Forzar reconstrucción sin caché
+docker build --no-cache -t mi-app .
+
+# Usar imagen previa como fuente de caché (útil en CI)
+docker build --cache-from ghcr.io/mi-org/app:latest -t mi-app .
+
+# Ver qué capas se usaron de caché
+docker build --progress=plain -t mi-app . 2>&1 | grep CACHED
+```
+
+Fuente: [Docker storage drivers](https://docs.docker.com/storage/storagedriver/), [Overlay2 driver](https://docs.docker.com/storage/storagedriver/overlayfs-driver/), [docker cp reference](https://docs.docker.com/engine/reference/commandline/cp/), [docker save/load](https://docs.docker.com/engine/reference/commandline/save/), [Build cache](https://docs.docker.com/build/cache/)
+
+---
+
+## Algoritmos
+
+Docker no es un lenguaje de programación y no tiene algoritmos en el sentido tradicional. Sin embargo, sus mecanismos internos tienen comportamientos que se pueden analizar en términos de complejidad y eficiencia.
+
+### Capas: union filesystem (O(n) para resolución)
+
+Cada capa es una diferencia respecto a la anterior. Cuando el contenedor lee un archivo, overlay2 debe recorrer las capas de arriba abajo hasta encontrarlo:
+
+```text
+Lectura de /etc/passwd -> busca en capa r/w -> no está -> capa N -> no está -> ... -> capa 0 (imagen base) -> lo encuentra
+```
+
+En el peor caso, la resolución es **O(n)** donde n = número de capas. En la práctica, el caché de metadatos del kernel (dcache) hace que las lecturas repetidas sean O(1). Por eso se recomienda tener ~20-50 capas como máximo, no cientos.
+
+### Cache invalidation (O(n) en capas modificadas)
+
+Cuando una capa cambia, todas las capas siguientes deben reconstruirse:
+
+```text
+FROM python:3.12-slim    # Capa 0 — cacheada
+WORKDIR /app             # Capa 1 — cacheada
+COPY requirements.txt .  # Capa 2 — ¡CAMBIA!
+RUN pip install -r ...   # Capa 3 — se reconstruye (depende de 2)
+COPY . .                 # Capa 4 — se reconstruye (depende de 3)
+CMD ["python", "app.py"] # Capa 5 — metadatos, no se reconstruye
+```
+
+Si la capa 2 se invalida, las capas 3 y 4 también. La complejidad es **O(n)** donde n = capas desde el cambio hasta el final. Por eso el orden óptimo es de menos a más cambiante: minimiza el número de capas afectadas.
+
+### Dependencias entre servicios (resolución topológica)
+
+`depends_on` en compose crea un grafo de dependencias. Docker Compose lo resuelve con un orden topológico:
+
+```yaml
+services:
+  web:
+    depends_on: [api, redis]
+  api:
+    depends_on:
+      db:
+        condition: service_healthy
+  worker:
+    depends_on: [redis, db]
+  redis:
+  db:
+```
+
+Grafo: web -> api -> db, web -> redis, worker -> redis, worker -> db
+Orden topológico: redis, db -> api, worker -> web
+
+La resolución es **O(V + E)** (V = servicios, E = dependencias). No se permiten dependencias cíclicas — error de validación.
+
+### Scheduling en Swarm/Kubernetes
+
+Swarm usa un algoritmo de **spreading**: distribuye réplicas entre nodos para minimizar el desbalance. K8s usa un scheduler más complejo con:
+
+- **Predicados** (filtros): el nodo debe cumplir requisitos (CPU, memoria, taints)
+- **Prioridades** (puntuación): elige el mejor nodo según peso (recursos libres, afinidad)
+
+```text
+Nodo A: 70% CPU usado, 60% RAM usado -> score: 30
+Nodo B: 30% CPU usado, 40% RAM usado -> score: 60 (menos cargado)
+```
+
+Complejidad: **O(P x N)** donde P = número de pods a asignar y N = número de nodos.
+
+### Round-robin en docker-compose --scale
+
+```bash
+docker compose up -d --scale api=5
+```
+
+Compose crea 5 réplicas del servicio `api`. Docker DNS resuelve el nombre del servicio con **round-robin**:
+
+```text
+api -> 172.17.0.2 (primera petición)
+api -> 172.17.0.3 (segunda)
+api -> 172.17.0.4 (tercera)
+...
+api -> 172.17.0.2 (vuelta a empezar)
+```
+
+Comportamiento: **O(1)** por resolución DNS. No hay estado compartido, el balanceo es estadísticamente uniforme.
+
+### Health check polling
+
+Docker ejecuta healthchecks periódicamente según el intervalo configurado:
+
+```text
+t=0  -> healthcheck ejecutado -> healthy
+t=30 -> healthcheck ejecutado -> healthy
+t=60 -> healthcheck ejecutado -> unhealthy (timeout)
+t=90 -> healthcheck ejecutado -> unhealthy (3er intento)
+t=90 -> contenedor marcado como unhealthy -> reinicio
+```
+
+Comportamiento: **O(1)** por healthcheck. El overhead es el del comando en sí (normalmente un curl o pg_isready).
+
+### Tabla resumen
+
+| Concepto | Complejidad / Comportamiento | Factor determinante |
+|---|---|---|
+| Resolución de capas (overlay2) | O(n) peor caso, O(1) con caché | n = número de capas |
+| Cache invalidation | O(n) capas desde el cambio | Orden del Dockerfile |
+| Dependencias (compose) | O(V + E) topológico | V = servicios, E = depends |
+| Scheduling Swarm | Spreading (balance de recursos) | Nodos y réplicas |
+| Scheduling K8s | O(P x N) predicados + prioridades | Pods y nodos |
+| Round-robin DNS | O(1) por resolución | Número de réplicas |
+| Health check | O(1) por intervalo | Intervalo configurado |
+| Build context transfer | O(tamaño contexto) | Archivos enviados al daemon |
+
+Fuente: [OverlayFS — kernel docs](https://www.kernel.org/doc/Documentation/filesystems/overlayfs.txt), [Docker cache invalidation](https://docs.docker.com/build/cache/), [Kubernetes scheduler](https://kubernetes.io/docs/concepts/scheduling-eviction/kube-scheduler/), [Docker Compose depends_on](https://docs.docker.com/compose/compose-file/#depends_on)
+
+---
+
+## Patrones de diseño en Docker
+
+### Sidecar Container
+
+Un contenedor auxiliar que acompaña al principal en el mismo pod/task y extiende o gestiona su funcionalidad.
+
+**Proxy sidecar** (inyectar un reverse proxy junto a la app):
+
+```yaml
+services:
+  app:
+    image: mi-app
+    networks:
+      - backend
+
+  sidecar-proxy:
+    image: nginx:alpine
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "80:80"
+    networks:
+      - backend
+      - frontend
+
+networks:
+  frontend:
+  backend:
+    internal: true
+```
+
+La app solo escucha en la red interna `backend`, el sidecar proxy recibe tráfico externo y lo reenvía.
+
+**Logging sidecar** (colectar logs y enviarlos a un agregador externo):
+
+```yaml
+services:
+  app:
+    image: mi-app
+    volumes:
+      - logs:/var/log/app
+
+  log-collector:
+    image: fluent/fluent-bit:latest
+    volumes:
+      - logs:/logs:ro
+    configs:
+      - source: fluentbit-conf
+        target: /fluent-bit/etc/fluent-bit.conf
+    depends_on:
+      - app
+
+configs:
+  fluentbit-conf:
+    file: ./fluent-bit.conf
+
+volumes:
+  logs:
+```
+
+### Ambassador Container
+
+Un proxy que abstrae la conexión a un servicio externo. El contenedor app se conecta a `localhost` del ambassador, y el ambassador enruta al servicio real.
+
+```yaml
+services:
+  app:
+    image: mi-app
+    environment:
+      - DATABASE_URL=postgres://user:pass@ambassador:5432/db
+    depends_on:
+      - ambassador
+
+  ambassador:
+    image: haproxy:alpine
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    environment:
+      - DB_HOST=db-produccion.externo.com
+      - DB_PORT=5432
+    # Ambos contenedores comparten la misma red
+```
+
+La app nunca conoce la ubicación real de la BD. Cambias el backend en el ambassador sin tocar la app.
+
+### Init Containers
+
+Contenedores que se ejecutan antes que el principal para preparar el entorno (migraciones, seed de datos, permisos, etc.).
+
+```yaml
+services:
+  init-db:
+    image: mi-app-migrations
+    environment:
+      - DATABASE_URL=postgres://user:pass@db:5432/miapp
+    depends_on:
+      db:
+        condition: service_healthy
+    profiles:
+      - setup  # No se ejecuta en producción normal
+
+  app:
+    image: mi-app
+    depends_on:
+      db:
+        condition: service_healthy
+    # En producción, las migraciones se ejecutan como parte del CI/CD
+```
+
+En Kubernetes este patrón es nativo con `initContainers:`. En Docker Compose se simula con `depends_on` + profiles, o con scripts de entrypoint que verifican estado.
+
+### Blue/Green Deploy con etiquetas
+
+Estrategia de despliegue sin downtime: dos versiones (blue = actual, green = nueva) coexisten, y se cambia el tráfico atómicamente.
+
+```yaml
+services:
+  app-blue:
+    image: mi-app:blue
+    ports:
+      - "3001:3000"
+    networks:
+      - app-net
+    profiles:
+      - blue
+
+  app-green:
+    image: mi-app:green
+    ports:
+      - "3002:3000"
+    networks:
+      - app-net
+    profiles:
+      - green
+
+  nginx:
+    image: nginx:alpine
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "80:80"
+    depends_on:
+      - app-blue
+      - app-green
+```
+
+El nginx balancea entre `app-blue:3000` y `app-green:3000`. Para cambiar, editas el upstream en nginx.conf y recargas:
+
+```bash
+docker compose --profile blue up -d   # Despliegas blue
+# Verificas que blue funciona
+docker compose --profile green up -d  # Despliegas green al lado
+# Cambias nginx.conf para apuntar a green
+docker compose exec nginx nginx -s reload
+docker compose --profile blue down    # Apagas blue
+```
+
+Fuente: [Docker patterns (docs.docker.com)](https://docs.docker.com/engine/network/), [Kubernetes Patterns (Red Hat)](https://www.redhat.com/en/topics/containers/kubernetes-patterns)
+
+---
+
+## Composición, herencia y polimorfismo
+
+Docker no es POO, pero sus mecanismos se entienden mejor con analogías de objetos:
+
+### Composición (docker-compose)
+
+Así como en POO un objeto contiene otros objetos, `docker-compose` compone servicios, redes y volúmenes en una aplicación completa:
+
+```yaml
+# docker-compose como "clase compuesta"
+services:
+  web:        # Un "objeto" que contiene...
+    build: .  # ...su propia lógica
+  db:         # Otro "objeto"
+    image: postgres
+  cache:      # Otro "objeto"
+    image: redis
+```
+
+Cada servicio es autocontenido e intercambiable. Cambias `postgres` por `mysql` sin tocar `web`. Es **composición sobre herencia**: prefieres tener servicios pequeños y reemplazables que imágenes enormes que heredan de todo.
+
+### Herencia (FROM)
+
+`FROM` es el equivalente a la herencia en imágenes:
+
+```dockerfile
+# "Clase base"
+FROM python:3.12-slim AS base
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+# "Subclase" que hereda de base y añade comportamiento
+FROM base AS development
+COPY . .
+CMD ["python", "dev_server.py"]
+
+# Otra "subclase"
+FROM base AS production
+COPY . .
+RUN pip install gunicorn
+CMD ["gunicorn", "app:app", "-b", "0.0.0.0:8000"]
+```
+
+Así como en Python `class Production(Base):`, aquí `FROM base AS production` hereda todo de `base` y añade o sobreescribe. El MRO aquí es lineal: cada capa hereda de la anterior.
+
+### Polimorfismo (un compose, múltiples entornos)
+
+El mismo `compose.yml` se comporta distinto según el perfil:
+
+```yaml
+services:
+  app:
+    build: .
+    environment:
+      - DATABASE_URL=postgres://user:pass@db:5432/miapp
+    profiles:
+      - dev
+      - staging
+      - prod
+
+  db-dev:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    profiles:
+      - dev
+
+  db-prod:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_PASSWORD_FILE=/run/secrets/db_password
+    secrets:
+      - db_password
+    profiles:
+      - prod
+```
+
+```bash
+docker compose --profile dev up    # Contenedor dev: app + db-dev
+docker compose --profile prod up   # Contenedor prod: app + db-prod (con secrets)
+```
+
+Misma interfaz (`compose.yml`), comportamientos distintos según el contexto. Eso es polimorfismo.
+
+---
+
+## Multimedia en Docker
+
+Docker encapsula herramientas multimedia como FFmpeg, ImageMagick, OpenCV y servidores de streaming sin instalar nada en el host. Cada herramienta vive en su contenedor con versiones fijas y sin conflictos.
+
+### FFmpeg
+
+FFmpeg es la navaja suiza del audio/vídeo (~1528 codecs). La imagen `jrottenberg/ffmpeg` lo ofrece listo para usar:
+
+```bash
+# Convertir MP4 a GIF
+docker run --rm -v $(pwd):/data jrottenberg/ffmpeg -i /data/input.mp4 /data/output.gif
+
+# Extraer audio
+docker run --rm -v $(pwd):/data jrottenberg/ffmpeg -i /data/video.mp4 -vn -acodec libmp3lame /data/audio.mp3
+
+# Comprimir con H.265
+docker run --rm -v $(pwd):/data jrottenberg/ffmpeg -i /data/input.mp4 -vcodec libx265 -crf 28 /data/output.mp4
+
+# Capturar frame en segundo N
+docker run --rm -v $(pwd):/data jrottenberg/ffmpeg -ss 00:01:30 -i /data/video.mp4 -vframes 1 /data/captura.jpg
+```
+
+### ImageMagick
+
+Procesamiento por lotes de imágenes sin instalar dependencias:
+
+```bash
+# Redimensionar todas las fotos de un directorio
+docker run --rm -v $(pwd):/data dpokidov/imagemagick mogrify -resize 800x600 /data/*.jpg
+
+# Convertir formatos
+docker run --rm -v $(pwd):/data dpokidov/imagemagick convert /data/foto.png /data/foto.jpg
+
+# Añadir marca de agua
+docker run --rm -v $(pwd):/data dpokidov/imagemagick composite -gravity southeast /data/watermark.png /data/foto.jpg /data/foto-marcada.jpg
+```
+
+### OpenCV
+
+Visión artificial en contenedor:
+
+```dockerfile
+FROM python:3.12-slim
+RUN pip install opencv-python-headless
+COPY procesar.py /app/
+CMD ["python", "/app/procesar.py"]
+```
+
+```bash
+docker run --rm -v $(pwd):/data mi-opencv
+```
+
+### Streaming: Plex, Jellyfin y Nginx RTMP
+
+```yaml
+services:
+  jellyfin:
+    image: jellyfin/jellyfin
+    ports:
+      - "8096:8096"
+    volumes:
+      - media:/media
+      - jellyfin-config:/config
+    devices:
+      - /dev/dri:/dev/dri
+    group_add:
+      - "44"
+      - "1000"
+
+  nginx-rtmp:
+    image: tiangolo/nginx-rtmp
+    ports:
+      - "1935:1935"
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+
+volumes:
+  media:
+  jellyfin-config:
+```
+
+### GStreamer
+
+Pipelines de medios en contenedor:
+
+```bash
+# Stream de prueba
+docker run --rm --network host -v $(pwd):/data gstreamer:latest \
+  gst-launch-1.0 videotestsrc ! autovideosink
+```
+
+### GPU y nvidia-docker
+
+Aceleración hardware para transcodificación y ML:
+
+```bash
+# Verificar GPUs disponibles
+docker run --rm --gpus all nvidia/cuda:12.0-base nvidia-smi
+
+# FFmpeg con NVENC
+docker run --rm --gpus all -v $(pwd):/data jrottenberg/ffmpeg \
+  -hwaccel cuda -i /data/input.mp4 -c:v h264_nvenc /data/output.mp4
+```
+
+### WebRTC: mediasoup y Janus
+
+```yaml
+services:
+  mediasoup:
+    image: versatiles/mediasoup:latest
+    ports:
+      - "3000:3000"
+      - "40000-49999:40000-49999/udp"
+    environment:
+      - MEDIASOUP_LISTEN_IP=0.0.0.0
+      - MEDIASOUP_ANNOUNCED_IP=your.public.ip
+
+  janus:
+    image: canyan/janus-gateway:latest
+    ports:
+      - "8088:8088"
+      - "8188:8188"
+      - "20000-20010:20000-20010/udp"
+```
+
+### Procesamiento por lotes
+
+```bash
+#!/bin/bash
+# batch-thumbnails.sh — generar miniaturas de todas las fotos
+INPUT=./fotos
+OUTPUT=./miniaturas
+mkdir -p "$OUTPUT"
+for foto in "$INPUT"/*.jpg; do
+  nombre=$(basename "$foto")
+  docker run --rm -v "$(pwd):/data" dpokidov/imagemagick \
+    convert "/data/$foto" -resize 200x200 "/data/$OUTPUT/$nombre"
+done
+```
+
+### docker-compose para pipeline multimedia
+
+```yaml
+services:
+  ingesta:
+    image: jrottenberg/ffmpeg
+    volumes:
+      - ./input:/input
+      - ./output:/output
+    command: -i /input/source.mp4 -c:v libx264 /output/transcoded.mp4
+
+  thumbnails:
+    image: dpokidov/imagemagick
+    volumes:
+      - ./output:/data
+    command: mogrify -resize 320x240 /data/*.jpg
+
+  streaming:
+    image: tiangolo/nginx-rtmp
+    ports:
+      - "1935:1935"
+    volumes:
+      - ./output:/www/data
+```
+
+Fuente: [jrottenberg/ffmpeg — Docker Hub](https://hub.docker.com/r/jrottenberg/ffmpeg), [ImageMagick Docker](https://hub.docker.com/r/dpokidov/imagemagick), [Jellyfin docs](https://jellyfin.org/docs/), [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/), [mediasoup docs](https://mediasoup.org/documentation/), [Janus Gateway](https://janus.conf.meetecho.com/), [nginx-rtmp Docker](https://hub.docker.com/r/tiangolo/nginx-rtmp)
+
+---
+
+## Bases de datos
+
+### PostgreSQL
+
+```dockerfile
+# Dockerfile postgres con configuración personalizada
+FROM postgres:16-alpine
+
+# Configuraciones de Postgres
+RUN echo "max_connections = 200" >> /usr/share/postgresql/postgresql.conf.sample
+RUN echo "shared_buffers = 256MB" >> /usr/share/postgresql/postgresql.conf.sample
+RUN echo "log_min_duration_statement = 1000" >> /usr/share/postgresql/postgresql.conf.sample
+
+# Scripts de inicialización (se ejecutan en orden alfabético)
+COPY init.sql /docker-entrypoint-initdb.d/
+```
+
+```yaml
+services:
+  postgres:
+    build: ./postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: miapp
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U appuser -d miapp"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: "512M"
+
+volumes:
+  pgdata:
+```
+
+### MySQL
+
+```dockerfile
+FROM mysql:8.4
+COPY my.cnf /etc/mysql/conf.d/my.cnf
+COPY init.sql /docker-entrypoint-initdb.d/
+```
+
+```yaml
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: miapp
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - mysqldata:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "3306:3306"
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --max_connections=200
+
+volumes:
+  mysqldata:
+```
+
+### MongoDB
+
+```dockerfile
+FROM mongo:7
+COPY mongod.conf /etc/mongod.conf
+COPY init.js /docker-entrypoint-initdb.d/
+```
+
+```yaml
+services:
+  mongo:
+    image: mongo:7
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_INITDB_DATABASE: miapp
+    volumes:
+      - mongodata:/data/db
+      - ./init.js:/docker-entrypoint-initdb.d/init.js:ro
+    ports:
+      - "27017:27017"
+
+volumes:
+  mongodata:
+```
+
+### Redis
+
+```dockerfile
+FROM redis:7-alpine
+COPY redis.conf /usr/local/etc/redis/redis.conf
+CMD ["redis-server", "/usr/local/etc/redis/redis.conf"]
+```
+
+```yaml
+services:
+  redis:
+    build: ./redis
+    volumes:
+      - redis-data:/data
+    command:
+      - redis-server
+      - --appendonly yes
+      - --maxmemory 128mb
+      - --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    ports:
+      - "6379:6379"
+
+volumes:
+  redis-data:
+```
+
+### Ejemplo completo con varias BD
+
+```yaml
+services:
+  app:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mongo:
+        condition: service_started
+
+  postgres:
+    image: postgres:16-alpine
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+
+  mysql:
+    image: mysql:8.4
+    volumes:
+      - mysqldata:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+
+  mongo:
+    image: mongo:7
+    volumes:
+      - mongodata:/data/db
+    environment:
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+
+volumes:
+  pgdata:
+  mysqldata:
+  mongodata:
+  redis-data:
+```
+
+Fuente: [Docker Official Images — PostgreSQL](https://hub.docker.com/_/postgres/), [Docker Official Images — MySQL](https://hub.docker.com/_/mysql/), [Docker Official Images — MongoDB](https://hub.docker.com/_/mongo/), [Docker Official Images — Redis](https://hub.docker.com/_/redis/)
+
+---
+
+## WebSockets y MQTT
+
+### WebSockets en Docker
+
+Las apps con WebSockets necesitan configurar correctamente proxies y timeouts. Las conexiones WebSocket son long-lived, así que los balanceadores deben mantenerlas abiertas.
+
+**App Node.js con WebSocket:**
+
+```dockerfile
+FROM node:20-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --omit=dev
+COPY . .
+EXPOSE 3000
+CMD ["node", "server.js"]
+```
+
+```yaml
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+
+  nginx:
+    image: nginx:alpine
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "80:80"
+    depends_on:
+      - app
+```
+
+```nginx
+# nginx.conf — proxy WebSocket (necesario para que funcione correctamente)
+upstream app {
+    server app:3000;
+}
+
+server {
+    listen 80;
+
+    location / {
+        proxy_pass http://app;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_read_timeout 86400s;  # WebSockets pueden estar abiertos horas
+    }
+}
+```
+
+**App Python con WebSocket (FastAPI):**
+
+```dockerfile
+FROM python:3.12-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+```yaml
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - WEBSOCKET_MAX_SIZE=1048576
+```
+
+### MQTT en Docker
+
+Mosquitto es el broker MQTT más popular. Docker lo hace trivial de desplegar:
+
+```yaml
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    ports:
+      - "1883:1883"  # MQTT
+      - "9001:9001"  # WebSocket
+    volumes:
+      - mosquitto-data:/mosquitto/data
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    environment:
+      - MOSQUITTO_PASSWORD_FILE=/mosquitto/config/password.txt
+
+volumes:
+  mosquitto-data:
+```
+
+```conf
+# mosquitto.conf
+listener 1883
+protocol mqtt
+
+listener 9001
+protocol websockets
+
+allow_anonymous false
+password_file /mosquitto/config/password.txt
+
+persistence true
+persistence_location /mosquitto/data/
+```
+
+**App Node.js que publica/recibe MQTT:**
+
+```dockerfile
+FROM node:20-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+CMD ["node", "mqtt-client.js"]
+```
+
+```javascript
+// mqtt-client.js
+const mqtt = require('mqtt');
+
+const client = mqtt.connect('mqtt://mosquitto:1883', {
+  username: 'app',
+  password: process.env.MQTT_PASSWORD
+});
+
+client.on('connect', () => {
+  client.subscribe('sensores/#');
+  setInterval(() => {
+    client.publish('sensores/temperatura', String(Math.random() * 30));
+  }, 5000);
+});
+
+client.on('message', (topic, payload) => {
+  console.log(`[${topic}] ${payload.toString()}`);
+});
+```
+
+**EMQX** (alternativa más escalable que Mosquitto, con cluster nativo):
+
+```yaml
+services:
+  emqx:
+    image: emqx:5
+    ports:
+      - "1883:1883"
+      - "8083:8083"  # WS
+      - "8084:8084"  # WSS
+      - "18083:18083" # Dashboard
+    environment:
+      EMQX_DASHBOARD__DEFAULT_PASSWORD: ${EMQX_PASSWORD}
+```
+
+Fuente: [Eclipse Mosquitto Docker](https://hub.docker.com/_/eclipse-mosquitto), [EMQX Docker](https://hub.docker.com/r/emqx/emqx), [NGINX WebSocket proxying](https://nginx.org/en/docs/http/websocket.html)
+
+---
+
+## Concurrencia y escalado
+
+Docker ofrece múltiples formas de escalar aplicaciones, desde un solo host hasta clústeres multi-nodo.
+
+### docker compose --scale
+
+Escala servicios horizontalmente en un solo host:
+
+```bash
+docker compose up -d --scale api=5 --scale worker=3
+```
+
+La red interna de Docker balancea entre las réplicas usando DNS round-robin. Limitación: todas las réplicas corren en el mismo host y comparten recursos.
+
+```yaml
+services:
+  api:
+    build: .
+    ports:
+      - "3000"  # Sin mapeo fijo — Docker asigna puertos efímeros
+    environment:
+      - REDIS_URL=redis://redis:6379
+
+  redis:
+    image: redis:7-alpine
+```
+
+Con `ports: "3000"` (sin host:container), Docker asigna un puerto aleatorio del host para cada réplica:
+
+```bash
+docker compose up -d --scale api=3
+docker compose ps api  # Muestra 3 contenedores con puertos distintos
+```
+
+### Docker Swarm services --replicas
+
+Swarm escala a través de múltiples nodos:
+
+```bash
+# Inicializar clúster
+docker swarm init
+docker swarm join --token SWMTKN-1-... 192.168.1.10:2377  # En workers
+
+# Crear servicio con réplicas
+docker service create \
+  --name api \
+  --replicas 5 \
+  --publish published=80,target=3000 \
+  --network overlay-net \
+  --limit-cpu 0.5 \
+  --limit-memory 256M \
+  mi-app:latest
+
+# Escalar
+docker service scale api=10
+
+# Actualizar rolling update
+docker service update \
+  --image mi-app:v2 \
+  --update-parallelism 2 \
+  --update-delay 10s \
+  api
+```
+
+El balanceador de carga integrado de Swarm (Ingress) distribuye tráfico entre todas las réplicas, incluso en diferentes nodos.
+
+### Kubernetes HPA (Horizontal Pod Autoscaler)
+
+Kubernetes escala pods basado en métricas (CPU, memoria, métricas personalizadas):
+
+```yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: api-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api
+  minReplicas: 2
+  maxReplicas: 20
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 15
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 60
+```
+
+```bash
+kubectl autoscale deployment api --cpu-percent=70 --min=2 --max=20
+```
+
+### Comparativa de escalado
+
+| Herramienta | Ámbito | Escalado | Balanceo | Persistencia | Instalación |
+|---|---|---|---|---|---|
+| Compose --scale | Un host | Manual | DNS RR | Volúmenes locales | Incluido en Docker |
+| Swarm | Multi-host declarativo | Manual/automático | Ingress LB | Volúmenes + NFS/Gluster | Incluido en Docker |
+| Kubernetes | Multi-host completo | HPA automático | Service + Ingress | PVC + CSI | Minikube / Managed |
+| Nomad | Multi-host | Job scaling | Consul + Fabio | CSI | HashiCorp stack |
+
+Fuente: [Docker Compose scale](https://docs.docker.com/compose/how-tos/scale/), [Docker Swarm service create](https://docs.docker.com/engine/reference/commandline/service_create/), [Kubernetes HPA](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/)
+
+---
+
+## Escala de aprendizaje: de 0 a 100
+
+Cada nivel incluye lo que debes saber y un proyecto para fijar los conceptos.
+
+### Nivel 0–15: Fundamentos absolutos
+
+**Qué aprender:**
+- Qué es un contenedor: proceso aislado con su propio sistema de archivos
+- `docker run`, `docker ps`, `docker stop`, `docker rm`
+- `docker pull`, `docker images`, `docker rmi`
+- Diferencia entre imagen (plantilla) y contenedor (instancia)
+- `docker run hello-world` y entender qué pasa
+- `docker run -it ubuntu bash` — explorar un contenedor interactivo
+- `docker run -d nginx` — contenedor en background
+- Conceptos clave: los contenedores comparten el kernel del host. Un contenedor corriendo es un proceso más en el host (pstree / ps aux | grep docker). Los contenedores NO son máquinas virtuales — arrancan en milisegundos y no tienen SO propio.
+
+**Proyecto:** *Servidor web estático* — crea un contenedor nginx que sirva un `index.html` con "Hola Mundo Docker". Usa `docker run -d -p 8080:80 -v $(pwd):/usr/share/nginx/html nginx:alpine`. Accede en `http://localhost:8080`. Reflexión: ¿cuánto ocupa la imagen nginx:alpine? ¿Por qué es tan pequeña?
+
+### Nivel 15–30: Dockerfile y builds
+
+**Qué aprender:**
+- Dockerfile básico: `FROM`, `WORKDIR`, `COPY`, `RUN`, `CMD`
+- Orden de instrucciones y layer caching
+- `.dockerignore` — qué excluir y por qué
+- `docker build -t nombre .` y entender el contexto de build
+- `EXPOSE`, `ENV`, `ARG`
+- Diferencia entre `RUN`, `CMD` y `ENTRYPOINT`
+- `COPY` vs `ADD` (siempre COPY)
+- Conceptos clave: cada instrucción crea una capa. Las capas se cachean por hash. Si ordenas bien (de menos a más cambiante), los builds incremental son ~O(1). El contexto de build es todo lo que envías al daemon — `.dockerignore` reduce el contexto.
+
+**Proyecto:** *App Node.js dockerizada* — crea un Dockerfile para una app Express que responda en `GET /`. Implementa layer caching: copia `package.json` primero, instala, luego copia el resto. Añade `.dockerignore`. Cambia el código fuente y observa que solo la última capa se reconstruye. Mide tiempos con y sin caché.
+
+### Nivel 30–45: Docker Compose y multi-servicio
+
+**Qué aprender:**
+- `compose.yml`: `services`, `build`, `image`, `ports`, `volumes`, `environment`
+- `docker compose up`, `down`, `logs`, `exec`, `ps`
+- Dependencias entre servicios con `depends_on`
+- Variables de entorno y archivos `.env`
+- Redes en compose: bridge por defecto, redes personalizadas
+- Profiles: entornos dev/staging/prod con el mismo compose
+- Conceptos clave: compose es composición de servicios. Cada servicio es un contenedor independiente pero se comunican por red interna. `depends_on` controla orden de arranque. Profiles seleccionan qué servicios se ejecutan.
+
+**Proyecto:** *App web + BD + caché* — compose con un servicio web (Node.js/Python), PostgreSQL y Redis. La web consulta la BD y cachea en Redis. Usa `depends_on` con `condition: service_healthy`. Variables de entorno para credenciales. Profile "dev" expone puertos de BD, profile "prod" no.
+
+### Nivel 40–55: Procesamiento multimedia con Docker
+
+**Qué aprender:**
+- Contenedores FFmpeg (`jrottenberg/ffmpeg`): conversión, compresión, extracción de audio, captura de frames
+- ImageMagick en contenedor para procesamiento por lotes de imágenes
+- OpenCV para visión artificial dockerizada
+- Streaming: Jellyfin, Plex, Nginx con módulo RTMP
+- GStreamer para pipelines de medios
+- GPU passthrough con `--gpus all` y nvidia-container-runtime
+- WebRTC: mediasoup y Janus Gateway en contenedores
+- docker-compose para pipelines multimedia completos
+
+**Conceptos clave:** los contenedores multimedia evitan instalar dependencias nativas — FFmpeg 6.0 tiene ~1528 codecs y cada versión puede cambiar flags. En contenedor tienes la versión exacta. La GPU se pasa con `--gpus all` (requiere nvidia-container-toolkit). Para streaming en vivo, Nginx RTMP es la opción más ligera; Jellyfin da una interfaz completa.
+
+**Proyecto:** *Pipeline de video* — docker-compose con FFmpeg para transcodificar vídeos, ImageMagick para miniaturas, y Jellyfin para servirlos. Bind mounts para input/output. Opcional: acelera con GPU.
+
+### Nivel 45–60: Multi-stage, volúmenes y redes
+
+**Qué aprender:**
+- Multi-stage builds: `FROM ... AS builder`, `COPY --from=builder`
+- Volúmenes: bind mount (desarrollo), volume (producción), tmpfs (caché efímero)
+- Redes avanzadas: bridge, host, overlay, macvlan
+- `docker network create`, conectar contenedores a múltiples redes
+- `docker volume create`, inspect, backup
+- `HEALTHCHECK` para monitorear estado del contenedor
+- logging drivers: `json-file` (por defecto), `local`, `syslog`, `fluentd`
+- Conceptos clave: multi-stage separa build de runtime — la imagen final solo tiene lo necesario para ejecutar. Bind mounts son para desarrollo (editas en host, se refleja en contenedor). Volúmenes son para datos que deben persistir. tmpfs para datos temporales que no necesitan persistencia.
+
+**Proyecto:** *App Go con multi-stage* — app Go que sirve una API REST. Dockerfile multi-stage: compila en `golang:1.22`, runtime en `scratch` (~10 MB final). Bind mount para desarrollo, volume para logs. Healthcheck en `/health`. Red separada para BD y otra para frontend.
+
+### Nivel 60–75: Seguridad, registros y CI/CD
+
+**Qué aprender:**
+- No ejecutar como root: `USER appuser`, `addgroup`/`adduser`
+- `--cap-drop=ALL --cap-add=NET_BIND_SERVICE`
+- Secrets: `--secret` en build, monturas de secrets en runtime
+- `.dockerignore` para no filtrar credenciales
+- `docker scout` (o Trivy) para escanear vulnerabilidades
+- Docker Hub, GHCR, Harbor: login, tag, push, pull
+- Tags semánticos: `v1.2.3`, SHA, `latest`
+- GitHub Actions: build + push con cache
+- Conceptos clave: los contenedores ejecutan como root por defecto — cambia a usuario no root. Las capabilities de Linux se pueden reducir al mínimo. Los secrets nunca deben estar en la imagen. El escaneo de vulnerabilidades es parte del pipeline.
+
+**Proyecto:** *CI/CD pipeline* — repositorio con GitHub Action que: (1) construye la imagen Docker con multi-stage, (2) escanea con `docker scout`, (3) etiqueta con SHA del commit + versión semántica, (4) publica en GHCR. La imagen ejecuta como usuario no root. Los secrets de BD se pasan en runtime, no en build.
+
+### Nivel 75–90: Swarm y orquestación básica
+
+**Qué aprender:**
+- `docker swarm init`, `docker swarm join`, `docker node ls`
+- `docker service create`, `service ls`, `service ps`, `service scale`
+- `docker stack deploy -c compose.yml` — despliega compose en Swarm
+- Redes overlay para multi-host
+- Secrets y configs en Swarm
+- Rolling updates: `--update-parallelism`, `--update-delay`
+- `docker stack services`, `docker stack ps`
+- Conceptos clave: Swarm convierte un grupo de servidores en un clúster lógico. Los servicios con `--replicas` se distribuyen entre nodos. Las redes overlay conectan contenedores en diferentes hosts. El balanceador de carga integrado distribuye tráfico.
+
+**Proyecto:** *Cluster Swarm local* — inicia 3 nodos con `docker swarm init` + `docker swarm join` (usa máquinas virtuales con multipass o VMs locales). Despliega un stack con `docker stack deploy`: app web con 3 réplicas, BD con 1, Redis con 2. Haz rolling update de la web. Escala a 10 réplicas. Verifica que el balanceo distribuye tráfico.
+
+### Nivel 90–100: Kubernetes, service mesh y producción
+
+**Qué aprender:**
+- Minikube: `minikube start`, `kubectl get nodes`, `kubectl get pods`
+- Deployments, Services, ConfigMaps, Secrets, PVCs
+- `kubectl apply -f deployment.yaml`, `kubectl expose`, `kubectl scale`
+- Ingress controller para tráfico externo
+- HPA (Horizontal Pod Autoscaler) con métricas de CPU
+- Service Mesh: Istio o Linkerd para mTLS, tracing, canary deployments
+- Observabilidad: Prometheus + Grafana, Loki para logs, Jaeger para tracing
+- GitOps: ArgoCD o Flux para despliegues declarativos
+- Conceptos clave: K8s es el estándar de la industria para orquestación. Minikube te da un clúster local de un nodo. Service Mesh añade mTLS, trazabilidad y control de tráfico. GitOps asegura que el estado real del clúster coincida con el repositorio Git.
+
+**Proyecto:** *Microservicios en K8s* — tres microservicios (api, auth, frontend) desplegados en Minikube. Deployments con HPA, Services tipo ClusterIP, Ingress para tráfico externo. ConfigMaps para configuración, Secrets para credenciales. Prometheus recolecta métricas, Grafana las visualiza. Service Mesh Istio para mTLS entre servicios. GitOps con ArgoCD sincronizado desde un repo Git.
+
+Fuente: [Docker Swarm docs](https://docs.docker.com/engine/swarm/), [Kubernetes docs](https://kubernetes.io/docs/), [Minikube docs](https://minikube.sigs.k8s.io/docs/), [Istio docs](https://istio.io/latest/docs/)
+
+---
+
+## Proyectos prácticos detallados
+
+### Gestor de tareas API dockerizado (nivel 30)
+
+```dockerfile
+# Dockerfile
+FROM node:20-alpine
+WORKDIR /app
+
+# Cache de dependencias
+COPY package*.json ./
+RUN npm ci --omit=dev && npm cache clean --force
+
+# App
+COPY . .
+
+# Seguridad: no root
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+
+EXPOSE 3000
+CMD ["node", "server.js"]
+```
+
+```yaml
+# compose.yml
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - DB_HOST=db
+      - DB_USER=tasks
+      - DB_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - ./src:/app/src:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      POSTGRES_DB: tasks
+      POSTGRES_USER: tasks
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tasks"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  pgdata:
+```
+
+```javascript
+// server.js
+const express = require('express');
+const { Pool } = require('pg');
+
+const pool = new Pool({
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'tasks',
+  password: process.env.DB_PASSWORD || 'password',
+  database: 'tasks'
+});
+
+const app = express();
+app.use(express.json());
+
+app.get('/health', (req, res) => res.json({ status: 'ok' }));
+
+app.get('/tasks', async (req, res) => {
+  const result = await pool.query('SELECT * FROM tasks ORDER BY id');
+  res.json(result.rows);
+});
+
+app.post('/tasks', async (req, res) => {
+  const { title } = req.body;
+  const result = await pool.query(
+    'INSERT INTO tasks (title) VALUES ($1) RETURNING *',
+    [title]
+  );
+  res.status(201).json(result.rows[0]);
+});
+
+app.listen(3000, () => console.log('Tasks API on :3000'));
+```
+
+### Web scraper distribuido con cola (nivel 75)
+
+```python
+# scraper/worker.py
+import os
+import json
+import redis
+import requests
+from bs4 import BeautifulSoup
+
+REDIS_URL = os.environ.get('REDIS_URL', 'redis://redis:6379')
+r = redis.Redis.from_url(REDIS_URL)
+
+def scrape(url):
+    resp = requests.get(url, timeout=10)
+    soup = BeautifulSoup(resp.text, 'html.parser')
+    titles = [h.get_text(strip=True) for h in soup.select('h2 a, h3 a')]
+    return {'url': url, 'titles': titles, 'count': len(titles)}
+
+def worker():
+    while True:
+        _, url = r.blpop('scrape:queue', timeout=0)
+        print(f"Scraping {url.decode()}")
+        result = scrape(url.decode())
+        r.rpush('scrape:results', json.dumps(result))
+
+if __name__ == '__main__':
+    worker()
+```
+
+```dockerfile
+# scraper/Dockerfile
+FROM python:3.12-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+RUN adduser --disabled-password --no-create-home appuser
+USER appuser
+CMD ["python", "worker.py"]
+```
+
+```yaml
+# compose.yml
+services:
+  api:
+    build: ./api
+    ports:
+      - "5000:5000"
+    depends_on:
+      - redis
+
+  worker:
+    build: ./scraper
+    environment:
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+    deploy:
+      replicas: 3
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis-data:/data
+
+volumes:
+  redis-data:
+```
+
+### Despliegue Blue/Green con Swarm (nivel 85)
+
+```yaml
+# stack.yml
+version: '3.8'
+
+services:
+  app-blue:
+    image: ghcr.io/mi-org/app:v1.0.0
+    networks:
+      - app-net
+    deploy:
+      replicas: 3
+      labels:
+        - "version=blue"
+
+  app-green:
+    image: ghcr.io/mi-org/app:v2.0.0
+    networks:
+      - app-net
+    deploy:
+      replicas: 0  # Inactivo hasta que se despliegue
+      labels:
+        - "version=green"
+
+  proxy:
+    image: traefik:v3.0
+    command:
+      - "--providers.docker.swarmMode=true"
+      - "--providers.docker.network=app-net"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - app-net
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+
+networks:
+  app-net:
+    driver: overlay
+```
+
+```bash
+# Despliegue blue
+docker stack deploy -c stack.yml miapp
+
+# Escalar green a 3 (blue sigue sirviendo)
+docker service scale miapp_app-green=3
+
+# Esperar a que green esté healthy, luego cortar blue
+docker service scale miapp_app-blue=0
+
+# Etiquetar green como el nuevo blue
+docker service update --label-add version=blue miapp_app-green
+```
+
+---
+
+## Hacks y tips de productividad
+
+**1. `docker system prune --volumes` — limpia todo lo no usado**
+
+```bash
+docker system prune -af --volumes
+```
+
+Elimina contenedores parados, redes no usadas, imágenes colgantes (`<none>:<none>`) y **volúmenes no referenciados**. Cuidado: los volúmenes contienen datos — asegúrate de que no los necesitas. Para limpieza más selectiva:
+
+```bash
+docker container prune     # Solo contenedores parados
+docker image prune -a      # Solo imágenes no usadas
+docker volume prune         # Solo volúmenes no referenciados
+docker network prune        # Solo redes no usadas
+```
+
+**2. `dive` — inspecciona el contenido de cada capa**
+
+```bash
+# Instalación
+docker pull wagoodman/dive
+docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock wagoodman/dive mi-app:latest
+
+# También como binario: https://github.com/wagoodman/dive
+dive mi-app:latest
+```
+
+Muestra: árbol de capas, qué archivos añadió/modificó/eliminó cada capa, espacio ocupado por archivos duplicados, y eficiencia del Dockerfile (porcentaje de archivos inútiles en la imagen final).
+
+**3. `lazydocker` — TUI interactiva para gestionar Docker**
+
+```bash
+# Instalación
+docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock lazyteam/lazydocker
+
+# O como binario
+brew install lazydocker  # macOS
+lazydocker
+```
+
+Interfaz en terminal con teclas rápidas: logs en vivo, inspección de contenedores, restart, exec en contenedor, todo sin escribir comandos largos.
+
+**4. `docker scout` — análisis de vulnerabilidades integrado**
+
+```bash
+# Docker Desktop lo incluye. En Linux:
+docker scout quickview mi-app
+docker scout cves mi-app       # Lista CVEs detallados
+docker scout recommendations mi-app  # Recomendaciones de imagen base
+docker scout compare mi-app:v1 mi-app:v2  # Compara vulnerabilidades entre versiones
+```
+
+Alternativas open-source: `trivy image mi-app` (Aqua Security), `grype mi-app` (Anchore).
+
+**5. `--progress=plain` — logs detallados del build**
+
+```bash
+docker build --progress=plain --no-cache -t mi-app .
+```
+
+Muestra cada paso del build con tiempos exactos, incluyendo la salida de comandos `RUN`. Útil para depurar Dockerfile en CI donde no ves la salida interactiva.
+
+**6. BuildKit — builds paralelos y secretos**
+
+BuildKit está activado por defecto desde Docker 23.0. Funcionalidades clave:
+
+```dockerfile
+# Sintaxis para activar BuildKit explícitamente
+# syntax=docker/dockerfile:1
+
+FROM python:3.12-slim
+
+# Montar caché de pip entre builds (persiste en host)
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install -r requirements.txt
+
+# Pasar secreto en build (no queda en la imagen)
+RUN --mount=type=secret,id=api_key \
+    echo "API key: $(cat /run/secrets/api_key)"
+```
+
+```bash
+docker build --secret id=api_key,src=./api_key.txt -t mi-app .
+```
+
+BuildKit también paraleliza etapas independientes en multi-stage y cachea monturas.
+
+**7. Contenedores como herramientas CLI**
+
+```bash
+# No necesitas instalar nada en tu máquina
+alias yq='docker run --rm -i -v ${PWD}:/workdir mikefarah/yq'
+alias jq='docker run --rm -i -v ${PWD}:/data imega/jq'
+alias ripgrep='docker run --rm -i -v ${PWD}:/data burntsushi/ripgrep'
+alias terraform='docker run --rm -i -v ${PWD}:/workspace -v ~/.aws:/root/.aws hashicorp/terraform'
+
+# Usar Python sin instalarlo
+alias py3='docker run --rm -i -v ${PWD}:/app python:3.12-slim python'
+```
+
+**8. `.env` con docker compose**
+
+```bash
+# .env (en el mismo directorio que compose.yml)
+DB_PASSWORD=supersecreto
+TAG=latest
+PORT=3000
+NODE_ENV=production
+```
+
+```yaml
+services:
+  app:
+    image: mi-app:${TAG:-latest}
+    ports:
+      - "${PORT}:3000"
+    environment:
+      - NODE_ENV
+    env_file:
+      - .env
+```
+
+Docker Compose lee automáticamente el archivo `.env`. Las variables se interpolan en el YAML con `${VARIABLE}` y se pasan a los servicios.
+
+**9. Docker socket proxy para seguridad**
+
+Nunca montes `/var/run/docker.sock` directamente en un contenedor a menos que sea estrictamente necesario. Un proxy con permisos restringidos es más seguro:
+
+```yaml
+services:
+  traefik:
+    image: traefik:v3.0
+    volumes:
+      - docker-socket-proxy:/var/run/docker.sock:ro
+
+  docker-socket-proxy:
+    image: tecnativa/docker-socket-proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      CONTAINERS: 1  # Solo permite leer contenedores
+      SERVICES: 1
+      NETWORKS: 1
+      TASKS: 1
+
+volumes:
+  docker-socket-proxy:
+```
+
+**10. Testear healthchecks localmente**
+
+```bash
+# Probar healthcheck manualmente
+docker run --rm alpine sh -c "apk add curl && curl -f http://host.docker.internal:3000/health"
+
+# Simular fallo
+docker exec contenedor sh -c "kill 1"  # mata el proceso principal → contenedor se para
+```
+
+Fuente: [Dive GitHub](https://github.com/wagoodman/dive), [LazyDocker GitHub](https://github.com/jesseduffield/lazydocker), [Docker Scout docs](https://docs.docker.com/scout/), [BuildKit docs](https://docs.docker.com/build/buildkit/)
+
+---
+
+## Canales y recursos en español
+
+### YouTube
+- **Midulive** — Videos sobre Docker, Kubernetes, CI/CD y DevOps en general, con ejemplos prácticos y directos
+- **MoureDev** — Docker desde cero, proyectos dockerizados, automatización con contenedores (también en Twitch)
+- **OpenWebinars** — Curso completo de Docker y Kubernetes, bastante estructurado y profesional
+- **EDteam** — Rutas de Docker desde fundamentos hasta Swarm, en español claro y pausado
+- **HolaMundo** — Introducciones rápidas a Docker Compose, Swarm, contenedores para desarrollo
+- **Programación Fácil** — Tutoriales de Docker para principiantes, desde instalación hasta producción
+- **Platzi** — Curso de Docker y Curso de Kubernetes, ruta DevOps completa
+- **CodigoFacilito** — Docker básico e intermedio, integración con proyectos web
+
+### Comunidades
+- **r/docker** (Reddit) — Noticias, dudas, proyectos, discusiones técnicas sobre Docker
+- **r/devops** (Reddit) — Comunidad DevOps con muchos temas de contenerización
+- **Docker Community Slack** — Canales oficiales de Docker en inglés, pero muy activa
+- **Discord DevOps en español** — Canales de ayuda, mentoring, proyectos compartidos
+- **Stack Overflow en español** — Etiquetas `docker` y `docker-compose` para dudas técnicas
+
+### Repositorios de código
+- [docker/awesome-compose](https://github.com/docker/awesome-compose) — Ejemplos oficiales de Docker Compose para distintos stacks
+- [veggiemonk/awesome-docker](https://github.com/veggiemonk/awesome-docker) — Lista curada de recursos, herramientas y proyectos Docker
+- [sickcodes/docker-osx](https://github.com/sickcodes/docker-osx) — Ejecuta macOS en Docker (proyecto loco pero impresionante)
+- [jessfraz/dockerfiles](https://github.com/jessfraz/dockerfiles) — Colección de Dockerfiles de Jessica Frazzette, referencia de buenas prácticas
+- [goldbergyoni/nodebestpractices](https://github.com/goldbergyoni/nodebestpractices) — Incluye sección de dockerización de Node.js
+
+### Blogs y newsletters
+- [Docker Blog](https://www.docker.com/blog/) — Blog oficial: novedades, tutorials, casos de uso (inglés)
+- [Play with Docker](https://labs.play-with-docker.com/) — Laboratorio interactivo en el navegador, sin instalar nada
+- [Docker Captain Blogs](https://www.docker.com/community/captains/) — Blogs de los Docker Captains (expertos certificados por Docker)
+- [r/docker en Reddit](https://reddit.com/r/docker) — Lo más activo de la comunidad Docker
+
+Fuente: búsqueda en YouTube y Reddit, listas curadas de Awesome Docker, [Docker Captains](https://www.docker.com/community/captains/)
+
+---
+
+## Referencias y documentación oficial
+
+- **Docs oficiales**: [docs.docker.com](https://docs.docker.com/) — reference, guides, best practices, CLI reference
+- **Docker Hub**: [hub.docker.com](https://hub.docker.com/) — registro público de imágenes oficiales y community
+- **Dockerfile reference**: [docs.docker.com/engine/reference/builder](https://docs.docker.com/engine/reference/builder/)
+- **Compose specification**: [docs.docker.com/compose/compose-file](https://docs.docker.com/compose/compose-file/)
+- **Docker Engine**: [docs.docker.com/engine](https://docs.docker.com/engine/)
+- **Docker Security**: [docs.docker.com/engine/security](https://docs.docker.com/engine/security/)
+- **Docker Swarm**: [docs.docker.com/engine/swarm](https://docs.docker.com/engine/swarm/)
+- **BuildKit**: [docs.docker.com/build/buildkit](https://docs.docker.com/build/buildkit/)
+- **Docker Scout**: [docs.docker.com/scout](https://docs.docker.com/scout/)
+- **Docker Blog**: [docker.com/blog](https://www.docker.com/blog/)
+- **Docker en GitHub**: [github.com/docker](https://github.com/docker)
+- **Play with Docker**: [labs.play-with-docker.com](https://labs.play-with-docker.com/)
+- **Docker Curriculum**: [docker-curriculum.com](https://docker-curriculum.com/) — tutorial completo de Docker
+- **Kubernetes docs**: [kubernetes.io/docs](https://kubernetes.io/docs/)
+
+### Fuentes de esta guía
+
+Esta guía se ha elaborado a partir de las siguientes fuentes consultadas durante su desarrollo:
+
+- [Docker — Documentación oficial y reference](https://docs.docker.com/)
+- [Dockerfile reference — docs.docker.com](https://docs.docker.com/engine/reference/builder/)
+- [Compose specification — docs.docker.com](https://docs.docker.com/compose/compose-file/)
+- [Docker Security — docs.docker.com](https://docs.docker.com/engine/security/)
+- [Docker Swarm overview — docs.docker.com](https://docs.docker.com/engine/swarm/)
+- [BuildKit — docs.docker.com](https://docs.docker.com/build/buildkit/)
+- [Docker Scout — docs.docker.com](https://docs.docker.com/scout/)
+- [Docker Hub Official Images](https://hub.docker.com/search?type=image&image_filter=official)
+- [Awesome Docker (GitHub)](https://github.com/veggiemonk/awesome-docker) — lista curada de recursos Docker
+- [Docker Curriculum (Prakhar Srivastav)](https://docker-curriculum.com/) — tutorial completo y gratuito
+- [Play with Docker](https://labs.play-with-docker.com/) — laboratorio interactivo
+- [r/docker](https://reddit.com/r/docker) — comunidad, debates y proyectos destacados
+- [Containers vs VMs (IBM)](https://www.ibm.com/cloud/blog/containers-vs-vms) — comparativa técnica
+- [OWASP Docker Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Docker_Security_Cheat_Sheet.html) — guía de seguridad
+- [Kubernetes Patterns (Red Hat)](https://www.redhat.com/en/topics/containers/kubernetes-patterns) — patrones de diseño en contenedores
+- [Docker Captain Blogs](https://www.docker.com/community/captains/) — blogs de expertos certificados
+- [Hacker News](https://news.ycombinator.com/) — discusiones y tendencias del ecosistema
+- [Kubernetes oficial docs](https://kubernetes.io/docs/) — documentación de K8s
+- [jrottenberg/ffmpeg — Docker Hub](https://hub.docker.com/r/jrottenberg/ffmpeg) — imagen oficial de FFmpeg en contenedor
+- [ImageMagick Docker — dpokidov](https://hub.docker.com/r/dpokidov/imagemagick) — procesamiento de imágenes en contenedor
+- [NVIDIA Container Toolkit docs](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/) — GPUs en contenedores Docker
+- [mediasoup documentation](https://mediasoup.org/documentation/) — WebRTC SFU en contenedores
+- [Jellyfin docs](https://jellyfin.org/docs/) — servidor multimedia open-source en Docker
+
+---
+
+## 🏆 Retos Relacionados
 
 Pon a prueba lo aprendido con estos desafíos:
 - [Consistencia De Base De Datos](/retos/guia-consistencia-de-base-de-datos)

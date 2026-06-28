@@ -1,102 +1,3063 @@
 ---
 draft: false
 title: "Guía de Dart: De 0 a 100"
-description: "Optimizado para interfaces de usuario fluidas. El corazón de Flutter."
+description: "Desde la primera línea de código hasta producción: instalación, null safety, Flutter, Isolates, patrones, bases de datos y recursos en español."
 pubDate: "2017-06-11"
-tags: ["dart", "guia", "mobile"]
+tags: ["dart", "guia", "mobile", "flutter"]
 image: "img/guia_0_100_dart_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 ---
 
 # Guía de Dart: De 0 a 100
 
-## 🛠️ Requisitos e Instalación
+## ¿Qué es Dart?
 
-**Todas las plataformas:** Descarga Dart SDK desde [dart.dev](https://dart.dev/get-dart). O instala Flutter (incluye Dart).
-**Windows/macOS/Linux:** Con Flutter: `git clone https://github.com/flutter/flutter.git -b stable && export PATH="$PATH:`pwd`/flutter/bin"`.
-**Verificación:** `--version` y prueba con un `"Hola Mundo"`.
-**Herramientas recomendadas:** **Flutter SDK** para desarrollo móvil. **DartPad** online. **VSCode** o **Android Studio** con extensiones Dart/Flutter.
+Dart es un lenguaje de programación de tipado estático, multiparadigma y optimizado para interfaces de usuario, creado por Google y lanzado en 2011. Su principal objetivo es reemplazar JavaScript en aplicaciones web complejas, pero su verdadero despegue llegó en 2018 con **Flutter**, el framework de UI multiplataforma de Google que usa Dart como lenguaje nativo.
 
-## 🚀 Hola Mundo y Sintaxis Básica
+**Características fundamentales:**
+- **Tipado estático con inferencia**: el compilador conoce los tipos en tiempo de compilación, pero no obliga a escribirlos siempre
+- **Null safety sound**: el sistema de tipos garantiza que nunca tendrás un null donde no esperas uno, en tiempo de compilación
+- **Dos compiladores**: JIT (Just-In-Time) para desarrollo con hot reload, AOT (Ahead-Of-Time) para producción con rendimiento nativo
+- **Multiplataforma**: compila a ARM/x64 nativo (iOS, Android, macOS, Windows, Linux), a JavaScript (web), y a WebAssembly
+- **Sintaxis familiar**: similar a C, Java, TypeScript — fácil de aprender si vienes de cualquiera de esos lenguajes
+- **Concurrencia sin shared memory**: Isolates son procesos ligeros que no comparten memoria, eliminando carreras de datos
+- **Propio ecosistema**: pub.dev aloja paquetes, el SDK incluye compilador, formateador, analizador estático y gestor de paquetes
 
-**Conceptos clave:**
+**¿Dónde se usa?**
+- **Móvil**: Flutter para iOS y Android — Google Ads, Alibaba, BMW, Toyota usan Flutter en producción
+- **Web**: AngularDart (menos común hoy), Flutter Web, frameworks server como Shelf y Serverpod
+- **Escritorio**: Flutter Desktop (macOS, Windows, Linux) — Google Earth, Canonical, Ubuntu installer
+- **Backend**: Serverpod, Shelf, Dart Frog — APIs REST, GraphQL, WebSockets
+- **Embedded**: Google Fuchsia OS está construido con Flutter/Dart
+- **Herramientas CLI**: scripts de automatización, tooling, análisis de datos
 
-- **Variables y Tipos:** Tipado fuerte con inferencia: `var nombre = "Ana"`. `dynamic` desactiva verificación. `final` (una asignación) y `const` (compile-time). Null safety: `String?`.
-- **Funciones:** `int suma(int a, int b) => a + b;` (flecha para una línea). Parámetros posicionales `[]`, nombrados `{}`, y con `required`. Funciones como objetos.
-- **POO y Mixins:** Clases con constructor simplificado: `class Punto(this.x, this.y)`. Mixins con `mixin` y `with`. `extends`, `implements`, `with`. `@override` explícito.
-- **Async y Streams:** `Future<T>` para operaciones asíncronas. `async`/`await`. `Stream<T>` para flujos de datos. `await for` y `listen()`. `StreamController` para crear streams.
-- **Colecciones:** Listas: `[1, 2, 3]`. Maps: `{"key": value}`. Sets: `{1, 2, 3}`. Collection if/for: `[for (var i in items) i * 2]`. Spread: `[...list]`.
+**¿Quién lo usa?** Google (Google Pay, Google Classroom, Google One), Alibaba (Xianyu app con 50M+ usuarios), BMW (myBMW app), Toyota (infotainment), Reflectly (app de meditación), el equipo de Dart/Flutter en Google.
 
-## 🏗️ Frameworks Populares
+Fuente: [dart.dev — Overview](https://dart.dev/overview), [Flutter — Showcase](https://flutter.dev/showcase), [Wikipedia — Dart](https://en.wikipedia.org/wiki/Dart_(programming_language))
 
-### Flutter
-**Instalación:** `flutter create mi_app`
-Framework de UI multiplataforma (iOS, Android, Web, Desktop). Todo son Widgets, hot reload, alto rendimiento (compila a nativo).
+---
+
+## ¿Cómo empezar? Instalación en todos los entornos
+
+### Windows
+1. Descarga el SDK desde [dart.dev/get-dart](https://dart.dev/get-dart) y ejecuta el instalador `.msi`
+2. O instala con **winget**: `winget install Google.Dart`
+3. Si instalas Flutter: el SDK Dart viene incluido. Descarga Flutter desde [flutter.dev](https://docs.flutter.dev/get-started/install)
+4. Verifica: abre `cmd` o PowerShell y ejecuta `dart --version`
+
+### macOS
+- **Homebrew** (recomendado para Dart solo):
+  ```bash
+  brew tap dart-lang/dart
+  brew install dart
+  ```
+- **Flutter** (incluye Dart):
+  ```bash
+  curl -O https://storage.googleapis.com/flutter_infra_release/releases/stable/macos/flutter_macos_arm64_3.24.0-stable.zip
+  unzip flutter_macos_*.zip
+  export PATH="$PATH:`pwd`/flutter/bin"
+  ```
+- Verifica: `dart --version`
+
+### Linux (Debian/Ubuntu)
+```bash
+sudo apt update
+sudo apt install apt-transport-https
+sudo wget -qO- https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /usr/share/keyrings/dart.gpg
+echo 'deb [signed-by=/usr/share/keyrings/dart.gpg arch=amd64] https://storage.googleapis.com/download.dartlang.org/linux/debian stable main' | sudo tee /etc/apt/sources.list.d/dart_stable.list
+sudo apt update && sudo apt install dart
+
+# Añade al PATH en ~/.bashrc
+export PATH="$PATH:/usr/lib/dart/bin"
+```
+
+### SDKMAN (Linux/macOS/WSL) — versión múltiple
+```bash
+curl -s "https://get.sdkman.io" | bash
+source "$HOME/.sdkman/bin/sdkman-init.sh"
+
+sdk install dart    # Última versión estable
+sdk list dart       # Versiones disponibles
+sdk use dart 3.4.0  # Cambiar versión temporalmente
+sdk default dart 3.4.0  # Versión por defecto
+```
+
+### Docker
+```dockerfile
+FROM dart:stable-sdk AS build
+WORKDIR /app
+COPY pubspec.* .
+RUN dart pub get
+COPY . .
+RUN dart compile exe bin/main.dart -o /app/server
+
+FROM debian:bookworm-slim
+COPY --from=build /app/server /server
+CMD ["/server"]
+```
+Usa `dart:stable-sdk` para desarrollo y compilación, imagen slim para producción. El SDK pesa ~1 GB, pero el binario compilado AOT es pequeño (~5-15 MB).
+
+### Alias útiles para el día a día
+Añade a tu `~/.bashrc` o `~/.zshrc`:
+```bash
+alias d='dart'
+alias dr='dart run'
+alias df='dart format .'
+alias da='dart analyze'
+alias dt='dart test'
+alias dpg='dart pub global'
+alias dcreate='dart create'
+alias dpgx='dart pub global run'
+```
+
+Fuente: [dart.dev — Get Dart](https://dart.dev/get-dart), [SDKMAN — Dart](https://sdkman.io/sdks#dart), [Docker Hub — Dart](https://hub.docker.com/_/dart)
+
+---
+
+## Primeros pasos y configuración del entorno
+
+### DartPad (online)
+DartPad ([dartpad.dev](https://dartpad.dev/)) es el editor online oficial. No requiere instalación, incluye Flutter snippets y soporta Dart 3 completo. Perfecto para probar fragmentos sin configurar nada.
+
+### dart create (proyecto nuevo)
+```bash
+dart create mi_proyecto
+cd mi_proyecto
+dart run    # Ejecuta el bin principal
+```
+Esto genera:
+```
+mi_proyecto/
+├── bin/
+│   └── mi_proyecto.dart    # Punto de entrada
+├── lib/
+│   └── mi_proyecto.dart    # Librería
+├── test/
+│   └── mi_proyecto_test.dart
+├── pubspec.yaml            # Dependencias y metadatos
+├── analysis_options.yaml   # Configuración del linter
+└── README.md
+```
+
+### Tipos de proyecto
+```bash
+dart create -t console mi_app       # CLI (por defecto)
+dart create -t web mi_app           # Web con dart:html
+dart create -t package mi_app       # Librería
+dart create -t server-shelf mi_app  # Servidor HTTP con shelf
+flutter create mi_app               # Proyecto Flutter
+```
+
+### Editores recomendados
+- **VSCode**: extensión "Dart" de Dart Code (dart-code.dart). Incluye análisis en vivo, autocompletado, refactors, debugger. Extensión "Flutter" adicional si usas Flutter.
+- **Android Studio / IntelliJ**: plugin oficial de Dart/Flutter. Excelente depurador visual y hot reload.
+- **Neovim/LSP**: `dartls` (Dart language server) vía `dart language-server --protocol=lsp`. Configurable con `mason.nvim`.
+
+### analysis_options.yaml (configuración del linter)
+```yaml
+analyzer:
+  errors:
+    invalid_assignment: error
+    missing_return: error
+    dead_code: warning
+
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+
+linter:
+  rules:
+    - always_declare_return_types
+    - avoid_print
+    - prefer_const_constructors
+    - prefer_final_locals
+    - prefer_single_quotes
+    - sort_constructors_first
+    - unawaited_futures
+    - use_super_parameters
+```
+Ejecuta el análisis: `dart analyze`. Corre el formateador: `dart format .`.
+
+### pubspec.yaml básico
+```yaml
+name: mi_app
+description: Una aplicación Dart
+version: 1.0.0
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+
+dependencies:
+  http: ^1.2.0
+  collection: ^1.18.0
+
+dev_dependencies:
+  test: ^1.25.0
+  lints: ^3.0.0
+```
+
+Fuente: [dart.dev — Get Started](https://dart.dev/get-dart), [DartPad](https://dartpad.dev/), [dart.dev — Linter Rules](https://dart.dev/tools/linter-rules)
+
+---
+
+## Paradigmas de Dart
+
+Dart es un lenguaje multiparadigma. Según el problema que resuelvas, puedes usar el estilo que mejor se adapte.
+
+### POO (Programación Orientada a Objetos)
+
+En Dart **todo es un objeto**, incluso los tipos primitivos como `int` o `bool`. Todos heredan de `Object`.
+
 ```dart
-import 'package:flutter/material.dart';
-
-void main() => runApp(const App());
-
-class App extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text('Hola Mundo'),
-        ),
-      ),
-    );
-  }
+void main() {
+  print(42.toString());          // '42'
+  print((3.14).roundToDouble()); // 3.0
+  print(true.toString());        // 'true'
 }
 ```
-### Aqueduct (Server)
-**Instalación:** `dart create -t server-shelf mi_servidor  # o usa shelf directamente`
-Shelf es un middleware web para Dart. Aqueduct (ahora parte de conduit) fue el framework más popular para APIs backend en Dart.
-```dart
-import 'package:shelf/shelf.dart';
-import 'package:shelf/shelf_io.dart' as io;
 
-Response handler(Request req) {
-  return Response.ok('Hola Mundo');
+**Clases, herencia, mixins, interfaces implícitas:**
+
+```dart
+mixin Volador {
+  String volar() => 'Estoy volando';
+}
+
+class Animal {}
+
+class Pajaro extends Animal with Volador {}
+
+void main() {
+  print(Pajaro().volar()); // 'Estoy volando'
+}
+```
+
+Toda clase en Dart es también una interfaz. Puedes usar `implements` para adoptar la interfaz de otra clase sin heredar su implementación.
+
+```dart
+class Perro {
+  String sonido() => 'Guau';
+}
+
+class Gato implements Perro {
+  @override
+  String sonido() => 'Miau';
+}
+```
+
+### Programación funcional
+
+Las funciones son objetos de primera clase (tipo `Function`). Puedes pasarlas como argumentos, asignarlas a variables y devolverlas desde otras funciones.
+
+```dart
+void main() {
+  // Función como objeto
+  final operacion = (int a, int b) => a + b;
+  print(operacion(3, 4)); // 7
+
+  // Closure: captura variables del entorno
+  int contador = 0;
+  final incrementar = () => contador++;
+  incrementar();
+  print(contador); // 1
+
+  // map, filter, reduce
+  final nums = [1, 2, 3, 4, 5];
+  final pares = nums.where((n) => n.isEven).toList();   // [2, 4]
+  final cuadrados = nums.map((n) => n * n).toList();    // [1, 4, 9, 16, 25]
+  final suma = nums.reduce((a, b) => a + b);            // 15
+}
+```
+
+### Programación reactiva
+
+Dart soporta el patrón reactivo con **Streams**. Un `Stream` emite valores en el tiempo; los suscriptores reaccionan a esos valores.
+
+```dart
+import 'dart:async';
+
+Stream<int> contador(int max) async* {
+  for (var i = 1; i <= max; i++) {
+    await Future.delayed(Duration(seconds: 1));
+    yield i;
+  }
 }
 
 void main() async {
-  var server = await io.serve(handler, 'localhost', 8080);
-  print('Servidor en ${server.address}:${server.port}');
+  await for (final valor in contador(3)) {
+    print(valor);
+  }
 }
 ```
 
-## 📝 Ejercicios Prácticos
+En Flutter, `StreamBuilder` reacciona a cambios en un Stream y reconstruye la UI automáticamente:
 
-1. **Null Safety** 🟢 `[Fácil]` — Función que recibe `int?` y devuelve su cuadrado (0 si null). Demuestra `??` y `?.`
-2. **Clases y Mixins** 🟢 `[Fácil]` — Define clase `Vehiculo` con mixin `Volador`. Crea `Avion` que herede ambos.
-3. **App Flutter básica** 🟡 `[Intermedio]` — Lista de tareas con Flutter: añadir, completar, eliminar. Usa StatefulWidget.
-4. **API con Shelf** 🟡 `[Intermedio]` — Servidor Shelf con rutas CRUD para productos. Almacenamiento en Map.
+```dart
+StreamBuilder<int>(
+  stream: contador(5),
+  builder: (context, snapshot) {
+    if (snapshot.connectionState == ConnectionState.waiting) {
+      return const Text('Esperando...');
+    }
+    if (snapshot.hasError) return Text('Error: ${snapshot.error}');
+    return Text('Valor: ${snapshot.data}');
+  },
+);
+```
 
-## ⚡ Buenas Prácticas y Complejidad
+### Declarativo vs imperativo
 
-**Buenas prácticas:**
+**Declarativo** describe *qué* debe mostrar la UI, no *cómo* construirla. Flutter usa un árbol de widgets declarativo:
 
-- Habilita `strict-casts` y `strict-inference` en analysis_options.yaml.
-- Usa `const` constructor siempre que sea posible — mejora rendimiento.
-- Organiza widgets en archivos separados con responsabilidad única.
-- Usa `freezed` para data classes inmutables con copyWith.
-- Escribe tests con `flutter test` y paquete `mockito`.
+```dart
+Widget build(BuildContext context) {
+  return Column(
+    children: [
+      const Text('Hola'),
+      ElevatedButton(
+        onPressed: () {},
+        child: const Text('Click'),
+      ),
+    ],
+  );
+}
+```
 
-**Complejidad algorítmica (Big O):**
+**Imperativo** describe *cómo* hacer algo paso a paso:
 
-Listas: acceso O(1), inserción O(n). Maps: O(1) promedio. Sets: O(1). Queues: add/remove O(1). `sort()` O(n log n). Dart compila a nativo (AOT) y a JS.
+```dart
+void main() {
+  final lista = <int>[];
+  for (var i = 0; i < 10; i++) {
+    if (i.isEven) lista.add(i);
+  }
+  print(lista);
+}
+```
 
-## 📚 Recursos y Documentación
+Fuente: [dart.dev — Language Tour](https://dart.dev/language), [dart.dev — Streams](https://dart.dev/language/async#stream), [Flutter — Widgets](https://docs.flutter.dev/ui/widgets)
 
-- 📖 [Dart Documentación](https://dart.dev/guides)
-- 🔧 [DartPad](https://dartpad.dev/)
-- 📖 [Flutter Documentación](https://docs.flutter.dev/)
-- 📖 [Dart en GitHub](https://github.com/dart-lang)
-- 📖 [Dart API Reference](https://api.dart.dev/)
+---
 
-### 🏆 Retos Relacionados
+## Tipos de datos y variables
+
+### var vs final vs const
+
+```dart
+var x = 42;        // Inferido como int, se puede reasignar
+final y = 42;      // Se asigna una vez en runtime
+const z = 42;      // Constante en compile-time
+
+x = 50;            // OK
+// x = 'hola';     // Error: String no es int
+
+final ahora = DateTime.now();  // OK: se evalúa en runtime
+// const ahora2 = DateTime.now();  // Error: no es compile-time constant
+```
+
+### Tipos built-in
+
+```dart
+int entero = 42;             // 64-bit en plataformas nativas
+int hex = 0xDEADBEEF;
+double decimal = 3.14;       // 64-bit doble precisión (IEEE 754)
+double notacion = 1.5e4;     // 15000.0
+num cualquiera = 42;         // num es supertipo de int y double
+cualquiera = 3.14;           // OK
+bool cierto = true;
+String texto = 'Hola';
+```
+
+### Records (Dart 3)
+
+```dart
+var punto = (3.0, 4.0);
+print(punto.$1); // 3.0
+
+var usuario = (nombre: 'Ana', edad: 30);
+print(usuario.nombre); // 'Ana'
+
+var (x, y) = punto; // destructuring
+```
+
+### Nullable types
+
+```dart
+int? nulable = null;
+int noNulo = 42;
+// noNulo = null;  // Error
+
+String mayusculas(String? texto) => texto!.toUpperCase(); // force unwrap
+
+late String nombre;
+nombre = 'Ana'; // Debe asignarse antes de leer
+
+void saludar({required String nombre}) => print('Hola $nombre');
+```
+
+### Type promotion
+
+```dart
+void procesar(Object obj) {
+  if (obj is String) print(obj.length); // Promovido a String
+
+  String? texto;
+  if (texto != null) print(texto.length); // Promovido a String
+}
+```
+
+### dynamic vs Object vs void vs Never
+
+```dart
+dynamic d = 42;       // Sin verificación de tipos en compile-time
+d = 'hola';           // OK
+d.metodoRaro();       // Solo falla en runtime
+
+Object o = 42;        // Tipo base conocido, requiere cast
+if (o is String) print(o.length); // Promovido
+
+void v;               // Función que no devuelve valor útil
+
+Never nunca() => throw UnimplementedError(); // Nunca retorna
+```
+
+### Colecciones
+
+```dart
+final lista = <int>[1, 2, 3];
+lista.add(4);
+
+final inmutable = List.unmodifiable([1, 2, 3]);
+
+final set = <String>{'a', 'b', 'a'};
+print(set.length); // 2
+
+final mapa = <String, int>{'uno': 1, 'dos': 2};
+```
+
+### String (UTF-16, Runes, interpolación)
+
+```dart
+String emoji = '😀';
+print(emoji.length);         // 2 (surrogate pair UTF-16)
+print(emoji.runes.length);   // 1 (Unicode code point)
+
+String nombre = 'Ana';
+print('Hola, $nombre');            // 'Hola, Ana'
+print('2 + 2 = ${2 + 2}');        // '2 + 2 = 4'
+
+String corazon = '\u{2764}';        // ❤️
+String cara = '\u{1F600}';          // 😀
+```
+
+### Enum (enhanced desde Dart 2.17)
+
+```dart
+enum Status {
+  ok(200, 'OK'),
+  notFound(404, 'Not Found');
+
+  final int code;
+  final String message;
+  const Status(this.code, this.message);
+
+  bool get isError => code >= 400;
+}
+```
+
+### Sealed class (Dart 3)
+
+```dart
+sealed class Result<T> {}
+class Success<T> extends Result<T> { final T data; Success(this.data); }
+class Error<T> extends Result<T> { final String message; Error(this.message); }
+
+String describe(Result<int> r) => switch (r) {
+  Success(:var data) => 'Datos: $data',
+  Error(:var message) => 'Error: $message',
+};
+```
+
+### Extension types (Dart 3)
+
+Envoltura sin overhead en runtime:
+
+```dart
+extension type Id(int value) {
+  bool get isValid => value > 0;
+}
+
+void main() {
+  final id = Id(42);
+  print(id.isValid); // true
+  print(id.value);   // 42
+}
+```
+
+### Memoria y compilación
+
+- **Dart VM generational GC**: new space (objetos jóvenes, se recolectan rápido) y old space (objetos que sobreviven varias colecciones). El GC es generacional: la mayoría de objetos muertos se recolectan en new space con un barrido rápido.
+- **Isolates**: cada Isolate tiene su propio heap aislado. No comparten memoria, se comunican por paso de mensajes (SendPort/ReceivePort). Esto elimina carreras de datos y locks.
+- **AOT (Ahead-Of-Time)**: compila a código nativo ARM/x64. Arranque rápido, rendimiento predecible. Para producción.
+- **JIT (Just-In-Time)**: compila durante el desarrollo. Permite hot reload. Máxima velocidad de iteración.
+
+Fuente: [dart.dev — Built-in Types](https://dart.dev/language/built-in-types), [dart.dev — Records](https://dart.dev/language/records), [dart.dev — Enums](https://dart.dev/language/enums), [dart.dev — Sealed classes](https://dart.dev/language/class-modifiers#sealed), [dart.dev — Extension types](https://dart.dev/language/extension-types), [Dart VM — mrale.ph](https://mrale.ph/dartvm/)
+
+---
+
+## Control de flujo y modularidad
+
+### if / else
+
+```dart
+if (condition) {
+  // ...
+} else if (other) {
+  // ...
+} else {
+  // ...
+}
+```
+
+### switch (expression desde Dart 3)
+
+```dart
+// Switch expression
+String desc(int valor) => switch (valor) {
+  0 => 'cero',
+  1 => 'uno',
+  _ => 'otro',
+};
+
+// Switch con pattern matching y guard (Dart 3)
+sealed class Maybe<T> {}
+class Some<T> extends Maybe<T> { final T value; Some(this.value); }
+class None<T> extends Maybe<T> {}
+
+String describe(Maybe<int> m) => switch (m) {
+  Some(value: > 10) => 'Grande',
+  Some(:var value) => 'Valor: $value',
+  None() => 'Vacío',
+};
+```
+
+### Bucles
+
+```dart
+for (var i = 0; i < 5; i++) { /* ... */ }
+for (final item in lista) { /* ... */ }
+while (cond) { /* ... */ }
+do { /* ... */ } while (cond);
+```
+
+### break / continue
+
+```dart
+for (var i = 0; i < 10; i++) {
+  if (i == 3) continue;
+  if (i == 7) break;
+  print(i); // 0, 1, 2, 4, 5, 6
+}
+```
+
+### Iteración funcional
+
+```dart
+final nums = [1, 2, 3, 4, 5];
+
+nums.forEach(print);
+final pares = nums.where((n) => n.isEven);       // (2, 4)
+final cuadrados = nums.map((n) => n * n);        // (1, 4, 9, 16, 25)
+nums.any((n) => n.isEven);                       // true
+nums.every((n) => n > 0);                        // true
+```
+
+### try / catch / finally
+
+```dart
+try {
+  final data = http.read('https://api.example.com');
+} on SocketException catch (e) {
+  print('Red: $e');
+} on HttpException catch (e) {
+  print('HTTP: $e');
+} catch (e, st) {
+  print('Error: $e');
+  rethrow;
+} finally {
+  print('Siempre se ejecuta');
+}
+```
+
+### assert
+
+```dart
+void dividir(int a, int b) {
+  assert(b != 0, 'No se puede dividir por cero');
+  print(a / b);
+}
+// Solo se evalúa en desarrollo y test.
+```
+
+### Módulos: import / export / library
+
+```dart
+// import
+import 'dart:io';                         // SDK
+import 'package:http/http.dart';          // pub.dev
+import '../otro.dart';                    // Relativo
+import 'package:mi_app/utils/helpers.dart';
+
+// show / hide
+import 'dart:math' show pi, sqrt;
+import 'dart:io' hide File;
+
+// deferred as (carga diferida)
+import 'package:pesado/pesado.dart' deferred as pesado;
+// await pesado.loadLibrary();
+
+// export (re-exportar)
+export 'src/validators.dart';
+export 'src/formatters.dart';
+```
+
+**Barrel files**: archivo `index.dart` que re-exporta todo:
+
+```dart
+// lib/models/index.dart
+export 'user.dart';
+export 'product.dart';
+export 'order.dart';
+```
+
+**library / part / part of** (desaconsejado oficialmente): fragmenta un archivo en varios. No se usa en proyectos nuevos. Prefiere import/export.
+
+**pubspec.yaml**:
+
+```yaml
+name: mi_app
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+dependencies:
+  http: ^1.2.0
+  collection: ^1.18.0
+```
+
+**Tipos de imports**:
+- `dart:` — librerías del SDK (io, convert, async, math, html...)
+- `package:` — paquetes de pub.dev o locales
+- Ruta relativa — otros archivos del mismo proyecto
+
+Fuente: [dart.dev — Control flow](https://dart.dev/language/control-flow), [dart.dev — Patterns](https://dart.dev/language/patterns), [dart.dev — Libraries](https://dart.dev/language/libraries)
+
+---
+
+## Conceptos clave explicados a fondo
+
+### Null safety (seguridad contra nulos)
+
+Dart introdujo **sound null safety** en la versión 2.12 (2021). A diferencia de TypeScript (donde null safety es opcional) o Kotlin (donde la interoperabilidad con Java la debilita), en Dart es **sound**: el compilador demuestra matemáticamente que ningún null escapará al runtime si el código compila sin errores.
+
+```dart
+// Tipos nulables vs no-nulables
+int noNulo = 42;
+int? nulable = null;
+
+// noNulo = null;   // Error de compilación
+nulable = 42;       // OK
+
+// El operador ! (force unwrap) — solo cuando SABES que no es null
+String maybeName(String? name) {
+  return name!;  // Lanza TypeError si name es null
+}
+
+// ?.  (null-aware access)
+String? nombre = null;
+print(nombre?.length);  // null, no lanza error
+
+// ??  (null-coalescing)
+String saludo = nombre ?? 'Invitado';
+
+// ??= (asignación solo si es null)
+String? valor;
+valor ??= 'default';  // Asigna porque valor es null
+```
+
+**Type promotion (promoción de tipos):**
+```dart
+void procesar(String? texto) {
+  if (texto == null) return;
+  // Aquí texto es String (promovido), no String?
+  print(texto.length);
+
+  // También funciona con is
+  Object objeto = 'hola';
+  if (objeto is String) {
+    print(objeto.length);  // Promovido a String
+  }
+}
+```
+
+**`late` (inicialización diferida):**
+```dart
+class Config {
+  late String apiKey;  // Se inicializa antes de usarse o explota
+
+  void init() {
+    apiKey = 'sk-12345';  // Obligatorio antes de cualquier lectura
+  }
+}
+
+// Lazy initialization
+class Database {
+  late final _conexion = _abrirConexion();  // Solo se ejecuta cuando se accede
+
+  void _abrirConexion() => print('Abriendo BD...');
+}
+```
+
+**`required` en parámetros nombrados:**
+```dart
+void saludar({required String nombre, int edad = 0}) {
+  print('Hola $nombre ($edad)');
+}
+// saludar();          // Error: falta required
+// saludar(nombre: 'Ana');  // OK
+```
+
+**¿Qué diferencia hay con otros lenguajes?**
+- **TypeScript**: la comprobación es opcional (strictNullChecks), tipos no confiables en runtime
+- **Kotlin**: null safety es sound, pero la interoperabilidad con Java introduce escapes
+- **Rust**: no tiene null, usa `Option<T>`. Dart usa `T?` que es syntactic sugar para `Nullable<T>`
+- **Swift**: `T?` es `Optional<T>`, similar a Dart pero sin promoción automática
+
+Fuente: [dart.dev — Null Safety](https://dart.dev/null-safety), [Dart 3 — Sound null safety](https://dart.dev/resources/understanding-null-safety)
+
+### Top-level functions y variables
+
+Dart permite definir funciones y variables fuera de una clase, como Python, y a diferencia de Java o C#.
+
+```dart
+// Variable top-level
+int contadorGlobal = 0;
+
+// Función top-level
+String saludar(String nombre) => 'Hola $nombre';
+
+void main() {
+  contadorGlobal++;
+  print(saludar('Ana'));
+}
+```
+
+Esto es posible porque Dart genera un objeto closure (una librería) que contiene los top-level symbols. En el modelo AOT, el compilador resuelve estos símbolos como globales estáticas. Es la razón por la que `main()` es una función, no un método de clase.
+
+### Colecciones: List, Set, Map
+
+```dart
+// List (array ordenado)
+final numeros = <int>[1, 2, 3];
+numeros.add(4);
+numeros.removeAt(0);
+numeros[0] = 99;
+
+// Spread (...)
+final otros = [0, ...numeros, 100];  // [0, 99, 3, 4, 100]
+final nulos = [1, ...?nulableList];  // null-aware spread
+
+// Collection if
+final items = ['A', if (mostrarB) 'B', 'C'];
+
+// Collection for
+final duplicados = [for (var n in numeros) n * 2];
+
+// Set (sin duplicados)
+final frutas = <String>{'manzana', 'pera', 'manzana'};
+print(frutas.length);  // 2
+
+// Map
+final capitales = <String, String>{
+  'España': 'Madrid',
+  'Francia': 'París',
+};
+capitales['Italia'] = 'Roma';
+```
+
+**Operaciones funcionales:**
+```dart
+numeros
+  .where((n) => n.isEven)
+  .map((n) => n * 10)
+  .toList();
+
+numeros.fold(0, (acc, n) => acc + n);  // Suma todos
+numeros.any((n) => n > 5);            // ¿Algún > 5?
+numeros.every((n) => n > 0);          // ¿Todos > 0?
+```
+
+### Records (Dart 3)
+
+Los records son tipos anónimos que agrupan múltiples valores. Existen desde Dart 3.0 y resuelven el problema de devolver múltiples valores sin crear una clase.
+
+```dart
+// Record posicional
+var punto = (3.0, 4.0);
+print(punto.$1);  // 3.0
+print(punto.$2);  // 4.0
+
+// Record con nombres
+var usuario = (nombre: 'Ana', edad: 30);
+print(usuario.nombre);  // 'Ana'
+
+// Mixto
+var mixto = ('hola', x: 1, 'mundo');
+print(mixto.$1);  // 'hola'
+print(mixto.x);   // 1
+print(mixto.$2);  // 'mundo' (los posicionales se numeran ignorando los nombrados)
+
+// Como retorno de función
+(int, String) dividir(int a, int b) {
+  return (a ~/ b, 'resto: ${a % b}');
+}
+
+// Records en tipos
+typedef Punto = (double x, double y);
+typedef Persona = ({String nombre, int edad});
+```
+
+**Pattern matching (desestructuración, Dart 3):**
+```dart
+// Destructuring de record
+var (x, y) = punto;
+
+// Destructuring en función
+void mostrar((double, double) punto) {
+  var (x, y) = punto;
+  print('($x, $y)');
+}
+
+// Switch con patterns (Dart 3)
+sealed class Shape {}
+class Circle extends Shape { final double radius; Circle(this.radius); }
+class Rectangle extends Shape { final double w, h; Rectangle(this.w, this.h); }
+
+double area(Shape shape) => switch (shape) {
+  Circle(:var radius) => 3.1416 * radius * radius,
+  Rectangle(:var w, :var h) => w * h,
+};
+
+// If-case (Dart 3)
+if (shape case Circle(:var radius)) {
+  print('Círculo de radio $radius');
+}
+
+// Foreach con pattern
+final puntos = [(1, 2), (3, 4), (5, 6)];
+for (var (x, y) in puntos) {
+  print('x=$x y=$y');
+}
+```
+
+### Sealed classes (Dart 3)
+
+```dart
+sealed class Result<T> {}
+class Success<T> extends Result<T> { final T data; Success(this.data); }
+class Error<T> extends Result<T> { final String message; Error(this.message); }
+class Loading<T> extends Result<T> {}
+
+String describe(Result<int> result) => switch (result) {
+  Success(:var data) => 'Datos: $data',
+  Error(:var message) => 'Error: $message',
+  Loading() => 'Cargando...',
+  // No necesitamos default — sealed cubre todos los casos
+};
+```
+
+`sealed` es un modificador que restringe la jerarquía: todas las subclases deben estar en el mismo archivo. El compilador conoce todas las variantes, permitiendo exhaustividad en los switch.
+
+### Extension methods
+
+Los extension methods añaden funcionalidad a tipos existentes sin modificar el tipo original. Es similar a los extension methods de C#, pero más flexible.
+
+```dart
+extension StringExtension on String {
+  String get capitalizado =>
+      this.isEmpty ? this : '${this[0].toUpperCase()}${this.substring(1)}';
+
+  int get vocales => split('').where((c) => 'aeiou'.contains(c.toLowerCase())).length;
+}
+
+extension IntExtension on int {
+  List<int> get hasta => List.generate(this, (i) => i);
+  int get cuadrado => this * this;
+}
+
+void main() {
+  print('hola mundo'.capitalizado);  // 'Hola mundo'
+  print(5.hasta);                    // [0, 1, 2, 3, 4]
+  print(7.cuadrado);                 // 49
+}
+```
+
+### Cascade notation (`..`)
+
+Permite realizar múltiples operaciones en el mismo objeto sin repetir la variable.
+
+```dart
+final lista = <int>[]
+  ..add(1)
+  ..add(2)
+  ..removeAt(0);
+// Equivalente a:
+// lista.add(1); lista.add(2); lista.removeAt(0);
+
+// Uso clásico en Flutter:
+Widget build(BuildContext context) {
+  return Container()
+    ..padding = EdgeInsets.all(8)
+    ..decoration = BoxDecoration(color: Colors.blue);
+}
+
+// Combinado con spread
+final items = [
+  ...lista,
+  ...[4, 5, 6],
+];
+```
+
+### async / await, Future y Stream
+
+```dart
+// Future: promesa de un valor futuro
+Future<String> fetchData() async {
+  await Future.delayed(Duration(seconds: 1));
+  return 'Datos cargados';
+}
+
+// async/await
+void main() async {
+  print('Cargando...');
+  var data = await fetchData();
+  print(data);
+}
+
+// Stream: flujo de datos en el tiempo
+Stream<int> contador(int max) async* {
+  for (var i = 0; i < max; i++) {
+    await Future.delayed(Duration(seconds: 1));
+    yield i;  // Emite un valor
+  }
+}
+
+void main() async {
+  await for (var valor in contador(5)) {
+    print(valor);  // 0, 1, 2, 3, 4 (cada segundo)
+  }
+
+  // Alternativa con listen()
+  contador(3).listen((v) => print(v));
+}
+
+// StreamController (control manual)
+import 'dart:async';
+
+class EventBus {
+  final _controller = StreamController<String>.broadcast();
+  Stream<String> get stream => _controller.stream;
+
+  void emit(String event) => _controller.add(event);
+
+  void dispose() => _controller.close();
+}
+
+void main() {
+  final bus = EventBus();
+  bus.stream.listen((e) => print('Evento: $e'));
+  bus.emit('usuario_creado');
+}
+```
+
+### Mixins
+
+Los mixins permiten reutilizar código entre jerarquías de clases sin herencia múltiple. Se declaran con `mixin` y se aplican con `with`.
+
+```dart
+mixin Logger {
+  void log(String message) => print('[LOG] $message');
+
+  void error(String message) => print('[ERROR] $message');
+}
+
+mixin JsonSerializable on Object {
+  String toJson();
+  // Puede usar this porque está vinculado a Object
+}
+
+mixin Timestamp {
+  final _createdAt = DateTime.now();
+  String get createdAt => _createdAt.toIso8601String();
+}
+
+class Usuario with Logger, Timestamp {
+  final String nombre;
+  Usuario(this.nombre);
+
+  void guardar() {
+    log('Guardando $nombre');
+  }
+}
+
+// Mixin con restricción (solo aplicable a cierta clase)
+mixin Volador on Animal {
+  void volar() => print('$nombre está volando');
+}
+
+class Animal {
+  final String nombre;
+  Animal(this.nombre);
+}
+
+class Pajaro extends Animal with Volador {
+  Pajaro(super.nombre);
+}
+
+// class Avion with Volador {}  // Error: Avion no extiende Animal
+```
+
+### Enums con propiedades y métodos
+
+Los enums en Dart 3 son clases completas: pueden tener campos, constructores, métodos y métodos override.
+
+```dart
+enum StatusCode {
+  ok(200, 'OK'),
+  notFound(404, 'Not Found'),
+  serverError(500, 'Internal Server Error');
+
+  final int code;
+  final String message;
+  const StatusCode(this.code, this.message);
+
+  bool get isError => code >= 400;
+  bool get isSuccess => code >= 200 && code < 300;
+
+  @override
+  String toString() => '$code $message';
+}
+
+void main() {
+  print(StatusCode.ok);        // 200 OK
+  print(StatusCode.notFound.isError);  // true
+
+  // Enhanced enums con métodos de instancia
+  StatusCode.ok.describe();    // [200] OK — Success
+}
+
+extension StatusDescription on StatusCode {
+  void describe() {
+    print('[$code] $message — ${isSuccess ? "Success" : "Error"}');
+  }
+}
+```
+
+### Generics, constraints y covariance
+
+```dart
+// Genéricos básicos
+class Caja<T> {
+  T valor;
+  Caja(this.valor);
+}
+
+// Constraints (T debe extender o implementar)
+class Repositorio<T extends Entity> {
+  void save(T entity) => entity.persist();
+}
+
+abstract class Entity {
+  void persist();
+}
+
+// Covariance: List<Dog> es subtipo de List<Animal>
+class Animal {}
+class Dog extends Animal {}
+
+void procesarAnimales(List<Animal> animales) {}
+void main() {
+  final perros = <Dog>[Dog()];
+  procesarAnimales(perros);  // OK: covariant
+}
+
+// En Dart, los genéricos son covariant por defecto en las colecciones
+// Para contravariance, se usa `covariant` o `in` en tipos funcionales
+```
+
+**covariant vs contravariant en Dart:**
+- `List<Dog>` se puede asignar a `List<Animal>` (covariance en colecciones)
+- En parámetros de funciones, puedes usar `covariant` para permitir subtipos:
+
+```dart
+class Comparador {
+  bool sonIguales(covariant Object a, covariant Object b) => a == b;
+}
+
+class ComparadorStrings extends Comparador {
+  @override
+  bool sonIguales(String a, String b) => a == b;  // Más específico
+}
+```
+
+### Constructores: factory, named, initializer list, const
+
+```dart
+// Named constructors
+class Punto {
+  final double x;
+  final double y;
+
+  Punto(this.x, this.y);  // Constructor por defecto
+
+  // Named constructor
+  Punto.origin() : x = 0, y = 0;
+
+  // Named constructor con initializer list
+  Punto.fromJson(Map<String, double> json)
+      : x = json['x'] ?? 0,
+        y = json['y'] ?? 0;
+
+  // Initializer list: código que se ejecuta ANTES del cuerpo
+  Punto.polar(double radio, double angulo)
+      : x = radio * angulo.cos(),
+        y = radio * angulo.sin() {
+    print('Creado punto polar');
+  }
+}
+
+// Const constructors (compile-time constant)
+class Constante {
+  final int valor;
+  const Constante(this.valor);  // Todos los campos deben ser final
+}
+
+void main() {
+  const c1 = Constante(42);
+  const c2 = Constante(42);
+  print(identical(c1, c2));  // true: canonicalizado
+
+  // Con named
+  final p = Punto.fromJson({'x': 3.0, 'y': 4.0});
+}
+
+// Factory constructors: pueden devolver subtipos o instancias cacheadas
+class Configuracion {
+  static final Map<String, Configuracion> _cache = {};
+
+  final String env;
+
+  // Private constructor — nadie puede llamarlo desde fuera
+  Configuracion._(this.env);
+
+  // Factory: decide qué instancia devolver
+  factory Configuracion.from(String env) {
+    return _cache.putIfAbsent(env, () => Configuracion._(env));
+  }
+
+  // Singleton con factory
+  static final Configuracion _instancia = Configuracion._('production');
+  factory Configuracion.shared() => _instancia;
+}
+
+// Const constructor con validación (initializer list)
+class Persona {
+  final String nombre;
+  final int edad;
+
+  const Persona(this.nombre, this.edad)
+      : assert(nombre.isNotEmpty, 'Nombre no puede estar vacío'),
+        assert(edad >= 0, 'Edad no puede ser negativa');
+}
+```
+
+### Operator overloading
+
+```dart
+class Vector {
+  final double x, y;
+  const Vector(this.x, this.y);
+
+  Vector operator +(Vector other) => Vector(x + other.x, y + other.y);
+  Vector operator -(Vector other) => Vector(x - other.x, y - other.y);
+  Vector operator *(double escalar) => Vector(x * escalar, y * escalar);
+  double operator [](int index) => index == 0 ? x : y;
+
+  @override
+  bool operator ==(Object other) =>
+      other is Vector && x == other.x && y == other.y;
+
+  @override
+  int get hashCode => Object.hash(x, y);
+
+  @override
+  String toString() => 'Vector($x, $y)';
+}
+
+void main() {
+  final v1 = Vector(1, 2);
+  final v2 = Vector(3, 4);
+  print(v1 + v2);  // Vector(4, 6)
+  print(v2 * 3);   // Vector(9, 12)
+  print(v1[0]);    // 1.0
+  print(v1 == Vector(1, 2));  // true
+}
+```
+
+### noSuchMethod y call method
+
+```dart
+// noSuchMethod: intercepta llamadas a métodos inexistentes
+class Proxy {
+  final Object _real;
+
+  Proxy(this._real);
+
+  @override
+  void noSuchMethod(Invocation invocation) {
+    print('Llamado: ${invocation.memberName}');
+    return Function.apply(
+      _real.getNoSuchMethod(invocation),
+      invocation.positionalArguments,
+      invocation.namedArguments,
+    );
+  }
+  // Necesita el override implícito
+  dynamic getNoSuchMethod(Invocation i) => _real;
+}
+
+// call method: objetos que se comportan como funciones
+class Multiplicador {
+  final int factor;
+  Multiplicador(this.factor);
+
+  int call(int valor) => valor * factor;
+}
+
+void main() {
+  final porDos = Multiplicador(2);
+  print(porDos(5));  // 10 — llama a Multiplicador.call(5)
+}
+```
+
+Fuente: [dart.dev — Language Tour](https://dart.dev/language), [Dart 3 — Records & Patterns](https://dart.dev/language/records), [Effective Dart](https://dart.dev/effective-dart)
+
+---
+
+## Sistema de archivos
+
+### dart:io — File, Directory, Link
+
+```dart
+import 'dart:io';
+import 'dart:convert';
+
+// Leer archivo completo
+final contenido = await File('datos.txt').readAsString();
+final lineas = await File('datos.txt').readAsLines();
+final bytes = await File('imagen.png').readAsBytes();
+
+// Escribir archivo
+await File('salida.txt').writeAsString('Hola mundo');
+await File('salida.bin').writeAsBytes([0x48, 0x65, 0x6C, 0x6C, 0x6F]);
+
+// Copiar, renombrar, eliminar
+await File('origen.txt').copy('destino.txt');
+await File('viejo.txt').rename('nuevo.txt');
+await File('temporal.txt').delete();
+
+// Verificar existencia y metadatos
+final existe = await File('datos.txt').exists();
+final info = await File('datos.txt').stat();
+print(info.modified); // DateTime
+print(info.size);     // bytes
+print(info.type);     // FileSystemEntityType
+
+// Directorios
+final dir = Directory('mi_carpeta');
+await dir.create(recursive: true);
+
+// Listar contenido
+await for (final entity in dir.list(recursive: true)) {
+  if (entity is File) {
+    print('Archivo: ${entity.path}');
+  } else if (entity is Directory) {
+    print('Directorio: ${entity.path}');
+  }
+}
+```
+
+### RandomAccessFile e IOSink
+
+```dart
+// RandomAccessFile: leer/escribir en posiciones específicas
+final file = await File('grande.dat').open(mode: FileMode.append);
+await file.writeFromBytes([0, 1, 2]);
+await file.close();
+
+// IOSink: buffer de escritura
+final sink = File('log.txt').openWrite();
+sink.writeln('Línea 1');
+sink.writeln('Línea 2');
+await sink.flush();
+await sink.close();
+```
+
+### FileSystemWatcher
+
+```dart
+final watcher = FileSystemWatcher.watch('mi_carpeta');
+await for (final event in watcher) {
+  print('${event.type}: ${event.path}');
+  // FileSystemEvent.modify, create, delete, move
+}
+```
+
+### Platform
+
+```dart
+import 'dart:io';
+
+void main() {
+  print(Platform.script);       // URI del script actual
+  print(Platform.executable);   // Ruta al ejecutable de Dart
+  print(Platform.operatingSystem); // 'linux', 'windows', 'macos'
+  print(Platform.numberOfProcessors);
+}
+```
+
+### Process
+
+```dart
+// Capturar salida
+final result = await Process.run('ls', ['-la']);
+print(result.stdout);
+print(result.stderr);
+print(result.exitCode);
+
+// Stream en vivo
+final process = await Process.start('ping', ['google.com']);
+await process.stdout.transform(utf8.decoder).forEach(print);
+```
+
+### dart:convert (UTF-8, JSON, Base64, GZip)
+
+```dart
+import 'dart:convert';
+
+final bytes = utf8.encode('Hola');                // [72, 111, 108, 97]
+final texto = utf8.decode([72, 111]);             // 'Ho'
+
+final jsonStr = jsonEncode({'nombre': 'Ana', 'edad': 30});
+final map = jsonDecode(jsonStr) as Map<String, dynamic>;
+
+final codificado = base64Encode([72, 111, 108, 97]);
+final decodificado = base64Decode(codificado);
+
+final comprimido = gzip.encode(utf8.encode('Texto...'));
+final descomprimido = utf8.decode(gzip.decode(comprimido));
+```
+
+### path package (NO incluido en dart:io)
+
+```dart
+import 'package:path/path.dart' as p;
+
+void main() {
+  print(p.join('usr', 'local', 'bin'));              // 'usr/local/bin'
+  print(p.split('/usr/local/bin'));                  // ['usr', 'local', 'bin']
+  print(p.extension('imagen.png'));                  // '.png'
+  print(p.basename('/usr/local/bin'));               // 'bin'
+  print(p.basenameWithoutExtension('foto.jpg'));     // 'foto'
+  print(p.dirname('/usr/local/bin'));                // '/usr/local'
+  print(p.normalize('/usr/./local/../bin'));         // '/usr/bin'
+  print(p.relative('/usr/local/bin', from: '/usr')); // 'local/bin'
+}
+```
+
+Fuente: [dart:io docs](https://api.dart.dev/stable/dart-io/dart-io-library.html), [dart:convert docs](https://api.dart.dev/stable/dart-convert/dart-convert-library.html), [path package](https://pub.dev/packages/path)
+
+---
+
+## Algoritmos y estructuras de datos
+
+### List.sort (Timsort)
+
+Dart usa **Timsort**, combinación de Merge Sort e Insertion Sort. O(n log n) promedio, estable.
+
+```dart
+final nums = [3, 1, 4, 1, 5, 9];
+nums.sort();                          // [1, 1, 3, 4, 5, 9]
+nums.sort((a, b) => b.compareTo(a)); // [9, 5, 4, 3, 1, 1]
+
+// Ordenar objetos
+class Persona {
+  final String nombre;
+  final int edad;
+  Persona(this.nombre, this.edad);
+}
+
+void main() {
+  final personas = [
+    Persona('Ana', 30),
+    Persona('Luis', 25),
+  ];
+  personas.sort((a, b) => a.edad.compareTo(b.edad));
+}
+```
+
+### binarySearch (package:collection)
+
+```dart
+import 'package:collection/collection.dart';
+
+void main() {
+  final nums = [1, 3, 5, 7, 9, 11];
+  final index = binarySearch(nums, 7); // 3
+  print(index);
+  // Requiere lista ordenada. O(log n)
+}
+```
+
+### Búsqueda y filtrado
+
+```dart
+final nums = [1, 2, 3, 4, 5, 6];
+
+final pares = nums.where((n) => n.isEven);             // (2, 4, 6)
+final primero = nums.firstWhere((n) => n.isEven);      // 2
+final unico = nums.singleWhere((n) => n == 3);         // 3
+nums.any((n) => n > 5);                                // true
+nums.every((n) => n > 0);                              // true
+nums.contains(3);                                      // true
+nums.map((n) => n * 2);                                // (2, 4, 6, 8, 10, 12)
+nums.reduce((a, b) => a + b);                          // 21
+nums.fold(0, (acc, n) => acc + n);                     // 21
+final plano = [[1, 2], [3, 4]].expand((x) => x).toList(); // [1, 2, 3, 4]
+nums.skip(2).take(3).toList();                         // [3, 4, 5]
+[1, 1, 2, 2, 3].toSet();                              // {1, 2, 3}
+```
+
+### groupBy (package:collection)
+
+```dart
+import 'package:collection/collection.dart';
+
+void main() {
+  final personas = [
+    Persona('Ana', 30),
+    Persona('Luis', 25),
+    Persona('Eva', 30),
+  ];
+  final agrupado = groupBy(personas, (p) => p.edad);
+  // {30: [Ana, Eva], 25: [Luis]}
+}
+```
+
+### Set operations
+
+```dart
+final a = <int>{1, 2, 3, 4};
+final b = <int>{3, 4, 5, 6};
+
+print(a.union(b));          // {1, 2, 3, 4, 5, 6}
+print(a.intersection(b));   // {3, 4}
+print(a.difference(b));     // {1, 2}
+print(a.lookup(3));         // 3 (O(1))
+```
+
+### Map avanzado
+
+```dart
+final mapa = <String, int>{'a': 1, 'b': 2};
+
+mapa.putIfAbsent('c', () => 3);    // Solo si no existe
+mapa.update('a', (v) => v + 10);   // Actualiza existente
+mapa.updateAll((k, v) => v * 2);   // Todos
+mapa.forEach((k, v) => print('$k -> $v'));
+for (final e in mapa.entries) print('${e.key}: ${e.value}');
+```
+
+### Queue / DoubleLinkedQueue (package:collection)
+
+```dart
+import 'dart:collection';
+import 'package:collection/collection.dart';
+
+void main() {
+  final cola = Queue<int>();
+  cola.addLast(1);
+  cola.addLast(2);
+  print(cola.removeFirst()); // 1
+
+  final deque = DoubleLinkedQueue<int>();
+  deque.addFirst(1);
+  deque.addLast(2);
+  print(deque.removeFirst()); // 1
+  print(deque.removeLast());  // 2
+}
+```
+
+### SplayTreeMap / SplayTreeSet (ordenados)
+
+```dart
+import 'dart:collection';
+
+void main() {
+  final ordenado = SplayTreeMap<String, int>();
+  ordenado['z'] = 1;
+  ordenado['a'] = 2;
+  print(ordenado.keys); // (a, z)
+
+  final setOrdenado = SplayTreeSet<int>();
+  setOrdenado.addAll([5, 3, 1, 4, 2]);
+  print(setOrdenado); // {1, 2, 3, 4, 5}
+}
+```
+
+### Tabla Big O
+
+| Tipo | Inserción | Búsqueda | Eliminación | Acceso | Notas |
+|---|---|---|---|---|---|
+| `List` | O(n)* | O(n) | O(n) | O(1) | *O(1) amortizado al final |
+| `HashSet` | O(1)** | O(1) | O(1) | — | **Amortizado, peor O(n) |
+| `HashMap` | O(1)** | O(1) | O(1) | O(1) | **Amortizado |
+| `SplayTreeMap` | O(log n) | O(log n) | O(log n) | — | Ordenado por clave |
+| `SplayTreeSet` | O(log n) | O(log n) | O(log n) | — | Ordenado |
+| `Queue` | O(1)* | O(n) | O(1)* | O(n) | *Con DoubleLinkedQueue |
+| `LinkedList` | O(1)* | O(n) | O(1)* | O(n) | *En ambos extremos |
+
+Fuente: [collection package](https://pub.dev/packages/collection), [dart:collection docs](https://api.dart.dev/stable/dart-collection/dart-collection-library.html), [Timsort Wikipedia](https://en.wikipedia.org/wiki/Timsort)
+
+---
+
+## Ejemplo completo de POO en Dart
+
+Este sistema modela una biblioteca multimedia usando clases, mixins, herencia, enumeraciones mejoradas, streams y genéricos. Cada clase añade una capa de complejidad.
+
+```dart
+import 'dart:async';
+import 'dart:convert';
+
+// ── Enumeración mejorada con propiedades ──
+
+enum FormatoVideo {
+  mp4('MP4', 'video/mp4'),
+  webm('WEBM', 'video/webm'),
+  avi('AVI', 'video/x-msvideo'),
+  mkv('MKV', 'video/x-matroska');
+
+  final String nombre;
+  final String mimeType;
+  const FormatoVideo(this.nombre, this.mimeType);
+
+  bool get esCompatibleWeb => this == mp4 || this == webm;
+}
+
+// ── Mixins ──
+
+mixin Exportable {
+  String toJson() => jsonEncode(toMap());
+  Map<String, dynamic> toMap();
+
+  String export(String formato) {
+    return switch (formato) {
+      'json' => toJson(),
+      _ => throw UnsupportedError('Formato $formato no soportado'),
+    };
+  }
+}
+
+mixin Timestamped {
+  final DateTime _creado = DateTime.now();
+  String get creadoEn => _creado.toIso8601String();
+}
+
+// ── Clase base abstracta ──
+
+abstract class Contenido {
+  final String titulo;
+  final int duracionSegundos;
+  final List<String> tags;
+  int _reproducciones = 0;
+
+  Contenido({
+    required this.titulo,
+    required this.duracionSegundos,
+    this.tags = const [],
+  });
+
+  int get reproducciones => _reproducciones;
+
+  String get duracionFormateada {
+    final minutos = duracionSegundos ~/ 60;
+    final segundos = duracionSegundos % 60;
+    return '$minutos:${segundos.toString().padLeft(2, '0')}';
+  }
+
+  String reproducir() {
+    _reproducciones++;
+    return '▶️ Reproduciendo $titulo...';
+  }
+
+  String obtenerInfo();  // Método abstracto
+
+  @override
+  String toString() => '[$runtimeType] $titulo ($duracionFormateada)';
+}
+
+// ── Herencia simple ──
+
+class Audio extends Contenido {
+  final int bitrateKbps;
+
+  Audio({
+    required super.titulo,
+    required super.duracionSegundos,
+    required this.bitrateKbps,
+    super.tags,
+  });
+
+  @override
+  String obtenerInfo() {
+    return '🎵 $titulo | $duracionFormateada | ${bitrateKbps}kbps | $reproducciones reproducciones';
+  }
+}
+
+class Video extends Contenido {
+  final String resolucion;
+  final FormatoVideo formato;
+  bool _subtitulos = false;
+
+  Video({
+    required super.titulo,
+    required super.duracionSegundos,
+    required this.resolucion,
+    required this.formato,
+    super.tags,
+  });
+
+  bool get tieneSubtitulos => _subtitulos;
+
+  set subtitulos(bool valor) {
+    if (formato == FormatoVideo.avi && valor) {
+      throw ArgumentError('AVI no soporta subtítulos');
+    }
+    _subtitulos = valor;
+  }
+
+  @override
+  String obtenerInfo() {
+    return '🎬 $titulo | $resolucion | ${formato.nombre} | ${_subtitulos ? "CC" : "Sin subtítulos"}';
+  }
+}
+
+// ── Herencia con mixin ──
+
+class Podcast extends Audio with Exportable, Timestamped {
+  final int episodio;
+  final String anfitrion;
+
+  Podcast({
+    required super.titulo,
+    required super.duracionSegundos,
+    required this.episodio,
+    required this.anfitrion,
+    super.bitrateKbps = 128,
+    super.tags,
+  });
+
+  @override
+  String obtenerInfo() {
+    return '🎙️ Ep.$episodio: $titulo | con $anfitrion | ${super.obtenerInfo()}';
+  }
+
+  @override
+  Map<String, dynamic> toMap() => {
+    'tipo': 'podcast',
+    'titulo': titulo,
+    'episodio': episodio,
+    'anfitrion': anfitrion,
+    'duracion': duracionSegundos,
+    'creado': creadoEn,
+  };
+}
+
+// ── Composición ──
+
+class ListaReproduccion {
+  final String nombre;
+  final List<Contenido> _items = [];
+
+  ListaReproduccion(this.nombre);
+
+  void agregar(Contenido item) => _items.add(item);
+  void quitar(int index) {
+    if (index >= 0 && index < _items.length) _items.removeAt(index);
+  }
+
+  List<String> reproducirTodo() =>
+      [for (var item in _items) item.reproducir()];
+
+  List<String> infoCompleta() =>
+      [for (var item in _items) item.obtenerInfo()];
+
+  int get totalDuracion =>
+      _items.fold(0, (sum, item) => sum + item.duracionSegundos);
+
+  // Stream para escuchar cambios
+  final _controller = StreamController<List<Contenido>>.broadcast();
+  Stream<List<Contenido>> get cambios => _controller.stream;
+
+  void agregarConNotificacion(Contenido item) {
+    _items.add(item);
+    _controller.add(List.unmodifiable(_items));
+  }
+
+  int get length => _items.length;
+  Contenido operator [](int index) => _items[index];
+
+  @override
+  String toString() => '📋 $nombre ($length items, ${totalDuracion ~/ 60}min total)';
+}
+
+// ── Genéricos ──
+
+class Result<T> {
+  final T? data;
+  final String? error;
+  final bool isLoading;
+
+  const Result._({this.data, this.error, this.isLoading = false});
+
+  factory Result.success(T data) => Result._(data: data);
+  factory Result.error(String message) => Result._(error: message);
+  factory Result.loading() => Result._(isLoading: true);
+
+  R when<R>({
+    required R Function(T data) success,
+    required R Function(String error) error,
+    required R Function() loading,
+  }) {
+    if (isLoading) return loading();
+    if (this.error != null) return error(this.error!);
+    return success(data as T);
+  }
+}
+
+// ── Uso del sistema ──
+
+void main() async {
+  // Crear contenido de distintos tipos
+  final cancion = Audio(
+    titulo: 'Bohemian Rhapsody',
+    duracionSegundos: 354,
+    bitrateKbps: 320,
+    tags: ['rock', 'clásico'],
+  );
+
+  final pelicula = Video(
+    titulo: 'Inception',
+    duracionSegundos: 8880,
+    resolucion: '4K',
+    formato: FormatoVideo.mkv,
+    tags: ['ciencia ficción', 'thriller'],
+  )..subtitulos = true;  // Cascade: llama al setter
+
+  final podcast = Podcast(
+    titulo: 'El futuro de la IA',
+    duracionSegundos: 2700,
+    episodio: 42,
+    anfitrion: 'Ana López',
+    tags: ['tecnología', 'IA'],
+  );
+
+  // Polimorfismo: cada uno implementa obtenerInfo() distinto
+  for (final contenido in [cancion, pelicula, podcast]) {
+    print(contenido.obtenerInfo());
+  }
+
+  // Composición
+  final lista = ListaReproduccion('Favoritos')
+    ..agregar(cancion)
+    ..agregar(pelicula)
+    ..agregar(podcast);
+  print(lista);
+  print(lista.reproducirTodo());
+
+  // Stream: escuchar cambios
+  lista.cambios.listen((items) => print('Actualizada: ${items.length} items'));
+  lista.agregarConNotificacion(cancion);
+
+  // Genéricos: Result
+  final resultado = Result.success(pelicula);
+  resultado.when(
+    success: (data) => print('Título: ${data.titulo}'),
+    error: (msg) => print('Error: $msg'),
+    loading: () => print('Cargando...'),
+  );
+
+  // Record para múltiples valores
+  var (nombre, duracion) = (cancion.titulo, cancion.duracionSegundos);
+  print('$nombre — ${duracion ~/ 60} min');
+
+  // Mixin Exportable
+  print(podcast.export('json'));
+
+  // Enum con propiedades
+  print(pelicula.formato.mimeType);  // video/x-matroska
+  print(pelicula.formato.esCompatibleWeb);  // false
+
+  // Operator overloading (operador [])
+  final primerItem = lista[0];  // Llama a operator[]
+  print(primerItem.titulo);
+}
+```
+
+**Conceptos demostrados:**
+
+| Concepto | Cómo aparece |
+|---|---|
+| Clase abstracta | `Contenido` con método abstracto `obtenerInfo()` |
+| Herencia simple | `Audio(Contenido)`, `Video(Contenido)` con `super` |
+| Mixins | `Exportable`, `Timestamped` con `with` |
+| Enum mejorado | `FormatoVideo` con campos, constructor, métodos |
+| Composición | `ListaReproduccion` contiene `List<Contenido>` |
+| Polimorfismo | `obtenerInfo()` es distinto en cada subclase |
+| Streams | `StreamController` para cambios en lista |
+| Genéricos | `Result<T>` con pattern matching |
+| Records | Desestructuración `var (nombre, duracion) = ...` |
+| Cascade | `pelicula..subtitulos = true`, `lista..agregar()` |
+| Factory | `Result.success()`, `Result.error()`, `Result.loading()` |
+| Named constructor | `Result._()` privado, `Result.success()` público |
+| `toString` | Todos los objetos tienen representación legible |
+| `operator[]` | `ListaReproduccion` permite acceso por índice |
+
+---
+
+## Patrones de diseño con ejemplos
+
+### Strategy
+En Dart, las funciones son objetos (Function type), así que el patrón Strategy se implementa pasando funciones directamente.
+
+```dart
+typedef EstrategiaOrden = List<int> Function(List<int>);
+
+List<int> ascendente(List<int> datos) {
+  return List.from(datos)..sort();
+}
+
+List<int> descendente(List<int> datos) {
+  return List.from(datos)..sort((a, b) => b.compareTo(a));
+}
+
+class Analizador {
+  final EstrategiaOrden estrategia;
+  Analizador(this.estrategia);
+
+  List<int> analizar(List<int> datos) => estrategia(datos);
+}
+
+void main() {
+  final a = Analizador(descendente);
+  print(a.analizar([3, 1, 4, 1, 5, 9]));  // [9, 5, 4, 3, 1, 1]
+}
+```
+
+### Observer
+Dart tiene soporte nativo para el patrón Observer mediante `StreamController` y `Stream`.
+
+```dart
+import 'dart:async';
+
+class Sensor {
+  final _controller = StreamController<double>.broadcast();
+  Stream<double> get lecturas => _controller.stream;
+
+  void emitir(double valor) => _controller.add(valor);
+
+  void dispose() => _controller.close();
+}
+
+void main() {
+  final sensor = Sensor();
+
+  // Observador 1: logger
+  sensor.lecturas.listen((v) => print('[LOG] Temperatura: $v°C'));
+
+  // Observador 2: dashboard
+  sensor.lecturas.listen((v) => print('[DASH] Actualizando gráfico con $v'));
+
+  // Observador 3: alarma (filtrado)
+  sensor.lecturas
+    .where((v) => v > 30)
+    .listen((v) => print('[ALERTA] Temperatura alta: $v°C'));
+
+  sensor.emitir(23.5);
+  sensor.emitir(31.2);
+  sensor.emitir(28.0);
+  sensor.emitir(35.1);
+  // Output:
+  // [LOG] Temperatura: 23.5°C
+  // [DASH] Actualizando gráfico con 23.5
+  // [LOG] Temperatura: 31.2°C
+  // [DASH] Actualizando gráfico con 31.2
+  // [ALERTA] Temperatura alta: 31.2°C
+  // ...
+}
+```
+
+### Singleton (factory constructor)
+```dart
+class Configuracion {
+  // Instancia única privada
+  static final Configuracion _instancia = Configuracion._internal();
+
+  // Factory que siempre devuelve la misma instancia
+  factory Configuracion() => _instancia;
+
+  // Constructor privado — no se puede llamar desde fuera
+  Configuracion._internal();
+
+  String apiUrl = 'https://api.example.com';
+  bool debug = false;
+}
+
+void main() {
+  final c1 = Configuracion();
+  final c2 = Configuracion();
+  print(identical(c1, c2));  // true
+
+  c1.debug = true;
+  print(c2.debug);  // true
+}
+```
+
+### Factory (con registro dinámico)
+```dart
+typedef PluginFactory = Plugin Function();
+
+abstract class Plugin {
+  static final Map<String, PluginFactory> _registry = {};
+
+  static void register(String nombre, PluginFactory factory) {
+    _registry[nombre] = factory;
+  }
+
+  static Plugin create(String nombre) {
+    final factory = _registry[nombre];
+    if (factory == null) throw ArgumentError('Plugin $nombre no registrado');
+    return factory();
+  }
+
+  String ejecutar();
+}
+
+// Registrar plugins
+void initPlugins() {
+  Plugin.register('pdf', () => _PluginPDF());
+  Plugin.register('csv', () => _PluginCSV());
+}
+
+class _PluginPDF implements Plugin {
+  @override
+  String ejecutar() => 'Procesando PDF';
+}
+
+class _PluginCSV implements Plugin {
+  @override
+  String ejecutar() => 'Procesando CSV';
+}
+
+void main() {
+  initPlugins();
+  final plugin = Plugin.create('pdf');
+  print(plugin.ejecutar());  // Procesando PDF
+}
+```
+
+### Builder (con cascade + records)
+```dart
+class PizzaBuilder {
+  String _masa = 'fina';
+  String _tamano = 'mediana';
+  final List<String> _ingredientes = [];
+
+  PizzaBuilder masa(String m) {
+    _masa = m;
+    return this;
+  }
+
+  PizzaBuilder tamano(String t) {
+    _tamano = t;
+    return this;
+  }
+
+  PizzaBuilder ingrediente(String i) {
+    _ingredientes.add(i);
+    return this;
+  }
+
+  // Build: devuelve un record con la pizza configurada
+  ({String masa, String tamano, List<String> ingredientes}) build() {
+    return (masa: _masa, tamano: _tamano, ingredientes: _ingredientes);
+  }
+}
+
+void main() {
+  final pizza = PizzaBuilder()
+    .masa('gruesa')
+    .tamano('grande')
+    .ingrediente('queso')
+    .ingrediente('pepperoni')
+    .ingrediente('aceitunas')
+    .build();
+
+  print('${pizza.masa} | ${pizza.tamano} | ${pizza.ingredientes}');
+}
+```
+
+### Adapter (implements)
+```dart
+// Interfaz que queremos usar
+abstract class Database {
+  Future<void> insert(String table, Map<String, dynamic> data);
+  Future<List<Map<String, dynamic>>> query(String sql);
+}
+
+// Sistema antiguo: API diferente
+class ApiVieja {
+  void insertar(String coleccion, Map<String, dynamic> doc) {
+    print('Vieja: insertando en $coleccion');
+  }
+
+  List<Map<String, dynamic>> consultar(String query) {
+    print('Vieja: consultando $query');
+    return [];
+  }
+}
+
+// Adaptador: convierte ApiVieja a Database
+class DatabaseAdapter implements Database {
+  final ApiVieja _api;
+
+  DatabaseAdapter(this._api);
+
+  @override
+  Future<void> insert(String table, Map<String, dynamic> data) async {
+    _api.insertar(table, data);  // Traduce nombres de métodos
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> query(String sql) async {
+    return _api.consultar(sql);
+  }
+}
+```
+
+---
+
+## Polimorfismo en detalle
+
+Dart tiene tres mecanismos principales de polimorfismo:
+
+### 1. Interfaces implícitas (todos los objetos implementan su interfaz)
+
+En Dart, **toda clase es también una interfaz**. Una clase puede implementar otra clase sin heredar su implementación.
+
+```dart
+class Perro {
+  String sonido() => 'Guau';
+}
+
+class Gato implements Perro {
+  @override
+  String sonido() => 'Miau';  // Debe implementar sonido()
+}
+
+class Coche implements Perro {
+  @override
+  String sonido() => 'Brum';  // No es un animal, pero implementa la interfaz
+}
+
+void hacerSonido(Perro animal) {
+  print(animal.sonido());
+}
+
+void main() {
+  hacerSonido(Perro());  // Guau
+  hacerSonido(Gato());   // Miau
+  hacerSonido(Coche());  // Brum
+}
+```
+
+### 2. Herencia con `extends` y `@override`
+
+```dart
+abstract class Forma {
+  double area();
+}
+
+class Circulo extends Forma {
+  final double radio;
+  Circulo(this.radio);
+
+  @override
+  double area() => 3.1416 * radio * radio;
+}
+
+class Rectangulo extends Forma {
+  final double ancho, alto;
+  Rectangulo(this.ancho, this.alto);
+
+  @override
+  double area() => ancho * alto;
+}
+
+void mostrarArea(Forma forma) {
+  print('Área: ${forma.area().toStringAsFixed(2)}');
+}
+
+void main() {
+  mostrarArea(Circulo(5));       // 78.54
+  mostrarArea(Rectangulo(3, 4));  // 12.00
+}
+```
+
+### 3. Duck typing con genéricos
+
+Dart no tiene duck typing en runtime como Python, pero con genéricos y `covariant` puedes lograr despacho dinámico.
+
+```dart
+// Con interfaces implícitas: cualquier cosa que tenga .imprimir()
+abstract class Imprimible {
+  String imprimir();
+}
+
+class Documento implements Imprimible {
+  @override
+  String imprimir() => 'Imprimiendo documento...';
+}
+
+class Foto implements Imprimible {
+  @override
+  String imprimir() => 'Imprimiendo foto 4x6...';
+}
+
+void enviarAImpresion(Imprimible objeto) {
+  print(objeto.imprimir());
+}
+
+void main() {
+  enviarAImpresion(Documento());  // Imprimiendo documento...
+  enviarAImpresion(Foto());       // Imprimiendo foto 4x6...
+}
+```
+
+**¿Dónde está la sobrecarga (overloading)?** Dart **no soporta** method overloading (múltiples métodos con el mismo nombre y distintos parámetros). En su lugar, usa:
+
+- **Parámetros opcionales posicionales** `[]`:
+  ```dart
+  void saludar(String nombre, [String? saludo]) {
+    print('${saludo ?? "Hola"}, $nombre');
+  }
+  ```
+
+- **Parámetros nombrados** `{}`:
+  ```dart
+  void configurar({String host = 'localhost', int port = 8080, bool ssl = false}) {
+    print('$host:$port ${ssl ? "(SSL)" : ""}');
+  }
+  ```
+
+- **Named constructors** para múltiples formas de construir:
+  ```dart
+  class Punto {
+    final double x, y;
+    Punto(this.x, this.y);
+    Punto.origin() : x = 0, y = 0;
+    Punto.fromJson(Map<String, double> json) : x = json['x']!, y = json['y']!;
+  }
+  ```
+
+---
+
+## Multimedia
+
+### dart:ui (Canvas, Paint, Path, Image)
+
+`dart:ui` es la biblioteca gráfica de bajo nivel que usa Flutter. No disponible en Dart puro (solo en Flutter):
+
+```dart
+import 'dart:ui' as ui;
+
+void dibujar(ui.Canvas canvas) {
+  final paint = ui.Paint()
+    ..color = const ui.Color(0xFF2196F3)
+    ..style = ui.PaintingStyle.fill;
+
+  canvas.drawCircle(const ui.Offset(100, 100), 50, paint);
+
+  final path = ui.Path()
+    ..moveTo(0, 0)
+    ..lineTo(100, 0)
+    ..lineTo(50, 100)
+    ..close();
+  canvas.drawPath(path, paint);
+}
+```
+
+### ImageCodec — decodificar imágenes
+
+```dart
+import 'dart:io';
+import 'dart:ui' as ui;
+import 'dart:typed_data';
+
+Future<ui.Image> decodificarImagen(String ruta) async {
+  final bytes = await File(ruta).readAsBytes();
+  final codec = await ui.instantiateImageCodec(
+    Uint8List.fromList(bytes),
+  );
+  final frameInfo = await codec.getNextFrame();
+  return frameInfo.image;
+}
+
+// Obtener frames de un GIF
+Future<List<ui.Image>> decodificarGIF(String ruta) async {
+  final bytes = await File(ruta).readAsBytes();
+  final codec = await ui.instantiateImageCodec(
+    Uint8List.fromList(bytes),
+  );
+  final frames = <ui.Image>[];
+  for (var i = 0; i < codec.frameCount; i++) {
+    final frame = await codec.getNextFrame();
+    frames.add(frame.image);
+  }
+  return frames;
+}
+```
+
+### Filtros visuales en Flutter
+
+```dart
+// ImageFiltered: desenfoque
+ImageFiltered(
+  imageFilter: ui.ImageFilter.blur(sigmaX: 2, sigmaY: 2),
+  child: Image.asset('foto.jpg'),
+);
+
+// ColorFiltered: filtro de color
+ColorFiltered(
+  colorFilter: const ColorFilter.mode(
+    Colors.red, BlendMode.multiply,
+  ),
+  child: Image.asset('foto.jpg'),
+);
+
+// BackdropFilter: desenfoque de fondo
+ClipRect(
+  child: BackdropFilter(
+    filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+    child: Container(color: Colors.black.withValues(alpha: 0.5)),
+  ),
+);
+```
+
+### Paquetes multimedia en Flutter
+
+| Paquete | Para qué | pub.dev |
+|---|---|---|
+| `video_player` | Reproducir video local/remoto | [pub.dev/packages/video_player](https://pub.dev/packages/video_player) |
+| `audioplayers` | Reproducir audio (local/URL, volumen) | [pub.dev/packages/audioplayers](https://pub.dev/packages/audioplayers) |
+| `image_picker` | Seleccionar fotos/video de cámara/galería | [pub.dev/packages/image_picker](https://pub.dev/packages/image_picker) |
+| `flutter_image_compress` | Comprimir imágenes (JPEG/PNG/WebP) | [pub.dev/packages/flutter_image_compress](https://pub.dev/packages/flutter_image_compress) |
+
+```dart
+// image_picker
+import 'package:image_picker/image_picker.dart';
+
+final picker = ImagePicker();
+final foto = await picker.pickImage(source: ImageSource.camera);
+final archivo = File(foto!.path);
+
+// flutter_image_compress
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+
+final comprimido = await FlutterImageCompress.compressWithFile(
+  foto.path,
+  minHeight: 1920,
+  minWidth: 1080,
+  quality: 80,
+);
+```
+
+### package:image (procesamiento en Dart puro)
+
+El paquete `image` permite leer, editar y escribir imágenes **sin Flutter** (Dart puro):
+
+```dart
+import 'package:image/image.dart' as img;
+
+void main() {
+  final image = img.decodeImage(File('foto.jpg').readAsBytesSync())!;
+
+  final redimensionada = img.copyResize(image, width: 800);
+  final recortada = img.copyCrop(image, x: 0, y: 0, width: 200, height: 200);
+  final volteada = img.flipHorizontal(image);
+  final rotada = img.copyRotate(image, angle: 90);
+
+  img.drawCircle(image, x: 100, y: 100, radius: 50, color: img.ColorRgb8(255, 0, 0));
+
+  File('salida.jpg').writeAsBytesSync(img.encodeJpg(redimensionada));
+  File('salida.png').writeAsBytesSync(img.encodePng(redimensionada));
+  File('salida.webp').writeAsBytesSync(img.encodeWebP(redimensionada));
+}
+```
+
+**Formatos soportados por package:image**:
+
+| Formato | Decodificar | Codificar |
+|---|---|---|
+| PNG | Sí | Sí |
+| JPEG | Sí | Sí |
+| GIF | Sí | Sí |
+| BMP | Sí | Sí |
+| TIFF | Sí | No |
+| TGA | Sí | Sí |
+| ICO | Sí | No |
+| PPM | Sí | Sí |
+| WebP | Sí | Sí |
+| PSD | Sí | No |
+
+### package:gif (decodificar/crear GIFs)
+
+```dart
+import 'package:gif/gif.dart' as gif;
+
+void main() {
+  // Decodificar
+  final bytes = File('animacion.gif').readAsBytesSync();
+  final decoder = gif.GifDecoder();
+  final animatedGif = decoder.decodeBytes(bytes);
+  for (var i = 0; i < animatedGif.frames.length; i++) {
+    print('Frame $i: ${animatedGif.frames[i].width}x${animatedGif.frames[i].height}');
+  }
+
+  // Crear GIF
+  final encoder = gif.GifEncoder();
+  final frames = [
+    img.Image(width: 100, height: 100),
+    img.Image(width: 100, height: 100),
+  ];
+  encoder.addFrame(frames[0]);
+  encoder.addFrame(frames[1]);
+  final gifBytes = encoder.encode();
+  File('salida.gif').writeAsBytesSync(gifBytes!);
+}
+```
+
+Fuente: [dart:ui docs](https://api.flutter.dev/flutter/dart-ui/dart-ui-library.html), [image package](https://pub.dev/packages/image), [gif package](https://pub.dev/packages/gif), [video_player](https://pub.dev/packages/video_player), [audioplayers](https://pub.dev/packages/audioplayers), [image_picker](https://pub.dev/packages/image_picker), [flutter_image_compress](https://pub.dev/packages/flutter_image_compress)
+
+---
+
+## Bases de datos
+
+### SQLite local
+
+| Paquete | Async | Para qué |
+|---|---|---|
+| **sqflite** | Sí | SQLite en Flutter (iOS/Android). El estándar para apps móviles |
+| **drift** (antes moor) | Sí | ORM sobre SQLite con generación de código, migrations, streams |
+| **sqlite3** | Sí | SQLite puro para Dart nativo (server, CLI). `package:sqlite3` |
+
+```dart
+// sqflite en Flutter
+import 'package:sqflite/sqflite.dart';
+
+Future<Database> initDB() async {
+  final db = await openDatabase(
+    'app.db',
+    version: 1,
+    onCreate: (db, version) async {
+      await db.execute('''
+        CREATE TABLE usuarios (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          nombre TEXT NOT NULL,
+          email TEXT UNIQUE
+        )
+      ''');
+    },
+  );
+  return db;
+}
+
+Future<void> insertarUsuario(Database db, String nombre, String email) async {
+  await db.insert('usuarios', {'nombre': nombre, 'email': email});
+}
+
+Future<List<Map<String, dynamic>>> obtenerUsuarios(Database db) async {
+  return await db.query('usuarios');
+}
+```
+
+```dart
+// drift (ORM moderno)
+import 'package:drift/drift.dart';
+import 'package:drift/native.dart';
+
+class Usuarios extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get nombre => text().withLength(min: 1, max: 100)();
+  TextColumn get email => text().unique()();
+}
+
+@DriftDatabase(tables: [Usuarios])
+class AppDB extends _$AppDB {
+  AppDB() : super(NativeDatabase.memory());
+
+  @override
+  int get schemaVersion => 1;
+
+  // Queries reactivas
+  Stream<List<Usuario>> watchUsuarios() => select(usuarios).watch();
+
+  Future<void> insertar(Usuario user) => into(usuarios).insert(user);
+}
+```
+
+### NoSQL local
+
+| Paquete | Base de datos | Para qué |
+|---|---|---|
+| **Hive** | Hive DB | Base de datos clave-valor rápida, sin dependencias nativas, puro Dart |
+| **Isar** | Isar DB | Sucesor de Hive. Más rápido, soporta índices, relaciones, queries complejas |
+| **ObjectBox** | ObjectBox | BD embebida orientada a objetos, ultrarrápida, para Flutter |
+
+```dart
+// Hive
+import 'package:hive/hive.dart';
+
+@HiveType()
+class Usuario extends HiveObject {
+  @HiveField(0)
+  late String nombre;
+
+  @HiveField(1)
+  late int edad;
+}
+
+void main() async {
+  await Hive.initFlutter();
+  final box = await Hive.openBox<Usuario>('usuarios');
+  final user = Usuario()..nombre = 'Ana'..edad = 30;
+  box.add(user);
+  print(box.get(0)?.nombre);  // Ana
+}
+```
+
+```dart
+// Isar
+import 'package:isar/isar.dart';
+
+@collection
+class Usuario {
+  Id id = Isar.autoIncrement;
+  late String nombre;
+  late int edad;
+
+  @Index()
+  late String email;
+}
+
+void main() async {
+  final dir = Directory.current.path;
+  final isar = await Isar.open([UsuarioSchema], directory: dir);
+
+  final user = Usuario()..nombre = 'Ana'..edad = 30..email = 'ana@email.com';
+  await isar.writeTxn(() => isar.usuarios.put(user));
+
+  final users = await isar.usuarios.where().nombreStartsWith('Ana').findAll();
+}
+```
+
+### Firebase Firestore (cloud)
+
+```dart
+// Firebase Firestore
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+Future<void> addUser() async {
+  final users = FirebaseFirestore.instance.collection('usuarios');
+  await users.add({'nombre': 'Ana', 'email': 'ana@email.com'});
+}
+
+// Escuchar en tiempo real
+Stream<QuerySnapshot> watchUsers() {
+  return FirebaseFirestore.instance.collection('usuarios').snapshots();
+}
+```
+
+### Supabase
+
+```dart
+import 'package:supabase/supabase.dart';
+
+final supabase = SupabaseClient('https://proyecto.supabase.co', 'anon_key');
+
+Future<void> insertUser() async {
+  await supabase.from('usuarios').insert({
+    'nombre': 'Ana',
+    'email': 'ana@email.com',
+  });
+}
+
+// Tiempo real con streams
+Stream<List<Map<String, dynamic>>> watchUsers() {
+  return supabase.from('usuarios').stream('*');
+}
+```
+
+Fuente: [sqflite pub.dev](https://pub.dev/packages/sqflite), [drift docs](https://drift.simonbinder.eu/), [Isar docs](https://isar.dev/), [Firebase Flutter docs](https://firebase.flutter.dev/), [Supabase Flutter docs](https://supabase.com/docs/reference/dart/introduction)
+
+---
+
+## WebSockets
+
+### dart:io WebSocket (nativo, server/CLI)
+
+```dart
+import 'dart:io';
+import 'dart:convert';
+
+// Servidor
+Future<void> startServer() async {
+  final server = await HttpServer.bind('0.0.0.0', 8080);
+  await for (final request in server) {
+    if (request.uri.path == '/ws') {
+      final ws = await WebSocketTransformer.upgrade(request);
+      ws.listen(
+        (data) => ws.add('Echo: $data'),
+        onDone: () => print('Cliente desconectado'),
+      );
+    }
+  }
+}
+
+// Cliente
+void connectClient() async {
+  final ws = await WebSocket.connect('ws://localhost:8080/ws');
+  ws.add('Hola servidor');
+  ws.listen((data) => print('Recibido: $data'));
+}
+```
+
+### web_socket_channel (multiplataforma, recomendado)
+
+```dart
+import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:web_socket_channel/io.dart';
+
+void main() {
+  // Conectar
+  final channel = IOWebSocketChannel.connect('wss://echo.websocket.org');
+
+  // Enviar
+  channel.sink.add('Hola mundo');
+
+  // Recibir
+  channel.stream.listen(
+    (message) => print('Recibido: $message'),
+    onError: (error) => print('Error: $error'),
+    onDone: () => print('Conexión cerrada'),
+  );
+
+  // Cerrar
+  channel.sink.close();
+}
+```
+
+### Socket.IO client (con fallback)
+
+```dart
+import 'package:socket_io_client/socket_io_client.dart' as io;
+
+void main() {
+  final socket = io.io('https://server.com', <String, dynamic>{
+    'transports': ['websocket'],
+    'autoConnect': true,
+  });
+
+  socket.on('connect', (_) {
+    print('Conectado');
+    socket.emit('mensaje', {'texto': 'Hola'});
+  });
+
+  socket.on('respuesta', (data) {
+    print('Respuesta: $data');
+  });
+
+  socket.on('disconnect', (_) => print('Desconectado'));
+}
+```
+
+Fuente: [web_socket_channel pub.dev](https://pub.dev/packages/web_socket_channel), [dart:io WebSocket docs](https://api.dart.dev/stable/dart-io/WebSocket-class.html), [socket_io_client pub.dev](https://pub.dev/packages/socket_io_client)
+
+---
+
+## Concurrencia: Isolates, Futures y Streams
+
+Dart tiene tres modelos de concurrencia, cada uno para un escenario distinto.
+
+### Futuros (async/await) — I/O-bound
+
+```dart
+Future<String> fetchData() async {
+  final response = await http.get(Uri.parse('https://api.example.com/data'));
+  return response.body;
+}
+
+Future<void> main() async {
+  final resultados = await Future.wait([
+    fetchData(),
+    fetchData(),
+    fetchData(),
+  ]);
+}
+```
+
+### Streams — flujo de datos en el tiempo
+
+```dart
+Stream<int> ticker(int ticks) async* {
+  for (var i = 1; i <= ticks; i++) {
+    await Future.delayed(Duration(seconds: 1));
+    yield i;
+  }
+}
+
+void main() async {
+  // Transformaciones
+  await for (final tick in ticker(5).where((t) => t.isEven)) {
+    print(tick);  // 2, 4
+  }
+
+  // Broadcast stream (múltiples listeners)
+  final controller = StreamController<int>.broadcast();
+  controller.stream.listen((v) => print('A: $v'));
+  controller.stream.listen((v) => print('B: $v'));
+  controller.add(1);
+  controller.add(2);
+}
+```
+
+### Isolates — CPU-bound (paralelismo real)
+
+Los Isolates son como hilos pero sin memoria compartida. Cada Isolate tiene su propio heap y se comunican mediante mensajes (paso de mensajes, estilo Erlang/Go). Esto elimina por completo las carreras de datos.
+
+```dart
+import 'dart:isolate';
+
+// Función que se ejecuta en otro Isolate
+void calcularPrimos(SendPort sendPort) {
+  final primos = <int>[];
+  for (var i = 2; i < 100000; i++) {
+    if (_esPrimo(i)) primos.add(i);
+  }
+  sendPort.send(primos);
+}
+
+bool _esPrimo(int n) {
+  for (var i = 2; i <= n ~/ 2; i++) {
+    if (n % i == 0) return false;
+  }
+  return true;
+}
+
+Future<void> main() async {
+  final receivePort = ReceivePort();
+  await Isolate.spawn(calcularPrimos, receivePort.sendPort);
+
+  final primos = await receivePort.first;
+  print('${primos.length} primos encontrados');
+}
+```
+
+**Isolate con comunicación bidireccional:**
+```dart
+Future<int> calcularEnIsolate(int n) async {
+  final receivePort = ReceivePort();
+  final isolate = await Isolate.spawn((SendPort send) {
+    // Recibir datos
+    receivePort.listen((message) {
+      if (message is int) {
+        send.send(_fibonacci(message));
+      }
+    });
+  }, receivePort.sendPort);
+
+  // Enviar datos al Isolate
+  receivePort.sendPort.send(n);
+
+  // Recibir resultado
+  final result = await receivePort.first;
+  isolate.kill(priority: Isolate.immediate);
+  return result;
+}
+
+int _fibonacci(int n) => n < 2 ? n : _fibonacci(n - 1) + _fibonacci(n - 2);
+```
+
+### compute (Flutter) — atajo para Isolates
+
+```dart
+import 'package:flutter/foundation.dart';
+
+// Flutter envuelve Isolate.spawn en compute()
+Future<List<int>> procesarDatos(List<int> datos) async {
+  return await compute((List<int> data) {
+    return data.where((n) => n.isEven).map((n) => n * 2).toList();
+  }, datos);
+}
+```
+
+### ¿Cuál usar?
+
+| Escenario | Modelo | Ejemplo |
+|---|---|---|
+| Llamadas HTTP, BD, API | async/await + Future | Microservicios, carga de datos |
+| Streaming tiempo real | Stream + StreamController | WebSockets, sensores, notificaciones |
+| Cálculo intensivo (CPU) | Isolate.spawn / compute | Procesamiento de imágenes, parsing |
+| Comunicación bidireccional | Isolate + SendPort/ReceivePort | Workers en background |
+| Múltiples tareas I/O | Future.wait / Stream.merge | Varias llamadas concurrentes |
+
+Fuente: [dart.dev — Concurrency](https://dart.dev/language/concurrency), [dart.dev — Isolates](https://dart.dev/language/isolates), [Flutter — Concurrency](https://docs.flutter.dev/perf/isolates)
+
+---
+
+## Escala de aprendizaje: de 0 a 100
+
+Cada nivel incluye lo que debes saber y un proyecto para fijar los conceptos.
+
+### Nivel 0–15: Fundamentos absolutos
+
+**Qué aprender:**
+- Sintaxis básica: `main()`, `print()`, variables con `var`, `final`, `const`
+- Tipos básicos: `int`, `double`, `String`, `bool`
+- Condicionales: `if`/`else`, operadores de comparación, `switch`
+- Bucles: `for`, `while`, `for-in`, `for (;;)`
+- Listas y Maps: `add()`, `[]`, `length`, `contains()`
+- Funciones: `void`, `return`, `=>` (flecha), parámetros posicionales
+- Interpolación de strings: `'Hola, $nombre'`, `'${x + y}'`
+- File system básico: `dart:io` — `File(path).readAsString()`, `writeAsString()`, `exists()`
+- **Conceptos clave**: `final` vs `const` — final se asigna una vez en runtime, const se evalúa en compile-time. Tipado fuerte pero con inferencia: si escribes `var x = 42`, el compilador sabe que es `int`. Null safety ya está activo desde el día 1.
+
+**Proyecto:** *Calculadora CLI* — programa que pide dos números y una operación (+, -, *, /). Maneja división por cero y entrada no numérica con `try/on`. Usa funciones separadas para cada operación. Bucle hasta que el usuario escriba "salir".
+
+### Nivel 15–30: Null safety, colecciones y funciones
+
+**Qué aprender:**
+- Null safety: `T?`, `!`, `??`, `?.`, `late`, `required`
+- Type promotion: el compilador promociona tipos tras `is` o `!= null`
+- Listas avanzadas: `map()`, `where()`, `reduce()`, `fold()`, `any()`, `every()`
+- Sets y Maps: `Set`, `HashSet`, `Map`, operaciones funcionales
+- Collection if/for/spread: `[...list]`, `if (cond) x`, `for (var i in items) i`
+- Funciones como objetos: funciones flecha, `typedef`, closures
+- Parámetros nombrados `{}`, posicionales opcionales `[]`, `required`
+- Algoritmos básicos: `List.sort()` (Timsort), `where()`/`firstWhere()`/`any()`/`every()`, `groupBy()` de `package:collection`
+- **Conceptos clave**: las colecciones en Dart son covariant: `List<Perro>` es subtipo de `List<Animal>`. Los closures capturan variables por referencia. El operador `??` se encadena: `a ?? b ?? c`. Timsort es O(n log n) y estable.
+
+**Proyecto:** *Gestor de tareas CLI* — añadir (`add "Comprar leche"`), listar (`list`), completar (`done 3`), eliminar (`rm 3`). Persistencia en JSON con archivo local. Usa `dart:io` para leer/escribir archivos y `dart:convert` para JSON. Implementa al menos una función que devuelva un record.
+
+### Nivel 30–45: POO, constructores y mixins
+
+**Qué aprender:**
+- Clases: campos, métodos, `this`, `new` (opcional), constructores con `Clase(this.campo)`
+- Named constructors, factory constructors, initializer list
+- `const` constructor: objetos inmutables en compile-time, canonicalización
+- Herencia: `extends`, `super`, `@override`, clases abstractas
+- Mixins: `mixin`, `with`, `on` (restricción)
+- Enumeraciones mejoradas: campos, métodos, constructores, `switch` exhaustivo
+- `toString()`, `operator ==`, `hashCode`, `noSuchMethod`, `call()`
+- **Conceptos clave**: factory constructors pueden devolver instancias ya existentes (singleton, caché). `const` constructor permite que el compilador canonalice instancias iguales. Los mixins son una forma de composición sin herencia múltiple. Los initializer lists se ejecutan antes del constructor body (útiles para asserts y validaciones).
+
+**Proyecto:** *Sistema de inventario* — clases `Producto`, `Inventario`. Métodos: `agregar()`, `retirar()`, `buscar()`, `valorTotal()`. Persistencia con `dart:io` + JSON. Named constructors: `Producto.nuevo(nombre, precio)` vs `Producto.desdeJson(map)`. Mixin `Exportable` para exportar a JSON. Enum `Categoria` con propiedades (`nombre`, `impuesto`). Tests con `dart test`.
+
+### Nivel 45–60: Extension methods, streams y genéricos
+
+**Qué aprender:**
+- Extension methods: añadir métodos a tipos existentes
+- Genéricos: `class Caja<T>`, `T extends SomeType`, `covariant`
+- `typedef` con genéricos, tipos parametrizados
+- Streams: `Stream`, `StreamController`, `broadcast()`, `listen()`, `await for`
+- Futures: `Future`, `async`/`await`, `Future.wait()`, `Future.error()`
+- Dart 3: Records (`(int, String)`), patterns (`var (a, b) = ...`), `sealed` class
+- Análisis estático: `dart analyze`, strict mode, linter rules
+- `extension type` (Dart 3): envoltura sin overhead en runtime
+- **Conceptos clave**: sealed classes habilitan switch exhaustivo (el compilador verifica que cubres todos los casos). Records son tipos valor (comparables por igualdad estructural). Extension types son como `typedef` pero con verificación real de tipos (no confundir con extension methods).
+
+**Proyecto:** *Procesador de logs* — lee archivos de log y emite eventos via Stream. Usa `StreamController` para transformar líneas en objetos `LogEntry` (sealed class con `Info`, `Warning`, `Error`). Extension method en `String` para parsear timestamps. Records para devolver estadísticas: `(int total, int errores, double tasa)`. Tests con streams falsos.
+
+### Nivel 60–75: HTTP, JSON y backend con Shelf
+
+**Qué aprender:**
+- `package:http`: peticiones HTTP, `get()`, `post()`, manejo de errores
+- `dart:convert`: `jsonDecode()`, `jsonEncode()`, `utf8`
+- `package:shelf`: servidor HTTP, rutas, middleware, `Router`
+- `package:shelf_io`: `serve()`
+- Operaciones asíncronas: encadenar Futures, manejar errores con `.catchError()`
+- Modelos con `fromJson`/`toJson`, serialización manual vs `json_serializable`
+- `package:test`: `test()`, `group()`, `expect()`, `setUp()`, `tearDown()`
+- **Conceptos clave**: Shelf usa `Handler` (función que recibe `Request` y devuelve `Response`). Los handlers se componen con middleware (como decoradores en Python). Dart no tiene reflection en el target AOT — usa `json_serializable` con generación de código en lugar de runtime introspection.
+
+**Proyecto:** *API de recetas* — servidor Shelf con rutas CRUD para recetas e ingredientes. Almacenamiento en memoria con `Map<String, Receta>`. Usa records para respuestas: `(int statusCode, Map body)`. Tests de integración con `package:test` y `HttpClient`. Middleware para logging y CORS. Extension method en `Request` para parsear JSON body.
+
+### Nivel 75–90: Flutter, Isolates, bases de datos y multimedia
+
+**Qué aprender:**
+- Flutter: `StatelessWidget`, `StatefulWidget`, `build()`, `setState()`
+- Arquitectura de Flutter: Widgets, Elementos, RenderObjects
+- Gestión de estado: `ChangeNotifier` + `Provider`, `Riverpod`, `Bloc`
+- Isolates: `Isolate.spawn()`, `ReceivePort`, `SendPort`, `compute()`
+- sqflite/drift: base de datos local en Flutter, CRUD, migrations
+- Hive/Isar: almacenamiento NoSQL local, objetos directamente
+- `build_runner`: generación de código con `json_serializable`, `freezed`, `drift`
+- `freezed`: data classes inmutables con `copyWith`, `union`, `sealed`
+- Multimedia: `image_picker` (cámara/galería), `video_player`, `audioplayers`, `dart:ui` (Canvas, Paint, ImageCodec), `package:image` (procesamiento Dart puro)
+- **Conceptos clave**: `compute()` es un atajo para Flutter que envuelve `Isolate.spawn` + `ReceivePort`. `freezed` genera `copyWith`, `==`, `hashCode`, `toString`, y patrones de unions selladas. La UI de Flutter se reconstruye con cada `setState()` — los `const` constructors evitan reconstrucciones innecesarias. `package:image` permite procesar imágenes sin Flutter ni GPU.
+
+**Proyecto:** *App de notas con Flutter* — CRUD de notas con sqflite o Isar. Stream para actualizar la UI en tiempo real. Un Isolate para exportación a PDF/ZIP en background. Riverpod como gestor de estado. freezed para modelos inmutables. Tests de widget y unitarios.
+
+### Nivel 90–100: Arquitectura y producción
+
+**Qué aprender:**
+- Clean Architecture en Flutter: dominio, datos, presentación
+- Serverpod: framework backend completo con Dart, ORM, WebSockets, auth
+- gRPC: `package:grpc`, protobuf, servicios streaming
+- Firebase: Auth, Firestore, Cloud Functions, Cloud Messaging
+- CI/CD: GitHub Actions para Flutter, `flutter test`, `flutter build`
+- Performance: `const` constructors, profiling con DevTools, `RepaintBoundary`
+- Observabilidad: logging estructurado, error reporting (Sentry), analytics
+- Deploy: App Store, Google Play, web (Firebase Hosting), desktop (MSIX, DMG)
+- Melos: monorepo management para proyectos multi-paquete
+- **Conceptos clave**: Serverpod genera cliente Dart automáticamente desde el servidor. Clean Architecture con Dart usa casos de uso como clases (no funciones sueltas). gRPC con Dart es first-class (Google usa Dart para gRPC internamente). El `const` constructor no es solo buena práctica — en Flutter evita reconstruir todo el widget tree.
+
+**Proyecto:** *App de chat en tiempo real* — Flutter + Serverpod o Firebase. Autenticación con Firebase Auth. Mensajería con Streams y WebSockets. Isolate para procesar imágenes antes de subirlas. Notificaciones push. CI/CD con GitHub Actions que corre tests, lint, y build para iOS/Android. Monitoreo con Sentry.
+
+Fuente: [Flutter docs](https://docs.flutter.dev/), [Serverpod docs](https://docs.serverpod.dev/), [Riverpod docs](https://riverpod.dev/), [freezed pub.dev](https://pub.dev/packages/freezed)
+
+---
+
+## Hacks y tips de productividad
+
+**1. Extension methods en tipos básicos**
+```dart
+extension IntUtils on int {
+  Duration get seconds => Duration(seconds: this);
+  Duration get minutes => Duration(minutes: this);
+}
+
+extension StringUtils on String {
+  String get capitalize => isEmpty ? this : '${this[0].toUpperCase()}${substring(1)}';
+  String get reverse => split('').reversed.join();
+}
+
+void main() {
+  Future.delayed(5.seconds, () => print('Tiempo!'));
+  print('hola'.capitalize);  // 'Hola'
+  print('dart'.reverse);     // 'trad'
+}
+```
+
+**2. sealed + when exhaustivo**
+```dart
+sealed class AsyncValue<T> {}
+class Data<T> extends AsyncValue<T> { final T value; Data(this.value); }
+class Error<T> extends AsyncValue<T> { final String message; Error(this.message); }
+class Loading<T> extends AsyncValue<T> {}
+
+extension AsyncValueX<T> on AsyncValue<T> {
+  R when<R>({
+    required R Function(T) data,
+    required R Function(String) error,
+    required R Function() loading,
+  }) => switch (this) {
+    Data(:var value) => data(value),
+    Error(:var message) => error(message),
+    Loading() => loading(),
+  };
+}
+```
+
+**3. Records para múltiples returns sin clases**
+```dart
+// Sin record: necesitas una clase o un Map
+({int min, int max, double avg}) analizar(List<int> nums) {
+  final sum = nums.fold(0, (a, b) => a + b);
+  return (min: nums.reduce((a, b) => a < b ? a : b),
+          max: nums.reduce((a, b) => a > b ? a : b),
+          avg: sum / nums.length);
+}
+```
+
+**4. Factory constructor para caché**
+```dart
+class Servicio {
+  static final _cache = <String, Servicio>{};
+
+  final String nombre;
+  Servicio._(this.nombre);
+
+  factory Servicio.de(String nombre) {
+    return _cache.putIfAbsent(nombre, () => Servicio._(nombre));
+  }
+}
+```
+
+**5. Cascade para builders y configuraciones**
+```dart
+final build = ProcessBuilder('dart')
+  ..arguments = ['analyze', 'lib/']
+  ..environment = {'DART_DEBUG': 'true'}
+  ..workingDirectory = projectPath
+  ..run();
+```
+
+**6. `copyWith` manual sin freezed (datos pequeños)**
+```dart
+class User {
+  final String name;
+  final int age;
+  const User(this.name, this.age);
+
+  User copyWith({String? name, int? age}) => User(
+    name ?? this.name,
+    age ?? this.age,
+  );
+}
+```
+
+**7. `extension type` para tipos seguros sin overhead (Dart 3)**
+```dart
+extension type Email(String value) {
+  bool get isValid => value.contains('@');
+  String get domain => value.split('@').last;
+}
+
+void main() {
+  final email = Email('user@example.com');
+  print(email.isValid);  // true
+  print(email.domain);   // 'example.com'
+  // email.value accede al String subyacente
+}
+```
+
+**8. Comandos útiles**
+```bash
+dart analyze        # Análisis estático completo
+dart format .       # Formatear todo el proyecto
+dart fix --apply    # Aplicar fixes automáticos del linter
+dart compile exe bin/main.dart -o app  # Compilar AOT nativo
+dart doc .          # Generar documentación HTML
+dart pub outdated   # Ver dependencias desactualizadas
+flutter build apk --split-per-abi  # Build para Android
+flutter build ios --no-codesign     # Build para iOS
+```
+
+Fuente: [dart.dev — Extension methods](https://dart.dev/language/extension-methods), [dart.dev — Records](https://dart.dev/language/records), [Effective Dart](https://dart.dev/effective-dart)
+
+---
+
+## Canales y recursos en español
+
+### YouTube
+- **Flutter Español** — Canal dedicado a Flutter y Dart en español, tutoriales y proyectos prácticos
+- **MoureDev** — Python, pero tiene contenido de Flutter/Dart, automatización y proyectos reales
+- **Develoteca** — Curso de Dart desde cero, Flutter, y desarrollo de apps multiplataforma
+- **Codigo Facilito** — Cursos de Dart y Flutter estructurados para principiantes
+- **Platzi** — Ruta de aprendizaje de Dart y Flutter con proyectos guiados
+- **Código Kotlin** — Aunque es Kotlin, tiene comparativas útiles Dart vs Kotlin
+- **Victor Robles** — Desarrollo web y móvil, incluye Flutter
+
+### Comunidades
+- **r/dartlang** (Reddit) — Comunidad oficial de Dart, noticias, dudas, proyectos
+- **r/FlutterDev** (Reddit) — Comunidad de Flutter, discusiones técnicas, showcases
+- **Dart / Flutter en español** (Discord) — Canales de ayuda, proyectos, mentoría
+- **Stack Overflow en español** — Etiqueta `dart` y `flutter` para dudas técnicas
+- **Flutter España** — Grupo de meetups y eventos virtuales
+
+### Repositorios de código
+- [dart-lang/sdk](https://github.com/dart-lang/sdk) — Repositorio oficial del SDK de Dart
+- [flutter/flutter](https://github.com/flutter/flutter) — Framework Flutter
+- [dart-lang/samples](https://github.com/dart-lang/samples) — Ejemplos oficiales de Dart
+- [solido/awesome-flutter](https://github.com/Solido/awesome-flutter) — Lista curada de recursos Flutter
+- [iisnek/awesome-dart](https://github.com/iisnek/awesome-dart) — Lista curada de paquetes Dart
+- [serverpod/serverpod](https://github.com/serverpod/serverpod) — Framework backend Dart
+
+### Blogs y newsletters
+- [Dart Blog](https://blog.dart.dev/) — Blog oficial del equipo Dart
+- [Flutter Blog](https://flutter.dev/blog) — Blog oficial de Flutter
+- [This Week in Flutter](https://thisweekinflutter.com/) — Newsletter semanal sobre Flutter
+- [Flutter Awesome](https://flutterawesome.com/) — Proyectos y paquetes destacados semanalmente
+- [Dart Academy](https://dart.academy/) — Tutoriales detallados y guías avanzadas
+
+Fuente: búsqueda en YouTube y Reddit, listas curadas de Awesome Flutter/Dart
+
+---
+
+## Referencias y documentación oficial
+
+- **Docs oficiales**: [dart.dev/guides](https://dart.dev/guides) — tutorial, language tour, library tour
+- **API Reference**: [api.dart.dev](https://api.dart.dev/) — documentación completa de la stdlib
+- **Dart Language Tour**: [dart.dev/language](https://dart.dev/language) — tour completo del lenguaje
+- **Effective Dart**: [dart.dev/effective-dart](https://dart.dev/effective-dart) — guía de estilo, mejores prácticas y diseño
+- **Dart cheatsheet**: [dart.dev/codelabs/dart-cheatsheet](https://dart.dev/codelabs/dart-cheatsheet) — chuleta interactiva
+- **Flutter docs**: [docs.flutter.dev](https://docs.flutter.dev/) — documentación oficial de Flutter
+- **pub.dev**: [pub.dev](https://pub.dev/) — índice oficial de paquetes Dart/Flutter
+- **DartPad**: [dartpad.dev](https://dartpad.dev/) — editor online para probar código Dart
+- **Dart en GitHub**: [github.com/dart-lang/sdk](https://github.com/dart-lang/sdk)
+- **Linter rules**: [dart.dev/tools/linter-rules](https://dart.dev/tools/linter-rules) — lista completa de reglas del linter
+
+### Fuentes de esta guía
+
+Esta guía se ha elaborado a partir de las siguientes fuentes consultadas durante su desarrollo:
+
+- [Dart.dev — Documentación oficial y language tour](https://dart.dev/language)
+- [Dart.dev — Null Safety](https://dart.dev/null-safety)
+- [Dart.dev — Records & Patterns (Dart 3)](https://dart.dev/language/records)
+- [Dart.dev — Concurrency / Isolates](https://dart.dev/language/concurrency)
+- [Effective Dart](https://dart.dev/effective-dart) — guía de estilo y mejores prácticas
+- [Linter Rules (dart.dev)](https://dart.dev/tools/linter-rules) — reglas de análisis estático
+- [Flutter — Documentación oficial](https://docs.flutter.dev/)
+- [pub.dev — Paquetes](https://pub.dev/) — sqflite, drift, http, shelf, web_socket_channel, etc.
+- [Serverpod — Documentación](https://docs.serverpod.dev/)
+- [Riverpod — Documentación](https://riverpod.dev/)
+- [freezed — pub.dev](https://pub.dev/packages/freezed)
+- [Dart Academy](https://dart.academy/) — tutoriales y guías avanzadas
+- [Awesome Flutter (GitHub)](https://github.com/Solido/awesome-flutter) — lista curada de recursos
+- [Awesome Dart (GitHub)](https://github.com/iisnek/awesome-dart) — lista curada de paquetes
+- [r/dartlang](https://reddit.com/r/dartlang) — comunidad, debates y proyectos destacados
+- [r/FlutterDev](https://reddit.com/r/FlutterDev) — comunidad, debates y proyectos Flutter
+- [Dart Wikipedia](https://en.wikipedia.org/wiki/Dart_(programming_language)) — historia y contexto
+- [SDKMAN — Gestor de versiones](https://sdkman.io/sdks#dart) — instalación multi-versión
+- [Docker Hub — dart](https://hub.docker.com/_/dart) — imágenes oficiales Docker
+
+---
+
+## 🏆 Retos Relacionados
 
 Pon a prueba lo aprendido con estos desafíos:
 - [Conversion De Monedas](/retos/guia-conversion-de-monedas)

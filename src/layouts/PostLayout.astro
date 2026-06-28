@@ -4,6 +4,7 @@ import "@styles/solution.css";
 import Layout from "@layouts/Layout.astro";
 import NextPrevLinks from "@components/NextPrevLinks.astro";
 import TableOfContents from "@components/TableOfContents.astro";
+import Breadcrumbs from "@components/Breadcrumbs.astro";
 import  CodeEnhancer from "@components/CodeEnhancer.astro";
 import ReadingProgress from "@components/ReadingProgress.astro";
 import ResponsiveImage from "@components/ResponsiveImage.astro";
@@ -90,6 +91,7 @@ const tagsArray = Array.isArray(tags)
     class="max-w-screen-xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 py-10 px-4 lg:px-0 font-sans"
   >
     <main class="lg:col-span-8">
+      <Breadcrumbs title={title} />
       <header class="mb-12">
         <div
           class="relative w-full h-[200px] sm:h-[300px] md:h-[400px] overflow-hidden bg-slate-100 dark:bg-slate-900 mb-10"
@@ -171,7 +173,7 @@ const tagsArray = Array.isArray(tags)
 
       <article
         id="contenido"
-        class="prose sm:prose-lg lg:prose-xl max-w-none
+        class="prose sm:prose-lg lg:prose-xl max-w-4xl
  prose-slate dark:prose-invert
  dark:prose-p:text-slate-300 prose-p:leading-[1.8]
  prose-headings:uppercase prose-headings:italic prose-headings:tracking-tighter prose-headings:font-black
@@ -214,11 +216,12 @@ const tagsArray = Array.isArray(tags)
       </div>
     </main>
 
-    <aside class="hidden lg:block lg:col-span-4">
-      <div class="sticky top-24 pl-8 h-fit">
+    <!-- TableOfContents: lg:hidden mobile details + hidden lg:block sidebar -->
+    <div class="lg:col-span-4">
+      <div class="lg:sticky lg:top-24 lg:pl-8 h-fit">
         <TableOfContents headings={headings} />
       </div>
-    </aside>
+    </div>
   </div>
 
   <CodeEnhancer />

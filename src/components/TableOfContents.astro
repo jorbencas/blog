@@ -3,7 +3,40 @@ const { headings = [] } = Astro.props;
 const hasServerHeadings = headings?.length > 1;
 ---
 
-<nav id="toc-container" class="relative h-full font-sans">
+{
+  hasServerHeadings && (
+    <details id="toc-mobile" class="lg:hidden group mb-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+      <summary class="flex items-center gap-2 cursor-pointer list-none px-4 py-3 bg-gradient-to-r from-sky-800 to-cyan-500 dark:from-sky-600 dark:to-cyan-400 text-white dark:text-slate-900 text-xs font-black uppercase tracking-[0.2em]">
+        <span>📋 Contenido de la guía</span>
+        <svg class="h-4 w-4 ml-auto transition-transform duration-300 group-open:rotate-180" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 9l-7 7-7-7" />
+        </svg>
+      </summary>
+      <div class="p-3 border-t border-slate-200 dark:border-slate-700 overflow-y-auto max-h-[50vh]">
+        <ul class="space-y-1">
+          {headings.map((h) => (
+            <li>
+              <a
+                href={`#${h.slug}`}
+                class:list={[
+                  "toc-link block py-2 pl-4 -ml-px border-l-2 border-l-transparent transition-all duration-300",
+                  "text-sm font-medium hover:text-cyan-500",
+                  h.depth === 2
+                    ? "text-slate-600 dark:text-slate-400"
+                    : "text-slate-500 dark:text-slate-400 text-xs ml-2",
+                ]}
+              >
+                {h.text}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </details>
+  )
+}
+
+<nav id="toc-container" class="relative h-full font-sans hidden lg:block">
   <div class="sticky top-32 max-h-[calc(100vh-8rem)] overflow-y-auto flex flex-col py-4 px-2">
     <div class="flex items-center gap-2 mb-6 opacity-40">
       <span class="text-sm font-bold uppercase tracking-[0.2em] text-slate-900 dark:text-white">
@@ -38,6 +71,12 @@ const hasServerHeadings = headings?.length > 1;
   h2[id],
   h3[id] {
     scroll-margin-top: 120px;
+  }
+  #toc-mobile summary::-webkit-details-marker {
+    display: none;
+  }
+  #toc-mobile summary {
+    list-style: none;
   }
 </style>
 
