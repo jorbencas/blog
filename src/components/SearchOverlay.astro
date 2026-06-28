@@ -1,0 +1,218 @@
+<div
+  id="search-overlay"
+  class="fixed inset-0 z-[60] bg-white dark:bg-slate-950 hidden flex-col"
+>
+  <div class="flex items-center justify-between px-4 sm:px-6 h-16 border-b border-slate-200 dark:border-slate-800">
+    <span class="text-xs font-black uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500">
+      Búsqueda
+    </span>
+    <button
+      id="search-overlay-close"
+      class="flex items-center justify-center h-9 w-9 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200"
+      aria-label="Cerrar búsqueda"
+    >
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 6L6 18M6 6l12 12"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="flex-1 overflow-y-auto">
+    <div class="max-w-2xl mx-auto w-full px-4 sm:px-6 pt-8 sm:pt-12">
+      <div class="relative">
+        <svg
+          class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+        <input
+          id="search-overlay-input"
+          type="text"
+          placeholder="BUSCAR EN LA BITÁCORA..."
+          aria-label="Buscar en el blog"
+          aria-controls="search-overlay-results"
+          autocomplete="off"
+          class="w-full p-4 pl-14 pr-12 text-base sm:text-lg bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none font-black uppercase tracking-widest rounded-xl border-2 border-transparent focus:border-cyan-500 dark:focus:border-cyan-400 transition-all duration-200"
+        />
+      </div>
+
+      <div
+        id="search-overlay-results"
+        class="mt-6 space-y-1"
+      >
+      </div>
+    </div>
+  </div>
+</div>
+
+<style is:global>
+  body.search-open {
+    overflow: hidden;
+  }
+</style>
+
+<script>
+(function() {
+  const overlay = document.getElementById("search-overlay");
+  const input = document.getElementById("search-overlay-input");
+  const results = document.getElementById("search-overlay-results");
+  const closeBtn = document.getElementById("search-overlay-close");
+  const searchToggle = document.getElementById("search-toggle");
+  let pagefind;
+  let debounceTimer;
+
+  const showLoading = () => {
+    results.innerHTML = `
+<div class="p-8 text-center">
+<p class="text-sm font-black uppercase tracking-[0.3em] text-cyan-500 dark:text-cyan-400 animate-pulse">
+Buscando...
+</p>
+</div>`;
+  };
+
+  const showEmpty = () => {
+    results.innerHTML = `
+<div class="p-12 text-center">
+<p class="text-sm font-black uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400">
+0 resultados encontrados
+</p>
+</div>`;
+  };
+
+  const open = () => {
+    overlay.classList.remove("hidden");
+    overlay.classList.add("flex");
+    document.body.classList.add("search-open");
+    setTimeout(() => input?.focus(), 100);
+  };
+
+  const close = () => {
+    overlay.classList.add("hidden");
+    overlay.classList.remove("flex");
+    document.body.classList.remove("search-open");
+    input?.blur();
+    results.innerHTML = "";
+  };
+
+  searchToggle?.addEventListener("click", open);
+
+  closeBtn?.addEventListener("click", close);
+
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) close();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+      e.preventDefault();
+      if (overlay.classList.contains("hidden")) {
+        open();
+      } else {
+        close();
+      }
+    }
+    if (e.key === "Escape" && !overlay.classList.contains("hidden")) {
+      close();
+    }
+  });
+
+  const renderResults = async (query) => {
+    if (!pagefind) return;
+    if (query.length <= 2) {
+      results.innerHTML = "";
+      return;
+    }
+
+    showLoading();
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(async () => {
+      const search = await pagefind.search(query);
+      const items = await Promise.all(
+        search.results.slice(0, 8).map((r) => r.data())
+      );
+
+      results.innerHTML = "";
+
+      if (items.length === 0) {
+        showEmpty();
+        return;
+      }
+
+      items.forEach((item) => {
+        const urlType =
+          item.url.includes("/proyectos/") ? "proyecto" :
+          item.url.includes("/herramientas/") ? "herramienta" :
+          item.url.includes("/retos/") ? "reto" : "post";
+
+        const typeConfig = {
+          proyecto: { label: "PROYECTO", color: "text-purple-500" },
+          herramienta: { label: "HERRAMIENTA", color: "text-emerald-500" },
+          reto: { label: "CHALLENGE", color: "text-cyan-500" },
+          post: { label: "BLOG_POST", color: "text-slate-500 dark:text-slate-400" },
+        };
+
+        const { label, color } = typeConfig[urlType];
+
+        const div = document.createElement("a");
+        div.href = item.url;
+        div.className = "flex items-start gap-4 p-4 sm:p-5 rounded-xl transition-all duration-200 hover:bg-slate-100 dark:hover:bg-slate-900 group";
+
+        div.innerHTML = `
+<div class="min-w-0 flex-1">
+  <div class="flex items-center gap-2 mb-1.5">
+    <span class="text-[10px] px-1.5 py-0.5 ${color} opacity-70 font-black uppercase tracking-widest">
+      ${label}
+    </span>
+  </div>
+  <h3 class="font-black text-sm sm:text-base text-slate-900 dark:text-white uppercase italic tracking-tighter group-hover:text-cyan-600 dark:group-hover:text-cyan-500 transition-colors">
+    ${item.meta.title}
+  </h3>
+  <p class="text-slate-500 dark:text-slate-400 text-xs mt-1.5 line-clamp-2 leading-relaxed font-medium">
+    ${item.excerpt}
+  </p>
+</div>`;
+        results.appendChild(div);
+      });
+    }, 300);
+  };
+
+  input?.addEventListener("input", (e) => {
+    renderResults(e.target.value);
+  });
+
+  input?.addEventListener("keydown", (e) => {
+    const items = results.querySelectorAll("a");
+    if (items.length === 0) return;
+    let activeIndex = -1;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      activeIndex = 0;
+      items[0]?.focus();
+      items.forEach((el, i) => el.classList.toggle("bg-slate-100 dark:bg-slate-900", i === 0));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      activeIndex = items.length - 1;
+      items[items.length - 1]?.focus();
+      items.forEach((el, i) => el.classList.toggle("bg-slate-100 dark:bg-slate-900", i === items.length - 1));
+    }
+  });
+
+  (async () => {
+    try {
+      pagefind = await import("/pagefind/pagefind.js");
+      await pagefind.options({ highlightParam: "highlight" });
+    } catch (e) {
+      results.innerHTML = `
+<div class="p-8 text-center">
+<p class="text-xs font-black uppercase tracking-[0.3em] text-amber-500">
+El índice de búsqueda solo está disponible tras <code class="font-mono">npm run build &amp;&amp; npm run preview</code>
+</p>
+</div>`;
+    }
+  })();
+})();
+</script>

@@ -1,6 +1,6 @@
 # Contexto del proyecto — Blog
 
-**Última actualización**: 2026-06-28 (refactor retos + multi-lenguaje)
+**Última actualización**: 2026-06-28 (refactor retos completado, cambios commiteados)
 **Stack**: Astro 6.4 + Svelte 5 + Tailwind CSS 4.3 | Vercel static | Node >= 18
 **Idioma**: Español
 **Deploy**: `blog-jorbencas.vercel.app`
@@ -28,6 +28,8 @@
 - **src/components/CodeTabs.svelte**: nuevo componente con tabs interactivos para Python, JS, Java, TypeScript
 - **src/content.config.ts**: schema extendido con campo `languages: string[]`
 - **src/content/auto-challenges/**: 58 retos reformulados con descripciones, pasos, tests y código en 4 lenguajes
+- **85 drafts eliminados**: retos redundantes o boilerplate eliminados del repositorio
+- Commit: `[retos] Refactor multi-lenguaje: 58 reformulados, 85 eliminados, CodeTabs component`
 - Build verificado sin errores
 
 ## Contenido
@@ -35,7 +37,7 @@
 5 colecciones MDX en `src/content/`:
 - `posts/` — incluye `resources.mdx` (482+ recursos), `n8n.mdx`, 15 guías 0-100, etc.
 - `auto-news/` — noticias automáticas
-- `auto-challenges/` — +140 retos
+- `auto-challenges/` — 58 retos multi-lenguaje (Python, JS, Java, TS)
 - `myprojects/` — proyectos personales
 - `tools/` — herramientas interactivas
 
@@ -59,7 +61,7 @@ Orden de secciones: Mis_Proyectos → Mini_Herramientas → Retos → Últimos_P
 ## Archivos relevantes
 
 - **Layouts**: `PostLayout.astro` (TOC en grid), `Layout.astro` (tema, anti-flash), `ProjectLayout.astro`
-- **Componentes clave**: `TableOfContents.astro` (mobile details + desktop sidebar), `Breadcrumbs.astro`, `Navbar.astro` (slot para buscador mobile), `Header.astro`, `Buscador.astro`, `CopyPost.astro` (3 botones), `ScrollToTop.astro`, `Archive.astro` (2 años + link completo)
+- **Componentes clave**: `TableOfContents.astro` (mobile details + desktop sidebar), `Breadcrumbs.astro`, `Navbar.astro` (slot para buscador mobile), `Header.astro`, `Buscador.astro`, `CopyPost.astro` (3 botones), `ScrollToTop.astro`, `Archive.astro` (2 años + link completo), `CodeTabs.svelte` (4-lang tabs interactivos)
 - **Cards**: `PreviewPost`, `ChallengeCard`, `ToolCard`, `ProjectCard` — sin quotes/italics en descripciones
 - **Guías**: 15 archivos `src/content/posts/guia-0-100-*.mdx`
 - **Scripts**: `fix_images.py`, `image_cache.json`, `rewrite_challenges.py`, `solutions_db.py`, `constants_retos.py`, `hunt_challenges.py`

@@ -5,6 +5,7 @@ import Header from "@components/header.astro";
 import SpeedInsights from "@vercel/speed-insights/astro";
 import SEO from "@components/SEO.astro";
 import "@styles/global.css";
+import { SITE_NAME, SITE_DESCRIPTION, AUTHOR_NAME } from "src/consts.js";
 
 export interface Props {
   title: string;
@@ -18,13 +19,11 @@ const {
   description,
   tags = [],
   pubDate = new Date().toString(),
-  author = "Jorge Beneyto Castelló",
+  author = AUTHOR_NAME,
 } = Astro.props as Props;
 
-const finalTitle = title || "Blog | Problemas de un desarrollador web";
-const finalDescription =
-  description ||
-  "Jorge Beneyto Castelló divulga sobre problemas, inquietudes e ideas de un desarollador web.";
+const finalTitle = title || `Blog | ${SITE_NAME}`;
+const finalDescription = description || SITE_DESCRIPTION;
 ---
 
 <!doctype html>

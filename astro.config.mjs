@@ -32,6 +32,5 @@ export default defineConfig({
     },
     wrap: true,
     smartypants: true, // Mejora tipografía (comillas, guiones)
-    gfm: true, // Habilita GitHub Flavored Markdown (por defecto es true)
   },
 });

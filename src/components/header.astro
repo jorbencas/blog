@@ -2,21 +2,21 @@
 import Buscador from "./Buscador.astro";
 import Navbar from "./Navbar.astro";
 import ToggleButton from "./ToggleButton.astro";
+import SearchOverlay from "./SearchOverlay.astro";
 ---
 
 <header
-  class="sticky top-0 w-full min-h-[80px] lg:min-h-0 bg-white dark:bg-slate-900/80 transition-colors duration-500 z-50 border-b border-slate-100 dark:border-slate-800/50"
+  id="site-header"
+  class="sticky top-0 w-full bg-white dark:bg-slate-900/80 transition-all duration-300 z-50 border-b border-slate-100 dark:border-slate-800/50"
 >
   <div class="max-w-screen-xl mx-auto px-4 sm:px-6">
-    <div
-      class="flex flex-col lg:flex-row items-center justify-between gap-y-4 py-4 md:py-6"
-    >
+    <div class="flex items-center justify-between h-16 md:h-20">
       <a
         href="/"
-        class="flex items-center group transition-transform active:scale-95 w-full lg:w-auto justify-center lg:justify-start pr-14 lg:pr-0"
+        class="flex items-center group transition-transform active:scale-95 shrink-0"
       >
         <h2
-          class="text-sm sm:text-lg md:text-xl xl:text-2xl font-black uppercase tracking-tighter italic leading-tight text-center lg:text-left"
+          class="text-sm sm:text-base md:text-xl xl:text-2xl font-black uppercase tracking-tighter italic leading-tight"
         >
           <span
             class="bg-clip-text text-transparent bg-gradient-to-r from-sky-800 to-cyan-500 dark:from-sky-400 dark:to-cyan-300"
@@ -27,32 +27,34 @@ import ToggleButton from "./ToggleButton.astro";
         </h2>
       </a>
 
-      <div class="w-full lg:w-auto flex justify-center order-3 lg:order-2">
-        <Navbar>
-          <div class="lg:hidden px-4 pt-6">
-            <Buscador />
-          </div>
-        </Navbar>
-      </div>
-
-      <div
-        class="flex items-center justify-center gap-2 w-full lg:w-auto order-2 lg:order-3"
-      >
-        <div class="flex items-center gap-1 p-1 px-3 w-full lg:w-auto">
-          <div class="hidden lg:block">
-            <Buscador />
-          </div>
-          <div class="hidden lg:block w-[1px] h-4 bg-slate-300 dark:bg-white/20 mx-1"></div>
-          <ToggleButton />
+      <div class="flex items-center gap-0.5 sm:gap-1">
+        <div class="hidden lg:block">
+          <Buscador />
         </div>
+        <div class="hidden lg:block w-[1px] h-4 bg-slate-300 dark:bg-white/20 mx-1"></div>
+
+        <button
+          id="search-toggle"
+          class="lg:hidden flex items-center justify-center h-9 w-9 rounded-lg text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200"
+          aria-label="Abrir búsqueda"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+        </button>
+
+        <ToggleButton />
+        <Navbar />
       </div>
     </div>
   </div>
 </header>
 
+<SearchOverlay />
+
 <script>
   (function() {
-    const header = document.currentScript.parentElement;
+    const header = document.getElementById("site-header");
     let lastScrollY = 0;
     let ticking = false;
 

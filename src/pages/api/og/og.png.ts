@@ -3,6 +3,7 @@ import satori from 'satori';
 import { Resvg } from '@resvg/resvg-js';
 import fs from 'fs';
 import path from 'path';
+import { SITE_NAME } from 'src/consts.js';
 
 export const prerender = false;
 
@@ -15,7 +16,7 @@ function getSvgAsBase64(tagName: string): string | null {
     const base64 = Buffer.from(svgContent).toString('base64');
     return `data:image/svg+xml;base64,${base64}`;
   } catch (e) {
-    console.error(`❌ Error al convertir SVG a Base64 para [${tagName}]:`, e);
+    console.error(`Error al convertir SVG a Base64 para [${tagName}]:`, e);
     return null;
   }
 }
@@ -37,7 +38,7 @@ function getFaviconAsBase64(): string | null {
 export const GET: APIRoute = async ({ request }) => {
   try {
     const { searchParams } = new URL(request.url);
-    const rawTitle = searchParams.get("title")?.trim() || "Problemas de un desarrollador Web";
+    const rawTitle = searchParams.get("title")?.trim() || SITE_NAME;
     const title = rawTitle
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")

@@ -1,5 +1,7 @@
 ---
 // seo.astro
+import { SITE_NAME } from "src/consts.js";
+
 interface Props {
   title: string;
   description: string;
@@ -10,12 +12,15 @@ interface Props {
 
 const { title, description, tags = [], pubDate, author } = Astro.props;
 
-// 1. SOLUCIÓN WARNINGS: Evitamos que textos muy largos trunquen las tarjetas en redes
-const cleanTitle = title.length > 60 ? `${title.substring(0, 57)}...` : title;
-const cleanDescription =
-  description.length > 155
-    ? `${description.substring(0, 152)}...`
-    : description;
+const truncateAtWord = (text, maxLen) => {
+  if (text.length <= maxLen) return text;
+  const truncated = text.substring(0, maxLen);
+  const lastSpace = truncated.lastIndexOf(" ");
+  return `${truncated.substring(0, lastSpace > 0 ? lastSpace : maxLen)}...`;
+};
+
+const cleanTitle = truncateAtWord(title, 60);
+const cleanDescription = truncateAtWord(description, 155);
 
 const titleEncoded = encodeURIComponent(title);
 const tagsEncoded = encodeURIComponent(
@@ -91,7 +96,7 @@ const jsonLD = {
 <meta property="og:image:height" content="630" />
 <meta property="og:image:type" content="image/png" />
 <meta property="og:image:alt" content={`Portada del artículo: ${title}`} />
-<meta property="og:site_name" content="Problemas de un desarrollador Web" />
+<meta property="og:site_name" content={SITE_NAME} />
 <meta property="og:locale" content="es_ES" />
 
 {tags.map((tag) => <meta property="article:tag" content={tag} />)}

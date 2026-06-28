@@ -1,5 +1,16 @@
 ---
 const { avif, webp, fallback, alt, blur, fetchpriority, class: className, aspectRatio, loading, imgClass } = Astro.props;
+
+function parseAspectRatio(ratio) {
+  if (!ratio) return 16 / 9;
+  if (typeof ratio === "number") return ratio;
+  const parts = ratio.split("/").map(Number);
+  return parts.length === 2 && parts[1] > 0 ? parts[0] / parts[1] : 16 / 9;
+}
+
+const ar = parseAspectRatio(aspectRatio);
+const imgW = 1200;
+const imgH = Math.round(1200 / ar);
 ---
 
 <div class={className} style={aspectRatio ? `aspect-ratio: ${aspectRatio}` : undefined}>
@@ -13,8 +24,8 @@ const { avif, webp, fallback, alt, blur, fetchpriority, class: className, aspect
       decoding="async"
       class={imgClass}
       {fetchpriority}
-      width="1200"
-      height="675"
+      width={imgW}
+      height={imgH}
       style={`${blur ? `background-image: url("data:image/jpeg;base64,${blur}");background-size:cover;background-position:center;filter:blur(20px);transition:filter 0.3s ease` : ''}`}
       onload="this.style.filter='blur(0)'"
     />

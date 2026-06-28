@@ -3,116 +3,109 @@ const pathname = new URL(Astro.url).pathname;
 const currentPath = pathname.slice(1);
 ---
 
-<nav class="relative w-full lg:w-auto">
+<nav class="relative flex items-center">
   <input type="checkbox" id="menu-toggle" class="peer hidden" aria-label="Abrir menú de navegación" />
 
   <label
     for="menu-toggle"
     aria-label="Abrir menú"
-    class={`fixed top-3 right-3 z-50 flex flex-col items-center justify-center h-10 w-10 gap-[5px] cursor-pointer select-none lg:hidden rounded-lg border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm transition-all duration-300
-      peer-checked:[&>span:nth-child(1)]:rotate-45 peer-checked:[&>span:nth-child(1)]:translate-y-[7.5px]
-      peer-checked:[&>span:nth-child(2)]:opacity-0 peer-checked:[&>span:nth-child(2)]:scale-x-0
-      peer-checked:[&>span:nth-child(3)]:-rotate-45 peer-checked:[&>span:nth-child(3)]:-translate-y-[7.5px]`}
+    class="flex flex-col items-center justify-center h-9 w-9 gap-[4.5px] cursor-pointer select-none lg:hidden rounded-lg transition-all duration-200 hover:bg-slate-100 dark:hover:bg-slate-800
+      peer-checked:[&>span:nth-child(1)]:rotate-45 peer-checked:[&>span:nth-child(1)]:translate-y-[6.5px]
+      peer-checked:[&>span:nth-child(2)]:opacity-0
+      peer-checked:[&>span:nth-child(3)]:-rotate-45 peer-checked:[&>span:nth-child(3)]:-translate-y-[6.5px]"
   >
-    <span
-      class="w-5 h-[2.5px] bg-slate-900 dark:bg-slate-200 transition-all duration-300 origin-center rounded-full"
-    ></span>
-    <span
-      class="w-5 h-[2.5px] bg-slate-900 dark:bg-slate-200 transition-all duration-300 origin-center rounded-full"
-    ></span>
-    <span
-      class="w-5 h-[2.5px] bg-slate-900 dark:bg-slate-200 transition-all duration-300 origin-center rounded-full"
-    ></span>
+    <span class="w-4 h-[2.5px] bg-slate-900 dark:bg-slate-200 transition-all duration-300 origin-center rounded-full"></span>
+    <span class="w-4 h-[2.5px] bg-slate-900 dark:bg-slate-200 transition-all duration-300 origin-center rounded-full"></span>
+    <span class="w-4 h-[2.5px] bg-slate-900 dark:bg-slate-200 transition-all duration-300 origin-center rounded-full"></span>
   </label>
 
   <div
+    class="fixed inset-0 z-30 bg-black/40 opacity-0 pointer-events-none peer-checked:opacity-100 peer-checked:pointer-events-auto transition-opacity duration-300 ease-out lg:hidden"
+  />
+
+  <div
     id="menu-items"
-    class="flex-col lg:flex-row gap-6 lg:gap-8 w-full lg:w-auto pt-6 lg:pt-0 items-center justify-center
-     fixed lg:static inset-x-0 top-0 bottom-0 lg:inset-auto bg-white/95 dark:bg-slate-900/80 lg:bg-transparent lg:dark:bg-transparent z-40 overflow-y-auto lg:overflow-visible
-    transition-all duration-300 ease-out
-    peer-checked:opacity-100 peer-checked:pointer-events-auto peer-checked:translate-y-0
-    opacity-0 pointer-events-none -translate-y-2
-    lg:opacity-100 lg:pointer-events-auto lg:translate-y-0"
+    class="fixed top-0 right-0 z-40 h-full w-72 max-w-[85vw] bg-white dark:bg-slate-900 shadow-2xl border-l border-slate-200 dark:border-slate-800
+      flex flex-col justify-center gap-8 px-10
+      transition-transform duration-300 ease-out
+      translate-x-full peer-checked:translate-x-0
+      lg:static lg:translate-x-0 lg:shadow-none lg:border-none lg:flex-row lg:items-center lg:w-auto lg:h-auto lg:p-0 lg:gap-8 lg:bg-transparent lg:dark:bg-transparent"
   >
-    <div class="flex flex-col lg:flex-row gap-6 lg:gap-8 items-center justify-center pt-16 lg:pt-0">
-      <a
-        href="/proyectos/1"
-        aria-current={currentPath.startsWith("proyectos") ? "page" : undefined}
-        class={`nav-link group relative text-sm font-black uppercase tracking-[0.2em] italic transition-colors w-full lg:w-fit text-center lg:text-left ${
-          currentPath.startsWith("proyectos")
-            ? "text-purple-500"
-            : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-        }`}
-      >
-        Proyectos
-        <span
-          class={`nav-underline absolute -bottom-1 left-0 h-0.5 bg-purple-500 transition-all duration-300 ${
-            currentPath.startsWith("proyectos") ? "w-full" : "w-0"
-          }`}></span>
-      </a>
+    <a
+      href="/proyectos/1"
+      aria-current={currentPath.startsWith("proyectos") ? "page" : undefined}
+      class={`nav-link group relative text-sm font-black uppercase tracking-[0.2em] italic transition-colors text-left ${
+        currentPath.startsWith("proyectos")
+          ? "text-purple-500"
+          : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+      }`}
+    >
+      Proyectos
+      <span
+        class={`nav-underline absolute -bottom-1 left-0 h-0.5 bg-purple-500 transition-all duration-300 ${
+          currentPath.startsWith("proyectos") ? "w-full" : "w-0"
+        }`}></span>
+    </a>
 
-      <a
-        href="/retos/1"
-        aria-current={currentPath.startsWith("retos") ? "page" : undefined}
-        class={`nav-link group relative text-sm font-black uppercase tracking-[0.2em] italic transition-colors w-full lg:w-fit text-center lg:text-left ${
-          currentPath.startsWith("retos")
-            ? "text-cyan-600 dark:text-cyan-500"
-            : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-        }`}
-      >
-        Retos
-        <span
-          class={`nav-underline absolute -bottom-1 left-0 h-0.5 bg-cyan-500 transition-all duration-300 ${
-            currentPath.startsWith("retos") ? "w-full" : "w-0"
-          }`}></span>
-      </a>
+    <a
+      href="/retos/1"
+      aria-current={currentPath.startsWith("retos") ? "page" : undefined}
+      class={`nav-link group relative text-sm font-black uppercase tracking-[0.2em] italic transition-colors text-left ${
+        currentPath.startsWith("retos")
+          ? "text-cyan-600 dark:text-cyan-500"
+          : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+      }`}
+    >
+      Retos
+      <span
+        class={`nav-underline absolute -bottom-1 left-0 h-0.5 bg-cyan-500 transition-all duration-300 ${
+          currentPath.startsWith("retos") ? "w-full" : "w-0"
+        }`}></span>
+    </a>
 
-      <a
-        href="/posts/1"
-        aria-current={currentPath.startsWith("posts") ? "page" : undefined}
-        class={`nav-link group relative text-sm font-black uppercase tracking-[0.2em] italic transition-colors w-full lg:w-fit text-center lg:text-left ${
-          currentPath.startsWith("posts")
-            ? "text-slate-900 dark:text-slate-200"
-            : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-        }`}
-      >
-        Blog
-        <span
-          class={`nav-underline absolute -bottom-1 left-0 h-0.5 bg-slate-900 dark:bg-slate-200 transition-all duration-300 ${
-            currentPath.startsWith("posts") ? "w-full" : "w-0"
-          }`}></span>
-      </a>
-      <a
-        href="/herramientas/1"
-        aria-current={currentPath.startsWith("herramientas") ? "page" : undefined}
-        class={`nav-link group relative text-sm font-black uppercase tracking-[0.2em] italic transition-colors w-full lg:w-fit text-center lg:text-left ${
-          currentPath.startsWith("herramientas")
-            ? "text-emerald-500"
-            : "text-slate-600 dark:text-slate-400 hover:text-emerald-500 dark:hover:text-emerald-400"
-        }`}
-      >
-        Mini Herramientas
-        <span
-          class={`nav-underline absolute -bottom-1 left-0 h-0.5 bg-emerald-500 transition-all duration-300 ${
-            currentPath.startsWith("herramientas")
-              ? "w-full"
-              : "w-0"
-          }`}></span>
-      </a>
+    <a
+      href="/posts/1"
+      aria-current={currentPath.startsWith("posts") ? "page" : undefined}
+      class={`nav-link group relative text-sm font-black uppercase tracking-[0.2em] italic transition-colors text-left ${
+        currentPath.startsWith("posts")
+          ? "text-slate-900 dark:text-slate-200"
+          : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+      }`}
+    >
+      Blog
+      <span
+        class={`nav-underline absolute -bottom-1 left-0 h-0.5 bg-slate-900 dark:bg-slate-200 transition-all duration-300 ${
+          currentPath.startsWith("posts") ? "w-full" : "w-0"
+        }`}></span>
+    </a>
 
-      <a
-        href="https://github.com/jorbencas/blog/issues/new/choose"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="nav-link group relative text-sm font-black uppercase tracking-[0.2em] italic transition-colors w-full lg:w-fit text-center lg:text-left text-slate-600 dark:text-slate-400 hover:text-amber-500 dark:hover:text-amber-400"
-      >
-        Bugs
-        <span
-          class="nav-underline absolute -bottom-1 left-0 h-0.5 bg-amber-500 transition-all duration-300 w-0"
-        ></span>
-      </a>
-    </div>
-    <slot />
+    <a
+      href="/herramientas/1"
+      aria-current={currentPath.startsWith("herramientas") ? "page" : undefined}
+      class={`nav-link group relative text-sm font-black uppercase tracking-[0.2em] italic transition-colors text-left ${
+        currentPath.startsWith("herramientas")
+          ? "text-emerald-500"
+          : "text-slate-600 dark:text-slate-400 hover:text-emerald-500 dark:hover:text-emerald-400"
+      }`}
+    >
+      Mini Herramientas
+      <span
+        class={`nav-underline absolute -bottom-1 left-0 h-0.5 bg-emerald-500 transition-all duration-300 ${
+          currentPath.startsWith("herramientas") ? "w-full" : "w-0"
+        }`}></span>
+    </a>
+
+    <a
+      href="https://github.com/jorbencas/blog/issues/new/choose"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="nav-link group relative text-sm font-black uppercase tracking-[0.2em] italic transition-colors text-left text-slate-600 dark:text-slate-400 hover:text-amber-500 dark:hover:text-amber-400"
+    >
+      Bugs
+      <span
+        class="nav-underline absolute -bottom-1 left-0 h-0.5 bg-amber-500 transition-all duration-300 w-0"
+      ></span>
+    </a>
   </div>
 </nav>
 
@@ -124,39 +117,10 @@ const currentPath = pathname.slice(1);
 
 <script>
   const toggle = document.getElementById("menu-toggle");
-  const hamburger = document.querySelector('label[for="menu-toggle"]');
 
-  // Scroll hide/show for mobile hamburger
-  let lastScrollY = 0;
-  let ticking = false;
-
-  function handleScroll() {
-    const currentScrollY = window.scrollY;
-
-    if (window.innerWidth < 1024 && !toggle.checked) {
-      if (currentScrollY > lastScrollY && currentScrollY > 50) {
-        hamburger.classList.add("-translate-y-20", "opacity-0");
-      } else {
-        hamburger.classList.remove("-translate-y-20", "opacity-0");
-      }
-    }
-
-    lastScrollY = currentScrollY;
-    ticking = false;
-  }
-
-  window.addEventListener("scroll", () => {
-    if (!ticking) {
-      requestAnimationFrame(handleScroll);
-      ticking = true;
-    }
-  });
-
-  // Show hamburger when menu opens regardless of scroll
   if (toggle) {
     toggle.addEventListener("change", () => {
       if (toggle.checked) {
-        hamburger.classList.remove("-translate-y-20", "opacity-0");
         const scrollY = window.scrollY;
         document.body.dataset.scrollY = String(scrollY);
         document.body.style.position = "fixed";

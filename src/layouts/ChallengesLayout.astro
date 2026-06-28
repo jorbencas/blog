@@ -1,6 +1,7 @@
 ---
-import Layout from "./Layout.astro";
+import Layout from "@layouts/Layout.astro";
 import { getCollection } from "astro:content";
+import Breadcrumbs from "@components/Breadcrumbs.astro";
 import CodeEnhancer from "@components/CodeEnhancer.astro";
 
 const { frontmatter, url } = Astro.props;
@@ -15,6 +16,7 @@ const sidebarChallenges = allChallenges
   <div class="max-w-screen-xl mx-auto px-6 py-12">
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
       <main class="lg:col-span-8 space-y-8">
+        <Breadcrumbs title={frontmatter.title} section="retos" />
         <header class="space-y-4 pb-8">
           <div class="flex items-center gap-4">
             <span
@@ -34,7 +36,7 @@ const sidebarChallenges = allChallenges
         </header>
 
         <div
-          class="prose dark:prose-invert prose-cyan max-w-none
+          class="prose dark:prose-invert prose-cyan max-w-4xl
  prose-headings:italic prose-headings:font-black prose-headings:uppercase prose-headings:tracking-tighter
  prose-p:text-slate-600 dark:prose-p:text-slate-400 prose-p:leading-relaxed
   prose-code:text-cyan-700 dark:prose-code:text-inherit
