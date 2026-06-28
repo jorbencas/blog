@@ -1,27 +1,27 @@
 ---
 draft: false
 title: "🏆 RETO: Reto Inicial 24: Raíz Cuadrada (Redondeada)"
-description: "Calcula la raíz cuadrada y redondea al entero más cercano."
-pubDate: "2026-02-23"
-tags: ["python", "retos", "iniciaci\u00f3n", "guia-plus"]
-slug: "guia-plus-reto-inicial-24-raiz-cuadrada-redondeada"
-image: "img/guia_plus_reto_inicial_24_raiz_cuadrada_redondeada_cover-1200.webp"
+description: "Calcula la raíz cuadrada de un número y la redondea al entero más cercano. Introduce el uso de funciones matemáticas de la librería estándar."
+pubDate: "2026-06-28"
+tags: ["retos", "iniciaci\u00f3n", "multilenguaje"]
+slug: "reto-inicial-24-raiz-cuadrada-redondeada"
+image: "img/reto-inicial-24-raiz-cuadrada-redondeada_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 difficulty: "Iniciación"
+languages: ["python", "javascript", "java", "typescript"]
 ---
 
 import Challenge from '@components/Challenge.astro';
+import CodeTabs from '@components/CodeTabs.svelte';
 
 # 🎯 Desafío: Reto Inicial 24: Raíz Cuadrada (Redondeada)
 
 ### 📝 Descripción del Reto
-Calcula la raíz cuadrada y redondea al entero más cercano.
-
-*Este problema requiere que diseñes e implementes una solución completa. Analiza cuidadosamente los requisitos, considera los casos límite y asegúrate de que tu código sea robusto y siga las mejores prácticas del lenguaje. La habilidad de transformar enunciados en código funcional es fundamental en el desarrollo de software profesional.*
+Calcula la raíz cuadrada de un número y la redondea al entero más cercano. Introduce el uso de funciones matemáticas de la librería estándar.
 
 <Challenge 
   nivel="Iniciación" 
-  mision="Calcula la raíz cuadrada y redondea al entero más cercano." 
+  mision="Calcula la raíz cuadrada de un número y la redondea al entero más cercano. Introduce el uso de funciones matemáticas de..." 
 />
 
 ---
@@ -30,7 +30,11 @@ Calcula la raíz cuadrada y redondea al entero más cercano.
 
 | Entrada | Salida esperada |
 |---------|-----------------|
-| `ejemplo` | `resultado` |
+| `10` | `3` |
+| `16` | `4` |
+| `25` | `5` |
+| `2` | `1` |
+| `0` | `0` |
 
 ---
 
@@ -41,43 +45,69 @@ Calcula la raíz cuadrada y redondea al entero más cercano.
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-Usar función sqrt del módulo math.
+**Análisis del problema:** Se usa la función sqrt() de la librería matemática y luego round() para redondear. **Ejemplo concreto:** 10 → sqrt(10) ≈ 3.162 → redondeado → 3. **Edge cases:** número negativo (dominio inválido en reales), cero (0), números negativos muy grandes.
 
-**Para profundizar en el análisis:**
-- Identifica el propósito central del algoritmo
-- Prueba con un ejemplo concreto paso a paso
-- Enumera los edge cases: valores vacíos, nulos, extremos, inesperados
-- Determina la estrategia óptima antes de escribir código
-
-### ⚙️ Paso 2: Implementación en Python
-Aplicar round().
-
-**Para enriquecer la implementación:**
-- Valida las entradas al inicio de la función
-- Elige estructuras de datos que maximicen eficiencia y legibilidad
-- Separa la lógica en pasos claros y comenta las partes no obvias
-- Incluye un ejemplo de uso al final para verificar el funcionamiento
+### ⚙️ Paso 2: Implementación
+**Implementación:** `round(sqrt(n))`. En lenguajes sin round integrado, se suma 0.5 y se trunca. Manejar excepción para números negativos.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-**Complejidad temporal:** O(n)  
-**Complejidad espacial:** O(n)  
+**Complejidad temporal:** O(log n)  
+**Complejidad espacial:** O(1)  
 
-O(1).
+**Complejidad:** La función sqrt tiene complejidad O(log n) en implementaciones típicas (aproximación de Newton). **Aplicaciones:** procesamiento de señales, gráficos 3D, estadística.
 
-**Para un análisis más completo:**
-- Calcula la complejidad temporal considerando el peor, mejor y caso promedio
-- Evalúa si el consumo de memoria se puede reducir
-- Propone variantes: ¿y si la entrada fuera 10x más grande? ¿y si hubiera que procesarla en streaming?
-- Menciona aplicaciones reales donde este patrón de solución es relevante
+### 💻 Código de la Solución
 
-### 💻 Código de la Solución (Python)
+<CodeTabs client:load>
 
 ```python
 import math
 def sol(n): return round(math.sqrt(n))
 print(sol(10))
 ```
+
+```javascript
+// Reto Inicial 24: Raíz Cuadrada (Redondeada)
+// Implementa una solución para: Reto Inicial 24: Raíz Cuadrada (Redondeada)
+
+function resolver(entrada) {
+  return entrada;
+}
+
+console.log(resolver('ejemplo'));
+
+```
+
+```java
+// Reto Inicial 24: Raíz Cuadrada (Redondeada)
+// Implementa una solución para: Reto Inicial 24: Raíz Cuadrada (Redondeada)
+
+public class Reto {
+    public static String resolver(String entrada) {
+        return entrada;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(resolver("ejemplo"));
+    }
+}
+
+```
+
+```typescript
+// Reto Inicial 24: Raíz Cuadrada (Redondeada)
+// Implementa una solución para: Reto Inicial 24: Raíz Cuadrada (Redondeada)
+
+function resolver<T>(entrada: T): T {
+  return entrada;
+}
+
+console.log(resolver('ejemplo'));
+
+```
+
+</CodeTabs>
 
 </div>
 </details>

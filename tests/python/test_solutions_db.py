@@ -31,7 +31,7 @@ class TestLookup:
     def test_known_curated_returns_data(self):
         result = lookup("fibonacci-recursivo", "javascript")
         assert result is not None
-        assert result["big_o_time"] == "O(2^n) (O(n) con memoización)"
+        assert result["big_o_time"] == "O(2^n) (O(n) con memoización/iterativo)"
 
     def test_unknown_title_returns_none(self):
         result = lookup("xyz-nonexistent-challenge-12345", "python")

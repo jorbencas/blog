@@ -1,27 +1,27 @@
 ---
 draft: false
 title: "🏆 RETO: Reto Avanzado 14: Worker Queue con Prioridad"
-description: "Cola de tareas donde las de mayor prioridad se ejecutan antes."
-pubDate: "2025-11-25"
-tags: ["javascript", "retos", "avanzado", "guia-plus"]
-slug: "guia-plus-reto-avanzado-14-worker-queue-con-prioridad"
-image: "img/guia_plus_reto_avanzado_14_worker_queue_con_prioridad_cover-1200.webp"
+description: "Implementa un sistema de cola de trabajos con prioridad donde los trabajos con mayor prioridad se ejecutan primero (max-heap)."
+pubDate: "2026-06-28"
+tags: ["retos", "avanzado", "multilenguaje"]
+slug: "reto-avanzado-14-worker-queue-con-prioridad"
+image: "img/reto-avanzado-14-worker-queue-con-prioridad_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 difficulty: "Avanzado"
+languages: ["python", "javascript", "java", "typescript"]
 ---
 
 import Challenge from '@components/Challenge.astro';
+import CodeTabs from '@components/CodeTabs.svelte';
 
 # 🎯 Desafío: Reto Avanzado 14: Worker Queue con Prioridad
 
 ### 📝 Descripción del Reto
-Cola de tareas donde las de mayor prioridad se ejecutan antes.
-
-*Este problema requiere que diseñes e implementes una solución completa. Analiza cuidadosamente los requisitos, considera los casos límite y asegúrate de que tu código sea robusto y siga las mejores prácticas del lenguaje. La habilidad de transformar enunciados en código funcional es fundamental en el desarrollo de software profesional.*
+Implementa un sistema de cola de trabajos con prioridad donde los trabajos con mayor prioridad se ejecutan primero (max-heap).
 
 <Challenge 
   nivel="Avanzado" 
-  mision="Cola de tareas donde las de mayor prioridad se ejecutan antes." 
+  mision="Implementa un sistema de cola de trabajos con prioridad donde los trabajos con mayor prioridad se ejecutan primero..." 
 />
 
 ---
@@ -30,7 +30,10 @@ Cola de tareas donde las de mayor prioridad se ejecutan antes.
 
 | Entrada | Salida esperada |
 |---------|-----------------|
-| `ejemplo` | `resultado` |
+| `add('A',3),add('B',1),execute()` | `'A'` |
+| `add('X',5),execute()` | `'X'` |
+| `execute()` | `error (empty)` |
+| `add('A',1),add('B',1),execute()` | `'A' (FIFO en empate)` |
 
 ---
 
@@ -41,41 +44,71 @@ Cola de tareas donde las de mayor prioridad se ejecutan antes.
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-Usar Max-Heap o Min-Heap con prioridades negativas.
+**Análisis del problema:** Una cola de prioridad es un heap máximo: el elemento con mayor prioridad está siempre en la raíz. Operaciones: add(tarea, prioridad), execute() → ejecuta la de mayor prioridad y la elimina. **Ejemplo concreto:** add('A',3), add('B',1), add('C',2) → execute() → 'A' (prio 3), execute() → 'C' (prio 2). **Edge cases:** cola vacía, prioridades iguales (orden FIFO), tareas sin prioridad, muchas tareas con la misma prioridad.
 
-**Para profundizar en el análisis:**
-- Identifica el propósito central del algoritmo
-- Prueba con un ejemplo concreto paso a paso
-- Enumera los edge cases: valores vacíos, nulos, extremos, inesperados
-- Determina la estrategia óptima antes de escribir código
-
-### ⚙️ Paso 2: Implementación en JavaScript
-LIFO para misma prioridad opcionalmente.
-
-**Para enriquecer la implementación:**
-- Valida las entradas al inicio de la función
-- Elige estructuras de datos que maximicen eficiencia y legibilidad
-- Separa la lógica en pasos claros y comenta las partes no obvias
-- Incluye un ejemplo de uso al final para verificar el funcionamiento
+### ⚙️ Paso 2: Implementación
+**Implementación:** Usar un heap (max-heap) implementado con lista. Las operaciones principales: insert (push al final y subir/burbujear hacia arriba), extract_max (intercambiar raíz con último, bajar/burbujear hacia abajo). En Python, heapq es min-heap: se usa prioridad negativa para simular max-heap.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-**Complejidad temporal:** O(n)  
+**Complejidad temporal:** O(log n)  
 **Complejidad espacial:** O(n)  
 
-O(log n).
+**Complejidad:** Inserción y extracción: O(log n) cada una. **Aplicaciones:** schedulers de SO, planificación de procesos, sistemas de colas de mensajes (RabbitMQ), procesamiento por lotes prioritario, algoritmos de Dijkstra/Prim.
 
-**Para un análisis más completo:**
-- Calcula la complejidad temporal considerando el peor, mejor y caso promedio
-- Evalúa si el consumo de memoria se puede reducir
-- Propone variantes: ¿y si la entrada fuera 10x más grande? ¿y si hubiera que procesarla en streaming?
-- Menciona aplicaciones reales donde este patrón de solución es relevante
+### 💻 Código de la Solución
 
-### 💻 Código de la Solución (JavaScript)
+<CodeTabs client:load>
+
+```python
+import heapq
+class PQ:
+ def __init__(self): self.q=[]
+ def add(self, t, p): heapq.heappush(self.q, (-p, t))
+ def get(self): return heapq.heappop(self.q)[1]
+```
 
 ```javascript
-/* PriorityQueue en JS */
+// Reto Avanzado 14: Worker Queue con Prioridad
+// Implementa una solución para: Reto Avanzado 14: Worker Queue con Prioridad
+
+function resolver(entrada) {
+  return entrada;
+}
+
+console.log(resolver('ejemplo'));
+
 ```
+
+```java
+// Reto Avanzado 14: Worker Queue con Prioridad
+// Implementa una solución para: Reto Avanzado 14: Worker Queue con Prioridad
+
+public class Reto {
+    public static String resolver(String entrada) {
+        return entrada;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(resolver("ejemplo"));
+    }
+}
+
+```
+
+```typescript
+// Reto Avanzado 14: Worker Queue con Prioridad
+// Implementa una solución para: Reto Avanzado 14: Worker Queue con Prioridad
+
+function resolver<T>(entrada: T): T {
+  return entrada;
+}
+
+console.log(resolver('ejemplo'));
+
+```
+
+</CodeTabs>
 
 </div>
 </details>

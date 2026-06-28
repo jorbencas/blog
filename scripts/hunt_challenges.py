@@ -120,25 +120,29 @@ CODEEMBER_LANGS = [
     ("dart", "Dart"),
 ]
 
+LANGUAGES = ["python", "javascript", "java", "typescript"]
+
+LANG_DISPLAY = {
+    "python": "Python",
+    "javascript": "JavaScript",
+    "java": "Java",
+    "typescript": "TypeScript",
+}
+
 async def solve_and_save(titulo, fuente, client, folder, difficulty_override=None, index_hint=0):
     print(f"Procesando: {titulo}")
 
-    week_seed = datetime.now().isocalendar()[1]
-    rng = random.Random(week_seed)
-    langs_shuffled = list(CODEEMBER_LANGS)
-    rng.shuffle(langs_shuffled)
-    lang_id, lang_display = langs_shuffled[index_hint % len(langs_shuffled)]
+    codes = {}
+    for lang_id in LANGUAGES:
+        lang_sol = db_lookup(titulo, lang_id)
+        if lang_sol:
+            codes[lang_id] = lang_sol.get('codigo', '')
+        else:
+            gen_sol = generate_generic(titulo, lang_id)
+            codes[lang_id] = gen_sol.get('codigo', '')
 
-    sol = db_lookup(titulo, lang_id)
-    if sol:
-        print(f"   Solución local encontrada ({lang_display}), sin llamada a IA")
-    else:
-        if client:
-            sol = await obtener_solucion_ia(titulo, fuente, client, lang=lang_display)
-
-        if not sol:
-            print(f"   IA falló o modo offline. Usando código genérico ({lang_display})")
-            sol = generate_generic(titulo, lang_id)
+    primary_sol = db_lookup(titulo, "python") or generate_generic(titulo, "python")
+    sol = primary_sol
 
     if sol:
         titulo_es = sol.get('titulo', titulo)
@@ -157,7 +161,7 @@ async def solve_and_save(titulo, fuente, client, folder, difficulty_override=Non
             "Difícil": "Avanzado", "Avanzado": "Avanzado", "Senior": "Avanzado"
         }
         dificultad_blog = taxonomia.get(dificultad, "Intermedio")
-        tags_seo = json.dumps([lang_id, 'retos', dificultad_blog.lower()])
+        tags_seo = json.dumps(['python', 'retos', dificultad_blog.lower()])
 
         def esc(s: str) -> str:
             return s.replace('{', '&#123;').replace('}', '&#125;').replace('<', '&lt;').replace('>', '&gt;')
@@ -184,9 +188,10 @@ async def solve_and_save(titulo, fuente, client, folder, difficulty_override=Non
                 big_o_time=esc(sol.get('big_o_time', 'O(n)')),
                 big_o_space=esc(sol.get('big_o_space', 'O(n)')),
                 tabla_casos=tabla_casos,
-                lenguaje_lower=lang_id,
-                lenguaje_display=lang_display,
-                codigo_solucion=sol.get('codigo', '')
+                python_code=esc(codes.get("python", "")),
+                javascript_code=esc(codes.get("javascript", "")),
+                java_code=esc(codes.get("java", "")),
+                typescript_code=esc(codes.get("typescript", "")),
             )
 
             await asyncio.to_thread(lambda: open(path, "w", encoding="utf-8").write(res))

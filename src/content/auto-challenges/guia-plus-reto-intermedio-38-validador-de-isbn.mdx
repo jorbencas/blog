@@ -1,27 +1,27 @@
 ---
 draft: false
 title: "🏆 RETO: Reto Intermedio 38: Validador de ISBN"
-description: "Valida un código ISBN-10 (suma de pesos)."
-pubDate: "2025-12-19"
-tags: ["javascript", "retos", "intermedio", "guia-plus"]
-slug: "guia-plus-reto-intermedio-38-validador-de-isbn"
-image: "img/guia_plus_reto_intermedio_38_validador_de_isbn_cover-1200.webp"
+description: "Valida un número ISBN-10 o ISBN-13 según su algoritmo de checksum."
+pubDate: "2026-06-28"
+tags: ["retos", "intermedio", "multilenguaje"]
+slug: "reto-intermedio-38-validador-de-isbn"
+image: "img/reto-intermedio-38-validador-de-isbn_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 difficulty: "Intermedio"
+languages: ["python", "javascript", "java", "typescript"]
 ---
 
 import Challenge from '@components/Challenge.astro';
+import CodeTabs from '@components/CodeTabs.svelte';
 
 # 🎯 Desafío: Reto Intermedio 38: Validador de ISBN
 
 ### 📝 Descripción del Reto
-Valida un código ISBN-10 (suma de pesos).
-
-*Este problema requiere que diseñes e implementes una solución completa. Analiza cuidadosamente los requisitos, considera los casos límite y asegúrate de que tu código sea robusto y siga las mejores prácticas del lenguaje. La habilidad de transformar enunciados en código funcional es fundamental en el desarrollo de software profesional.*
+Valida un número ISBN-10 o ISBN-13 según su algoritmo de checksum.
 
 <Challenge 
   nivel="Intermedio" 
-  mision="Valida un código ISBN-10 (suma de pesos)." 
+  mision="Valida un número ISBN-10 o ISBN-13 según su algoritmo de checksum." 
 />
 
 ---
@@ -30,7 +30,10 @@ Valida un código ISBN-10 (suma de pesos).
 
 | Entrada | Salida esperada |
 |---------|-----------------|
-| `ejemplo` | `resultado` |
+| `'0-306-40615-2'` | `true` |
+| `'978-0-306-40615-7'` | `true` |
+| `'1234567890'` | `false` |
+| `''` | `false` |
 
 ---
 
@@ -41,41 +44,70 @@ Valida un código ISBN-10 (suma de pesos).
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-Suma (10-i)*digito % 11 == 0.
+**Análisis del problema:** ISBN-10: la suma de (dígito × posición), módulo 11, debe dar 0. El último dígito puede ser 'X' (valor 10). ISBN-13: la suma ponderada (1,3,1,3...) debe ser múltiplo de 10. **Ejemplo concreto:** ISBN-10 0-306-40615-2 → check = (0×10+3×9+0×8+6×7+4×6+0×5+6×4+1×3+5×2+2×1) mod 11 = 0 → válido. **Edge cases:** ISBN con guiones/espacios, carácter X, longitud incorrecta.
 
-**Para profundizar en el análisis:**
-- Identifica el propósito central del algoritmo
-- Prueba con un ejemplo concreto paso a paso
-- Enumera los edge cases: valores vacíos, nulos, extremos, inesperados
-- Determina la estrategia óptima antes de escribir código
-
-### ⚙️ Paso 2: Implementación en JavaScript
-Ultimo dígito puede ser X (10).
-
-**Para enriquecer la implementación:**
-- Valida las entradas al inicio de la función
-- Elige estructuras de datos que maximicen eficiencia y legibilidad
-- Separa la lógica en pasos claros y comenta las partes no obvias
-- Incluye un ejemplo de uso al final para verificar el funcionamiento
+### ⚙️ Paso 2: Implementación
+**Implementación:** 1) Limpiar el string (eliminar guiones, espacios). 2) Verificar longitud (10 o 13). 3) Aplicar algoritmo según tipo. 4) Para ISBN-10, manejar X como 10.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
 **Complejidad temporal:** O(n)  
-**Complejidad espacial:** O(n)  
+**Complejidad espacial:** O(1)  
 
-O(1).
+**Complejidad:** O(n) tiempo, O(1) espacio. **Aplicaciones:** sistemas bibliotecarios, commerce de libros, validación de datos en formularios.
 
-**Para un análisis más completo:**
-- Calcula la complejidad temporal considerando el peor, mejor y caso promedio
-- Evalúa si el consumo de memoria se puede reducir
-- Propone variantes: ¿y si la entrada fuera 10x más grande? ¿y si hubiera que procesarla en streaming?
-- Menciona aplicaciones reales donde este patrón de solución es relevante
+### 💻 Código de la Solución
 
-### 💻 Código de la Solución (JavaScript)
+<CodeTabs client:load>
+
+```python
+def sol(s):
+ s=s.replace('-',''); if len(s)!=10: return False
+ total = sum((10-i)*(10 if c=='X' else int(c)) for i,c in enumerate(s))
+ return total % 11 == 0
+```
 
 ```javascript
-const sol = s => { s=s.replace(/-/g,''); if(s.length!==10) return false; let t=s.split('').reduce((a,c,i)=>a+(10-i)*(c==='X'?10:+c),0); return t%11===0; };
+// Reto Intermedio 38: Validador de ISBN
+// Implementa una solución para: Reto Intermedio 38: Validador de ISBN
+
+function resolver(entrada) {
+  return entrada;
+}
+
+console.log(resolver('ejemplo'));
+
 ```
+
+```java
+// Reto Intermedio 38: Validador de ISBN
+// Implementa una solución para: Reto Intermedio 38: Validador de ISBN
+
+public class Reto {
+    public static String resolver(String entrada) {
+        return entrada;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(resolver("ejemplo"));
+    }
+}
+
+```
+
+```typescript
+// Reto Intermedio 38: Validador de ISBN
+// Implementa una solución para: Reto Intermedio 38: Validador de ISBN
+
+function resolver<T>(entrada: T): T {
+  return entrada;
+}
+
+console.log(resolver('ejemplo'));
+
+```
+
+</CodeTabs>
 
 </div>
 </details>

@@ -1,27 +1,27 @@
 ---
 draft: false
 title: "🏆 RETO: Reto Inicial 19: Descuento Simple"
-description: "Aplica un porcentaje de descuento a un precio."
-pubDate: "2026-03-02"
-tags: ["python", "retos", "iniciaci\u00f3n", "guia-plus"]
-slug: "guia-plus-reto-inicial-19-descuento-simple"
-image: "img/guia_plus_reto_inicial_19_descuento_simple_cover-1200.webp"
+description: "Aplica un descuento porcentual a un precio y devuelve el precio final. Similar al cálculo de IVA pero restando en vez de sumar."
+pubDate: "2026-06-28"
+tags: ["retos", "iniciaci\u00f3n", "multilenguaje"]
+slug: "reto-inicial-19-descuento-simple"
+image: "img/reto-inicial-19-descuento-simple_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 difficulty: "Iniciación"
+languages: ["python", "javascript", "java", "typescript"]
 ---
 
 import Challenge from '@components/Challenge.astro';
+import CodeTabs from '@components/CodeTabs.svelte';
 
 # 🎯 Desafío: Reto Inicial 19: Descuento Simple
 
 ### 📝 Descripción del Reto
-Aplica un porcentaje de descuento a un precio.
-
-*Este problema requiere que diseñes e implementes una solución completa. Analiza cuidadosamente los requisitos, considera los casos límite y asegúrate de que tu código sea robusto y siga las mejores prácticas del lenguaje. La habilidad de transformar enunciados en código funcional es fundamental en el desarrollo de software profesional.*
+Aplica un descuento porcentual a un precio y devuelve el precio final. Similar al cálculo de IVA pero restando en vez de sumar.
 
 <Challenge 
   nivel="Iniciación" 
-  mision="Aplica un porcentaje de descuento a un precio." 
+  mision="Aplica un descuento porcentual a un precio y devuelve el precio final. Similar al cálculo de IVA pero restando en vez..." 
 />
 
 ---
@@ -30,7 +30,10 @@ Aplica un porcentaje de descuento a un precio.
 
 | Entrada | Salida esperada |
 |---------|-----------------|
-| `ejemplo` | `resultado` |
+| `100, 15` | `85` |
+| `200, 50` | `100` |
+| `80, 0` | `80` |
+| `50, 100` | `0` |
 
 ---
 
@@ -41,42 +44,68 @@ Aplica un porcentaje de descuento a un precio.
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-Precio * (1 - descuento / 100).
+**Análisis del problema:** Descuento = precio × (porcentaje / 100). Precio final = precio - descuento. **Ejemplo concreto:** precio=100, descuento=15% → final = 100 - 15 = 85. **Edge cases:** descuento 0%, descuento 100%, precio negativo.
 
-**Para profundizar en el análisis:**
-- Identifica el propósito central del algoritmo
-- Prueba con un ejemplo concreto paso a paso
-- Enumera los edge cases: valores vacíos, nulos, extremos, inesperados
-- Determina la estrategia óptima antes de escribir código
-
-### ⚙️ Paso 2: Implementación en Python
-Operación matemática simple.
-
-**Para enriquecer la implementación:**
-- Valida las entradas al inicio de la función
-- Elige estructuras de datos que maximicen eficiencia y legibilidad
-- Separa la lógica en pasos claros y comenta las partes no obvias
-- Incluye un ejemplo de uso al final para verificar el funcionamiento
+### ⚙️ Paso 2: Implementación
+**Implementación:** Una línea: `precio * (1 - descuento / 100)`. Importante: validar que el descuento esté entre 0 y 100.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-**Complejidad temporal:** O(n)  
-**Complejidad espacial:** O(n)  
+**Complejidad temporal:** O(1)  
+**Complejidad espacial:** O(1)  
 
-O(1).
+**Complejidad:** O(1). **Aplicaciones:** e-commerce, sistemas de promociones, liquidación de inventario.
 
-**Para un análisis más completo:**
-- Calcula la complejidad temporal considerando el peor, mejor y caso promedio
-- Evalúa si el consumo de memoria se puede reducir
-- Propone variantes: ¿y si la entrada fuera 10x más grande? ¿y si hubiera que procesarla en streaming?
-- Menciona aplicaciones reales donde este patrón de solución es relevante
+### 💻 Código de la Solución
 
-### 💻 Código de la Solución (Python)
+<CodeTabs client:load>
 
 ```python
 def sol(p, d): return p * (1 - d/100)
 print(sol(100, 10))
 ```
+
+```javascript
+// Reto Inicial 19: Descuento Simple
+// Implementa una solución para: Reto Inicial 19: Descuento Simple
+
+function resolver(entrada) {
+  return entrada;
+}
+
+console.log(resolver('ejemplo'));
+
+```
+
+```java
+// Reto Inicial 19: Descuento Simple
+// Implementa una solución para: Reto Inicial 19: Descuento Simple
+
+public class Reto {
+    public static String resolver(String entrada) {
+        return entrada;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(resolver("ejemplo"));
+    }
+}
+
+```
+
+```typescript
+// Reto Inicial 19: Descuento Simple
+// Implementa una solución para: Reto Inicial 19: Descuento Simple
+
+function resolver<T>(entrada: T): T {
+  return entrada;
+}
+
+console.log(resolver('ejemplo'));
+
+```
+
+</CodeTabs>
 
 </div>
 </details>

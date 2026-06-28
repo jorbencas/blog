@@ -1,16 +1,18 @@
 ---
 draft: false
 title: "🏆 RETO: Reto Inicial 06: Par o Impar"
-description: "Comprueba si un número es par."
-pubDate: "2026-03-22"
-tags: ["python", "retos", "iniciaci\u00f3n", "guia-plus"]
-slug: "guia-plus-reto-inicial-06-par-o-impar"
-image: "img/guia_plus_reto_inicial_06_par_o_impar_cover-1200.webp"
+description: "Determina si un número entero es par o impar. Un número par es aquel que puede dividirse exactamente entre 2 (resto 0), mientras que un número impar deja resto..."
+pubDate: "2026-06-28"
+tags: ["retos", "iniciaci\u00f3n", "multilenguaje"]
+slug: "reto-inicial-06-par-o-impar"
+image: "img/reto-inicial-06-par-o-impar_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 difficulty: "Iniciación"
+languages: ["python", "javascript", "java", "typescript"]
 ---
 
 import Challenge from '@components/Challenge.astro';
+import CodeTabs from '@components/CodeTabs.svelte';
 
 # 🎯 Desafío: Reto Inicial 06: Par o Impar
 
@@ -19,7 +21,7 @@ Determina si un número entero es par o impar. Un número par es aquel que puede
 
 <Challenge 
   nivel="Iniciación" 
-  mision="Comprueba si un número es par." 
+  mision="Determina si un número entero es par o impar. Un número par es aquel que puede dividirse exactamente entre 2 (resto 0)..." 
 />
 
 ---
@@ -28,11 +30,11 @@ Determina si un número entero es par o impar. Un número par es aquel que puede
 
 | Entrada | Salida esperada |
 |---------|-----------------|
-| `4` | `Par` |
-| `7` | `Impar` |
-| `0` | `Par` |
-| `-12` | `Par` |
-| `1` | `Impar` |
+| ``````````4`````````` | ``````````Par`````````` |
+| ``````````7`````````` | ``````````Impar`````````` |
+| ``````````0`````````` | ``````````Par`````````` |
+| ``````````-12`````````` | ``````````Par`````````` |
+| ``````````1`````````` | ``````````Impar`````````` |
 
 ---
 
@@ -45,7 +47,8 @@ Determina si un número entero es par o impar. Un número par es aquel que puede
 ### 🏗️ Paso 1: Análisis de la lógica
 **Análisis del problema:** La paridad de un número se determina únicamente por su resto al dividir entre 2. Si el resto es 0, es par; si es 1, es impar. **Ejemplo concreto:** 4 ÷ 2 = 2 con resto 0 → Par. 7 ÷ 2 = 3 con resto 1 → Impar. **Edge cases:** números negativos (el módulo en la mayoría de lenguajes preserva la paridad correctamente), número 0 (es par, resto 0), números grandes (no hay problema, solo una operación). **Consideraciones:** En algunos lenguajes como JavaScript, el operador `%` con números negativos puede dar resultados distintos según el signo, pero para determinar paridad siempre funciona correctamente porque nos interesa solo el resto absoluto.
 
-### ⚙️ Paso 2: Implementación en Python
+### ⚙️ Paso 2: Implementación
+Implementación
 **Implementación:** La solución es directa: usamos el operador módulo `%` que devuelve el resto de la división. `n % 2 == 0` significa que n es divisible exactamente entre 2, luego es par. En caso contrario, impar. En Python y otros lenguajes, podemos usar un ternario para hacerlo en una línea: `return 'Par' if n % 2 == 0 else 'Impar'`. **Variante bitwise:** Una alternativa más eficiente (aunque marginal) es usar el operador AND bit a bit: `n & 1`. Si el resultado es 0, el último bit es 0 → número par. Esto funciona porque en binario, los números pares siempre terminan en bit 0. Este truco es común en programación de sistemas y embedded donde cada operación cuenta.
 
 ### 🚀 Paso 3: Complejidad y Optimización
@@ -53,9 +56,56 @@ Determina si un número entero es par o impar. Un número par es aquel que puede
 **Complejidad temporal:** O(1)  
 **Complejidad espacial:** O(1)  
 
+Complejidad y Optimización
+
+
+
+
+Complejidad y Optimización
+
+
+
+
+Complejidad y Optimización
+
+
+
+
+Complejidad y Optimización
+
+
+
+
+Complejidad y Optimización
+
+
+
+
+Complejidad y Optimización
+
+
+
+
+Complejidad y Optimización
+
+
+
+
+Complejidad y Optimización
+
+
+
+
+Complejidad y Optimización
+
+
+
+
 **Complejidad:** O(1) tanto en tiempo como en espacio — es una operación aritmética simple que el hardware ejecuta en un ciclo de CPU. **Variantes:** 1) Determinar si un número es múltiplo de otro (n % k == 0). 2) Alternar colores/turnos en un bucle usando un contador de paridad (útil en juegos y UI). 3) Filtrado de números pares/impares de un array con filtros funcionales. **Aplicaciones reales:** sistemas de turnos en videojuegos, generación de patrones checkerboard, procesamiento de señales, validación de datos en formularios (como números de teléfono o identificaciones que siguen reglas de paridad).
 
-### 💻 Código de la Solución (Python)
+### 💻 Código de la Solución
+
+<CodeTabs client:load>
 
 ```python
 def par_o_impar(n):
@@ -65,6 +115,26 @@ print(par_o_impar(4))   # Par
 print(par_o_impar(7))   # Impar
 print(par_o_impar(-12)) # Par
 ```
+
+```javascript
+const parOImpar = n => n % 2 === 0 ? 'Par' : 'Impar';
+console.log(parOImpar(4));  // Par
+console.log(parOImpar(7));  // Impar
+```
+
+```java
+public class ParOImpar {
+    public static String check(int n) { return n % 2 == 0 ? "Par" : "Impar"; }
+    public static void main(String[] a) { System.out.println(check(4)); }
+}
+```
+
+```typescript
+const parOImpar = (n: number): string => n % 2 === 0 ? 'Par' : 'Impar';
+console.log(parOImpar(4)); // Par
+```
+
+</CodeTabs>
 
 </div>
 </details>

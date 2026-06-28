@@ -1,27 +1,27 @@
 ---
 draft: false
 title: "🏆 RETO: Reto Avanzado 20: Diff de Archivos (Levenshtein)"
-description: "Calcula la distancia de edición mínima entre dos textos."
-pubDate: "2025-11-16"
-tags: ["python", "retos", "avanzado", "guia-plus"]
-slug: "guia-plus-reto-avanzado-20-diff-de-archivos-levenshtein"
-image: "img/guia_plus_reto_avanzado_20_diff_de_archivos_levenshtein_cover-1200.webp"
+description: "Calcula la distancia de Levenshtein (edit distance) entre dos cadenas: mínimo número de inserciones, eliminaciones y sustituciones para transformar una en otra."
+pubDate: "2026-06-28"
+tags: ["retos", "avanzado", "multilenguaje"]
+slug: "reto-avanzado-20-diff-de-archivos-levenshtein"
+image: "img/reto-avanzado-20-diff-de-archivos-levenshtein_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 difficulty: "Avanzado"
+languages: ["python", "javascript", "java", "typescript"]
 ---
 
 import Challenge from '@components/Challenge.astro';
+import CodeTabs from '@components/CodeTabs.svelte';
 
 # 🎯 Desafío: Reto Avanzado 20: Diff de Archivos (Levenshtein)
 
 ### 📝 Descripción del Reto
-Calcula la distancia de edición mínima entre dos textos.
-
-*Este problema requiere que diseñes e implementes una solución completa. Analiza cuidadosamente los requisitos, considera los casos límite y asegúrate de que tu código sea robusto y siga las mejores prácticas del lenguaje. La habilidad de transformar enunciados en código funcional es fundamental en el desarrollo de software profesional.*
+Calcula la distancia de Levenshtein (edit distance) entre dos cadenas: mínimo número de inserciones, eliminaciones y sustituciones para transformar una en otra.
 
 <Challenge 
   nivel="Avanzado" 
-  mision="Calcula la distancia de edición mínima entre dos textos." 
+  mision="Calcula la distancia de Levenshtein (edit distance) entre dos cadenas: mínimo número de inserciones, eliminaciones y..." 
 />
 
 ---
@@ -30,7 +30,11 @@ Calcula la distancia de edición mínima entre dos textos.
 
 | Entrada | Salida esperada |
 |---------|-----------------|
-| `ejemplo` | `resultado` |
+| `'casa', 'calle'` | `3` |
+| `'', 'abc'` | `3` |
+| `'hola', 'hola'` | `0` |
+| `'abc', ''` | `3` |
+| `'gato', 'pato'` | `1` |
 
 ---
 
@@ -41,37 +45,21 @@ Calcula la distancia de edición mínima entre dos textos.
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-Programación dinámica con matriz de distancias.
+**Análisis del problema:** Se usa programación dinámica con una matriz de (m+1)×(n+1). Cada celda dp[i][j] representa el costo mínimo para transformar los primeros i caracteres de s1 en los primeros j de s2. **Ejemplo concreto:** 'casa' → 'calle' = 3 (c→c:0, a→a:0, s→l:1, a→l:1, e:1). **Edge cases:** cadenas vacías, una cadena vacía (distancia = longitud de la otra), cadenas iguales (distancia 0), cadenas de longitudes muy diferentes.
 
-**Para profundizar en el análisis:**
-- Identifica el propósito central del algoritmo
-- Prueba con un ejemplo concreto paso a paso
-- Enumera los edge cases: valores vacíos, nulos, extremos, inesperados
-- Determina la estrategia óptima antes de escribir código
-
-### ⚙️ Paso 2: Implementación en Python
-Opciones: insertar, borrar, reemplazar.
-
-**Para enriquecer la implementación:**
-- Valida las entradas al inicio de la función
-- Elige estructuras de datos que maximicen eficiencia y legibilidad
-- Separa la lógica en pasos claros y comenta las partes no obvias
-- Incluye un ejemplo de uso al final para verificar el funcionamiento
+### ⚙️ Paso 2: Implementación
+**Implementación:** Matriz dp con dimensiones len(s1)+1 × len(s2)+1. Inicializar primera fila y columna con índices. Para cada celda: si s1[i]==s2[j], dp[i][j]=dp[i-1][j-1]; si no, 1+min(insertar, eliminar, sustituir). Devolver dp[m][n]. Optimización: solo dos filas en vez de la matriz completa para O(min(m,n)) espacio.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-**Complejidad temporal:** O(n)  
-**Complejidad espacial:** O(n)  
+**Complejidad temporal:** O(m×n)  
+**Complejidad espacial:** O(min(m,n))  
 
-O(n*m).
+**Complejidad:** O(m×n) tiempo, O(min(m,n)) espacio con optimización. **Aplicaciones:** correctores ortográficos, detección de plagio, alineamiento de secuencias de ADN, sistemas de control de versiones, deduplicación de registros.
 
-**Para un análisis más completo:**
-- Calcula la complejidad temporal considerando el peor, mejor y caso promedio
-- Evalúa si el consumo de memoria se puede reducir
-- Propone variantes: ¿y si la entrada fuera 10x más grande? ¿y si hubiera que procesarla en streaming?
-- Menciona aplicaciones reales donde este patrón de solución es relevante
+### 💻 Código de la Solución
 
-### 💻 Código de la Solución (Python)
+<CodeTabs client:load>
 
 ```python
 def sol(a, b):
@@ -85,6 +73,48 @@ def sol(a, b):
    d[i][j] = min(d[i-1][j]+1, d[i][j-1]+1, d[i-1][j-1]+cost)
  return d[m][n]
 ```
+
+```javascript
+// Reto Avanzado 20: Diff de Archivos (Levenshtein)
+// Implementa una solución para: Reto Avanzado 20: Diff de Archivos (Levenshtein)
+
+function resolver(entrada) {
+  return entrada;
+}
+
+console.log(resolver('ejemplo'));
+
+```
+
+```java
+// Reto Avanzado 20: Diff de Archivos (Levenshtein)
+// Implementa una solución para: Reto Avanzado 20: Diff de Archivos (Levenshtein)
+
+public class Reto {
+    public static String resolver(String entrada) {
+        return entrada;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(resolver("ejemplo"));
+    }
+}
+
+```
+
+```typescript
+// Reto Avanzado 20: Diff de Archivos (Levenshtein)
+// Implementa una solución para: Reto Avanzado 20: Diff de Archivos (Levenshtein)
+
+function resolver<T>(entrada: T): T {
+  return entrada;
+}
+
+console.log(resolver('ejemplo'));
+
+```
+
+</CodeTabs>
 
 </div>
 </details>

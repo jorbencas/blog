@@ -54,6 +54,7 @@ const autoChallenges = defineCollection({
     image: z.string().optional(),
     author: z.string().default("Jorge Beneyto Castelló"),
     difficulty: z.string().optional(),
+    languages: z.array(z.string()).optional(),
   }),
 });
 

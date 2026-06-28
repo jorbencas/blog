@@ -29,7 +29,7 @@ class TestRetoMdTemplate:
             "{descripcion_ia}", "{tabla_casos}",
             "{paso_1}", "{paso_2}", "{paso_3}",
             "{big_o_time}", "{big_o_space}",
-            "{lenguaje_lower}", "{lenguaje_display}", "{codigo_solucion}",
+            "{python_code}", "{javascript_code}", "{java_code}", "{typescript_code}",
         ]
         for placeholder in required:
             assert placeholder in RETO_MD_TEMPLATE, f"Missing placeholder: {placeholder}"

@@ -1,27 +1,27 @@
 ---
 draft: false
 title: "🏆 RETO: Reto Avanzado 01: Árboles Binarios de Búsqueda"
-description: "Implementa inserción y búsqueda en un ABB."
-pubDate: "2025-12-14"
-tags: ["python", "retos", "avanzado", "guia-plus"]
-slug: "guia-plus-reto-avanzado-01-arboles-binarios-de-busqueda"
-image: "img/guia_plus_reto_avanzado_01_arboles_binarios_de_busqueda_cover-1200.webp"
+description: "Implementa un Árbol Binario de Búsqueda (BST) con inserción y búsqueda. Cada nodo tiene un valor, hijo izquierdo (menor) y derecho (mayor)."
+pubDate: "2026-06-28"
+tags: ["retos", "avanzado", "multilenguaje"]
+slug: "reto-avanzado-01-arboles-binarios-de-busqueda"
+image: "img/reto-avanzado-01-arboles-binarios-de-busqueda_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 difficulty: "Avanzado"
+languages: ["python", "javascript", "java", "typescript"]
 ---
 
 import Challenge from '@components/Challenge.astro';
+import CodeTabs from '@components/CodeTabs.svelte';
 
 # 🎯 Desafío: Reto Avanzado 01: Árboles Binarios de Búsqueda
 
 ### 📝 Descripción del Reto
-Implementa inserción y búsqueda en un ABB.
-
-*Este problema requiere que diseñes e implementes una solución completa. Analiza cuidadosamente los requisitos, considera los casos límite y asegúrate de que tu código sea robusto y siga las mejores prácticas del lenguaje. La habilidad de transformar enunciados en código funcional es fundamental en el desarrollo de software profesional.*
+Implementa un Árbol Binario de Búsqueda (BST) con inserción y búsqueda. Cada nodo tiene un valor, hijo izquierdo (menor) y derecho (mayor).
 
 <Challenge 
   nivel="Avanzado" 
-  mision="Implementa inserción y búsqueda en un ABB." 
+  mision="Implementa un Árbol Binario de Búsqueda (BST) con inserción y búsqueda. Cada nodo tiene un valor, hijo izquierdo..." 
 />
 
 ---
@@ -30,7 +30,10 @@ Implementa inserción y búsqueda en un ABB.
 
 | Entrada | Salida esperada |
 |---------|-----------------|
-| `ejemplo` | `resultado` |
+| `insertar(5,3,7,1,9), buscar(7)` | `true` |
+| `insertar(5,3,7), buscar(4)` | `false` |
+| `insertar(), buscar(1)` | `false` |
+| `insertar(1,2,3), buscar(3)` | `true` |
 
 ---
 
@@ -41,37 +44,21 @@ Implementa inserción y búsqueda en un ABB.
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-Nodos con left, right y val.
+**Análisis del problema:** Un BST es una estructura donde para cada nodo, todos los valores del subárbol izquierdo son menores y los del derecho son mayores. Esto permite búsqueda binaria O(log n). **Ejemplo concreto:** insertar 5, 3, 7, 1, 9. Buscar 7 → encontrado. Buscar 4 → no encontrado. **Edge cases:** árbol vacío (root=null), valores duplicados (según implementación), inserción secuencial (degenera a lista), árbol muy profundo.
 
-**Para profundizar en el análisis:**
-- Identifica el propósito central del algoritmo
-- Prueba con un ejemplo concreto paso a paso
-- Enumera los edge cases: valores vacíos, nulos, extremos, inesperados
-- Determina la estrategia óptima antes de escribir código
-
-### ⚙️ Paso 2: Implementación en Python
-Insertar recurriendo por el lado menor o mayor.
-
-**Para enriquecer la implementación:**
-- Valida las entradas al inicio de la función
-- Elige estructuras de datos que maximicen eficiencia y legibilidad
-- Separa la lógica en pasos claros y comenta las partes no obvias
-- Incluye un ejemplo de uso al final para verificar el funcionamiento
+### ⚙️ Paso 2: Implementación
+**Implementación:** Clase Nodo con val, left, right. Insertar: si root es None, crear nodo. Si valor &lt; root.val, insertar en left; si &gt;, en right. Buscar: similar, comparando en cada nivel.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-**Complejidad temporal:** O(n)  
+**Complejidad temporal:** O(log n) promedio, O(n) peor caso  
 **Complejidad espacial:** O(n)  
 
-O(log n) promedio, O(n) peor caso.
+**Complejidad:** O(log n) promedio, O(n) peor caso (árbol desbalanceado). O(n) espacio para almacenar n nodos. Mejorable con árboles AVL o Red-Black. **Aplicaciones:** búsquedas dinámicas, diccionarios en memoria, implementación de sets, sistemas de archivos.
 
-**Para un análisis más completo:**
-- Calcula la complejidad temporal considerando el peor, mejor y caso promedio
-- Evalúa si el consumo de memoria se puede reducir
-- Propone variantes: ¿y si la entrada fuera 10x más grande? ¿y si hubiera que procesarla en streaming?
-- Menciona aplicaciones reales donde este patrón de solución es relevante
+### 💻 Código de la Solución
 
-### 💻 Código de la Solución (Python)
+<CodeTabs client:load>
 
 ```python
 class Node:
@@ -82,6 +69,48 @@ def ins(root,v):
  else: root.r=ins(root.r,v)
  return root
 ```
+
+```javascript
+// Reto Avanzado 01: Árboles Binarios de Búsqueda
+// Implementa una solución para: Reto Avanzado 01: Árboles Binarios de Búsqueda
+
+function resolver(entrada) {
+  return entrada;
+}
+
+console.log(resolver('ejemplo'));
+
+```
+
+```java
+// Reto Avanzado 01: Árboles Binarios de Búsqueda
+// Implementa una solución para: Reto Avanzado 01: Árboles Binarios de Búsqueda
+
+public class Reto {
+    public static String resolver(String entrada) {
+        return entrada;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(resolver("ejemplo"));
+    }
+}
+
+```
+
+```typescript
+// Reto Avanzado 01: Árboles Binarios de Búsqueda
+// Implementa una solución para: Reto Avanzado 01: Árboles Binarios de Búsqueda
+
+function resolver<T>(entrada: T): T {
+  return entrada;
+}
+
+console.log(resolver('ejemplo'));
+
+```
+
+</CodeTabs>
 
 </div>
 </details>

@@ -26,9 +26,11 @@ slug: "{slug_name}"
 image: "{ruta_imagen}"
 author: "Jorge Beneyto Castelló"
 difficulty: "{dificultad}"
+languages: ["python", "javascript", "java", "typescript"]
 ---
 
 import Challenge from '@components/Challenge.astro';
+import CodeTabs from '@components/CodeTabs.svelte';
 
 # 🎯 Desafío: {titulo}
 
@@ -59,7 +61,7 @@ import Challenge from '@components/Challenge.astro';
 ### 🏗️ Paso 1: Análisis de la lógica
 {paso_1}
 
-### ⚙️ Paso 2: Implementación en {lenguaje_display}
+### ⚙️ Paso 2: Implementación
 {paso_2}
 
 ### 🚀 Paso 3: Complejidad y Optimización
@@ -69,11 +71,27 @@ import Challenge from '@components/Challenge.astro';
 
 {paso_3}
 
-### 💻 Código de la Solución ({lenguaje_display})
+### 💻 Código de la Solución
 
-```{lenguaje_lower}
-{codigo_solucion}
+<CodeTabs client:load>
+
+```python
+{python_code}
 ```
+
+```javascript
+{javascript_code}
+```
+
+```java
+{java_code}
+```
+
+```typescript
+{typescript_code}
+```
+
+</CodeTabs>
 
 </div>
 </details>

@@ -1,27 +1,27 @@
 ---
 draft: false
 title: "🏆 RETO: Reto Avanzado 11: Simulador de Blockchain"
-description: "Crea una cadena de bloques básica con hashing y prueba de trabajo."
-pubDate: "2025-11-29"
-tags: ["python", "retos", "avanzado", "guia-plus"]
-slug: "guia-plus-reto-avanzado-11-simulador-de-blockchain"
-image: "img/guia_plus_reto_avanzado_11_simulador_de_blockchain_cover-1200.webp"
+description: "Implementa una cadena de bloques simple con validación de integridad mediante hashes SHA-256 y prueba de trabajo (proof of work)."
+pubDate: "2026-06-28"
+tags: ["retos", "avanzado", "multilenguaje"]
+slug: "reto-avanzado-11-simulador-de-blockchain"
+image: "img/reto-avanzado-11-simulador-de-blockchain_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 difficulty: "Avanzado"
+languages: ["python", "javascript", "java", "typescript"]
 ---
 
 import Challenge from '@components/Challenge.astro';
+import CodeTabs from '@components/CodeTabs.svelte';
 
 # 🎯 Desafío: Reto Avanzado 11: Simulador de Blockchain
 
 ### 📝 Descripción del Reto
-Crea una cadena de bloques básica con hashing y prueba de trabajo.
-
-*Este problema requiere que diseñes e implementes una solución completa. Analiza cuidadosamente los requisitos, considera los casos límite y asegúrate de que tu código sea robusto y siga las mejores prácticas del lenguaje. La habilidad de transformar enunciados en código funcional es fundamental en el desarrollo de software profesional.*
+Implementa una cadena de bloques simple con validación de integridad mediante hashes SHA-256 y prueba de trabajo (proof of work).
 
 <Challenge 
   nivel="Avanzado" 
-  mision="Crea una cadena de bloques básica con hashing y prueba de trabajo." 
+  mision="Implementa una cadena de bloques simple con validación de integridad mediante hashes SHA-256 y prueba de trabajo (proof..." 
 />
 
 ---
@@ -30,7 +30,9 @@ Crea una cadena de bloques básica con hashing y prueba de trabajo.
 
 | Entrada | Salida esperada |
 |---------|-----------------|
-| `ejemplo` | `resultado` |
+| `crearCadena(), addBloque('tx1')` | `valida` |
+| `crearCadena(), modificarBloque(0)` | `invalida` |
+| `addBloque(''), addBloque('abc')` | `2 bloques` |
 
 ---
 
@@ -41,37 +43,21 @@ Crea una cadena de bloques básica con hashing y prueba de trabajo.
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-Cada bloque contiene hash del anterior y un nonce.
+**Análisis del problema:** Cada bloque contiene datos, su propio hash, el hash del bloque anterior, y un nonce (para proof of work). La cadena es válida si cada bloque apunta al hash correcto del anterior. **Ejemplo concreto:** Bloque 1: 'genesis', hash=abc... → Bloque 2: 'tx1', prev=abc..., hash=def... Si alguien modifica el bloque 1, su hash cambia y el bloque 2 queda inválido. **Edge cases:** cadena vacía (solo bloque genesis), bloque con datos vacíos, nonce que nunca encuentra solución, hash collisions.
 
-**Para profundizar en el análisis:**
-- Identifica el propósito central del algoritmo
-- Prueba con un ejemplo concreto paso a paso
-- Enumera los edge cases: valores vacíos, nulos, extremos, inesperados
-- Determina la estrategia óptima antes de escribir código
-
-### ⚙️ Paso 2: Implementación en Python
-Calcular SHA256 hasta cumplir dificultad.
-
-**Para enriquecer la implementación:**
-- Valida las entradas al inicio de la función
-- Elige estructuras de datos que maximicen eficiencia y legibilidad
-- Separa la lógica en pasos claros y comenta las partes no obvias
-- Incluye un ejemplo de uso al final para verificar el funcionamiento
+### ⚙️ Paso 2: Implementación
+**Implementación:** Clase Bloque con índice, timestamp, datos, prev_hash, nonce, hash. Método mine_block(dificultad) que incrementa nonce hasta que el hash empiece por 'difficulty' ceros. Clase Blockchain con lista de bloques y método is_chain_valid.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-**Complejidad temporal:** O(n)  
+**Complejidad temporal:** O(1) inserción, O(n) verificación  
 **Complejidad espacial:** O(n)  
 
-O(2^dificultad).
+**Complejidad:** Inserción/propagación de bloques: O(1). Verificación de cadena: O(n). Minería (proof of work): exponencial en la dificultad — O(16^difficulty). **Aplicaciones:** criptomonedas, certificación de documentos, registros inmutables, trazabilidad en supply chain.
 
-**Para un análisis más completo:**
-- Calcula la complejidad temporal considerando el peor, mejor y caso promedio
-- Evalúa si el consumo de memoria se puede reducir
-- Propone variantes: ¿y si la entrada fuera 10x más grande? ¿y si hubiera que procesarla en streaming?
-- Menciona aplicaciones reales donde este patrón de solución es relevante
+### 💻 Código de la Solución
 
-### 💻 Código de la Solución (Python)
+<CodeTabs client:load>
 
 ```python
 import hashlib
@@ -80,6 +66,48 @@ def mine(b, d):
  while not hash_b(b).startswith('0'*d): b['nonce']+=1
  return b
 ```
+
+```javascript
+// Reto Avanzado 11: Simulador de Blockchain
+// Implementa una solución para: Reto Avanzado 11: Simulador de Blockchain
+
+function resolver(entrada) {
+  return entrada;
+}
+
+console.log(resolver('ejemplo'));
+
+```
+
+```java
+// Reto Avanzado 11: Simulador de Blockchain
+// Implementa una solución para: Reto Avanzado 11: Simulador de Blockchain
+
+public class Reto {
+    public static String resolver(String entrada) {
+        return entrada;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(resolver("ejemplo"));
+    }
+}
+
+```
+
+```typescript
+// Reto Avanzado 11: Simulador de Blockchain
+// Implementa una solución para: Reto Avanzado 11: Simulador de Blockchain
+
+function resolver<T>(entrada: T): T {
+  return entrada;
+}
+
+console.log(resolver('ejemplo'));
+
+```
+
+</CodeTabs>
 
 </div>
 </details>

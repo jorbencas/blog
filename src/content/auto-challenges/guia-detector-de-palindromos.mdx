@@ -1,25 +1,27 @@
 ---
 draft: false
 title: "🏆 RETO: Detector de Palíndromos"
-description: "Resuelve el siguiente reto de programación: **Detector de Palíndromos**."
-pubDate: "2026-02-12"
-tags: ["rust", "retos", "iniciaci\u00f3n", "guia-plus"]
-slug: "guia-detector-de-palindromos"
-image: "img/guia_detector_de_palindromos_cover-1200.webp"
+description: "Comprueba si una palabra o frase es un palíndromo: que se lee igual de izquierda a derecha que de derecha a izquierda, ignorando espacios, signos de puntuación..."
+pubDate: "2026-06-28"
+tags: ["retos", "iniciaci\u00f3n", "multilenguaje"]
+slug: "reto-detector-de-palindromos"
+image: "img/reto-detector-de-palindromos_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 difficulty: "Iniciación"
+languages: ["python", "javascript", "java", "typescript"]
 ---
 
 import Challenge from '@components/Challenge.astro';
+import CodeTabs from '@components/CodeTabs.svelte';
 
 # 🎯 Desafío: Detector de Palíndromos
 
 ### 📝 Descripción del Reto
-Comprueba si una palabra o frase es un palíndromo: que se lee igual de izquierda a derecha que de derecha a izquierda, ignorando espacios, signos de puntuación y diferencias entre mayúsculas y minúsculas. Ejemplos clásicos: "Ana" (true), "A man, a plan, a canal: Panama" (true), "hola" (false). Este ejercicio es fundamental para practicar normalización de texto, expresiones regulares y manipulación de cadenas — habilidades esenciales en procesamiento de lenguaje natural y validación de datos textuales.
+Comprueba si una palabra o frase es un palíndromo: que se lee igual de izquierda a derecha que de derecha a izquierda, ignorando espacios, signos de puntuación y diferencias entre mayúsculas y minúsculas. Ejemplos clásicos: &quot;Ana&quot; (true), &quot;A man, a plan, a canal: Panama&quot; (true), &quot;hola&quot; (false). Este ejercicio es fundamental para practicar normalización de texto, expresiones regulares y manipulación de cadenas — habilidades esenciales en procesamiento de lenguaje natural y validación de datos textuales.
 
 <Challenge 
   nivel="Iniciación" 
-  mision="Resuelve el siguiente reto de programación: **Detector de Palíndromos**." 
+  mision="Comprueba si una palabra o frase es un palíndromo: que se lee igual de izquierda a derecha que de derecha a izquierda..." 
 />
 
 ---
@@ -28,11 +30,11 @@ Comprueba si una palabra o frase es un palíndromo: que se lee igual de izquierd
 
 | Entrada | Salida esperada |
 |---------|-----------------|
-| `Ana` | `true` |
-| `hola` | `false` |
-| `A man a plan a canal Panama` | `true` |
-| `` | `true` |
-| `a1a` | `true` |
+| ``````````Ana`````````` | ``````````true`````````` |
+| ``````````hola`````````` | ``````````false`````````` |
+| ``````````A man a plan a canal Panama`````````` | ``````````true`````````` |
+| ```````````````````` | ``````````true`````````` |
+| ``````````a1a`````````` | ``````````true`````````` |
 
 ---
 
@@ -43,9 +45,10 @@ Comprueba si una palabra o frase es un palíndromo: que se lee igual de izquierd
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-**Análisis del problema:** Un palíndromo se define por su simetría. La clave está en qué comparamos y cómo normalizamos. **Ejemplo concreto:** "A man, a plan, a canal: Panama" → normalizado: "amanaplanacanalpanama" → inverso: "amanaplanacanalpanama" → son iguales → true. **Edge cases:** cadena vacía (es palíndromo por definición), un solo carácter (siempre true), frases con solo símbolos ("!?," vacío = true), frases con números ("a1a" es palíndromo), caracteres acentuados (depende de si se normalizan: "súes" vs "sues"), mayúsculas mixtas ("Ana" debe ser true). **Restricciones importantes:** el método debe ser eficiente para frases largas, manejar Unicode correctamente y no alterar el significado de la comparación.
+**Análisis del problema:** Un palíndromo se define por su simetría. La clave está en qué comparamos y cómo normalizamos. **Ejemplo concreto:** &quot;A man, a plan, a canal: Panama&quot; → normalizado: &quot;amanaplanacanalpanama&quot; → inverso: &quot;amanaplanacanalpanama&quot; → son iguales → true. **Edge cases:** cadena vacía (es palíndromo por definición), un solo carácter (siempre true), frases con solo símbolos (&quot;!?,&quot; vacío = true), frases con números (&quot;a1a&quot; es palíndromo), caracteres acentuados (depende de si se normalizan: &quot;súes&quot; vs &quot;sues&quot;), mayúsculas mixtas (&quot;Ana&quot; debe ser true). **Restricciones importantes:** el método debe ser eficiente para frases largas, manejar Unicode correctamente y no alterar el significado de la comparación.
 
-### ⚙️ Paso 2: Implementación en Rust
+### ⚙️ Paso 2: Implementación
+Implementación
 **Implementación:** 1) Convertir toda la cadena a minúsculas con `s.lower()` para ignorar mayúsculas. 2) Eliminar todo lo que no sea alfanumérico (espacios, puntuación, símbolos) usando una expresión regular: `re.sub(r'[^a-z0-9]', '', s)`. 3) Comparar la cadena resultante con su inversa. En Python, `limpio == limpio[::-1]`. **Versión optimizada (two pointers):** en vez de crear una copia inversa (O(n) espacio extra), podemos usar dos punteros (uno al inicio, otro al final) que avanzan hacia el centro comparando caracteres, saltando no-alfanuméricos. Esta versión usa O(1) espacio adicional. Es más compleja de implementar pero más eficiente para frases muy largas y es la solución esperada en entrevistas técnicas de nivel medio.
 
 ### 🚀 Paso 3: Complejidad y Optimización
@@ -53,17 +56,96 @@ Comprueba si una palabra o frase es un palíndromo: que se lee igual de izquierd
 **Complejidad temporal:** O(n)  
 **Complejidad espacial:** O(n) (O(1) con two pointers)  
 
+Complejidad y Optimización
+
+
+
+
+Complejidad y Optimización
+
+
+
+
+Complejidad y Optimización
+
+
+
+
+Complejidad y Optimización
+
+
+
+
+Complejidad y Optimización
+
+
+
+
+Complejidad y Optimización
+
+
+
+
+Complejidad y Optimización
+
+
+
+
+Complejidad y Optimización
+
+
+
+
+Complejidad y Optimización
+
+
+
+
 **Complejidad:** O(n) tiempo en ambos enfoques. O(n) espacio en la versión con inversión de cadena (por la copia). O(1) espacio en la versión two pointers. **Variantes:** 1) Detectar el palíndromo más largo dentro de una cadena (problema clásico de entrevista). 2) Verificar si un número entero es palíndromo (sin convertirlo a string). 3) Palíndromos en listas/arrays. 4) Palíndromos permisivos con hasta k eliminaciones de caracteres. **Aplicaciones reales:** procesamiento de ADN (secuencias palindrómicas son relevantes en genética), validación de datos simétricos, compresión de datos, análisis literario y de texto, algoritmos de búsqueda de patrones en bioinformática.
 
-### 💻 Código de la Solución (Rust)
+### 💻 Código de la Solución
 
-```rust
-fn es_palindromo(s: &str) -> bool {
-    let l: String = s.to_lowercase().chars().filter(|c| c.is_alphanumeric()).collect();
-    l == l.chars().rev().collect::<String>()
-}
-fn main() { println!("{}", es_palindromo("Ana")); }
+<CodeTabs client:load>
+
+```python
+import re
+
+def es_palindromo(s):
+    limpio = re.sub(r'[^a-z0-9]', '', s.lower())
+    return limpio == limpio[::-1]
+
+print(es_palindromo('Ana'))          # True
+print(es_palindromo('A man a plan a canal Panama'))  # True
+print(es_palindromo('hola'))         # False
 ```
+
+```javascript
+function esPalindromo(s) {
+  const limpio = s.toLowerCase().replace(/[^a-z0-9]/g, '');
+  return limpio === limpio.split('').reverse().join('');
+}
+console.log(esPalindromo('Ana'));  // true
+```
+
+```java
+public class Palindromo {
+    public static boolean check(String s) {
+        String l = s.toLowerCase().replaceAll("[^a-z0-9]", "");
+        return l.equals(new StringBuilder(l).reverse().toString());
+    }
+    public static void main(String[] a) { System.out.println(check("Ana")); }
+}
+```
+
+```typescript
+function esPalindromo(s: string): boolean {
+  const limpio = s.toLowerCase().replace(/[^a-z0-9]/g, '');
+  return limpio === limpio.split('').reverse().join('');
+}
+console.log(esPalindromo('Ana')); // true
+```
+
+</CodeTabs>
 
 </div>
 </details>
