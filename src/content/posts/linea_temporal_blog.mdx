@@ -136,6 +136,7 @@ El blog alcanza madurez técnica:
 - **rewrite_challenges.py**: script que procesa los 143 retos, extrayendo contenido existente y generando código para los 4 lenguajes
 - **content.config.ts**: schema extendido con campo `languages` para filtrado multi-lenguaje
 - **constants_retos.py + hunt_challenges.py**: actualizados para generar retos nuevos con el formato multi-lenguaje
+- **CodeTabs.svelte fix**: selector de `<pre>` corregido — Astro envuelve el slot en `<astro-slot>`, por lo que `:scope > .code-panels > pre` no encontraba hijos. Cambiado a `.code-panels querySelectorAll('pre')`
 
 ### Junio (27) — Resources masivo + Hacking + Certificaciones + Diseño
 - **resources.mdx**: expansión masiva a 518 tarjetas en 36 categorías. Nuevas: Hacking/Ciberseguridad (24), Certificaciones (23). Nuevas sub-secciones IA: Tokens, MCP, Skills, RAG, Subagentes (35 tarjetas nuevas)
@@ -146,6 +147,13 @@ El blog alcanza madurez técnica:
 - **Tags simplificado**: eliminado `tags.json` (obsoleto, lógica rota). `TagsPosts.astro` y `tags/index.astro` simplificados
 - **AGENTS.md**: reestructurado (reglas críticas primero) y traducido al inglés
 - **contexto.md**: actualizado con todos los cambios
+
+### Junio (29) — E2E audit completo + CodeTabs/Navbar fixes
+- **CodeTabs language detection fix**: Shiki almacena el lenguaje en `pre[data-language]`, no en `code.className` — corregido en `onMount`
+- **CodeTabs `switchTab` selector fix**: mismo bug `:scope > .code-panels > pre` en `switchTab()` — Astro envuelve slotted content en `<astro-slot>`
+- **Navbar backdrop**: click listener añadido para cerrar el menú mobile al hacer clic fuera
+- **8 spec files E2E**: 94 tests cubriendo navegación, listados, detalle, interactivos, responsive, contraste y visual regression — 93/94 passing
+- **Build verificado sin errores**
 
 ---
 

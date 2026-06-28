@@ -20,6 +20,7 @@ const currentPath = pathname.slice(1);
   </label>
 
   <div
+    id="menu-backdrop"
     class="fixed inset-0 z-30 bg-black/40 opacity-0 pointer-events-none peer-checked:opacity-100 peer-checked:pointer-events-auto transition-opacity duration-300 ease-out lg:hidden"
   />
 
@@ -150,5 +151,13 @@ const currentPath = pathname.slice(1);
         toggle.dispatchEvent(new Event("change"));
       }
     });
+
+    const backdrop = document.getElementById("menu-backdrop");
+    if (backdrop) {
+      backdrop.addEventListener("click", () => {
+        toggle.checked = false;
+        toggle.dispatchEvent(new Event("change"));
+      });
+    }
   }
 </script>

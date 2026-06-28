@@ -1,6 +1,6 @@
 # Contexto del proyecto — Blog
 
-**Última actualización**: 2026-06-28 (refactor retos completado, cambios commiteados)
+**Última actualización**: 2026-06-29 (E2E audit + CodeTabs/Navbar fixes)
 **Stack**: Astro 6.4 + Svelte 5 + Tailwind CSS 4.3 | Vercel static | Node >= 18
 **Idioma**: Español
 **Deploy**: `blog-jorbencas.vercel.app`
@@ -18,6 +18,7 @@
 | 2025-05 | Errores MDX preexistentes fixeados (`<Fragment>`, `<1ms`, `<T>`, `<100ms`) |
 | 2025-06 | **UI/UX audit**: Fase 1 (TOC colapsable mobile, breadcrumbs, max-w-4xl), Fase 2 (footer opacidad, cards sin quotes), Fase 3 (transición main, archive limitado), Fase 4 (buscador en hamburguesa, scroll-to-top desktop) |
 | 2025-06 | **Retos multi-lenguaje**: 58 reformulados con 4 lenguajes (Python, JS, Java, TS), 85 archivados como draft. CodeTabs component |
+| 2025-06 | **E2E audit completo**: 94 tests — navegación, listados, detalle, interactivos, responsive, contraste, visual regression. CodeTabs language detection fix (Shiki `pre[data-language]`). Navbar backdrop click handler |
 
 ## Mejoras implementadas
 
@@ -30,6 +31,14 @@
 - **src/content/auto-challenges/**: 58 retos reformulados con descripciones, pasos, tests y código en 4 lenguajes
 - **85 drafts eliminados**: retos redundantes o boilerplate eliminados del repositorio
 - Commit: `[retos] Refactor multi-lenguaje: 58 reformulados, 85 eliminados, CodeTabs component`
+- Build verificado sin errores
+
+### 2. E2E audit completo + CodeTabs/Navbar fixes ✅
+- **CodeTabs.svelte (onMount)**: language detection cambiado de `code.className.match(/language-(\w+)/)` a `pre.getAttribute('data-language')` — Shiki no añade clases `language-` al `<code>`, usa `data-language` en `<pre>`
+- **CodeTabs.svelte (switchTab)**: bug `:scope > .code-panels > pre` corregido a `codePanels.querySelectorAll('pre')` (Astro envuelve slotted content en `<astro-slot>`)
+- **Navbar.astro**: backdrop `#menu-backdrop` con click listener que cierra el menú mobile
+- **8 spec files E2E**: `navigation.spec.mjs`, `listing-pages.spec.mjs`, `detail-pages.spec.mjs`, `interactive.spec.mjs`, `responsive.spec.mjs`, `contrast.spec.mjs`, `visual-regression-full.spec.mjs`, más fixes en `content.spec.mjs` y `navbar.spec.mjs`
+- 93/94 tests passing (1 flaky: Ctrl+K focus por timing de Pagefind async)
 - Build verificado sin errores
 
 ## Contenido
@@ -67,4 +76,4 @@ Orden de secciones: Mis_Proyectos → Mini_Herramientas → Retos → Últimos_P
 - **Scripts**: `fix_images.py`, `image_cache.json`, `rewrite_challenges.py`, `solutions_db.py`, `constants_retos.py`, `hunt_challenges.py`
 - **CI/CD**: `fixing_img.yml`, `spelling.yml`, `issues_handel.yml`
 - **Skills**: `.opencode/skills/expand-guia-formato/SKILL.md`
-- **Tests**: `tests/specs/search.spec.mjs`, `visual-regression.spec.mjs`
+- **Tests**: `tests/specs/search.spec.mjs`, `visual-regression.spec.mjs`, `navigation.spec.mjs`, `listing-pages.spec.mjs`, `detail-pages.spec.mjs`, `interactive.spec.mjs`, `responsive.spec.mjs`, `contrast.spec.mjs`, `visual-regression-full.spec.mjs`

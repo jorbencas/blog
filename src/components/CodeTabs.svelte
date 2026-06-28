@@ -21,16 +21,14 @@
 
   onMount(() => {
     if (!container) return;
-    const preElements = Array.from(container.querySelectorAll(':scope > .code-panels > pre'));
+    const codePanels = container.querySelector('.code-panels');
+    if (!codePanels) return;
+    const preElements = Array.from(codePanels.querySelectorAll('pre'));
     if (preElements.length === 0) return;
 
     tabs = preElements.map((pre, i) => {
-      const codeEl = pre.querySelector('code');
-      let lang = 'Code';
-      if (codeEl) {
-        const match = codeEl.className.match(/language-(\w+)/);
-        if (match) lang = getDisplayName(match[1]);
-      }
+      const rawLang = pre.getAttribute('data-language') || '';
+      let lang = rawLang ? getDisplayName(rawLang) : 'Code';
       if (i !== 0) pre.style.display = 'none';
       return { name: lang };
     });
@@ -40,7 +38,9 @@
   function switchTab(index) {
     if (!container) return;
     activeIndex = index;
-    const preElements = Array.from(container.querySelectorAll(':scope > .code-panels > pre'));
+    const codePanels = container.querySelector('.code-panels');
+    if (!codePanels) return;
+    const preElements = Array.from(codePanels.querySelectorAll('pre'));
     preElements.forEach((pre, i) => {
       pre.style.display = i === index ? '' : 'none';
     });
