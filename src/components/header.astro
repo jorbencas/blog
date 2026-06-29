@@ -50,34 +50,16 @@ import SearchOverlay from "./SearchOverlay.astro";
   </div>
 </header>
 
+<div
+  id="menu-backdrop"
+  class="fixed inset-0 z-30 bg-black/40 opacity-0 pointer-events-none transition-opacity duration-300 ease-out lg:hidden"
+/>
+
 <SearchOverlay />
 
-<script>
-  (function() {
-    const header = document.getElementById("site-header");
-    let lastScrollY = 0;
-    let ticking = false;
-
-    function handleScroll() {
-      const currentScrollY = window.scrollY;
-      if (window.innerWidth < 1024 && currentScrollY > 80) {
-        if (currentScrollY > lastScrollY) {
-          header.style.transform = "translateY(-100%)";
-        } else {
-          header.style.transform = "translateY(0)";
-        }
-      } else {
-        header.style.transform = "translateY(0)";
-      }
-      lastScrollY = currentScrollY;
-      ticking = false;
-    }
-
-    window.addEventListener("scroll", () => {
-      if (!ticking) {
-        requestAnimationFrame(handleScroll);
-        ticking = true;
-      }
-    });
-  })();
-</script>
+<style>
+  #menu-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+</style>
