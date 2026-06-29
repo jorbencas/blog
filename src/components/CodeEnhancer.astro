@@ -5,6 +5,7 @@
 <script>
   function mejorarBloquesCodigo() {
     const bloques = document.querySelectorAll("pre:not(.mejorado)");
+    const filtered = Array.from(bloques).filter(pre => !pre.closest("th, td"));
 
     // Iniciales reconocibles + colores oficiales
     const configLang = {
@@ -71,7 +72,7 @@
       terminal: { initials: "TM", color: "4EAA25" },
     };
 
-    bloques.forEach((pre) => {
+    filtered.forEach((pre) => {
       pre.classList.add("mejorado");
 
       const codeElement = pre.querySelector("code");

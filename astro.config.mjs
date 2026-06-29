@@ -22,6 +22,7 @@ export default defineConfig({
   },
   site: "https://blog-jorbencas.vercel.app/",
   markdown: {
+    gfm: true,
     remarkPlugins: [remarkReadingTime],
     shikiConfig: {
       // Usamos un tema para Light y otro para Dark
