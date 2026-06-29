@@ -58,35 +58,44 @@ test.describe("Navigation", () => {
       await expect(items).toHaveClass(/open/);
     });
 
-    test("backdrop click closes mobile menu", async ({ page }) => {
+    test("close button closes mobile menu", async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 812 });
       await page.goto("/", { waitUntil: "networkidle" });
       await openMenu(page);
       await expect(page.locator("#menu-items")).toHaveClass(/open/);
-      const backdrop = page.locator("#menu-backdrop");
-      await backdrop.click({ force: true });
+      await page.locator("#menu-close").click();
       await page.waitForTimeout(200);
       await expect(page.locator("#menu-items")).not.toHaveClass(/open/);
     });
 
-    test("Escape key closes mobile menu", async ({ page }) => {
+    test("backdrop click does NOT close mobile menu", async ({ page }) => {
+      await page.setViewportSize({ width: 375, height: 812 });
+      await page.goto("/", { waitUntil: "networkidle" });
+      await openMenu(page);
+      await expect(page.locator("#menu-items")).toHaveClass(/open/);
+      await page.locator("#menu-backdrop").click({ force: true });
+      await page.waitForTimeout(200);
+      await expect(page.locator("#menu-items")).toHaveClass(/open/);
+    });
+
+    test("Escape key does NOT close mobile menu", async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 812 });
       await page.goto("/", { waitUntil: "networkidle" });
       await openMenu(page);
       await expect(page.locator("#menu-items")).toHaveClass(/open/);
       await page.keyboard.press("Escape");
       await page.waitForTimeout(200);
-      await expect(page.locator("#menu-items")).not.toHaveClass(/open/);
+      await expect(page.locator("#menu-items")).toHaveClass(/open/);
     });
 
-    test("menu closed when resizing to desktop", async ({ page }) => {
+    test("menu stays open when resizing to desktop", async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 812 });
       await page.goto("/", { waitUntil: "networkidle" });
       await openMenu(page);
       await expect(page.locator("#menu-items")).toHaveClass(/open/);
       await page.setViewportSize({ width: 1280, height: 800 });
       await page.waitForTimeout(400);
-      await expect(page.locator("#menu-items")).not.toHaveClass(/open/);
+      await expect(page.locator("#menu-items")).toHaveClass(/open/);
     });
 
     test("nav links are accessible inside mobile menu", async ({ page }) => {
