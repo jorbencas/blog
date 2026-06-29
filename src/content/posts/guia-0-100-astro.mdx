@@ -4,9 +4,11 @@ title: "Guía de Astro: De 0 a 100"
 description: "Desde la primera página hasta producción: instalación, conceptos, islas, colecciones, despliegue y recursos en español."
 pubDate: "2017-06-11"
 tags: ["astro", "guia", "frontend", "ssr"]
-image: "img/guia_0_100_astro_cover-1200.webp"
+image: "guia_0_100_astro/guia_0_100_astro_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 ---
+
+import ResponsiveImage from "@components/ResponsiveImage.astro";
 
 # Guía de Astro: De 0 a 100
 
@@ -803,7 +805,7 @@ const posts = defineCollection({
     updatedDate: z.date().optional(),
     tags: z.array(z.string()),
     draft: z.boolean().default(false),
-    image: z.string().optional(),
+    image: "guia_0_100_astro/guia_0_100_astro_cover-1200.webp"
   }),
 });
 
@@ -1088,7 +1090,7 @@ import heroMobile from '../images/hero-mobile.jpg';
 
 **Imágenes en Markdown/MDX:**
 ```mdx
-![Descripción](../images/foto.jpg)
+<ResponsiveImage avif="/img/guia_0_100_astro/guia_0_100_astro_1-480.avif 480w, /img/guia_0_100_astro/guia_0_100_astro_1-768.avif 768w, /img/guia_0_100_astro/guia_0_100_astro_1-1200.avif 1200w" webp="/img/guia_0_100_astro/guia_0_100_astro_1-480.webp 480w, /img/guia_0_100_astro/guia_0_100_astro_1-768.webp 768w, /img/guia_0_100_astro/guia_0_100_astro_1-1200.webp 1200w" fallback="/img/guia_0_100_astro/guia_0_100_astro_1-1200.webp" alt="Descripción" blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDCUngZx9aeVwM7lP0p4jTB49O9KI19Kuxk5IZnNFS7F9KKdiOZH//Z" />
 <!-- Las imágenes en MDX se optimizan automáticamente si están en src/ -->
 ```
 
@@ -1096,7 +1098,7 @@ import heroMobile from '../images/hero-mobile.jpg';
 ```js
 // astro.config.mjs
 export default defineConfig({
-  image: {
+  image: "guia_0_100_astro/guia_0_100_astro_cover-1200.webp"
     service: 'astro:assets', // o 'sharp' para compatibilidad
     domains: ['images.ctfassets.net'], // CDNs permitidas para imágenes remotas
   },
@@ -2545,7 +2547,7 @@ const processed = await sharp(buffer)
 En archivos MDX, las imágenes se escriben con sintaxis Markdown estándar:
 
 ```mdx
-![Descripción](../../images/foto.jpg)
+<ResponsiveImage avif="/img/guia_0_100_astro/guia_0_100_astro_2-480.avif 480w, /img/guia_0_100_astro/guia_0_100_astro_2-768.avif 768w, /img/guia_0_100_astro/guia_0_100_astro_2-1200.avif 1200w" webp="/img/guia_0_100_astro/guia_0_100_astro_2-480.webp 480w, /img/guia_0_100_astro/guia_0_100_astro_2-768.webp 768w, /img/guia_0_100_astro/guia_0_100_astro_2-1200.webp 1200w" fallback="/img/guia_0_100_astro/guia_0_100_astro_2-1200.webp" alt="Descripción" blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDCUngZx9aeVwM7lP0p4jTB49O9KI19Kuxk5IZnNFS7F9KKdiOZH//Z" />
 ```
 
 Las imágenes dentro de `src/` se optimizan automáticamente con `astro:assets`.
@@ -2880,7 +2882,7 @@ Cada nivel incluye lo que debes saber y un proyecto para fijar los conceptos.
 - `remark`/`rehype` plugins (TOC, autolink headings, reading time)
 - `Astro.glob()` vs content collections (cuándo usar cada uno)
 - Slugs generados automáticos y personalizados
-- Imágenes en contenido: `![alt](ruta)` y optimización
+- Imágenes en contenido: `<ResponsiveImage avif="/img/guia_0_100_astro/guia_0_100_astro_3-480.avif 480w, /img/guia_0_100_astro/guia_0_100_astro_3-768.avif 768w, /img/guia_0_100_astro/guia_0_100_astro_3-1200.avif 1200w" webp="/img/guia_0_100_astro/guia_0_100_astro_3-480.webp 480w, /img/guia_0_100_astro/guia_0_100_astro_3-768.webp 768w, /img/guia_0_100_astro/guia_0_100_astro_3-1200.webp 1200w" fallback="/img/guia_0_100_astro/guia_0_100_astro_3-1200.webp" alt="alt" blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDBBOOtP/EGpBEmDx6d6URr6VdjJyQzOaKl2L6UU7EcyP/Z" />` y optimización
 - **Tipos de datos**: TypeScript en frontmatter, `Astro.props` tipado, tipos inferidos de Zod, `Astro.glob()` array tipado, variables en template con `{}`
 - **Control de flujo**: condicionales `{condition &&}`, bucles `{items.map()}`, ternarios, `Astro.slots` y named slots, layouts anidados, módulos del proyecto
 - **Conceptos clave**: Zod schemas — validan el frontmatter en build time y generan tipos TypeScript automáticamente. Content collections reemplazan a `Astro.glob()` para contenido. Los archivos MDX pueden importar y renderizar componentes. El slug se genera desde el nombre del archivo por defecto.
@@ -3100,7 +3102,7 @@ Fuente: [Astro docs — Pagination](https://docs.astro.build/en/guides/routing/#
 import { getCollection } from 'astro:content';
 
 const posts = await getCollection('posts');
-// En el frontmatter: image: "./mi-foto.jpg" (ruta relativa al archivo MDX)
+// En el frontmatter: image: "guia_0_100_astro/guia_0_100_astro_cover-1200.webp"
 // En el componente:
 import { Image } from 'astro:assets';
 ---

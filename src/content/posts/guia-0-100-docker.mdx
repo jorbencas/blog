@@ -220,7 +220,7 @@ services:
       - db
 
   db:
-    image: postgres:16-alpine
+    image: "img/guia_0_100_docker_cover-1200.webp"
     volumes:
       - pgdata:/var/lib/postgresql/data
     environment:
@@ -373,7 +373,7 @@ Compose interpola variables del entorno y del archivo `.env`:
 # compose.yml
 services:
   web:
-    image: mi-app:${TAG:-latest}
+    image: "img/guia_0_100_docker_cover-1200.webp"
     ports:
       - "${PORT:-3000}:3000"
     environment:
@@ -594,15 +594,15 @@ Compose ofrece control de flujo para entornos modulares:
 # Profiles: activar/desactivar servicios según el entorno
 services:
   app:
-    image: mi-app
+    image: "img/guia_0_100_docker_cover-1200.webp"
     profiles: [prod, staging, dev]
 
   adminer:
-    image: adminer
+    image: "img/guia_0_100_docker_cover-1200.webp"
     profiles: [dev]  # Solo en desarrollo
 
   backup:
-    image: mi-backup
+    image: "img/guia_0_100_docker_cover-1200.webp"
     profiles: [prod]  # Solo en producción
 
 # depends_on con condiciones
@@ -618,7 +618,7 @@ services:
 
 # healthcheck: monitoreo de estado
   db:
-    image: postgres:16-alpine
+    image: "img/guia_0_100_docker_cover-1200.webp"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -985,7 +985,7 @@ services:
       dockerfile: Dockerfile.prod
       args:
         - NODE_ENV=production
-    image: ghcr.io/mi-org/api:${TAG:-latest}
+    image: "img/guia_0_100_docker_cover-1200.webp"
     ports:
       - "${PORT:-3000}:3000"
     environment:
@@ -1025,7 +1025,7 @@ services:
       - staging
 
   db:
-    image: postgres:16-alpine
+    image: "img/guia_0_100_docker_cover-1200.webp"
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -1045,7 +1045,7 @@ services:
       - prod
 
   redis:
-    image: redis:7-alpine
+    image: "img/guia_0_100_docker_cover-1200.webp"
     volumes:
       - redis-data:/data
     healthcheck:
@@ -1055,7 +1055,7 @@ services:
       retries: 5
 
   adminer:
-    image: adminer
+    image: "img/guia_0_100_docker_cover-1200.webp"
     ports:
       - "8080:8080"
     profiles:
@@ -1533,12 +1533,12 @@ Un contenedor auxiliar que acompaña al principal en el mismo pod/task y extiend
 ```yaml
 services:
   app:
-    image: mi-app
+    image: "img/guia_0_100_docker_cover-1200.webp"
     networks:
       - backend
 
   sidecar-proxy:
-    image: nginx:alpine
+    image: "img/guia_0_100_docker_cover-1200.webp"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     ports:
@@ -1560,12 +1560,12 @@ La app solo escucha en la red interna `backend`, el sidecar proxy recibe tráfic
 ```yaml
 services:
   app:
-    image: mi-app
+    image: "img/guia_0_100_docker_cover-1200.webp"
     volumes:
       - logs:/var/log/app
 
   log-collector:
-    image: fluent/fluent-bit:latest
+    image: "img/guia_0_100_docker_cover-1200.webp"
     volumes:
       - logs:/logs:ro
     configs:
@@ -1589,14 +1589,14 @@ Un proxy que abstrae la conexión a un servicio externo. El contenedor app se co
 ```yaml
 services:
   app:
-    image: mi-app
+    image: "img/guia_0_100_docker_cover-1200.webp"
     environment:
       - DATABASE_URL=postgres://user:pass@ambassador:5432/db
     depends_on:
       - ambassador
 
   ambassador:
-    image: haproxy:alpine
+    image: "img/guia_0_100_docker_cover-1200.webp"
     volumes:
       - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
     environment:
@@ -1614,7 +1614,7 @@ Contenedores que se ejecutan antes que el principal para preparar el entorno (mi
 ```yaml
 services:
   init-db:
-    image: mi-app-migrations
+    image: "img/guia_0_100_docker_cover-1200.webp"
     environment:
       - DATABASE_URL=postgres://user:pass@db:5432/miapp
     depends_on:
@@ -1624,7 +1624,7 @@ services:
       - setup  # No se ejecuta en producción normal
 
   app:
-    image: mi-app
+    image: "img/guia_0_100_docker_cover-1200.webp"
     depends_on:
       db:
         condition: service_healthy
@@ -1640,7 +1640,7 @@ Estrategia de despliegue sin downtime: dos versiones (blue = actual, green = nue
 ```yaml
 services:
   app-blue:
-    image: mi-app:blue
+    image: "img/guia_0_100_docker_cover-1200.webp"
     ports:
       - "3001:3000"
     networks:
@@ -1649,7 +1649,7 @@ services:
       - blue
 
   app-green:
-    image: mi-app:green
+    image: "img/guia_0_100_docker_cover-1200.webp"
     ports:
       - "3002:3000"
     networks:
@@ -1658,7 +1658,7 @@ services:
       - green
 
   nginx:
-    image: nginx:alpine
+    image: "img/guia_0_100_docker_cover-1200.webp"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     ports:
@@ -1697,9 +1697,9 @@ services:
   web:        # Un "objeto" que contiene...
     build: .  # ...su propia lógica
   db:         # Otro "objeto"
-    image: postgres
+    image: "img/guia_0_100_docker_cover-1200.webp"
   cache:      # Otro "objeto"
-    image: redis
+    image: "img/guia_0_100_docker_cover-1200.webp"
 ```
 
 Cada servicio es autocontenido e intercambiable. Cambias `postgres` por `mysql` sin tocar `web`. Es **composición sobre herencia**: prefieres tener servicios pequeños y reemplazables que imágenes enormes que heredan de todo.
@@ -1745,14 +1745,14 @@ services:
       - prod
 
   db-dev:
-    image: postgres:16-alpine
+    image: "img/guia_0_100_docker_cover-1200.webp"
     ports:
       - "5432:5432"
     profiles:
       - dev
 
   db-prod:
-    image: postgres:16-alpine
+    image: "img/guia_0_100_docker_cover-1200.webp"
     environment:
       - POSTGRES_PASSWORD_FILE=/run/secrets/db_password
     secrets:
@@ -1827,7 +1827,7 @@ docker run --rm -v $(pwd):/data mi-opencv
 ```yaml
 services:
   jellyfin:
-    image: jellyfin/jellyfin
+    image: "img/guia_0_100_docker_cover-1200.webp"
     ports:
       - "8096:8096"
     volumes:
@@ -1840,7 +1840,7 @@ services:
       - "1000"
 
   nginx-rtmp:
-    image: tiangolo/nginx-rtmp
+    image: "img/guia_0_100_docker_cover-1200.webp"
     ports:
       - "1935:1935"
       - "8080:80"
@@ -1880,7 +1880,7 @@ docker run --rm --gpus all -v $(pwd):/data jrottenberg/ffmpeg \
 ```yaml
 services:
   mediasoup:
-    image: versatiles/mediasoup:latest
+    image: "img/guia_0_100_docker_cover-1200.webp"
     ports:
       - "3000:3000"
       - "40000-49999:40000-49999/udp"
@@ -1889,7 +1889,7 @@ services:
       - MEDIASOUP_ANNOUNCED_IP=your.public.ip
 
   janus:
-    image: canyan/janus-gateway:latest
+    image: "img/guia_0_100_docker_cover-1200.webp"
     ports:
       - "8088:8088"
       - "8188:8188"
@@ -1916,20 +1916,20 @@ done
 ```yaml
 services:
   ingesta:
-    image: jrottenberg/ffmpeg
+    image: "img/guia_0_100_docker_cover-1200.webp"
     volumes:
       - ./input:/input
       - ./output:/output
     command: -i /input/source.mp4 -c:v libx264 /output/transcoded.mp4
 
   thumbnails:
-    image: dpokidov/imagemagick
+    image: "img/guia_0_100_docker_cover-1200.webp"
     volumes:
       - ./output:/data
     command: mogrify -resize 320x240 /data/*.jpg
 
   streaming:
-    image: tiangolo/nginx-rtmp
+    image: "img/guia_0_100_docker_cover-1200.webp"
     ports:
       - "1935:1935"
     volumes:
@@ -1994,7 +1994,7 @@ COPY init.sql /docker-entrypoint-initdb.d/
 ```yaml
 services:
   mysql:
-    image: mysql:8.4
+    image: "img/guia_0_100_docker_cover-1200.webp"
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: miapp
@@ -2025,7 +2025,7 @@ COPY init.js /docker-entrypoint-initdb.d/
 ```yaml
 services:
   mongo:
-    image: mongo:7
+    image: "img/guia_0_100_docker_cover-1200.webp"
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
@@ -2086,28 +2086,28 @@ services:
         condition: service_started
 
   postgres:
-    image: postgres:16-alpine
+    image: "img/guia_0_100_docker_cover-1200.webp"
     volumes:
       - pgdata:/var/lib/postgresql/data
     environment:
       POSTGRES_PASSWORD: ${PG_PASSWORD}
 
   mysql:
-    image: mysql:8.4
+    image: "img/guia_0_100_docker_cover-1200.webp"
     volumes:
       - mysqldata:/var/lib/mysql
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
 
   mongo:
-    image: mongo:7
+    image: "img/guia_0_100_docker_cover-1200.webp"
     volumes:
       - mongodata:/data/db
     environment:
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
 
   redis:
-    image: redis:7-alpine
+    image: "img/guia_0_100_docker_cover-1200.webp"
     volumes:
       - redis-data:/data
     command: redis-server --appendonly yes
@@ -2149,7 +2149,7 @@ services:
       - "3000:3000"
 
   nginx:
-    image: nginx:alpine
+    image: "img/guia_0_100_docker_cover-1200.webp"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
     ports:
@@ -2207,7 +2207,7 @@ Mosquitto es el broker MQTT más popular. Docker lo hace trivial de desplegar:
 ```yaml
 services:
   mosquitto:
-    image: eclipse-mosquitto:2
+    image: "img/guia_0_100_docker_cover-1200.webp"
     ports:
       - "1883:1883"  # MQTT
       - "9001:9001"  # WebSocket
@@ -2273,7 +2273,7 @@ client.on('message', (topic, payload) => {
 ```yaml
 services:
   emqx:
-    image: emqx:5
+    image: "img/guia_0_100_docker_cover-1200.webp"
     ports:
       - "1883:1883"
       - "8083:8083"  # WS
@@ -2311,7 +2311,7 @@ services:
       - REDIS_URL=redis://redis:6379
 
   redis:
-    image: redis:7-alpine
+    image: "img/guia_0_100_docker_cover-1200.webp"
 ```
 
 Con `ports: "3000"` (sin host:container), Docker asigna un puerto aleatorio del host para cada réplica:
@@ -2585,7 +2585,7 @@ services:
     restart: unless-stopped
 
   db:
-    image: postgres:16-alpine
+    image: "img/guia_0_100_docker_cover-1200.webp"
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -2699,7 +2699,7 @@ services:
       replicas: 3
 
   redis:
-    image: redis:7-alpine
+    image: "img/guia_0_100_docker_cover-1200.webp"
     volumes:
       - redis-data:/data
 
@@ -2715,7 +2715,7 @@ version: '3.8'
 
 services:
   app-blue:
-    image: ghcr.io/mi-org/app:v1.0.0
+    image: "img/guia_0_100_docker_cover-1200.webp"
     networks:
       - app-net
     deploy:
@@ -2724,7 +2724,7 @@ services:
         - "version=blue"
 
   app-green:
-    image: ghcr.io/mi-org/app:v2.0.0
+    image: "img/guia_0_100_docker_cover-1200.webp"
     networks:
       - app-net
     deploy:
@@ -2733,7 +2733,7 @@ services:
         - "version=green"
 
   proxy:
-    image: traefik:v3.0
+    image: "img/guia_0_100_docker_cover-1200.webp"
     command:
       - "--providers.docker.swarmMode=true"
       - "--providers.docker.network=app-net"
@@ -2884,7 +2884,7 @@ NODE_ENV=production
 ```yaml
 services:
   app:
-    image: mi-app:${TAG:-latest}
+    image: "img/guia_0_100_docker_cover-1200.webp"
     ports:
       - "${PORT}:3000"
     environment:
@@ -2902,12 +2902,12 @@ Nunca montes `/var/run/docker.sock` directamente en un contenedor a menos que se
 ```yaml
 services:
   traefik:
-    image: traefik:v3.0
+    image: "img/guia_0_100_docker_cover-1200.webp"
     volumes:
       - docker-socket-proxy:/var/run/docker.sock:ro
 
   docker-socket-proxy:
-    image: tecnativa/docker-socket-proxy
+    image: "img/guia_0_100_docker_cover-1200.webp"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
