@@ -4,7 +4,7 @@ description: "Esta semana hemos seguido de cerca las principales tendencias en t
 desarrollo."
 pubDate: "2026-06-06"
 author: "Jorge Beneyto Castelló"
-image: "img/2026_w23_tech_recap_cover-1200.webp"
+image: "img/2026_w23_tech_recap/2026_w23_tech_recap_cover-1200.webp"
 tags: ["tech", "semanal"]
 slug: "2026-w23-tech-recap"
 draft: false

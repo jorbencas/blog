@@ -511,7 +511,7 @@ async def process_file(session: aiohttp.ClientSession, path: Path, semaphore: as
             if fm_tags_match:
                 fm_tags = [t.strip().strip('"').strip("'") for t in fm_tags_match[0].split(",") if t.strip()]
 
-            current_folder: Path = (IMG_DIR / base_name) if len(md_images) > 1 else IMG_DIR
+            current_folder: Path = IMG_DIR / base_name
             current_folder.mkdir(parents=True, exist_ok=True)
 
             # Resolución adaptativa de portadas
@@ -528,8 +528,8 @@ async def process_file(session: aiohttp.ClientSession, path: Path, semaphore: as
                     if img.mode in ("RGBA", "P"): 
                         img = img.convert("RGB")
                     _, webp, _ = compress_and_save_adaptive(img, f"{base_name}_cover", current_folder)
-                    if webp:
-                        content = re.sub(r'image:\s*["\']?(.*?)["\']?\n', f'image: "{current_folder.name}/{webp[-1][0]}"\n', content)
+                if (current_folder / f"{base_name}_cover-1200.webp").exists():
+                    content = re.sub(r'image:\s*["\']?(.*?)["\']?\n', f'image: "img/{current_folder.name}/{base_name}_cover-1200.webp"\n', content)
 
             # Inyección del cuerpo Markdown (Procesa imágenes internas)
             for i, (alt, original_src) in enumerate(md_images):
@@ -564,7 +564,7 @@ async def process_file(session: aiohttp.ClientSession, path: Path, semaphore: as
                     webp = [(f"{name}-{size}.webp", size) for size in SIZES]
                     blur = "data:image/jpeg;base64,/9j/4AAQSkZJRgA="
 
-                prefix: str = f"/img/{base_name}" if len(md_images) > 1 else "/img"
+                prefix: str = f"/img/{base_name}"
                 component: str = f'<ResponsiveImage avif="{build_srcset(avif, prefix)}" webp="{build_srcset(webp, prefix)}" fallback="{prefix}/{webp[-1][0]}" alt="{alt}" blur="{blur}" />'
                 content = content.replace(f"![{alt}]({original_src})", component)
 

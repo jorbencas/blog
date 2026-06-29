@@ -3,7 +3,7 @@ title: "Weekly Tech Recap W26"
 description: "Esta semana ha sido un buen recordatorio de que la economía tech es un ecosistema complejo, donde el hype se mezcla con la dura realidad. Hemos visto "
 pubDate: "2026-06-25"
 author: "Jorge Beneyto Castelló"
-image: "img/2026_w26_tech_recap_cover-1200.webp"
+image: "img/2026_w26_tech_recap/2026_w26_tech_recap_cover-1200.webp"
 tags: ["tech", "gaming", "inteligencia_artificial", "big_tech", "hardware"]
 slug: "2026-w26-tech-recap"
 draft: false
