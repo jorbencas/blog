@@ -198,34 +198,40 @@ def process_svg_fallback(input_path: Path, out_dir: Path, filename: str) -> None
 # ==============================================================================
 # IA EDITORIAL (MIGRADO AL NUEVO SDK GOOGLE-GENAI)
 # ==============================================================================
-def get_gemini_tech_context(title: str, content_snippet: str = "") -> Optional[Dict[str, Any]]:
+def get_gemini_tech_context(title: str, content_snippet: str = "", tags: Optional[List[str]] = None) -> Optional[Dict[str, Any]]:
     if not GEMINI_KEY:
         return None
     try:
-        # Migración al nuevo cliente de la librería unificada google-genai
         from google import genai
         client = genai.Client(api_key=GEMINI_KEY)
-        
+
+        tag_str: str = ", ".join(tags[:5]) if tags else ""
         prompt: str = f"""
-        Analiza este artículo de blog tecnológico. Título: "{title}". Fragmento: "{content_snippet[:400]}"
-        Devuelve estrictamente un objeto JSON válido con la siguiente estructura:
-        {{
-          "color_bg": "Un color hexadecimal CSS muy oscuro adecuado para fondo de IDE (ej: #0d1117, #0f141c)",
-          "color_accent": "Un color hexadecimal vibrante neón tipo sintaxis (ej: #00f2fe, #38bdf8)",
-          "keywords": ["3 palabras clave tecnológicas"],
-          "mock_filename": "Un nombre de archivo simulado (ej: index.tsx, server.js, deploy.yaml)",
-          "tech_stack": "Nombre de la tecnología principal en mayúsculas (ej: ASTRO, REACT, DOCKER)"
-        }}
-        """
-        # Llamada estructurada nativa para gemini-2.5-flash
+Eres un diseñador gráfico experto en branding tecnológico. Analiza este artículo de blog y genera una paleta visual y concepto de portada.
+
+TÍTULO: "{title}"
+TAGS: {tag_str}
+FRAGMENTO: "{content_snippet[:600]}"
+
+Devuelve EXACTAMENTE este JSON, sin markdown ni código alrededor:
+{{
+  "color_bg": "Color hexadecimal oscuro y moderno para fondo, que evoque la tecnología (ej: #0d1117, #0f141c, #1a1b2e)",
+  "color_accent": "Color hexadecimal vibrante que represente la tecnología principal, tipo neón sintaxis (ej: #00f2fe para web, #f97316 para Rust, #7c3aed para IA, #22c55e para backend, #e11d48 para frontend)",
+  "color_secondary": "Color hexadecimal secundario más suave para degradados o código sintético (ej: #38bdf8, #a78bfa, #34d399, #fb923c)",
+  "keywords": ["entre 3 y 5 keywords técnicas representativas del artículo"],
+  "mock_filename": "Nombre de archivo realista que refleje el stack o el tema (ej: api.py, Dockerfile, main.tf, k8s-deploy.yaml, agent.py)",
+  "tech_stack": "Tecnología principal en MAYÚSCULAS (ej: PYTHON, ASTRO, KUBERNETES, REACT, RUST, DOCKER, PYTORCH)",
+  "unsplash_query": "consulta visual corta para buscar una imagen de portada en Unsplash, que mezcle el concepto técnico con una metáfora visual atractiva (ej: 'server rack blue lights', 'neon code editor dark', 'robot writing AI', 'circuit board geometric', 'data center purple', 'developer desk minimal')"
+}}
+"""
         response = client.models.generate_content(
             model='gemini-2.5-flash',
             contents=prompt,
         )
         if response.text:
             match = re.search(r'(\{.*\})', response.text, re.DOTALL)
-            if match: 
-                return json.loads(match.group(1))  # type: ignore
+            if match:
+                return json.loads(match.group(1))
     except Exception as e:
         print(f"⚠️ Aviso en el cliente Gemini GenAI: {e}")
     return None
@@ -248,15 +254,35 @@ def clean_query(text: str) -> str:
 def build_unsplash_query(title: str, tags: List[str], content_snippet: str = "") -> str:
     parts: List[str] = []
     parts.extend(tags[:3])
-    parts.append(clean_query(title))
-    tech_hints: List[str] = ["technology", "code", "digital", "abstract"]
-    if any(kw in content_snippet.lower() for kw in ["python", "javascript", "typescript", "rust", "go", "java"]):
-        tech_hints = ["programming", "code", "developer", "technology"]
-    elif any(kw in content_snippet.lower() for kw in ["docker", "deploy", "devops", "ci/cd"]):
-        tech_hints = ["devops", "infrastructure", "server", "cloud"]
-    elif any(kw in content_snippet.lower() for kw in ["design", "ux", "ui", "css", "tailwind"]):
-        tech_hints = ["design", "interface", "minimal", "creative"]
-    parts.extend(tech_hints)
+    cleaned: str = clean_query(title)
+    if cleaned:
+        parts.append(cleaned)
+
+    lower: str = content_snippet.lower()
+    if any(kw in lower for kw in ["python", "javascript", "typescript", "rust", "go", "java", "c#", "c++", "ruby", "zig"]):
+        tech_hints: List[str] = ["programming language", "code editor", "developer setup", "software"]
+    elif any(kw in lower for kw in ["docker", "deploy", "devops", "kubernetes", "ci/cd", "terraform"]):
+        tech_hints = ["devops", "server infrastructure", "cloud computing", "automation"]
+    elif any(kw in lower for kw in ["design", "ux", "ui", "css", "tailwind", "figma", "frontend"]):
+        tech_hints = ["web design", "minimal interface", "creative technology", "modern ui"]
+    elif any(kw in lower for kw in ["machine learning", "ia", "inteligencia artificial", "neural", "deep learning", "pytorch", "tensorflow"]):
+        tech_hints = ["artificial intelligence", "neural network abstract", "tech brain", "future"]
+    elif any(kw in lower for kw in ["seguridad", "security", "hacking", "ciberseguridad", "cybersecurity"]):
+        tech_hints = ["cybersecurity", "data protection", "digital lock", "network security"]
+    elif any(kw in lower for kw in ["base de datos", "database", "sql", "nosql", "big data", "data"]):
+        tech_hints = ["data center", "database abstract", "server room", "big data"]
+    elif any(kw in lower for kw in ["mobile", "android", "ios", "flutter", "react native", "app"]):
+        tech_hints = ["mobile technology", "smartphone", "app development", "digital"]
+    elif any(kw in lower for kw in ["raspberry", "arduino", "iot", "embedded", "hardware"]):
+        tech_hints = ["circuit board", "electronics", "hardware hacking", "maker"]
+    elif any(kw in lower for kw in ["linux", "terminal", "bash", "unix", "command line"]):
+        tech_hints = ["linux terminal", "command line", "developer terminal", "hacker screen"]
+    elif any(kw in lower for kw in ["api", "rest", "graphql", "microservicios", "backend"]):
+        tech_hints = ["network programming", "server architecture", "api development", "backend"]
+    else:
+        tech_hints = ["modern technology", "digital workspace", "abstract tech", "minimalist"]
+
+    parts.extend(tech_hints if len(tech_hints) <= 4 else tech_hints[:4])
     return " ".join(p for p in parts if p)
 
 def slugify(text: str) -> str:
@@ -267,25 +293,26 @@ def build_srcset(images: List[Tuple[str, int]], prefix: str) -> str:
     return ", ".join([f"{prefix}/{n} {s}w" for n, s in images])
 
 async def search_unsplash(session: aiohttp.ClientSession, query: str) -> Optional[Dict[str, Any]]:
-    if not ACCESS_KEY or not query.strip(): 
+    if not ACCESS_KEY or not query.strip():
         return None
-    if query in cache: 
-        return cache[query]  # type: ignore
+    if query in cache:
+        return cache[query]
     url: str = "https://api.unsplash.com/search/photos"
-    params: Dict[str, str] = {"query": query + " technology code abstract", "per_page": "1", "orientation": "landscape"}
+    params: Dict[str, str] = {"query": query, "per_page": "5", "orientation": "landscape", "content_filter": "high"}
     headers: Dict[str, str] = {"Authorization": f"Client-ID {ACCESS_KEY}"}
     try:
         async with session.get(url, params=params, headers=headers, timeout=15) as r:
-            if r.status != 200: 
+            if r.status != 200:
                 return None
             data: Dict[str, Any] = await r.json()
-            if not data.get("results"): 
+            if not data.get("results"):
                 return None
-            photo: Dict[str, Any] = data["results"][0]
-            cache[query] = photo
+            results: List[Dict[str, Any]] = data["results"]
+            best: Dict[str, Any] = max(results, key=lambda p: p.get("likes", 0))
+            cache[query] = best
             save_cache()
-            return photo
-    except Exception: 
+            return best
+    except Exception:
         return None
 
 # ==============================================================================
@@ -298,6 +325,7 @@ def generate_local_banner(title: str, tech_context: Optional[Dict[str, Any]] = N
         ctx: Dict[str, Any] = tech_context or {}
         bg_dark: str = ctx.get("color_bg", "#0f141c")
         accent: str = ctx.get("color_accent", "#00f2fe")
+        secondary: str = ctx.get("color_secondary", "#38bdf8")
         mock_file: str = ctx.get("mock_filename", "main.tsx")
         tech_label: str = ctx.get("tech_stack", "DEV WORKSPACE")
         keywords: List[str] = ctx.get("keywords", ["code", "system"])
@@ -319,7 +347,13 @@ def generate_local_banner(title: str, tech_context: Optional[Dict[str, Any]] = N
             draw.line([(0, y), (width, y)], fill=(255, 255, 255, 5))
 
         random.seed(title)
-        syntax_colors: List[Tuple[int, int, int, int]] = [(56, 189, 248, 25), (244, 63, 94, 25), (52, 211, 153, 25)]
+        r_a = int(accent[1:3], 16)
+        g_a = int(accent[3:5], 16)
+        b_a = int(accent[5:7], 16)
+        r_s = int(secondary[1:3], 16)
+        g_s = int(secondary[3:5], 16)
+        b_s = int(secondary[5:7], 16)
+        syntax_colors: List[Tuple[int, int, int, int]] = [(r_a, g_a, b_a, 25), (r_s, g_s, b_s, 25), (244, 63, 94, 25), (52, 211, 153, 25)]
         for line_idx in range(12):
             y_pos: int = 140 + (line_idx * 32)
             indent: int = random.choice([60, 90, 120])
@@ -500,8 +534,11 @@ async def process_file(session: aiohttp.ClientSession, path: Path, semaphore: as
                         img = Image.open(full_local_path)
                     else:
                         res = await search_all_providers(session, alt if alt.strip() else fm_title, content, fm_tags)
-                        async with session.get(res["url"], headers={"User-Agent": "Mozilla"}, timeout=15) as r:
-                            img = Image.open(BytesIO(await r.read())) if r.status == 200 else Image.new('RGB', (1200,630), "#0f141c")
+                        if res["source"] == "local_gen":
+                            img = generate_local_banner(res["title"], res["theme"])
+                        else:
+                            async with session.get(res["url"], headers={"User-Agent": "Mozilla"}, timeout=15) as r:
+                                img = Image.open(BytesIO(await r.read())) if r.status == 200 else Image.new('RGB', (1200,630), "#0f141c")
 
                     if img.mode in ("RGBA", "P"): 
                         img = img.convert("RGB")
@@ -533,7 +570,7 @@ async def search_all_providers(session: aiohttp.ClientSession, title: str, conte
     photo: Optional[Dict[str, Any]] = await search_unsplash(session, query)
     if photo: 
         return {"url": photo["urls"]["raw"], "source": "unsplash"}
-    return {"source": "local_gen", "title": title, "theme": get_gemini_tech_context(title, content_snippet)}
+    return {"source": "local_gen", "title": title, "theme": get_gemini_tech_context(title, content_snippet, tags)}
 
 # ==============================================================================
 # ORQUESTADOR (BÚSQUEDA RECURSIVA CONTROLADA POR SEMÁFORO)

@@ -24,6 +24,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Optional
 from io import BytesIO
+from random import uniform
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -307,31 +308,113 @@ class LayoutStrategy(ABC):
 
 
 class LeftBigRightStackedLayout(LayoutStrategy):
-    """1 imagen grande izquierda + 2 apiladas derecha. Canvas 1400×900."""
+    """1 imagen grande izquierda + 2 apiladas derecha. Canvas 1400×900.
+    
+    Si mecano_style=True, las imágenes se rotan ligeramente y se reducen
+    de tamaño para imitar la estética del collage de Mecano.
+    """
+
+    def __init__(self, mecano_style: bool = False):
+        self.mecano = mecano_style
+
+    def _paste_rotated(self, canvas: Image.Image, img: Image.Image,
+                       cx: int, cy: int, tw: int, th: int,
+                       angle: float, crop_top: int = 0) -> Image.Image:
+        """Redimensiona, rota y pega una imagen centrada en (cx, cy)."""
+        bg_color = "#0f141c"
+        img = img.convert("RGB")
+        src_h = img.height - crop_top
+        if src_h <= 0:
+            crop_top = 0
+            src_h = img.height
+        r = max(tw / img.width, th / src_h)
+        nw = int(img.width * r)
+        nh = int(src_h * r)
+        img = img.resize((nw, nh), Image.LANCZOS)
+        left = (nw - tw) // 2
+        top = (nh - th) // 2
+        img = img.crop((left, top, left + tw, top + th))
+
+        # Shadow as RGBA
+        shadow = Image.new("RGBA", img.size, (0, 0, 0, 0))
+        shadow_draw = ImageDraw.Draw(shadow)
+        shadow_draw.rounded_rectangle(
+            [6, 6, tw - 6, th - 6], radius=6, fill=(0, 0, 0, 90)
+        )
+
+        # Rotate
+        shadow_rot = shadow.rotate(angle, expand=True, fillcolor=(0, 0, 0, 0))
+        img_rot = img.rotate(angle, expand=True, fillcolor=bg_color)
+
+        # Paste position (centered)
+        sw, sh = img_rot.size
+        px = cx - sw // 2
+        py = cy - sh // 2
+
+        # Work in RGBA for proper shadow compositing
+        canvas_rgba = canvas.convert("RGBA")
+        canvas_rgba.alpha_composite(shadow_rot, (px + 3, py + 5))
+        canvas_rgba.paste(img_rot, (px, py))
+        return canvas_rgba.convert("RGB")
 
     def compose(self, images: list[Image.Image]) -> Image.Image:
         if len(images) < 3:
             raise ValueError(f"Se necesitan 3 imágenes, se recibieron {len(images)}")
 
         canvas = Image.new("RGB", (CANVAS_W, CANVAS_H), "#0f141c")
+
+        if self.mecano:
+            # Mecano style: smaller panels with slight rotation
+            # Left/main panel — slightly tilted left
+            left_angle = uniform(-3.0, 0.0)
+            left_cx, left_cy = 420, 430
+            left_tw, left_th = 700, 660
+            canvas = self._paste_rotated(canvas, images[0],
+                                         left_cx, left_cy, left_tw, left_th,
+                                         angle=left_angle, crop_top=80)
+
+            # Right-top panel — tilted right
+            rt_angle = uniform(1.5, 4.5)
+            rt_cx, rt_cy = 1120, 200
+            rt_tw, rt_th = 500, 340
+            canvas = self._paste_rotated(canvas, images[1],
+                                         rt_cx, rt_cy, rt_tw, rt_th,
+                                         angle=rt_angle)
+
+            # Right-bottom panel — tilted left
+            rb_angle = uniform(-3.5, 0.0)
+            rb_cx, rb_cy = 1090, 670
+            rb_tw, rb_th = 480, 370
+            canvas = self._paste_rotated(canvas, images[2],
+                                         rb_cx, rb_cy, rb_tw, rb_th,
+                                         angle=rb_angle)
+
+            return canvas
+
+        # Original (non-rotated) layout
         gap = GAP
         left_w = 910
         right_w = CANVAS_W - left_w - gap
         right_h = (CANVAS_H - gap * 2) // 2
         left_h = CANVAS_H - gap * 2
 
-        def fit(img: Image.Image, tw: int, th: int) -> Image.Image:
+        def fit(img: Image.Image, tw: int, th: int, crop_top: int = 0) -> Image.Image:
             img = img.convert("RGB")
-            r = max(tw / img.width, th / img.height)
-            img = img.resize((int(img.width * r), int(img.height * r)), Image.LANCZOS)
-            left = (img.width - tw) // 2
-            top = (img.height - th) // 2
+            src_h = img.height - crop_top
+            if src_h <= 0:
+                crop_top = 0
+                src_h = img.height
+            r = max(tw / img.width, th / src_h)
+            nw = int(img.width * r)
+            nh = int(src_h * r)
+            img = img.resize((nw, nh), Image.LANCZOS)
+            left = (nw - tw) // 2
+            top = (nh - th) // 2
             return img.crop((left, top, left + tw, top + th))
 
-        left_img = fit(images[0], left_w, left_h)
         draw = ImageDraw.Draw(canvas)
+        left_img = fit(images[0], left_w, left_h, crop_top=80)
         canvas.paste(left_img, (gap, gap))
-        # Subtle border on left panel
         draw.rectangle([gap, gap, left_w + gap, left_h + gap], outline="#1e293b", width=1)
 
         rt_img = fit(images[1], right_w, right_h)
@@ -428,6 +511,12 @@ def _update_image_field(mdx_path: Path, new_image: str) -> bool:
     """Reemplaza la línea `image:` en frontmatter con la nueva ruta."""
     with open(mdx_path, encoding="utf-8") as f:
         content = f.read()
+
+    # Check if the image line already has the correct value
+    m_img = re.search(r'^image:\s*["\'](.+?)["\']\s*$', content, re.MULTILINE)
+    if m_img and m_img.group(1) == new_image:
+        return False  # Already up to date
+
     new_content = re.sub(
         r'^(image:\s*)["\'].*?["\']\s*$',
         rf'\1"{new_image}"',
@@ -495,7 +584,7 @@ def ci_mode(force: bool = False, dry_run: bool = False) -> int:
             try:
                 provider = PlaywrightProvider(url)
                 images = provider.get_images()
-                layout = LeftBigRightStackedLayout()
+                layout = LeftBigRightStackedLayout(mecano_style=True)
                 canvas = layout.compose(images)
                 exporter = ImageExporter(str(IMG_DIR / base_name))
                 exporter.export(canvas)
@@ -556,6 +645,8 @@ def main():
     parser.add_argument("--layout", default="left-big-right-stacked",
                         choices=list(LAYOUTS.keys()),
                         help="Layout del collage (default: left-big-right-stacked)")
+    parser.add_argument("--mecano", action="store_true",
+                        help="Estilo Mecano: paneles más pequeños, rotados ligeramente y con sombra")
     parser.add_argument("--dev-server", action="store_true",
                         help="Arranca npm run dev automáticamente (para --route)")
     parser.add_argument("--actions", help="JSON con acciones para Playwright")
@@ -599,7 +690,12 @@ def main():
     # Compose
     print("🎨 Componiendo collage...")
     layout_cls = LAYOUTS[args.layout]
-    layout = layout_cls()
+    if args.mecano:
+        if not issubclass(layout_cls, LeftBigRightStackedLayout):
+            parser.error("--mecano solo disponible con layout left-big-right-stacked")
+        layout = layout_cls(mecano_style=True)
+    else:
+        layout = layout_cls()
     canvas = layout.compose(images)
     print(f"   → Collage {canvas.width}×{canvas.height}")
 
