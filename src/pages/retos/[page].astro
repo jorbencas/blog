@@ -1,6 +1,6 @@
 ---
 import Layout from "@layouts/Layout.astro";
-import ChallengeCard from "@components/ChallengeCard.astro";
+import Card from "@components/Card.astro";
 import NextPrevLinks from "@components/NextPrevLinks.astro";
 import Information from "@components/Information.astro";
 import { getCollection } from "astro:content";
@@ -54,10 +54,11 @@ const { prev, next } = url;
             data.length > 0 ? (
               data.map((ch) => (
                 <li class="list-none">
-                  <ChallengeCard
-                    {...ch.data}
-                    href={`/retos/${ch.id.replace(/\.[^/.]+$/, "")}`}
-                  />
+<Card
+                      {...ch.data}
+                      href={`/retos/${ch.id.replace(/\.[^/.]+$/, "")}`}
+                      accent="cyan"
+                    />
                 </li>
               ))
             ) : (

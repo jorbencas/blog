@@ -1,6 +1,6 @@
 ---
 import Layout from "@layouts/Layout.astro";
-import ToolCard from "@components/ToolCard.astro";
+import Card from "@components/Card.astro";
 import { getCollection } from "astro:content";
 import { getSortedPosts } from "src/utils";
 
@@ -54,9 +54,12 @@ const tags = [...new Set(allTools.flatMap((t) => t.data.tags))];
         sortedTools.length > 0 ? (
           sortedTools.map((tool) => (
             <div class="tool-entry">
-              <ToolCard
+              <Card
                 {...tool.data}
-                id={tool.id.replace(/\.[^/.]+$/, "")}
+                href={`/herramientas/${tool.id.replace(/\.[^/.]+$/, "")}`}
+                accent="emerald"
+                aspectRatio="video"
+                overlay="white"
               />
             </div>
           ))

@@ -1,7 +1,6 @@
 ---
 import Layout from "@layouts/Layout.astro";
-import PreviewPost from "@components/PreviewPost.astro";
-import ChallengeCard from "@components/ChallengeCard.astro"; // Importamos la Card de retos
+import Card from "@components/Card.astro";
 import NextPrevLinks from "@components/NextPrevLinks.astro";
 import Information from "@components/Information.astro";
 import { getSortedPosts } from "src/utils";
@@ -77,12 +76,13 @@ const { prev, next } = url;
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {challenges.slice(0, 3).map((ch) => (
-                <ChallengeCard
+                <Card
                   href={`/retos/${ch.id}`}
                   title={ch.data.title}
                   description={ch.data.description}
                   image={ch.data.image}
                   difficulty={ch.data.difficulty}
+                  accent="cyan"
                 />
               ))}
             </div>
@@ -107,7 +107,7 @@ const { prev, next } = url;
           >
             {
               data.length > 0 ? (
-                data.map((p) => <PreviewPost post={p} />)
+                data.map((p) => <Card href={`/posts/${p.id}`} {...p.data} accent="cyan" />)
               ) : (
                 <div class="col-span-full">
                   <Information section="posts" />

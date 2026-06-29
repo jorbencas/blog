@@ -1,6 +1,6 @@
 ---
 import Layout from "@layouts/Layout.astro";
-import ProjectCard from "@components/ProjectCard.astro";
+import Card from "@components/Card.astro";
 import NextPrevLinks from "@components/NextPrevLinks.astro";
 import Information from "@components/Information.astro";
 import { getCollection } from "astro:content";
@@ -48,10 +48,13 @@ const { prev, next } = url;
             data.length > 0 ? (
               data.map((project) => (
                 <li class="list-none">
-                  <ProjectCard
-                    {...project.data}
-                    id={project.id.replace(/\.[^/.]+$/, "")}
-                  />
+<Card
+                      {...project.data}
+                      href={`/proyectos/${project.id.replace(/\.[^/.]+$/, "")}`}
+                      accent="purple"
+                      aspectRatio="video"
+                      overlay="white"
+                    />
                 </li>
               ))
             ) : (

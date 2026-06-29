@@ -1,6 +1,6 @@
 ---
 import Layout from "@layouts/Layout.astro";
-import ToolCard from "@components/ToolCard.astro";
+import Card from "@components/Card.astro";
 import NextPrevLinks from "@components/NextPrevLinks.astro";
 import Information from "@components/Information.astro";
 import { getCollection } from "astro:content";
@@ -47,10 +47,13 @@ const { prev, next } = url;
             data.length > 0 ? (
               data.map((tool) => (
                 <li class="list-none">
-                  <ToolCard
-                    {...tool.data}
-                    id={tool.id.replace(/\.[^/.]+$/, "")}
-                  />
+<Card
+                      {...tool.data}
+                      href={`/herramientas/${tool.id.replace(/\.[^/.]+$/, "")}`}
+                      accent="emerald"
+                      aspectRatio="video"
+                      overlay="white"
+                    />
                 </li>
               ))
             ) : (
