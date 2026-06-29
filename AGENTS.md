@@ -5,6 +5,7 @@
 - **Clean & Readable**: Write code for humans first, computers second. Deep believer in KISS and SOLID.
 - **Automation First**: If a manual task has to be done more than thrice, it deserves a script or a GitHub Action.
 - **Architecture Mindset**: Focus on decoupled systems, scalability, and predictable state management.
+- **Refactor Iteratively**: When code works, refactor it toward clean, testable design. Replace hardcoded mappings with data-driven structures. Eliminate long if/elif chains. Each change should leave the codebase more maintainable than before.
 
 Apply these principles when writing code. First make it work correctly, then improve the design.
 
@@ -53,7 +54,7 @@ When adding or changing a dependency:
 
 ## Workflow
 0. **Read `docs/contexto.md` first** — always start by reading the full context.
-1. **Run `npm run build` after every change** to verify no errors.
+1. **Run `npm run build` before every commit** to verify no errors. Only commit if the build passes.
 2. **Save context** to `docs/contexto.md` — load the `update-context` skill for the exact format.
 3. **Update timeline** after significant changes — load the `update-timeline` skill.
 
@@ -208,7 +209,7 @@ MDX parses `<` and `{` as JSX/expression boundaries even in prose. **Never leave
 
 ## Build Verification
 
-1. **Siempre** correr `npm run build` después de cualquier cambio en MDX o componentes
+1. **Siempre** correr `npm run build` **antes de commitear**. Solo commitear si el build pasa.
 2. Errores comunes de build:
    - `<` no escapado en MDX → buscar `<[A-Za-z0-9]` en prosa
    - `{ }` no escapados en MDX → buscar `{[a-zA-Z]` fuera de code blocks

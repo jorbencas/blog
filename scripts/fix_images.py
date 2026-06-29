@@ -65,7 +65,7 @@ def prune_cache(cache_data: Dict[str, Any]) -> Dict[str, Any]:
     now: Any = datetime.now(timezone.utc)
     pruned: Dict[str, Any] = {}
     for key, val in cache_data.items():
-        if not isinstance(val, dict):
+        if type(val) is not dict:
             continue
         created = val.get("created_at", "")
         dt = _parse_date(created)
@@ -261,6 +261,31 @@ def clean_query(text: str) -> str:
         keep.append(w)
     return " ".join(keep)
 
+TECH_HINTS_MAP: List[tuple[List[str], List[str]]] = [
+    (["python", "javascript", "typescript", "rust", "go", "java", "c#", "c++", "ruby", "zig"],
+     ["programming language", "code editor", "developer setup", "software"]),
+    (["docker", "deploy", "devops", "kubernetes", "ci/cd", "terraform"],
+     ["devops", "server infrastructure", "cloud computing", "automation"]),
+    (["design", "ux", "ui", "css", "tailwind", "figma", "frontend"],
+     ["web design", "minimal interface", "creative technology", "modern ui"]),
+    (["machine learning", "ia", "inteligencia artificial", "neural", "deep learning", "pytorch", "tensorflow"],
+     ["artificial intelligence", "neural network abstract", "tech brain", "future"]),
+    (["seguridad", "security", "hacking", "ciberseguridad", "cybersecurity"],
+     ["cybersecurity", "data protection", "digital lock", "network security"]),
+    (["base de datos", "database", "sql", "nosql", "big data", "data"],
+     ["data center", "database abstract", "server room", "big data"]),
+    (["mobile", "android", "ios", "flutter", "react native", "app"],
+     ["mobile technology", "smartphone", "app development", "digital"]),
+    (["raspberry", "arduino", "iot", "embedded", "hardware"],
+     ["circuit board", "electronics", "hardware hacking", "maker"]),
+    (["linux", "terminal", "bash", "unix", "command line"],
+     ["linux terminal", "command line", "developer terminal", "hacker screen"]),
+    (["api", "rest", "graphql", "microservicios", "backend"],
+     ["network programming", "server architecture", "api development", "backend"]),
+]
+
+DEFAULT_TECH_HINTS: List[str] = ["modern technology", "digital workspace", "abstract tech", "minimalist"]
+
 def build_unsplash_query(title: str, tags: List[str], content_snippet: str = "") -> str:
     parts: List[str] = []
     parts.extend(tags[:3])
@@ -269,30 +294,13 @@ def build_unsplash_query(title: str, tags: List[str], content_snippet: str = "")
         parts.append(cleaned)
 
     lower: str = content_snippet.lower()
-    if any(kw in lower for kw in ["python", "javascript", "typescript", "rust", "go", "java", "c#", "c++", "ruby", "zig"]):
-        tech_hints: List[str] = ["programming language", "code editor", "developer setup", "software"]
-    elif any(kw in lower for kw in ["docker", "deploy", "devops", "kubernetes", "ci/cd", "terraform"]):
-        tech_hints = ["devops", "server infrastructure", "cloud computing", "automation"]
-    elif any(kw in lower for kw in ["design", "ux", "ui", "css", "tailwind", "figma", "frontend"]):
-        tech_hints = ["web design", "minimal interface", "creative technology", "modern ui"]
-    elif any(kw in lower for kw in ["machine learning", "ia", "inteligencia artificial", "neural", "deep learning", "pytorch", "tensorflow"]):
-        tech_hints = ["artificial intelligence", "neural network abstract", "tech brain", "future"]
-    elif any(kw in lower for kw in ["seguridad", "security", "hacking", "ciberseguridad", "cybersecurity"]):
-        tech_hints = ["cybersecurity", "data protection", "digital lock", "network security"]
-    elif any(kw in lower for kw in ["base de datos", "database", "sql", "nosql", "big data", "data"]):
-        tech_hints = ["data center", "database abstract", "server room", "big data"]
-    elif any(kw in lower for kw in ["mobile", "android", "ios", "flutter", "react native", "app"]):
-        tech_hints = ["mobile technology", "smartphone", "app development", "digital"]
-    elif any(kw in lower for kw in ["raspberry", "arduino", "iot", "embedded", "hardware"]):
-        tech_hints = ["circuit board", "electronics", "hardware hacking", "maker"]
-    elif any(kw in lower for kw in ["linux", "terminal", "bash", "unix", "command line"]):
-        tech_hints = ["linux terminal", "command line", "developer terminal", "hacker screen"]
-    elif any(kw in lower for kw in ["api", "rest", "graphql", "microservicios", "backend"]):
-        tech_hints = ["network programming", "server architecture", "api development", "backend"]
-    else:
-        tech_hints = ["modern technology", "digital workspace", "abstract tech", "minimalist"]
+    tech_hints: List[str] = DEFAULT_TECH_HINTS
+    for keywords, hints in TECH_HINTS_MAP:
+        if any(kw in lower for kw in keywords):
+            tech_hints = hints
+            break
 
-    parts.extend(tech_hints if len(tech_hints) <= 4 else tech_hints[:4])
+    parts.extend(tech_hints[:4])
     return " ".join(p for p in parts if p)
 
 def slugify(text: str) -> str:
