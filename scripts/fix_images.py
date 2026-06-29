@@ -201,6 +201,11 @@ def process_svg_fallback(input_path: Path, out_dir: Path, filename: str) -> None
 def get_gemini_tech_context(title: str, content_snippet: str = "", tags: Optional[List[str]] = None) -> Optional[Dict[str, Any]]:
     if not GEMINI_KEY:
         return None
+
+    gemini_key: str = f"_gemini_{hashlib.md5(f'{title}|||{content_snippet}|||{sorted(tags) if tags else ""}'.encode()).hexdigest()}"
+    if gemini_key in cache:
+        return cache[gemini_key]
+
     try:
         from google import genai
         client = genai.Client(api_key=GEMINI_KEY)
@@ -231,9 +236,14 @@ Devuelve EXACTAMENTE este JSON, sin markdown ni código alrededor:
         if response.text:
             match = re.search(r'(\{.*\})', response.text, re.DOTALL)
             if match:
-                return json.loads(match.group(1))
+                result: Dict[str, Any] = json.loads(match.group(1))
+                cache[gemini_key] = result
+                save_cache()
+                return result
     except Exception as e:
         print(f"⚠️ Aviso en el cliente Gemini GenAI: {e}")
+    cache[gemini_key] = None
+    save_cache()
     return None
 
 # ==============================================================================
@@ -303,9 +313,13 @@ async def search_unsplash(session: aiohttp.ClientSession, query: str) -> Optiona
     try:
         async with session.get(url, params=params, headers=headers, timeout=15) as r:
             if r.status != 200:
+                cache[query] = None
+                save_cache()
                 return None
             data: Dict[str, Any] = await r.json()
             if not data.get("results"):
+                cache[query] = None
+                save_cache()
                 return None
             results: List[Dict[str, Any]] = data["results"]
             best: Dict[str, Any] = max(results, key=lambda p: p.get("likes", 0))
@@ -313,6 +327,8 @@ async def search_unsplash(session: aiohttp.ClientSession, query: str) -> Optiona
             save_cache()
             return best
     except Exception:
+        cache[query] = None
+        save_cache()
         return None
 
 # ==============================================================================
