@@ -31,24 +31,23 @@ test.describe("Responsive behavior", () => {
     test("hamburger hidden on desktop", async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 800 });
       await page.goto("/", { waitUntil: "networkidle" });
-      const label = page.locator('label[for="menu-toggle"]');
-      const isVisible = await label.isVisible();
+      const btn = page.locator("button#menu-toggle");
+      const isVisible = await btn.isVisible();
       expect(isVisible).toBeFalsy();
     });
 
     test("hamburger visible on mobile", async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 812 });
       await page.goto("/", { waitUntil: "networkidle" });
-      const label = page.locator('label[for="menu-toggle"]');
-      await expect(label).toBeVisible();
+      const btn = page.locator("button#menu-toggle");
+      await expect(btn).toBeVisible();
     });
 
     test("nav links hidden on mobile when menu closed", async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 812 });
       await page.goto("/", { waitUntil: "networkidle" });
       const items = page.locator("#menu-items");
-      const cls = await items.getAttribute("class");
-      expect(cls).toContain("translate-x-full");
+      await expect(items).not.toHaveClass(/open/);
     });
   });
 

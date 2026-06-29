@@ -64,12 +64,10 @@ import CodeTabs from '@components/CodeTabs.svelte';
 ### ⚙️ Paso 2: Implementación
 {paso_2}
 
-### 🚀 Paso 3: Complejidad y Optimización
+{paso_3}
 
 **Complejidad temporal:** {big_o_time}  
 **Complejidad espacial:** {big_o_space}  
-
-{paso_3}
 
 ### 💻 Código de la Solución
 

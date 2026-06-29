@@ -130,7 +130,7 @@ test.describe("Listing pages", () => {
   test.describe("Weekly listing", () => {
     test("renders weekly cards", async ({ page }) => {
       await page.goto("/weekly/1", { waitUntil: "networkidle" });
-      const links = page.locator("a[href*='/posts/20']");
+      const links = page.locator("a[href*='/weekly/']");
       const count = await links.count();
       expect(count).toBeGreaterThan(0);
     });

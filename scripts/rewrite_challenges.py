@@ -286,25 +286,12 @@ def extract_table_rows(text):
 
 def get_code(title, lang):
     """Get solution code for a challenge in a specific language."""
-    from scripts.solutions_db import _normalize_key
-    slug = _normalize_key(title)
+    # Try DB lookup for all languages first
+    sol = db_lookup(title, lang)
+    if sol and sol.get("codigo"):
+        return sol["codigo"]
 
-    # 5 curated entries have proper multi-language code in DB
-    curated = {"suma-de-digitos", "par-o-impar", "invertir-palabra",
-               "fibonacci-recursivo", "detector-de-palindromos"}
-    is_curated = any(c in slug or slug in c for c in curated)
-
-    if is_curated:
-        sol = db_lookup(title, lang)
-        if sol and sol.get("codigo"):
-            return sol["codigo"]
-
-    if lang == "python":
-        sol = db_lookup(title, lang)
-        if sol:
-            return sol.get("codigo", "")
-
-    # Generate language-specific code (avoids Python fallback for Java/TS)
+    # Fallback to generic stub
     gen = generate_generic(title, lang)
     return gen.get("codigo", "")
 
@@ -390,12 +377,10 @@ import CodeTabs from '@components/CodeTabs.svelte';
 ### ⚙️ Paso 2: Implementación
 {p2_body}
 
-### 🚀 Paso 3: Complejidad y Optimización
+{p3_body}
 
 **Complejidad temporal:** {big_o_time}  
 **Complejidad espacial:** {big_o_space}  
-
-{p3_body}
 
 ### 💻 Código de la Solución
 
@@ -550,6 +535,9 @@ def main():
                 except Exception as e:
                     print(f"   ⚠️  Error getting {lang} code: {e}")
                     codes[lang] = f"# {lang} solution (fallback)"
+
+            # Prepend heading to p3 (heading moved from template to data)
+            p3 = f"### 🚀 Paso 3: Complejidad y Optimización\n\n{p3}"
 
             # Build new MDX
             difficulty_display = difficulty

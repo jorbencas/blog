@@ -42,55 +42,57 @@ test.describe("Navigation", () => {
   });
 
   test.describe("Mobile menu", () => {
+    async function openMenu(page) {
+      await page.locator("button#menu-toggle").click();
+      await page.waitForTimeout(300);
+    }
+
     test("hamburger visible on mobile, toggles menu", async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 812 });
       await page.goto("/", { waitUntil: "networkidle" });
-      const toggle = page.locator("#menu-toggle");
-      await expect(toggle).toBeHidden();
-      const label = page.locator('label[for="menu-toggle"]');
-      await expect(label).toBeVisible();
-      await label.click();
-      await expect(toggle).toBeChecked();
+      const toggle = page.locator("button#menu-toggle");
+      await expect(toggle).toBeVisible();
+      const items = page.locator("#menu-items");
+      await expect(items).not.toHaveClass(/open/);
+      await openMenu(page);
+      await expect(items).toHaveClass(/open/);
     });
 
     test("backdrop click closes mobile menu", async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 812 });
       await page.goto("/", { waitUntil: "networkidle" });
-      const toggle = page.locator("#menu-toggle");
-      await page.locator('label[for="menu-toggle"]').click();
-      await expect(toggle).toBeChecked();
+      await openMenu(page);
+      await expect(page.locator("#menu-items")).toHaveClass(/open/);
       const backdrop = page.locator("#menu-backdrop");
       await backdrop.click({ force: true });
       await page.waitForTimeout(200);
-      await expect(toggle).not.toBeChecked();
+      await expect(page.locator("#menu-items")).not.toHaveClass(/open/);
     });
 
     test("Escape key closes mobile menu", async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 812 });
       await page.goto("/", { waitUntil: "networkidle" });
-      const toggle = page.locator("#menu-toggle");
-      await page.locator('label[for="menu-toggle"]').click();
-      await expect(toggle).toBeChecked();
+      await openMenu(page);
+      await expect(page.locator("#menu-items")).toHaveClass(/open/);
       await page.keyboard.press("Escape");
       await page.waitForTimeout(200);
-      await expect(toggle).not.toBeChecked();
+      await expect(page.locator("#menu-items")).not.toHaveClass(/open/);
     });
 
     test("menu closed when resizing to desktop", async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 812 });
       await page.goto("/", { waitUntil: "networkidle" });
-      const toggle = page.locator("#menu-toggle");
-      await page.locator('label[for="menu-toggle"]').click();
-      await expect(toggle).toBeChecked();
+      await openMenu(page);
+      await expect(page.locator("#menu-items")).toHaveClass(/open/);
       await page.setViewportSize({ width: 1280, height: 800 });
       await page.waitForTimeout(400);
-      await expect(toggle).not.toBeChecked();
+      await expect(page.locator("#menu-items")).not.toHaveClass(/open/);
     });
 
     test("nav links are accessible inside mobile menu", async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 812 });
       await page.goto("/", { waitUntil: "networkidle" });
-      await page.locator('label[for="menu-toggle"]').click();
+      await openMenu(page);
       await expect(page.locator("#menu-items a.nav-link")).toHaveCount(5);
     });
   });

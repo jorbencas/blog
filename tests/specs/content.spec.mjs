@@ -1,54 +1,32 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Content elements", () => {
-  test("CopyPost button exists and dropdown works on a post", async ({ page }) => {
+  test("CopyPost buttons exist (MD, TXT, IA)", async ({ page }) => {
     await page.goto("/posts/conexion_ssh_mediante_clave_publica_privada/", {
       waitUntil: "networkidle",
     });
 
-    const button = page.locator(".copy-trigger");
-    await expect(button).toBeVisible();
-    await expect(button).toHaveText(/COPIAR/);
-
-    const menu = page.locator(".copy-menu");
-    await expect(menu).toHaveClass(/hidden/);
-
-    await button.click();
-    await expect(menu).not.toHaveClass(/hidden/);
-
-    await menu.locator('[data-copy="markdown"]').click();
-    await expect(menu).toHaveClass(/hidden/);
+    const btns = page.locator('.copy-post button[data-copy]');
+    await expect(btns).toHaveCount(3);
+    await expect(btns.nth(0)).toContainText("MD");
+    await expect(btns.nth(1)).toContainText("TXT");
+    await expect(btns.nth(2)).toContainText("IA");
   });
 
   test("Navbar hamburger menu opens on mobile", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto("/", { waitUntil: "networkidle" });
 
-    // Check the hidden checkbox directly (peer-checked CSS hack)
-    const toggle = page.locator("#menu-toggle");
-    await expect(toggle).toBeHidden();
+    const toggle = page.locator("button#menu-toggle");
+    await expect(toggle).toBeVisible();
 
-    // Label (the hamburger icon) should be visible on mobile
-    const label = page.locator('label[for="menu-toggle"]');
-    await expect(label).toBeVisible();
-
-    // Menu items should be visible (lg:opacity-100 on desktop),
-    // but on mobile they start hidden (opacity-0 pointer-events-none)
     const items = page.locator("#menu-items");
-    const initialClass = await items.getAttribute("class");
-    expect(initialClass).toContain("opacity-0");
+    await expect(items).not.toHaveClass(/open/);
 
-    // Click the label to toggle
-    await label.click();
+    await toggle.click();
     await page.waitForTimeout(300);
 
-    // Menu should be visible now (peer-checked:opacity-100)
-    const afterClass = await items.getAttribute("class");
-    // Check that opacity-0 is gone (peer-checked overrides it)
-    // Actually, peer-checked adds opacity-100, but opacity-0 is still in the class
-    // The CSS cascade with peer-checked makes it visible
-    const isChecked = await toggle.isChecked();
-    expect(isChecked).toBeTruthy();
+    await expect(items).toHaveClass(/open/);
   });
 
   test("Dark mode toggle exists", async ({ page }) => {

@@ -4,24 +4,19 @@ const currentPath = pathname.slice(1);
 ---
 
 <nav class="relative flex items-center">
-  <input type="checkbox" id="menu-toggle" class="peer hidden" aria-label="Abrir menú de navegación" />
-
-  <label
-    for="menu-toggle"
-    aria-label="Abrir menú"
-    class="flex flex-col items-center justify-center h-9 w-9 gap-[4.5px] cursor-pointer select-none lg:hidden rounded-lg transition-all duration-200 hover:bg-slate-100 dark:hover:bg-slate-800
-      peer-checked:[&>span:nth-child(1)]:rotate-45 peer-checked:[&>span:nth-child(1)]:translate-y-[6.5px]
-      peer-checked:[&>span:nth-child(2)]:opacity-0
-      peer-checked:[&>span:nth-child(3)]:-rotate-45 peer-checked:[&>span:nth-child(3)]:-translate-y-[6.5px]"
+  <button
+    id="menu-toggle"
+    aria-label="Abrir menú de navegación"
+    class="flex flex-col items-center justify-center h-9 w-9 gap-[4.5px] cursor-pointer select-none lg:hidden rounded-lg transition-all duration-200 hover:bg-slate-100 dark:hover:bg-slate-800"
   >
     <span class="w-4 h-[2.5px] bg-slate-900 dark:bg-slate-200 transition-all duration-300 origin-center rounded-full"></span>
     <span class="w-4 h-[2.5px] bg-slate-900 dark:bg-slate-200 transition-all duration-300 origin-center rounded-full"></span>
     <span class="w-4 h-[2.5px] bg-slate-900 dark:bg-slate-200 transition-all duration-300 origin-center rounded-full"></span>
-  </label>
+  </button>
 
   <div
     id="menu-backdrop"
-    class="fixed inset-0 z-30 bg-black/40 opacity-0 pointer-events-none peer-checked:opacity-100 peer-checked:pointer-events-auto transition-opacity duration-300 ease-out lg:hidden"
+    class="fixed inset-0 z-30 bg-black/40 opacity-0 pointer-events-none transition-opacity duration-300 ease-out lg:hidden"
   />
 
   <div
@@ -29,8 +24,7 @@ const currentPath = pathname.slice(1);
     class="fixed top-0 right-0 z-40 h-full w-72 max-w-[85vw] bg-white dark:bg-slate-900 shadow-2xl border-l border-slate-200 dark:border-slate-800
       flex flex-col justify-center gap-8 px-10
       transition-transform duration-300 ease-out
-      translate-x-full peer-checked:translate-x-0
-      lg:static lg:translate-x-0 lg:shadow-none lg:border-none lg:flex-row lg:items-center lg:w-auto lg:h-auto lg:p-0 lg:gap-8 lg:bg-transparent lg:dark:bg-transparent"
+      lg:static lg:shadow-none lg:border-none lg:flex-row lg:items-center lg:w-auto lg:h-auto lg:p-0 lg:gap-8 lg:bg-transparent lg:dark:bg-transparent"
   >
     <a
       href="/proyectos/1"
@@ -114,50 +108,85 @@ const currentPath = pathname.slice(1);
   .nav-link:hover .nav-underline {
     width: 100% !important;
   }
+
+  #menu-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  #menu-items {
+    transform: translateX(100%);
+  }
+
+  #menu-items.open {
+    transform: translateX(0);
+  }
+
+  @media (min-width: 1024px) {
+    #menu-items {
+      transform: none;
+    }
+  }
 </style>
 
 <script>
-  const toggle = document.getElementById("menu-toggle");
+  const btn = document.getElementById("menu-toggle");
+  const backdrop = document.getElementById("menu-backdrop");
+  const menuItems = document.getElementById("menu-items");
+  const lines = btn?.querySelectorAll("span");
 
-  if (toggle) {
-    toggle.addEventListener("change", () => {
-      if (toggle.checked) {
-        const scrollY = window.scrollY;
-        document.body.dataset.scrollY = String(scrollY);
-        document.body.style.position = "fixed";
-        document.body.style.top = `-${scrollY}px`;
-        document.body.style.left = "0";
-        document.body.style.right = "0";
-      } else {
-        const scrollY = parseInt(document.body.dataset.scrollY || "0", 10);
-        document.body.style.position = "";
-        document.body.style.top = "";
-        document.body.style.left = "";
-        document.body.style.right = "";
-        window.scrollTo(0, scrollY);
-      }
-    });
+  let isOpen = false;
+
+  function openMenu() {
+    isOpen = true;
+    backdrop?.classList.add("open");
+    menuItems?.classList.add("open");
+    lines?.[0]?.classList.add("rotate-45", "translate-y-[6.5px]");
+    lines?.[1]?.classList.add("opacity-0");
+    lines?.[2]?.classList.add("-rotate-45", "-translate-y-[6.5px]");
+
+    const scrollY = window.scrollY;
+    document.body.dataset.scrollY = String(scrollY);
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.left = "0";
+    document.body.style.right = "0";
+  }
+
+  function closeMenu() {
+    isOpen = false;
+    backdrop?.classList.remove("open");
+    menuItems?.classList.remove("open");
+    lines?.[0]?.classList.remove("rotate-45", "translate-y-[6.5px]");
+    lines?.[1]?.classList.remove("opacity-0");
+    lines?.[2]?.classList.remove("-rotate-45", "-translate-y-[6.5px]");
+
+    const scrollY = parseInt(document.body.dataset.scrollY || "0", 10);
+    document.body.style.position = "";
+    document.body.style.top = "";
+    document.body.style.left = "";
+    document.body.style.right = "";
+    window.scrollTo(0, scrollY);
+  }
+
+  function toggleMenu() {
+    if (isOpen) closeMenu();
+    else openMenu();
+  }
+
+  if (btn) {
+    btn.addEventListener("click", toggleMenu);
 
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && toggle.checked) {
-        toggle.checked = false;
-        toggle.dispatchEvent(new Event("change"));
-      }
+      if (e.key === "Escape" && isOpen) closeMenu();
     });
 
     window.addEventListener("resize", () => {
-      if (window.innerWidth >= 1024 && toggle.checked) {
-        toggle.checked = false;
-        toggle.dispatchEvent(new Event("change"));
-      }
+      if (window.innerWidth >= 1024 && isOpen) closeMenu();
     });
 
-    const backdrop = document.getElementById("menu-backdrop");
     if (backdrop) {
-      backdrop.addEventListener("click", () => {
-        toggle.checked = false;
-        toggle.dispatchEvent(new Event("change"));
-      });
+      backdrop.addEventListener("click", closeMenu);
     }
   }
 </script>

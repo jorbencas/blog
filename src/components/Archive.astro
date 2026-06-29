@@ -34,10 +34,10 @@ const hasHiddenYears = sortedYears.length > 2;
     </h3>
   </div>
 
-  <div class="space-y-4" id="archive-years">
+  <div class="space-y-4" id="archive-container" data-year-archived="false">
     {
       sortedYears.map((year, i) => (
-        <details class={`group pb-3 ${i >= 2 ? "hidden-archive-year hidden" : ""}`}>
+        <details class={`group pb-3 ${i >= 2 ? "hidden-archive-year" : ""}`}>
           <summary class="flex justify-between items-center cursor-pointer list-none py-2 px-3 rounded-lg hover:bg-slate-200 dark:hover:bg-white/5 transition-all">
             <span class="text-lg text-slate-800 dark:text-white font-black italic tracking-tighter">
               > {year}
@@ -119,27 +119,30 @@ const hasHiddenYears = sortedYears.length > 2;
   .animate-slide-down {
     animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   }
+
+  .hidden-archive-year {
+    display: none;
+  }
+
+  [data-year-archived="true"] .hidden-archive-year {
+    display: block;
+  }
 </style>
 
 <script>
   document.addEventListener("astro:page-load", () => {
     const btn = document.getElementById("archive-toggle");
-    if (!btn) return;
+    const container = document.getElementById("archive-container");
+    if (!btn || !container) return;
     btn.addEventListener("click", () => {
-      const hidden = document.querySelectorAll(".hidden-archive-year");
-      const isHidden = hidden[0]?.classList.contains("hidden");
-      hidden.forEach((el) => {
-        if (isHidden) {
-          el.classList.remove("hidden");
-          el.style.display = "block";
-        } else {
-          el.classList.add("hidden");
-          el.style.display = "";
-        }
-      });
-      btn.textContent = isHidden
+      const isCurrentlyExpanded = container.dataset.yearArchived === "true";
+      const newState = isCurrentlyExpanded ? "false" : "true";
+      container.dataset.yearArchived = newState;
+
+      const hiddenCount = container.querySelectorAll(".hidden-archive-year").length;
+      btn.textContent = newState === "true"
         ? "← Colapsar archivo"
-        : `→ Ver archivo completo (${hidden.length + 2} años)`;
+        : `→ Ver archivo completo (${hiddenCount + 2} años)`;
     });
   });
 </script>

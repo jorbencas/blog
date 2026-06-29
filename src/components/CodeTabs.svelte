@@ -130,4 +130,8 @@
     margin: 0;
     border-radius: 0;
   }
+
+  .code-panels pre:not(:first-child) {
+    display: none;
+  }
 </style>

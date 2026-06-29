@@ -59,6 +59,7 @@
       powershell: { initials: "PS", color: "5391FE" },
       docker: { initials: "DK", color: "2496ED" },
       dockerfile: { initials: "DF", color: "2496ED" },
+      dockerignore: { initials: "DF", color: "2496ED" },
       yaml: { initials: "YM", color: "CB171E" },
       yml: { initials: "YM", color: "CB171E" },
       toml: { initials: "TL", color: "9C4221" },
@@ -98,16 +99,25 @@
       };
 
       const crearBadge = (texto, color) => {
-        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        const svg = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "svg"
+        );
         svg.setAttribute("viewBox", "0 0 20 20");
         svg.classList.add("w-4", "h-4", "shrink-0");
-        const bg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        const bg = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "rect"
+        );
         bg.setAttribute("width", "20");
         bg.setAttribute("height", "20");
         bg.setAttribute("rx", "4");
         bg.setAttribute("fill", `#${color}`);
         svg.appendChild(bg);
-        const tx = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        const tx = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "text"
+        );
         tx.setAttribute("x", "10");
         tx.setAttribute("y", "13.5");
         tx.setAttribute("text-anchor", "middle");
@@ -148,10 +158,20 @@
       divContenido.className =
         "overflow-x-auto selection:bg-cyan-500/30 text-sm leading-[1.7] p-4 bg-slate-50/50 dark:bg-slate-950";
 
-      pre.classList.add("!m-0", "!text-sm", "!leading-[1.7]", "selection:bg-cyan-500/30");
+      pre.classList.add(
+        "!m-0",
+        "!text-sm",
+        "!leading-[1.7]",
+        "selection:bg-cyan-500/30"
+      );
       const codeEl = pre.querySelector("code");
       if (codeEl) {
-        codeEl.classList.add("!m-0", "!text-sm", "!leading-[1.7]", "selection:bg-cyan-500/30");
+        codeEl.classList.add(
+          "!m-0",
+          "!text-sm",
+          "!leading-[1.7]",
+          "selection:bg-cyan-500/30"
+        );
       }
 
       pre.querySelectorAll(".comment").forEach((el) => {
@@ -174,6 +194,14 @@
       wrapper.appendChild(divContenido);
       divContenido.appendChild(pre);
 
+      // Dark mode: brighten Shiki token colors for readability
+      if (document.documentElement.classList.contains("dark")) {
+        divContenido.style.setProperty(
+          "filter",
+          "brightness(1.4) saturate(1.25)"
+        );
+      }
+
       // 4. Lógica de copia
       const btn = header.querySelector(".boton-copiar");
       btn.addEventListener("click", async () => {
@@ -187,7 +215,11 @@
         btn.classList.add("scale-105");
         setTimeout(() => {
           btn.innerHTML = `<span class="copy-text">[ COPIAR ]</span>`;
-          btn.classList.remove("scale-105", "text-cyan-600", "dark:text-cyan-400");
+          btn.classList.remove(
+            "scale-105",
+            "text-cyan-600",
+            "dark:text-cyan-400"
+          );
         }, 2000);
       });
     });
@@ -196,4 +228,3 @@
   document.addEventListener("astro:page-load", mejorarBloquesCodigo);
   document.addEventListener("DOMContentLoaded", mejorarBloquesCodigo);
 </script>
-

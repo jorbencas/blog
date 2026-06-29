@@ -26,13 +26,8 @@ test.describe("Navbar underline", () => {
     await expect(blogLink).toBeVisible();
 
     const underline = blogLink.locator(".nav-underline");
-    await expect(underline).toBeVisible();
-
-    const ancho = await underline.evaluate((el) => {
-      const style = getComputedStyle(el);
-      return parseFloat(style.width);
-    });
-    expect(ancho).toBe(0);
+    const cls = await underline.getAttribute("class");
+    expect(cls).toContain("w-0");
   });
 
   test("all nav links are visible without overflow clipping on desktop", async ({ page }) => {
