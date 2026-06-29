@@ -79,14 +79,16 @@ details .details-content {
   padding: 1rem !important;
 }
 
-.dark .astro-code {
+.dark .astro-code,
+.dark .shiki {
   border-color: rgba(255,255,255,0.08);
+  background-color: var(--shiki-dark-bg) !important;
 }
 
-.dark .astro-code,
-.dark .astro-code span {
+.dark .astro-code span,
+.dark .shiki span {
   color: var(--shiki-dark) !important;
-  background-color: var(--shiki-dark-bg) !important;
+  background-color: transparent !important;
   font-style: var(--shiki-dark-font-style) !important;
 }
 
@@ -112,12 +114,22 @@ article.prose pre {
 article.prose table {
   display: block;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+article.prose table td,
+article.prose table th {
+  white-space: nowrap;
+  padding-right: 1rem;
+}
+@media (max-width: 640px) {
+  article.prose table td,
+  article.prose table th {
+    padding: 0.5rem 0.75rem;
+  }
 }
 article.prose p,
 article.prose li,
-article.prose blockquote,
-article.prose td,
-article.prose th {
+article.prose blockquote {
   overflow-wrap: break-word;
   word-break: break-word;
 }
