@@ -1,6 +1,6 @@
 # Contexto del proyecto — Blog
 
-**Última actualización**: 2026-06-29 (Navbar fix + GFM tables + Shiki + Archive)
+**Última actualización**: 2026-06-29 (Refactor cards + Navbar fix + GFM tables + Shiki + Archive)
 **Stack**: Astro 6.4 + Svelte 5 + Tailwind CSS 4.3 | Vercel static | Node >= 18
 **Idioma**: Español
 **Deploy**: `blog-jorbencas.vercel.app`
@@ -20,6 +20,7 @@
 | 2025-06 | **Retos multi-lenguaje**: 58 reformulados con 4 lenguajes (Python, JS, Java, TS), 85 archivados como draft. CodeTabs component |
 | 2025-06 | **E2E audit completo**: 94 tests — navegación, listados, detalle, interactivos, responsive, contraste, visual regression. CodeTabs language detection fix (Shiki `pre[data-language]`). Navbar backdrop click handler |
 | 2025-06 | **GFM tables + Shiki + Archive + Navbar**: GFM fix (Astro 6.4.x regression), Shiki `github-light`/`github-dark`, Archive sin toggle, Navbar con botón X dedicado sin cierre por backdrop/Escape |
+| 2025-06 | **Refactor cards**: PreviewPost, ToolCard, ChallengeCard, ProjectCard unificados en un solo `Card.astro` paramétrico por acento |
 
 ## Mejoras implementadas
 
@@ -54,6 +55,14 @@
 - 39 tests funcionales pasan + 4 visual regression snapshots actualizadas
 - Build verificado sin errores
 
+### 4. Refactor cards: PreviewPost + ToolCard + ChallengeCard + ProjectCard → Card.astro ✅
+- **Card.astro**: nuevo componente unificado que reemplaza 4 cards anteriores. Acepta `accent` ("cyan" | "emerald" | "purple"), `aspectRatio`, `overlay`, `difficulty` (badge opcional), `repository` (icono GitHub opcional), `tags`, `pubDate`. Misma estructura `<a>` wrapping que PreviewPost
+- **4 componentes eliminados**: `PreviewPost.astro`, `ToolCard.astro`, `ChallengeCard.astro`, `ProjectCard.astro` — 457 líneas eliminadas, 249 añadidas
+- **9 páginas actualizadas**: `index.astro`, `posts/[page].astro`, `posts/index.astro`, `herramientas/index.astro`, `herramientas/[page].astro`, `retos/[page].astro`, `proyectos/[page].astro`, `tags/[tag]/[page].astro`
+- **ToolCard y ProjectCard**: ahora con `<a>` wrapping (antes tenían link "Detalles_") — todo el card es clickeable, mismo comportamiento que PreviewPost
+- 59 tests pasan (incluyendo visual regression — sin cambios visuales)
+- Build verificado sin errores
+
 ## Contenido
 
 5 colecciones MDX en `src/content/`:
@@ -84,7 +93,7 @@ Orden de secciones: Mis_Proyectos → Mini_Herramientas → Retos → Últimos_P
 
 - **Layouts**: `PostLayout.astro` (TOC en grid), `Layout.astro` (tema, anti-flash), `ProjectLayout.astro`
 - **Componentes clave**: `TableOfContents.astro` (mobile details + desktop sidebar), `Breadcrumbs.astro`, `Navbar.astro` (slot para buscador mobile, botón X dedicado para cerrar menú, sin cierre por backdrop/Escape/resize), `Header.astro`, `Buscador.astro`, `CopyPost.astro` (3 botones), `ScrollToTop.astro`, `Archive.astro` (todos los años visibles, sin toggle), `CodeTabs.svelte` (4-lang tabs interactivos)
-- **Cards**: `PreviewPost`, `ChallengeCard`, `ToolCard`, `ProjectCard` — sin quotes/italics en descripciones
+- **Cards**: `Card.astro` (unificado, paramétrico por acento: cyan/emerald/purple, aspectRatio, overlay, difficulty badge, repository icon)
 - **Guías**: 15 archivos `src/content/posts/guia-0-100-*.mdx`
 - **Scripts**: `fix_images.py`, `image_cache.json`, `rewrite_challenges.py`, `solutions_db.py`, `constants_retos.py`, `hunt_challenges.py`
 - **CI/CD**: `fixing_img.yml`, `spelling.yml`, `issues_handel.yml`
