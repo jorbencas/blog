@@ -1,28 +1,107 @@
 ---
+import { formatDatePost, resolveImagePath } from "src/utils.js";
 import Layout from "@layouts/Layout.astro";
 import { getCollection } from "astro:content";
 import Breadcrumbs from "@components/Breadcrumbs.astro";
 import CodeEnhancer from "@components/CodeEnhancer.astro";
+import ResponsiveImage from "@components/ResponsiveImage.astro";
 
-const { frontmatter, url } = Astro.props;
+interface Props {
+  title: string;
+  description: string;
+  tags: string[];
+  author: string;
+  image: string;
+  pubDate: string | Date;
+  difficulty?: string;
+  languages?: string[];
+}
+
+const { title, description, tags, author, image, pubDate, difficulty, languages } = Astro.props;
+
+const imagenLimpia = resolveImagePath(image);
+
 const allChallenges = await getCollection("auto-challenges");
 
 const sidebarChallenges = allChallenges
-  .filter((c) => c.slug !== url?.split("/").pop())
+  .filter((c) => c.id.replace(/\.[^/.]+$/, "") !== Astro.url.pathname.split("/").pop())
   .slice(0, 5);
 ---
 
-<Layout title={frontmatter.title}>
-  <div class="max-w-screen-xl mx-auto px-6 py-12">
+<Layout
+  title={title}
+  description={description}
+  tags={tags}
+  pubDate={pubDate}
+  author={author}
+>
+  <div
+    class="max-w-screen-xl mx-auto px-4 lg:px-0 py-10 font-sans"
+  >
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
       <main class="lg:col-span-8 space-y-8">
-        <Breadcrumbs title={frontmatter.title} section="retos" />
-        <header class="space-y-4 pb-8">
-          <h1
-            class="text-2xl sm:text-3xl md:text-6xl font-black italic uppercase tracking-tighter text-slate-900 dark:text-white"
+        <Breadcrumbs title={title} section="retos" />
+        <header class="mb-12">
+          <div
+            class="relative w-full h-[200px] sm:h-[300px] md:h-[400px] overflow-hidden bg-slate-100 dark:bg-slate-900 mb-10"
           >
-            {frontmatter.title}
-          </h1>
+            {
+              imagenLimpia ? (
+                <ResponsiveImage
+                  fallback={imagenLimpia}
+                  alt={title}
+                  fetchpriority="high"
+                  loading="eager"
+                  class="w-full h-full object-cover"
+                />
+              ) : (
+                <div class="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center">
+                  <span class="text-slate-500 dark:text-slate-600 text-xs sm:text-sm">
+                    SIN_IMAGEN
+                  </span>
+                </div>
+              )
+            }
+          </div>
+
+          <div class="space-y-4 sm:space-y-6">
+            <h1
+              class="text-2xl sm:text-3xl md:text-5xl font-black uppercase italic tracking-tighter leading-tight text-slate-900 dark:text-white"
+            >
+              {title}
+            </h1>
+
+            <p
+              class="text-base sm:text-xl text-white leading-relaxed max-w-3xl pl-4 sm:pl-6 from-sky-900 to-cyan-500 bg-gradient-to-r"
+            >
+              {description}
+            </p>
+
+            <div
+              class="flex flex-wrap items-center gap-8 pt-6 text-xs sm:text-sm uppercase tracking-[0.2em]"
+            >
+              <div class="flex items-center gap-2">
+                <span class="text-slate-500 dark:text-slate-400">FECHA:</span>
+                <time class="text-slate-900 dark:text-white font-bold"
+                  >{formatDatePost(pubDate)}</time
+                >
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-slate-500 dark:text-slate-400">AUTOR:</span>
+                <span class="text-slate-900 dark:text-white font-bold"
+                  >{author}</span
+                >
+              </div>
+              {
+                difficulty && (
+                  <div class="flex items-center gap-2">
+                    <span class="text-slate-500 dark:text-slate-400">DIFICULTAD:</span>
+                    <span class="text-cyan-600 dark:text-cyan-400 font-bold uppercase">{difficulty}</span>
+                  </div>
+                )
+              }
+            </div>
+          </div>
         </header>
 
         <div

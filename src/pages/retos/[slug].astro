@@ -3,18 +3,28 @@ import { getCollection, render } from "astro:content";
 import ChallengesLayout from "@layouts/ChallengesLayout.astro";
 
 export async function getStaticPaths() {
- const challenges = await getCollection("auto-challenges");
+  const challenges = await getCollection("auto-challenges");
 
- return challenges.map((entry) => ({
- params: { slug: entry.id.replace(/\.[^/.]+$/, "") },
- props: { entry },
- }));
+  return challenges.map((entry) => ({
+    params: { slug: entry.id.replace(/\.[^/.]+$/, "") },
+    props: { entry },
+  }));
 }
 
 const { entry } = Astro.props;
 const { Content } = await render(entry);
+const { title, description, tags, author, image, pubDate, difficulty, languages } = entry.data;
 ---
 
-<ChallengesLayout frontmatter={entry.data} url={Astro.url.pathname}>
- <Content />
+<ChallengesLayout
+  title={title}
+  description={description}
+  tags={tags ?? []}
+  author={author}
+  image={image}
+  pubDate={pubDate}
+  difficulty={difficulty}
+  languages={languages}
+>
+  <Content />
 </ChallengesLayout>
