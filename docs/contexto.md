@@ -1,6 +1,6 @@
 # Contexto del proyecto — Blog
 
-**Última actualización**: 2026-06-29 (E2E audit + CodeTabs/Navbar fixes)
+**Última actualización**: 2026-06-29 (Navbar fix + GFM tables + Shiki + Archive)
 **Stack**: Astro 6.4 + Svelte 5 + Tailwind CSS 4.3 | Vercel static | Node >= 18
 **Idioma**: Español
 **Deploy**: `blog-jorbencas.vercel.app`
@@ -19,6 +19,7 @@
 | 2025-06 | **UI/UX audit**: Fase 1 (TOC colapsable mobile, breadcrumbs, max-w-4xl), Fase 2 (footer opacidad, cards sin quotes), Fase 3 (transición main, archive limitado), Fase 4 (buscador en hamburguesa, scroll-to-top desktop) |
 | 2025-06 | **Retos multi-lenguaje**: 58 reformulados con 4 lenguajes (Python, JS, Java, TS), 85 archivados como draft. CodeTabs component |
 | 2025-06 | **E2E audit completo**: 94 tests — navegación, listados, detalle, interactivos, responsive, contraste, visual regression. CodeTabs language detection fix (Shiki `pre[data-language]`). Navbar backdrop click handler |
+| 2025-06 | **GFM tables + Shiki + Archive + Navbar**: GFM fix (Astro 6.4.x regression), Shiki `github-light`/`github-dark`, Archive sin toggle, Navbar con botón X dedicado sin cierre por backdrop/Escape |
 
 ## Mejoras implementadas
 
@@ -39,6 +40,18 @@
 - **Navbar.astro**: backdrop `#menu-backdrop` con click listener que cierra el menú mobile
 - **8 spec files E2E**: `navigation.spec.mjs`, `listing-pages.spec.mjs`, `detail-pages.spec.mjs`, `interactive.spec.mjs`, `responsive.spec.mjs`, `contrast.spec.mjs`, `visual-regression-full.spec.mjs`, más fixes en `content.spec.mjs` y `navbar.spec.mjs`
 - 93/94 tests passing (1 flaky: Ctrl+K focus por timing de Pagefind async)
+- Build verificado sin errores
+
+### 3. Varios fixes: GFM tables, Shiki, Archive, Navbar ✅
+- **astro.config.mjs**: añadido `gfm: true` — corrige regresión de Astro 6.4.x donde tablas GFM no se renderizaban en `.mdx` (cambio de schema `.default(true)` a `.optional()`)
+- **astro.config.mjs**: Shiki themes cambiados a `github-light`/`github-dark`
+- **CodeEnhancer.astro**: filtra `<pre>` dentro de `<th>`/`<td>` para no romper tablas con wrapper `my-6`/`border`
+- **CodeEnhancer.astro**: eliminado filtro `brightness(1.4) saturate(1.25)` en dark mode (sobresaturaba texto)
+- **global.css**: eliminadas reglas duplicadas de `::-webkit-scrollbar` en `.details-content pre`
+- **Archive.astro**: eliminada toda la lógica de ocultar años (toggle "Ver archivo completo", `hidden-archive-year`, `data-year-archived`, JS asociado) — todos los años visibles siempre
+- **Navbar.astro**: eliminada animación de spans del hamburguer (rotar/opacidad); añadido botón X dedicado `#menu-close` dentro del panel; menú solo se abre con hamburguer, solo se cierra con X. Eliminados handlers de backdrop click, Escape key y resize. JS simplificado
+- **tests/navigation.spec.mjs**: tests actualizados — Escape ya no cierra el menú, resize ya no cierra, nuevo test para botón X
+- 39 tests funcionales pasan + 4 visual regression snapshots actualizadas
 - Build verificado sin errores
 
 ## Contenido
@@ -70,7 +83,7 @@ Orden de secciones: Mis_Proyectos → Mini_Herramientas → Retos → Últimos_P
 ## Archivos relevantes
 
 - **Layouts**: `PostLayout.astro` (TOC en grid), `Layout.astro` (tema, anti-flash), `ProjectLayout.astro`
-- **Componentes clave**: `TableOfContents.astro` (mobile details + desktop sidebar), `Breadcrumbs.astro`, `Navbar.astro` (slot para buscador mobile), `Header.astro`, `Buscador.astro`, `CopyPost.astro` (3 botones), `ScrollToTop.astro`, `Archive.astro` (2 años + link completo), `CodeTabs.svelte` (4-lang tabs interactivos)
+- **Componentes clave**: `TableOfContents.astro` (mobile details + desktop sidebar), `Breadcrumbs.astro`, `Navbar.astro` (slot para buscador mobile, botón X dedicado para cerrar menú, sin cierre por backdrop/Escape/resize), `Header.astro`, `Buscador.astro`, `CopyPost.astro` (3 botones), `ScrollToTop.astro`, `Archive.astro` (todos los años visibles, sin toggle), `CodeTabs.svelte` (4-lang tabs interactivos)
 - **Cards**: `PreviewPost`, `ChallengeCard`, `ToolCard`, `ProjectCard` — sin quotes/italics en descripciones
 - **Guías**: 15 archivos `src/content/posts/guia-0-100-*.mdx`
 - **Scripts**: `fix_images.py`, `image_cache.json`, `rewrite_challenges.py`, `solutions_db.py`, `constants_retos.py`, `hunt_challenges.py`
