@@ -1,9 +1,9 @@
 ---
 draft: false
 title: "Tech Pulse: Dashboard Automatizado de Noticias Tech con IA"
-description: "Scraper inteligente que recolecta 30+ fuentes tech, genera resúmenes con Gemini IA, filtra por canales y fechas, y despliega un dashboard dinámico + newsletter diaria."
+description: "Scraper inteligente que recolecta 139 fuentes tech (web, YouTube, RSS), genera resúmenes con Gemini IA, filtra por categorías/badge/canal/fecha, ranking GitHub Stars, y despliega dashboard + Telegram cada 30 min + newsletter diaria."
 pubDate: "2026/06/25"
-tags: ['python', 'ia', 'web-scraping', 'devops', 'automation', 'github-actions']
+tags: ['python', 'ia', 'web-scraping', 'devops', 'automation', 'github-actions', 'rss']
 image: "img/tech_pulse_dashboard/tech_pulse_dashboard_cover-1200.webp"
 repository: "https://github.com/jorbencas/test_githubActions"
 url: "https://jorbencasdownloaderdocument.surge.sh"
@@ -16,120 +16,142 @@ featured: false
 El ecosistema tecnológico publica decenas de noticias, vídeos y recursos cada día. Seguir el ritmo manualmente es imposible. Herramientas como Feedly o Google News son genéricas, no filtran por relevancia técnica real ni ofrecen resúmenes inteligentes.
 
 Se necesitaba un sistema que:
-- Recolectara automáticamente contenido de 30+ fuentes (YouTube, blogs tech, RSS)
+- Recolectara automáticamente contenido de 139 fuentes (YouTube, blogs tech, RSS, redes sociales)
 - Clasificara y deduplicara el contenido en tiempo real
-- Generara un resumen semanal con IA tipo "editor senior de tecnología"
-- Desplegara un dashboard interactivo con filtros por canal y fecha
-- Enviara una newsletter diaria con diseño curado
+- Generara resúmenes por noticia y un recap semanal con IA
+- Desplegara un dashboard interactivo con filtros combinables
+- Enviara notificaciones por Telegram cada 30 minutos con audio TTS
+- Enviara una newsletter diaria con resúmenes curados
 
 ## 2. La Solución Arquitectónica
 
-**Tech Pulse** nace como un pipeline completo de automatización orquestado por GitHub Actions, construido en Python asíncrono.
+**Tech Pulse** nace como un pipeline completo de automatización orquestado por GitHub Actions, construido en Python asíncrono con scripts modulares independientes.
 
 ### Capas del Sistema
 
-- **Capa de Extracción (Scraping):** Arquitectura de extractores especializados con `YouTubeExtractor` (parsea JSON `ytInitialData` directamente) y `WebExtractor` (BeautifulSoup con selectores CSS personalizados por fuente). Usa un `ScraperPro` facade que centraliza las operaciones con semáforo de concurrencia (5 peticiones simultáneas).
+- **Capa de Extracción (Scraping):** Arquitectura de extractores especializados:
+  - `YouTubeExtractor` — parsea JSON `ytInitialData` directamente (vídeos, shorts, livestreams)
+  - `WebExtractor` — BeautifulSoup con selectores CSS personalizados por fuente + `extraer_rss()` para feeds XML (RSS 2.0 y Atom)
+  - `ScraperPro` facade con semáforo de concurrencia (5 peticiones simultáneas)
+  - `AvatarRepository` — caché de avatares de canales YouTube con fallback a UI Avatars
 
-- **Capa de Procesamiento IA:** Integración con Gemini API (`google-genai`) para:
-  - Resumen semanal con análisis de tendencias
-  - Soluciones técnicas a retos de programación con Big-O notation
+- **Capa de Procesamiento IA:** Integración con Gemini API para:
+  - Resumen semanal con análisis de tendencias (modelo `gemini-2.5-pro`)
+  - Resumen individual por noticia (vía `extraer_texto_articulo()` + `resumir_noticia()`)
+  - Traducción de títulos al español en lote
   - Generación de imágenes para posts con Imagen
-  - Traducción de títulos al español
 
-- **Capa de Persistencia:** Historial JSON con control de duplicados por enlace e ID de vídeo, truncado a 900 entradas.
+- **Capa de Persistencia:** Historial JSON con deduplicación automática por URL normalizada y título similar, truncado a 900 entradas.
 
 - **Capa de Distribución:**
-  - Dashboard HTML estático desplegado en Surge.sh
+  - Dashboard HTML/JS estático desplegado en Surge.sh
   - Newsletter HTML con diseño responsive vía Mailgun
+  - Notificaciones Telegram cada 30 min con audio edge-tts (voz española)
   - Posts en markdown para blog Astro vía PR automático
-  - Resumen por Telegram con TTS (edge-tts, voz española)
 
 ### Pipeline de Contenido
 
-El flujo semanal está definido por dos workflows de GitHub Actions:
-1. **Sábado (scraper_workflow.yml):** Optimiza imágenes → scrapea fuentes → genera resumen IA → PR al blog → despliega dashboard
-2. **Domingo (hunt_challenges.yml):** Busca retos de programación → genera soluciones con IA → PR al blog
+Cada script es independiente y orquestable por separado:
+
+1. `scrape_news.py` → `files/noticias_historico.json` (web + YouTube + RSS)
+2. `scrape_tools.py` → `files/herramientas.json` (GitHub Trending + Product Hunt)
+3. `scrape_trends.py` → `files/trends.json` (Google Trends + TikTok via Playwright)
+4. `generate_weekly.py` → `auto-news/` (recap MD) + `public/` (dashboard + data.json)
+5. `send_email.py` → Mailgun (diario 09:00 UTC)
+6. `send_telegram.py` → Telegram con TTS (cada 30 min)
 
 ## 3. Retos Técnicos y Decisiones de Diseño
 
-### Gestión de APIs con Rate Limiting
+### Arquitectura Modular vs Monolito
 
-Las APIs de Gemini tienen cuotas estrictas. Se implementó un sistema de **failover con reintentos** que prueba 3 modelos distintos (gemini-2.5-flash → gemini-2.5-pro) con backoff exponencial de 5 segundos. Si todos fallan, se usa una base de datos local de soluciones hardcoded (`solutions_db.py`) como plan C.
+Originalmente todo el scraping vivía en un único `downloadFile.py`. Se refactorizó a 6 scripts independientes para permitir ejecución selectiva por workflow y facilitar el mantenimiento. Cada script tiene sus propias dependencias y puede ejecutarse en solitario.
+
+### Deduplicación Inteligente
+
+La función `deduplicar_items()` en `utils.py` elimina duplicados en dos niveles:
+- **URL normalizada:** quita `?utm_*`, `#fragment`, trailing `/`, normaliza `http` → `https`
+- **Título similar:** compara el prefijo al 85% del título más corto para detectar la misma noticia con variaciones
 
 ```python
-for modelo in modelos:
-    for intento in range(2):
-        try:
-            response = client.models.generate_content(model=modelo, contents=prompt)
-            match = re.search(r'(\{.*\})', response.text.strip(), re.DOTALL)
-            if match:
-                data = json.loads(match.group(1))
-                if data.get('codigo') and len(data['codigo']) > 80:
-                    return data
-        except Exception as e:
-            if "429" in str(e) or "QUOTA" in str(e):
-                await asyncio.sleep(5)  # backoff
+def normalizar_url(url: str) -> str:
+    url = url.split("?")[0].split("#")[0].rstrip("/")
+    return url.replace("http://", "https://").lower()
 ```
+
+### 20 Fuentes RSS
+
+Se añadieron fuentes RSS como alternativa ligera a scraping HTML: OpenAI Blog, Anthropic Blog, Google DeepMind, Meta AI Blog, Mistral AI News, Hacker News, Stack Overflow Blog, LangChain Blog, Google AI Blog, MIT Tech Review AI, Google Search Central, Moz Blog SEO, Search Engine Journal, Wired AI, The Verge AI, TechCrunch AI, Ars Technica AI, Dev.to, GitHub Engineering. El parser soporta RSS 2.0 y Atom, con detección automática de namespace.
 
 ### Renderizado Client-Side del Dashboard
 
-Originalmente Python generaba todo el HTML con decenas de miles de líneas inline. Se refactorizó a una arquitectura **SPA ligera**:
+Python genera un `index.html` shell (~2KB) + `data.json` con el historial completo. JavaScript (`script.js`) construye dinámicamente:
 
-- Python solo genera un `index.html` shell (~2KB) + `data.json` con el historial completo
-- JavaScript (`script.js`) carga el JSON, construye filtros dinámicos por canal/fecha, renderiza vídeos y noticias
-- Los filtros operan sobre el dataset completo (900+ registros), no solo un subconjunto
+- **Filtros combinables:** categoría (IA, Programación, DevOps, etc.), tipo (Tech/Beca/RSS), fuente RSS específica, canal, semana
+- **Chips con favicon:** cada chip de canal/fuente muestra avatar o favicon via Google S2 (`//www.google.com/s2/favicons?domain=...`)
+- **Ranking GitHub Stars:** top 20 repos ordenados por estrellas extraídos de GitHub Topics/Collections, con filtro por nombre/lenguaje
+- **Badges con clases CSS unificadas:** `.badge-tech`, `.badge-beca`, `.badge-rss`, `.badge-cat`
 
-### Extracción Robusta de YouTube
+### Telegram con Audio por Noticia
 
-YouTube no ofrece API pública gratuita para scraping. Se implementó un parser que extrae el objeto `ytInitialData` del HTML, con fallback a regex cuando el JSON no está disponible. Soporta vídeos, shorts y livestreams con detección de estado "EN DIRECTO".
+`send_telegram.py` envía cada noticia nueva como mensaje separado con:
+- Resumen IA de 3-4 líneas generado por Gemini
+- Botón inline al dashboard
+- Audio TTS con edge-tts (voz `es-ES-AlvaroNeural`)
+- Control de duplicados vía `telegram_sent.json`
+
+### Noticias desde 139 Fuentes
+
+| Tipo | Cantidad | Ejemplos |
+|------|----------|----------|
+| YouTube | 20+ canales | MoureDev, Midudev, Pelado Nerd, Ringa Tech, Nethermind |
+| Web HTML | 60+ sitios | Xataka, TechCrunch, The Verge, Wired, Hacker News, GitHub Blog |
+| RSS XML | 20 feeds | OpenAI, Anthropic, DeepMind, Hacker News, Stack Overflow, SEO |
+| Twitter/X | 10+ cuentas | GitHub, Vercel, Astro, dotpige, Bricemoure |
+| Herramientas | 3 fuentes | GitHub Trending, GitHub Topics, Product Hunt |
 
 ## 4. Desglose del Feature Set
 
-- **30+ fuentes monitorizadas:** YouTube (15 canales), blogs tech (Xataka, Genbeta, TechCrunch, The Verge, Wired, HackerNews, etc.), fuentes de becas
-- **Clasificación inteligente:** Filtrado por keywords tech vs becas con badges visuales
-- **Dashboard interactivo:** Filtros combinados por canal + fecha, selector por semanas agrupado por meses, tarjetas de vídeo con miniaturas
-- **Newsletter diaria:**
-  - Dark mode support (`prefers-color-scheme`)
-  - Estadísticas rápidas (tech, becas, multimedia)
-  - Resumen generado por Gemini con badge "generado con IA"
-  - Lista curada de enlaces con iconos por tipo
-- **Generación de retos:** Cacería semanal en Codewars + retosdeprogramacion.com, con soluciones en 12 lenguajes
-- **Dashboard SEO:** Meta tags Open Graph, Twitter Cards, meta description, canonical URL
+- **139 fuentes monitorizadas:** YouTube, blogs tech, RSS, Twitter, GitHub, Product Hunt
+- **Clasificación inteligente:** 7 categorías (IA, Programación, DevOps, Ciberseguridad, Hardware, Negocios, Becas) + badges Tech/Beca/RSS
+- **Dashboard interactivo:** filtros combinables por categoría + tipo + fuente RSS + canal + semana, ranking GitHub Stars
+- **Newsletter diaria:** resúmenes individuales por noticia con Gemini, estadísticas rápidas
+- **Telegram cada 30 min:** notificaciones con resumen IA + audio TTS, dedup entre envíos
+- **Ranking GitHub Stars:** top 20 repos ordenados por estrellas desde GitHub Topics/Collections
+- **Deduplicación:** por URL normalizada y título similar en scrape y generación de dashboard
+- **SEO:** meta tags Open Graph, Twitter Cards, JSON-LD WebSite
 
 ## 5. Puesta en Marcha Local
 
 ```bash
-# Clonar el repositorio
 git clone https://github.com/jorbencas/test_githubActions.git
 cd test_githubActions
-
-# Crear entorno virtual e instalar dependencias
-python -m venv .venv
-source .venv/bin/activate
+python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
-# Configurar variables de entorno
-cp .env.example .env
-# Editar .env con GEMINI_API_KEY, MAILGUN_API_KEY, etc.
+# Scrapear noticias
+python scrape_news.py
 
-# Ejecutar el scraper completo
-python downloadFile.py
+# Scrapear herramientas
+python scrape_tools.py
 
-# O solo la cacería de retos
-python hunt_challenges.py
+# Generar dashboard
+python generate_weekly.py
 
-# En modo offline (sin IA)
-python hunt_challenges.py --offline
+# Enviar Telegram (dry-run)
+python send_telegram.py --dry-run --max-items 3
+
+# Enviar email (dry-run)
+python send_email.py --dry-run --max-items 5
 ```
 
-El dashboard se genera en `public/index.html` y se puede previsualizar localmente abriendo el archivo en el navegador o sirviéndolo con `python -m http.server -d public`.
+El dashboard se genera en `public/index.html` y se puede previsualizar con `python -m http.server -d public`.
 
 ## 6. Live Demo
 
-El dashboard está desplegado y accesible públicamente, con actualización automática cada semana.
+El dashboard está desplegado y accesible públicamente, con actualización automática cada semana y notificaciones cada 30 minutos.
 
 👉 **[Abrir Tech Pulse Dashboard](https://jorbencasdownloaderdocument.surge.sh)**
 
 ---
 
-*Este proyecto es el motor de contenido automatizado detrás de las secciones de noticias y retos del blog.*
+*Este proyecto es el motor de contenido automatizado detrás de las secciones de noticias del blog.*
