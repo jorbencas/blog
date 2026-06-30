@@ -170,7 +170,7 @@ services:
     depends_on:
       - db
   db:
-    image: postgres:16-alpine
+    image: "img/guia_0_100_docker/guia_0_100_docker_cover-1200.webp"
     volumes:
       - pgdata:/var/lib/postgresql/data
     environment:
@@ -586,7 +586,7 @@ services:
     networks:
       - backend
   sidecar-proxy:
-    image: nginx:alpine
+    image: "img/guia_0_100_docker/guia_0_100_docker_cover-1200.webp"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     ports:
@@ -612,7 +612,7 @@ services:
     depends_on:
       - ambassador
   ambassador:
-    image: haproxy:alpine
+    image: "img/guia_0_100_docker/guia_0_100_docker_cover-1200.webp"
     volumes:
       - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
 ```
@@ -623,7 +623,7 @@ Contenedores que se ejecutan antes que el principal para preparar el entorno.
 ```yaml
 services:
   init-db:
-    image: postgres:16-alpine
+    image: "img/guia_0_100_docker/guia_0_100_docker_cover-1200.webp"
     environment:
       - DATABASE_URL=postgres://user:pass@db:5432/miapp
     depends_on:
@@ -859,7 +859,7 @@ spec:
     spec:
       containers:
         - name: api
-          image: mi-app:latest
+          image: "img/guia_0_100_docker/guia_0_100_docker_cover-1200.webp"
           ports:
             - containerPort: 3000
           resources:
@@ -965,13 +965,13 @@ spec:
 ```yaml
 services:
   prometheus:
-    image: prom/prometheus
+    image: "img/guia_0_100_docker/guia_0_100_docker_cover-1200.webp"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - "9090:9090"
   grafana:
-    image: grafana/grafana
+    image: "img/guia_0_100_docker/guia_0_100_docker_cover-1200.webp"
     ports:
       - "3000:3000"
     environment:
@@ -1149,7 +1149,7 @@ services:
         max-file: "3"
 
   db:
-    image: postgres:16-alpine
+    image: "img/guia_0_100_docker/guia_0_100_docker_cover-1200.webp"
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -1164,7 +1164,7 @@ services:
       retries: 5
 
   redis:
-    image: redis:7-alpine
+    image: "img/guia_0_100_docker/guia_0_100_docker_cover-1200.webp"
     volumes:
       - redis-data:/data
     healthcheck:
@@ -1336,7 +1336,7 @@ PORT=3000
 ```yaml
 services:
   docker-socket-proxy:
-    image: tecnativa/docker-socket-proxy
+    image: "img/guia_0_100_docker/guia_0_100_docker_cover-1200.webp"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
