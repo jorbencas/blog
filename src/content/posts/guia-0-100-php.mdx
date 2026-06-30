@@ -110,6 +110,8 @@ alias pint='vendor/bin/pint'
 
 ## Primeros pasos y configuración del entorno
 
+Si prefieres ver directamente el "Hola Mundo" en PHP, consulta [El Atlas del Hola Mundo](/posts/hola/#php).
+
 ### El REPL
 
 PHP incluye un intérprete interactivo. Ejecuta `php -a` en terminal y escribe directamente:
@@ -206,9 +208,7 @@ Archivo `composer.json` básico:
 
 ### Editores recomendados
 
-- **VSCode**: extensión **PHP Intelephense** (de Ben Mewburn) — autocompletado, navegación, diagnósticos, refactors. Complemento con **PHP Debug** (Xdebug) y **Laravel Extra Intellisense**. Perfil recomendado: `Ctrl+Shift+P → Preferences: Open Profile → PHP`
-- **PHPStorm**: IDE específico de JetBrains. Depurador visual, refactorings avanzados, integración con Symfony/Laravel, base de datos, PHPStan/Psalm integrado (De pago, pero el mejor para PHP)
-- **Neovim**: con `nvim-lspconfig` + `intelephense`, `phpactor` como LSP alternativo, `mason.nvim` para instalación
+Los IDEs y editores más usados son [VSCode](/posts/resources/#ides-y-editores-de-codigo), [JetBrains](/posts/resources/#ides-y-editores-de-codigo) y [Neovim](/posts/resources/#ides-y-editores-de-codigo). Extensiones y configuraciones recomendadas en [Recursos](/posts/resources/#ides-y-editores-de-codigo).
 
 ### Configuración inicial del proyecto
 
@@ -372,8 +372,12 @@ while ($row = mysqli_fetch_assoc($result)) {
 
 ### Variables
 
-Toda variable empieza por `$`. No necesitan declaración previa. El tipado es dinámico pero con declaraciones opcionales desde PHP 5 (tipos en funciones) y PHP 7.4 (typed properties).
+#### ¿Qué es?
+En PHP, toda variable empieza por `$`. No necesitan declaración previa ni tipo explícito — el tipado es dinámico aunque desde PHP 5 se pueden declarar tipos en funciones y desde PHP 7.4 en propiedades. La primera asignación define el tipo y el contenido.
 
+🔗 [PHP Manual — Variables](https://www.php.net/manual/en/language.variables.php)
+
+#### Sintaxis básica
 ```php
 <?php
 $nombre = "Ana";        // string
@@ -383,82 +387,165 @@ $activo = true;         // bool
 $datos = null;          // null
 ```
 
+| Convención | Ejemplo | Ámbito |
+|---|---|---|
+| `$variable` | `$nombre` | Local |
+| `$GLOBALS['var']` | `$GLOBALS['db']` | Global |
+| `$_GET`, `$_POST` | `$_GET['id']` | Superglobal |
+| `$this->prop` | `$this->nombre` | De instancia |
+
+#### 🧪 Cómo probarlo
+```php
+<?php
+// variables.php
+$nombre = "Ana";
+$edad = 28;
+var_dump($nombre); // string(3) "Ana"
+var_dump($edad);   // int(28)
+echo '$nombre vale ' . $nombre;
+
+// Test con PHPUnit
+// vendor/bin/phpunit --filter testVariables
+// public function testVariables(): void {
+//     $nombre = "Ana";
+//     $this->assertSame("Ana", $nombre);
+// }
+```
+
+#### 💡 Memoria y rendimiento
+- Las variables son contenedores **zval** que almacenan tipo, valor y **refcount**
+- **Copy-on-write**: asignar `$b = $a` no copia hasta que se modifica
+- `unset()` decrementa refcount, el GC libera cuando llega a 0
+- Las superglobales (`$_GET`, `$_POST`, `$_SERVER`) existen siempre en request — no las reasignes sin necesidad
+
+#### ✅ Buenas prácticas
+- Usa nombres descriptivos en camelCase o snake_case (elige uno y sé consistente)
+- ✅ Declara tipos en propiedades y funciones desde PHP 7.4+
+- ✅ Inicializa variables explícitamente
+- ❌ **Nunca uses `extract()`** en datos del usuario — permite inyección de variables
+- ❌ **No confíes en `register_globals`** (eliminado en PHP 5.4)
+- ⚠️ `$_GET`, `$_POST` contienen strings — conviértelos explícitamente con `(int)` o `intval()`
+
+#### 🏗️ Metodología
+Las variables en PHP se usan en todos los paradigmas. En scripts pequeños, las globales son aceptables. En proyectos grandes (>10k líneas), encapsula todo en clases o funciones con inyección de dependencias.
+
+#### 🔗 Para saber más
+- [PHP Manual — Variable basics](https://www.php.net/manual/en/language.variables.basics.php)
+- [PHP The Right Way — Variables](https://phptherightway.com/#variables)
+
 ### Tipos escalares
 
+#### ¿Qué es?
+PHP tiene cuatro tipos escalares: `int`, `float`, `string` y `bool`. Son los bloques básicos sobre los que se construyen todos los demás tipos. Internamente, el Zend Engine los representa como estructuras C dentro del contenedor zval.
+
+🔗 [PHP Manual — Scalar Types](https://www.php.net/manual/en/language.types.intro.php)
+
+#### Sintaxis básica
 | Tipo | Desde | Ejemplo | Descripción |
 |---|---|---|---|
-| `int` | PHP 4 | `42` | Entero (64 bits en sistemas 64-bit) |
-| `float` | PHP 4 | `3.14` | Punto flotante (double precision IEEE 754) |
-| `string` | PHP 4 | `"hola"` | Secuencia de bytes (binaria, no Unicode nativo) |
+| `int` | PHP 4 | `42` | Entero 64 bits |
+| `float` | PHP 4 | `3.14` | Punto flotante IEEE 754 |
+| `string` | PHP 4 | `"hola"` | Secuencia de bytes |
 | `bool` | PHP 4 | `true` | Booleano |
 
-### Tipos compuestos
-
-| Tipo | Desde | Descripción |
-|---|---|---|
-| `array` | PHP 4 | Mapa ordenado (tabla hash) |
-| `object` | PHP 4 | Instancia de clase |
-| `callable` | PHP 5.4 | Función, método o closure invocable |
-| `iterable` | PHP 7.1 | `array` o `Traversable` (acepta foreach) |
-
-### Tipos especiales (standalone)
-
-| Tipo | Desde | Descripción |
-|---|---|---|
-| `mixed` | PHP 8.0 | Cualquier tipo |
-| `void` | PHP 7.1 | No retorna valor |
-| `never` | PHP 8.1 | Nunca retorna (exit, throw) |
-| `null` | PHP 8.2 | Solo `null` como tipo independiente |
-| `false` | PHP 8.2 | Solo `false` como tipo |
-| `true` | PHP 8.2 | Solo `true` como tipo |
-
 ```php
 <?php
-declare(strict_types=1);
-
-function mixto(mixed $v): mixed { return $v; }
-function sinRetorno(): void {}
-function abortar(): never { exit(1); }
-function nulo(): null { return null; }
-function falla(): false { return false; }
+$entero = 42;
+$flotante = 3.14;
+$texto = "Hola";
+$booleano = true;
 ```
 
-### Typed properties (PHP 7.4+)
-
-```php
-<?php
-class Usuario
-{
-    public string $nombre;
-    protected int $edad;
-    private ?string $email = null;
-}
+#### 🧪 Cómo probarlo
+```bash
+php -r 'var_dump(is_int(42), is_float(3.14), is_string("a"), is_bool(true));'
 ```
+
+#### 💡 Memoria y rendimiento
+| Tipo | Tamaño (64-bit) | Notas |
+|---|---|---|
+| `int` | 8 bytes | Precisión exacta hasta 9.007.199.254.740.991 |
+| `float` | 8 bytes | IEEE 754 double — no exacto para decimales |
+| `bool` | 1 byte | Almacenado como zend_long internamente |
+| `string` | Variable | 1 byte por carácter + overhead zval |
+
+#### ✅ Buenas prácticas
+- Usa `===` para comparar escalares (compara tipo y valor)
+- Convierte explícitamente: `(int) $input`, `strval()`, `floatval()`
+- ⚠️ `0 == "foo"` devuelve `true` en modo débil — usa `===`
+- Prefiere `declare(strict_types=1)` en archivos nuevos
+
+#### 🏗️ Metodología
+Los escalares son la base de cualquier programa PHP. Úsalos directamente para datos simples. Para datos complejos con validación, envuélvelos en Value Objects.
+
+#### 🔗 Para saber más
+- [PHP Manual — Integer](https://www.php.net/manual/en/language.types.integer.php)
+- [PHP Manual — Float](https://www.php.net/manual/en/language.types.float.php)
 
 ### Strings
 
-PHP strings son secuencias de bytes. No hay codificación Unicode nativa — se usa `mbstring` para UTF-8.
+#### ¿Qué es?
+Los strings en PHP son secuencias de bytes. No hay codificación Unicode nativa — para UTF-8 se necesita la extensión `mbstring` (multibyte string). PHP soporta 4 sintaxis distintas de strings: comillas simples, dobles, heredoc y nowdoc.
 
+🔗 [PHP Manual — Strings](https://www.php.net/manual/en/language.types.string.php)
+
+#### Sintaxis básica
 ```php
 <?php
-$s1 = 'Hola $nombre';                                   // literal: "Hola $nombre"
-$s2 = "Hola $nombre";                                   // "Hola Ana"
-$s3 = <<<TEXT
+$nombre = "Ana";
+$s1 = 'Hola $nombre';        // literal: "Hola $nombre"
+$s2 = "Hola $nombre";        // interpolado: "Hola Ana"
+$s3 = <<<TEXT                // heredoc
 Línea 1
 Línea 2
 TEXT;
-$s4 = <<<'TEXT'
+$s4 = <<<'TEXT'              // nowdoc (sin interpolación)
 Línea $nombre
 TEXT;
 
-echo mb_strlen('ññ');       // 2 (no 4 como strlen)
-echo mb_substr('café', 2);  // 'fé'
+echo mb_strlen('ññ');        // 2 (no 4 como strlen)
+echo mb_substr('café', 2);   // 'fé'
 ```
+
+#### 🧪 Cómo probarlo
+```php
+<?php
+// strings.php
+$nombre = "Ana";
+$saludo = "Hola, $nombre";
+assert($saludo === "Hola, Ana");
+
+$longitud = mb_strlen('ññ');
+assert($longitud === 2);
+```
+
+#### 💡 Memoria y rendimiento
+- Las strings son mutables pero la reasignación crea una nueva
+- `mbstring` es ~2x más lento que `strlen`/`substr` pero necesario para UTF-8
+- Para concatenación masiva, usa `implode()` o `sprintf()` en vez de `.=` en bucles
+- Las strings entre comillas dobles se parsean en busca de variables — es marginalmente más lento que comillas simples
+
+#### ✅ Buenas prácticas
+- Usa `mb_*` funciones para cualquier texto con acentos/ñ/emojis
+- Prefiere `sprintf()` o `implode()` sobre concatenación con `.`
+- ⚠️ `strlen('café')` da 5 (no 4) porque 'é' ocupa 2 bytes en UTF-8
+- ❌ No uses `$$` para variables variables con strings del usuario
+
+#### 🏗️ Metodología
+Las strings en PHP son el tipo más ubicuo — se usan para HTML, SQL, JSON, rutas. Para textos cortos usa comillas simples. Para textos con formato usa heredoc. Para internacionalización, encapsula strings en funciones `__()` o similar.
+
+#### 🔗 Para saber más
+- [PHP Manual — String functions](https://www.php.net/manual/en/ref.strings.php)
+- [PHP Manual — mbstring](https://www.php.net/manual/en/book.mbstring.php)
 
 ### Arrays
 
-Los arrays de PHP son mapas ordenados. Internamente son tablas hash que mantienen el orden de inserción.
+#### ¿Qué es?
+Los arrays de PHP son **mapas ordenados** — internamente son tablas hash que mantienen el orden de inserción. Pueden funcionar como listas, diccionarios, pilas, colas, conjuntos, etc. Es la estructura de datos más versátil y la más usada en PHP.
 
+🔗 [PHP Manual — Arrays](https://www.php.net/manual/en/language.types.array.php)
+
+#### Sintaxis básica
 ```php
 <?php
 $nums = [1, 2, 3, 4, 5];
@@ -474,27 +561,55 @@ $vals = array_values($user);
 $pos = array_search(3, $nums);
 $existe = in_array(3, $nums);
 
-sort($nums);
-rsort($nums);
-asort($nums);
-ksort($nums);
+sort($nums);  rsort($nums);  asort($nums);  ksort($nums);
 usort($nums, fn($a, $b) => $a <=> $b);
 ```
 
-### Typed arrays (SplFixedArray)
-
+#### 🧪 Cómo probarlo
 ```php
 <?php
-$arr = SplFixedArray::fromArray([1, 2, 3]);
-$arr[0] = 10;
-echo $arr[1];
-$arr->setSize(5);
+$nums = [1, 2, 3, 4, 5];
+$pares = array_filter($nums, fn($n) => $n % 2 === 0);
+assert($pares === [2, 4]);
+
+$suma = array_reduce($nums, fn($c, $n) => $c + $n, 0);
+assert($suma === 15);
 ```
 
-### Gestión de memoria
+#### 💡 Memoria y rendimiento
+| Operación | Complejidad | Notas |
+|---|---|---|
+| Acceso `$arr[$key]` | O(1) promedio | Tabla hash |
+| Inserción `$arr[] = $val` | O(1) amortizado | |
+| `in_array()` / `array_search()` | O(n) | Búsqueda lineal |
+| `isset($arr[$key])` | O(1) | |
+| `sort()` | O(n log n) | Quicksort |
+| `array_map()` / `array_filter()` | O(n) | |
 
-PHP usa el Zend Engine con un administrador de memoria propio.
+Cada array tiene overhead ~56 bytes + 32 bytes por elemento (zval + hash bucket).
 
+#### ✅ Buenas prácticas
+- ✅ Usa `array_map`/`array_filter`/`array_reduce` en lugar de `foreach` para transformaciones
+- ✅ `isset()` es O(1), prefiérelo sobre `array_key_exists()` con valores null
+- ⚠️ `foreach` con `&` (referencia) requiere `unset()` después para evitar efectos laterales
+- ❌ No uses `extract()` — dificulta el seguimiento de variables
+- ❌ No mezcles índices numéricos y asociativos en el mismo array
+
+#### 🏗️ Metodología
+Los arrays en PHP son todoterreno. Para datos simples: arrays numéricos. Para registros: arrays asociativos. Para colecciones grandes (>100k elementos): `SplFixedArray`. Para pilas/colas: `SplStack`/`SplQueue`. Para conjuntos: usa claves de array como `$set[$valor] = true`.
+
+#### 🔗 Para saber más
+- [PHP Manual — Array functions](https://www.php.net/manual/en/ref.array.php)
+- [PHP Manual — SPL Data Structures](https://www.php.net/manual/en/spl.datastructures.php)
+
+### Gestión de memoria en PHP
+
+#### ¿Qué es?
+PHP usa el **Zend Engine** con un administrador de memoria propio que gestiona zval (contenedores de valor), copy-on-write y garbage collection cíclico. Es importante entenderlo para escribir código eficiente y evitar fugas de memoria.
+
+🔗 [PHP Manual — GC](https://www.php.net/manual/en/features.gc.refcounting-basics.php)
+
+#### Sintaxis básica
 ```php
 <?php
 $a = range(1, 1000000);
@@ -503,11 +618,34 @@ $b[0] = 999;   // aquí se copia (separación)
 unset($a);     // decrementa refcount
 ```
 
-- **zval**: contenedor de valor que almacena tipo, valor y **refcount**
-- **Copy-on-write**: al asignar no se copia hasta que se modifica
-- **GC cíclico**: no existía hasta PHP 5.3; desde PHP 7.3+ está siempre activo
+#### 🧪 Cómo probarlo
+```bash
+php -r '
+$a = range(1, 1000);
+$b = $a;
+debug_zval_ref($a);
+'
+```
 
-<sup>Fuente: [PHP Manual — Types](https://www.php.net/manual/en/language.types.intro.php), [PHP Manual — Arrays](https://www.php.net/manual/en/language.types.array.php), [PHP Manual — Strings](https://www.php.net/manual/en/language.types.string.php), [PHP Manual — Reference Counting](https://www.php.net/manual/en/features.gc.refcounting-basics.php), [PHP 8.2 — Standalone Types RFC](https://wiki.php.net/rfc/standalone_types_php)</sup>
+#### 💡 Memoria y rendimiento
+- **zval**: 16 bytes + 8 bytes por valor (tipos simples) + hash bucket (~24 bytes en arrays)
+- **Copy-on-write**: asignar no copia hasta que modificas — ahorra memoria masivamente
+- **GC cíclico**: no existía hasta PHP 5.3; desde PHP 7.3+ está siempre activo
+- ⚠️ **Referencias circulares**: objetos que se apuntan mutuamente no se liberan hasta el GC cíclico
+- `memory_get_usage()` y `memory_get_peak_usage()` para monitorizar
+
+#### ✅ Buenas prácticas
+- ✅ `unset()` grandes estructuras cuando ya no las necesites
+- ✅ Usa `SplFixedArray` para arrays grandes de tamaño fijo
+- ⚠️ Las referencias (`&`) rompen el copy-on-write
+- ⚠️ Los generadores (`yield`) mantienen memoria constante incluso con datos grandes
+
+#### 🏗️ Metodología
+Para scripts pequeños (`&lt;1k` líneas) no te preocupes por la memoria. Para aplicaciones grandes, usa profiling con Xdebug y monitoriza con `memory_get_usage()`. Los generadores son la herramienta clave para procesar archivos grandes (logs, CSV) sin agotar memoria.
+
+#### 🔗 Para saber más
+- [PHP Manual — Reference Counting](https://www.php.net/manual/en/features.gc.refcounting-basics.php)
+- [PHP Manual — Memory Management](https://www.php.net/manual/en/internals2.memory.php)
 
 ---
 
@@ -515,6 +653,12 @@ unset($a);     // decrementa refcount
 
 ### Condicionales
 
+#### ¿Qué es?
+PHP ofrece las estructuras típicas de control: `if/elseif/else`, `switch`, y desde PHP 8.0 la expresión `match`. Las condicionales controlan qué bloques de código se ejecutan según una condición booleana.
+
+🔗 [PHP Manual — Control Structures](https://www.php.net/manual/en/language.control-structures.php)
+
+#### Sintaxis básica
 ```php
 <?php
 $edad = 18;
@@ -543,8 +687,47 @@ $categoria = match (true) {
 };
 ```
 
+| Estructura | Cuándo usarla |
+|---|---|
+| `if/elseif/else` | Condiciones complejas con operadores lógicos |
+| `switch` | Una variable contra múltiples valores fijos |
+| `match` (PHP 8.0) | Switch mejorado con tipado estricto y sin break |
+
+#### 🧪 Cómo probarlo
+```bash
+php -r '
+$edad = 18;
+$cat = match (true) { $edad < 12 => "Niño", $edad < 65 => "Adulto", default => "Senior" };
+var_dump($cat);
+'
+```
+
+#### 💡 Memoria y rendimiento
+- `match` es tan rápido como `switch` pero más seguro (tipado estricto)
+- `if/elseif` con muchas ramas (>10) puede beneficiarse de un array mapa en vez de condicionales
+- `switch` con `break` olvidado es la fuente #1 de bugs en condicionales
+
+#### ✅ Buenas prácticas
+- ✅ Prefiere `match` sobre `switch` desde PHP 8.0
+- ⚠️ Nunca olvides `break` en `switch`
+- ✅ Usa early returns para evitar anidamiento profundo
+- ❌ No uses `else` después de `return` — es código muerto
+
+#### 🏗️ Metodología
+Para 2-3 ramas usa `if/else`. Para múltiples valores fijos usa `match`. Para lógica compleja con side effects usa `if` con guards. En código funcional, prefiere `match` como expresión que retorna valor.
+
+#### 🔗 Para saber más
+- [PHP 8.0 Match Expression RFC](https://wiki.php.net/rfc/match_expression_v2)
+- [PHP Manual — Comparison Operators](https://www.php.net/manual/en/language.operators.comparison.php)
+
 ### Bucles
 
+#### ¿Qué es?
+PHP soporta 4 tipos de bucles: `for`, `foreach`, `while` y `do/while`. `foreach` es el más usado por su sintaxis limpia con arrays. Los bucles pueden anidarse y usar `break N` para salir de múltiples niveles.
+
+🔗 [PHP Manual — Loops](https://www.php.net/manual/en/language.control-structures.php)
+
+#### Sintaxis básica
 ```php
 <?php
 $nums = [1, 2, 3, 4, 5];
@@ -584,8 +767,43 @@ for ($i = 0; $i < 10; $i++) {
 }
 ```
 
+#### 🧪 Cómo probarlo
+```bash
+php -r '
+$nums = [1, 2, 3];
+$sum = 0;
+foreach ($nums as $n) $sum += $n;
+var_dump($sum); // int(6)
+'
+```
+
+#### 💡 Memoria y rendimiento
+- `foreach` sobre arrays es O(n) — tan eficiente como `for`
+- `for ($i = 0; $i < count($arr); $i++)` evalúa `count()` en cada iteración — guarda el tamaño en variable
+- `foreach` con `&` (referencia) mantiene la referencia después del bucle — siempre usa `unset()`
+- Los generadores (`yield`) evitan construir el array completo en memoria
+
+#### ✅ Buenas prácticas
+- ✅ `foreach` sobre `for` para arrays — más legible y seguro
+- ⚠️ Siempre `unset()` la referencia después de `foreach (&$v)`
+- ✅ `break 2` para salir de bucles anidados
+- ❌ No modifiques el array mientras iteras con `foreach`
+
+#### 🏗️ Metodología
+Usa `foreach` para recorrer colecciones (95% de los casos). Usa `for` cuando necesites un índice numérico. Usa `while` para buques basados en condición (lectura de archivos, streams). Usa `do/while` cuando necesites ejecutar al menos una vez.
+
+#### 🔗 Para saber más
+- [PHP Manual — foreach](https://www.php.net/manual/en/control-structures.foreach.php)
+- [PHP Manual — Generators](https://www.php.net/manual/en/language.generators.php)
+
 ### Excepciones
 
+#### ¿Qué es?
+PHP tiene un sistema de excepciones con `try/catch/finally`. Desde PHP 7.1 puedes capturar múltiples tipos en un mismo catch con pipe (`|`). `Throwable` es la interfaz base que implementan `Exception` y `Error`.
+
+🔗 [PHP Manual — Exceptions](https://www.php.net/manual/en/language.exceptions.php)
+
+#### Sintaxis básica
 ```php
 <?php
 try {
@@ -604,8 +822,48 @@ try {
 $nombre = $_GET['name'] ?? throw new \InvalidArgumentException('Name required');
 ```
 
+#### 🧪 Cómo probarlo
+```php
+<?php
+// exceptions.php
+function dividir(int $a, int $b): float {
+    if ($b === 0) throw new \DivisionByZeroError('División por cero');
+    return $a / $b;
+}
+
+try {
+    echo dividir(10, 0);
+} catch (\DivisionByZeroError $e) {
+    echo "Error: " . $e->getMessage();
+}
+```
+
+#### 💡 Memoria y rendimiento
+- Lanzar excepciones es lento (~1000x más que un `if`) — úsalas para errores excepcionales, no para control de flujo
+- El bloque `finally` se ejecuta siempre, incluso si hay `return` en `try`
+- `throw` como expresión (PHP 8.0) permite lanzar en lugares donde antes no se podía (operador ternario, null coalescing)
+
+#### ✅ Buenas prácticas
+- ✅ Captura excepciones específicas, no `\Exception` a secas
+- ✅ Usa `finally` para liberar recursos (archivos, BD)
+- ⚠️ No uses excepciones para control de flujo normal
+- ✅ Personaliza excepciones extendiendo `\RuntimeException` o `\DomainException`
+
+#### 🏗️ Metodología
+Las excepciones son para situaciones excepcionales. Para validación de input del usuario, prefiere devolver errores. Para errores de infraestructura (BD caída, archivo no encontrado), la excepción es correcta. En APIs, captura en un middleware global.
+
+#### 🔗 Para saber más
+- [PHP Manual — Exception hierarchy](https://www.php.net/manual/en/language.exceptions.php)
+- [PHP The Right Way — Errors](https://phptherightway.com/#error_reporting)
+
 ### Namespaces y autoloading
 
+#### ¿Qué es?
+Los namespaces organizan el código PHP evitando colisiones de nombres. El autoloading carga clases automáticamente sin `require` manual. PSR-4 es el estándar de la comunidad y Composer lo implementa por defecto.
+
+🔗 [PHP Manual — Namespaces](https://www.php.net/manual/en/language.namespaces.php)
+
+#### Sintaxis básica
 ```php
 <?php
 // src/Models/Usuario.php
@@ -646,7 +904,33 @@ spl_autoload_register(function (string $class): void {
 });
 ```
 
-<sup>Fuente: [PHP Manual — Control Structures](https://www.php.net/manual/en/language.control-structures.php), [PHP Manual — Exceptions](https://www.php.net/manual/en/language.exceptions.php), [PHP Manual — Namespaces](https://www.php.net/manual/en/language.namespaces.php), [PHP 8.0 — Match Expression RFC](https://wiki.php.net/rfc/match_expression_v2)</sup>
+#### 🧪 Cómo probarlo
+```bash
+# Verifica autoloading
+php -r '
+require "vendor/autoload.php";
+var_dump(class_exists("App\\Models\\Usuario"));
+'
+```
+
+#### 💡 Memoria y rendimiento
+- Composer genera un classmap optimizado con `composer dump-autoload -o`
+- El autoloading PSR-4 con optimización convierte todo a classmap (O(1) lookup)
+- `include_once` es ligeramente más lento que `include` por la comprobación
+- `require` es igual de rápido que `include` pero para errores fatales
+
+#### ✅ Buenas prácticas
+- ✅ Sigue PSR-4 estrictamente: `App\Models\Usuario` → `src/Models/Usuario.php`
+- ✅ Ejecuta `composer dump-autoload -o` en producción
+- ✅ Siempre `require __DIR__ . '/vendor/autoload.php'` en el entry point
+- ❌ No mezcles `require`, `include` y autoloading — usa solo Composer
+
+#### 🏗️ Metodología
+Para proyectos pequeños (`&lt;5` clases), el autoloading manual con `spl_autoload_register` basta. Para cualquier proyecto que use dependencias externas, Composer es obligatorio. Usa PSR-4 como convención de nombres — es el estándar de la industria.
+
+#### 🔗 Para saber más
+- [PHP-FIG — PSR-4 Autoloader](https://www.php-fig.org/psr/psr-4/)
+- [Composer — Autoloading](https://getcomposer.org/doc/01-basic-usage.md#autoloading)
 
 ---
 
@@ -1708,10 +1992,14 @@ foreach ($filter as $item) {
 
 ## Sistema de archivos
 
-PHP tiene un sistema de archivos muy completo, heredado de C y ampliado con wrappers de stream.
-
 ### Operaciones básicas
 
+#### ¿Qué es?
+PHP tiene un sistema de archivos muy completo, heredado de C y ampliado con wrappers de stream. Ofrece funciones para leer, escribir, copiar, mover, eliminar y recorrer archivos y directorios.
+
+🔗 [PHP Manual — Filesystem](https://www.php.net/manual/en/book.filesystem.php)
+
+#### Sintaxis básica
 ```php
 <?php
 $contenido = file_get_contents('archivo.txt');
@@ -1751,15 +2039,62 @@ foreach ($file as $row) {
 }
 ```
 
+| Función | Descripción |
+|---|---|
+| `file_get_contents($path)` | Lee todo el archivo en un string |
+| `file_put_contents($path, $data)` | Escribe un string en archivo |
+| `fopen() / fgets() / fclose()` | Lectura línea por línea para archivos grandes |
+| `scandir() / glob()` | Listar archivos en directorio |
+| `mkdir() / rmdir()` | Crear/eliminar directorios |
+| `SplFileObject` | OOP para recorrer archivos (especialmente CSV) |
+
+#### 🧪 Cómo probarlo
+```bash
+php -r '
+file_put_contents("test.txt", "Hola Mundo");
+echo file_get_contents("test.txt");
+unlink("test.txt");
+'
+```
+
+#### 💡 Memoria y rendimiento
+- `file_get_contents()` carga todo en memoria — para archivos >100MB usa `fopen()` + `fgets()` o `SplFileObject`
+- `file()` también carga todo en un array — igual que `file_get_contents` pero divide en líneas
+- `glob()` escanea el disco — para búsquedas repetitivas cachea resultados
+- `SplFileObject` con `READ_CSV` es eficiente para archivos CSV grandes
+
+#### ✅ Buenas prácticas
+- ✅ Siempre verifica `file_exists()` antes de leer
+- ✅ Usa `LOCK_EX` en `file_put_contents()` para escritura concurrente
+- ✅ Cierra handles con `fclose()` — PHP lo hace al finalizar el request pero no confíes en ello
+- ⚠️ Los paths relativos dependen del CWD — usa `__DIR__` para paths absolutos
+- ❌ No confíes en `$_FILES['file']['type']` — valida siempre el MIME real con `finfo`
+
+#### 🏗️ Metodología
+Para archivos pequeños (`&lt;10MB`), `file_get_contents()` + `file_put_contents()` es suficiente. Para archivos grandes (`&gt;100MB`), procesa línea por línea. Para archivos remotos, usa streams con contexto (`stream_context_create`). Para archivos compartidos entre requests, considera usar una BD o Redis.
+
+#### 🔗 Para saber más
+- [PHP Manual — Streams](https://www.php.net/manual/en/book.stream.php)
+- [PHP Manual — SplFileObject](https://www.php.net/manual/en/class.splfileobject.php)
+
 ### Formatos estructurados
 
+#### ¿Qué es?
+PHP tiene soporte nativo para JSON, CSV, ZIP, GZIP, y mediante extensiones para YAML, XML y más formatos. JSON es el más usado para APIs y almacenamiento.
+
+🔗 [PHP Manual — JSON](https://www.php.net/manual/en/book.json.php)
+
+#### Sintaxis básica
 ```php
 <?php
 $data = ['nombre' => 'Ana', 'edad' => 28];
+
+// JSON
 $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 file_put_contents('data.json', $json);
 $decoded = json_decode(file_get_contents('data.json'), true);
 
+// CSV
 $handle = fopen('datos.csv', 'w');
 fputcsv($handle, ['Nombre', 'Edad']);
 fputcsv($handle, ['Ana', 28]);
@@ -1771,6 +2106,7 @@ while ($row = fgetcsv($handle)) {
 }
 fclose($handle);
 
+// ZIP
 $zip = new ZipArchive();
 if ($zip->open('archive.zip', ZipArchive::CREATE) === true) {
     $zip->addFile('archivo.txt', 'carpeta/archivo.txt');
@@ -1778,41 +2114,56 @@ if ($zip->open('archive.zip', ZipArchive::CREATE) === true) {
     $zip->close();
 }
 
+// GZIP
 $data = gzencode($contenido, 9);
 file_put_contents('datos.gz', $data);
 $original = gzdecode(file_get_contents('datos.gz'));
 
-// yaml_parse_file('config.yaml');  // requiere pecl install yaml
-
+// MIME
 $finfo = new finfo(FILEINFO_MIME_TYPE);
 echo $finfo->file('imagen.jpg');
 ```
 
-### Archivos temporales
-
-```php
-<?php
-$tmp = tmpfile();
-fwrite($tmp, 'datos temporales');
-rewind($tmp);
-echo fread($tmp, 1024);
-fclose($tmp);
-
-$path = tempnam(sys_get_temp_dir(), 'php_');
-file_put_contents($path, 'contenido');
-unlink($path);
-
-// move_uploaded_file($_FILES['avatar']['tmp_name'], 'uploads/avatar.jpg');
+#### 🧪 Cómo probarlo
+```bash
+php -r '
+echo json_encode(["nombre" => "Ana"]);
+echo json_last_error_msg();
+'
 ```
 
-<sup>Fuente: [PHP Manual — Filesystem](https://www.php.net/manual/en/book.filesystem.php), [PHP Manual — Zip](https://www.php.net/manual/en/book.zip.php), [PHP Manual — JSON](https://www.php.net/manual/en/book.json.php), [PHP Manual — Fileinfo](https://www.php.net/manual/en/book.fileinfo.php)</sup>
+#### 💡 Memoria y rendimiento
+- `json_decode()` sin `true` (objeto stdClass) es más rápido que con `true` (array)
+- CSV con `fgetcsv()` es eficiente para archivos grandes — no carga todo en memoria
+- ZIP en compresión almacenada (store) es rápido pero no reduce tamaño
+- GZIP nivel 9 es el máximo comprimido pero más lento — nivel 6 es el balance óptimo
+
+#### ✅ Buenas prácticas
+- ✅ Siempre verifica `json_last_error()` después de `json_decode()`
+- ✅ Usa `JSON_THROW_ON_ERROR` (PHP 7.3+) para excepciones
+- ✅ Para CSV con caracteres UTF-8, añade BOM al inicio: `"\xEF\xBB\xBF"`
+- ⚠️ `json_decode()` devuelve `null` para JSON inválido — no se puede distinguir del string "null"
+- ❌ No uses `serialize()` para datos que necesites leer desde otros lenguajes
+
+#### 🏗️ Metodología
+JSON para APIs y config. CSV para import/export con hojas de cálculo. ZIP para backups y descargas múltiples. GZIP para logs comprimidos. Para config YAML, usa la extensión `yaml` o Symfony YAML component.
+
+#### 🔗 Para saber más
+- [PHP Manual — CSV](https://www.php.net/manual/en/function.fgetcsv.php)
+- [PHP Manual — ZipArchive](https://www.php.net/manual/en/class.ziparchive.php)
 
 ---
 
 ## Algoritmos
 
-### Array functions de ordenación
+### Ordenación
 
+#### ¿Qué es?
+PHP tiene funciones de ordenación que modifican el array original (sort, rsort, asort, ksort) y variantes con callback (usort, uasort, uksort). Internamente usan Quicksort.
+
+🔗 [PHP Manual — Array Sorting](https://www.php.net/manual/en/array.sorting.php)
+
+#### Sintaxis básica
 ```php
 <?php
 $nums = [5, 3, 8, 1, 9, 2];
@@ -1833,7 +2184,41 @@ shuffle($nums);
 $clave = array_rand($nums);
 ```
 
+#### 🧪 Cómo probarlo
+```bash
+php -r '
+$nums = [5, 3, 8, 1];
+sort($nums);
+var_dump($nums === [1, 3, 5, 8]);
+'
+```
+
+#### 💡 Memoria y rendimiento
+| Algoritmo interno | Complejidad |
+|---|---|
+| sort/rsort | O(n log n) Quicksort |
+| usort/uasort | O(n log n) |
+| natsort | O(n log n) |
+
+Todos modifican el array original — no crean copia. Para arrays grandes (>100k), son eficientes pero consumen memoria extra para la recursión.
+
+#### ✅ Buenas prácticas
+- ✅ Usa el spaceship `<=>` para ordenación ascendente y `$b <=> $a` para descendente
+- ✅ Siempre pasa `SORT_NUMERIC` o `SORT_STRING` como flag para rendimiento
+- ⚠️ `$array = sort($array)` asigna `true` (sort devuelve bool) — error común
+- ❌ No uses `shuffle()` si necesitas reproducibilidad — pasa `srand()` primero
+
+#### 🏗️ Metodología
+Para arrays pequeños (`&lt;1000`), cualquier función sirve. Para grandes volúmenes, prefiere `sort()` sobre `usort()`. Si necesitas ordenación estable, usa `array_multisort()`. Para ordenación natural de strings (`img1.jpg`, `img2.jpg`, `img10.jpg`), usa `natsort()`.
+
+#### 🔗 Para saber más
+- [PHP Manual — Sorting](https://www.php.net/manual/en/array.sorting.php)
+- [Wikipedia — Quicksort](https://en.wikipedia.org/wiki/Quicksort)
+
 ### Búsqueda y comparación
+
+#### ¿Qué es?
+Funciones para buscar elementos en arrays: `in_array()`, `array_search()`, `array_key_exists()`. También para comparar arrays: `array_diff()`, `array_intersect()`, `array_unique()`.
 
 ```php
 <?php
@@ -1849,7 +2234,21 @@ $intersect = array_intersect([1, 2, 3], [2, 3, 4]);
 $diff = array_diff([1, 2, 3], [2, 3, 4]);
 ```
 
+#### 💡 Memoria y rendimiento
+- `in_array()` y `array_search()` son O(n) — búsqueda lineal
+- `isset($arr[$key])` es O(1) — mucho más rápido para verificar existencia
+- `array_unique()` es O(n) internamente
+- `array_intersect()` / `array_diff()` usan tablas hash — O(n + m)
+
+#### ✅ Buenas prácticas
+- ✅ Para verificar si una clave existe: `isset($arr[$key])` o `array_key_exists()`
+- ⚠️ `in_array()` con `true` (strict mode) compara tipos — más seguro
+- ✅ En arrays grandes, convierte a `SplFixedArray` para acceso más rápido
+
 ### Transformación
+
+#### ¿Qué es?
+`array_map()`, `array_filter()` y `array_reduce()` son las funciones de orden superior (map/filter/reduce) que permiten transformar colecciones sin bucles explícitos.
 
 ```php
 <?php
@@ -1871,15 +2270,29 @@ $chunks = array_chunk($nums, 2);
 $slice = array_slice($nums, 0, 3);
 array_splice($nums, 1, 2, ['a', 'b']);
 
-$nombre = 'Ana';
-$edad = 28;
-$arr = compact('nombre', 'edad');
-extract($arr);
-
 $frecuencias = array_count_values([1, 1, 2, 3, 1]);
 ```
 
+#### 💡 Memoria y rendimiento
+| Operación | Complejidad |
+|---|---|
+| `array_map()` | O(n) |
+| `array_filter()` | O(n) |
+| `array_reduce()` | O(n) |
+| `array_column()` | O(n) |
+
+`array_map()` preserva keys numéricas pero reindexa las asociativas — usa `array_map(null, $keys, $values)` para conservar ambas.
+
+#### ✅ Buenas prácticas
+- ✅ `array_map` + arrow functions para transformaciones simples
+- ✅ `array_filter` sin callback elimina valores falsy: `array_filter([0, 1, null, 2])` → `[1, 2]`
+- ⚠️ `compact()` es útil pero crea variables implícitas — difícil de debuggear
+- ❌ `extract()` está deprecado moralmente — nunca lo uses con datos del usuario
+
 ### SPL — Estructuras de datos
+
+#### ¿Qué es?
+SPL (Standard PHP Library) provee estructuras de datos eficientes: pilas (`SplStack`), colas (`SplQueue`), heaps (`SplMaxHeap`, `SplMinHeap`, `SplPriorityQueue`), arrays fijos (`SplFixedArray`), y más.
 
 ```php
 <?php
@@ -1899,23 +2312,10 @@ $heap->insert(5);
 $heap->insert(20);
 echo $heap->extract();  // 20
 
-$minHeap = new SplMinHeap();
-$minHeap->insert(10);
-$minHeap->insert(5);
-echo $minHeap->extract();  // 5
-
 $pq = new SplPriorityQueue();
 $pq->insert('baja', 1);
 $pq->insert('alta', 10);
 echo $pq->extract();  // 'alta'
-
-$fa = new SplFixedArray(3);
-$fa[0] = 'a';
-
-$storage = new SplObjectStorage();
-$obj = new stdClass();
-$storage->attach($obj, 'metadata');
-echo $storage[$obj];
 
 $list = new SplDoublyLinkedList();
 $list->push('a');
@@ -1923,19 +2323,32 @@ $list->push('b');
 echo $list->shift();  // 'a'
 ```
 
+#### 💡 Memoria y rendimiento
+| Estructura | Internamente |
+|---|---|
+| SplStack | Lista doblemente enlazada |
+| SplQueue | Lista doblemente enlazada |
+| SplMaxHeap | Heap binario |
+| SplFixedArray | Array C nativo (más rápido que array PHP) |
+| SplObjectStorage | Mapa de objetos |
+
+`SplFixedArray` es ~30% más rápido que `array` para acceso indexado y ocupa menos memoria. Útil para grandes matrices de tamaño fijo.
+
+#### ✅ Buenas prácticas
+- ✅ Usa `SplPriorityQueue` en lugar de `usort()` + array cuando necesites extraer ordenadamente
+- ✅ `SplObjectStorage` es ideal para asociar metadatos a objetos
+- ⚠️ `SplFixedArray` no tiene `[]` para añadir — usa `$fa[$i] = $val` con índice conocido
+
 ### Tabla de complejidad Big O
 
 | Operación | Array nativo | SplFixedArray | SplHeap |
 |---|---|---|---|
-| Acceso `$arr[$key]` | O(1) | O(1) | — |
+| Acceso | O(1) | O(1) | — |
 | Inserción | O(1) amortizado | O(1) | O(log n) |
-| Búsqueda `in_array()` | O(n) | O(n) | — |
-| `sort()` | O(n log n) | — | — |
-| `array_map/filter` | O(n) | O(n) | — |
-| `array_merge` | O(n + m) | — | — |
-| `array_unique` | O(n) | — | — |
+| Búsqueda | O(n) | O(n) | — |
+| sort() | O(n log n) | — | — |
 
-<sup>Fuente: [PHP Manual — Array Functions](https://www.php.net/manual/en/ref.array.php), [PHP Manual — SPL Data Structures](https://www.php.net/manual/en/spl.datastructures.php), [Wikipedia — Big O notation](https://en.wikipedia.org/wiki/Big_O_notation)</sup>
+<sup>Fuente: [PHP Manual — Array Functions](https://www.php.net/manual/en/ref.array.php), [PHP Manual — SPL Data Structures](https://www.php.net/manual/en/spl.datastructures.php)</sup>
 
 ---
 
@@ -3723,6 +4136,293 @@ $fiber2->resume();  // "Tarea 2: después de suspender"
 
 ---
 
+## Testing y calidad
+
+### PHPUnit — el framework de testing estándar
+
+#### ¿Qué es?
+PHPUnit es el framework de testing más usado en PHP (creado por Sebastian Bergmann). Sigue el patrón xUnit y es el estándar de facto desde PHP 5. Alternativas: Pest (sintaxis más expresiva, construida sobre PHPUnit), PHPSpec (BDD), Behat (behavior-driven).
+
+🔗 [PHPUnit docs](https://phpunit.de/)
+
+#### Sintaxis básica
+```php
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+class CalculadoraTest extends TestCase
+{
+    public function testSuma(): void
+    {
+        $calc = new Calculadora();
+        $this->assertSame(4, $calc->suma(2, 2));
+    }
+
+    public function testDivisionPorCero(): void
+    {
+        $this->expectException(\DivisionByZeroError::class);
+        $calc = new Calculadora();
+        $calc->divide(10, 0);
+    }
+
+    /** @dataProvider proveedorSumas */
+    public function testSumaProvider(int $a, int $b, int $esperado): void
+    {
+        $calc = new Calculadora();
+        $this->assertSame($esperado, $calc->suma($a, $b));
+    }
+
+    public static function proveedorSumas(): array
+    {
+        return [
+            [1, 2, 3],
+            [-1, 1, 0],
+            [0, 0, 0],
+            [100, 200, 300],
+        ];
+    }
+}
+```
+
+#### 🧪 Cómo ejecutarlo
+```bash
+vendor/bin/phpunit tests/
+vendor/bin/phpunit --filter testSuma
+vendor/bin/phpunit --coverage-html coverage/
+```
+
+#### 💡 Configuración (phpunit.xml)
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit
+    bootstrap="vendor/autoload.php"
+    colors="true"
+    failOnRisky="true"
+    failOnWarning="true"
+>
+    <testsuites>
+        <testsuite name="Unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Feature">
+            <directory>tests/Feature</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory>src</directory>
+        </include>
+    </source>
+    <coverage>
+        <report>
+            <html outputDirectory="coverage"/>
+        </report>
+    </coverage>
+</phpunit>
+```
+
+#### 💡 Memoria y rendimiento
+- PHPUnit carga toda la suite en memoria — para proyectos grandes usa `--order-by=defects` o división por grupos
+- `--coverage` ralentiza los tests significativamente (2-5x más lentos)
+- Pest es más rápido en suites pequeñas por su sintaxis ligera
+
+#### ✅ Buenas prácticas
+- ✅ Un test por responsabilidad — usa `@dataProvider` para variaciones
+- ✅ Nombra tests como `testNombreMetodo_estado_esperado` (ej: `testSuma_numerosPositivos_retornaSuma`)
+- ✅ Usa mocks con PHPUnit `createMock()` para aislar dependencias
+- ⚠️ No uses `sleep()` en tests — usa `ClockMock` o similar
+- ❌ No hagas peticiones HTTP reales en tests unitarios — mockea `HttpClient`
+
+#### 🏗️ Metodología
+Sigue la pirámide de testing: muchos tests unitarios (rápidos, aislados), algunos tests de integración (con BD/API), pocos tests E2E. En Laravel, usa `RefreshDatabase` para tests de integración. En Symfony, usa `KernelTestCase`.
+
+#### 🔗 Para saber más
+- [PHPUnit Documentation](https://docs.phpunit.de/)
+- [Pest PHP — Testing Framework](https://pestphp.com/)
+
+### Pest — testing expresivo
+
+#### ¿Qué es?
+Pest es un wrapper sobre PHPUnit con sintaxis más fluida y expresiva. Ideal para equipos que prefieren escribir tests como funciones en lugar de clases.
+
+```php
+<?php
+use function Pest\Faker\fake;
+
+test('suma básica', function () {
+    $result = suma(2, 2);
+    expect($result)->toBe(4);
+});
+
+test('excepción en división por cero', function () {
+    expect(fn() => divide(10, 0))
+        ->toThrow(DivisionByZeroError::class);
+});
+
+dataset('numeros', [
+    [1, 2, 3],
+    [-1, 1, 0],
+    [0, 0, 0],
+]);
+
+test('suma con dataset', function ($a, $b, $expected) {
+    expect(suma($a, $b))->toBe($expected);
+})->with('numeros');
+```
+
+🔗 [Pest PHP](https://pestphp.com/)
+
+### Análisis estático: PHPStan y Psalm
+
+#### ¿Qué es?
+PHPStan y Psalm son herramientas de análisis estático que detectan errores sin ejecutar el código. PHPStan tiene niveles de 0 a max (9 en PHPStan 1.x, 6 en PHPStan 2.x). Psalm usa niveles de 1 a 8 (más estricto = nivel más bajo).
+
+```bash
+# PHPStan
+vendor/bin/phpstan analyse src/ --level max
+vendor/bin/phpstan analyse src/ --generate-baseline  # Ignorar errores conocidos
+
+# Psalm
+vendor/bin/psalm --show-info=true
+vendor/bin/psalm --alter --issues=MissingReturnType  # Auto-fix
+```
+
+```neon
+# phpstan.neon
+parameters:
+    level: max
+    paths:
+        - src/
+    excludePaths:
+        - src/Migrations/
+```
+
+🔗 [PHPStan](https://phpstan.org/), [Psalm](https://psalm.dev/)
+
+---
+
+## Conceptos avanzados
+
+### Atributos (annotations nativas)
+
+#### ¿Qué es?
+Los atributos (PHP 8.0) reemplazan las anotaciones PHPDoc (`@Route`, `@ORM\Column`) con metadatos estructurados nativos del lenguaje. Son clases que pueden leerse mediante Reflection.
+
+```php
+<?php
+#[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_METHOD)]
+class Route
+{
+    public function __construct(
+        public string $path,
+        public string $method = 'GET',
+    ) {}
+}
+
+#[Route('/api/users')]
+class UserController
+{
+    #[Route('/api/users/{id}', method: 'GET')]
+    public function show(int $id): array
+    {
+        return ['id' => $id, 'name' => 'Ana'];
+    }
+}
+
+// Leer en runtime
+$ref = new ReflectionClass(UserController::class);
+foreach ($ref->getAttributes(Route::class) as $attr) {
+    $route = $attr->newInstance();
+    echo "{$route->method} {$route->path}\n";
+}
+```
+
+🔗 [PHP 8.0 Attributes RFC](https://wiki.php.net/rfc/attributes_v2)
+
+### Fibers — concurrencia cooperativa
+
+#### ¿Qué es?
+Las fibers (PHP 8.1) son corutinas a nivel de sistema. Permiten pausar y reanudar funciones en puntos específicos, similar a async/await pero sin event loop externo. amphp usa fibers como base.
+
+```php
+<?php
+$fiber = new Fiber(function (): void {
+    $value = Fiber::suspend('suspendido');
+    echo "Reanudado con: $value\n";
+});
+
+$result = $fiber->start();   // 'suspendido'
+$fiber->resume('hola');      // Imprime: "Reanudado con: hola"
+```
+
+🔗 [PHP 8.1 Fibers RFC](https://wiki.php.net/rfc/fibers)
+
+### Enums nativos
+
+#### ¿Qué es?
+Los enums (PHP 8.1) son tipos enumerados con métodos, interfaces y valores asociados. Reemplazan las constantes de clase y los paquetes de `myclabs/php-enum`.
+
+```php
+<?php
+enum Status: string
+{
+    case Draft = 'draft';
+    case Published = 'published';
+    case Archived = 'archived';
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::Draft => 'Borrador',
+            self::Published => 'Publicado',
+            self::Archived => 'Archivado',
+        };
+    }
+}
+
+echo Status::Published->value;     // 'published'
+echo Status::Published->label();   // 'Publicado'
+echo Status::from('draft');        // Status::Draft
+```
+
+🔗 [PHP 8.1 Enums RFC](https://wiki.php.net/rfc/enumerations)
+
+### SOAP y XML
+
+PHP tiene soporte nativo para SOAP (`SoapClient`, `SoapServer`) y XML (`SimpleXML`, `DOMDocument`, `XMLReader` para archivos grandes).
+
+```php
+<?php
+// SoapClient
+$client = new SoapClient('https://api.example.com/wsdl?wsdl');
+$result = $client->getUser(['id' => 1]);
+
+// SimpleXML
+$xml = simplexml_load_string('<user><name>Ana</name></user>');
+echo $xml->name;  // Ana
+
+// DOMDocument
+$dom = new DOMDocument();
+$dom->loadHTML($html);
+$items = $dom->getElementsByTagName('li');
+
+// XMLReader para archivos grandes (>100MB)
+$reader = new XMLReader();
+$reader->open('large.xml');
+while ($reader->read()) {
+    if ($reader->nodeType === XMLReader::ELEMENT && $reader->name === 'item') {
+        $item = $reader->readOuterXml();
+        // procesar...
+    }
+}
+```
+
+🔗 [PHP Manual — SOAP](https://www.php.net/manual/en/book.soap.php), [PHP Manual — SimpleXML](https://www.php.net/manual/en/book.simplexml.php)
+
+---
+
 ## Escala de aprendizaje: de 0 a 100
 
 Cada nivel incluye lo que debes saber y un proyecto para fijar los conceptos.
@@ -4046,6 +4746,142 @@ foreach (array_slice($allArticles, 0, 10) as $article) {
 }
 
 echo "Total artículos: " . count($allArticles) . PHP_EOL;
+```
+
+---
+
+## Proyecto final integrador: API REST de gestión de tareas
+
+Construye una API REST completa con PHP puro (sin framework) primero, y luego migra a Laravel para ver la diferencia. Este proyecto cubre todos los conceptos de la guía.
+
+### Fase 1 — PHP puro con router casero
+
+```php
+<?php
+declare(strict_types=1);
+
+// public/index.php — Entry point
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use App\Router;
+use App\Controllers\TaskController;
+use App\Repositories\JsonTaskRepository;
+
+$container = [
+    'taskRepo' => new JsonTaskRepository(__DIR__ . '/../data/tasks.json'),
+];
+
+$router = new Router();
+
+$router->get('/api/tasks',         [new TaskController($container['taskRepo']), 'index']);
+$router->get('/api/tasks/{id}',    [new TaskController($container['taskRepo']), 'show']);
+$router->post('/api/tasks',        [new TaskController($container['taskRepo']), 'store']);
+$router->put('/api/tasks/{id}',    [new TaskController($container['taskRepo']), 'update']);
+$router->delete('/api/tasks/{id}', [new TaskController($container['taskRepo']), 'destroy']);
+
+$router->dispatch($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);
+```
+
+### Fase 2 — Migración a Laravel
+
+```bash
+composer create-project laravel/laravel task-manager
+php artisan make:model Task -m
+php artisan make:controller Api/TaskController --api
+php artisan make:request StoreTaskRequest
+php artisan make:resource TaskResource
+```
+
+```php
+<?php
+// app/Models/Task.php
+class Task extends Model
+{
+    protected $fillable = ['title', 'description', 'completed', 'due_date'];
+
+    protected function casts(): array
+    {
+        return [
+            'completed' => 'boolean',
+            'due_date' => 'date',
+        ];
+    }
+}
+
+// app/Http/Resources/TaskResource.php
+class TaskResource extends JsonResource
+{
+    public function toArray(Request $request): array
+    {
+        return [
+            'id' => $this->id,
+            'title' => $this->title,
+            'description' => $this->description,
+            'completed' => $this->completed,
+            'due_date' => $this->due_date?->format('Y-m-d'),
+            'created_at' => $this->created_at,
+        ];
+    }
+}
+```
+
+### Fase 3 — Testing
+
+```php
+<?php
+// tests/Feature/TaskTest.php
+class TaskTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_puede_crear_tarea(): void
+    {
+        $response = $this->postJson('/api/tasks', [
+            'title' => 'Aprender PHP',
+            'description' => 'Completar la guía de 0 a 100',
+        ]);
+
+        $response->assertStatus(201)
+                 ->assertJson(['title' => 'Aprender PHP']);
+    }
+
+    public function test_lista_tareas(): void
+    {
+        Task::factory()->count(3)->create();
+
+        $response = $this->getJson('/api/tasks');
+        $response->assertStatus(200)
+                 ->assertJsonCount(3, 'data');
+    }
+
+    public function test_requiere_titulo(): void
+    {
+        $response = $this->postJson('/api/tasks', []);
+        $response->assertStatus(422);
+    }
+}
+```
+
+### Fase 4 — Producción
+
+```bash
+# Optimizar autoload
+composer install --no-dev --optimize-autoloader
+
+# Cachear rutas y config
+php artisan config:cache
+php artisan route:cache
+
+# Servir con PHP-FPM + Nginx (no artisan serve)
+# Configuración Nginx:
+# server {
+#     listen 80;
+#     server_name api.example.com;
+#     root /var/www/task-manager/public;
+#     index index.php;
+#     location / { try_files $uri $uri/ /index.php?$query_string; }
+#     location ~ \.php$ { fastcgi_pass unix:/var/run/php/php8.3-fpm.sock; }
+# }
 ```
 
 ---

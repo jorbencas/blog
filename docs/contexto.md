@@ -1,6 +1,6 @@
 # Contexto del proyecto — Blog
 
-**Última actualización**: 2026-06-29 (Refactor cards + Navbar fix + GFM tables + Shiki + Archive)
+**Última actualización**: 2026-06-30 (TOC scroll tracking fix + overflow-y-auto)
 **Stack**: Astro 6.4 + Svelte 5 + Tailwind CSS 4.3 | Vercel static | Node >= 18
 **Idioma**: Español
 **Deploy**: `blog-jorbencas.vercel.app`
@@ -21,6 +21,8 @@
 | 2025-06 | **E2E audit completo**: 94 tests — navegación, listados, detalle, interactivos, responsive, contraste, visual regression. CodeTabs language detection fix (Shiki `pre[data-language]`). Navbar backdrop click handler |
 | 2025-06 | **GFM tables + Shiki + Archive + Navbar**: GFM fix (Astro 6.4.x regression), Shiki `github-light`/`github-dark`, Archive sin toggle, Navbar con botón X dedicado sin cierre por backdrop/Escape |
 | 2025-06 | **Refactor cards**: PreviewPost, ToolCard, ChallengeCard, ProjectCard unificados en un solo `Card.astro` paramétrico por acento |
+| 2025-06 | **TOC scroll tracking fix**: querySelector reemplazado por getAttribute("href") para IDs con U+FE0F; observer reinicializado en cada navigation; primer heading activo por defecto; rootMargin ajustado |
+| 2025-06 | **TOC overflow-y-auto**: max-h + scroll interno cuando la lista de enlaces excede el viewport |
 
 ## Mejoras implementadas
 
@@ -53,6 +55,16 @@
 - **Navbar.astro**: eliminada animación de spans del hamburguer (rotar/opacidad); añadido botón X dedicado `#menu-close` dentro del panel; menú solo se abre con hamburguer, solo se cierra con X. Eliminados handlers de backdrop click, Escape key y resize. JS simplificado
 - **tests/navigation.spec.mjs**: tests actualizados — Escape ya no cierra el menú, resize ya no cierra, nuevo test para botón X
 - 39 tests funcionales pasan + 4 visual regression snapshots actualizadas
+- Build verificado sin errores
+
+### 5. TOC scroll tracking fix ✅
+- **TableOfContents.astro**: reemplazado `document.querySelector('.toc-link[href="#${id}"]')` por `link.getAttribute("href") === `#${id}`` para evitar fallos con caracteres unicode (U+FE0F) en IDs de headings
+- Desconectado `observer.disconnect()` antes de crear nuevo observer en cada `initTOC()` para evitar acumulación en navegaciones con `astro:page-load`
+- Primer heading ahora se activa siempre como estado por defecto (no solo cuando `scrollY < 100`)
+- `rootMargin` cambiado de `"-100px 0px -70% 0px"` a `"-120px 0px -60% 0px"` para tracking más natural
+- Eliminado plugin `remark-clean-headings` innecesario de `astro.config.mjs`
+- Eliminado TOC inline manual de `src/content/posts/n8n.mdx`
+- Añadido `max-h-[calc(100vh-8rem)] overflow-y-auto` al contenedor sticky del TOC para scroll interno cuando hay muchos headings
 - Build verificado sin errores
 
 ### 4. Refactor cards: PreviewPost + ToolCard + ChallengeCard + ProjectCard → Card.astro ✅

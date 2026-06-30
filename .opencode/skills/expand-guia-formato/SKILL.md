@@ -18,7 +18,50 @@ author: "Jorge Beneyto Castelló"
 ---
 ```
 
-## Secciones obligatorias (16)
+## Template estándar por concepto
+
+Cada sección técnica (secciones 5 a 15) debe aplicar este sub-formato para cada sub-concepto:
+
+```
+### {Concepto}
+
+#### ¿Qué es?
+- Definición en lenguaje llano + definición formal
+- Analogía del mundo real
+- 🔗 Enlace a Wikipedia / MDN / glosario
+
+#### Sintaxis básica
+- Código mínimo ejecutable, listo para copiar y pegar
+- Tabla de variantes (si aplica)
+
+#### 🧪 Cómo probarlo
+- Mini‑script autónomo: `python3 -c "..."` / `node -e "..."`
+- Test unitario con el framework estándar (pytest, Jest, JUnit, etc.)
+- Template de test para este concepto concreto
+- Ejemplo de aserciones básicas
+
+#### 💡 Memoria y rendimiento
+- Cuánto ocupa en memoria, stack vs heap
+- Complejidad Big O (si aplica: acceso, búsqueda, inserción, borrado)
+- Tips de optimización específicos del concepto
+- ⚠️ Posibles fugas de memoria / efectos secundarios
+
+#### ✅ Buenas prácticas
+- Lo idiomático recomendado
+- ⚠️ Errores frecuentes
+- ❌ Antipatrones
+- Cómo escala esta práctica en proyectos grandes
+
+#### 🏗️ Metodología
+- ¿Cuándo usarlo y cuándo NO?
+- Alternativas según escala del proyecto (script → microservicio → monolito)
+- Relación con otros paradigmas
+
+#### 🔗 Para saber más
+- 2-4 enlaces externos variados (oficial, tutorial, vídeo, artículo en profundidad)
+```
+
+## Secciones obligatorias (22)
 
 ### 1. ¿Qué es {Tecnología}?
 - Origen, creador, año de creación
@@ -39,7 +82,7 @@ author: "Jorge Beneyto Castelló"
 - REPL / intérprete interactivo si existe
 - Hola Mundo
 - Estructura de proyecto
-- Editores recomendados (VSCode, JetBrains, Neovim) + extensiones
+- Editores recomendados → [IDEs y Editores de Código](/posts/resources/#ides-y-editores-de-codigo) (VSCode, JetBrains, Neovim) + extensiones
 - Config inicial: linters, formatters, type checkers
 - Gestión de dependencias (npm, cargo, pip, maven, go modules, etc.)
 
@@ -170,34 +213,109 @@ Cada concepto debe incluir:
 - Tabla "¿Cuál usar?" por escenario
 - GIL / event loop / work-stealing según el lenguaje
 
-### 16. Escala de aprendizaje 0–100 (7 niveles)
+### 16. Testing y calidad
+
+Tipos de test y frameworks disponibles en {Tecnología}:
+
+#### Frameworks y herramientas
+| Framework | Propósito | Async? | CLI | Template |
+|-----------|-----------|--------|-----|----------|
+| {ej: pytest} | {unitario} | {sí/no} | {comando} | {enlace a template} |
+
+#### Cómo testear cada concepto
+(Por cada concepto de las secciones 5-15, dar el patrón de test específico)
+- **Variables y tipos** → aserciones simples, type narrowing en tests
+- **Control de flujo** → cobertura de ramas, boundary testing
+- **POO** → mocks, stubs, fixtures, factories en tests
+- **Async** → test con timeouts, falsificación de reloj
+- **File I/O** → temp directories, fixtures de archivos
+- **Red** → mock servers, HTTP interceptors
+
+#### Parametrización
+- Test parametrizados (pytest.mark.parametrize, Jest.each, JUnit @ParameterizedTest)
+- Property-based testing (Hypothesis, fast-check, QuickTheories)
+- Fuzzing básico
+
+#### Cobertura y CI
+- Herramientas de cobertura (coverage.py, c8/codecov, JaCoCo)
+- Integración con GitHub Actions
+- Umbrales recomendados
+
+#### Mini‑scripts de verificación
+- Script autónomo por concepto que el lector pueda ejecutar para validar que lo entendió
+- Cada mini‑script incluye: enunciado, solución esperada, test que lo verifica
+- Template de mini‑script disponible en `scripts/templates/` (por crear)
+
+### 17. Conceptos avanzados parametrizados
+
+Contenido parametrizado según la tecnología. Seleccionar los que apliquen:
+
+| Tecnología | Concepto avanzado | Por qué es el siguiente paso natural |
+|---|---|---|
+| Docker | Kubernetes, Docker Swarm, Compose en producción | Orquestación multi‑contenedor |
+| Python | asyncio profundo, C extensions, profile-guided optimization | Performance y concurrencia real |
+| JavaScript | Web Workers, WASM, Server Components, Structured Clone | Cómputo en cliente y server |
+| TypeScript | advanced types, template literal types, conditional types | Tipado de precisión quirúrgica |
+| Java | Project Loom (virtual threads), GraalVM, JMM, JMH benchmarking | Concurrencia y native image |
+| Kotlin | Coroutines flow/channels, multiplatform, Compose | Async y shared code |
+| C# | Source Generators, NativeAOT, Span\<T\>/Memory\<T\>, Channels | Rendimiento extremo |
+| Go | go:generate, pprof, cgo, WASM, govulncheck | Tooling y ecosistema |
+| Rust | unsafe, FFI, embedded no_std, WASM, Pin, async traits | Sistemas y WASM |
+| Swift | Swift concurrency (actors, async sequences), SwiftUI, macros | UI y concurrencia moderna |
+| Dart | isolates, FFI, Wasm, flutter web | Rendimiento y nativo |
+| Ruby | Ractor, Fiber Scheduler, YJIT, pattern matching | Concurrencia real |
+| PHP | Fibers, FFI, preloading, async PHP (ReactPHP, Amp, Swoole) | Concurrencia y rendimiento |
+| Astro | view transitions, server islands, content collections avanzado, i18n | Riqueza de UI y datos |
+| Markdown/MDX | Remark plugins, MDX custom components, AST manipulation | Procesamiento avanzado |
+
+Cada concepto avanzado debe incluir:
+- Enlace a documentación oficial
+- Mini tutorial de inicio
+- Proyecto ejemplo
+
+### 18. Escala de aprendizaje 0–100 (7 niveles)
 Cada nivel debe incluir:
 - Lista de conceptos a aprender (referenciando las secciones anteriores)
-- Proyecto concreto con código que integre file system + algoritmos + multimedia + BD + red
+- Proyecto concreto con código que integre file system + algoritmos + testing + BD + red
 - Referencia a conceptos clave del lenguaje
 
 Niveles:
 - **0–15**: Fundamentos (sintaxis, variables, tipos, condicionales, bucles, file system básico)
 - **15–30**: Estructuras de datos, funciones, colecciones, algoritmos de búsqueda/ordenación
 - **30–45**: POO, módulos, errores, genéricos, patrones, multimedia básico
-- **45–60**: Testing, logging, tooling, empaquetado, file system avanzado, procesamiento por lotes
+- **45–60**: Testing (unitario + integración + parametrización), logging, tooling, empaquetado, file system avanzado, procesamiento por lotes
 - **60–75**: Web APIs, async, BD, WebSockets, multimedia streaming
 - **75–90**: Producción, Docker, CI/CD, patrones, procesamiento multimedia avanzado
 - **90–100**: Arquitectura, sistemas distribuidos, performance, algoritmos complejos
 
-### 17. Canales y recursos en español
+### 19. Proyecto final integrador
+
+Proyecto concreto que combine, como mínimo:
+- File system I/O
+- Algoritmo / estructura de datos
+- POO o módulos
+- Testing (unitario + integración)
+- Red o BD
+
+El proyecto debe:
+- Ser ejecutable de principio a fin
+- Incluir tests automatizados
+- Incluir documentación
+- Tener un template disponible en `scripts/templates/` (por crear)
+
+### 20. Canales y recursos en español
 - Canales de YouTube (mínimo 5)
 - Comunidades (Reddit, Discord, Telegram)
 - Repositorios GitHub destacados
 - Blogs / newsletters
 
-### 18. Hacks y tips de productividad
+### 21. Hacks y tips de productividad
 - Mínimo 8 tips con código
 - Atajos, herramientas, patterns poco conocidos
 - Configuraciones recomendadas
 - Cómo debuggear file system, multimedia, concurrencia
 
-### 19. Referencias y documentación oficial
+### 22. Referencias y documentación oficial
 - Links a docs oficiales
 - PEPs / RFCs / JEPs / KIPs relevantes
 - Fuentes de esta guía (mínimo 15, con URLs reales)
@@ -221,6 +339,12 @@ Niveles:
 10. **File system en todos** — todo lenguaje tiene stdlib para I/O, incluir sí o sí
 11. **Multimedia solo si aplica** — lenguajes de scripting tienen más librerías; sistemas embebidos/no estándar, omitir
 12. **Todo progresivo** — cada sección referencia a las anteriores, construye sobre lo ya explicado
+13. **Código testeable** — todo snippet debe poder ejecutarse y verificarse con un test
+14. **Enlaces externos obligatorios** — cada concepto (¿Qué es?) debe tener al menos 1 enlace externo
+15. **Mini‑scripts de verificación** — incluir al menos un script autónomo por sección que el lector pueda ejecutar para validar su comprensión
+16. **Adaptación por tecnología** — no forzar conceptos que no aplican. Para tecnologías no‑lenguaje (Docker, Astro, Markdown/MDX), omitir secciones sin contenido significativo y reinterpretar otras (ej: Docker "patrones" = multi‑stage builds, redes overlay; Astro "POO" = componentes/server islands)
+17. **Enlace al post "Hola Mundo"** — si la guía es de un lenguaje/tecnología que aparece en `src/content/posts/hola.mdx`, buscar la sección correspondiente (por nombre de tecnología) y añadir al inicio de la sección 3 (Primeros pasos) un párrafo como: `Si prefieres ver directamente el "Hola Mundo" en {Tecnología}, consulta [El Atlas del Hola Mundo](/posts/hola/#{sección}).` Solo aplica a guías de tipo *código* (lenguajes de programación, frameworks, tecnologías con sintaxis), no a guías conceptuales (Docker, Markdown/MDX).
+18. **Referencia a IDEs en resources.mdx** — en sección 3 (Primeros pasos), no listar manualmente los IDEs/editorres. Enlazar a la sección `#ides-y-editores-de-codigo` de `/posts/resources/`. Solo mencionar los nombres (VSCode, JetBrains, Neovim) sin descripciones largas.
 
 ## Orden de ejecución recomendado
 

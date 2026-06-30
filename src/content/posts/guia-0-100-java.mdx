@@ -9,6 +9,7 @@ author: "Jorge Beneyto Castelló"
 ---
 
 # Guía de Java: De 0 a 100
+
 ## ¿Qué es Java?
 
 Java es un lenguaje de programación orientado a objetos, de tipado estático y fuerte, creado por **James Gosling** en **Sun Microsystems** y lanzado en **1995**. Su filosofía central es **"Write Once, Run Anywhere" (WORA)**: el código se compila a bytecode que se ejecuta en la Java Virtual Machine (JVM), lo que permite que un mismo programa corra en Windows, Linux, macOS y cualquier plataforma que tenga una JVM.
@@ -147,6 +148,8 @@ Fuente: [SDKMAN docs](https://sdkman.io/), [Adoptium docs](https://adoptium.net/
 
 ## Primeros pasos y configuración del entorno
 
+Si prefieres ver directamente el "Hola Mundo" en Java, consulta [El Atlas del Hola Mundo](/posts/hola/#java).
+
 ### Compilación y ejecución manual
 
 ```java
@@ -215,10 +218,8 @@ mi-proyecto/
 ```
 
 ### Editores recomendados
-- **IntelliJ IDEA**: Community Edition gratuita, Ultimate para Spring/empresarial. El IDE más usado en Java. Tiene refactorización, depurador visual, perfilador integrado
-- **VS Code**: Extension Pack for Java de Microsoft (Language Support for Java, Debugger, Maven/Gradle, Test Runner). Ligero, ideal para proyectos medianos
-- **Eclipse**: Tradicional, gratuito, gran ecosistema de plugins. Todavía usado en muchas empresas
-- **NetBeans**: IDE oficial de Apache, soporte JDK 21, perfilador
+
+Los IDEs y editores más usados son [VSCode](/posts/resources/#ides-y-editores-de-codigo), [JetBrains](/posts/resources/#ides-y-editores-de-codigo) y [Neovim](/posts/resources/#ides-y-editores-de-codigo). Extensiones y configuraciones recomendadas en [Recursos](/posts/resources/#ides-y-editores-de-codigo).
 
 ### Configuración inicial del proyecto (Maven pom.xml)
 
@@ -328,7 +329,6 @@ Las interfaces funcionales principales están en `java.util.function`:
 Antes de que se asentara el paradigma OOP, el código Java se escribía a menudo de forma procedimental: métodos `static` en clases utilitarias, sin instanciar objetos. Hoy solo se ve en código legacy, métodos `main()` y clases de utilidades (Math, Collections).
 
 ```java
-// Estilo procedimental (legacy)
 public class UtilMath {
     public static int sumar(int a, int b) {
         return a + b;
@@ -352,12 +352,84 @@ public class UtilMath {
 Fuente: [Java Language Specification](https://docs.oracle.com/javase/specs/), [Oracle — Lambda Expressions](https://docs.oracle.com/javase/tutorial/java/javaOO/lambdaexpressions.html)
 
 ---
+
 ## Tipos de datos y variables
+
+### Sistema de tipos
+
+#### ¿Qué es?
+Java tiene **tipado estático y fuerte**: el tipo de cada variable se conoce en tiempo de compilación y no se realizan conversiones implícitas entre tipos incompatibles. El sistema de tipos es **nominal**: dos clases son compatibles si una extiende/implementa explícitamente a la otra. Es como una máquina expendedora: cada producto tiene un código exacto y no puedes meter un código de otro producto para obtenerlo.
+
+🔗 [Wikipedia — Tipado estático](https://es.wikipedia.org/wiki/Tipado_est%C3%A1tico), [Java Language Spec](https://docs.oracle.com/javase/specs/)
+
+#### Sintaxis básica
+```java
+int x = 42;          // tipo explícito
+var y = "hola";      // inferencia local (JDK 10+), compila a String
+// x = "texto";      // Error de compilación: tipos incompatibles
+
+String saludo(String nombre) {
+    return "Hola " + nombre;
+}
+```
+
+#### 🧪 Cómo probarlo
+```java
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+class TiposTest {
+    @Test
+    void tipadoEstatico() {
+        int x = 42;
+        assertEquals(42, x);
+        // x = "texto";  // No compila
+    }
+
+    @Test
+    void inferenciaVar() {
+        var texto = "hola";
+        assertTrue(texto instanceof String);
+    }
+
+    @Test
+    void tipadoFuerte() {
+        // assertThrows(Exception.class, () -> { "42" + 1; });
+        // En Java no hay concatenación implícita peligrosa como en JS
+        String resultado = "42" + 1;  // "421" — String, no número
+        assertEquals("421", resultado);
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- Los tipos primitivos se almacenan directamente en el stack (o dentro de objetos en el heap)
+- Los wrappers (`Integer`, `Long`) son objetos en el heap con overhead (~16-24 bytes)
+- `var` se resuelve en compilación — no tiene impacto en runtime
+- `instanceof` es O(1) gracias al caché de tipos de la JVM
+
+#### ✅ Buenas prácticas
+- ✅ Usa primitivos (`int`, `long`, `double`) para valores que no necesitan ser null — más rápidos y ocupan menos memoria
+- ⚠️ No confundas `==` con `.equals()`: `==` compara referencias en objetos, `.equals()` compara valor
+- ❌ No uses `var` para tipos que no son obvios en el contexto (`var result = getData()` donde no se ve el tipo)
+
+#### 🏗️ Metodología
+- Usa `var` para tipos obvios en el lado derecho (`var list = new ArrayList<String>()`)
+- Usa `Integer`/`Long` wrappers solo cuando necesites nullabilidad (campos de entidad JPA, genéricos)
+- En APIs públicas, prefiere tipos explícitos sobre `var`
+
+#### 🔗 Para saber más
+- [Oracle — Primitive Types](https://docs.oracle.com/javase/tutorial/java/nutsandbolts/datatypes.html)
+- [Oracle — Local Variable Type Inference](https://docs.oracle.com/en/java/javase/21/language/local-variable-type-inference.html)
 
 ### Primitivos vs Wrappers
 
-Cada tipo primitivo tiene su correspondiente wrapper (clase envolvente) en el heap:
+#### ¿Qué es?
+Cada tipo primitivo tiene su correspondiente wrapper (clase envolvente) en el heap. Los primitivos viven en el stack; los wrappers son objetos en el heap. Es como la diferencia entre llevar el dinero en efectivo en el bolsillo (stack) vs tenerlo en una caja fuerte (heap): más seguro pero más lento de acceder.
 
+🔗 [Oracle — Autoboxing](https://docs.oracle.com/javase/tutorial/java/data/autoboxing.html)
+
+#### Sintaxis básica
 | Primitivo | Tamaño | Wrapper | Rango | Default | Cache |
 |-----------|--------|---------|-------|---------|-------|
 | `byte` | 8 bits | `Byte` | -128 a 127 | 0 | -128 a 127 |
@@ -375,83 +447,165 @@ Integer wrapper = 42;  // Heap + autoboxing
 int vuelta = wrapper;  // Unboxing
 ```
 
-**Autoboxing/unboxing (Java 5+):** conversión automática entre primitivo y wrapper. El compilador inserta llamadas a `valueOf()` y `xxxValue()` automáticamente.
-
+#### 🧪 Cómo probarlo
 ```java
-Integer a = 42;      // autoboxing: Integer.valueOf(42)
-int b = a;           // unboxing: a.intValue()
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
-// Ojo: en bucles grandes es caro
-Integer suma = 0;
-for (int i = 0; i < 1_000_000; i++) {
-    suma += i;  // Crea 1M de objetos Integer!
+class PrimitivosTest {
+    @Test
+    void autoboxing() {
+        Integer wrapper = 42;        // autoboxing: int → Integer
+        int primitivo = wrapper;     // unboxing: Integer → int
+        assertEquals(42, primitivo);
+    }
+
+    @Test
+    void integerCache() {
+        assertSame(Integer.valueOf(127), Integer.valueOf(127));
+        assertNotSame(Integer.valueOf(128), Integer.valueOf(128));
+    }
+
+    @Test
+    void rendimientoAutoboxing() {
+        // NO hagas esto en producción — crea 1M de objetos
+        Integer suma = 0;
+        for (int i = 0; i < 1000; i++) {
+            suma += i;
+        }
+        assertEquals(499500, suma);
+    }
 }
 ```
 
-**Integer caching:** `Integer.valueOf()` cachea valores entre -128 y 127. `Integer.valueOf(127) == Integer.valueOf(127)` da `true`, pero con 128 da `false`. Siempre usa `.equals()` para comparar wrappers.
+#### 💡 Memoria y rendimiento
+- Primitivo en stack: 4 bytes para `int`, 8 para `long`/`double`
+- Wrapper en heap: ~16-24 bytes de overhead de objeto + los datos
+- **Integer caching**: `Integer.valueOf()` cachea valores -128 a 127. `Integer.valueOf(127) == Integer.valueOf(127)` da `true`, pero con 128 da `false`
+- El autoboxing en bucles grandes es costoso: cada `suma += i` crea un nuevo `Integer`
+- `Comparator.comparingInt()` evita autoboxing vs `Comparator.comparing()`
+
+#### ✅ Buenas prácticas
+- ✅ Siempre usa `.equals()` para comparar wrappers, nunca `==`
+- ⚠️ En colecciones, el autoboxing es necesario pero ten cuidado con el rendimiento
+- ❌ No uses `Integer` para contadores en bucles — usa `int`
+
+#### 🏗️ Metodología
+- Primitivos: datos numéricos locales, contadores, flags
+- Wrappers: colecciones genéricas (`List<Integer>`), JPA (nullable), APIs que requieren Object
+- Para colecciones de primitivos en Java 21+: `IntList` de Eclipse Collections o arrays
+
+#### 🔗 Para saber más
+- [Baeldung — Autoboxing Guide](https://www.baeldung.com/java-autoboxing-unboxing)
+- [Oracle — Primitive Types](https://docs.oracle.com/javase/tutorial/java/nutsandbolts/datatypes.html)
 
 ### String
 
-`String` es un objeto **inmutable**: cualquier operación que parezca modificarlo (concat, replace, substring) crea una nueva cadena.
+#### ¿Qué es?
+`String` es un objeto **inmutable**: cualquier operación que parezca modificarlo (concat, replace, substring) crea una nueva cadena. Java almacena las cadenas literales en un **String Pool** dentro del heap. Es como un sello de goma: cada vez que cambias el texto, necesitas un sello nuevo.
 
+🔗 [Oracle — Strings](https://docs.oracle.com/javase/tutorial/java/data/strings.html)
+
+#### Sintaxis básica
 ```java
 String literal = "hola";            // String Pool
-String objeto = new String("hola"); // Heap (evitar a menos que sea necesario)
-String internada = literal.intern(); // Fuerza entrada en pool
+String objeto = new String("hola"); // Heap (evitar)
+String internada = literal.intern();
 
 String concat = "a" + "b";  // El compilador optimiza literales
-```
 
-**String Pool:** las cadenas literales se almacenan en un pool dentro del heap. Si dos variables usan el mismo literal, apuntan al mismo objeto.
-
-```java
 String a = "hello";
 String b = "hello";
 System.out.println(a == b);  // true (misma referencia en pool)
 
 String c = new String("hello");
 System.out.println(a == c);  // false (objeto distinto en heap)
-```
 
-**StringBuilder / StringBuffer:** para concatenaciones múltiples en bucles o construcción de cadenas grandes.
-
-```java
-// StringBuilder — no sincronizado, más rápido (monohilo)
+// StringBuilder — para concatenaciones múltiples
 var sb = new StringBuilder();
 for (int i = 0; i < 1000; i++) {
     sb.append("linea ").append(i).append("\n");
 }
 String resultado = sb.toString();
 
-// StringBuffer — sincronizado (thread-safe, más lento)
-var sbf = new StringBuffer();
+// Text Blocks (JDK 15+)
+String json = """
+    {
+      "nombre": "Ana",
+      "email": "ana@email.com"
+    }
+    """;
 ```
 
-Regla general: usa `StringBuilder` en entorno monohilo y `StringBuffer` si varios hilos acceden concurrentemente.
-
-### Arrays
-
-Los arrays en Java son objetos. Son **covariantes**: `String[]` es subtipo de `Object[]`.
-
+#### 🧪 Cómo probarlo
 ```java
-int[] nums = {1, 2, 3};
-String[] nombres = new String[5];
-int[][] matriz = new int[3][4];
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
-// Covarianza — permite esto en compilación
-Object[] objs = new String[3];
-objs[0] = "hola";   // OK
-objs[1] = 42;       // ArrayStoreException en runtime!
+class StringTest {
+    @Test
+    void inmutable() {
+        String s = "hola";
+        String resultado = s.toUpperCase();
+        assertEquals("hola", s);
+        assertEquals("HOLA", resultado);
+    }
+
+    @Test
+    void stringPool() {
+        String a = "hello";
+        String b = "hello";
+        assertSame(a, b);
+    }
+
+    @Test
+    void stringBuilder() {
+        var sb = new StringBuilder();
+        sb.append("a").append("b").append("c");
+        assertEquals("abc", sb.toString());
+    }
+
+    @Test
+    void textBlock() {
+        String json = """
+            {"clave": "valor"}
+            """.trim();
+        assertEquals("{\"clave\": \"valor\"}", json);
+    }
+}
 ```
 
-`ArrayStoreException` es la consecuencia de la covarianza: la JVM verifica en runtime que el tipo del valor insertado sea compatible con el tipo real del array.
+#### 💡 Memoria y rendimiento
+- Las cadenas literales se almacenan en el String Pool (internado automático)
+- `new String("hola")` crea un objeto en el heap fuera del pool — evitarlo
+- La concatenación con `+` en bucles es O(n²) porque crea un nuevo String en cada iteración
+- `StringBuilder` es la opción eficiente para concatenaciones múltiples (O(n))
+- `String.intern()` permite meter una cadena en el pool manualmente, pero es costoso
 
-Los arrays tienen longitud fija. Para colecciones dinámicas usa `ArrayList`.
+#### ✅ Buenas prácticas
+- ✅ Usa `StringBuilder` para construir cadenas en bucles
+- ⚠️ No uses `==` para comparar cadenas — usa `.equals()`
+- ❌ No uses `new String("literal")` — es redundante y evita el pool
+- ✅ Prefiere Text Blocks para JSON, SQL, HTML multilínea
+
+#### 🏗️ Metodología
+- Cadenas constantes: literales (String Pool)
+- Construcción dinámica: `StringBuilder`
+- Thread-safe: `StringBuffer` (sincronizado, más lento)
+- Parsing: `String.split()`, `String.format()`, `String.join()`
+
+#### 🔗 Para saber más
+- [Baeldung — String Pool](https://www.baeldung.com/java-string-pool)
+- [Oracle — StringBuilder](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/StringBuilder.html)
 
 ### var (inferencia de tipo local, JDK 10+)
 
-`var` infiere el tipo de la variable a partir del inicializador en compilación. No es tipado dinámico.
+#### ¿Qué es?
+`var` infiere el tipo de la variable a partir del inicializador en compilación. No es tipado dinámico — el tipo se deduce en tiempo de compilación y es inmutable después. Es como cuando dices "dame eso" señalando: el contexto determina qué es exactamente.
 
+🔗 [Oracle — Local Variable Type Inference](https://docs.oracle.com/en/java/javase/21/language/local-variable-type-inference.html)
+
+#### Sintaxis básica
 ```java
 var lista = new ArrayList<String>();    // ArrayList<String>
 var mapa = new HashMap<String, Integer>();
@@ -463,10 +617,54 @@ var resultado = calcularAlgo();
 // var z = (a, b) -> a+b;  // lambda sin tipo explícito
 ```
 
+#### 🧪 Cómo probarlo
+```java
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+class VarTest {
+    @Test
+    void inferencia() {
+        var texto = "hola";
+        assertInstanceOf(String.class, texto);
+    }
+
+    @Test
+    void varConGenericos() {
+        var lista = new java.util.ArrayList<String>();
+        lista.add("test");
+        assertEquals(1, lista.size());
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `var` es puramente sintáctico — el compilador reemplaza por el tipo exacto
+- No tiene impacto en memoria ni rendimiento en runtime
+- El bytecode generado es idéntico a escribir el tipo explícito
+
+#### ✅ Buenas prácticas
+- ✅ Usa `var` cuando el tipo es obvio por el inicializador
+- ⚠️ No uses `var` para parámetros de métodos, campos de clase o tipos de retorno
+- ❌ No uses `var` si oscurece la legibilidad (`var result = complexMethod()`)
+
+#### 🏗️ Metodología
+- IDE-friendly: en IntelliJ, `var` se expande al tipo real con Ctrl+Click
+- Usa `var` para tipos genéricos complejos (`Map<String, List<Integer>>`)
+- En APIs públicas, preferir tipos explícitos para documentación
+
+#### 🔗 Para saber más
+- [Baeldung — Java var](https://www.baeldung.com/java-10-local-variable-type-inference)
+- [Oracle — Style Guide for var](http://openjdk.org/projects/amber/guides/lvti-faq)
+
 ### Records (JDK 16+)
 
-Clases inmutables generadas automáticamente por el compilador. Proporcionan constructor, getters, `equals()`, `hashCode()`, `toString()` sin boilerplate.
+#### ¿Qué es?
+Los Records son clases inmutables generadas automáticamente por el compilador. Proporcionan constructor, getters, `equals()`, `hashCode()`, `toString()` sin boilerplate. Es como pedir una hamburguesa en un restaurante de menú fijo: ya viene con todo incluido, no tienes que pedir cada ingrediente por separado.
 
+🔗 [Oracle — Records](https://docs.oracle.com/en/java/javase/21/language/records.html)
+
+#### Sintaxis básica
 ```java
 public record Persona(String nombre, int edad) {
     // Compact constructor — validación
@@ -480,14 +678,70 @@ public record Persona(String nombre, int edad) {
         return "Hola, soy " + nombre;
     }
 }
+
+// Uso
+var p = new Persona("Ana", 30);
+p.nombre();         // "Ana" (getter)
+p.toString();       // "Persona[nombre=Ana, edad=30]"
+p.equals(new Persona("Ana", 30));  // true
 ```
 
-Los records son `final`, todos sus campos son `private final`, no pueden extender otras clases ni ser extendidos. Ideales para DTOs, value objects, claves en mapas, respuestas API.
+#### 🧪 Cómo probarlo
+```java
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
-### Enums (clases especiales)
+class RecordTest {
+    @Test
+    void crearYAcceder() {
+        var p = new Persona("Ana", 30);
+        assertEquals("Ana", p.nombre());
+        assertEquals(30, p.edad());
+    }
 
-En Java, `enum` es una clase completa. Pueden tener campos, métodos, constructores, implementar interfaces.
+    @Test
+    void equalsPorValor() {
+        var a = new Persona("Ana", 30);
+        var b = new Persona("Ana", 30);
+        assertEquals(a, b);
+    }
 
+    @Test
+    void validacion() {
+        assertThrows(IllegalArgumentException.class,
+            () -> new Persona("Ana", -1));
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- Los Records son `final` con campos `private final` — la JVM puede optimizarlos agresivamente
+- Al ser inmutables, son seguros en concurrencia sin sincronización
+- Sin overhead de librerías externas (vs Lombok `@Data`)
+- El bytecode generado es similar al de una clase escrita manualmente
+
+#### ✅ Buenas prácticas
+- ✅ Usa Records para DTOs, value objects, claves en mapas, respuestas API
+- ⚠️ Los Records no pueden extender otras clases — no son para jerarquías de dominio
+- ❌ No uses Records si necesitas setters o mutabilidad
+
+#### 🏗️ Metodología
+- Records para datos inmutables de transporte (DTOs, eventos)
+- Clases normales para entidades con identidad mutable (JPA `@Entity`)
+- Lombok `@Data` para clases con muchos campos que necesitan mutabilidad
+
+#### 🔗 Para saber más
+- [Baeldung — Java Records](https://www.baeldung.com/java-record-keyword)
+- [Oracle — Record docs](https://docs.oracle.com/en/java/javase/21/language/records.html)
+
+### Enums
+
+#### ¿Qué es?
+En Java, `enum` es una clase completa. Pueden tener campos, métodos, constructores, implementar interfaces. Son inherentemente serializables y resistentes a reflection. Es como un menú de restaurante: tiene opciones fijas (los valores del enum) pero cada una puede tener sus propios ingredientes (campos) y preparación (métodos).
+
+🔗 [Oracle — Enum Types](https://docs.oracle.com/javase/tutorial/java/javaOO/enum.html)
+
+#### Sintaxis básica
 ```java
 public enum Dia {
     LUNES(true), MARTES(true), MIERCOLES(true),
@@ -495,35 +749,139 @@ public enum Dia {
 
     private final boolean laborable;
 
-    Dia(boolean laborable) {
-        this.laborable = laborable;
-    }
+    Dia(boolean laborable) { this.laborable = laborable; }
 
     public boolean esLaborable() { return laborable; }
 }
 
-// Uso
 Dia hoy = Dia.LUNES;
 System.out.println(hoy.esLaborable());  // true
 ```
 
-Los enums tienen métodos útiles: `values()`, `valueOf()`, `ordinal()`, `name()`. Son inherentemente serializables y resistentes a reflection.
+#### 🧪 Cómo probarlo
+```java
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+class EnumTest {
+    @Test
+    void valores() {
+        assertTrue(Dia.LUNES.esLaborable());
+        assertFalse(Dia.DOMINGO.esLaborable());
+    }
+
+    @Test
+    void valueOf() {
+        assertEquals(Dia.LUNES, Dia.valueOf("LUNES"));
+    }
+
+    @Test
+    void values() {
+        assertEquals(7, Dia.values().length);
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- Los enums son singletons por definición — solo una instancia por valor en toda la JVM
+- La comparación con `==` es segura y O(1) (misma referencia)
+- `ordinal()` devuelve la posición (0-based) — útil para arrays indexados
+- `EnumMap` y `EnumSet` son las implementaciones más eficientes para claves enum
+
+#### ✅ Buenas prácticas
+- ✅ Usa enums para conjuntos fijos de constantes relacionadas
+- ⚠️ No uses `ordinal()` para lógica de negocio — puede cambiar al reordenar
+- ❌ No uses `switch` sobre `ordinal()` — usa el enum directamente
+
+#### 🏗️ Metodología
+- Constantes simples: `enum` sin campos
+- Constantes con comportamiento: `enum` con métodos abstractos implementados por cada valor
+- Singleton seguro: `enum` con una sola instancia (Effective Java Item 3)
+
+#### 🔗 Para saber más
+- [Baeldung — Java Enums](https://www.baeldung.com/a-guide-to-java-enums)
+- [Oracle — Enum docs](https://docs.oracle.com/en/java/javase/21/language/enums.html)
 
 ### Optional (Java 8+)
 
-Contenedor que puede o no contener un valor. Alternativa declarativa a `null`.
+#### ¿Qué es?
+Contenedor que puede o no contener un valor. Alternativa declarativa a `null`. Es como una caja que puede estar vacía: en vez de devolver `null` y que el que llama tenga que acordarse de comprobarlo, devuelves una caja que dice explícitamente "puede no haber nada aquí".
 
+🔗 [Oracle — Optional](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Optional.html)
+
+#### Sintaxis básica
 ```java
 Optional<String> opt = Optional.ofNullable(obtenerNombre());
 opt.map(String::toUpperCase)
    .filter(s -> s.length() > 3)
    .orElse("defecto");
+
+Optional.ofNullable(obtenerNombre())
+    .map(String::toUpperCase)
+    .orElseThrow(() -> new IllegalStateException("No hay valor"));
+
+obtenerNombre().ifPresent(n -> System.out.println("Hola " + n));
 ```
 
-Optional no es un reemplazo universal de null. No uses Optional para: campos de clase, parámetros de métodos, colecciones, o serialización.
+#### 🧪 Cómo probarlo
+```java
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+class OptionalTest {
+    @Test
+    void orElse() {
+        var opt = Optional.ofNullable(null);
+        assertEquals("defecto", opt.orElse("defecto"));
+    }
+
+    @Test
+    void mapYFilter() {
+        var opt = Optional.of("hola mundo");
+        var resultado = opt.map(String::toUpperCase)
+                          .filter(s -> s.length() > 5)
+                          .orElse("corto");
+        assertEquals("HOLA MUNDO", resultado);
+    }
+
+    @Test
+    void orElseThrow() {
+        var opt = Optional.empty();
+        assertThrows(IllegalStateException.class,
+            () -> opt.orElseThrow(() -> new IllegalStateException("no hay")));
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `Optional` es un objeto con overhead (~16-24 bytes)
+- No uses Optional para campos de clase (serialización problemática)
+- `Optional.empty()` devuelve un singleton — no crea objetos nuevos
+- Las operaciones `map()`/`filter()` crean nuevos objetos Optional en cada paso
+
+#### ✅ Buenas prácticas
+- ✅ Úsalo para valores de retorno que pueden estar ausentes
+- ⚠️ No uses Optional para: parámetros de métodos, campos de clase, colecciones, serialización
+- ❌ No llames `.get()` sin verificar `.isPresent()` — derrota el propósito
+
+#### 🏗️ Metodología
+- Optional como retorno de métodos: "puede o no haber resultado"
+- `null` para ausencia programática (no hay resultado porque no debía haberlo)
+- Excepciones para errores que deben manejarse
+- `orElseThrow()` cuando la ausencia es un error
+
+#### 🔗 Para saber más
+- [Baeldung — Optional Guide](https://www.baeldung.com/java-optional)
+- [Oracle — Optional API](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Optional.html)
 
 ### Memoria: Stack vs Heap
 
+#### ¿Qué es?
+Java gestiona la memoria en dos áreas principales: el **Stack** (pila) y el **Heap** (montículo). Cada hilo tiene su propio stack (~1 MB); el heap es compartido por todos los hilos. Las variables locales y las referencias viven en el stack; los objetos y arrays viven en el heap, gestionados por el Garbage Collector. Es como una oficina: tu escritorio (stack) tiene tus notas actuales, y el archivo (heap) guarda todos los documentos.
+
+🔗 [Oracle — JVM Memory Management](https://docs.oracle.com/cd/E13150_01/jrockit_jvm/jvm/jvm_mgmt.html)
+
+#### Sintaxis básica
 ```
 Stack (por hilo ~1MB)               Heap (compartido)
 ┌─────────────────────┐             ┌─────────────────────────┐
@@ -544,57 +902,70 @@ public void ejemplo() {
 }
 ```
 
-### Garbage Collection
+#### 🧪 Cómo probarlo
+```java
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
-La JVM gestiona la memoria automáticamente. El heap se organiza en generaciones:
-
-```
-Young Generation (Eden + S0 + S1) → Old Generation → Metaspace
-```
-
-**Generational GC:** los objetos nuevos se asignan en Eden (Young). Los que sobreviven varias colecciones se promocionan a Old (Tenured). La mayoría de los objetos muere joven (weak generational hypothesis).
-
-**Recolectores principales:**
-
-| Recolector | JDK | Descripción | Ideal para |
-|-----------|-----|-------------|------------|
-| **G1 GC** | Default JDK 9+ | Divide heap en regiones (~1-32 MB), prioriza las más sucias. Pausas predecibles configurables con `-XX:MaxGCPauseMillis=200` | Uso general |
-| **ZGC** | JDK 15+ (prod) | Pausas < 1ms, heaps hasta 16 TB. Coloreado de punteros, reubicación concurrente | Latencia ultrabaja |
-| **Shenandoah** | JDK 21+ (stable) | Compactación concurrente, pausas ultrabajas independientes del tamaño del heap | Apps sensibles a latencia |
-| **Serial GC** | Siempre | Un solo hilo para todo el GC. Pausas largas pero mínimo overhead | Apps pequeñas, monohilo |
-| **Parallel GC** | JDK 8 default | Múltiples hilos para Young y Old GC | Throughput máximo |
-
-```bash
-java -XX:+UseZGC -jar app.jar
-java -XX:+UseShenandoahGC -jar app.jar
-java -XX:+UseG1GC -XX:MaxGCPauseMillis=100 -jar app.jar
+class MemoriaTest {
+    @Test
+    void stackVsHeap() {
+        int primitivo = 5;         // stack
+        String literal = "hola";    // ref → stack, "hola" → pool
+        Integer wrapper = 42;       // ref → stack, 42 → heap (cached)
+        assertAll(
+            () -> assertEquals(5, primitivo),
+            () -> assertEquals("hola", literal),
+            () -> assertEquals(42, wrapper)
+        );
+    }
+}
 ```
 
-**¿Fugas de memoria en Java?** Sí: listeners no desregistrados, ClassLoader leaks (redeploys en Tomcat), `String.intern()` excesivo, conexiones no cerradas, referencias circulares con `finalize()`.
+#### 💡 Memoria y rendimiento
+- **Stack overflow**: bucles recursivos sin condición de salida (~1MB por hilo, configurable con `-Xss`)
+- **Heap overflow**: crear más objetos de los que la memoria disponible puede contener
+- Las variables en stack se liberan automáticamente al salir del método (sin intervención del GC)
+- Los objetos en heap sobreviven hasta que el GC determina que no hay referencias
+- `-Xms` (heap inicial) y `-Xmx` (heap máximo) son las flags de configuración principales
 
-Fuente: [Oracle — Primitive Types](https://docs.oracle.com/javase/tutorial/java/nutsandbolts/datatypes.html), [Oracle — Garbage Collection Tuning](https://docs.oracle.com/en/java/javase/21/gctuning/), [Baeldung — GC Guide](https://www.baeldung.com/jvm-garbage-collectors)
+#### ✅ Buenas prácticas
+- ✅ Prefiere primitivos sobre wrappers para reducir presión en el heap
+- ⚠️ No crees objetos innecesariamente dentro de bucles
+- ❌ No confíes en `finalize()` para liberar recursos — está deprecated desde Java 9
+
+#### 🏗️ Metodología
+- Objetos pequeños y temporales: se asignan en Eden (Young Gen) y se recolectan rápidamente
+- Objetos longevos: promocionados a Old Gen después de varias colecciones
+- Strings: el String Pool reduce duplicados pero retiene cadenas que ya no se usan
+
+#### 🔗 Para saber más
+- [Baeldung — JVM Memory](https://www.baeldung.com/java-jvm-memory)
+- [Oracle — GC Tuning](https://docs.oracle.com/en/java/javase/21/gctuning/)
 
 ---
+
 ## Control de flujo y modularidad
 
-### Condicionales: if / else if / else
+### Condicionales
 
+#### ¿Qué es?
+Las estructuras condicionales permiten ejecutar diferentes bloques de código según condiciones booleanas. Java ofrece `if/else`, `switch` (tradicional y expresión), y pattern matching en switch. Es como un semáforo: el camino que tomas depende del color que veas.
+
+🔗 [Wikipedia — Estructuras de control](https://es.wikipedia.org/wiki/Estructuras_de_control)
+
+#### Sintaxis básica
 ```java
 if (condicion) {
     // se ejecuta si condicion es true
 } else if (otraCondicion) {
-    // se ejecuta si la primera es false y esta es true
+    // ...
 } else {
-    // se ejecuta si todas son false
+    // ...
 }
 ```
 
-Los condicionales aceptan cualquier expresión booleana. Java no tiene truthiness automático — la condición debe ser explícitamente `boolean`.
-
-### Switch
-
-**Switch tradicional (statement, JDK 1+):**
-
+**Switch tradicional (JDK 1+):**
 ```java
 switch (dia) {
     case "LUNES":
@@ -610,10 +981,7 @@ switch (dia) {
 }
 ```
 
-Cuidado con el **fall-through**: si olvidas `break`, la ejecución continúa al siguiente caso.
-
 **Switch expression (JDK 14+):**
-
 ```java
 String tipo = switch (dia) {
     case "LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES" -> "laborable";
@@ -623,17 +991,7 @@ String tipo = switch (dia) {
 };
 ```
 
-Las switch expressions usan `->` en lugar de `:` y no tienen fall-through. Pueden devolver un valor con `yield` si se usan bloques:
-
-```java
-String tipo = switch (dia) {
-    case "LUNES" -> { yield "laborable"; }
-    default -> "otro";
-};
-```
-
-**Switch pattern matching (JDK 17+ preview, JDK 21+ stable):**
-
+**Switch pattern matching (JDK 21+ stable):**
 ```java
 static String formatear(Object obj) {
     return switch (obj) {
@@ -646,10 +1004,72 @@ static String formatear(Object obj) {
 }
 ```
 
-Los patrones pueden incluir guardas (`when`) y se evalúan en orden. El compilador verifica exhaustividad.
+#### 🧪 Cómo probarlo
+```java
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+class CondicionalesTest {
+    @Test
+    void ifElse() {
+        int edad = 18;
+        String categoria;
+        if (edad < 12) categoria = "niño";
+        else if (edad < 18) categoria = "adolescente";
+        else categoria = "adulto";
+        assertEquals("adulto", categoria);
+    }
+
+    @Test
+    void switchExpression() {
+        String dia = "LUNES";
+        String tipo = switch (dia) {
+            case "LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES" -> "laborable";
+            case "SABADO", "DOMINGO" -> "finde";
+            default -> "invalido";
+        };
+        assertEquals("laborable", tipo);
+    }
+
+    @Test
+    void patternMatching() {
+        assertEquals("Entero: 42", formatear(42));
+        assertEquals("String: hola", formatear("hola"));
+        assertEquals("nulo", formatear(null));
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `if/else` es O(1) por condición — evaluación lazy (cortocircuito)
+- `switch` tradicional usa tablas de salto (lookupswitch/tableswitch) — O(1)
+- `switch` expression es eficiente: el compilador genera bytecode optimizado
+- Pattern matching en switch: la JVM optimiza los patrones
+
+#### ✅ Buenas prácticas
+- ✅ Prefiere switch expression sobre if/else encadenados para múltiples valores de una variable
+- ⚠️ No olvides `break` en switch tradicional — el fall-through causa bugs
+- ❌ No uses switch sobre `ordinal()` de enums — usa el enum directamente
+- ✅ Usa pattern matching para instanceof + cast (JDK 16+)
+
+#### 🏗️ Metodología
+- 1-2 condiciones: `if/else`
+- 3+ condiciones sobre el mismo valor: `switch`
+- Validaciones complejas: pattern matching
+- Dispatch dinámico: polimorfismo
+
+#### 🔗 Para saber más
+- [Oracle — Switch Expressions](https://docs.oracle.com/en/java/javase/21/language/switch-expressions.html)
+- [Baeldung — Pattern Matching](https://www.baeldung.com/java-pattern-matching-instanceof)
 
 ### Bucles
 
+#### ¿Qué es?
+Los bucles ejecutan un bloque de código repetidamente. Java ofrece `for` (clásico y enhanced), `while`, `do-while`, y `forEach` con Streams. Es como una cinta transportadora: los elementos pasan uno tras otro y tú haces algo con cada uno.
+
+🔗 [Oracle — Loops](https://docs.oracle.com/javase/tutorial/java/nutsandbolts/while.html)
+
+#### Sintaxis básica
 ```java
 // for clásico
 for (int i = 0; i < 10; i++) {
@@ -679,90 +1099,172 @@ lista.forEach(System.out::println);
 mapa.forEach((k, v) -> System.out.println(k + " -> " + v));
 ```
 
-### break / continue con labels
-
-Java permite etiquetar bloques para controlar la salida de bucles anidados:
-
+#### 🧪 Cómo probarlo
 ```java
-outer:
-for (int i = 0; i < 5; i++) {
-    for (int j = 0; j < 5; j++) {
-        if (i == 2) continue outer;  // salta a la siguiente iteración de outer
-        if (i == 4) break outer;     // sale completamente de outer
-        System.out.println(i + "," + j);
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+class BuclesTest {
+    @Test
+    void forClasico() {
+        int suma = 0;
+        for (int i = 1; i <= 5; i++) suma += i;
+        assertEquals(15, suma);
+    }
+
+    @Test
+    void forEach() {
+        var lista = java.util.List.of("a", "b", "c");
+        var resultado = new StringBuilder();
+        for (String s : lista) resultado.append(s);
+        assertEquals("abc", resultado.toString());
+    }
+
+    @Test
+    void whileTest() {
+        int i = 0;
+        while (i < 3) i++;
+        assertEquals(3, i);
     }
 }
 ```
 
-Es la alternativa de Java a `goto` — controlar estructuras sin perder legibilidad.
+#### 💡 Memoria y rendimiento
+- `for` clásico sobre array: tan rápido como C (la JVM optimiza los bounds checks)
+- `for-each` sobre colecciones: usa `Iterator` internamente — ligero overhead
+- `forEach` con lambda: overhead de crear un Consumer, pero el JIT inlinea
+- Los bucles con autoboxing dentro son costosos: crean objetos en cada iteración
 
-### Excepciones: try / catch / finally
+#### ✅ Buenas prácticas
+- ✅ Prefiere `for-each` sobre `for` clásico para colecciones
+- ⚠️ No modifiques la colección mientras la iteras — `ConcurrentModificationException`
+- ❌ No uses `for (int i = 0; i < list.size(); i++)` — guarda el tamaño en una variable
+- ✅ Extrae condiciones invariantes fuera del bucle
 
-```java
-// try-catch-finally
-try {
-    var reader = new FileReader("archivo.txt");
-    // código que puede lanzar excepción
-} catch (FileNotFoundException e) {
-    System.err.println("Archivo no encontrado: " + e.getMessage());
-} catch (IOException e) {
-    System.err.println("Error de E/S: " + e.getMessage());
-} finally {
-    // Siempre se ejecuta (cierre manual, liberación de recursos)
-}
+#### 🏗️ Metodología
+- Procesamiento simple de colecciones: `for-each`
+- Necesidad de índice: `for` clásico
+- Transformaciones de datos: `Stream API` (más declarativo)
+- Bucles infinitos con condición de salida: `while (true)` con `break`
 
-// Multi-catch (JDK 7+)
-try {
-    // código
-} catch (IOException | SQLException e) {
-    log.error("Error de I/O o BD", e);
-}
+#### 🔗 Para saber más
+- [Oracle — Loops Tutorial](https://docs.oracle.com/javase/tutorial/java/nutsandbolts/while.html)
+- [Baeldung — Loops in Java](https://www.baeldung.com/java-loops)
+
+### Excepciones
+
+#### ¿Qué es?
+Java diferencia entre **checked** (verificadas en compilación) y **unchecked** (runtime). Las checked exceptions obligan al programador a manejarlas; las unchecked (subclases de `RuntimeException`) no. Es como la diferencia entre un aviso de mantenimiento programado (checked) y una avería imprevista (unchecked).
+
+```
+Throwable
+├── Error (unchecked) — OutOfMemoryError, StackOverflowError
+└── Exception
+    ├── RuntimeException (unchecked) — NullPointerException, IllegalArgumentException
+    └── IOException (checked) — FileNotFoundException, SocketException
 ```
 
-**Try-with-resources (JDK 7+):** cierra automáticamente recursos que implementan `AutoCloseable`.
+🔗 [Oracle — Exceptions](https://docs.oracle.com/javase/tutorial/essential/exceptions/)
 
+#### Sintaxis básica
 ```java
+// Checked — debes manejarlas
+try {
+    var reader = new FileReader("archivo.txt");
+} catch (FileNotFoundException e) {
+    System.err.println("Archivo no encontrado");
+}
+
+// Unchecked — no obligatorio
+public void dividir(int a, int b) {
+    if (b == 0) throw new IllegalArgumentException("No dividir por cero");
+}
+
+// Try-with-resources (JDK 7+)
 try (var br = new BufferedReader(new FileReader("archivo.txt"))) {
     System.out.println(br.readLine());
 } catch (IOException e) {
     e.printStackTrace();
 }
 
-// Múltiples recursos
-try (var in = new FileInputStream("in.txt");
-     var out = new FileOutputStream("out.txt")) {
-    out.write(in.readAllBytes());
+// Multi-catch (JDK 7+)
+try {
+    // código
+} catch (IOException | SQLException e) {
+    log.error("Error", e);
 }
 ```
 
-### Assertions
-
+#### 🧪 Cómo probarlo
 ```java
-assert edad >= 0 : "La edad no puede ser negativa: " + edad;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+class ExcepcionesTest {
+    @Test
+    void excepcionEsperada() {
+        assertThrows(IllegalArgumentException.class,
+            () -> { throw new IllegalArgumentException("error"); });
+    }
+
+    @Test
+    void mensajeExcepcion() {
+        var ex = assertThrows(IllegalArgumentException.class,
+            () -> dividir(10, 0));
+        assertTrue(ex.getMessage().contains("cero"));
+    }
+
+    @Test
+    void sinExcepcion() {
+        assertDoesNotThrow(() -> dividir(10, 2));
+    }
+}
+
+private int dividir(int a, int b) {
+    if (b == 0) throw new IllegalArgumentException("No dividir por cero");
+    return a / b;
+}
 ```
 
-Se activan en runtime con flag `-ea` (enable assertions). No se usan para validación de entrada pública ni en producción. Son para verificar invariantes internos durante desarrollo y testing.
+#### 💡 Memoria y rendimiento
+- Construir una excepción es caro (rellenar el stack trace, ~50μs)
+- El bloque `try` sin excepción tiene overhead mínimo (la JVM optimiza)
+- No uses excepciones para control de flujo normal
+- `try-with-resources` genera bytecode más complejo que un `try/finally` manual, pero es más seguro
 
-### Paquetes e imports
+#### ✅ Buenas prácticas
+- ✅ Sé específico con los tipos de excepción que capturas
+- ⚠️ No captures `Exception` genérica sin razón
+- ❌ No tragues excepciones con `catch (Exception e) { /* vacío */ }`
+- ✅ Usa try-with-resources para cualquier recurso que implemente `AutoCloseable`
 
+#### 🏗️ Metodología
+- Checked exceptions: errores recuperables que quien llama debe manejar (IOException, SQLException)
+- Unchecked exceptions: errores de programación (NullPointerException, IllegalArgumentException)
+- Excepciones personalizadas: cuando necesitas transmitir información específica del error
+- Validación de entrada: lanza `IllegalArgumentException`
+
+#### 🔗 Para saber más
+- [Oracle — Exception Tutorial](https://docs.oracle.com/javase/tutorial/essential/exceptions/)
+- [Baeldung — Exceptions Guide](https://www.baeldung.com/java-exceptions)
+
+### Módulos y paquetes
+
+#### ¿Qué es?
+Un paquete (`package`) agrupa clases relacionadas. Un módulo (`module-info.java`, JPMS, JDK 9+) encapsula paquetes y declara dependencias explícitas. Es la unidad de organización del código en Java. Es como una biblioteca: los paquetes son las estanterías y los módulos son las salas que agrupan estanterías temáticas.
+
+🔗 [OpenJDK — Project Jigsaw](https://openjdk.org/projects/jigsaw/)
+
+#### Sintaxis básica
 ```java
 package com.miempresa.app;
 
 import java.util.List;
-import java.util.Map;
 import static java.lang.Math.PI;  // import estático
 ```
 
-- `package`: declara el paquete al que pertenece la clase (refleja la estructura de directorios)
-- `import`: declara clases de otros paquetes para usarlas sin prefijo completo
-- `import static`: importa miembros estáticos directamente
-
-### Módulos (JPMS, JDK 9)
-
-Project Jigsaw introduce el sistema de módulos para encapsular paquetes y sus dependencias.
-
+**module-info.java (JPMS, JDK 9+):**
 ```java
-// module-info.java
 module com.miempresa.app {
     requires com.miempresa.datos;
     requires transitive java.sql;
@@ -774,20 +1276,276 @@ module com.miempresa.app {
 }
 ```
 
-**Directivas clave:**
-| Directiva | Significado |
-|-----------|-------------|
-| `requires` | Dependencia de otro módulo |
-| `requires transitive` | Dependencia heredada por quien use este módulo |
-| `exports` | Paquetes visibles externamente |
-| `exports ... to` | Exporta solo a módulos concretos |
-| `opens` | Permite reflection sobre el paquete (Hibernate, Jackson, serialización) |
-| `opens ... to` | Abre reflection solo a módulos concretos |
-| `provides ... with` | Declara implementación de un servicio SPI |
-| `uses` | Declara que se consumirá un servicio SPI |
+#### 🧪 Cómo probarlo
+```java
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+class PaquetesTest {
+    @Test
+    void importsFuncionan() {
+        var lista = new java.util.ArrayList<String>();
+        lista.add("test");
+        assertTrue(lista instanceof java.util.List);
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- Los imports no tienen impacto en rendimiento — son purely sintácticos
+- JPMS verifica dependencias en compilación y runtime (no en caliente)
+- `jlink` puede crear runtime mínimo incluyendo solo los módulos necesarios (~30-40 MB)
+
+#### ✅ Buenas prácticas
+- ✅ Usa imports explícitos, no `import package.*`
+- ⚠️ No tengas clases con el mismo nombre que clases de la stdlib
+- ❌ No crees paquetes con más de 20-30 clases — divide por responsabilidad
+
+#### 🏗️ Metodología
+- Paquetes por capa: `controller`, `service`, `repository`, `model`
+- Paquetes por feature: `usuario`, `pedido`, `producto` (más modular)
+- Módulos: para librerías y aplicaciones grandes donde quieras encapsular APIs internas
+
+#### 🔗 Para saber más
+- [Oracle — Packages](https://docs.oracle.com/javase/tutorial/java/package/packages.html)
+- [Baeldung — JPMS Guide](https://www.baeldung.com/java-9-modularity)
+
+---
+
+## Sistema de archivos
+
+### java.nio.file (NIO.2, JDK 7+)
+
+#### ¿Qué es?
+La API moderna y recomendada para manejo de archivos, introducida en Java 7 como parte de NIO.2. Proporciona operaciones fluidas, streaming, watches y mapeo de memoria. Es como tener un asistente de archivos que puede leer, escribir, copiar y vigilar cambios sin que tengas que hacer el trabajo pesado.
+
+🔗 [Oracle — File I/O (NIO.2)](https://docs.oracle.com/javase/tutorial/essential/io/fileio.html)
+
+#### Sintaxis básica
+```java
+import java.nio.file.*;
+import java.nio.file.attribute.*;
+
+Path ruta = Path.of("datos", "config.properties");
+Path absoluta = Path.of("/home/user", "app", "config.yml");
+
+// Leer y escribir (JDK 11+)
+String contenido = Files.readString(path);
+Files.writeString(path, "Hola mundo");
+
+List<String> lineas = Files.readAllLines(path);
+Files.write(path, List.of("línea 1", "línea 2"));
+
+// Copiar, mover, borrar
+Files.copy(origen, destino, StandardCopyOption.REPLACE_EXISTING);
+Files.move(origen, destino, StandardCopyOption.ATOMIC_MOVE);
+Files.deleteIfExists(path);
+
+// Recorrer archivos
+try (var stream = Files.walk(Path.of("src"))) {
+    stream.filter(p -> p.toString().endsWith(".java"))
+          .forEach(System.out::println);
+}
+
+// Archivos grandes con Stream perezoso
+try (var lines = Files.lines(Path.of("grande.csv"))) {
+    lines.filter(l -> !l.startsWith("#"))
+         .map(l -> l.split(","))
+         .limit(100)
+         .forEach(arr -> System.out.println(arr[0]));
+}
+
+// Atributos
+var attrs = Files.readAttributes(path, BasicFileAttributes.class);
+System.out.println("Tamaño: " + attrs.size());
+```
+
+#### 🧪 Cómo probarlo
+```java
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import static org.junit.jupiter.api.Assertions.*;
+import java.nio.file.*;
+
+class FileTest {
+    @TempDir
+    Path tempDir;
+
+    @Test
+    void escribirYLeer() throws Exception {
+        var archivo = tempDir.resolve("test.txt");
+        Files.writeString(archivo, "contenido");
+        assertEquals("contenido", Files.readString(archivo));
+    }
+
+    @Test
+    void copiar() throws Exception {
+        var origen = tempDir.resolve("a.txt");
+        var destino = tempDir.resolve("b.txt");
+        Files.writeString(origen, "datos");
+        Files.copy(origen, destino, StandardCopyOption.REPLACE_EXISTING);
+        assertTrue(Files.exists(destino));
+    }
+
+    @Test
+    void walk() throws Exception {
+        Files.createDirectory(tempDir.resolve("sub"));
+        Files.writeString(tempDir.resolve("sub/archivo.txt"), "contenido");
+        try (var stream = Files.walk(tempDir)) {
+            long count = stream.count();
+            assertTrue(count >= 2);
+        }
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `Files.readString()` carga todo el archivo en memoria — peligroso para archivos grandes (>100MB)
+- `Files.lines()` es lazy: lee bajo demanda, ideal para archivos grandes
+- `FileChannel` con `MappedByteBuffer` ofrece el mejor rendimiento para archivos muy grandes
+- `WatchService` usa eventos del SO (inotify en Linux) — overhead mínimo
+- Las operaciones de NIO.2 son generalmente más rápidas que `java.io` por el buffering nativo
+
+#### ✅ Buenas prácticas
+- ✅ Siempre usa try-with-resources con streams de archivos
+- ⚠️ No uses `readString()` para archivos que no caben en memoria
+- ❌ No ignores el encoding — especifica `StandardCharsets.UTF_8` explícitamente
+- ✅ Prefiere NIO.2 sobre java.io para nuevo código
+
+#### 🏗️ Metodología
+- Archivos pequeños: `Files.readString()` / `writeString()`
+- Archivos grandes: `Files.lines()` para streaming línea por línea
+- Alto rendimiento binario: `FileChannel` + `MappedByteBuffer`
+- Vigilar cambios: `WatchService` para hot-reload, procesamiento de archivos entrantes
+
+#### 🔗 Para saber más
+- [Baeldung — Java NIO.2](https://www.baeldung.com/java-nio-2-file-api)
+- [Oracle — NIO.2 Tutorial](https://docs.oracle.com/javase/tutorial/essential/io/fileio.html)
+
+---
+
+## Algoritmos y estructuras de datos
+
+### Ordenación
+
+#### ¿Qué es?
+Java incluye algoritmos de ordenación optimizados: **Timsort** (para objetos, estable, O(n log n)) y **Dual-Pivot Quicksort** (para primitivos, inestable, O(n log n)). Es como tener un archivador que ordena tus documentos automáticamente en cuanto se lo pides.
+
+🔗 [Wikipedia — Timsort](https://es.wikipedia.org/wiki/Timsort)
+
+#### Sintaxis básica
+```java
+import java.util.*;
+
+var list = new ArrayList<>(List.of(3, 1, 4, 1, 5, 9));
+Collections.sort(list);     // Timsort — O(n log n), estable
+Collections.reverse(list);
+Collections.shuffle(list);
+
+int[] array = {3, 1, 4, 1, 5, 9};
+Arrays.sort(array);         // Dual-Pivot Quicksort
+
+Arrays.parallelSort(array); // ForkJoinPool
+
+// Comparadores
+records.sort(Comparator.comparing(Persona::edad));
+records.sort(Comparator.comparing(Persona::edad).reversed());
+records.sort(Comparator.comparing(Persona::apellido)
+                       .thenComparing(Persona::nombre));
+
+// Primitivos (evitan autoboxing)
+records.sort(Comparator.comparingInt(Persona::edad));
+```
+
+#### 🧪 Cómo probarlo
+```java
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+class OrdenacionTest {
+    @Test
+    void sortLista() {
+        var list = new ArrayList<>(List.of(3, 1, 2));
+        Collections.sort(list);
+        assertEquals(List.of(1, 2, 3), list);
+    }
+
+    @Test
+    void sortArray() {
+        int[] arr = {3, 1, 2};
+        Arrays.sort(arr);
+        assertArrayEquals(new int[]{1, 2, 3}, arr);
+    }
+
+    @Test
+    void comparadorPersonalizado() {
+        record Persona(String nombre, int edad) {}
+        var personas = new ArrayList<>(List.of(
+            new Persona("Ana", 30), new Persona("Luis", 25)));
+        personas.sort(Comparator.comparing(Persona::edad));
+        assertEquals(25, personas.get(0).edad());
+    }
+
+    @Test
+    void sortEstable() {
+        record Par(int key, String val) {}
+        var datos = new ArrayList<>(List.of(
+            new Par(1, "a"), new Par(2, "b"), new Par(1, "c")));
+        datos.sort(Comparator.comparing(Par::key));
+        assertEquals("a", datos.get(0).val());
+        assertEquals("c", datos.get(2).val());
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `Collections.sort()` (Timsort): O(n log n) peor caso, O(n) mejor caso (datos ya ordenados)
+- `Arrays.sort()` (Dual-Pivot Quicksort): O(n log n) promedio
+- `Arrays.parallelSort()`: divide el array, ordena en paralelo y fusiona
+- `sorted()` con Stream crea una nueva lista (O(n) memoria extra)
+- `list.sort()` ordena in-place (O(1) memoria extra)
+- Timsort es estable: elementos iguales mantienen su orden relativo
+
+#### ✅ Buenas prácticas
+- ✅ Usa `Comparator.comparing()` con method references — evita errores
+- ⚠️ `parallelSort()` solo es beneficioso para arrays grandes (>5000 elementos)
+- ❌ No implementes tu propio algoritmo de ordenación — el de Java es mejor
+- ✅ Usa `Comparator.comparingInt()` para evitar autoboxing con primitivos
+
+#### 🏗️ Metodología
+- Ordenación simple: `Collections.sort()` o `list.sort()`
+- Streams: `.sorted(Comparator.comparing(...))`
+- Arrays primitivos: `Arrays.sort()` o `Arrays.parallelSort()`
+- Top-N elementos: PriorityQueue o Stream `.limit(N)` después de sorted
+
+#### 🔗 Para saber más
+- [Oracle — Sorting](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Collections.html#sort(java.util.List))
+- [Baeldung — Comparator](https://www.baeldung.com/java-comparator-comparable)
+
+---
+
+## Conceptos clave explicados a fondo
+
+### JVM, JRE, bytecode y compilación JIT
+
+#### ¿Qué es?
+El ecosistema Java tiene tres capas: **JDK** (kit de desarrollo con compilador `javac`), **JRE** (runtime con la JVM y librerías) y **JVM** (máquina virtual que ejecuta bytecode). La JVM convierte bytecode en código máquina mediante compilación JIT (Just-In-Time). Es como un traductor simultáneo: el JDK es el diccionario, la JRE es el traductor, y la JVM es el intérprete que habla directamente con el oyente.
+
+```java
+int suma = 1 + 2;
+// javac lo compila a bytecode: iconst_1, iconst_2, iadd, istore_1
+// La JVM interpreta bytecode. Las partes "calientes" (hot spots)
+// se compilan a código nativo mediante JIT
+```
+
+🔗 [Oracle — JVM docs](https://docs.oracle.com/en/java/javase/)
+
+#### Sintaxis básica
+```
+.java --(javac)--> .class (bytecode) --(JVM)--> código máquina
+```
 
 **jlink — runtime mínimo:**
-
 ```bash
 jlink --module-path $JAVA_HOME/jmods:target/classes \
       --add-modules com.miempresa.app \
@@ -795,134 +1553,124 @@ jlink --module-path $JAVA_HOME/jmods:target/classes \
 ./runtime-minimo/bin/java com.miempresa.app.Main
 ```
 
-### Visibilidad (modificadores de acceso)
-
-| Modificador | Clase | Paquete | Subclase | Mundo |
-|-------------|-------|---------|----------|-------|
-| `private` | ✓ | ✗ | ✗ | ✗ |
-| *package-private* (default) | ✓ | ✓ | ✗ | ✗ |
-| `protected` | ✓ | ✓ | ✓ | ✗ |
-| `public` | ✓ | ✓ | ✓ | ✓ |
-
-- **package-private**: ningún modificador. Visible solo dentro del mismo paquete.
-- **`private`**: solo accesible dentro de la clase donde se declara.
-- **`protected`**: visible en el mismo paquete + subclases (incluso en paquetes distintos).
-- **`public`**: accesible desde cualquier clase de cualquier módulo.
-
-Fuente: [Oracle — Switch Expressions](https://docs.oracle.com/en/java/javase/21/language/switch-expressions.html), [OpenJDK — Project Jigsaw](https://openjdk.org/projects/jigsaw/), [Oracle — Control Flow](https://docs.oracle.com/javase/tutorial/java/nutsandbolts/flow.html)
-
----
-## Conceptos clave explicados a fondo
-
-### JVM, JRE, JDK, bytecode, compilación JIT, garbage collection
-
-El ecosistema Java tiene tres capas:
-
-```
-.java --(javac)--> .class (bytecode) --(JVM)--> código máquina
-```
-
-- **JDK (Java Development Kit)**: kit completo para desarrollar. Incluye compilador (`javac`), depurador (`jdb`), herramientas (JConsole, VisualVM, jlink, jpackage, javadoc) y la JRE
-- **JRE (Java Runtime Environment)**: solo para ejecutar. Incluye la JVM y las librerías estándar. Desde Java 11 no existe como instalación independiente — usas `jlink` para crear runtimes mínimos
-- **JVM (Java Virtual Machine)**: ejecuta bytecode. Especificación abstracta con implementaciones: HotSpot (Oracle/OpenJDK), OpenJ9 (Eclipse), GraalVM (polyglot)
-
-**El viaje del código:**
+#### 🧪 Cómo probarlo
 ```java
-int suma = 1 + 2;
-// javac lo compila a bytecode: iconst_1, iconst_2, iadd, istore_1
-// La JVM interpreta bytecode. Las partes "calientes" (hot spots)
-// se compilan a código nativo mediante JIT (Just-In-Time compilation)
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+class JVMTest {
+    @Test
+    void bytecodeExecution() {
+        int suma = 1 + 2;
+        assertEquals(3, suma);
+    }
+
+    @Test
+    void jitOptimization() {
+        long inicio = System.nanoTime();
+        long suma = 0;
+        for (int i = 0; i < 1_000_000; i++) {
+            suma += i;
+        }
+        long fin = System.nanoTime();
+        assertTrue(suma > 0);
+        System.out.println("Tiempo (ms): " + (fin - inicio) / 1_000_000);
+        // La primera ejecución es más lenta (interpretación)
+        // La JVM compila JIT los hot spots
+    }
+}
 ```
 
-**Compilación JIT:** Cuando la JVM detecta que un método se ejecuta muchas veces (hot spot), lo compila a código máquina nativo. La próxima llamada ejecuta código nativo directamente. Esto es lo que hace que Java sea rápido a largo plazo aunque la primera ejecución sea más lenta. Los perfiles de ejecución permiten optimizaciones como inline de métodos virtuales y eliminación de bounds checking.
+#### 💡 Memoria y rendimiento
+- La compilación JIT ocurre cuando un método se ejecuta muchas veces (umbral configurable: `-XX:CompileThreshold=10000`)
+- **AOT con GraalVM**: compila Java a nativo con `native-image`. Arranque instantáneo (~0.1s vs ~3s), menos memoria (~10 MB vs ~100 MB)
+- El JIT puede hacer inline de métodos virtuales y eliminar bounds checking
+- **JVM warm-up**: las primeras ejecuciones son más lentas hasta que el JIT compila los hot spots
 
-**AOT con GraalVM:** Permite compilar Java a nativo con `native-image`. Arranque instantáneo (~0.1s vs ~3s), menos memoria (~10 MB vs ~100 MB). Ideal para serverless. Limitaciones: menos reflection, no todos los frameworks son compatibles (Spring Boot 3 sí).
+#### ✅ Buenas prácticas
+- ✅ Perfila tu aplicación con JMH antes de optimizar
+- ⚠️ El warm-up de la JVM afecta benchmarks — usa JMH que incluye warm-up iterations
+- ❌ No asumas que el bytecode se ejecuta igual en todas las JVMs (HotSpot vs OpenJ9 vs GraalVM)
 
-**Garbage Collection:**
+#### 🏗️ Metodología
+- Apps server: JVM HotSpot con G1GC es la opción por defecto más equilibrada
+- Serverless/FaaS: GraalVM Native Image para arranque instantáneo
+- Microservicios con restricciones de memoria: GraalVM (menor footprint)
 
-| Recolector | JDK | Descripción | ¿Para qué? |
-|---|---|---|---|
-| **G1 GC** | Default JDK 9+ | Divide heap en regiones, prioriza las más sucias. Pausas predecibles | Uso general |
-| **ZGC** | JDK 15+ prod | Pausas < 1ms, heaps hasta 16 TB | Latencia ultrabaja |
-| **Shenandoah** | JDK 21+ stable | Compactación concurrente, pausas ultrabajas | Apps sensibles a latencia |
-| **Serial GC** | Siempre | Un hilo para GC | Apps pequeñas |
-| **Parallel GC** | JDK 8 default | Múltiples hilos | Throughput máximo |
+#### 🔗 Para saber más
+- [Baeldung — JIT Compiler](https://www.baeldung.com/jvm-jit-compiler)
+- [GraalVM docs](https://www.graalvm.org/)
 
+### Garbage Collection
+
+#### ¿Qué es?
+La JVM gestiona la memoria automáticamente mediante el Garbage Collector. El heap se organiza en generaciones: Young (Eden + S0 + S1) → Old → Metaspace. Los objetos nuevos se asignan en Eden; los que sobreviven varias colecciones se promocionan a Old. La mayoría de los objetos muere joven (weak generational hypothesis). Es como un servicio de limpieza de oficinas: cada noche se tira la basura de las papeleras (Eden), y cada mes se revisan los archivos (Old) para ver qué se puede eliminar.
+
+🔗 [Oracle — GC Tuning](https://docs.oracle.com/en/java/javase/21/gctuning/)
+
+#### Sintaxis básica
 ```bash
 java -XX:+UseZGC -jar app.jar
 java -XX:+UseShenandoahGC -jar app.jar
+java -XX:+UseG1GC -XX:MaxGCPauseMillis=100 -jar app.jar
 ```
 
-**¿Fuga de memoria?** Sí: listeners no desregistrados, ClassLoader leaks al redeployar, String.intern() excesivo, conexiones no cerradas.
+| Recolector | JDK | Descripción | Ideal para |
+|-----------|-----|-------------|------------|
+| **G1 GC** | Default JDK 9+ | Divide heap en regiones (~1-32 MB), prioriza las más sucias. Pausas predecibles | Uso general |
+| **ZGC** | JDK 15+ (prod) | Pausas < 1ms, heaps hasta 16 TB. Coloreado de punteros | Latencia ultrabaja |
+| **Shenandoah** | JDK 21+ (stable) | Compactación concurrente, pausas ultrabajas | Apps sensibles a latencia |
+| **Serial GC** | Siempre | Un solo hilo para todo el GC. Pausas largas pero mínimo overhead | Apps pequeñas, monohilo |
+| **Parallel GC** | JDK 8 default | Múltiples hilos para Young y Old GC | Throughput máximo |
 
-Herramientas: VisualVM, JProfiler, Eclipse MAT, JFR (built-in), Async Profiler.
-
-Fuente: [Oracle — JVM docs](https://docs.oracle.com/en/java/javase/), [Baeldung — GC Guide](https://www.baeldung.com/jvm-garbage-collectors)
-
-### Variables, tipos primitivos vs objetos, autoboxing, stack vs heap
-
-**Tipos primitivos:**
-
-| Tipo | Tamaño | Rango | Default |
-|---|---|---|---|
-| `byte` | 8 bits | -128 a 127 | 0 |
-| `short` | 16 bits | -32.768 a 32.767 | 0 |
-| `int` | 32 bits | -2³¹ a 2³¹-1 | 0 |
-| `long` | 64 bits | -2⁶³ a 2⁶³-1 | 0L |
-| `float` | 32 bits | ±3.4E-38 | 0.0f |
-| `double` | 64 bits | ±1.7E-308 | 0.0 |
-| `boolean` | ~1 bit | true/false | false |
-| `char` | 16 bits | 0-65.535 | '\u0000' |
-
-**Primitivos vs Wrappers:**
+#### 🧪 Cómo probarlo
 ```java
-int x = 5;        // Primitivo — stack
-Integer y = 5;    // Objeto — heap (autoboxing)
-```
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import java.lang.management.*;
 
-| Primitivo | Wrapper |
-|---|---|
-| `int` | `Integer` |
-| `long` | `Long` |
-| `double` | `Double` |
-| `boolean` | `Boolean` |
-| `char` | `Character` |
-
-**Autoboxing y unboxing (Java 5+):**
-```java
-Integer a = 42;   // autoboxing: int -> Integer
-int b = a;        // unboxing: Integer -> int
-
-// Cuidado: autoboxing en bucles es costoso
-Integer suma = 0;
-for (int i = 0; i < 1_000_000; i++) {
-    suma += i;  // Crea 1M de objetos Integer!
+class GCTest {
+    @Test
+    void memoriaDisponible() {
+        var mem = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
+        assertTrue(mem.getMax() > 0);
+        System.out.println("Heap max: " + mem.getMax() / 1024 / 1024 + " MB");
+    }
 }
 ```
 
-**Integer caching:** Java cachea `Integer` de -128 a 127. `a == b` da true para 127 pero false para 128. Siempre usa `.equals()`.
+#### 💡 Memoria y rendimiento
+- **Fugas de memoria en Java**: listeners no desregistrados, ClassLoader leaks (redeploys en Tomcat), `String.intern()` excesivo, conexiones no cerradas
+- El GC Stop-The-World (STW) pausa todos los hilos de la aplicación
+- ZGC y Shenandoah minimizan las pausas STW (concurrentes)
+- Herramientas: VisualVM, JProfiler, Eclipse MAT, JFR (built-in), Async Profiler
 
-**String Pool:** literales se cachean. `"hola" == "hola"` -> true. `new String("hola")` crea nuevo objeto.
+#### ✅ Buenas prácticas
+- ✅ Configura `-Xms` y `-Xmx` iguales para evitar redimensiones del heap
+- ⚠️ Si ves pausas largas de GC, prueba ZGC o Shenandoah
+- ❌ No llames a `System.gc()` — ignora la sugerencia o empeora el rendimiento
+- ✅ Monitorea el GC con `-Xlog:gc*` en JDK 17+
 
-**Stack vs Heap:**
-- **Stack**: por hilo. Variables locales, referencias. ~1MB. Se libera al salir del método
-- **Heap**: compartido. Objetos y arrays. Gestionado por GC. Configurable (`-Xms`, `-Xmx`)
+#### 🏗️ Metodología
+- Apps con requisitos de latencia: ZGC o Shenandoah
+- Apps batch/throughput: Parallel GC
+- Microservicios con memoria limitada: GraalVM Native Image (sin GC)
+- Monitoreo: JFR + GC logs + Prometheus/Grafana con JMX Exporter
 
+#### 🔗 Para saber más
+- [Baeldung — GC Guide](https://www.baeldung.com/jvm-garbage-collectors)
+- [Oracle — GC Tuning Guide](https://docs.oracle.com/en/java/javase/21/gctuning/)
+
+### POO clásica: clases, herencia, interfaces y polimorfismo
+
+#### ¿Qué es?
+Java es un lenguaje puramente orientado a objetos (casi todo es objeto, salvo primitivos). El sistema de tipos es **nominal**: dos clases son compatibles si una extiende/implementa explícitamente a la otra. Es como un árbol genealógico: cada clase conoce a sus ancestros y descendientes.
+
+🔗 [Oracle — OOP Concepts](https://docs.oracle.com/javase/tutorial/java/concepts/)
+
+#### Sintaxis básica
 ```java
-public void ejemplo() {
-    int x = 5;           // x -> stack
-    String s = "hola";   // s (ref) -> stack; "hola" -> heap (String Pool)
-}
-```
-
-Fuente: [Oracle — Primitive Types](https://docs.oracle.com/javase/tutorial/java/nutsandbolts/datatypes.html)
-
-### POO clásica: clases, herencia simple, interfaces, abstract, polimorfismo, encapsulación
-
-Java es un lenguaje puramente orientado a objetos (casi todo es objeto, salvo primitivos). El sistema de tipos es **nominal**: dos clases son compatibles si una extiende/implementa explícitamente a la otra.
-
-**Clase y encapsulación:**
-```java
+// Clase y encapsulación
 public class Persona {
     private String nombre;
     private int edad;
@@ -933,192 +1681,97 @@ public class Persona {
     }
 
     public String getNombre() { return nombre; }
-    public void setNombre(String nombre) { this.nombre = nombre; }
     public int getEdad() { return edad; }
-    public void setEdad(int edad) { this.edad = edad; }
-
-    @Override
-    public String toString() {
-        return nombre + " (" + edad + " años)";
-    }
 }
-```
 
-**Herencia simple y clase abstracta:**
-```java
+// Herencia simple y clase abstracta
 public abstract class Animal {
     protected String nombre;
-
-    public Animal(String nombre) {
-        this.nombre = nombre;
-    }
-
+    public Animal(String nombre) { this.nombre = nombre; }
     public abstract String hacerSonido();
-
-    public void dormir() {
-        System.out.println(nombre + " está durmiendo...");
-    }
+    public void dormir() { System.out.println(nombre + " durmiendo..."); }
 }
 
 public class Perro extends Animal {
-    private String raza;
-
-    public Perro(String nombre, String raza) {
-        super(nombre);
-        this.raza = raza;
-    }
-
-    @Override
-    public String hacerSonido() { return "Guau"; }
-
-    public void moverCola() {
-        System.out.println(nombre + " mueve la cola");
-    }
+    public Perro(String nombre) { super(nombre); }
+    @Override public String hacerSonido() { return "Guau"; }
 }
-```
 
-**Interfaces:**
-```java
+// Interfaces
 public interface Volador {
     void volar();
-
-    default void planear() {
-        System.out.println("Planeando...");
-    }
-
-    static boolean esAve(Object obj) {
-        return obj instanceof Volador;
-    }
+    default void planear() { System.out.println("Planeando..."); }
+    static boolean esAve(Object obj) { return obj instanceof Volador; }
 }
 
-public class Pajaro extends Animal implements Volador {
-    public Pajaro(String nombre) { super(nombre); }
-
-    @Override public String hacerSonido() { return "Pío"; }
-
-    @Override public void volar() {
-        System.out.println(nombre + " está volando");
-    }
-}
-```
-
-**Polimorfismo:**
-```java
-Animal a = new Perro("Rex", "Pastor");
+// Polimorfismo
+Animal a = new Perro("Rex");
 System.out.println(a.hacerSonido());  // Guau
-
-a = new Pajaro("Tweety");
-System.out.println(a.hacerSonido());  // Pío
 
 // Pattern Matching for instanceof (JDK 16+)
 if (a instanceof Perro perro) {
-    perro.moverCola();  // Cast implícito
+    perro.moverCola();
 }
 ```
 
-**Modificadores de acceso:**
-
-| Modificador | Clase | Paquete | Subclase | Mundo |
-|---|---|---|---|---|
-| `private` | ✓ | ✗ | ✗ | ✗ |
-| default | ✓ | ✓ | ✗ | ✗ |
-| `protected` | ✓ | ✓ | ✓ | ✗ |
-| `public` | ✓ | ✓ | ✓ | ✓ |
-
-Fuente: [Oracle — Java Tutorials OOP](https://docs.oracle.com/javase/tutorial/java/concepts/)
-
-### Java Records (JDK 16+)
-
-Los Records son clases inmutables para datos. El compilador genera constructor, getters, `equals()`, `hashCode()`, `toString()`.
-
+#### 🧪 Cómo probarlo
 ```java
-// Antes — mucho boilerplate
-public final class Punto {
-    private final int x;
-    private final int y;
-    public Punto(int x, int y) { this.x = x; this.y = y; }
-    public int getX() { return x; }
-    public int getY() { return y; }
-}
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
-// Con Record (JDK 16+)
-public record Punto(int x, int y) {
-    // Compact constructor — validaciones
-    public Punto {
-        if (x < 0 || y < 0)
-            throw new IllegalArgumentException("Coordenadas no negativas");
+class POOTest {
+    @Test
+    void encapsulacion() {
+        var p = new Persona("Ana", 30);
+        assertEquals("Ana", p.getNombre());
     }
 
-    public double distanciaAlOrigen() {
-        return Math.sqrt(x * x + y * y);
+    @Test
+    void polimorfismo() {
+        Animal a = new Perro("Rex");
+        assertEquals("Guau", a.hacerSonido());
+    }
+
+    @Test
+    void patternMatchingInstanceof() {
+        Animal a = new Perro("Rex");
+        if (a instanceof Perro perro) {
+            assertNotNull(perro);
+        }
     }
 }
-
-// Uso
-var p = new Punto(3, 4);
-p.x();         // 3 (getter, no getX())
-p.toString();  // "Punto[x=3, y=4]"
-p.equals(new Punto(3, 4));  // true
 ```
 
-**¿Cuándo usar Records?** DTOs, value objects, claves en mapas, respuestas API. No pueden extender otras clases, son inmutables.
+#### 💡 Memoria y rendimiento
+- Cada objeto tiene overhead de cabecera (~12-16 bytes en JVM de 64 bits con compressed OOPs)
+- La herencia añade una tabla de métodos virtuales (vtable) por clase
+- El JIT puede inline métodos virtuales cuando detecta que solo hay una implementación
+- Pattern matching (`instanceof` con variable) no tiene overhead adicional
 
-### Pattern Matching, Sealed Classes, Switch Expressions
+#### ✅ Buenas prácticas
+- ✅ Favorece composición sobre herencia (Effective Java Item 18)
+- ⚠️ No crees jerarquías de herencia profundas (>3 niveles)
+- ❌ No uses herencia solo para reutilizar código — prefiere composición o delegación
+- ✅ Usa interfaces para definir contratos, clases abstractas para implementación base
 
-**instanceof pattern matching (JDK 16+):**
-```java
-if (obj instanceof String s) {
-    System.out.println(s.length());
-}
-```
+#### 🏗️ Metodología
+- "es un": herencia (`Perro extends Animal`)
+- "tiene un": composición (`Coche contiene Motor`)
+- "puede hacer": interfaz (`Volador`, `Exportable`)
+- Para DTOs/value objects: Records (JDK 16+)
 
-**Switch pattern matching (JDK 21+):**
-```java
-public static String formatear(Object obj) {
-    return switch (obj) {
-        case Integer i -> "Entero: " + i;
-        case String s -> "Cadena: " + s;
-        case null -> "Es nulo";
-        default -> "Tipo: " + obj.getClass().getName();
-    };
-}
-```
+#### 🔗 Para saber más
+- [Baeldung — Inheritance](https://www.baeldung.com/java-inheritance)
+- [Oracle — Interfaces](https://docs.oracle.com/javase/tutorial/java/IandI/createinterface.html)
 
-**Sealed Classes (JDK 17):**
-```java
-public sealed interface Figura permits Circulo, Rectangulo {
-    double area();
-}
+### Genéricos, wildcards y type erasure
 
-public final class Circulo implements Figura {
-    private final double radio;
-    public Circulo(double radio) { this.radio = radio; }
-    @Override public double area() { return Math.PI * radio * radio; }
-}
+#### ¿Qué es?
+Los genéricos son **invariantes** y se implementan mediante **type erasure**: en runtime `List<String>` y `List<Integer>` son ambos `List`. Los genéricos proporcionan seguridad de tipos en compilación sin overhead en runtime. Es como una máquina de envasado: la etiqueta (tipo) solo importa durante el envasado; después todas las cajas son iguales.
 
-public final class Rectangulo implements Figura {
-    private final double ancho, alto;
-    public Rectangulo(double ancho, double alto) { this.ancho = ancho; this.alto = alto; }
-    @Override public double area() { return ancho * alto; }
-}
-```
+🔗 [Oracle — Generics Tutorial](https://docs.oracle.com/javase/tutorial/java/generics/)
 
-**Switch Expressions (JDK 14+):**
-```java
-String resultado = switch (dia) {
-    case "LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES" -> "laborable";
-    case "SABADO", "DOMINGO" -> "finde";
-    case null -> "nulo";
-    default -> "invalido";
-};
-```
-
-Fuente: [Oracle — Record docs](https://docs.oracle.com/en/java/javase/21/language/records.html), [Baeldung — Pattern Matching](https://www.baeldung.com/java-pattern-matching-instanceof)
-
-### Genéricos, wildcards, type erasure
-
-Los genéricos son **invariantes** y se implementan mediante **type erasure**: en runtime `List<String>` y `List<Integer>` son ambos `List`.
-
+#### Sintaxis básica
 ```java
 public class Caja<T> {
     private T contenido;
@@ -1129,93 +1782,74 @@ public class Caja<T> {
 Caja<String> caja = new Caja<>();
 caja.guardar("Hola");
 String valor = caja.obtener();  // Sin cast
+
+// Wildcards
+void sumar(List<? extends Number> nums) { /* solo lectura */ }
+void addInts(List<? super Integer> lista) { /* solo escritura */ }
 ```
 
-**Type Erasure:** en compilación `T` se reemplaza por `Object` (o el bound). El compilador inserta casts implícitos. No puedes hacer `new T()` ni `instanceof Caja<String>`.
-
-**Wildcards:**
+#### 🧪 Cómo probarlo
 ```java
-// ? extends T (covarianza) — solo lectura
-void sumar(List<? extends Number> nums) {
-    for (Number n : nums) sum += n.doubleValue();
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+class GenericosTest {
+    @Test
+    void cajaGenerica() {
+        var caja = new Caja<String>();
+        caja.guardar("test");
+        assertEquals("test", caja.obtener());
+    }
+
+    @Test
+    void wildcardExtends() {
+        var nums = java.util.List.of(1, 2, 3);
+        double suma = 0;
+        for (Number n : nums) suma += n.doubleValue();
+        assertEquals(6.0, suma);
+    }
+
+    @Test
+    void typeErasure() {
+        var listaStr = new java.util.ArrayList<String>();
+        var listaInt = new java.util.ArrayList<Integer>();
+        // En runtime ambos son ArrayList
+        assertTrue(listaStr.getClass() == listaInt.getClass());
+    }
 }
-
-// ? super T (contravarianza) — solo escritura
-void addInts(List<? super Integer> lista) {
-    lista.add(42);
-}
 ```
 
-**PECS — Producer Extends, Consumer Super:** si solo lees usa `? extends`, si solo escribes usa `? super`.
+#### 💡 Memoria y rendimiento
+- Type erasure: en compilación `T` se reemplaza por `Object` (o el bound)
+- No puedes hacer `new T()` ni `instanceof Caja<String>` — la información de tipo se pierde
+- Los genéricos no tienen overhead en runtime (todo se resuelve en compilación)
+- Los wildcards `? extends` y `? super` son conceptos de compilación — sin impacto en runtime
 
-Fuente: [Oracle — Generics Tutorial](https://docs.oracle.com/javase/tutorial/java/generics/)
+#### ✅ Buenas prácticas
+- ✅ PECS: Producer Extends, Consumer Super
+- ⚠️ No uses raw types (`List` sin parámetro de tipo) — el compilador da warning
+- ❌ No uses genéricos con tipos primitivos — necesitas wrappers
+- ✅ Usa method references con genéricos (`Function.identity()`)
 
-### Excepciones: checked vs unchecked, try-with-resources
+#### 🏗️ Metodología
+- Clases genéricas: cuando el algoritmo no depende del tipo concreto
+- Wildcards: APIs que deben ser flexibles en los tipos aceptados
+- Type bounds: `<T extends Comparable<T>>` para ordenación
 
-Java diferencia entre **checked** (verificadas en compilación) y **unchecked** (runtime).
+#### 🔗 Para saber más
+- [Baeldung — Generics](https://www.baeldung.com/java-generics)
+- [Oracle — Wildcards](https://docs.oracle.com/javase/tutorial/java/generics/wildcards.html)
 
-```
-Throwable
-├── Error (unchecked) — OutOfMemoryError, StackOverflowError
-└── Exception
-    ├── RuntimeException (unchecked) — NullPointerException, IllegalArgumentException
-    └── IOException (checked) — FileNotFoundException, SocketException
-```
+### Streams API y Optional
 
-**Checked — debes manejarlas:**
+#### ¿Qué es?
+**Streams (Java 8+)** es una API para procesamiento declarativo de datos. Las operaciones son **lazy** (no se ejecutan hasta que hay una operación terminal). **Optional** es un contenedor que puede o no contener un valor, diseñado para evitar `NullPointerException`. Streams es como una cadena de montaje: cada trabajador hace una operación y pasa el resultado al siguiente.
+
+🔗 [Oracle — Streams](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/stream/package-summary.html)
+
+#### Sintaxis básica
 ```java
-try {
-    var reader = new FileReader("archivo.txt");
-} catch (FileNotFoundException e) {
-    System.err.println("Archivo no encontrado");
-}
-```
-
-**Unchecked — no obligatorio:**
-```java
-public void dividir(int a, int b) {
-    if (b == 0) throw new IllegalArgumentException("No dividir por cero");
-}
-```
-
-**Try-with-resources (Java 7+):**
-```java
-try (var br = new BufferedReader(new FileReader("archivo.txt"))) {
-    System.out.println(br.readLine());
-} catch (IOException e) {
-    e.printStackTrace();
-}
-
-// Múltiples recursos
-try (var in = new FileInputStream("in.txt");
-     var out = new FileOutputStream("out.txt")) {
-    out.write(in.readAllBytes());
-}
-```
-
-Fuente: [Oracle — Exceptions](https://docs.oracle.com/javase/tutorial/essential/exceptions/)
-
-### Anotaciones
-
-```java
-@Override          // Verifica sobrescritura
-@FunctionalInterface  // Interfaz con un solo método abstracto
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface Auditable {
-    String accion();
-    String modulo() default "SISTEMA";
-}
-```
-
-**Anotaciones populares:** Spring: `@Component`, `@Service`, `@RestController`, `@Transactional`. JPA: `@Entity`, `@Table`, `@Id`. Lombok: `@Data`, `@Builder`, `@Slf4j`. JUnit: `@Test`, `@BeforeEach`.
-
-### Streams API, Optional, CompletableFuture
-
-**Streams (Java 8+):** procesamiento declarativo de datos. Perezoso.
-
-```java
+// Streams
 list.stream()
     .filter(s -> s.length() > 3)
     .map(String::toUpperCase)
@@ -1231,10 +1865,8 @@ Collectors.partitioningBy(s -> s.length() > 5)
 
 // reduce
 int suma = nums.stream().reduce(0, Integer::sum);
-```
 
-**Optional:**
-```java
+// Optional
 Optional.ofNullable(obtenerNombre())
     .map(String::toUpperCase)
     .orElse("Por defecto")
@@ -1243,497 +1875,147 @@ Optional.ofNullable(obtenerNombre())
 obtenerNombre().ifPresent(n -> System.out.println("Hola " + n));
 ```
 
-**CompletableFuture:**
+#### 🧪 Cómo probarlo
 ```java
-CompletableFuture.supplyAsync(() -> {
-    Thread.sleep(1000);
-    return "Resultado";
-}).thenApply(String::toUpperCase)
-  .thenAccept(System.out::println)
-  .exceptionally(ex -> { log.error("Error", ex); return null; });
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.stream.*;
 
-// Combinar
-CompletableFuture.allOf(f1, f2, f3).join();
-f1.thenCombine(f2, (a, b) -> a + " " + b);
-```
+class StreamsTest {
+    @Test
+    void filterMap() {
+        var result = Stream.of("hola", "mundo", "java")
+            .filter(s -> s.length() > 3)
+            .map(String::toUpperCase)
+            .toList();
+        assertEquals(2, result.size());
+    }
 
-Fuente: [Oracle — Streams](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/stream/package-summary.html)
+    @Test
+    void groupingBy() {
+        var words = Stream.of("java", "kotlin", "c", "rust", "go");
+        var grouped = words.collect(Collectors.groupingBy(String::length));
+        assertTrue(grouped.containsKey(4));
+    }
 
-### Módulos (JPMS, JDK 9)
+    @Test
+    void reduce() {
+        int suma = Stream.of(1, 2, 3, 4, 5)
+            .reduce(0, Integer::sum);
+        assertEquals(15, suma);
+    }
 
-```java
-// module-info.java
-module com.miempresa.app {
-    requires com.miempresa.datos;
-    requires transitive java.sql;
-    exports com.miempresa.app.api;
-    opens com.miempresa.app.internal;
+    @Test
+    void optional() {
+        var resultado = Optional.ofNullable(null)
+            .orElse("defecto");
+        assertEquals("defecto", resultado);
+    }
 }
 ```
 
-**jlink — runtime mínimo:**
-```bash
-jlink --module-path $JAVA_HOME/jmods:target/classes \
-      --add-modules com.miempresa.app \
-      --output mi-runtime --compress 2 --strip-debug
+#### 💡 Memoria y rendimiento
+- Las operaciones intermedias (filter, map) son lazy — no se ejecutan hasta la terminal
+- `toList()` (JDK 16+) crea una lista inmutable — más eficiente que `collect(Collectors.toList())`
+- `parallelStream()` puede mejorar rendimiento en datos grandes y operaciones CPU-bound
+- Optional no está diseñado para alto rendimiento en bucles — cada operación crea un nuevo Optional
+
+#### ✅ Buenas prácticas
+- ✅ Prefiere `toList()` (JDK 16+) sobre `collect(Collectors.toList())`
+- ⚠️ No uses `parallelStream()` sin medir — el overhead de paralelización puede empeorar el rendimiento
+- ❌ No uses Stream para bucles simples — `for-each` es más legible
+- ✅ Usa `.orElseThrow()` en vez de `.get()` (más seguro)
+
+#### 🏗️ Metodología
+- Transformaciones de datos: Streams API
+- Valores ausentes: Optional
+- Procesamiento paralelo: `parallelStream()` solo si es CPU-bound y datos grandes
+- Bucles simples con efectos secundarios: `for-each`
+
+#### 🔗 Para saber más
+- [Baeldung — Streams Guide](https://www.baeldung.com/java-8-streams)
+- [Oracle — Streams API](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/stream/package-summary.html)
+
+### Excepciones: checked vs unchecked
+
+#### ¿Qué es?
+Java diferencia entre **checked** (verificadas en compilación) y **unchecked** (runtime). Las checked obligan al programador a manejarlas con `try/catch` o declararlas con `throws`. Es como la diferencia entre una inspección técnica de tu coche (checked: sabes que va a pasar y tienes que prepararte) y un pinchazo inesperado (unchecked: pasa sin avisar).
+
+🔗 [Oracle — Exceptions](https://docs.oracle.com/javase/tutorial/essential/exceptions/)
+
+#### Sintaxis básica
+```java
+// Checked
+try {
+    var reader = new FileReader("archivo.txt");
+} catch (FileNotFoundException e) {
+    System.err.println("Archivo no encontrado");
+}
+
+// Unchecked
+public void dividir(int a, int b) {
+    if (b == 0) throw new IllegalArgumentException("No dividir por cero");
+}
+
+// Try-with-resources (JDK 7+)
+try (var br = new BufferedReader(new FileReader("archivo.txt"))) {
+    System.out.println(br.readLine());
+} catch (IOException e) {
+    e.printStackTrace();
+}
 ```
 
-Fuente: [OpenJDK — Project Jigsaw](https://openjdk.org/projects/jigsaw/)
+#### 🧪 Cómo probarlo
+```java
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+class ExceptionsTest {
+    @Test
+    void uncheckedEsperada() {
+        assertThrows(IllegalArgumentException.class,
+            () -> dividir(10, 0));
+    }
+
+    @Test
+    void tryWithResources() {
+        assertDoesNotThrow(() -> {
+            try (var br = new java.io.BufferedReader(
+                    new java.io.StringReader("hola"))) {
+                assertEquals("hola", br.readLine());
+            }
+        });
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- Construir una excepción es caro (~50μs) por el stack trace
+- Try-with-resources genera bytecode más complejo, pero el recurso se cierra siempre
+- Stack trace filling puede desactivarse con `-XX:-StackTraceInThrowable`
+
+#### ✅ Buenas prácticas
+- ✅ Captura excepciones específicas, no `Exception` genérica
+- ⚠️ No uses excepciones para control de flujo normal
+- ❌ No tragues excepciones sin registrarlas
+- ✅ Usa try-with-resources para cualquier recurso AutoCloseable
+
+#### 🏗️ Metodología
+- Checked: errores recuperables esperados
+- Unchecked: errores de programación
+- Personalizadas: cuando necesitas datos adicionales del error
+
+#### 🔗 Para saber más
+- [Baeldung — Exceptions](https://www.baeldung.com/java-exceptions)
+- [Oracle — try-with-resources](https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html)
 
 ---
 
-## Sistema de archivos
+## POO y patrones de diseño
 
-### java.nio.file (NIO.2, JDK 7+)
+### Sistema multimedia completo
 
-La API moderna y recomendada para manejo de archivos, introducida en Java 7 como parte de NIO.2.
-
-**Path y operaciones básicas:**
-
-```java
-import java.nio.file.*;
-import java.nio.file.attribute.*;
-
-Path ruta = Path.of("datos", "config.properties");
-Path absoluta = Path.of("/home/user", "app", "config.yml");
-Path relativa = Path.of(".").toAbsolutePath();
-
-// Métodos útiles
-ruta.getFileName();       // "config.properties"
-ruta.getParent();         // "datos"
-ruta.getRoot();           // null (o "/" en absoluta)
-ruta.toAbsolutePath();    // resuelve a ruta completa
-```
-
-**Leer y escribir archivos (JDK 11+):**
-
-```java
-// Texto completo
-String contenido = Files.readString(path);
-Files.writeString(path, "Hola mundo");
-
-// Líneas
-List<String> lineas = Files.readAllLines(path);
-Files.write(path, List.of("línea 1", "línea 2"));
-
-// Binario
-byte[] datos = Files.readAllBytes(path);
-Files.write(path, datos);
-```
-
-**Copiar, mover, borrar:**
-
-```java
-Files.copy(origen, destino, StandardCopyOption.REPLACE_EXISTING);
-Files.move(origen, destino, StandardCopyOption.ATOMIC_MOVE);
-Files.delete(path);
-Files.deleteIfExists(path);  // No lanza excepción si no existe
-```
-
-**Recorrer el sistema de archivos:**
-
-```java
-// walk — recorrido recursivo
-try (var stream = Files.walk(Path.of("src"))) {
-    stream.filter(p -> p.toString().endsWith(".java"))
-          .forEach(System.out::println);
-}
-
-// find — walk con filtro de atributos
-try (var stream = Files.find(Path.of("src"),
-        Integer.MAX_VALUE,
-        (p, attrs) -> attrs.isRegularFile() && p.toString().endsWith(".java"))) {
-    stream.toList();
-}
-
-// Directorio plano
-try (var stream = Files.list(Path.of("."))) {
-    stream.forEach(System.out::println);
-}
-```
-
-**Files.lines — archivos grandes con Stream perezoso:**
-
-```java
-try (var lines = Files.lines(Path.of("grande.csv"))) {
-    lines.filter(l -> !l.startsWith("#"))
-         .map(l -> l.split(","))
-         .limit(100)
-         .forEach(arr -> System.out.println(arr[0]));
-}
-```
-
-`Files.lines()` no carga el archivo completo en memoria — el Stream lee bajo demanda. Siempre usa try-with-resources para cerrar el archivo.
-
-**Atributos de archivo:**
-
-```java
-var attrs = Files.readAttributes(path, BasicFileAttributes.class);
-System.out.println("Tamaño: " + attrs.size());
-System.out.println("Creado: " + attrs.creationTime());
-System.out.println("Modificado: " + attrs.lastModifiedTime());
-System.out.println("Es directorio: " + attrs.isDirectory());
-System.out.println("Es regular: " + attrs.isRegularFile());
-```
-
-### java.io (legacy)
-
-API clásica basada en streams de bytes y caracteres. Sigue funcionando pero se prefiere NIO.2 para nuevo código.
-
-```java
-// BufferedReader / BufferedWriter
-try (var reader = new BufferedReader(new FileReader("in.txt"));
-     var writer = new BufferedWriter(new FileWriter("out.txt"))) {
-    String linea;
-    while ((linea = reader.readLine()) != null) {
-        writer.write(linea);
-        writer.newLine();
-    }
-}
-
-// InputStream / OutputStream (binario)
-try (var in = new FileInputStream("foto.jpg");
-     var out = new FileOutputStream("copia.jpg")) {
-    byte[] buffer = new byte[8192];
-    int leidos;
-    while ((leidos = in.read(buffer)) != -1) {
-        out.write(buffer, 0, leidos);
-    }
-}
-```
-
-### FileChannel (NIO, alta velocidad)
-
-Para operaciones de E/S intensivas con memoria mapeada.
-
-```java
-try (var channel = FileChannel.open(path, StandardOpenOption.READ)) {
-    var buffer = ByteBuffer.allocate(1024);
-    int bytesRead = channel.read(buffer);
-    buffer.flip();
-    while (buffer.hasRemaining()) {
-        System.out.print((char) buffer.get());
-    }
-}
-
-// Memoria mapeada (archivos muy grandes)
-try (var channel = FileChannel.open(path, StandardOpenOption.READ)) {
-    var mapped = channel.map(
-        FileChannel.MapMode.READ_ONLY, 0, channel.size());
-    // mapped es un MappedByteBuffer
-}
-```
-
-### RandomAccessFile
-
-Acceso aleatorio a archivos: leer y escribir en cualquier posición mediante `seek()`.
-
-```java
-try (var raf = new RandomAccessFile("datos.bin", "rw")) {
-    raf.seek(100);       // Ir a la posición 100
-    raf.writeInt(42);     // Escribir entero
-    raf.seek(0);          // Volver al inicio
-    int valor = raf.readInt();
-    System.out.println(valor);
-}
-```
-
-### WatchService — vigilar cambios en el sistema de archivos
-
-Escucha eventos de creación, modificación y borrado en directorios. Ideal para hot-reload, procesamiento de archivos entrantes, sincronización.
-
-```java
-try (var watcher = FileSystems.getDefault().newWatchService()) {
-    Path dir = Path.of(".");
-    dir.register(watcher,
-        StandardWatchEventKinds.ENTRY_CREATE,
-        StandardWatchEventKinds.ENTRY_MODIFY,
-        StandardWatchEventKinds.ENTRY_DELETE);
-
-    System.out.println("Vigilando: " + dir);
-
-    while (true) {
-        WatchKey key = watcher.take();  // Bloquea hasta que hay un evento
-        for (WatchEvent<?> event : key.pollEvents()) {
-            WatchEvent.Kind<?> kind = event.kind();
-            Path filename = (Path) event.context();
-            System.out.println(filename + " -> " + kind);
-        }
-        key.reset();  // Importante: resetear para seguir recibiendo eventos
-    }
-}
-```
-
-### ZIP / GZIP — compresión
-
-```java
-// Comprimir GZIP
-try (var gzip = new GZIPOutputStream(new FileOutputStream("datos.gz"))) {
-    gzip.write("Hola mundo".getBytes(StandardCharsets.UTF_8));
-}
-
-// Descomprimir GZIP
-try (var gzip = new GZIPInputStream(new FileInputStream("datos.gz"))) {
-    System.out.println(new String(gzip.readAllBytes()));
-}
-
-// Leer archivo ZIP
-try (var zis = new ZipInputStream(new FileInputStream("archivo.zip"))) {
-    ZipEntry entry;
-    while ((entry = zis.getNextEntry()) != null) {
-        System.out.println("Extrayendo: " + entry.getName());
-        byte[] contenido = zis.readAllBytes();
-        Files.write(Path.of(entry.getName()), contenido);
-        zis.closeEntry();
-    }
-}
-```
-
-### Properties files
-
-```properties
-# config.properties
-db.url=jdbc:postgresql://localhost/mydb
-db.user=admin
-db.pass=secreto
-app.name=MiApp
-app.version=1.0.0
-```
-
-```java
-var props = new Properties();
-try (var reader = Files.newBufferedReader(Path.of("config.properties"))) {
-    props.load(reader);
-    String url = props.getProperty("db.url");
-    String user = props.getProperty("db.user", "default");
-    String version = props.getProperty("app.version");
-    System.out.println(url);
-}
-```
-
-**Resumen: ¿java.io o java.nio.file?**
-
-| Situación | API recomendada |
-|-----------|-----------------|
-| Leer/escribir archivos pequeños | `Files.readString()` / `writeString()` |
-| Archivos grandes (streaming) | `Files.lines()`, `FileChannel` |
-| Recorrer árbol de directorios | `Files.walk()`, `Files.find()` |
-| E/S binaria de alto rendimiento | `FileChannel`, `MappedByteBuffer` |
-| Legacy / código existente | `java.io` (BufferedReader, etc.) |
-| Vigilar cambios | `WatchService` |
-| Compresión ZIP/GZIP | `ZipInputStream`, `GZIPOutputStream` |
-
-Fuente: [Oracle — File I/O (NIO.2)](https://docs.oracle.com/javase/tutorial/essential/io/fileio.html), [Baeldung — Java NIO.2](https://www.baeldung.com/java-nio-2-file-api)
-
----
-## Algoritmos y estructuras de datos
-
-### Ordenación
-
-```java
-import java.util.*;
-
-var list = new ArrayList<>(List.of(3, 1, 4, 1, 5, 9));
-Collections.sort(list);     // Timsort — O(n log n), estable
-Collections.reverse(list);  // Invierte el orden
-Collections.shuffle(list);  // Aleatoriza
-
-int[] array = {3, 1, 4, 1, 5, 9};
-Arrays.sort(array);         // Dual-Pivot Quicksort — O(n log n)
-
-// Ordenación paralela (ForkJoinPool)
-Arrays.parallelSort(array);
-```
-
-- **`Collections.sort()`**: usa **Timsort** (O(n log n), estable). Es una mezcla de Merge Sort e Insertion Sort. Detecta secuencias ya ordenadas para minimizar comparaciones. Es el algoritmo de ordenación por defecto para objetos.
-- **`Arrays.sort()`** para primitivos: usa **Dual-Pivot Quicksort** (O(n log n)) de Vladimir Yaroslavskiy, Jon Bentley y Joshua Bloch. Más rápido que el Quicksort clásico.
-- **`Arrays.sort()`** para objetos: también usa Timsort.
-- **`Arrays.parallelSort()`**: divide el array en partes, las ordena en paralelo y las fusiona. Aprovecha múltiples núcleos.
-
-### Búsqueda binaria
-
-```java
-// Lista (debe estar ordenada)
-int index = Collections.binarySearch(list, 5);
-// Devuelve índice o -(punto_de_inserción) - 1 si no existe
-
-// Array (debe estar ordenado)
-int idx = Arrays.binarySearch(array, 5);
-```
-
-### Comparadores avanzados
-
-```java
-// Comparator.comparing
-records.sort(Comparator.comparing(Persona::edad));
-records.sort(Comparator.comparing(Persona::edad).reversed());
-records.sort(Comparator.comparing(Persona::apellido)
-                       .thenComparing(Persona::nombre));
-
-// nullsFirst / nullsLast
-records.sort(Comparator.nullsFirst(
-    Comparator.comparing(Persona::edad)));
-
-// Comparadores primitivos (evitan autoboxing)
-records.sort(Comparator.comparingInt(Persona::edad));
-records.sort(Comparator.comparingDouble(Persona::salario));
-
-// Comparator natural (Comparable)
-Collections.sort(list);  // requiere que los elementos implementen Comparable
-```
-
-### Stream API para algoritmos
-
-```java
-// sorted
-var top3 = persons.stream()
-    .sorted(Comparator.comparing(Persona::edad).reversed())
-    .limit(3)
-    .toList();
-
-// distinct
-var ciudades = persons.stream()
-    .map(Persona::ciudad)
-    .distinct()
-    .sorted()
-    .toList();
-
-// max / min
-var mayor = persons.stream()
-    .max(Comparator.comparing(Persona::edad));
-var menor = persons.stream()
-    .min(Comparator.comparing(Persona::edad));
-
-// groupingBy
-var porCiudad = persons.stream()
-    .collect(Collectors.groupingBy(Persona::ciudad));
-// { "Madrid" -> [Persona("Ana", 30)], "Barcelona" -> [Persona("Luis", 25)] }
-
-// partitioningBy
-var mayoresEdad = persons.stream()
-    .collect(Collectors.partitioningBy(p -> p.edad() >= 18));
-// { true -> [...], false -> [...] }
-
-// summingInt, averagingInt, summarizingInt
-var totalEdad = persons.stream()
-    .collect(Collectors.summingInt(Persona::edad));
-var mediaEdad = persons.stream()
-    .collect(Collectors.averagingInt(Persona::edad));
-var stats = persons.stream()
-    .collect(Collectors.summarizingInt(Persona::edad));
-// stats.getMax(), stats.getMin(), stats.getAverage(), stats.getCount()
-
-// joining
-var csv = persons.stream()
-    .map(Persona::nombre)
-    .collect(Collectors.joining(", "));
-// "Ana, Luis, Pedro"
-
-// toMap (clave única)
-var mapa = persons.stream()
-    .collect(Collectors.toMap(Persona::id, Function.identity()));
-
-// groupingBy con downstream
-var ciudadesPorPais = persons.stream()
-    .collect(Collectors.groupingBy(
-        Persona::pais,
-        Collectors.mapping(Persona::ciudad, Collectors.toSet())));
-```
-
-### Collections.binarySearch
-
-Búsqueda binaria en listas ya ordenadas. O(log n).
-
-```java
-var list = new ArrayList<>(List.of("Ana", "Luis", "Pedro", "Zoe"));
-int idx = Collections.binarySearch(list, "Luis");
-System.out.println(idx);  // 1
-```
-
-### PriorityQueue (heap)
-
-Cola con prioridad implementada como heap binario. Por defecto es un **min-heap** (el elemento más pequeño tiene la prioridad más alta).
-
-```java
-// Min-heap (por defecto)
-var minHeap = new PriorityQueue<Integer>();
-minHeap.add(5); minHeap.add(1); minHeap.add(3);
-System.out.println(minHeap.poll());  // 1
-System.out.println(minHeap.poll());  // 3
-System.out.println(minHeap.poll());  // 5
-
-// Max-heap
-var maxHeap = new PriorityQueue<Integer>(Comparator.reverseOrder());
-maxHeap.add(5); maxHeap.add(1); maxHeap.add(3);
-System.out.println(maxHeap.poll());  // 5
-
-// Con objetos
-var pq = new PriorityQueue<Persona>(
-    Comparator.comparing(Persona::edad));
-pq.add(new Persona("Ana", 30));
-pq.add(new Persona("Luis", 25));
-System.out.println(pq.poll().nombre());  // "Luis" (el de menor edad)
-```
-
-**Operaciones:** `add()`/`offer()` O(log n), `poll()` O(log n), `peek()` O(1), `remove()` O(n).
-
-### Deque / ArrayDeque
-
-`ArrayDeque` es una cola doblemente terminada (double-ended queue). Más rápida que `LinkedList` y `Stack`.
-
-```java
-var deque = new ArrayDeque<String>();
-
-// Como cola (FIFO)
-deque.addLast("primero");
-deque.addLast("segundo");
-deque.addLast("tercero");
-deque.pollFirst();   // "primero"
-
-// Como pila (LIFO)
-deque.addFirst("inicio");
-deque.addLast("final");
-deque.pollLast();    // "final"
-deque.pollFirst();   // "inicio"
-
-// Métodos disponibles
-deque.addFirst(e);    // lanza excepción si capacidad excedida
-deque.offerFirst(e);  // devuelve false si capacidad excedida
-deque.removeFirst();  // lanza NoSuchElementException si vacío
-deque.pollFirst();    // devuelve null si vacío
-deque.getFirst();     // lanza excepción si vacío
-deque.peekFirst();    // devuelve null si vacío
-```
-
-### Tabla de complejidad Big O
-
-| Colección | Get/Acceso | Add/Insert | Remove | Contains/Buscar | Iteración | Memoria extra |
-|-----------|-----------|------------|--------|-----------------|-----------|---------------|
-| `ArrayList` | O(1) | O(1)* | O(n) | O(n) | O(n) | Baja |
-| `LinkedList` | O(n) | O(1) | O(1) | O(n) | O(n) | Alta (nodos) |
-| `HashMap` | O(1) | O(1) | O(1) | O(1) | O(n) | Media (buckets) |
-| `TreeMap` | O(log n) | O(log n) | O(log n) | O(log n) | O(n) | Media (árbol rojo-negro) |
-| `LinkedHashMap` | O(1) | O(1) | O(1) | O(1) | O(n) | Media (orden de inserción/acceso) |
-| `HashSet` | — | O(1) | O(1) | O(1) | O(n) | Media |
-| `TreeSet` | — | O(log n) | O(log n) | O(log n) | O(n) | Media |
-| `PriorityQueue` | O(1) (peek) | O(log n) | O(n) | O(n) | O(n) | Baja |
-| `ArrayDeque` | O(1) | O(1) | O(1) | O(n) | O(n) | Baja |
-
-* `ArrayList.add()` es O(1) amortizado — O(n) cuando necesita redimensionar el array interno.
-
-**Reglas prácticas:**
-- **HashMap vs TreeMap**: HashMap para casi todo (O(1)). TreeMap solo si necesitas ordenación.
-- **ArrayList vs LinkedList**: ArrayList para casi todo (localidad de referencia). LinkedList solo si insertas/eliminas al inicio frecuentemente.
-- **HashSet vs TreeSet**: HashSet para casi todo. TreeSet solo si necesitas ordenado.
-- **Stack vs ArrayDeque**: `ArrayDeque` reemplaza a `Stack` (más rápida, no sincronizada).
-- **Vector / Hashtable**: legacy, no usar.
-
-Fuente: [Oracle — Collections Framework](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Collections.html), [Baeldung — Java Collections Complexity](https://www.baeldung.com/java-collections-complexity)
-
----
-## Ejemplo completo de POO en Java
-
-Sistema de biblioteca multimedia que une todos los conceptos.
+Este ejemplo une todos los conceptos de POO en un sistema de biblioteca multimedia.
 
 ```java
 import java.time.LocalDateTime;
@@ -1883,36 +2165,6 @@ class ListaReproduccion {
         return "📋 " + nombre + " (" + items.size() + " items)";
     }
 }
-
-// ── Uso ──
-
-public class Main {
-    public static void main(String[] args) {
-        var cancion = new Audio(
-            new Metadatos("Bohemian Rhapsody", 354), 320);
-
-        var pelicula = new Video(
-            new Metadatos("Inception", 8880), "4K",
-            FormatoVideo.MKV);
-        pelicula.setSubtitulos(true);
-
-        var podcast = new Podcast(
-            new Metadatos("El futuro de la IA", 2700),
-            128, 42, "Ana López");
-
-        // Polimorfismo
-        for (var c : List.of(cancion, pelicula, podcast))
-            System.out.println(c.obtenerInfo());
-
-        // Composición
-        var lista = new ListaReproduccion("Favoritos");
-        lista.agregar(cancion);
-        lista.agregar(pelicula);
-        lista.agregar(podcast);
-        System.out.println(lista);
-        lista.reproducirTodo().forEach(System.out::println);
-    }
-}
 ```
 
 **Conceptos demostrados:**
@@ -1923,7 +2175,6 @@ public class Main {
 | Herencia simple | `Audio extends Contenido`, `Video extends Contenido` |
 | Interface | `Exportable` con método `default` |
 | Herencia + Interface | `Podcast extends Audio implements Exportable` |
-| `super()` | `super(metadatos)` llama al constructor padre |
 | Encapsulación | `private int reproducciones`, getters públicos |
 | Polimorfismo | `obtenerInfo()` distinto según clase concreta |
 | Composición | `ListaReproduccion` contiene `List<Contenido>` |
@@ -1931,36 +2182,75 @@ public class Main {
 | Enum | `FormatoVideo` con valores constantes |
 | Streams API | `items.stream().map(...).toList()` |
 
+#### 🧪 Cómo probarlo
+```java
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+class POOCompletoTest {
+    @Test
+    void polimorfismo() {
+        var cancion = new Audio(
+            new Metadatos("Bohemian Rhapsody", 354), 320);
+        var pelicula = new Video(
+            new Metadatos("Inception", 8880), "4K", FormatoVideo.MKV);
+        assertTrue(cancion.obtenerInfo().contains("Bohemian"));
+        assertTrue(pelicula.obtenerInfo().contains("Inception"));
+    }
+
+    @Test
+    void composicion() {
+        var lista = new ListaReproduccion("Favoritos");
+        lista.agregar(new Audio(new Metadatos("Test", 100), 128));
+        assertEquals(1, lista.size());
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- Cada objeto en Java tiene overhead de cabecera (~12-16 bytes con compressed OOPs)
+- La herencia añade una vtable por clase (tamaño fijo O(n) donde n es número de métodos virtuales)
+- Records son `final` y pueden optimizarse mejor que clases mutables
+- Los patrones de diseño pueden añadir overhead si se usan en exceso
+
+#### ✅ Buenas prácticas
+- ✅ Favorece composición sobre herencia
+- ⚠️ No abuses de patrones de diseño — YAGNI
+- ❌ No implementes un patrón si una función/lambda es suficiente
+
+#### 🏗️ Metodología
+- Estrategias de negocio: Strategy (lambdas)
+- Eventos: Observer (PropertyChangeListener o eventos personalizados)
+- Creación compleja: Builder (Lombok @Builder)
+- Singleton: enum con una instancia (Effective Java Item 3)
+- Adaptación: Adapter (wrapping de APIs externas)
+
+#### 🔗 Para saber más
+- [Refactoring Guru — Design Patterns](https://refactoring.guru/es/design-patterns)
+- [Baeldung — Design Patterns](https://www.baeldung.com/design-patterns-series)
+
 ---
 
 ## Polimorfismo en detalle
 
-Java tiene tres formas de polimorfismo:
+### ¿Qué es?
+Java tiene tres formas de polimorfismo: **por subtipo** (herencia de interfaces/clases), **paramétrico** (genéricos) y **ad-hoc** (overloading de métodos). Es como un control remoto universal: el mismo botón "play" funciona en un DVD, una consola o un servicio de streaming, pero cada uno hace algo diferente internamente.
 
-### 1. Subtipo (herencia)
+🔗 [Wikipedia — Polimorfismo](https://es.wikipedia.org/wiki/Polimorfismo_(inform%C3%A1tica))
 
+### Sintaxis básica
+
+**Subtipo (herencia):**
 ```java
 interface Sonido { String sonido(); }
 
-class Perro implements Sonido {
-    public String sonido() { return "Guau"; }
-}
-class Gato implements Sonido {
-    public String sonido() { return "Miau"; }
-}
-class Coche implements Sonido {
-    public String sonido() { return "Brum"; }
-}
+class Perro implements Sonido { public String sonido() { return "Guau"; } }
+class Gato implements Sonido { public String sonido() { return "Miau"; } }
 
 void hacerSonido(Sonido s) { System.out.println(s.sonido()); }
-
-hacerSonido(new Perro());  // Guau
-hacerSonido(new Gato());   // Miau
-hacerSonido(new Coche());  // Brum
 ```
 
-### 2. Paramétrico (genéricos)
-
+**Paramétrico (genéricos):**
 ```java
 interface Forma<T extends Number> { double area(); }
 
@@ -1970,209 +2260,71 @@ class Circulo implements Forma<Double> {
     public double area() { return Math.PI * radio * radio; }
 }
 
-class Rectangulo implements Forma<Double> {
-    private final double ancho, alto;
-    public Rectangulo(double a, double h) { this.ancho = a; this.alto = h; }
-    public double area() { return ancho * alto; }
-}
-
 void mostrarArea(Forma<?> f) {
     System.out.printf("Área: %.2f%n", f.area());
 }
-
-mostrarArea(new Circulo(5));       // 78.54
-mostrarArea(new Rectangulo(3, 4)); // 12.00
 ```
 
-### 3. Ad-hoc (overloading)
-
+**Ad-hoc (overloading):**
 ```java
 class Impresora {
     void imprimir(String s) { System.out.println("Texto: " + s); }
     void imprimir(int n) { System.out.println("Número: " + n); }
-    void imprimir(Documento d) {
-        System.out.println("Documento: " + d.getTitulo());
+}
+```
+
+### 🧪 Cómo probarlo
+```java
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+class PolimorfismoTest {
+    @Test
+    void subtipo() {
+        Sonido s = new Perro();
+        assertEquals("Guau", s.sonido());
+    }
+
+    @Test
+    void parametrico() {
+        var c = new Circulo(5);
+        assertTrue(c.area() > 0);
     }
 }
 ```
+
+#### 💡 Memoria y rendimiento
+- **Subtipo**: la vtable se consulta en cada llamada — overhead mínimo
+- **Paramétrico**: type erasure — no hay overhead en runtime
+- **Ad-hoc**: se resuelve en compilación — sin overhead
+- El JIT puede desvirtualizar e inlinear métodos cuando detecta monomorfismo
+
+#### ✅ Buenas prácticas
+- ✅ Prefiere interfaces sobre clases abstractas para definir contratos
+- ⚠️ El overloading puede ser confuso con tipos primitivos y wrappers
+- ❌ No uses instanceof para simular polimorfismo — el polimorfismo es mejor
+
+#### 🏗️ Metodología
+- Subtipo: comportamiento que varía por tipo de objeto
+- Paramétrico: algoritmos independientes del tipo de dato
+- Ad-hoc: operaciones que difieren por tipo de argumento
+
+#### 🔗 Para saber más
+- [Baeldung — Polymorphism](https://www.baeldung.com/java-polymorphism)
+- [Oracle — Polymorphism](https://docs.oracle.com/javase/tutorial/java/IandI/polymorphism.html)
 
 ---
 
-## Patrones de diseño con ejemplos
+## Interacción con contenido multimedia
 
-### Strategy (interfaces funcionales)
+### javax.imageio (Imágenes)
 
-```java
-Function<List<Integer>, List<Integer>> ascending =
-    list -> list.stream().sorted().toList();
+#### ¿Qué es?
+La API estándar de Java para leer y escribir imágenes. Soporta PNG, JPEG, BMP, WBMP, GIF. Para otros formatos (WebP, TIFF, SVG) usa extensiones como TwelveMonkeys o Apache Commons Imaging.
 
-Function<List<Integer>, List<Integer>> descending =
-    list -> list.stream()
-        .sorted(Comparator.reverseOrder()).toList();
+🔗 [Oracle — Image I/O](https://docs.oracle.com/en/java/javase/21/docs/api/java.desktop/javax/imageio/package-summary.html)
 
-class Analizador {
-    private final Function<List<Integer>, List<Integer>> estrategia;
-
-    public Analizador(Function<List<Integer>, List<Integer>> e) {
-        this.estrategia = e;
-    }
-
-    public List<Integer> analizar(List<Integer> datos) {
-        return estrategia.apply(datos);
-    }
-}
-
-var a = new Analizador(descending);
-System.out.println(a.analizar(List.of(3, 1, 4, 1, 5, 9)));
-```
-
-### Observer (PropertyChangeListener)
-
-```java
-import java.beans.*;
-
-class Sensor {
-    private final PropertyChangeSupport soporte =
-        new PropertyChangeSupport(this);
-    private double temperatura;
-
-    public void addObserver(PropertyChangeListener listener) {
-        soporte.addPropertyChangeListener(listener);
-    }
-
-    public void setTemperatura(double nueva) {
-        double vieja = this.temperatura;
-        this.temperatura = nueva;
-        soporte.firePropertyChange("temperatura", vieja, nueva);
-    }
-}
-
-var sensor = new Sensor();
-sensor.addObserver(e ->
-    System.out.println("[LOG] Temp: " + e.getNewValue()));
-sensor.addObserver(e ->
-    System.out.println("[DASH] Actualizando gráfico"));
-sensor.setTemperatura(23.5);
-```
-
-### Singleton (con enum)
-
-```java
-public enum Config {
-    INSTANCE;
-
-    private String dbUrl = "jdbc:postgresql://localhost/mydb";
-    private boolean cargado = false;
-
-    public void cargar() {
-        if (!cargado) {
-            System.out.println("Cargando configuración (una vez)");
-            cargado = true;
-        }
-    }
-
-    public String getDbUrl() { return dbUrl; }
-}
-
-Config cfg = Config.INSTANCE;  // Siempre la misma instancia
-```
-
-¿Por qué enum? Garantiza única instancia, seguro en serialización, resistente a reflection (Effective Java Item 3).
-
-### Factory (Supplier)
-
-```java
-enum TipoPlugin { PDF, CSV, JSON }
-
-class PluginFactory {
-    private static final Map<TipoPlugin, Supplier<Plugin>> reg =
-        new HashMap<>();
-
-    static {
-        reg.put(TipoPlugin.PDF, PluginPDF::new);
-        reg.put(TipoPlugin.CSV, PluginCSV::new);
-    }
-
-    public static Plugin crear(TipoPlugin tipo) {
-        return reg.getOrDefault(tipo, () -> {
-            throw new IllegalArgumentException();
-        }).get();
-    }
-}
-
-interface Plugin { String ejecutar(); }
-
-class PluginPDF implements Plugin {
-    public String ejecutar() { return "Procesando PDF"; }
-}
-
-class PluginCSV implements Plugin {
-    public String ejecutar() { return "Procesando CSV"; }
-}
-```
-
-### Builder (Lombok @Builder)
-
-```java
-import lombok.Builder;
-import lombok.Value;
-
-@Value
-@Builder
-public class Usuario {
-    String nombre;
-    String email;
-    @Builder.Default int edad = 0;
-    List<String> tags;
-}
-
-var usuario = Usuario.builder()
-    .nombre("Ana")
-    .email("ana@email.com")
-    .edad(30)
-    .tag("admin")
-    .build();
-```
-
-### Adapter
-
-```java
-class SistemaViejo {
-    public List<List<Object>> query(String sql) {
-        return List.of(List.of("resultado"));
-    }
-}
-
-class SistemaNuevo {
-    public CompletableFuture<List<Object>> execute(String q) {
-        return CompletableFuture.completedFuture(List.of("resultado"));
-    }
-}
-
-class DBAdapter {
-    private final Object backend;
-
-    public DBAdapter(Object backend) { this.backend = backend; }
-
-    public List<Object> query(String sql) {
-        if (backend instanceof SistemaViejo v)
-            return v.query(sql).stream()
-                .flatMap(Collection::stream).toList();
-        else if (backend instanceof SistemaNuevo n)
-            return n.execute(sql).join();
-        throw new IllegalArgumentException();
-    }
-}
-```
-
----
-
-## Multimedia
-
-### javax.imageio
-
-La API estándar de Java para leer y escribir imágenes.
-
+#### Sintaxis básica
 ```java
 import javax.imageio.*;
 import java.awt.image.BufferedImage;
@@ -2182,179 +2334,62 @@ import java.io.File;
 BufferedImage img = ImageIO.read(new File("foto.jpg"));
 System.out.println("Dimensiones: " + img.getWidth() + "x" + img.getHeight());
 
-// Escribir imagen (formatos: PNG, JPEG, BMP, WBMP, GIF)
+// Escribir imagen
 ImageIO.write(img, "PNG", new File("salida.png"));
-
-// ImageReader — más control
-ImageReader reader = ImageIO.getImageReadersByFormatName("jpg").next();
-reader.setInput(ImageIO.createImageInputStream(new File("foto.jpg")));
-BufferedImage img2 = reader.read(0);
-int numPages = reader.getNumImages(true);  // Para GIF/animaciones
 ```
 
-Formatos nativos: PNG, JPEG, BMP, WBMP, GIF. Para otros formatos (WebP, TIFF, SVG) usa extensiones como [TwelveMonkeys](https://github.com/haraldk/TwelveMonkeys) o Apache Commons Imaging.
-
-### BufferedImage — procesamiento píxel a píxel
-
+#### 🧪 Cómo probarlo
 ```java
-BufferedImage img = ImageIO.read(new File("foto.jpg"));
-int width = img.getWidth();
-int height = img.getHeight();
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import static org.junit.jupiter.api.Assertions.*;
+import javax.imageio.*;
+import java.awt.image.BufferedImage;
+import java.nio.file.Path;
 
-// Convertir a escala de grises
-for (int y = 0; y < height; y++) {
-    for (int x = 0; x < width; x++) {
-        int rgb = img.getRGB(x, y);
-        int r = (rgb >> 16) & 0xFF;
-        int g = (rgb >> 8) & 0xFF;
-        int b = rgb & 0xFF;
-        int gray = (r + g + b) / 3;
-        int nuevoRGB = (255 << 24) | (gray << 16) | (gray << 8) | gray;
-        img.setRGB(x, y, nuevoRGB);
+class MultimediaTest {
+    @Test
+    void crearYGuardarImagen(@TempDir Path tempDir) throws Exception {
+        var img = new BufferedImage(100, 50, BufferedImage.TYPE_INT_RGB);
+        var archivo = tempDir.resolve("test.png").toFile();
+        assertTrue(ImageIO.write(img, "PNG", archivo));
+        assertTrue(archivo.exists());
     }
 }
-ImageIO.write(img, "PNG", new File("gris.png"));
 ```
 
-### Java2D (Graphics2D)
+#### 💡 Memoria y rendimiento
+- Una imagen 4K (3840x2160) en RGB ocupa ~25 MB en RAM
+- `ImageIO` está escrito en Java puro — más lento que librerías nativas
+- Para procesamiento intensivo, usa `BufferedImage` con acceso directo a píxeles (`getRGB`/`setRGB`)
 
-Dibujo vectorial y rasterizado con renderizado de alta calidad.
+#### ✅ Buenas prácticas
+- ✅ Usa TwelveMonkeys para soporte WebP y TIFF
+- ⚠️ No proceses imágenes muy grandes (>10000px) sin redimensionar
+- ❌ No guardes en JPEG sin especificar calidad
 
-```java
-import java.awt.*;
-import java.awt.geom.*;
-import java.awt.image.*;
+#### 🏗️ Metodología
+- Procesamiento simple de imágenes: ImageIO + BufferedImage
+- Renderizado 2D: Java2D (Graphics2D)
+- Visión artificial: OpenCV Java bindings
+- Redimensionado rápido: Thumbnailator
 
-BufferedImage canvas = new BufferedImage(800, 600, BufferedImage.TYPE_INT_ARGB);
-Graphics2D g2d = canvas.createGraphics();
-
-// Configurar calidad
-g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-                     RenderingHints.VALUE_ANTIALIAS_ON);
-g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
-                     RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-
-// Dibujar formas
-g2d.setColor(new Color(41, 128, 185));
-g2d.fillRect(50, 50, 200, 150);
-
-g2d.setColor(Color.ORANGE);
-g2d.setStroke(new BasicStroke(3));
-g2d.draw(new Ellipse2D.Double(300, 50, 150, 150));
-
-// Transformaciones (rotación, escalado, traslación)
-AffineTransform tx = AffineTransform.getRotateInstance(
-    Math.toRadians(45), 400, 300);
-g2d.setTransform(tx);
-g2d.fillRect(350, 250, 100, 100);
-
-// Texto
-g2d.setTransform(new AffineTransform());
-g2d.setFont(new Font("Arial", Font.BOLD, 24));
-g2d.setColor(Color.WHITE);
-g2d.drawString("Hola Java2D", 50, 500);
-
-g2d.dispose();
-ImageIO.write(canvas, "PNG", new File("canvas.png"));
-```
-
-### JavaFX (Media, MediaPlayer)
-
-```java
-import javafx.scene.media.*;
-
-Media media = new Media(new File("audio.mp3").toURI().toString());
-MediaPlayer player = new MediaPlayer(media);
-player.setCycleCount(MediaPlayer.INDEFINITE);
-player.setVolume(0.8);
-player.play();
-```
-
-JavaFX requiere las dependencias `javafx.media` y `javafx.graphics`. Desde JDK 11 ya no viene incluido en el JDK — hay que añadirlo como dependencia.
-
-### Processing.org
-
-Processing es un entorno de creative coding con bindings oficiales para Java. Ideal para visualizaciones, arte generativo y prototipado visual interactivo.
-
-```java
-void setup() {
-    size(800, 600);
-    background(255);
-}
-
-void draw() {
-    ellipse(mouseX, mouseY, 50, 50);
-}
-```
-
-Documentación: [processing.org](https://processing.org/)
-
-### OpenCV Java bindings
-
-OpenCV tiene bindings oficiales para Java. Se usa para visión artificial: detección facial, seguimiento de objetos, OCR.
-
-```java
-import org.opencv.core.*;
-import org.opencv.imgcodecs.*;
-import org.opencv.imgproc.*;
-
-// System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-Mat img = Imgcodecs.imread("foto.jpg");
-Mat gray = new Mat();
-Imgproc.cvtColor(img, gray, Imgproc.COLOR_BGR2GRAY);
-Imgcodecs.imwrite("gris.jpg", gray);
-```
-
-Documentación: [opencv.org](https://opencv.org/), bindings vía [bytedeco/javacv](https://github.com/bytedeco/javacv) o los oficiales de OpenCV.
-
-### ffmpeg-cli-wrapper
-
-La librería [JavaCV](https://github.com/bytedeco/javacv) proporciona wrappers para FFmpeg desde Java. Permite captura de video, transcodificación, streaming, y manipulación de multimedia.
-
-```java
-// FFmpegFrameGrabber para capturar frames
-// FFmpegFrameRecorder para grabar video
-```
-
-### Apache Commons Imaging
-
-Librería de Apache para leer y escribir formatos de imagen adicionales no soportados por ImageIO nativo: TIFF, BMP, ICO, PCX, PSD, XBM, etc.
-
-```java
-// Formatos adicionales: TIFF, BMP, ICO, PCX, PSD, XBM
-```
-
-Documentación: [commons.apache.org/proper/commons-imaging/](https://commons.apache.org/proper/commons-imaging/)
-
-### Thumbnailator
-
-Librería ligera para redimensionar imágenes de forma sencilla y fluida.
-
-```java
-// Redimensionar a tamaño fijo
-Thumbnails.of("foto.jpg")
-    .size(200, 200)
-    .toFile("thumb.jpg");
-
-// Redimensionar manteniendo proporción
-Thumbnails.of("foto.jpg")
-    .width(300)
-    .toFile("thumb.jpg");
-
-// Calidad de compresión
-Thumbnails.of("foto.jpg")
-    .size(800, 600)
-    .outputQuality(0.8)
-    .toFile("comprimida.jpg");
-```
-
-Documentación: [github.com/coobird/thumbnailator](https://github.com/coobird/thumbnailator)
+#### 🔗 Para saber más
+- [Baeldung — Java Images](https://www.baeldung.com/java-images)
+- [TwelveMonkeys GitHub](https://github.com/haraldk/TwelveMonkeys)
 
 ---
+
 ## Bases de datos
 
 ### JDBC
 
+#### ¿Qué es?
+JDBC (Java Database Connectivity) es la API estándar para conectar Java con bases de datos relacionales. Proporciona una interfaz uniforme para diferentes motores de BD mediante drivers.
+
+🔗 [Oracle — JDBC](https://docs.oracle.com/javase/tutorial/jdbc/)
+
+#### Sintaxis básica
 ```java
 try (var conn = DriverManager.getConnection(url, user, pass);
      var stmt = conn.createStatement()) {
@@ -2389,42 +2424,14 @@ public class Usuario {
 
 public interface UsuarioRepo extends JpaRepository<Usuario, Long> {
     Optional<Usuario> findByEmail(String email);
-    List<Usuario> findByNombreContainingIgnoreCase(String nombre);
 }
 
 @Service
 public class UsuarioService {
     private final UsuarioRepo repo;
-
     public UsuarioService(UsuarioRepo repo) { this.repo = repo; }
-
-    public Usuario crear(String nombre, String email, int edad) {
-        if (repo.findByEmail(email).isPresent())
-            throw new IllegalArgumentException("Email ya registrado");
-        var u = new Usuario();
-        u.setNombre(nombre);
-        u.setEmail(email);
-        u.setEdad(edad);
-        return repo.save(u);
-    }
+    // ...
 }
-```
-
-### Migraciones con Flyway
-
-```properties
-spring.flyway.enabled=true
-spring.flyway.locations=classpath:db/migration
-```
-
-```sql
--- V1__crear_usuarios.sql
-CREATE TABLE usuarios (
-    id BIGSERIAL PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
 ```
 
 | Librería | Tipo | Para qué |
@@ -2435,55 +2442,46 @@ CREATE TABLE usuarios (
 | **MyBatis** | SQL Mapper | SQL explícito en XML |
 | **H2** | BD embebida | En memoria, perfecta para tests |
 
+#### 🧪 Cómo probarlo
+```java
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import java.sql.*;
+
+class DATest {
+    @Test
+    void h2EnMemoria() throws Exception {
+        try (var conn = DriverManager.getConnection("jdbc:h2:mem:test")) {
+            conn.createStatement().execute("CREATE TABLE t (id INT)");
+            conn.createStatement().execute("INSERT INTO t VALUES (1)");
+            var rs = conn.createStatement().executeQuery("SELECT COUNT(*) FROM t");
+            rs.next();
+            assertEquals(1, rs.getInt(1));
+        }
+    }
+}
+```
+
 Fuente: [Spring Data JPA docs](https://spring.io/projects/spring-data-jpa), [Hibernate docs](https://hibernate.org/)
 
 ---
 
-## WebSockets
-
-### Jakarta WebSocket
-
-```java
-@ServerEndpoint("/ws")
-public class ChatEndpoint {
-    private static final Set<Session> sesiones =
-        ConcurrentHashMap.newKeySet();
-
-    @OnOpen
-    public void onOpen(Session session) { sesiones.add(session); }
-
-    @OnMessage
-    public void onMessage(String msg, Session session)
-            throws IOException {
-        for (Session s : sesiones) {
-            if (s.isOpen())
-                s.getBasicRemote().sendText("Echo: " + msg);
-        }
-    }
-
-    @OnClose
-    public void onClose(Session session) { sesiones.remove(session); }
-}
-```
+## WebSockets y mensajería
 
 ### Spring WebSocket
 
 ```java
 @Configuration
 @EnableWebSocketMessageBroker
-public class WebSocketConfig
-        implements WebSocketMessageBrokerConfigurer {
-
+public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
-    public void configureMessageBroker(
-            MessageBrokerRegistry config) {
+    public void configureMessageBroker(MessageBrokerRegistry config) {
         config.enableSimpleBroker("/topic");
         config.setApplicationDestinationPrefixes("/app");
     }
 
     @Override
-    public void registerStompEndpoints(
-            StompEndpointRegistry registry) {
+    public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws").withSockJS();
     }
 }
@@ -2496,21 +2494,6 @@ public class ChatController {
         return new Mensaje("Sistema", "Echo: " + msg.texto());
     }
 }
-
-record Mensaje(String usuario, String texto) {}
-```
-
-### Netty (alto rendimiento)
-
-```java
-var bossGroup = new NioEventLoopGroup(1);
-var workerGroup = new NioEventLoopGroup();
-var b = new ServerBootstrap();
-b.group(bossGroup, workerGroup)
- .channel(NioServerSocketChannel.class)
- .childHandler(new WebSocketServerInitializer());
-var ch = b.bind(8080).sync().channel();
-ch.closeFuture().sync();
 ```
 
 **Cuándo usar cada uno:**
@@ -2522,69 +2505,31 @@ ch.closeFuture().sync();
 
 ## Threading, concurrencia y paralelismo
 
-### Thread básico
+### ExecutorService y Virtual Threads
 
+#### ¿Qué es?
+Java ofrece múltiples modelos de concurrencia: **Threads** (clásico, pesado), **ExecutorService** (pool de hilos, Java 5+), **CompletableFuture** (composición asíncrona, Java 8+), y **Virtual Threads** (hilos ligeros, JDK 21 LTS). Es como tener diferentes tamaños de herramientas para diferentes trabajos.
+
+🔗 [Oracle — Concurrency](https://docs.oracle.com/javase/tutorial/essential/concurrency/)
+
+#### Sintaxis básica
 ```java
-Thread hilo = new Thread(() -> {
-    System.out.println("Hola desde: " +
-        Thread.currentThread().getName());
-});
-hilo.start();
-hilo.join();
-```
-
-### ExecutorService (Java 5+)
-
-```java
+// ExecutorService
 ExecutorService fixed = Executors.newFixedThreadPool(4);
-ExecutorService cached = Executors.newCachedThreadPool();
-ScheduledExecutorService scheduler =
-    Executors.newScheduledThreadPool(2);
-
 Future<String> future = fixed.submit(() -> {
     Thread.sleep(1000);
     return "Resultado";
 });
 String resultado = future.get(2, TimeUnit.SECONDS);
-
-scheduler.scheduleAtFixedRate(
-    () -> System.out.println("Tick"), 0, 1, TimeUnit.SECONDS);
-
 fixed.shutdown();
-fixed.awaitTermination(5, TimeUnit.SECONDS);
-```
 
-### CompletableFuture (Java 8+)
-
-```java
+// CompletableFuture
 CompletableFuture.supplyAsync(() -> obtenerPrecio("AAPL"))
     .thenApply(p -> p * 0.85)
     .thenAccept(System.out::println)
     .exceptionally(ex -> { log.error("Error", ex); return null; });
 
-// Combinar
-var a = obtenerPrecioAsync("AAPL");
-var g = obtenerPrecioAsync("GOOG");
-a.thenCombine(g, Double::sum)
-    .thenAccept(t -> System.out.println("Total: " + t));
-CompletableFuture.allOf(a, g).join();
-```
-
-### Virtual Threads (JDK 21 LTS)
-
-Hilos ligeros gestionados por la JVM, no por el SO. Miles de virtual threads en un carrier thread.
-
-```java
-// Antes — threads de SO (pesados)
-var pool = Executors.newFixedThreadPool(200);
-for (int i = 0; i < 10_000; i++) {
-    pool.submit(() -> {
-        Thread.sleep(1000);
-        return "ok";
-    });
-}
-
-// Con virtual threads — 10,000 tareas
+// Virtual Threads (JDK 21 LTS)
 try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
     for (int i = 0; i < 10_000; i++) {
         executor.submit(() -> {
@@ -2594,280 +2539,431 @@ try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
     }
 }
 
-// Creación directa
 Thread vt = Thread.ofVirtual()
     .name("mi-vt")
     .start(() -> System.out.println("Hola desde VT"));
 ```
 
-¿Dónde brillan? I/O-bound (servidores web, BD, APIs). Spring Boot 3.2+: `spring.threads.virtual.enabled=true`. Limitaciones: no para CPU-bound, `synchronized` bloquea el carrier (usa `ReentrantLock`).
-
-### ForkJoinPool (Java 7+)
-
+#### 🧪 Cómo probarlo
 ```java
-class SumaArray extends RecursiveTask<Long> {
-    private static final int UMBRAL = 1000;
-    private final int[] array;
-    private final int inicio, fin;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.concurrent.*;
 
-    SumaArray(int[] array, int inicio, int fin) {
-        this.array = array;
-        this.inicio = inicio;
-        this.fin = fin;
+class ConcurrenciaTest {
+    @Test
+    void executorService() throws Exception {
+        var executor = Executors.newSingleThreadExecutor();
+        var future = executor.submit(() -> 42);
+        assertEquals(42, future.get());
+        executor.shutdown();
     }
 
-    @Override
-    protected Long compute() {
-        if (fin - inicio <= UMBRAL) {
-            long suma = 0;
-            for (int i = inicio; i < fin; i++) suma += array[i];
-            return suma;
-        }
-        int medio = (inicio + fin) / 2;
-        var izq = new SumaArray(array, inicio, medio);
-        var der = new SumaArray(array, medio, fin);
-        izq.fork();
-        return der.compute() + izq.join();
+    @Test
+    void completableFuture() throws Exception {
+        var result = CompletableFuture.supplyAsync(() -> 21)
+            .thenApply(n -> n * 2)
+            .get();
+        assertEquals(42, result);
     }
 }
-
-long suma = ForkJoinPool.commonPool()
-    .invoke(new SumaArray(datos, 0, datos.length));
 ```
 
-### ¿Cuál usar?
+#### 💡 Memoria y rendimiento
+- **Threads del SO**: ~1MB por hilo — no escalan más allá de miles
+- **Virtual Threads**: ~100 bytes por hilo — puedes crear millones
+- Virtual Threads son ideales para I/O-bound (servidores web, BD, APIs)
+- Para CPU-bound, sigue siendo mejor usar `parallelStream()` o `ForkJoinPool`
 
-| Escenario | Modelo | Ejemplo |
-|---|---|---|
-| Llamadas HTTP, BD, APIs | Virtual Threads o CompletableFuture | Microservicios |
-| Cálculo CPU | ForkJoinPool, parallelStream | ML, procesamiento |
-| Tareas programadas | ScheduledExecutorService | Cron jobs |
-| Escalabilidad I/O | Virtual Threads (JDK 21+) | Servidores web |
-| Productor-consumidor | BlockingQueue + ExecutorService | Colas |
+#### ✅ Buenas prácticas
+- ✅ Usa Virtual Threads para tareas I/O-bound (JDK 21+)
+- ⚠️ No uses `synchronized` con Virtual Threads — usa `ReentrantLock`
+- ❌ No combines Virtual Threads con pools de hilos fijos
+- ✅ Prefiere `CompletableFuture` para composición de tareas asíncronas
 
-Fuente: [Oracle — Concurrency](https://docs.oracle.com/javase/tutorial/essential/concurrency/), [Project Loom](https://openjdk.org/projects/loom/)
+#### 🏗️ Metodología
+- I/O-bound (HTTP, BD, APIs): Virtual Threads (JDK 21+) o CompletableFuture
+- CPU-bound (cálculos): parallelStream, ForkJoinPool
+- Tareas programadas: ScheduledExecutorService
+- Productor-consumidor: BlockingQueue + ExecutorService
+
+#### 🔗 Para saber más
+- [Project Loom](https://openjdk.org/projects/loom/)
+- [Baeldung — Virtual Threads](https://www.baeldung.com/java-virtual-threads)
+
+---
+
+## Testing y calidad
+
+### Frameworks y herramientas
+
+| Framework | Propósito | Async | CLI |
+|-----------|-----------|-------|-----|
+| JUnit 5 | Unitario e integración | Sí | `mvn test` / `gradle test` |
+| Mockito | Mocks y stubs | Sí | Incluido en test runtime |
+| AssertJ | Aserciones fluidas | No | Librería de aserciones |
+| JaCoCo | Cobertura de código | No | `mvn jacoco:report` |
+
+### Cómo testear cada concepto
+
+**Variables y tipos** → aserciones simples
+```java
+@Test
+void tipos() {
+    assertInstanceOf(Integer.class, 42);
+    assertInstanceOf(String.class, "hola");
+}
+```
+
+**Control de flujo** → boundary testing con parametrización
+```java
+@ParameterizedTest
+@CsvSource({"0,cero", "1,positivo", "-1,negativo"})
+void testSigno(int input, String expected) {
+    String result;
+    if (input > 0) result = "positivo";
+    else if (input < 0) result = "negativo";
+    else result = "cero";
+    assertEquals(expected, result);
+}
+```
+
+**POO** → mocks con Mockito
+```java
+@Test
+void testConMock() {
+    var repo = mock(UsuarioRepo.class);
+    when(repo.findById(1L)).thenReturn(Optional.of(new Usuario()));
+    var service = new UsuarioService(repo);
+    assertNotNull(service.obtener(1L));
+}
+```
+
+**File I/O** → temp directories con JUnit 5
+```java
+@TempDir
+Path tempDir;
+
+@Test
+void testArchivo() throws Exception {
+    var f = tempDir.resolve("test.txt");
+    Files.writeString(f, "contenido");
+    assertEquals("contenido", Files.readString(f));
+}
+```
+
+### Parametrización avanzada
+```java
+@ParameterizedTest
+@ValueSource(ints = {1, 2, 3, 4, 5})
+void testPositivos(int n) {
+    assertTrue(n > 0);
+}
+
+@ParameterizedTest
+@MethodSource("proveedorArgumentos")
+void testConMetodo(String input, int expected) {
+    assertEquals(expected, input.length());
+}
+
+static Stream<Arguments> proveedorArgumentos() {
+    return Stream.of(
+        Arguments.of("hola", 4),
+        Arguments.of("mundo", 5)
+    );
+}
+```
+
+### Cobertura y CI
+
+**Configuración JaCoCo en pom.xml:**
+```xml
+<plugin>
+    <groupId>org.jacoco</groupId>
+    <artifactId>jacoco-maven-plugin</artifactId>
+    <version>0.8.11</version>
+    <executions>
+        <execution>
+            <goals><goal>prepare-agent</goal></goals>
+        </execution>
+        <execution>
+            <id>report</id>
+            <phase>verify</phase>
+            <goals><goal>report</goal></goals>
+        </execution>
+    </executions>
+</plugin>
+```
+
+```bash
+mvn verify                  # tests + cobertura
+mvn jacoco:report           # generar reporte HTML
+# Abrir target/site/jacoco/index.html
+```
+
+**GitHub Actions:**
+```yaml
+- name: Run tests with coverage
+  run: mvn verify
+- name: Upload coverage
+  uses: codecov/codecov-action@v3
+```
+
+**Umbrales recomendados:** 70-80% de cobertura de instrucciones para proyectos en producción.
+
+---
+
+## Conceptos avanzados para Java
+
+### Project Loom (Virtual Threads)
+
+#### ¿Qué es?
+Project Loom introduce **virtual threads** (hilos ligeros) gestionados por la JVM, no por el SO. Permite crear millones de hilos sin agotar la memoria. Es como tener un organizador de tareas que puede gestionar miles de pendientes con solo unos pocos empleados.
+
+🔗 [OpenJDK — Project Loom](https://openjdk.org/projects/loom/)
+
+#### Sintaxis básica
+```java
+// Crear un virtual thread
+Thread vt = Thread.ofVirtual()
+    .name("mi-vt")
+    .start(() -> System.out.println("Hola desde VT"));
+
+// ExecutorService con virtual threads
+try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+    for (int i = 0; i < 100_000; i++) {
+        executor.submit(() -> {
+            Thread.sleep(1000);  // Se parkea, no bloquea
+            return "ok";
+        });
+    }
+}
+```
+
+**Spring Boot 3.2+:** `spring.threads.virtual.enabled=true`
+
+### GraalVM Native Image
+
+Compila Java a binario nativo con `native-image`. Arranque instantáneo (~0.1s), menos memoria (~10 MB).
+
+🔗 [GraalVM docs](https://www.graalvm.org/)
+
+### JMH (Java Microbenchmark Harness)
+
+Framework oficial para benchmarks precisos en Java. Incluye warm-up, evita optimizaciones del JIT.
+
+```java
+@Benchmark
+@BenchmarkMode(Mode.AverageTime)
+@OutputTimeUnit(TimeUnit.NANOSECONDS)
+public void benchmarkSuma() {
+    int suma = 0;
+    for (int i = 0; i < 100; i++) suma += i;
+}
+```
+
+```bash
+mvn clean install
+java -jar target/benchmarks.jar
+```
+
+🔗 [JMH docs](https://github.com/openjdk/jmh)
+
+### JMM (Java Memory Model)
+
+Define cómo los hilos interactúan a través de la memoria y qué garantías de visibilidad ofrece. Palabras clave: `volatile` (visibilidad), `synchronized` (atomicidad + visibilidad), `happens-before`.
+
+🔗 [JSR 133 — JMM](https://jcp.org/en/jsr/detail?id=133)
 
 ---
 
 ## Escala de aprendizaje: de 0 a 100
 
-Cada nivel incluye qué debes saber y un proyecto para fijar conceptos.
-
 ### Nivel 0-15: Fundamentos absolutos
-
 **Qué aprender:**
 - Sintaxis: `public class Main { public static void main(String[] args) }`, variables primitivas, `System.out.println()`
 - Condicionales: `if`/`else if`/`else`, operadores
 - Bucles: `for` (clásico y enhanced), `while`
 - Arrays: `int[] nums = {1, 2, 3}`, acceso por índice, `length`
 - Strings: `length()`, `charAt()`, `substring()`, `equals()` vs `==`
-- Clases: `Scanner`, `Math`, `Random`
-- **Paradigmas**: imperativo (statement-oriented), qué es POO y funcional desde el primer día
-- **Tipos de datos**: primitivos vs wrappers (`int`/`Integer`), autoboxing/unboxing, String (inmutable, pool), `var` (JDK 10+)
-- **Control de flujo**: `if`/`else`, `switch` tradicional y expression, `for`/`while`/`do-while`, `break`/`continue` con labels, `try`/`catch`/`finally`, asserts
-- **Conceptos clave**: diferencia primitivos (stack) vs objetos (heap). `equals()` compara contenido, `==` referencias. `javac` compila a bytecode, `java` ejecuta en JVM.
+- **Testing**: JUnit 5 básico con `@Test` y `assertEquals`
 
-**Proyecto:** *Adivina el número* — programa elige aleatorio (`Random`), usuario adivina con pistas "mayor/menor". Contador de intentos. Try-catch para entrada no numérica (`InputMismatchException`). Reflexión: ¿por qué `Integer.valueOf(127) == Integer.valueOf(127)` da true pero 128 da false? (Integer caching -128 a 127).
+**Proyecto:** *Adivina el número* — programa elige aleatorio (`Random`), usuario adivina con pistas "mayor/menor". Contador de intentos. Try-catch para entrada no numérica.
 
 ### Nivel 15-30: POO, colecciones, archivos y algoritmos
-
 **Qué aprender:**
 - Clases, objetos, constructores, `this`, `new`
 - Encapsulación: `private` + getters/setters
 - `ArrayList`, `HashMap`, `HashSet`
-- For-each sobre colecciones, autoboxing
-- Strings: `StringBuilder`, `String.format()`, `split()`, `join()`
-- Archivos: `BufferedReader`/`BufferedWriter`, try-with-resources
-- `Path`/`Files` (java.nio.file)
-- **Sistema de archivos**: `Files.walk()`, `Files.find()`, `Files.lines()` para archivos grandes, `FileChannel`, `WatchService`, ZIP/GZIP, `Properties`
-- **Algoritmos**: `Collections.sort()` (Timsort), `Arrays.sort()` (Dual-Pivot Quicksort), `binarySearch`, `Comparator.comparing`, tabla Big O de colecciones
-- **Conceptos clave**: `equals()` vs `==`. ArrayList vs array. Autoboxing crea objetos. Try-with-resources cierra automáticamente.
+- Archivos: `Path`/`Files` (java.nio.file)
+- **Algoritmos**: `Collections.sort()`, `Arrays.sort()`, `binarySearch`, tabla Big O
+- **Testing**: `@ParameterizedTest`, `@TempDir`
 
-**Proyecto:** *Gestor de tareas CLI* — añadir, listar, completar, eliminar tareas. Persistencia en JSON. Clase `Tarea` con id, descripción, completado. Excepción personalizada `TareaNoEncontradaException`.
+**Proyecto:** *Gestor de tareas CLI* — añadir, listar, completar, eliminar tareas. Persistencia en JSON. Clase `Tarea` con id, descripción, completado.
 
 ### Nivel 30-45: Herencia, interfaces y excepciones
-
 **Qué aprender:**
 - Herencia: `extends`, `super()`, `@Override`
-- Clases abstractas: `abstract class`, `abstract method`
-- Interfaces: `interface`, `implements`, métodos `default`
+- Clases abstractas e interfaces
 - Polimorfismo de subtipo
-- Excepciones: checked vs unchecked, personalizadas
-- `enum` con campos y métodos
-- Records (JDK 16+)
+- Excepciones: checked vs unchecked
+- `enum` con campos, Records (JDK 16+)
 - `Optional<T>`
-- **Conceptos clave**: herencia simple de clases, múltiple de interfaces. Contrato `equals()`/`hashCode()`.
 
-**Proyecto:** *Sistema de inventario* — `Producto` (record), `Inventario` con `HashMap`. Interface `Exportable`. Excepciones: `StockInsuficienteException`, `ProductoNoExisteException`. Tests con JUnit 5.
+**Proyecto:** *Sistema de inventario* — `Producto` (record), `Inventario` con `HashMap`. Interface `Exportable`. Excepciones personalizadas.
 
-### Nivel 45-60: Testing, lambdas, streams, genéricos y algoritmos avanzados
-
+### Nivel 45-60: Testing, lambdas, streams, genéricos
 **Qué aprender:**
-- JUnit 5: `@Test`, `@BeforeEach`, `@ParameterizedTest`, AssertJ
-- Mockito: `@Mock`, `when()`, `verify()`
-- Lambdas, method references, `@FunctionalInterface`
-- `java.util.function` (Predicate, Function, Consumer, Supplier)
-- Streams API: filter, map, flatMap, collect, reduce, groupingBy, partitioningBy
-- Genéricos: clases, métodos, wildcards `? extends` `? super`
-- Type erasure
-- **Algoritmos avanzados**: `Stream.sorted()`, `distinct()`, `max()`/`min()`, `groupingBy`, `partitioningBy`, `PriorityQueue` (heap), `ArrayDeque`, `Collections.binarySearch`
-- **Conceptos clave**: lambdas son azúcar para interfaces funcionales. Streams son lazy. PECS. Big O de colecciones.
+- JUnit 5 avanzado + Mockito
+- Lambdas, method references
+- Streams API: filter, map, flatMap, collect, reduce, groupingBy
+- Genéricos: clases, métodos, wildcards
+- **Algoritmos avanzados**: PriorityQueue, ArrayDeque, Collections.binarySearch
 
-**Proyecto:** *Analizador de ventas* — procesa CSV con Streams. Clase `Venta` con producto, cantidad, precio. Streams para: total por producto, top 10, media por mes. PriorityQueue para top productos. Tests con JUnit 5 y Mockito.
+**Proyecto:** *Analizador de ventas* — procesa CSV con Streams. Tests con JUnit 5 y Mockito.
 
 ### Nivel 60-75: Spring Boot y APIs REST
-
 **Qué aprender:**
 - Spring Initializr (start.spring.io)
 - `@RestController`, `@RequestMapping`, `@GetMapping`/`@PostMapping`
-- `@RequestBody`, `@PathVariable`, `@RequestParam`
-- `@Service`, `@Repository`, inyección de dependencias
 - Spring Data JPA: `@Entity`, repositorios, query methods
-- DTOs con Records
-- Bean Validation: `@NotBlank`, `@Email`, `@Valid`
-- `@ControllerAdvice` + `@ExceptionHandler`
-- **Conceptos clave**: DI / IoC, `@Component` y estereotipos, `@Transactional`.
+- DTOs con Records, Bean Validation
 
-**Proyecto:** *API de recetas* — Spring Boot + JPA + H2. CRUD recetas e ingredientes. Búsqueda por ingrediente. Tests con `@WebMvcTest` y `@DataJpaTest`.
+**Proyecto:** *API de recetas* — Spring Boot + JPA + H2. CRUD recetas e ingredientes.
 
 ### Nivel 75-90: Producción, Docker y multimedia
-
 **Qué aprender:**
-- Docker multi-stage para Spring Boot
-- Docker Compose (app + PostgreSQL + Redis)
+- Docker multi-stage para Spring Boot, Docker Compose
 - Testcontainers para tests de integración
 - CI/CD con GitHub Actions
 - Logging: SLF4J + Logback, MDC
 - Métricas con Micrometer + Prometheus
-- Caché con `@Cacheable` + Redis
 - Spring Security + JWT
-- WebSockets con Spring
-- **Multimedia**: `javax.imageio` (ImageIO), `BufferedImage` (procesamiento píxel), Java2D (Graphics2D), JavaFX Media, OpenCV Java, Thumbnailator, Apache Commons Imaging
-- **Conceptos clave**: multi-stage builds, Testcontainers, Actuator, MDC.
 
-**Proyecto:** *Dashboard de monitorización* — API + WebSocket. JPA + PostgreSQL. Redis caché. Docker Compose. Testcontainers. GitHub Actions.
+**Proyecto:** *Dashboard de monitorización* — API + WebSocket. JPA + PostgreSQL. Redis caché. Docker Compose.
 
 ### Nivel 90-100: Microservicios y arquitectura
-
 **Qué aprender:**
 - Spring Cloud: Eureka, Gateway, Config Server
-- Comunicación: WebClient, gRPC, Kafka/RabbitMQ
 - Circuit Breaker: Resilience4j
-- Distributed tracing: Sleuth + Zipkin
-- Arquitectura hexagonal / clean architecture
-- Event sourcing / CQRS (Axon, Kafka Streams)
-- OpenTelemetry, Prometheus, Grafana
-- JFR, Async Profiler
+- Distributed tracing: OpenTelemetry
 - GraalVM native-image
-- **Conceptos clave**: Spring Cloud Config, circuit breaker, OpenTelemetry, GraalVM AOT.
+- JFR, Async Profiler
 
-**Proyecto:** *Sistema de notificaciones distribuido* — microservicios con Eureka, Gateway, Kafka, Resilience4j, Sleuth + Zipkin, Docker Compose, Prometheus + Grafana.
-
-Fuente: [Spring Boot docs](https://docs.spring.io/spring-boot/), [Spring Cloud docs](https://spring.io/projects/spring-cloud)
+**Proyecto:** *Sistema de notificaciones distribuido* — microservicios con Eureka, Gateway, Kafka, Resilience4j, OpenTelemetry.
 
 ---
 
-## Proyectos prácticos detallados
+## Proyecto final integrador: Analizador de logs HTTP
 
-### Gestor de contraseñas CLI (nivel 30)
+Este proyecto combina file I/O, algoritmos, POO, testing y red. Ejecutable de principio a fin.
 
 ```java
-import java.io.*;
+import java.io.IOException;
 import java.nio.file.*;
-import java.security.*;
 import java.util.*;
-import javax.crypto.*;
-import javax.crypto.spec.*;
+import java.util.regex.*;
+import java.util.stream.*;
 
-public class PasswordManager {
-    private static final Path KEY_PATH = Path.of("vault.key");
-    private static final Path VAULT_PATH = Path.of("vault.enc");
-    private final SecretKey key;
+public record LogEntry(
+    String ip, String timestamp, String metodo,
+    String ruta, int status, int tamano
+) {}
 
-    public PasswordManager() throws Exception {
-        this.key = loadOrCreateKey();
+class LogParser {
+    private static final Pattern PATRON = Pattern.compile(
+        "(?<ip>[\\d.]+).*\\[(?<ts>[^\\]]+)\\].*" +
+        "\"(?<metodo>\\w+)\\s+(?<ruta>\\S+).*\".*" +
+        "(?<status>\\d+)\\s+(?<tamano>\\d+)"
+    );
+
+    private final Path archivo;
+
+    public LogParser(Path archivo) { this.archivo = archivo; }
+
+    public List<LogEntry> parsear() throws IOException {
+        return Files.lines(archivo)
+            .map(PATRON::matcher)
+            .filter(Matcher::matches)
+            .map(m -> new LogEntry(
+                m.group("ip"), m.group("ts"), m.group("metodo"),
+                m.group("ruta"), Integer.parseInt(m.group("status")),
+                Integer.parseInt(m.group("tamano"))
+            ))
+            .toList();
+    }
+}
+
+class LogAnalyzer {
+    private final List<LogEntry> entradas;
+
+    public LogAnalyzer(List<LogEntry> entradas) {
+        this.entradas = entradas;
     }
 
-    private SecretKey loadOrCreateKey() throws Exception {
-        if (Files.exists(KEY_PATH))
-            return new SecretKeySpec(Files.readAllBytes(KEY_PATH), "AES");
-        var gen = KeyGenerator.getInstance("AES");
-        gen.init(256);
-        var k = gen.generateKey();
-        Files.write(KEY_PATH, k.getEncoded());
-        return k;
+    public List<String> topIps(int n) {
+        return entradas.stream()
+            .collect(Collectors.groupingBy(LogEntry::ip, Collectors.counting()))
+            .entrySet().stream()
+            .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+            .limit(n)
+            .map(Map.Entry::getKey)
+            .toList();
     }
 
-    public static String generatePassword(int length) {
-        var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
-            "abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
-        var random = new SecureRandom();
-        var sb = new StringBuilder(length);
-        for (int i = 0; i < length; i++)
-            sb.append(chars.charAt(random.nextInt(chars.length())));
-        return sb.toString();
+    public Map<String, Long> erroresPorRuta() {
+        return entradas.stream()
+            .filter(e -> e.status() >= 400)
+            .collect(Collectors.groupingBy(
+                LogEntry::ruta, Collectors.counting()));
+    }
+
+    public Map<String, Object> resumen() {
+        return Map.of(
+            "total", entradas.size(),
+            "ips_unicas", entradas.stream().map(LogEntry::ip).distinct().count(),
+            "top_ips", topIps(5),
+            "errores", erroresPorRuta()
+        );
     }
 }
 ```
 
-### API REST Spring Boot (nivel 60)
-
+### Tests
 ```java
-@SpringBootApplication
-public class Application {
-    public static void main(String[] args) {
-        SpringApplication.run(Application.class, args);
-    }
-}
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import static org.junit.jupiter.api.Assertions.*;
+import java.nio.file.*;
 
-@Entity
-public class Tarea {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    private String titulo;
-    private String descripcion;
-    private boolean completada;
-}
+class LogAnalyzerTest {
+    @TempDir
+    Path tempDir;
 
-public interface TareaRepo extends JpaRepository<Tarea, Long> {
-    List<Tarea> findByCompletadaFalse();
-}
+    @Test
+    void parsearLog() throws Exception {
+        var log = "192.168.1.1 - - [10/Oct/2023:13:55:36] " +
+            "\"GET /index.html HTTP/1.1\" 200 2326";
+        var f = tempDir.resolve("test.log");
+        Files.writeString(f, log);
 
-@RestController
-@RequestMapping("/api/tareas")
-public class TareaController {
-    private final TareaRepo repo;
-
-    public TareaController(TareaRepo repo) { this.repo = repo; }
-
-    @GetMapping
-    public List<Tarea> listar() { return repo.findAll(); }
-
-    @PostMapping
-    public Tarea crear(@Valid @RequestBody Tarea t) {
-        return repo.save(t);
+        var parser = new LogParser(f);
+        var entradas = parser.parsear();
+        assertEquals(1, entradas.size());
+        assertEquals("192.168.1.1", entradas.get(0).ip());
     }
 
-    @GetMapping("/{id}")
-    public Tarea obtener(@PathVariable Long id) {
-        return repo.findById(id)
-            .orElseThrow(() -> new ResponseStatusException(NOT_FOUND));
-    }
-
-    @PutMapping("/{id}")
-    public Tarea actualizar(@PathVariable Long id,
-                            @Valid @RequestBody Tarea t) {
-        return repo.findById(id).map(existente -> {
-            existente.setTitulo(t.getTitulo());
-            existente.setDescripcion(t.getDescripcion());
-            existente.setCompletada(t.isCompletada());
-            return repo.save(existente);
-        }).orElseThrow(() -> new ResponseStatusException(NOT_FOUND));
-    }
-
-    @DeleteMapping("/{id}")
-    public void eliminar(@PathVariable Long id) {
-        repo.deleteById(id);
+    @Test
+    void analizarLogs() {
+        var entradas = List.of(
+            new LogEntry("1.1.1.1", "ts", "GET", "/", 200, 100),
+            new LogEntry("1.1.1.1", "ts", "GET", "/", 404, 50),
+            new LogEntry("2.2.2.2", "ts", "POST", "/api", 200, 200)
+        );
+        var analyzer = new LogAnalyzer(entradas);
+        var resumen = analyzer.resumen();
+        assertEquals(3, resumen.get("total"));
+        assertEquals(2L, resumen.get("ips_unicas"));
     }
 }
 ```
@@ -2880,9 +2976,6 @@ public class TareaController {
 ```java
 var lista = new ArrayList<String>();
 var mapa = new HashMap<String, List<Integer>>();
-var resultado = personas.stream()
-    .filter(p -> p.edad() > 18)
-    .collect(Collectors.groupingBy(Persona::ciudad));
 ```
 
 **2. Try-with-resources con múltiples recursos**
@@ -2899,25 +2992,12 @@ try (var reader = Files.newBufferedReader(path);
 **3. Text Blocks (JDK 15+)**
 ```java
 String json = """
-    {
-      "nombre": "Ana",
-      "email": "ana@email.com"
-    }
-    """;
-
-String sql = """
-    SELECT u.nombre, COUNT(p.id) as total
-    FROM usuarios u LEFT JOIN pedidos p ON p.usuario_id = u.id
-    WHERE u.activo = TRUE
-    GROUP BY u.id
+    { "nombre": "Ana", "email": "ana@email.com" }
     """;
 ```
 
 **4. `instanceof` con pattern matching (JDK 16+)**
 ```java
-if (obj instanceof String s) {
-    System.out.println(s.toLowerCase());
-}
 if (obj instanceof String s && s.length() > 5) {
     System.out.println("String largo: " + s);
 }
@@ -2936,17 +3016,10 @@ return switch (obj) {
 
 **6. Records para DTOs**
 ```java
-public record UsuarioResponse(
-    Long id, String nombre, String email, boolean activo
-) {}
-
-public UsuarioResponse toResponse(Usuario u) {
-    return new UsuarioResponse(
-        u.getId(), u.getNombre(), u.getEmail(), u.isActivo());
-}
+public record UsuarioResponse(Long id, String nombre, String email) {}
 ```
 
-**7. `Optional.orElseThrow()`**
+**7. `Optional.orElseThrow()` con excepción personalizada**
 ```java
 var tarea = repo.findById(id)
     .orElseThrow(() -> new TareaNoEncontradaException(id));
@@ -2961,16 +3034,10 @@ public class Config {
     private int puerto;
     @Builder.Default private boolean ssl = true;
 }
-
-var cfg = Config.builder()
-    .host("localhost")
-    .puerto(8080)
-    .build();
 ```
 
-**9. SLF4J + Logback**
+**9. SLF4J + Logback con Lombok `@Slf4j`**
 ```java
-// @Slf4j con Lombok
 log.debug("Procesando usuario: {}", id);
 log.info("Operación completada");
 log.error("Error procesando pedido {}", pedidoId, exception);
@@ -2984,49 +3051,44 @@ jlink --module-path $JAVA_HOME/jmods:target/classes \
 ./mi-app/bin/java com.miempresa.app.Main
 ```
 
-Fuente: [Oracle — Java Features](https://www.oracle.com/java/features/)
-
 ---
 
 ## Canales y recursos en español
 
 ### YouTube
-- **Programación ATS** — Curso de Java desde cero, muy completo. Explica POO de forma intuitiva
-- **Píldoras Informáticas** — Curso de Java SE + Java EE, Swing, JDBC. Muy detallado
+- **Programación ATS** — Curso de Java desde cero, POO intuitiva
+- **Píldoras Informáticas** — Java SE + Java EE, Swing, JDBC
 - **CodigoFacilito** — Java básico a avanzado, Spring Boot, Hibernate
-- **MoureDev** — Java, Kotlin, Spring Boot, proyectos prácticos para portfolio
-- **OpenWebinars** — Cursos profesionales de Java, Spring, arquitectura empresarial
+- **MoureDev** — Java, Kotlin, Spring Boot, proyectos prácticos
+- **OpenWebinars** — Cursos profesionales de Java, Spring, arquitectura
 - **TodoCode** — Java, POO, Spring Boot, testing con JUnit
-- **La Geekipedia de Ernesto** — Java desde cero, ejercicios prácticos
 
 ### Comunidades
-- **r/Java** (Reddit) — Noticias, discusiones, proyectos, dudas técnicas
-- **Stack Overflow en español** — Etiqueta `java` para preguntas técnicas
-- **Discord Java en español** — Canales de ayuda, proyectos, mentoría
+- **r/Java** (Reddit) — Noticias, discusiones, proyectos
+- **Stack Overflow en español** — Etiqueta `java`
+- **Discord Java en español** — Canales de ayuda y mentoría
 
 ### Blogs y newsletters
-- **Baeldung** ([baeldung.com](https://www.baeldung.com/)) — El recurso #1 en tutoriales Java
-- **Java Code Geeks** ([javacodegeeks.com](https://www.javacodegeeks.com/)) — Tutoriales y artículos
-- **InfoQ Java** ([infoq.com/java](https://www.infoq.com/java/)) — Noticias y tendencias
+- **Baeldung** ([baeldung.com](https://www.baeldung.com/)) — Tutoriales Java #1
+- **Java Code Geeks** ([javacodegeeks.com](https://www.javacodegeeks.com/))
+- **InfoQ Java** ([infoq.com/java](https://www.infoq.com/java/))
 
-### Repositorios de código
-- [iluwatar/java-design-patterns](https://github.com/iluwatar/java-design-patterns) — Patrones de diseño en Java
-- [TheAlgorithms/Java](https://github.com/TheAlgorithms/Java) — Algoritmos en Java
-- [spring-projects/spring-boot](https://github.com/spring-projects/spring-boot) — Código fuente
-- [eugenp/tutorials](https://github.com/eugenp/tutorials) — Proyecto Baeldung
-
-Fuente: búsqueda en YouTube y Reddit, listas curadas de Awesome Java
+### Repositorios
+- [iluwatar/java-design-patterns](https://github.com/iluwatar/java-design-patterns)
+- [TheAlgorithms/Java](https://github.com/TheAlgorithms/Java)
+- [spring-projects/spring-boot](https://github.com/spring-projects/spring-boot)
+- [eugenp/tutorials](https://github.com/eugenp/tutorials)
 
 ---
 
 ## Referencias y documentación oficial
 
-- **Docs oficiales**: [docs.oracle.com/en/java](https://docs.oracle.com/en/java/) — Java SE documentation
+- **Docs oficiales**: [docs.oracle.com/en/java](https://docs.oracle.com/en/java/)
 - **OpenJDK**: [openjdk.org](https://openjdk.org/) — Código fuente, JEPs
 - **Dev.java**: [dev.java](https://dev.java/) — Tutorial oficial moderno
-- **Spring docs**: [docs.spring.io](https://docs.spring.io/) — Spring Boot, Framework, Cloud
-- **Maven**: [maven.apache.org](https://maven.apache.org/guides/) — Build tool
-- **Baeldung**: [baeldung.com](https://www.baeldung.com/) — Tutoriales prácticos
+- **Spring docs**: [docs.spring.io](https://docs.spring.io/)
+- **Maven**: [maven.apache.org](https://maven.apache.org/guides/)
+- **Baeldung**: [baeldung.com](https://www.baeldung.com/)
 
 ### Fuentes de esta guía
 
@@ -3040,12 +3102,12 @@ Fuente: búsqueda en YouTube y Reddit, listas curadas de Awesome Java
 - [Effective Java (Joshua Bloch)](https://www.oreilly.com/library/view/effective-java-3rd/9780134686097/)
 - [Java Concurrency in Practice (Brian Goetz)](https://www.oreilly.com/library/view/java-concurrency-in/0321349601/)
 - [Modern Java in Action (Raoul-Gabriel Urma)](https://www.oreilly.com/library/view/modern-java-in/9781617293566/)
-- [r/Java](https://reddit.com/r/Java) — Comunidad y debates
-- [Awesome Java (GitHub)](https://github.com/akullpp/awesome-java) — Lista curada
+- [r/Java](https://reddit.com/r/Java)
+- [Awesome Java (GitHub)](https://github.com/akullpp/awesome-java)
 
 ---
 
-## Retos Relacionados
+## 🏆 Retos Relacionados
 
 Pon a prueba lo aprendido con estos desafíos:
 - [Plus Reto Inicial 06 Par O Impar](/retos/guia-plus-reto-inicial-06-par-o-impar)
@@ -3053,4 +3115,3 @@ Pon a prueba lo aprendido con estos desafíos:
 - [Plus Reto Intermedio 05 Generador De Contrasenas](/retos/guia-plus-reto-intermedio-05-generador-de-contrasenas)
 - [Plus Reto Intermedio 13 Contador De Palabras Unicas](/retos/guia-plus-reto-intermedio-13-contador-de-palabras-unicas)
 - [Plus Reto Avanzado 05 Asyncio Para Scrapers](/retos/guia-plus-reto-avanzado-05-asyncio-para-scrapers)
-

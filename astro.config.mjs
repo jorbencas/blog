@@ -1,5 +1,6 @@
 import { defineConfig } from "astro/config";
 import { remarkReadingTime } from "./remark-reading-time.mjs";
+import { unified } from "@astrojs/markdown-remark";
 import tailwindcss from "@tailwindcss/vite";
 import mdx from "@astrojs/mdx";
 import sitemap from "@astrojs/sitemap";
@@ -18,20 +19,21 @@ export default defineConfig({
     },
   },
   image: {
-    domains: ["images.unsplash.com"], // 🌟 Permet a Astro optimitzar les fotos d'Unsplash
+    domains: ["images.unsplash.com"],
   },
   site: "https://blog-jorbencas.vercel.app/",
   markdown: {
-    gfm: true,
-    remarkPlugins: [remarkReadingTime],
+    processor: unified({
+      remarkPlugins: [remarkReadingTime],
+      gfm: true,
+      smartypants: true,
+    }),
     shikiConfig: {
-      // Usamos un tema para Light y otro para Dark
       themes: {
         light: "github-light",
         dark: "github-dark",
       },
     },
     wrap: true,
-    smartypants: true, // Mejora tipografía (comillas, guiones)
   },
 });

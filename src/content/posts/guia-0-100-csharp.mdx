@@ -109,6 +109,8 @@ Fuente: [Microsoft .NET install docs](https://learn.microsoft.com/en-us/dotnet/c
 
 ## Primeros pasos y configuración del entorno
 
+Si prefieres ver directamente el "Hola Mundo" en C#, consulta [El Atlas del Hola Mundo](/posts/hola/#c).
+
 ### Crear un proyecto nuevo
 ```bash
 dotnet new console -o MiApp     # App de consola
@@ -160,9 +162,8 @@ dotnet remove package Dapper
 ```
 
 ### Editores recomendados
-- **VS Code**: extensión C# Dev Kit (Microsoft), incluye language server, debugging, tests. Perfil recomendado: instalar C# Dev Kit + .NET Install Tool
-- **Rider**: IDE de JetBrains, excelente para proyectos grandes, refactorización, navegación
-- **Visual Studio**: Community gratuita, Professional de pago. Mejor experiencia en Windows con WPF/MAUI
+
+Los IDEs y editores más usados son [VSCode](/posts/resources/#ides-y-editores-de-codigo), [JetBrains](/posts/resources/#ides-y-editores-de-codigo) y [Neovim](/posts/resources/#ides-y-editores-de-codigo). Extensiones y configuraciones recomendadas en [Recursos](/posts/resources/#ides-y-editores-de-codigo).
 
 ### Configuración inicial del proyecto
 ```bash
@@ -285,8 +286,75 @@ Fuente: [Functional C#](https://learn.microsoft.com/en-us/dotnet/csharp/tutorial
 
 ## Tipos de datos y variables
 
+### Sistema de tipos
+
+#### ¿Qué es?
+C# tiene **tipado estático fuerte**: el tipo de cada variable se conoce en tiempo de compilación y no se realizan conversiones implícitas entre tipos incompatibles. Es como una caja etiquetada: sabes exactamente qué contiene sin necesidad de abrirla.
+
+El sistema de tipos es **nominal** (el nombre del tipo determina la compatibilidad), a diferencia del duck typing de Python o el structural typing de TypeScript.
+
+🔗 [Wikipedia — Tipado estático](https://es.wikipedia.org/wiki/Sistema_de_tipos), [Microsoft — C# type system](https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/)
+
+#### Sintaxis básica
+```csharp
+int x = 42;                    // Tipado estático: x siempre es int
+// x = "hola";                 // ❌ Error de compilación
+var y = 42;                    // Inferencia: y es int
+dynamic z = 42;                // Dynamic: tipo resuelto en runtime
+z = "texto";                   // OK — dynamic permite cambio de tipo
+```
+
+#### 🧪 Cómo probarlo
+```csharp
+// En xUnit
+[Fact]
+public void Tipado_estatico_no_permite_cambio()
+{
+    int x = 42;
+    Assert.Equal(42, x);
+    // x = "texto";  // No compila
+}
+
+[Fact]
+public void Dynamic_permite_cambio()
+{
+    dynamic d = 42;
+    Assert.Equal(42, d);
+    d = "texto";
+    Assert.Equal("texto", d);
+}
+```
+
+#### 💡 Memoria y rendimiento
+- Tipado estático: el compilador genera el código máquina exacto para cada tipo — sin overhead en runtime
+- `var` es azúcar sintáctico: no afecta al rendimiento, es idéntico a declarar el tipo explícito
+- `dynamic` usa DLR (Dynamic Language Runtime) — añade overhead de resolución en runtime
+- `object` requiere boxing/unboxing para value types
+
+#### ✅ Buenas prácticas
+- ✅ Usa `var` cuando el tipo sea obvio por la derecha (`var dict = new Dictionary<string, int>()`)
+- ❌ No abuses de `dynamic` — pierdes seguridad de tipos, IntelliSense y rendimiento
+- ❌ No uses `var` cuando oscurece la legibilidad (`var x = ObtenerValor()`)
+
+#### 🏗️ Metodología
+- En APIs y interfaces públicas, prefiere tipos explícitos sobre `var`
+- En código interno (métodos privados/locales), `var` mejora la legibilidad
+- `dynamic` es útil para interop con COM, JSON dinámico o lenguajes dinámicos
+
+#### 🔗 Para saber más
+- [Microsoft — Implicitly typed local variables](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/implicitly-typed-local-variables)
+- [Microsoft — dynamic type](https://learn.microsoft.com/en-us/dotnet/csharp/advanced-topics/interop/using-type-dynamic)
+
 ### Value types vs Reference types
 
+#### ¿Qué es?
+C# divide todos los tipos en dos categorías fundamentales. Los **value types** (`struct`) almacenan el valor directamente en la pila (o inline en el heap). Los **reference types** (`class`) almacenan una referencia al objeto en el heap, gestionado por el garbage collector.
+
+**Analogía**: un value type es como una hoja de papel con el número escrito; un reference type es como la dirección de una casa — todos los que tienen la dirección ven la misma casa.
+
+🔗 [Microsoft — Value types](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/value-types), [Reference types](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/reference-types)
+
+#### Sintaxis básica
 | Aspecto | Value type (`struct`) | Reference type (`class`) |
 |---|---|---|
 | Memoria | Stack o inline en heap | Heap (GC gestiona) |
@@ -299,19 +367,69 @@ Fuente: [Functional C#](https://learn.microsoft.com/en-us/dotnet/csharp/tutorial
 struct Punto { public int X, Y; }
 var p1 = new Punto { X = 1, Y = 2 };
 var p2 = p1; p2.X = 99;
-Console.WriteLine(p1.X);  // 1
+Console.WriteLine(p1.X);  // 1 — copia independiente
 
 class Persona { public string? Nombre; }
 var a = new Persona { Nombre = "Ana" };
 var b = a; b.Nombre = "Juan";
-Console.WriteLine(a.Nombre);  // "Juan"
+Console.WriteLine(a.Nombre);  // "Juan" — misma referencia
 ```
 
-**Built-in types:**
+#### 🧪 Cómo probarlo
+```csharp
+[Fact]
+public void Value_type_copia_independiente()
+{
+    var p1 = new Punto { X = 1, Y = 2 };
+    var p2 = p1;
+    p2.X = 99;
+    Assert.Equal(1, p1.X);  // No se afecta
+}
 
+[Fact]
+public void Reference_type_comparte_objeto()
+{
+    var a = new Persona { Nombre = "Ana" };
+    var b = a;
+    b.Nombre = "Juan";
+    Assert.Equal("Juan", a.Nombre);  // Mismo objeto
+}
+```
+
+#### 💡 Memoria y rendimiento
+- Value types en stack: asignación y liberación inmediatas (push/pop)
+- Reference types en heap: el GC debe recolectarlos — más presión de memoria
+- Pasar un struct grande por valor COPIA todo — usar `ref` o `in` para evitar copia
+- Boxing: un value type convertido a `object` se COPIA al heap — evítalo en bucles
+
+#### ✅ Buenas prácticas
+- ✅ Usa `struct` para datos pequeños (< 16 bytes) y lógica simple
+- ✅ Usa `readonly struct` para garantizar inmutabilidad
+- ⚠️ No pases structs grandes por valor — usa `ref` o `in`
+- ❌ No hagas structs mutables — causa confusión (las copias no se sincronizan)
+
+#### 🏗️ Metodología
+- **Value types**: números, coordenadas, flags, datos inmutables pequeños
+- **Reference types**: objetos de dominio, servicios, datos que comparten estado
+- **readonly struct**: cuando necesitas rendimiento de value type con seguridad de inmutabilidad
+
+#### 🔗 Para saber más
+- [Microsoft — Choosing between class and struct](https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/choosing-between-class-and-struct)
+- [Microsoft — ref returns and ref locals](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/declarations#reference-variables)
+
+### Built-in types (tipos primitivos)
+
+#### ¿Qué es?
+C# proporciona un conjunto de tipos primitivos que son alias de tipos del sistema (`System.Int32`, `System.Double`, etc.). Cada uno tiene un tamaño fijo en memoria y un rango específico.
+
+🔗 [Microsoft — Built-in types](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/)
+
+#### Sintaxis básica
 | Tipo | Alias | Tamaño | Rango |
 |---|---|---|---|
 | `byte` | `System.Byte` | 8 bits | 0–255 |
+| `sbyte` | `System.SByte` | 8 bits | -128 a 127 |
+| `short` | `System.Int16` | 16 bits | -32,768 a 32,767 |
 | `int` | `System.Int32` | 32 bits | ±2.1e9 |
 | `long` | `System.Int64` | 64 bits | ±9.2e18 |
 | `float` | `System.Single` | 32 bits | ±3.4e38 |
@@ -319,98 +437,211 @@ Console.WriteLine(a.Nombre);  // "Juan"
 | `decimal` | `System.Decimal` | 128 bits | ±7.9e28 (preciso) |
 | `char` | `System.Char` | 16 bits | Unicode UTF-16 |
 | `bool` | `System.Boolean` | 8 bits | true/false |
-
-**Nullable value types (`int?`):**
+| `nint` | `System.IntPtr` | 32/64 bits | Según plataforma |
 
 ```csharp
+int entero = 42;
+long largo = 42L;
+float flotante = 3.14f;    // Sufijo f
+double doble = 3.14;       // Por defecto
+decimal dinero = 19.99m;   // Sufijo m — preciso para dinero
+char letra = 'A';
+bool activo = true;
+```
+
+#### 🧪 Cómo probarlo
+```csharp
+[Theory]
+[InlineData(42, typeof(int))]
+[InlineData(3.14, typeof(double))]
+[InlineData(19.99m, typeof(decimal))]
+public void Tipos_primitivos_corresponden(dynamic valor, Type tipoEsperado)
+{
+    Assert.Equal(tipoEsperado, valor.GetType());
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `decimal` es más lento que `double` (~20x) — usa `double` para cálculos científicos
+- `float` es más rápido que `double` en GPUs pero menos preciso
+- `nint` se optimiza según plataforma (32/64 bits) — útil para punteros y tamaños
+- `bool` en realidad ocupa 1 byte (no 1 bit) en la mayoría de contextos
+
+#### ✅ Buenas prácticas
+- ✅ Usa `decimal` para dinero y valores financieros
+- ✅ Usa `double` para cálculos científicos y mediciones
+- ⚠️ No compares floats con `==` — usa `Math.Abs(a - b) < epsilon`
+- ❌ No uses `float` para dinero — la falta de precisión causa errores acumulativos
+
+#### 🏗️ Metodología
+- En aplicaciones financieras: `decimal` para todos los valores monetarios
+- En juegos/gráficos: `float` (las GPUs trabajan en float32)
+- En ciencia/datos: `double` (precisión suficiente, buen rendimiento)
+- En sistemas embebidos: considera `byte`/`short` para ahorrar memoria
+
+#### 🔗 Para saber más
+- [Microsoft — Floating-point numeric types](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/floating-point-numeric-types)
+- [What Every Computer Scientist Should Know About Floating-Point](https://docs.oracle.com/cd/E19957-01/806-3568/ncg_goldberg.html)
+
+### Nullable types
+
+#### ¿Qué es?
+C# tiene dos sistemas de nulabilidad: **nullable value types** (`int?`, `bool?`) desde C# 2, y **nullable reference types** (`string?`) desde C# 8. Los primeros son tipos especiales `Nullable&lt;T&gt;` que envuelven un value type. Los segundos son una característica de análisis de flujo en compilación.
+
+🔗 [Microsoft — Nullable value types](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/nullable-value-types), [Nullable reference types](https://learn.microsoft.com/en-us/dotnet/csharp/nullable-references)
+
+#### Sintaxis básica
+```csharp
+// Nullable value types
 int? edad = null;
 edad = 25;
 if (edad.HasValue)
     Console.WriteLine(edad.Value);
 int definitivo = edad ?? 0;  // Null-coalescing
-```
 
-**Nullable reference types (C# 8+):**
-
-```csharp
+// Nullable reference types (C# 8+)
 #nullable enable
-string nombre = "Ana";      // No nullable
-string? apodo = null;       // Nullable
-Console.WriteLine(apodo?.Length);  // Safe navigation
+string nombre = "Ana";      // No nullable — no puede ser null
+string? apodo = null;       // Nullable — puede ser null
+Console.WriteLine(apodo?.Length);  // Safe navigation: null si apodo es null
+
+// Operadores null-condicionales
+string? texto = ObtenerTexto();
+int? longitud = texto?.Length;     // null si texto es null
+string saludo = texto ?? "default"; // Null-coalescing
+texto ??= "valor por defecto";     // Null-coalescing assignment
 ```
 
-**`var`, `dynamic` y `object`:**
-
+#### 🧪 Cómo probarlo
 ```csharp
-var x = 42;          // int, tipado estático
-dynamic d = 42;      // Dynamic — resuelve en runtime
-d = "texto";
-Console.WriteLine(d.ToUpper());
+[Fact]
+public void Nullable_value_type_funciona()
+{
+    int? edad = null;
+    Assert.False(edad.HasValue);
+    
+    edad = 25;
+    Assert.True(edad.HasValue);
+    Assert.Equal(25, edad.Value);
+}
 
-object o = 42;       // Boxing
-o = "texto";
-int i = (int)o;      // Unboxing (excepción si no es int)
+[Fact]
+public void Null_coalescing_devuelve_default()
+{
+    string? texto = null;
+    string resultado = texto ?? "default";
+    Assert.Equal("default", resultado);
+}
 ```
 
-### string (inmutable) y StringBuilder
+#### 💡 Memoria y rendimiento
+- `int?` es `Nullable<int>` — ocupa ~8 bytes (4 del int + 4 del bool HasValue)
+- Nullable reference types son solo análisis en compilación — sin impacto en runtime
+- `?.` (null-conditional) genera una rama condicional en IL
+- `??` (null-coalescing) genera una comparación y salto
 
+#### ✅ Buenas prácticas
+- ✅ Habilita `Nullable` en todos los proyectos nuevos (`<Nullable>enable</Nullable>`)
+- ✅ Usa `??` sobre operador ternario cuando sea posible
+- ⚠️ No uses `!` (null-forgiving operator) a menos que estés seguro — silencia warnings reales
+- ❌ No ignores los warnings de nullabilidad — son bugs potenciales
+
+#### 🏗️ Metodología
+- **Public APIs**: prefiere no retornar null — usa `Option&lt;T&gt;` o pattern `Result&lt;T&gt;`
+- **Bases de datos**: usa `??` para valores por defecto cuando leas columnas nullables
+- **Deserialización JSON**: los campos opcionales deben ser `string?`, los requeridos `string`
+
+#### 🔗 Para saber más
+- [Microsoft — Nullable reference types tutorial](https://learn.microsoft.com/en-us/dotnet/csharp/tutorials/nullable-reference-types)
+- [Nullable migration strategies](https://learn.microsoft.com/en-us/dotnet/csharp/nullable-migration-strategies)
+
+### string e inmutabilidad
+
+#### ¿Qué es?
+`string` en C# es una secuencia inmutable de caracteres Unicode (UTF-16). Cada operación que parece modificar un string crea uno nuevo en el heap. Es un reference type, pero se comporta como value type en cuanto a semántica de copia (inmutable).
+
+🔗 [Microsoft — string](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/strings/)
+
+#### Sintaxis básica
 ```csharp
 string s = "Hola";
 string t = s;
 s += " Mundo";        // Crea NUEVA cadena
 Console.WriteLine(t);  // "Hola" — inmutable
 
-// Peligro: concatenación en bucle — O(n²)
-string res = "";
-for (int i = 0; i < 1000; i++)
-    res += i;          // 1000 cadenas intermedias
-
-// Solución: StringBuilder — O(n)
+// Concatenación eficiente
 var sb = new StringBuilder();
 for (int i = 0; i < 1000; i++)
     sb.Append(i);
-Console.WriteLine(sb.ToString());
+string resultado = sb.ToString();
+
+// Raw string literals (C# 11)
+string json = """
+{
+    "nombre": "Ana",
+    "edad": 30
+}
+""";
+
+// Interpolación
+int edad = 30;
+string msg = $"Tiene {edad} años";
 ```
 
-### Arrays
-
+#### 🧪 Cómo probarlo
 ```csharp
-int[] arr = [1, 2, 3, 4, 5];
-int[,] mat = { { 1, 2 }, { 3, 4 } };
-Console.WriteLine(mat[0, 1]);  // 2
+[Fact]
+public void String_es_inmutable()
+{
+    string s = "Hola";
+    string t = s;
+    s += " Mundo";
+    Assert.Equal("Hola", t);  // t no cambia
+}
 
-int[][] jagged = [[1, 2], [3, 4, 5], [6]];  // Jagged
-Console.WriteLine(jagged[1][2]);  // 5
-
-// Covarianza (solo reference types)
-string[] strings = ["a", "b"];
-object[] objects = strings;      // OK
+[Fact]
+public void StringBuilder_es_eficiente()
+{
+    var sb = new StringBuilder();
+    for (int i = 0; i < 100; i++)
+        sb.Append(i);
+    Assert.Equal(100, sb.Length);
+}
 ```
 
-### Span&lt;T&gt; y Memory&lt;T&gt;
+#### 💡 Memoria y rendimiento
+- Concatenación con `+` en bucles es O(n²) — crea n cadenas intermedias
+- `StringBuilder` es O(n) — reusa un buffer interno que crece al doble
+- **String interning**: las cadenas literales iguales comparten la misma memoria
+- `string.IsNullOrEmpty()` vs `str == ""` — prefiere el método estático
 
-```csharp
-int[] array = [1, 2, 3, 4, 5, 6, 7, 8];
+#### ✅ Buenas prácticas
+- ✅ Prefiere `$""` (interpolación) sobre `string.Format()` o concatenación con `+`
+- ✅ Usa `StringBuilder` para más de 3-4 concatenaciones o en bucles
+- ⚠️ No uses `+` dentro de bucles con strings
+- ❌ No uses `string.Compare()` cuando puedas usar `==` (salvo que necesites orden cultural)
 
-Span<int> slice = array.AsSpan(2, 3);  // Slice sin copia
-slice[0] = 99;
-Console.WriteLine(array[2]);  // 99
+#### 🏗️ Metodología
+- Para manipulación intensiva de texto: `StringBuilder` o `Span<char>`
+- Para parsing: `ReadOnlySpan<char>` evita allocaciones
+- Para datos internacionales: usa `StringComparison.InvariantCulture` o `Ordinal`
 
-// stackalloc — buffer en stack, cero allocations
-Span<byte> buffer = stackalloc byte[256];
-buffer[0] = 0xFF;
-
-// Memory<T> — versión heap-safe (para campos async)
-Memory<int> mem = array.AsMemory(2, 3);
-```
+#### 🔗 Para saber más
+- [Microsoft — Best Practices for Using Strings](https://learn.microsoft.com/en-us/dotnet/standard/base-types/best-practices-strings)
+- [StringBuilder docs](https://learn.microsoft.com/en-us/dotnet/api/system.text.stringbuilder)
 
 ### Colecciones
 
+#### ¿Qué es?
+Las colecciones en C# son contenedores tipados para almacenar y manipular grupos de objetos. La mayoría viven en `System.Collections.Generic` y ofrecen diferentes garantías de rendimiento y ordenación.
+
+🔗 [Microsoft — Collections](https://learn.microsoft.com/en-us/dotnet/standard/collections/)
+
+#### Sintaxis básica
 ```csharp
 // List<T> — array dinámico
 var lista = new List<int> { 1, 2, 3 };
-lista.Add(4);
-lista.RemoveAt(0);
+lista.Add(4); lista.RemoveAt(0);
 
 // Dictionary<K,V> — tabla hash O(1)
 var dict = new Dictionary<string, int>
@@ -432,29 +663,135 @@ Console.WriteLine(q.Dequeue());  // "primero"
 var p = new Stack<int>();
 p.Push(1); p.Push(2);
 Console.WriteLine(p.Pop());  // 2
+
+// Collection expressions (C# 12)
+List<int> nums = [1, 2, 3];
 ```
 
-### Memoria: stack vs heap, boxing/unboxing, GC
-
+#### 🧪 Cómo probarlo
 ```csharp
-int x = 42;                // Stack
-var obj = new object();    // Heap (referencia en stack)
+[Fact]
+public void HashSet_elimina_duplicados()
+{
+    var set = new HashSet<int> { 1, 2, 2, 3 };
+    Assert.Equal(3, set.Count);
+}
 
-// Boxing: value type → heap
-int n = 42;
-object o = n;              // Copia int al heap
-int n2 = (int)o;           // Unboxing: heap → stack
+[Fact]
+public void Dictionary_contiene_clave()
+{
+    var dict = new Dictionary<string, int> { ["Ana"] = 30 };
+    Assert.True(dict.ContainsKey("Ana"));
+    Assert.False(dict.ContainsKey("Luis"));
+}
 
-// GC Generations:
-// Gen 0: objetos nuevos (~ms)
-// Gen 1: supervivientes Gen 0
-// Gen 2: objetos longevos (singletons, static)
-// LOH: objetos > 85 KB, Gen 2, no se compacta
-
-var grande = new byte[100_000];  // → LOH
+[Fact]
+public void Queue_es_FIFO()
+{
+    var q = new Queue<string>();
+    q.Enqueue("primero"); q.Enqueue("segundo");
+    Assert.Equal("primero", q.Dequeue());
+    Assert.Equal("segundo", q.Dequeue());
+}
 ```
 
-Fuente: [Value types](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/value-types), [Span&lt;T&gt;](https://learn.microsoft.com/en-us/dotnet/standard/memory-and-spans/memory-t-usage-guidelines), [Collections](https://learn.microsoft.com/en-us/dotnet/standard/collections/), [Boxing](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/types/boxing-and-unboxing)
+#### 💡 Memoria y rendimiento
+| Colección | Acceso | Inserción | Búsqueda | Eliminación |
+|---|---|---|---|---|
+| `List&lt;T&gt;` | O(1) | O(1)* | O(n) | O(n) |
+| `Dictionary&lt;K,V&gt;` | O(1) | O(1) | O(1) | O(1) |
+| `HashSet&lt;T&gt;` | - | O(1) | O(1) | O(1) |
+| `Queue&lt;T&gt;` | O(1) peek | O(1) | - | O(1) |
+| `Stack&lt;T&gt;` | O(1) peek | O(1) | - | O(1) |
+
+*O(n) cuando el array interno necesita redimensionarse.
+
+#### ✅ Buenas prácticas
+- ✅ Prefiere `List<T>` sobre `ArrayList` (sin boxing)
+- ✅ Usa `TryGetValue` sobre `ContainsKey` + `[]` en Dictionary (mitad de búsquedas)
+- ⚠️ No modifiques una colección mientras la iteras con `foreach`
+- ❌ No asumas que `Dictionary` mantiene orden de inserción (usa `OrderedDictionary`)
+
+#### 🏗️ Metodología
+- **List&lt;T&gt;**: colección ordenada, acceso por índice, iteración frecuente
+- **Dictionary&lt;K,V&gt;**: búsquedas por clave, cachés, índices secundarios
+- **HashSet&lt;T&gt;**: membresía, duplicados, operaciones de conjunto
+- **Queue&lt;T&gt;**: cola de procesamiento, BFS, buffers FIFO
+- **Stack&lt;T&gt;**: backtracking, undo/redo, DFS
+
+#### 🔗 Para saber más
+- [Microsoft — Collection Data Structures](https://learn.microsoft.com/en-us/dotnet/standard/collections/selecting-a-collection-class)
+- [Microsoft — Concurrent Collections](https://learn.microsoft.com/en-us/dotnet/standard/collections/thread-safe/)
+
+### Arrays y Span&lt;T&gt;
+
+#### ¿Qué es?
+Los arrays en C# son colecciones de tamaño fijo, contiguas en memoria. `Span<T>` (C# 7.2+) es una ventana sobre memoria contigua — puede apuntar a arrays, memoria nativa o stack — sin copiar datos.
+
+🔗 [Microsoft — Arrays](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/arrays), [Span&lt;T&gt;](https://learn.microsoft.com/en-us/dotnet/standard/memory-and-spans/)
+
+#### Sintaxis básica
+```csharp
+// Arrays — tamaño fijo
+int[] arr = [1, 2, 3, 4, 5];
+int[,] mat = { { 1, 2 }, { 3, 4 } };
+int[][] jagged = [[1, 2], [3, 4, 5], [6]];
+
+// Span<T> — slice sin copia
+Span<int> slice = arr.AsSpan(2, 3);
+slice[0] = 99;
+Console.WriteLine(arr[2]);  // 99 — el array original cambia
+
+// stackalloc — buffer en stack, cero allocations
+Span<byte> buffer = stackalloc byte[256];
+
+// Memory<T> — versión heap-safe (para campos async)
+Memory<int> mem = arr.AsMemory(2, 3);
+```
+
+#### 🧪 Cómo probarlo
+```csharp
+[Fact]
+public void Span_modifica_array_original()
+{
+    int[] arr = [1, 2, 3, 4, 5];
+    Span<int> slice = arr.AsSpan(1, 3);
+    slice[0] = 99;
+    Assert.Equal(99, arr[1]);
+}
+
+[Fact]
+public void Array_covarianza_solo_reference()
+{
+    string[] strings = ["a", "b"];
+    object[] objects = strings;  // OK
+    Assert.Throws<ArrayTypeMismatchException>(() =>
+    {
+        objects[0] = 42;  // Runtime error
+    });
+}
+```
+
+#### 💡 Memoria y rendimiento
+- Los arrays son el tipo de colección más eficiente en memoria (solo los datos)
+- `Span<T>` elimina copias de memoria — operaciones sobre subconjuntos sin allocations
+- `stackalloc` asigna en stack — ultrafino pero limitado (~1 MB de stack)
+- Los arrays multidimensionales `[,]` son un solo bloque; los jagged `[][]` son arrays de arrays
+
+#### ✅ Buenas prácticas
+- ✅ Usa `Span<T>` para operaciones de slicing sin copia (procesamiento de texto, buffers)
+- ✅ Prefiere `stackalloc` para buffers temporales pequeños
+- ⚠️ Los arrays multidimensionales pueden ser más lentos que jagged arrays
+- ❌ No uses `Array.Copy` cuando `Span<T>` pueda hacer slicing
+
+#### 🏗️ Metodología
+- Arrays: datos de tamaño fijo conocido en tiempo de compilación
+- `Span<T>`: procesamiento de alto rendimiento (parsers, serializadores)
+- `Memory<T>`: operaciones async que necesitan buffer temporal
+
+#### 🔗 Para saber más
+- [Microsoft — Memory and Span usage guidelines](https://learn.microsoft.com/en-us/dotnet/standard/memory-and-spans/memory-t-usage-guidelines)
+- [Microsoft — Array performance tips](https://learn.microsoft.com/en-us/dotnet/csharp/advanced-topics/performance/)
 
 ---
 
@@ -462,8 +799,14 @@ Fuente: [Value types](https://learn.microsoft.com/en-us/dotnet/csharp/language-r
 
 ### Control de flujo
 
-**if/else:**
+#### ¿Qué es?
+El control de flujo determina el orden en que se ejecutan las instrucciones. C# ofrece condicionales, bucles, saltos y manejo de recursos. Su sintaxis deriva de C, con importantes mejoras como switch expressions, pattern matching y using declarations.
 
+🔗 [Microsoft — Statements](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/)
+
+#### Sintaxis básica
+
+**if/else y switch:**
 ```csharp
 int edad = 18;
 if (edad >= 18)
@@ -472,21 +815,6 @@ else if (edad >= 13)
     Console.WriteLine("Adolescente");
 else
     Console.WriteLine("Niño");
-```
-
-**switch:**
-
-```csharp
-// Tradicional (statement)
-switch (edad)
-{
-    case < 13:
-        Console.WriteLine("Niño"); break;
-    case < 20:
-        Console.WriteLine("Adolescente"); break;
-    default:
-        Console.WriteLine("Adulto"); break;
-}
 
 // Switch expression (C# 8+)
 string tipo = edad switch
@@ -495,60 +823,37 @@ string tipo = edad switch
     >= 13 and < 20 => "Adolescente",
     _ => "Adulto"
 };
-```
 
-**Pattern matching en switch:**
-
-```csharp
+// Pattern matching
 object valor = 42;
-
 string desc = valor switch
 {
-    int i when i < 0 => $"Negativo: {i}",
     int i => $"Entero: {i}",
     string s => $"Texto: {s}",
     null => "Nulo",
     _ => "Otro"
 };
 
-// Property pattern
-if (valor is string { Length: > 5 } texto)
-    Console.WriteLine($"Largo: {texto}");
-
 // List pattern (C# 11)
 int[] nums = [1, 2, 3, 4, 5];
 var dl = nums switch
 {
     [1, 2, .. var resto] => $"Empieza con 1,2, luego {resto.Length} más",
-    [.., 5] => "Termina en 5",
     [] => "Vacía"
-};
-
-// Relational patterns
-string Nota(int p) => p switch
-{
-    >= 90 => "Sobresaliente",
-    >= 70 and < 90 => "Notable",
-    >= 50 and < 70 => "Aprobado",
-    < 50 => "Suspenso"
 };
 ```
 
 **Bucles:**
-
 ```csharp
 for (int i = 0; i < 10; i++) Console.WriteLine(i);
 foreach (var n in Enumerable.Range(1, 10)) Console.WriteLine(n);
-
 int j = 0;
 while (j < 10) { Console.WriteLine(j); j++; }
-
 int k = 0;
 do { Console.WriteLine(k); k++; } while (k < 10);
 ```
 
 **break, continue, goto:**
-
 ```csharp
 for (int i = 0; i < 10; i++)
 {
@@ -556,90 +861,143 @@ for (int i = 0; i < 10; i++)
     if (i == 7) break;
 }
 
-for (int i = 0; i < 10; i++)
-    for (int j = 0; j < 10; j++)
-        if (i * j > 50) goto Salir;
-Salir: ;
-```
-
-**using (statement y declaration):**
-
+**using y checked/unchecked:**
 ```csharp
-// using statement
-using (var file = new StreamReader("archivo.txt"))
-    Console.WriteLine(file.ReadToEnd());
-
-// using declaration (C# 8+) — se descarta al salir del ámbito
+// using declaration — se descarta al salir del ámbito
 using var reader = new StreamReader("archivo.txt");
-```
 
-**checked/unchecked:**
-
-```csharp
 int max = int.MaxValue;
-checked  { int r = max + 1; }  // OverflowException
+checked  { int r = max + 1; }   // OverflowException
 unchecked { int r = max + 1; }  // Silencia overflow
 ```
 
-### Modularidad
+#### 🧪 Cómo probarlo
+```csharp
+[Theory]
+[InlineData(10, "Niño")]
+[InlineData(15, "Adolescente")]
+[InlineData(25, "Adulto")]
+public void Switch_expression_clasifica_edad(int edad, string esperado)
+{
+    string tipo = edad switch
+    {
+        < 13 => "Niño",
+        >= 13 and < 20 => "Adolescente",
+        _ => "Adulto"
+    };
+    Assert.Equal(esperado, tipo);
+}
 
-**Namespace y using:**
+[Fact]
+public void Pattern_matching_detecta_tipo()
+{
+    object valor = 42;
+    string desc = valor switch
+    {
+        int i => $"Entero: {i}",
+        _ => "Otro"
+    };
+    Assert.Equal("Entero: 42", desc);
+}
+```
 
+#### 💡 Memoria y rendimiento
+- Switch expression compila a tablas de salto (jump tables) cuando es posible — O(1)
+- Pattern matching con múltiples casos es optimizado por el compilador
+- `foreach` sobre arrays usa `GetEnumerator()` — sin allocations para arrays
+- `goto` raramente necesario — suele indicar diseño mejorable
+
+#### ✅ Buenas prácticas
+- ✅ Prefiere switch expression sobre if/else encadenados para múltiples condiciones
+- ✅ Usa pattern matching para reducir verbose if/else + cast
+- ⚠️ No anides switch dentro de switch — refactoriza a método separado
+- ❌ No uses `goto` excepto para salir de bucles anidados (raro)
+
+#### 🏗️ Metodología
+- **Condicionales simples** (≤3 ramas): if/else es más legible
+- **Múltiples condiciones** (≥4 ramas): switch expression
+- **Type checking**: pattern matching con switch
+- **Bucles**: `for` cuando sabes el número de iteraciones; `while` cuando no; `foreach` para colecciones
+
+#### 🔗 Para saber más
+- [Microsoft — Pattern matching](https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/functional/pattern-matching)
+- [Microsoft — Iteration statements](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/iteration-statements)
+
+### Modularidad y organización del código
+
+#### ¿Qué es?
+C# organiza el código en **namespaces** (contenedores lógicos), **assemblies** (unidades de compilación) y **archivos físicos**. Los proyectos .NET pueden tener múltiples assemblies que se referencian entre sí.
+
+🔗 [Microsoft — Namespaces](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/namespace)
+
+#### Sintaxis básica
+
+**Namespaces y usings:**
 ```csharp
 namespace MiApp.Modelos;
 
 using System;
-using System.Collections.Generic;
-using MiApp.Services;
-using static System.Math;       // Importa métodos estáticos
 using Proj = MiApp.Models;      // Alias
-
-// Global using (C# 10+) — en GlobalUsings.cs, aplica a todo el proyecto
-global using System.Linq;
+global using System.Linq;       // C# 10+: aplica a todo el proyecto
 ```
 
 **File-scoped namespaces (C# 10+):**
-
 ```csharp
-// Todo el archivo pertenece a este namespace sin llaves
 namespace MiApp.Modelos;
 public class Usuario { }
 ```
 
 **Assemblies:**
-
-Un proyecto .NET compila a un assembly: `.exe` (ejecutable) o `.dll` (biblioteca). Cada assembly contiene IL, metadatos y recursos.
-
 ```bash
 dotnet new classlib -o MiLib
 dotnet add MiApp reference MiLib
 ```
 
-**Partial class/struct/interface:**
-
+**Partial class/struct:**
 ```csharp
 // Archivo 1: Usuario.Part1.cs
 public partial class Usuario
 {
     public string Nombre { get; set; }
-    public string Email { get; set; }
 }
 
 // Archivo 2: Usuario.Part2.cs
 public partial class Usuario
 {
-    public override string ToString() => $"{Nombre} <{Email}>";
-}
-
-// Partial method — declaración opcional
-public partial class Logger
-{
-    partial void LogPartial(string msg);
-    public void Log(string msg) => LogPartial(msg);
+    public override string ToString() => $"{Nombre}";
 }
 ```
 
-Fuente: [Switch expression](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/switch-expression), [Pattern matching](https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/functional/pattern-matching), [Namespaces](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/namespace), [Partial classes](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/partial-classes-and-methods)
+#### 🧪 Cómo probarlo
+```csharp
+// Verificar que un tipo es accesible desde otro assembly
+[Fact]
+public void Tipo_publico_es_accesible()
+{
+    var type = typeof(MiLib.SomeClass);
+    Assert.NotNull(type);
+}
+```
+
+#### 💡 Memoria y rendimiento
+- Los assemblies se cargan en memoria al primer uso (lazy loading)
+- `global using` no afecta al rendimiento — es azúcar de compilación
+- `partial class` no tiene overhead en runtime — se fusiona en compilación
+
+#### ✅ Buenas prácticas
+- ✅ Un archivo por tipo (clase/struct/interface), nombrado como el tipo
+- ✅ Usa file-scoped namespaces (menos indentación)
+- ⚠️ No uses `global using` para todo — solo para lo que se usa en >80% de archivos
+- ❌ No pongas múltiples clases públicas en el mismo archivo (salvo tipos pequeños)
+
+#### 🏗️ Metodología
+- **Proyectos pequeños** (`&lt;5` archivos): namespace único o ninguno
+- **Librerías**: namespace = `Empresa.Tecnologia.Componente`
+- **Proyectos grandes**: separa en assemblies diferentes por capa (API, Dominio, Infraestructura)
+
+#### 🔗 Para saber más
+- [Microsoft — File-scoped namespaces](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/proposals/csharp-10.0/file-scoped-namespaces)
+- [Microsoft — Partial Classes and Methods](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/partial-classes-and-methods)
 
 ---
 
@@ -647,1135 +1005,858 @@ Fuente: [Switch expression](https://learn.microsoft.com/en-us/dotnet/csharp/lang
 
 ### CLR, IL, JIT y Garbage Collector
 
-C# no se compila a código máquina directamente. El compilador de C# (Roslyn) genera **IL (Intermediate Language)** — código en lenguaje intermedio similar a ensamblador. En tiempo de ejecución, el **CLR (Common Language Runtime)** activa el compilador **JIT (Just-In-Time)** que traduce IL a código nativo.
+#### ¿Qué es?
+C# no se compila a código máquina directamente. El compilador Roslyn genera **IL (Intermediate Language)**. En runtime, el **CLR (Common Language Runtime)** activa el compilador **JIT (Just-In-Time)** que traduce IL a código nativo. El **GC (Garbage Collector)** gestiona la memoria automáticamente.
 
+🔗 [Microsoft — CLR](https://learn.microsoft.com/en-us/dotnet/standard/clr)
+
+#### Sintaxis básica
 ```csharp
-// Tu código C#:
+// Tu código C# → IL → JIT → código nativo
 int suma = 2 + 2;
+// IL: ldc.i4.2 / ldc.i4.2 / add / stloc.0
+// x86_64: mov eax, 2 / add eax, 2 / mov [rbp-4], eax
 
-// Se compila a IL similar a:
-//   ldc.i4.2
-//   ldc.i4.2
-//   add
-//   stloc.0
-
-// Luego JIT lo convierte a ensamblador x86_64:
-//   mov eax, 2
-//   add eax, 2
-//   mov [rbp-4], eax
-```
-
-**¿Qué hace el CLR?**
-- Carga y verifica el IL (type safety, no buffer overflows)
-- JIT compila IL a código nativo (o usa **AOT** con Native AOT en .NET 7+)
-- Gestiona memoria con el **Garbage Collector (GC)** generacional
-- Proporciona seguridad (CAS, verificaciones de tipo)
-- Maneja excepciones entre lenguajes .NET
-
-**JIT vs AOT:**
-| Estrategia | Compilación | Rendimiento | Tamaño | Deploy |
-|---|---|---|---|---|
-| JIT (default) | En runtime | Mejora con el tiempo (tiered compilation) | IL + runtime | Necesita runtime |
-| ReadyToRun (R2R) | Pre-compila parcial | Inicio más rápido | Más grande | Necesita runtime |
-| Native AOT | Todo nativo | Inicio instantáneo | ~2-3 MB | Autocontenido sin runtime |
-
-**Garbage Collector generacional:**
-El GC de .NET divide los objetos en 3 generaciones:
-- **Gen 0**: objetos recién creados, corta vida. Se recolecta frecuentemente (~milisegundos)
-- **Gen 1**: supervivientes de Gen 0. Corto-medio plazo
-- **Gen 2**: objetos longevos (singletons, static data). Recolección costosa
-
-```csharp
+// GC generacional: Gen 0 (objetos nuevos), Gen 1, Gen 2 (longevos)
 void EjemploGC()
 {
-    var temporal = new byte[1024];  // Gen 0
-    var cache = new byte[1024 * 1024];  // Gen 0, pero pasa a Large Object Heap (> 85KB)
-    
-    GC.Collect();     // Forzar — no lo hagas en producción
-    GC.WaitForPendingFinalizers();
-    GC.Collect(2);    // Forzar Gen 2 — bloquea todo
+    var temporal = new byte[1024];    // Gen 0
+    var cache = new byte[1024 * 1024];  // LOH (> 85KB)
 }
 ```
 
-**Large Object Heap (LOH):** objetos > 85KB van al LOH, que es Gen 2 y no se compacta por defecto (puede fragmentarse). Usa `GCSettings.LargeObjectHeapCompactionMode` para forzar compactación.
+**JIT vs AOT:**
+| Estrategia | Compilación | Rendimiento | Deploy |
+|---|---|---|---|
+| JIT (default) | En runtime | Mejora con tiered compilation | Necesita runtime |
+| ReadyToRun | Pre-compila parcial | Inicio más rápido | Necesita runtime |
+| Native AOT | Todo nativo | Inicio instantáneo | Autocontenido |
 
-Fuente: [Microsoft CLR docs](https://learn.microsoft.com/en-us/dotnet/standard/clr), [Garbage Collection docs](https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/), [Pro .NET Memory Management (Konrad Kokosa)](https://prodotnetmemory.com/)
+#### 🧪 Cómo probarlo
+```csharp
+[Fact]
+public void CLR_ejecuta_IL_correctamente()
+{
+    int suma = 2 + 2;
+    Assert.Equal(4, suma);
+}
+
+[Fact]
+public void LOH_se_usa_para_objetos_grandes()
+{
+    var grande = new byte[100_000]; // > 85KB → LOH
+    Assert.Equal(100_000, grande.Length);
+}
+```
+
+#### 💡 Memoria y rendimiento
+- GC generacional: Gen 0 se recolecta en ~ms, Gen 2 es costosa (pausa ~100ms)
+- LOH (>85KB) no se compacta por defecto — puede fragmentarse
+- Native AOT elimina JIT en runtime pero limita la generación de código dinámico
+- Tiered compilation: los métodos empiezan con JIT rápido y se re-JITean con optimizaciones si son llamados frecuentemente
+
+#### ✅ Buenas prácticas
+- ✅ Evita llamar `GC.Collect()` en producción
+- ✅ Usa Native AOT para serverless y CLIs; JIT para apps que necesitan reflexión pesada
+- ⚠️ No asumas que objetos en Gen 0 se recolectan inmediatamente
+- ❌ No crees objetos temporales grandes (>85KB) en bucles — llenan LOH rápido
+
+#### 🏗️ Metodología
+- **Apps web**: JIT — necesitas reflexión y generación dinámica
+- **CLIs/serverless**: Native AOT — inicio rápido, menor footprint
+- **Juegos**: ReadyToRun para balance entre inicio y rendimiento
+
+#### 🔗 Para saber más
+- [Microsoft — Garbage Collection](https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/)
+- [Pro .NET Memory Management (Konrad Kokosa)](https://prodotnetmemory.com/)
 
 ### Value types vs Reference types, Boxing/Unboxing
 
-C# divide los tipos en dos categorías fundamentales:
+#### ¿Qué es?
+C# divide los tipos en dos categorías: **value types** (almacenados en stack o inline en heap) y **reference types** (siempre en heap, GC gestiona). Entender la diferencia es crucial para rendimiento y predictibilidad.
 
-| Aspecto | Value types (`struct`) | Reference types (`class`) |
-|---|---|---|
-| Memoria | Stack (o inline en heap) | Heap (GC gestiona) |
-| Asignación | `int a = 5;` | `var obj = new MiClase();` |
-| Copia | Copia el valor completo | Copia la referencia |
-| `null` | No por defecto (nullable sí: `int?`) | Sí |
-| `==` por defecto | Compara bits | Compara referencias |
-| Performance | Más rápido (menos presión GC) | Más overhead |
+🔗 [Microsoft — Value types](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/value-types)
 
+#### Sintaxis básica
 ```csharp
-// Value type: struct
-struct Punto
-{
-    public int X { get; set; }
-    public int Y { get; set; }
-}
-
+// Value type: struct — se copia por valor
+struct Punto { public int X { get; set; } public int Y { get; set; } }
 var p1 = new Punto { X = 1, Y = 2 };
-var p2 = p1;          // Copia TODOS los bytes
+var p2 = p1;
 p2.X = 99;
 Console.WriteLine(p1.X);  // 1 — no se afecta
 
-// Reference type: class
-class Persona
-{
-    public string Nombre { get; set; }
-}
-
+// Reference type: class — se copia la referencia
 var persona1 = new Persona { Nombre = "Ana" };
-var persona2 = persona1;  // Copia la REFERENCIA
+var persona2 = persona1;
 persona2.Nombre = "Juan";
-Console.WriteLine(persona1.Nombre);  // "Juan" — el mismo objeto
-```
+Console.WriteLine(persona1.Nombre);  // "Juan" — mismo objeto
 
-**Boxing y Unboxing:**
-El boxing ocurre cuando un value type se convierte a `object` o a una interfaz. Esto crea un objeto en el heap y COPIA el valor.
-
-```csharp
+// Boxing: value type → object (crea objeto en heap)
 int numero = 42;
-object obj = numero;          // Boxing: value → heap (copia en heap)
-int numero2 = (int)obj;       // Unboxing: heap → value (copia a stack)
+object obj = numero;               // Boxing
+int numero2 = (int)obj;            // Unboxing
 
-// Peligro: boxing en colecciones no genéricas
-var lista = new ArrayList();
-lista.Add(42);                 // Boxing — cada Add boxea
-int x = (int)lista[0];         // Unboxing
-
-// Sin boxing: genéricos
-var listaBuena = new List<int>();
-listaBuena.Add(42);            // Sin boxing — List<T> preserva el tipo
+// Genéricos evitan boxing
+var listaBuena = new List<int>();  // Sin boxing
 ```
 
-**¿Cuándo ocurre boxing sin querer?**
-- `Console.WriteLine($"El valor es {42}");` — boxing al llamar a `object.ToString()`
-- Pasar un `struct` a un parámetro `object`
-- Usar `IEnumerable` (no genérico) en lugar de `IEnumerable<T>`
-- Comparar structs con `Equals(object)` sin sobrecargar
-
+#### 🧪 Cómo probarlo
 ```csharp
-// Cómo evitarlo: sobrecargar métodos
-public void Procesar(int valor) { }  // Sin boxing
-public void Procesar(object valor) { }  // Con boxing
-
-// Usar genéricos siempre
-// ❌ ArrayList (no genérico)
-// ✅ List<T>, Dictionary<K,V>
-```
-
-Fuente: [Microsoft — Value types](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/value-types), [Boxing and Unboxing](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/types/boxing-and-unboxing)
-
-### Tipos primitivos y colecciones
-
-**Tipos primitivos:**
-| Tipo | Aliased | Tamaño | Rango | Precisión |
-|---|---|---|---|---|
-| `byte` | `System.Byte` | 8 bits | 0 a 255 | Entero |
-| `sbyte` | `System.SByte` | 8 bits | -128 a 127 | Entero |
-| `short` | `System.Int16` | 16 bits | -32,768 a 32,767 | Entero |
-| `int` | `System.Int32` | 32 bits | -2^31 a 2^31-1 | Entero |
-| `long` | `System.Int64` | 64 bits | -2^63 a 2^63-1 | Entero |
-| `float` | `System.Single` | 32 bits | ±1.5e-45 a ±3.4e38 | ~7 dígitos |
-| `double` | `System.Double` | 64 bits | ±5e-324 a ±1.7e308 | ~15 dígitos |
-| `decimal` | `System.Decimal` | 128 bits | ±1.0e-28 a ±7.9e28 | ~28 dígitos |
-| `bool` | `System.Boolean` | 8 bits | true/false | — |
-| `char` | `System.Char` | 16 bits | U+0000 a U+FFFF | Unicode UTF-16 |
-| `nint` | `System.IntPtr` | 32/64 bits | Según plataforma | Entero |
-
-**`string` (inmutable):**
-```csharp
-string s1 = "Hola";
-string s2 = s1;
-s1 += " Mundo";        // Crea NUEVA cadena — s1 ahora es "Hola Mundo"
-Console.WriteLine(s2); // "Hola" — s2 no se modifica
-
-// Internamente: s1 + " Mundo" crea un nuevo char[] en el heap
-// La original "Hola" sigue existiendo hasta que GC la recolecte
-
-// Concatenación en bucle — peligro:
-string resultado = "";
-for (int i = 0; i < 1000; i++)
-    resultado += i;      // Crea 1000 cadenas intermedias, O(n²)
-
-// Solución:
-var sb = new StringBuilder();
-for (int i = 0; i < 1000; i++)
-    sb.Append(i);        // O(n), reusa buffer interno
-string resultado2 = sb.ToString();
-
-// String interning: las cadenas literales se reúsan
-string a = "Hola";
-string b = "Hola";
-Console.WriteLine(object.ReferenceEquals(a, b));  // True (intern pool)
-
-// Raw string literals (C# 11):
-string json = """
+[Fact]
+public void Struct_se_copia_por_valor()
 {
-    "nombre": "Ana",
-    "edad": 30
+    var p1 = new Punto { X = 1, Y = 2 };
+    var p2 = p1;
+    p2.X = 99;
+    Assert.Equal(1, p1.X);  // p1 no cambia
 }
-""";
-```
 
-**Arrays, List y Dictionary:**
-```csharp
-// Arrays — tamaño fijo
-int[] arr = [1, 2, 3, 4, 5];
-int[,] matriz = { { 1, 2 }, { 3, 4 } };
-Span<int> slice = arr.AsSpan(1, 3);  // Sin copia, acceso seguro
-
-// List<T> — array dinámico
-var lista = new List<int> { 1, 2, 3 };
-lista.Add(4);
-lista.RemoveAt(0);
-Console.WriteLine(lista[0]);  // 2
-
-// Dictionary<K,V> — tabla hash
-var dict = new Dictionary<string, int>
+[Fact]
+public void List_generica_evita_boxing()
 {
-    ["Ana"] = 30,
-    ["Juan"] = 25
-};
-dict.Add("Luis", 40);
-if (dict.TryGetValue("Ana", out int edad))
-    Console.WriteLine(edad);
-
-// HashSet<T> — conjunto único O(1)
-var conjunto = new HashSet<int> { 1, 2, 3, 3, 3 };
-Console.WriteLine(conjunto.Count);  // 3
-
-// Queue<T> — FIFO
-var cola = new Queue<string>();
-cola.Enqueue("primero");
-cola.Enqueue("segundo");
-Console.WriteLine(cola.Dequeue());  // "primero"
-
-// Stack<T> — LIFO
-var pila = new Stack<int>();
-pila.Push(1);
-pila.Push(2);
-Console.WriteLine(pila.Pop());  // 2
-
-// ConcurrentDictionary — thread-safe
-var concurrent = new System.Collections.Concurrent.ConcurrentDictionary<int, string>();
+    var list = new List<int> { 42 };
+    Assert.Equal(42, list[0]); // Sin boxing
+}
 ```
 
-Fuente: [Microsoft — Built-in types](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/), [Collections docs](https://learn.microsoft.com/en-us/dotnet/standard/collections/)
+#### 💡 Memoria y rendimiento
+- Value types en stack: sin presión de GC, más rápidos
+- Cada boxing aloca en heap y copia — evítalo en bucles calientes
+- Structs grandes (>16 bytes) pueden ser más lentos que classes por la copia completa
+- Genéricos eliminan boxing — usa `List<T>` nunca `ArrayList`
+
+#### ✅ Buenas prácticas
+- ✅ Usa `struct` para datos pequeños (`&lt;16` bytes) e inmutables
+- ✅ Usa `class` para la mayoría de tipos (más flexibles, menos copias)
+- ⚠️ No pases structs grandes por parámetro sin `in` (copia completa)
+- ❌ No uses colecciones no genéricas (`ArrayList`, `Hashtable`) — siempre boxing
+
+#### 🏗️ Metodología
+- **Datos de valor**: `struct` readonly para coordenadas, vectores, colores
+- **Entidades/DTOs**: `class` o `record` (reference type)
+- **Hot paths**: prefiere structs pequeños para reducir presión de GC
+- **APIs**: usa genéricos para evitar boxing en parámetros
+
+#### 🔗 Para saber más
+- [Microsoft — Boxing and Unboxing](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/types/boxing-and-unboxing)
+
+### Tipos primitivos, string y colecciones
+
+#### ¿Qué es?
+Los tipos primitivos son alias de tipos `System.*` (`int` → `Int32`). `string` es inmutable. Las colecciones base incluyen arrays, `List<T>`, `Dictionary<,>`, `HashSet<T>`, `Queue<T>` y `Stack<T>`.
+
+🔗 [Microsoft — Built-in types](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/)
+
+#### Sintaxis básica
+```csharp
+// Primitivos
+int entero = 42;
+double pi = 3.1416;
+decimal precio = 19.99m;
+bool activo = true;
+
+// string — inmutable
+string s1 = "Hola";
+s1 += " Mundo";  // Crea NUEVA cadena
+
+// StringBuilder — para mutación eficiente
+var sb = new StringBuilder();
+for (int i = 0; i < 1000; i++) sb.Append(i);
+
+// Arrays
+int[] arr = [1, 2, 3];
+Span<int> slice = arr.AsSpan(1, 2);  // Sin copia
+
+// Colecciones genéricas
+var lista = new List<int> { 1, 2, 3 };
+var dict = new Dictionary<string, int> { ["Ana"] = 30 };
+var hashSet = new HashSet<int> { 1, 2, 3 };
+var cola = new Queue<string>();
+var pila = new Stack<int>();
+```
+
+#### 🧪 Cómo probarlo
+```csharp
+[Fact]
+public void StringBuilder_es_mas_eficiente_que_concatenacion()
+{
+    var sb = new StringBuilder();
+    for (int i = 0; i < 100; i++) sb.Append(i);
+    Assert.Equal(100, sb.Length);
+}
+
+[Fact]
+public void HashSet_elimina_duplicados()
+{
+    var set = new HashSet<int> { 1, 1, 2, 3 };
+    Assert.Equal(3, set.Count);
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `string` inmutable: cada concatenación crea un nuevo objeto — O(n²) en bucles
+- `StringBuilder` usa buffer interno que crece exponencialmente — O(n) en bucles
+- String interning: literales iguales comparten la misma memoria
+- Colecciones genéricas no generan boxing; las no genéricas sí
+
+#### ✅ Buenas prácticas
+- ✅ Usa `StringBuilder` para múltiples concatenaciones en bucles
+- ✅ Prefiere `List<T>` sobre arrays cuando el tamaño puede cambiar
+- ⚠️ No modifiques cadenas en bucles grandes — usa `StringBuilder`
+- ❌ No uses `ArrayList`, `Hashtable` — siempre prefiere las versiones genéricas
+
+#### 🏗️ Metodología
+- **Texto dinámico**: `StringBuilder` para logs, generación de HTML/CSV
+- **Datos fijos**: arrays (tamaño conocido) o `ReadOnlySpan<T>` para máximo rendimiento
+- **Lookups frecuentes**: `Dictionary<K,V>` para búsqueda por clave
+- **Unicidad**: `HashSet<T>` para eliminar duplicados
+
+#### 🔗 Para saber más
+- [Microsoft — String building](https://learn.microsoft.com/en-us/dotnet/standard/base-types/stringbuilder)
+- [Microsoft — Collections](https://learn.microsoft.com/en-us/dotnet/standard/collections/)
 
 ### POO: clases, interfaces, abstract, sealed, records y structs
 
-**Clase y herencia simple:**
+#### ¿Qué es?
+C# es un lenguaje orientado a objetos con herencia simple de clases e implementación múltiple de interfaces. Soporta **clases**, **structs**, **records** (C# 9+), **abstract** y **sealed** para controlar la jerarquía.
+
+🔗 [Microsoft — Classes](https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/classes)
+
+#### Sintaxis básica
 ```csharp
-// Clase base
-public class Animal
-{
-    public string Nombre { get; init; }
-    
-    public Animal(string nombre) => Nombre = nombre;
-    
-    // Virtual: puede ser sobreescrito
-    public virtual string HacerSonido() => "...";
-}
+// Clase con herencia simple
+public class Animal { public string Nombre { get; init; } public virtual string HacerSonido() => "..."; }
+public class Perro : Animal { public override string HacerSonido() => "Guau"; }
 
-// Clase derivada — herencia simple (una sola clase base)
-public class Perro : Animal
-{
-    public Perro(string nombre) : base(nombre) { }
-    
-    public override string HacerSonido() => "Guau";
-    
-    // sealed: impide que subclases sobreescriban
-    public sealed override string ToString() => $"Perro: {Nombre}";
-}
-```
+// Interfaz — múltiples implementaciones
+public interface IVolador { void Volar(); }
+public class Pato : IVolador, INadador { public void Volar() { } public void Nadar() { } }
 
-**Interfaces (contratos):**
-```csharp
-public interface IVolador
-{
-    void Volar();
-    
-    // Default interface methods (C# 8+)
-    int AlturaMaxima() => 100;
-}
+// Abstract — no instanciable, obliga a implementar
+public abstract class Forma { public abstract double Area(); }
+public sealed class Circulo : Forma { public double Radio { get; } public override double Area() => Math.PI * Radio * Radio; }
 
-public interface INadador
-{
-    void Nadar();
-}
-
-// Implementación múltiple (C# no tiene herencia múltiple de clases)
-public class Pato : IVolador, INadador
-{
-    public void Volar() => Console.WriteLine("Pato volando");
-    public void Nadar() => Console.WriteLine("Pato nadando");
-}
-```
-
-**Abstract y sealed:**
-```csharp
-// Abstract: no se puede instanciar, obliga a implementar
-public abstract class Forma
-{
-    public abstract double Area();     // Sin implementación
-    public virtual string Descripcion() => "Una forma";  // Con default
-}
-
-// Sealed: no se puede heredar
-public sealed class Circulo : Forma
-{
-    public double Radio { get; }
-    public Circulo(double radio) => Radio = radio;
-    
-    public override double Area() => Math.PI * Radio * Radio;
-}
-
-// class CirculoHijo : Circulo { }  // ❌ Error: Circulo es sealed
-```
-
-**Records (C# 9+):**
-```csharp
-// Record posicional — inmutable, value-based equality
+// Record — inmutable, equality por valor (C# 9+)
 public record Persona(string Nombre, int Edad);
+var p2 = new Persona("Ana", 30) with { Edad = 31 };
 
-// Equivalente a:
-public record Persona
-{
-    public string Nombre { get; init; }
-    public int Edad { get; init; }
-    
-    public Persona(string nombre, int edad) 
-    {
-        Nombre = nombre;
-        Edad = edad;
-    }
-    
-    // Genera automáticamente: Equals, GetHashCode, ToString, Deconstruct
-}
-
-// Uso
-var p1 = new Persona("Ana", 30);
-var p2 = p1 with { Edad = 31 };  // Non-destructive mutation
-Console.WriteLine(p1);           // Persona { Nombre = Ana, Edad = 30 }
-Console.WriteLine(p1 == p2);     // False (Edad cambió)
-
-// Record struct (C# 10+)
-public readonly record struct Punto(double X, double Y);
-
-// Record con herencia
-public abstract record Empleado(string Nombre, string Departamento);
-public record Ingeniero(string Nombre, string Departamento, string Lenguaje) 
-    : Empleado(Nombre, Departamento);
-public record Manager(string Nombre, string Departamento, List<string> Equipo) 
-    : Empleado(Nombre, Departamento);
+// Struct — value type, copia por valor
+public readonly struct Coordenadas(double lat, double lon);
 ```
 
-**Structs:**
+#### 🧪 Cómo probarlo
 ```csharp
-// Value type — recomendado para datos pequeños (< 16 bytes)
-public readonly struct Coordenadas
+[Fact]
+public void Record_equality_por_valor()
 {
-    public double Latitud { get; }
-    public double Longitud { get; }
-    
-    public Coordenadas(double lat, double lon)
-    {
-        Latitud = lat;
-        Longitud = lon;
-    }
+    var p1 = new Persona("Ana", 30);
+    var p2 = new Persona("Ana", 30);
+    Assert.Equal(p1, p2);  // True — records comparan por valor
 }
 
-// ref struct — solo en stack, no puede ir al heap
-public ref struct SpanWrapper
+[Fact]
+public void Clase_sealed_no_puede_heredarse()
 {
-    private readonly Span<byte> _buffer;
-    public SpanWrapper(Span<byte> buffer) => _buffer = buffer;
+    var c = new Circulo(5);
+    Assert.Equal(Math.PI * 25, c.Area(), precision: 10);
 }
 ```
 
-Fuente: [Microsoft — Classes](https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/classes), [Records](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/record), [Interfaces](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/interface)
+#### 💡 Memoria y rendimiento
+- `record` genera `Equals`/`GetHashCode`/`ToString` automáticamente — sin reflexión en runtime
+- `sealed` en métodos permite devirtualización (inline) por el JIT
+- `struct` no genera presión de GC pero se copia al pasar como parámetro
+- `abstract` no tiene overhead directo — solo marca métodos como virtual
+
+#### ✅ Buenas prácticas
+- ✅ Usa `record` para DTOs, eventos, y datos inmutables
+- ✅ Usa `sealed` en clases que no deben heredarse — mejora rendimiento
+- ⚠️ No crees jerarquías profundas (>3 niveles) — prefiere composición
+- ❌ No uses `struct` para objetos >16 bytes — la copia es cara
+
+#### 🏗️ Metodología
+- **Modelos de datos**: `record` (inmutable, value equality)
+- **Servicios**: `class` con interfaces (dependencias inyectables)
+- **Configuración**: `record` con `init` properties
+- **Hot paths**: `readonly struct` para datos pequeños
+
+#### 🔗 Para saber más
+- [Microsoft — Records](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/record)
+- [Microsoft — Interfaces](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/interface)
 
 ### Propiedades y fields
 
+#### ¿Qué es?
+Las **propiedades** encapsulan campos con getters/setters. C# ofrece auto-propiedades, init-only setters y required properties. Son la forma canónica de exponer datos en una clase.
+
+🔗 [Microsoft — Properties](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/properties)
+
+#### Sintaxis básica
 ```csharp
 public class Producto
 {
-    // Field (campo privado)
-    private decimal _precio;
-    
-    // Auto-propiedad (C# 3+): el compilador genera el field
-    public string Nombre { get; set; }
-    
-    // Auto-propiedad de solo lectura
-    public string Codigo { get; }  // Solo se asigna en constructor
-    
-    // Init-only setter (C# 9+): solo asigna en inicialización
-    public DateTime FechaCreacion { get; init; }
-    
-    // Propiedad con lógica
+    private decimal _precio;                          // Field privado
+    public string Nombre { get; set; }                // Auto-propiedad
+    public string Codigo { get; }                     // Solo init en constructor
+    public DateTime FechaCreacion { get; init; }      // Init-only (C# 9+)
+    public required string SKU { get; init; }         // Required (C# 11)
+    public decimal PrecioConIVA => Precio * 1.21m;    // Calculada
+
     public decimal Precio
     {
         get => _precio;
         set => _precio = value >= 0 ? value 
             : throw new ArgumentException("El precio no puede ser negativo");
     }
-    
-    // Propiedad calculada (solo getter)
-    public decimal PrecioConIVA => Precio * 1.21m;
-    
-    // Required (C# 11): obligatorio en inicialización
-    public required string SKU { get; init; }
 }
-
-// Uso con init y required
-var producto = new Producto
-{
-    Nombre = "Laptop",
-    Codigo = "LAP-001",
-    Precio = 1000,
-    SKU = "SKU-12345",
-    FechaCreacion = DateTime.UtcNow
-};
 ```
 
-Fuente: [Properties docs](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/properties)
+#### 🧪 Cómo probarlo
+```csharp
+[Fact]
+public void Propiedad_con_validacion_lanza_excepcion()
+{
+    var p = new Producto { Nombre = "Test", Precio = 10 };
+    Assert.Throws<ArgumentException>(() => p.Precio = -1);
+}
+```
+
+#### 💡 Memoria y rendimiento
+- Auto-propiedades se compilan a fields con get/set — sin overhead
+- Init-only setters se verifican en compilación, no en runtime
+- `required` se valida en compilación con análisis de flujo
+
+#### ✅ Buenas prácticas
+- ✅ Usa auto-propiedades para la mayoría de casos
+- ✅ Prefiere `init` sobre `set` para inmutabilidad
+- ⚠️ No agregues lógica pesada en getters — los consumidores no lo esperan
+- ❌ No expongas campos públicos — siempre usa propiedades
+
+#### 🏗️ Metodología
+- **DTOs**: auto-propiedades con `init`
+- **Entidades**: propiedades con lógica de validación
+- **Config**: required properties para asegurar inicialización completa
 
 ### Delegados, eventos y lambdas
 
-**Delegados:**
+#### ¿Qué es?
+Los **delegados** son types que definen firmas de métodos. Los **eventos** notifican cambios a suscriptores. Las **lambdas** son funciones anónimas. C# ofrece delegados predefinidos como `Func<>`, `Action<>` y `Predicate<>`.
+
+🔗 [Microsoft — Delegates](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/delegates/)
+
+#### Sintaxis básica
 ```csharp
-// Declaración de un delegado
-public delegate int Operacion(int a, int b);
+// Delegado y lambdas
+Func<int, int, int> sumar = (a, b) => a + b;
+Action<string> log = msg => Console.WriteLine(msg);
+Predicate<int> esPar = x => x % 2 == 0;
 
-// Métodos que coinciden con la firma
-static int Sumar(int x, int y) => x + y;
-static int Restar(int x, int y) => x - y;
-
-// Uso
-Operacion op = Sumar;
-Console.WriteLine(op(3, 4));  // 7
-
-op = Restar;
-Console.WriteLine(op(3, 4));  // -1
-
-// Delegados genéricos predefinidos (no necesitas crear los tuyos)
-Func<int, int, int> funcion = (a, b) => a * b;  // Recibe, devuelve
-Action<string> accion = msg => Console.WriteLine(msg);  // Recibe, void
-Predicate<int> predicado = x => x > 0;  // Recibe, bool
-```
-
-**Eventos:**
-```csharp
+// Evento
 public class Sensor
 {
-    // Declaración del evento (basado en delegado EventHandler)
     public event EventHandler<double>? TemperaturaExcedida;
-    
     private double _temperatura;
     public double Temperatura
     {
         get => _temperatura;
-        set
-        {
-            _temperatura = value;
-            if (value > 50)
-                TemperaturaExcedida?.Invoke(this, value);
-        }
+        set { _temperatura = value; if (value > 50) TemperaturaExcedida?.Invoke(this, value); }
     }
 }
 
-// Suscripción
-var sensor = new Sensor();
-sensor.TemperaturaExcedida += (sender, temp) => 
-    Console.WriteLine($"¡Alarma! Temperatura: {temp}°C");
-
-sensor.Temperatura = 55;  // Dispara el evento
-
-// EventHandler<TEventArgs> es el estándar
-// sender: quien emitió el evento
-// TEventArgs: datos del evento
+// Lambda static — no captura variables (C# 9)
+Func<int, int, int> sumStatic = static (a, b) => a + b;
 ```
 
-**Lambdas:**
+#### 🧪 Cómo probarlo
 ```csharp
-// Expresión lambda básica
-var cuadrado = (int x) => x * x;
-
-// Lambda con múltiples líneas
-var procesar = (List<int> nums) =>
+[Fact]
+public void Evento_se_dispara_cuando_se_supera_limite()
 {
-    var resultado = nums.Where(n => n > 0).ToList();
-    return resultado.Sum();
-};
-
-// Lambdas con tipos explícitos
-var sumar = (int a, int b) => a + b;
-
-// Lambda static (C# 9): no captura variables del contexto
-Func<int, int, int> sumarStatic = static (a, b) => a + b;
-
-// Lambda natural (C# 10): el compilador infiere el tipo delegado
-var filtrar = (int[] items, int min) => items.Where(i => i >= min).ToArray();
-
-// Callback con lambda
-void EjecutarConLog(Func<int, int> operacion, int valor)
-{
-    Console.WriteLine($"Ejecutando con {valor}");
-    var resultado = operacion(valor);
-    Console.WriteLine($"Resultado: {resultado}");
+    var sensor = new Sensor();
+    double temp = 0;
+    sensor.TemperaturaExcedida += (_, t) => temp = t;
+    sensor.Temperatura = 55;
+    Assert.Equal(55, temp);
 }
 
-EjecutarConLog(x => x * x, 5);  // 25
+[Fact]
+public void Lambda_static_no_captura_variables()
+{
+    Func<int, int> f = static x => x * x;
+    Assert.Equal(25, f(5));
+}
 ```
 
-Fuente: [Delegates](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/delegates/), [Events](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/events/), [Lambda expressions](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/lambda-expressions)
+#### 💡 Memoria y rendimiento
+- Delegados son reference types — alocan en heap
+- Eventos son multicast delegates — mantienen lista de invocación
+- Lambdas que capturan variables locales alocan un closure object
+- Lambda `static` (C# 9) evita closure allocation
+
+#### ✅ Buenas prácticas
+- ✅ Usa `EventHandler<TEventArgs>` en vez de delegados personalizados para eventos
+- ✅ Prefiere lambda `static` cuando no captures variables
+- ⚠️ No suscribas eventos sin desuscribir — memory leaks
+- ❌ No pases lambdas como `Expression<>` si solo necesitas delegados
+
+#### 🏗️ Metodología
+- **Notificaciones**: eventos con `EventHandler<T>`
+- **Callbacks**: `Func<>`/`Action<>` como parámetros
+- **Filtros**: `Predicate<T>` o `Func<T, bool>`
+- **Hot paths**: lambda static para evitar allocations repetidos
 
 ### LINQ (Language Integrated Query)
 
-LINQ es el sistema de consultas integrado en C#. Puedes consultar colecciones en memoria (LINQ to Objects), bases de datos (LINQ to SQL/EF), XML, y más.
+#### ¿Qué es?
+LINQ permite consultar colecciones, bases de datos y XML con sintaxis integrada en C#. Soporta method syntax (fluent) y query syntax (SQL-like). Todas las operaciones son lazy evaluation hasta que se materializan con `ToList()`/`ToArray()`.
 
-**Method syntax (fluent):**
+🔗 [Microsoft — LINQ](https://learn.microsoft.com/en-us/dotnet/csharp/linq/)
+
+#### Sintaxis básica
 ```csharp
-var numeros = new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+var nums = new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 
-var resultado = numeros
-    .Where(n => n % 2 == 0)           // Filtra pares
-    .Select(n => n * 10)              // Transforma
-    .OrderByDescending(n => n)        // Ordena descendente
-    .Take(3)                          // Toma 3
-    .ToList();                        // Materializa
+// Method syntax (fluent)
+var result = nums.Where(n => n % 2 == 0).Select(n => n * 10).OrderByDescending(n => n).Take(3).ToList();
 
-// resultado: [100, 80, 60]
+// Query syntax (SQL-like)
+var result2 = from n in nums where n % 2 == 0 orderby n descending select n * 10;
+
+// Operadores clave
+.Where(n => n > 5).Select(n => new { Valor = n, Cuadrado = n * n })
+.Skip(5).Take(5).Chunk(3)
+.OrderBy(p => p.Nombre).ThenByDescending(p => p.Edad)
+.Count().Sum(p => p.Precio).Average().Aggregate((a, b) => a + b)
+.Any(p => p.Edad > 18).All(p => p.Activo).Contains(42)
+.Distinct().Union(otra).Intersect(otra).Except(otra)
+.GroupBy(p => p.Categoria).Select(g => new { Categoria = g.Key, Total = g.Sum(p => p.Precio) })
+
+// Lazy evaluation
+var query = nums.Where(n => n > 3);    // NO se ejecuta aquí
+var list = query.ToList();             // Aquí se materializa
 ```
 
-**Query syntax (SQL-like):**
+#### 🧪 Cómo probarlo
 ```csharp
-var resultado = from n in numeros
-                where n % 2 == 0
-                orderby n descending
-                select n * 10;
-```
-
-**Operadores esenciales:**
-```csharp
-// Filtrado
-.Where(n => n > 5)
-.OfType<string>()        // Filtra por tipo
-
-// Proyección
-.Select(n => new { Valor = n, Cuadrado = n * n })
-.SelectMany(lista => lista)  // Aplana colecciones anidadas
-
-// Partición
-.Take(5)                 // Primeros 5
-.Skip(5)                 // Salta 5
-.TakeLast(5)             // Últimos 5
-.Chunk(3)                // Divide en grupos de 3
-
-// Ordenación
-.OrderBy(p => p.Nombre)
-.ThenBy(p => p.Edad)
-.OrderByDescending(p => p.Fecha)
-
-// Agregación
-.Count()
-.Sum(p => p.Precio)
-.Average()
-.Min(), .Max()
-.Aggregate((a, b) => a + b)  // Acumulador personalizado
-
-// Cuantificadores
-.Any(p => p.Edad > 18)
-.All(p => p.Activo)
-.Contains(42)
-
-// Conjuntos
-.Distinct()
-.Union(otra)
-.Intersect(otra)
-.Except(otra)
-
-// Agrupación
-.GroupBy(p => p.Categoria)
-    .Select(g => new { Categoria = g.Key, Total = g.Sum(p => p.Precio) })
-
-// Joins
-var join = from p in personas
-           join d in departamentos on p.DeptId equals d.Id
-           select new { p.Nombre, d.NombreDepartamento };
-
-// Zip — combina dos secuencias
-var nums = new[] { 1, 2, 3 };
-var letras = new[] { "A", "B", "C" };
-var zipped = nums.Zip(letras, (n, l) => $"{n}{l}");
-// ["1A", "2B", "3C"]
-```
-
-**Lazy evaluation:**
-```csharp
-var query = numeros.Where(n =>
+[Fact]
+public void LINQ_filtra_y_ordena()
 {
-    Console.WriteLine($"Evaluando {n}");
-    return n > 3;
-});
-
-// Hasta aquí NO se ejecuta nada (diferido)
-
-var lista = query.ToList();  // Aquí se ejecuta — "Evaluando 1", "Evaluando 2", ...
-
-// Importante: la query se re-ejecuta cada vez
-var count1 = query.Count();  // Vuelve a evaluar TODA la colección
-var count2 = query.Count();  // Otra vez
-
-// Materializa para evitar re-evaluación:
-var cache = query.ToList();
+    int[] nums = [3, 1, 4, 1, 5];
+    var result = nums.Where(n => n > 2).OrderByDescending(n => n).ToList();
+    Assert.Equal([5, 4, 3], result);
+}
 ```
 
-Fuente: [LINQ docs](https://learn.microsoft.com/en-us/dotnet/csharp/linq/), [LINQ 101 samples](https://learn.microsoft.com/en-us/samples/dotnet/try-samples/101-linq-samples/)
+#### 💡 Memoria y rendimiento
+- Lazy evaluation evita crear colecciones intermedias innecesarias
+- Cada materialización re-ejecuta la query — llama a `ToList()` una vez y cachea
+- `Select` no aloca hasta materializar
+- Operaciones como `Count()` sin filtro son O(1) para `List<T>`/arrays
+
+#### ✅ Buenas prácticas
+- ✅ Materializa con `ToList()`/`ToArray()` si vas a iterar múltiples veces
+- ✅ Usa `Any()` en vez de `Count() > 0` para verificar existencia
+- ⚠️ No abuses de LINQ en hot paths — foreach explícito es más rápido
+- ❌ No llames `ToList()` antes de filtrar — rompe lazy evaluation
 
 ### Genéricos, constraints, covarianza/contravarianza
 
-**Genéricos básicos:**
+#### ¿Qué es?
+Los **genéricos** permiten definir tipos y métodos parametrizados por tipo. Las **constraints** restringen qué tipos pueden usarse. **Covarianza** (`out`) permite usar tipos derivados; **contravarianza** (`in`) permite usar tipos base.
+
+🔗 [Microsoft — Generics](https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/generics)
+
+#### Sintaxis básica
 ```csharp
 // Clase genérica
 public class Repositorio<T>
 {
     private readonly List<T> _items = [];
-    
     public void Agregar(T item) => _items.Add(item);
     public T Obtener(int index) => _items[index];
-    public IEnumerable<T> Todos() => _items;
 }
 
-var repo = new Repositorio<int>();
-repo.Agregar(42);
-
-// Método genérico
-public T Max<T>(T a, T b) where T : IComparable<T>
-{
-    return a.CompareTo(b) > 0 ? a : b;
-}
-```
-
-**Constraints (restricciones):**
-```csharp
-// where T : class        — reference type
-// where T : struct       — value type (no nullable)
-// where T : new()        — debe tener constructor sin parámetros
-// where T : BaseClass    — debe heredar de BaseClass
-// where T : IInterface   — debe implementar IInterface
-// where T : notnull      — no nullable (C# 8+)
-// where T : unmanaged    — tipo no gestionado (C# 7.3+)
-// where T : Enum         — tipo enum (C# 7.3+)
-// where T : Delegate     — tipo delegado (C# 7.3+)
-
+// Constraints
+// where T : class | struct | new() | BaseClass | IInterface | notnull | unmanaged | Enum | Delegate
 public class Fabrica<T> where T : new()
 {
     public T Crear() => new T();
 }
 
-public class Procesador<T> where T : class, IDisposable, new()
-{
-    public void Procesar()
-    {
-        using var item = new T();
-        // ...
-    }
-}
-```
+// Covarianza (out): IEnumerable<string> → IEnumerable<object>
+IEnumerable<string> cadenas = ["hola"];
+IEnumerable<object> objetos = cadenas;
 
-**Covarianza y contravarianza:**
-```csharp
-// Covarianza: out — puedo usar un tipo más derivado del declarado
-// IEnumerable<out T> → IEnumerable<object> acepta IEnumerable<string>
-IEnumerable<string> cadenas = ["hola", "mundo"];
-IEnumerable<object> objetos = cadenas;  // OK — covarianza
-
-// Contravarianza: in — puedo usar un tipo más base del declarado
-// Action<in T> → Action<string> acepta Action<object>
+// Contravarianza (in): Action<object> → Action<string>
 Action<object> accionObj = obj => Console.WriteLine(obj);
-Action<string> accionStr = accionObj;  // OK — contravarianza
-
-// Ejemplo con interfaces personalizadas
-interface IProductor<out T> { T Producir(); }     // Covariante
-interface IConsumidor<in T> { void Consumir(T item); }  // Contravariante
-
-class Productor<T> : IProductor<T>
-{
-    private readonly T _item;
-    public Productor(T item) => _item = item;
-    public T Producir() => _item;
-}
-
-class Consumidor<T> : IConsumidor<T>
-{
-    public void Consumir(T item) => Console.WriteLine(item);
-}
-
-// Uso
-IProductor<string> productorStr = new Productor<string>("Hola");
-IProductor<object> productorObj = productorStr;  // Covarianza
-
-IConsumidor<object> consumidorObj = new Consumidor<object>();
-IConsumidor<string> consumidorStr = consumidorObj;  // Contravarianza
+Action<string> accionStr = accionObj;
 ```
 
-Fuente: [Generics docs](https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/generics), [Covariance and Contravariance](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/covariance-contravariance/)
+#### 🧪 Cómo probarlo
+```csharp
+[Fact]
+public void Repositorio_generico_funciona_con_cualquier_tipo()
+{
+    var repo = new Repositorio<int>();
+    repo.Agregar(42);
+    Assert.Equal(42, repo.Obtener(0));
+}
+```
+
+#### 💡 Memoria y rendimiento
+- Los genéricos se especializan por tipo en JIT — sin boxing ni casting
+- Cada tipo cerrado (ej. `List<int>`) genera código nativo separado
+- `struct` como genérico no aloca en heap si el contenedor es stack-only
+
+#### ✅ Buenas prácticas
+- ✅ Usa genéricos para evitar duplicar código con diferentes tipos
+- ✅ Documenta constraints con `where` cláusulas explícitas
+- ⚠️ No uses `object` como parámetro — prefiere genéricos con constraints
+- ❌ No especialices genéricos con demasiados tipos cerrados — crece el código nativo
 
 ### async/await, Task, ValueTask, IAsyncEnumerable
 
+#### ¿Qué es?
+`async`/`await` permite escribir código asíncrono que no bloquea hilos. `Task` representa una operación en curso. `ValueTask` es un struct que evita allocations para resultados síncronos. `IAsyncEnumerable<T>` permite streams asíncronos con `await foreach`.
+
+🔗 [Microsoft — Async/await](https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/)
+
+#### Sintaxis básica
 ```csharp
 // async/await básico
 public async Task<string> ObtenerDatosAsync(string url)
 {
     using var client = new HttpClient();
-    string contenido = await client.GetStringAsync(url);
-    return contenido;
+    return await client.GetStringAsync(url);
 }
 
-// Task es como un "Future" o "Promise"
-// await extrae el resultado sin bloquear el hilo
-```
-
-**Task vs ValueTask:**
-```csharp
-// Task — para operaciones que suelen ser asíncronas
-public async Task<int> LeerArchivoAsync(string path)
-{
-    string contenido = await File.ReadAllTextAsync(path);
-    return contenido.Length;
-}
-
-// ValueTask — para resultados que suelen ser síncronos
-// ValueTask es un struct, evita asignación en heap
-private readonly Dictionary<string, int> _cache = [];
-
+// ValueTask — evita allocation si el resultado es síncrono
 public ValueTask<int> ObtenerValorAsync(string key)
 {
     if (_cache.TryGetValue(key, out int valor))
-        return new ValueTask<int>(valor);  // Síncrono, sin Task
-    
-    return new ValueTask<int>(CalcularAsync(key));  // Asíncrono
+        return new ValueTask<int>(valor);   // Sin allocation
+    return new ValueTask<int>(CalcularAsync(key));
 }
 
-private async Task<int> CalcularAsync(string key)
-{
-    await Task.Delay(100);
-    return 42;
-}
-```
+// Múltiples tareas concurrentes
+var tareas = Enumerable.Range(0, 10).Select(i => ObtenerDatosAsync($"https://api.example.com/{i}"));
+string[] resultados = await Task.WhenAll(tareas);
 
-**Múltiples llamadas concurrentes:**
-```csharp
-public async Task ProcesarMultipleAsync()
-{
-    var tareas = new List<Task<string>>();
-    
-    for (int i = 0; i < 10; i++)
-    {
-        tareas.Add(ObtenerDatosAsync($"https://api.example.com/{i}"));
-    }
-    
-    // Espera a TODAS
-    string[] resultados = await Task.WhenAll(tareas);
-    
-    // Espera la primera en completar
-    Task<string> primero = await Task.WhenAny(tareas);
-    
-    // Procesa según completan
-    var tareasEnProgreso = new List<Task<string>>(tareas);
-    while (tareasEnProgreso.Count > 0)
-    {
-        Task<string> completada = await Task.WhenAny(tareasEnProgreso);
-        tareasEnProgreso.Remove(completada);
-        Console.WriteLine(completada.Result);
-    }
-}
-```
-
-**Cancelación:**
-```csharp
-public async Task ProcesarConCancelacionAsync(CancellationToken ct)
-{
-    // Lanza OperationCanceledException si se cancela
-    await Task.Delay(5000, ct);
-    
-    // Verificar manualmente
-    ct.ThrowIfCancellationRequested();
-    
-    // O verificar sin excepción
-    if (ct.IsCancellationRequested)
-        return;
-}
-
-// Uso
+// Cancelación
 var cts = new CancellationTokenSource();
 cts.CancelAfter(TimeSpan.FromSeconds(3));
+await Task.Delay(5000, cts.Token);  // Lanza OperationCanceledException
 
-try
+// IAsyncEnumerable<T> — streams asíncronos
+public async IAsyncEnumerable<int> GenerarAsync()
 {
-    await ProcesarConCancelacionAsync(cts.Token);
+    for (int i = 0; i < 10; i++) { await Task.Delay(100); yield return i; }
 }
-catch (OperationCanceledException)
-{
-    Console.WriteLine("Operación cancelada");
-}
+await foreach (int num in GenerarAsync()) Console.WriteLine(num);
 ```
 
-**IAsyncEnumerable&lt;T&gt; (C# 8+):**
+#### 🧪 Cómo probarlo
 ```csharp
-// Iteración asíncrona — yield return async
-public async IAsyncEnumerable<int> GenerarNumerosAsync()
+[Fact]
+public async Task Async_metodo_completa_correctamente()
 {
-    for (int i = 0; i < 10; i++)
-    {
-        await Task.Delay(100);  // Simula trabajo async
-        yield return i;
-    }
+    string result = await ObtenerDatosAsync("https://example.com");
+    Assert.NotNull(result);
 }
 
-// Consumo
-await foreach (int numero in GenerarNumerosAsync())
+[Fact]
+public async Task Cancelacion_lanza_excepcion()
 {
-    Console.WriteLine(numero);
-}
-
-// Procesamiento con LINQ async
-await foreach (int par in GenerarNumerosAsync()
-    .WhereAwait(async n => { await Task.Delay(1); return n % 2 == 0; }))
-{
-    Console.WriteLine(par);
+    var cts = new CancellationTokenSource();
+    cts.Cancel();
+    await Assert.ThrowsAsync<OperationCanceledException>(() => 
+        Task.Delay(5000, cts.Token));
 }
 ```
 
-**Parallel LINQ (PLINQ):**
-```csharp
-var numeros = Enumerable.Range(0, 100_000);
+#### 💡 Memoria y rendimiento
+- `async`/`await` compila a una máquina de estados (state machine) en struct — sin thread
+- `ValueTask` evita allocation de `Task` cuando el resultado es síncrono
+- `Task.WhenAll` es más eficiente que esperar secuencialmente
+- Cada `await` puede devolver el hilo al pool si la operación no está completa
 
-// Parallel query — usa múltiples hilos automáticamente
-var resultado = numeros
-    .AsParallel()
-    .Where(n => EsPrimo(n))
-    .OrderBy(n => n)
-    .ToArray();
-
-// Control de paralelismo
-var lento = numeros
-    .AsParallel()
-    .WithDegreeOfParallelism(4)  // Limita a 4 hilos
-    .Select(n => OperacionCostosa(n));
-```
-
-Fuente: [Async/await docs](https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/), [Task-based async pattern](https://learn.microsoft.com/en-us/dotnet/standard/asynchronous-programming-patterns/task-based-asynchronous-pattern-tap)
+#### ✅ Buenas prácticas
+- ✅ Usa `*Async` en toda I/O (red, disco, BD) — nunca bloquees con `.Result`
+- ✅ Pasa `CancellationToken` a todos los métodos async
+- ⚠️ No hagas `Task.WhenAll` con miles de tareas — usa `Parallel.ForEachAsync`
+- ❌ No uses `async void` excepto en event handlers — las excepciones son inmanejables
 
 ### Pattern matching
 
-C# tiene pattern matching cada vez más potente desde C# 7:
+#### ¿Qué es?
+El **pattern matching** permite comprobar la forma de un valor (tipo, propiedades, posición) y extraer datos en una sola expresión. Evolucionó desde C# 7 con type patterns hasta C# 11 con list patterns.
 
+🔗 [Microsoft — Pattern matching](https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/functional/pattern-matching)
+
+#### Sintaxis básica
 ```csharp
 object valor = 42;
 
 // Type pattern
-if (valor is int entero)
-    Console.WriteLine(entero);
+if (valor is int entero) Console.WriteLine(entero);
 
-// Switch expression (C# 8+)
-string descripcion = valor switch
+// Switch expression
+string desc = valor switch
 {
     int i when i > 0 => $"Entero positivo: {i}",
-    int i => $"Entero: {i}",
     string s => $"Cadena: {s}",
     null => "Nulo",
-    _ => "Otro tipo"  // discard pattern
+    _ => "Otro"
 };
 
-// Property pattern (C# 8+)
-if (valor is string { Length: > 5 } texto)
-    Console.WriteLine($"Texto largo: {texto}");
-
-// Positional pattern (deconstruct)
-if (valor is (int x, int y))
-    Console.WriteLine($"Coordenadas: {x}, {y}");
+// Property pattern
+if (valor is string { Length: > 5 } texto) Console.WriteLine($"Largo: {texto}");
 
 // List patterns (C# 11)
-int[] numeros = [1, 2, 3, 4, 5];
-
-// Match patrones en listas
-var resultado = numeros switch
+int[] nums = [1, 2, 3, 4, 5];
+var res = nums switch
 {
-    [1, 2, .. var resto] => $"Empieza con 1, 2, luego {resto.Length} más",
-    [.., 5] => "Termina en 5",
+    [1, 2, .. var resto] => $"Empieza con 1,2, luego {resto.Length} más",
     [var primero, .., var ultimo] => $"Primero: {primero}, último: {ultimo}",
-    [] => "Vacía",
-    [var unico] => $"Un solo elemento: {unico}"
-};
-
-// Pattern matching en records
-var persona = new Persona("Ana", 30);
-var info = persona switch
-{
-    { Nombre: "Ana", Edad: >= 18 } => "Ana, mayor de edad",
-    { Edad: < 18 } => "Menor de edad",
-    _ => "Otra persona"
+    [] => "Vacía"
 };
 
 // Relational patterns (C# 9+)
-string clasificar(int n) => n switch
+string Nota(int p) => p switch
 {
-    < 0 => "Negativo",
-    >= 0 and <= 10 => "Entre 0 y 10",
-    > 10 and <= 100 => "Entre 11 y 100",
-    > 100 => "Grande"
+    >= 90 => "Sobresaliente",
+    >= 70 => "Notable",
+    >= 50 => "Aprobado",
+    < 50 => "Suspenso"
 };
 ```
 
-Fuente: [Pattern matching docs](https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/functional/pattern-matching), [C# 11 list patterns](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/patterns#list-patterns)
-
-### Nullable reference types (C# 8+)
-
+#### 🧪 Cómo probarlo
 ```csharp
-#nullable enable
-
-public class Usuario
+[Theory]
+[InlineData(95, "Sobresaliente")]
+[InlineData(75, "Notable")]
+[InlineData(55, "Aprobado")]
+[InlineData(30, "Suspenso")]
+public void Pattern_matching_en_notas(int puntuacion, string esperado)
 {
-    public string Nombre { get; set; }        // No nullable — no puede ser null
-    public string? Email { get; set; }        // Nullable — puede ser null
-    public string Apodo { get; set; } = "";   // Valor por defecto
-    
-    public Usuario(string nombre) => Nombre = nombre;
+    string nota = puntuacion switch
+    {
+        >= 90 => "Sobresaliente",
+        >= 70 => "Notable",
+        >= 50 => "Aprobado",
+        < 50 => "Suspenso"
+    };
+    Assert.Equal(esperado, nota);
 }
-
-// Operadores null-condicionales
-string? texto = ObtenerTexto();
-int? longitud = texto?.Length;     // Si texto es null, longitud es null
-char? primera = texto?[0];         // ?[] para indexación
-string saludo = texto ?? "default"; // Null-coalescing
-texto ??= "valor por defecto";      // Null-coalescing assignment (C# 8+)
-
-// Análisis de flujo null
-void Procesar(string? cadena)
-{
-    if (cadena is null)
-        return;
-    
-    // Aquí el compilador SABE que cadena no es null
-    Console.WriteLine(cadena.Length);
-}
-
-// Operador ! (null-forgiving) — confía al compilador
-string nombre = ObtenerNombre()!;  // "Sé que no es null, confía en mí"
-
-// Nullable y genéricos
-// T? solo funciona si T es struct o tiene constraint
-public T? Buscar<T>(int id) where T : class => null;
-public T? BuscarValor<T>(int id) where T : struct => null;
 ```
 
-Fuente: [Nullable reference types](https://learn.microsoft.com/en-us/dotnet/csharp/nullable-references), [Null safety](https://learn.microsoft.com/en-us/dotnet/csharp/tutorials/nullable-reference-types)
+#### 💡 Memoria y rendimiento
+- Pattern matching compila a código eficiente — tablas de salto cuando es posible
+- Switch expression con patrones es tan rápida como if/else manual
+- List patterns tienen overhead mínimo — el compilador optimiza
+
+#### ✅ Buenas prácticas
+- ✅ Usa pattern matching para simplificar if/else + cast verbose
+- ✅ Prefiere switch expression para múltiples condiciones de tipo
+- ⚠️ No hagas pattern matching en objetos grandes en hot paths
+- ❌ No uses pattern matching como sustituto de polimorfismo bien diseñado
+
+### Nullable reference types
+
+#### ¿Qué es?
+Desde C# 8, los tipos referencia pueden ser **nullable** (`string?`) o **non-nullable** (`string`). El compilador analiza el flujo para prevenir `NullReferenceException` en tiempo de compilación.
+
+🔗 [Microsoft — Nullable reference types](https://learn.microsoft.com/en-us/dotnet/csharp/nullable-references)
+
+#### Sintaxis básica
+```csharp
+#nullable enable
+public class Usuario
+{
+    public string Nombre { get; set; }   // No nullable
+    public string? Email { get; set; }   // Nullable
+}
+
+string? texto = ObtenerTexto();
+int? longitud = texto?.Length;           // ?. condicional
+string saludo = texto ?? "default";      // ?? coalescing
+texto ??= "valor";                       // ??= asignación (C# 8+)
+
+void Procesar(string? cadena)
+{
+    if (cadena is null) return;
+    Console.WriteLine(cadena.Length);     // Compilador sabe que no es null
+}
+
+// Null-forgiving operator
+string nombre = ObtenerNombre()!;         // "Confía en mí, no es null"
+```
+
+#### 🧪 Cómo probarlo
+```csharp
+[Fact]
+public void Null_coalescing_devuelve_default_cuando_null()
+{
+    string? texto = null;
+    Assert.Equal("default", texto ?? "default");
+}
+```
 
 ### Extension methods y partial classes
 
-**Extension methods:**
+#### ¿Qué es?
+Los **extension methods** añaden métodos a tipos existentes sin modificar el tipo original. Son métodos estáticos en clases estáticas con el primer parámetro marcado con `this`. Las **partial classes** dividen la definición de una clase en múltiples archivos.
+
+🔗 [Microsoft — Extension Methods](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/extension-methods)
+
+#### Sintaxis básica
 ```csharp
-// Los extension methods "añaden" métodos a tipos existentes
+// Extension method
 public static class StringExtensions
 {
-    public static bool EsPalindromo(this string texto)
-    {
-        if (string.IsNullOrEmpty(texto)) return false;
-        var limpio = texto.ToLower().Replace(" ", "");
-        return limpio.SequenceEqual(limpio.Reverse());
-    }
-    
-    public static string Truncar(this string texto, int maxLength)
-    {
-        return texto?.Length > maxLength 
-            ? texto[..maxLength] + "..." 
-            : texto;
-    }
+    public static bool EsPalindromo(this string texto) { /* ... */ }
+    public static string Truncar(this string texto, int maxLength) => 
+        texto?.Length > maxLength ? texto[..maxLength] + "..." : texto;
 }
 
 // Uso
-string frase = "Anita lava la tina";
-Console.WriteLine(frase.EsPalindromo());  // True
-Console.WriteLine(frase.Truncar(10));     // "Anita lava..."
+"Anita lava la tina".EsPalindromo();  // True
 
-// LINQ son extension methods
-// Where, Select, OrderBy, etc. son extension methods de IEnumerable<T>
-```
-
-**Partial classes/records:**
-```csharp
+// Partial class
 // Archivo 1: Persona.Part1.cs
-public partial class Persona
-{
-    public string Nombre { get; set; }
-    public string Email { get; set; }
-}
-
+public partial class Persona { public string Nombre { get; set; } }
 // Archivo 2: Persona.Part2.cs
-public partial class Persona
-{
-    public override string ToString() => $"{Nombre} <{Email}>";
-}
+public partial class Persona { public override string ToString() => Nombre; }
+```
 
-// Partial methods — declaración en un archivo, implementación opcional en otro
-// Archivo 1
-public partial class Logger
+#### 🧪 Cómo probarlo
+```csharp
+[Fact]
+public void Extension_method_funciona_en_null()
 {
-    partial void LogPartial(string mensaje);  // Puede no implementarse
-    
-    public void Log(string msg)
-    {
-        Console.WriteLine($"LOG: {msg}");
-        LogPartial(msg);  // Si no hay implementación, el compilador la elimina
-    }
-}
-
-// Archivo 2
-public partial class Logger
-{
-    partial void LogPartial(string mensaje)
-    {
-        File.AppendAllText("log.txt", mensaje + "\n");
-    }
-}
-
-// Partial records (C# 9+)
-public partial record Empleado(string Nombre, decimal Salario);
-public partial record Empleado
-{
-    public decimal SalarioAnual => Salario * 12;
+    string? nula = null;
+    Assert.Null(nula.Truncar(5));  // Maneja null internamente
 }
 ```
 
-### Top-level statements, global usings, file-scoped namespaces
+### Top-level statements, global usings y file-scoped namespaces
 
-**Top-level statements (C# 9+):**
+#### ¿Qué es?
+C# 9+ introdujo **top-level statements** (programa sin `class`/`Main`), C# 10+ **global usings** (importan en todo el proyecto) y **file-scoped namespaces** (sin llaves). Simplifican drásticamente el boilerplate.
+
+🔗 [Microsoft — Top-level statements](https://learn.microsoft.com/en-us/dotnet/csharp/whats-new/tutorials/top-level-statements)
+
+#### Sintaxis básica
 ```csharp
 // Program.cs — sin class, sin Main
 using System;
-using System.Linq;
-
-var numeros = new[] { 1, 2, 3, 4, 5 };
+var numeros = new[] { 1, 2, 3 };
 Console.WriteLine(numeros.Sum());
-
-// Puedes tener funciones locales
 static string Saludar(string nombre) => $"Hola {nombre}";
-Console.WriteLine(Saludar("Mundo"));
-```
 
-**Global usings (C# 10+):**
-```csharp
-// GlobalUsings.cs — aplica a TODOS los archivos del proyecto
+// GlobalUsings.cs — aplica a TODO el proyecto
 global using System;
-global using System.Collections.Generic;
 global using System.Linq;
-global using System.Threading.Tasks;
 
-// Con ImplicitUsings habilitado, ya tienes:
-// System, System.Collections.Generic, System.IO, System.Linq,
-// System.Net.Http, System.Threading, System.Threading.Tasks
+// File-scoped namespace (C# 10+)
+namespace MiApp.Modelos;
+public class Usuario { }
 ```
 
-**File-scoped namespaces (C# 10+):**
+#### 🧪 Cómo probarlo
 ```csharp
-// Antes (C# < 10):
-namespace MiApp.Modelos
+// En proyectos de test, ImplicitUsings ya incluye System, LINQ, etc.
+[Fact]
+public void Top_level_statements_son_equivalentes()
 {
-    public class Usuario { }
+    // El comportamiento es idéntico a tener Program.Main
+    Assert.True(true);
 }
-
-// Ahora (C# 10+):
-namespace MiApp.Modelos;
-
-public class Usuario { }
-// Ya no necesitas llaves ni indentación extra
 ```
 
 ### Source generators (metaprogramación en compilación)
 
-Los source generators (C# 9+) son piezas de código que se ejecutan durante la compilación para generar código fuente adicional. Son la alternativa moderna a T4 templates y Reflection pesada.
+#### ¿Qué es?
+Los **source generators** (C# 9+) son piezas de código que se ejecutan durante la compilación para generar código fuente adicional. Son la alternativa moderna a T4 templates y Reflection pesada. El compilador Roslyn los invoca automáticamente.
 
+🔗 [Microsoft — Source Generators](https://learn.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/source-generators-overview)
+
+#### Sintaxis básica
 ```csharp
-// Un source generator es una clase que implementa ISourceGenerator
-// Ejemplo minimalista:
 [Generator]
 public class HelloGenerator : ISourceGenerator
 {
     public void Initialize(GeneratorInitializationContext context) { }
-    
     public void Execute(GeneratorExecutionContext context)
     {
-        var source = """
-namespace GeneratedCode;
-
-public static class HelloWorld
-{
-    public static string GetMessage() => "Generado en compilación!";
-}
-""";
-        context.AddSource("HelloWorld.g.cs", source);
+        context.AddSource("HelloWorld.g.cs", """
+            namespace GeneratedCode;
+            public static class HelloWorld
+            {
+                public static string GetMessage() => "Generado en compilación!";
+            }
+        """);
     }
 }
 
-// Uso (el generador crea esta clase en compilación):
-Console.WriteLine(GeneratedCode.HelloWorld.GetMessage());
-```
-
-**Source generators famosos:**
-| Generador | Para qué |
-|---|---|
-| **System.Text.Json** | Genera serializadores JSON en compilación (evita Reflection) |
-| **MediatR** | Registra handlers automáticamente |
-| **Regex Source Generator** | Compila regex en compile-time (`[GeneratedRegex]`) |
-| **Protobuf** | Genera bindings C# de .proto |
-| **Fody** | IL weaving en build |
-
-```csharp
+// Source generators famosos
+// System.Text.Json — serializadores sin reflexión
 // Regex source generator (C# 11+)
 public partial class EmailValidator
 {
     [GeneratedRegex(@"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$")]
     public static partial Regex EmailRegex();
-    
-    public static bool EsValido(string email) => EmailRegex().IsMatch(email);
 }
-// Sin reflexión, sin compilación en runtime — genera el código en build
 ```
 
-Fuente: [Source Generators docs](https://learn.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/source-generators-overview), [C# 9 features](https://learn.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-9)
+#### 🧪 Cómo probarlo
+```csharp
+[Fact]
+public void Source_generated_regex_es_valida()
+{
+    Assert.True(EmailValidator.EmailRegex().IsMatch("test@example.com"));
+    Assert.False(EmailValidator.EmailRegex().IsMatch("invalido"));
+}
+```
 
-## Sistema de archivos
+#### 💡 Memoria y rendimiento
+- Source generators eliminan reflexión y compilación en runtime — ideales para NativeAOT
+- El regex source generator compila el patrón en build time, no en runtime
+- Cero overhead en runtime — el código generado es estático
 
-### System.IO — clases principales
+#### ✅ Buenas prácticas
+- ✅ Usa `[GeneratedRegex]` en vez de `new Regex()` para patrones fijos
+- ✅ Para serialización de alto rendimiento, usa `JsonSerializerContext`
+- ⚠️ No generes código que podría escribirse fácilmente a mano
+- ❌ No uses source generators para lógica de negocio — son para infraestructura
 
+## Sistema de archivos y serialización
+
+### File, Directory y Path
+
+#### ¿Qué es?
+El espacio `System.IO` proporciona clases para operar sobre archivos y directorios. `File` y `Directory` ofrecen métodos estáticos para operaciones rápidas. `FileInfo` y `DirectoryInfo` son útiles para múltiples operaciones sobre el mismo recurso. `Path` manipula rutas de forma multiplataforma.
+
+🔗 [Microsoft — System.IO](https://learn.microsoft.com/en-us/dotnet/standard/io/)
+
+#### Sintaxis básica
 ```csharp
 using System.IO;
 
-// File — métodos estáticos
+// File — estático
 string contenido = File.ReadAllText("archivo.txt");
 File.WriteAllText("salida.txt", "Hola Mundo");
 File.Copy("origen.txt", "destino.txt", overwrite: true);
-File.Delete("temporal.txt");
 bool existe = File.Exists("archivo.txt");
 
-// FileInfo — instancia, útil para múltiples operaciones
+// FileInfo — instancia
 var fi = new FileInfo("archivo.txt");
-Console.WriteLine($"{fi.Name}, {fi.Length} bytes, {fi.CreationTime}");
+Console.WriteLine($"{fi.Name}, {fi.Length} bytes");
 
 // Directory — estático
-string[] archivos = Directory.GetFiles("./", "*.txt");
+string[] txts = Directory.GetFiles("./", "*.txt");
 Directory.CreateDirectory("MisDatos");
 
 // DirectoryInfo — instancia
@@ -1783,19 +1864,63 @@ var di = new DirectoryInfo("./");
 foreach (var f in di.GetFiles("*.cs"))
     Console.WriteLine(f.Name);
 
-// Path — manipulación de rutas
+// Path — rutas multiplataforma
 string combo = Path.Combine("carpeta", "sub", "archivo.txt");
-string ext = Path.GetExtension("archivo.txt");     // ".txt"
-string sinExt = Path.GetFileNameWithoutExtension("archivo.txt");
-string temp = Path.GetTempPath();
+string ext = Path.GetExtension("archivo.txt");
 string tempFile = Path.GetTempFileName();
-string randName = Path.GetRandomFileName();
 ```
 
-### StreamReader/Writer y FileStream
-
+#### 🧪 Cómo probarlo
 ```csharp
-// StreamReader — lectura de texto por líneas
+[Fact]
+public void File_Write_read_roundtrip()
+{
+    var path = Path.GetTempFileName();
+    File.WriteAllText(path, "Hola pruebas");
+    var content = File.ReadAllText(path);
+    Assert.Equal("Hola pruebas", content);
+    File.Delete(path);
+}
+
+[Fact]
+public void Path_combine_unixa_separator()
+{
+    string result = Path.Combine("a", "b", "c.txt");
+    Assert.Equal("a/b/c.txt", result);
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `File.ReadAllText` carga todo el archivo en memoria — no apto para archivos >100 MB
+- `File.ReadLines` (deferred) itera línea a línea sin cargar todo
+- `FileInfo` cachea metadatos en la primera llamada — usa `Refresh()` si cambia externamente
+- `Path.Combine` es barato — usa el separador del SO automáticamente
+
+#### ✅ Buenas prácticas
+- ✅ Usa `Path.Combine` en vez de concatenar cadenas con `"/"` o `"\\"` manualmente
+- ✅ Prefiere `File.ReadLines` para archivos grandes en vez de `ReadAllText`
+- ⚠️ No asumas rutas fijas — usa `Environment.GetFolderPath` para carpetas del sistema
+- ❌ No guardes archivos temporales sin limpiarlos — usa `Path.GetTempFileName` y elimínalos
+
+#### 🏗️ Metodología
+- **Configuración**: almacena rutas en configuración (appsettings.json), nunca hardcodees
+- **Logs**: escribe a `ApplicationData` o `Logs/` con rotación de archivos
+- **Uploads**: sanitiza nombres, limita tamaño, guarda fuera de `wwwroot`
+- **Pruebas**: usa `Path.GetTempPath()` para archivos temporales que se limpian después
+
+#### 🔗 Para saber más
+- [Microsoft — File and Stream I/O](https://learn.microsoft.com/en-us/dotnet/standard/io/)
+
+### Streams: lectura, escritura y async I/O
+
+#### ¿Qué es?
+Un `Stream` es una abstracción de una secuencia de bytes. `FileStream`, `MemoryStream` y `GZipStream` son tipos comunes. Los streams soportan operaciones síncronas y asíncronas (`ReadAsync`/`WriteAsync`). `StreamReader`/`StreamWriter` añaden capa de texto.
+
+🔗 [Microsoft — Streams](https://learn.microsoft.com/en-us/dotnet/standard/io/streams)
+
+#### Sintaxis básica
+```csharp
+// StreamReader — texto línea a línea
 using var reader = new StreamReader("archivo.txt");
 string? linea;
 while ((linea = await reader.ReadLineAsync()) != null)
@@ -1805,37 +1930,72 @@ while ((linea = await reader.ReadLineAsync()) != null)
 using var writer = new StreamWriter("salida.txt", append: true);
 await writer.WriteLineAsync("Nueva línea");
 
-// FileStream — lectura/escritura binaria
+// FileStream — binario
 using var fs = new FileStream("datos.bin", FileMode.OpenOrCreate);
 byte[] buffer = new byte[4096];
-int bytesRead = await fs.ReadAsync(buffer, 0, buffer.Length);
-await fs.WriteAsync(buffer, 0, bytesRead);
+int bytesRead = await fs.ReadAsync(buffer);
 
-// BinaryReader/Writer
+// BinaryReader/Writer — tipos primitivos
 using var bw = new BinaryWriter(File.Open("datos.bin", FileMode.Create));
-bw.Write(42);
-bw.Write(3.14);
-bw.Write("Hola");
+bw.Write(42); bw.Write(3.14); bw.Write("Hola");
 
-using var br = new BinaryReader(File.OpenRead("datos.bin"));
-int entero = br.ReadInt32();
-double doble = br.ReadDouble();
-string texto = br.ReadString();
-```
-
-### Async I/O
-
-```csharp
+// Async file helpers
 await File.WriteAllTextAsync("archivo.txt", "contenido");
 string texto = await File.ReadAllTextAsync("archivo.txt");
-
-await using var source = File.OpenRead("origen.bin");
-await using var dest = File.OpenWrite("destino.bin");
-await source.CopyToAsync(dest);
 ```
 
-### FileSystemWatcher
+#### 🧪 Cómo probarlo
+```csharp
+[Fact]
+public async Task Stream_escribe_y_lee_texto()
+{
+    var path = Path.GetTempFileName();
+    await File.WriteAllTextAsync(path, "línea 1\nlínea 2");
+    var lines = await File.ReadAllLinesAsync(path);
+    Assert.Equal(2, lines.Length);
+    File.Delete(path);
+}
 
+[Fact]
+public void MemoryStream_funciona_sin_archivo()
+{
+    using var ms = new MemoryStream();
+    using var writer = new StreamWriter(ms);
+    writer.Write("en memoria");
+    writer.Flush();
+    Assert.True(ms.Length > 0);
+}
+```
+
+#### 💡 Memoria y rendimiento
+- Operaciones async evitan bloquear el thread de UI — críticas en apps gráficas
+- `FileStream` tiene buffer interno (4 KB por defecto) — ajusta con `FileStreamOptions`
+- `MemoryStream` trabaja en RAM — útil para tests y transformaciones en memoria
+- `CopyToAsync` optimiza la copia entre streams sin buffers intermedios grandes
+
+#### ✅ Buenas prácticas
+- ✅ Siempre usa `using` o `await using` para streams — liberan handles del SO
+- ✅ Usa métodos `*Async` en servidores web y UI — evitas thread pool starvation
+- ⚠️ No mezcles `Read` y `ReadAsync` en el mismo stream — resultados impredecibles
+- ❌ No llames `Dispose` manualmente si usas `using`
+
+#### 🏗️ Metodología
+- **Archivos pequeños** (`&lt;10` MB): `ReadAllText`/`WriteAllText` (simple)
+- **Archivos grandes**: `FileStream` con buffer o `ReadLines` (deferred)
+- **Streams en red/API**: siempre async para no bloquear
+- **Transformaciones**: encadena streams (`GZipStream` sobre `FileStream`)
+
+#### 🔗 Para saber más
+- [Microsoft — Async file I/O](https://learn.microsoft.com/en-us/dotnet/standard/io/asynchronous-file-i-o)
+
+### FileSystemWatcher y compresión
+
+#### ¿Qué es?
+`FileSystemWatcher` monitoriza cambios en archivos/directorios y dispara eventos. `System.IO.Compression` proporciona compresión ZIP, GZip y Deflate sin dependencias externas.
+
+🔗 [Microsoft — FileSystemWatcher](https://learn.microsoft.com/en-us/dotnet/api/system.io.filesystemwatcher)
+
+#### Sintaxis básica
 ```csharp
 using var watcher = new FileSystemWatcher("./")
 {
@@ -1843,252 +2003,316 @@ using var watcher = new FileSystemWatcher("./")
     Filter = "*.txt",
     EnableRaisingEvents = true
 };
-
 watcher.Created += (s, e) => Console.WriteLine($"Creado: {e.Name}");
 watcher.Changed += (s, e) => Console.WriteLine($"Modificado: {e.Name}");
-watcher.Deleted += (s, e) => Console.WriteLine($"Eliminado: {e.Name}");
-watcher.Renamed += (s, e) => Console.WriteLine($"Renombrado: {e.OldName} → {e.Name}");
 
-Console.WriteLine("Esperando cambios... (Enter para salir)");
-Console.ReadLine();
-```
-
-### Compresión (System.IO.Compression)
-
-```bash
-dotnet add package System.IO.Compression
-```
-
-```csharp
-using System.IO.Compression;
-
+// ZIP
 using var archivo = ZipFile.Open("backup.zip", ZipArchiveMode.Create);
 archivo.CreateEntryFromFile("datos.txt", "datos.txt");
-archivo.CreateEntryFromFile("imagen.jpg", "fotos/imagen.jpg");
-
 ZipFile.ExtractToDirectory("backup.zip", "./restaurado");
 
+// GZip
 using var original = File.OpenRead("grande.txt");
 using var comprimido = File.Create("grande.gz");
 using var gzip = new GZipStream(comprimido, CompressionMode.Compress);
 await original.CopyToAsync(gzip);
-
-using var deflate = new DeflateStream(File.Create("datos.deflate"), CompressionLevel.Optimal);
 ```
 
-### JSON (System.Text.Json)
+#### 🧪 Cómo probarlo
+```csharp
+[Fact]
+public void Zip_crea_y_extrae_archivo()
+{
+    var src = Path.GetTempFileName();
+    var zip = Path.GetTempFileName() + ".zip";
+    File.WriteAllText(src, "contenido");
+    using (var a = ZipFile.Open(zip, ZipArchiveMode.Create))
+        a.CreateEntryFromFile(src, "inner.txt");
+    Assert.True(new FileInfo(zip).Length > 0);
+    File.Delete(src); File.Delete(zip);
+}
+```
 
+#### 💡 Memoria y rendimiento
+- `FileSystemWatcher` usa eventos del SO — no consume CPU hasta que hay cambios
+- `GZipStream` comprime ≈100 MB/s en CPU moderna; `DeflateStream` similar sin checksum
+- ZIP añade overhead de cabeceras (~1 KB por archivo)
+
+#### ✅ Buenas prácticas
+- ✅ Limita `NotifyFilter` a lo necesario para reducir eventos duplicados
+- ✅ Comprime logs rotados tras N días para ahorrar espacio
+- ⚠️ `FileSystemWatcher` puede perder eventos si el buffer interno (64 KB) se llena
+- ❌ No confíes en el orden de eventos — bufferiza cambios antes de procesar
+
+#### 🏗️ Metodología
+- **Backups**: ZIP con `CreateEntryFromFile` y fecha en el nombre
+- **Watch de directorio**: procesa eventos con un buffer de tiempo (debounce 500ms)
+- **Logs**: comprime con GZip tras rotación diaria
+
+#### 🔗 Para saber más
+- [Microsoft — ZipFile class](https://learn.microsoft.com/en-us/dotnet/api/system.io.compression.zipfile)
+
+### Serialización: JSON, CSV y YAML
+
+#### ¿Qué es?
+La serialización convierte objetos a formato textual/binario para almacenamiento o transmisión. `System.Text.Json` es el serializador oficial para JSON (desde .NET Core 3.0). `CsvHelper` y `YamlDotNet` son librerías externas para CSV y YAML.
+
+🔗 [Microsoft — System.Text.Json](https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/)
+
+#### Sintaxis básica
 ```csharp
 using System.Text.Json;
 
 public record Producto(string Nombre, decimal Precio, int Stock);
 
+// Serializar
 var producto = new Producto("Laptop", 999.99m, 10);
-string json = JsonSerializer.Serialize(producto);
-
 var options = new JsonSerializerOptions
 {
     WriteIndented = true,
     PropertyNamingPolicy = JsonNamingPolicy.CamelCase
 };
-json = JsonSerializer.Serialize(producto, options);
+string json = JsonSerializer.Serialize(producto, options);
 
+// Deserializar
 var deserializado = JsonSerializer.Deserialize<Producto>(json);
-Console.WriteLine(deserializado?.Nombre);
 
 // JsonDocument — acceso sin tipado
 using var doc = JsonDocument.Parse(json);
 string nombre = doc.RootElement.GetProperty("nombre").GetString()!;
 
-// Source generator (C# 9+)
+// Source generator — cero reflexión
 [JsonSerializable(typeof(Producto[]))]
 partial class AppJsonContext : JsonSerializerContext { }
-string jsonSG = JsonSerializer.Serialize(new[] { producto }, AppJsonContext.Default.ProductoArray);
 ```
-
-### CSV (CsvHelper)
-
 ```bash
 dotnet add package CsvHelper
 ```
-
 ```csharp
 using CsvHelper;
 using System.Globalization;
 
-var records = new List<Producto>
-{
-    new("Laptop", 999.99m, 10),
-    new("Mouse", 29.99m, 50)
-};
-
+var records = new List<Producto> { new("Laptop", 999.99m, 10) };
 using var writer = new StreamWriter("productos.csv");
 using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
 csv.WriteRecords(records);
-
-using var reader = new StreamReader("productos.csv");
-using var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture);
-var productos = csvReader.GetRecords<Producto>().ToList();
 ```
-
-### YAML (YamlDotNet)
-
 ```bash
 dotnet add package YamlDotNet
 ```
-
 ```csharp
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
-
-var producto = new Producto("Laptop", 999.99m, 10);
 
 var serializer = new SerializerBuilder()
     .WithNamingConvention(CamelCaseNamingConvention.Instance)
     .Build();
 string yaml = serializer.Serialize(producto);
-
-var deserializer = new DeserializerBuilder()
-    .WithNamingConvention(CamelCaseNamingConvention.Instance)
-    .Build();
-var p = deserializer.Deserialize<Producto>(yaml);
 ```
 
-Fuente: [System.IO docs](https://learn.microsoft.com/en-us/dotnet/standard/io/), [System.Text.Json](https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/), [CsvHelper](https://joshclose.github.io/CsvHelper/), [YamlDotNet](https://github.com/aaubry/YamlDotNet), [IO.Compression](https://learn.microsoft.com/en-us/dotnet/standard/io/compression)
+#### 🧪 Cómo probarlo
+```csharp
+[Fact]
+public void Json_deserializa_correctamente()
+{
+    string json = """{"nombre":"Laptop","precio":999.99,"stock":10}""";
+    var prod = JsonSerializer.Deserialize<Producto>(json);
+    Assert.Equal("Laptop", prod!.Nombre);
+}
+
+[Fact]
+public void Source_generator_no_usa_reflexion()
+{
+    var prod = new Producto("Test", 1, 1);
+    var json = JsonSerializer.Serialize(prod, AppJsonContext.Default.Producto);
+    Assert.NotNull(json);
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `System.Text.Json` es ~50% más rápido que Newtonsoft.Json y con menos allocations
+- Source generators eliminan reflexión y JIT compilation — ideales para NativeAOT
+- `Utf8JsonReader` y `Utf8JsonWriter` trabajan directamente sobre UTF-8 sin decodificar
+
+#### ✅ Buenas prácticas
+- ✅ Usa `JsonNamingPolicy.CamelCase` para APIs REST
+- ✅ Para alto rendimiento, usa `JsonSerializerContext` (source generators)
+- ⚠️ No serialices tipos circulares sin configuración de referencia
+- ❌ No compartas `JsonSerializerOptions` entre hilos sin inmutabilidad
+
+#### 🏗️ Metodología
+- **APIs REST**: System.Text.Json con camelCase + `[JsonIgnore]` en propiedades sensibles
+- **Config**: JSON con `WriteIndented = true` para legibilidad humana
+- **Bulk data**: CSV con CsvHelper; YAML para configs complejas
+
+#### 🔗 Para saber más
+- [System.Text.Json — How to](https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/how-to)
+- [CsvHelper docs](https://joshclose.github.io/CsvHelper/)
+- [YamlDotNet GitHub](https://github.com/aaubry/YamlDotNet)
 
 ---
 
 ## Algoritmos y estructuras de datos
 
-### Ordenación
+### Ordenación y búsqueda
 
+#### ¿Qué es?
+La ordenación organiza elementos según un criterio de comparación. `Array.Sort` usa Introsort (QuickSort + HeapSort + InsertionSort), O(n log n) promedio. `BinarySearch` requiere datos ordenados y es O(log n). LINQ ofrece `OrderBy`/`ThenBy` con ordenación estable.
+
+🔗 [Microsoft — Array.Sort](https://learn.microsoft.com/en-us/dotnet/api/system.array.sort)
+
+#### Sintaxis básica
 ```csharp
 int[] arr = [5, 3, 8, 1, 9, 2, 7, 4, 6];
 
-// Array.Sort — Introsort (QuickSort + HeapSort + InsertionSort)
+// Introsort
 Array.Sort(arr);
-Console.WriteLine(string.Join(", ", arr));  // 1, 2, 3, 4, 5, 6, 7, 8, 9
-
 Array.Sort(arr, (a, b) => b.CompareTo(a));  // Descendente
 
-var lista = new List<int> { 5, 3, 8, 1 };
-lista.Sort();
-lista.Sort((a, b) => b.CompareTo(a));
-```
-
-**LINQ para ordenación:**
-
-```csharp
+// LINQ — estable
 var ordenado = arr.OrderBy(x => x).ToArray();
-var descendente = arr.OrderByDescending(x => x);
-
-var personas = new[]
-{
-    new { Nombre = "Ana", Edad = 30 },
-    new { Nombre = "Juan", Edad = 25 },
-    new { Nombre = "Ana", Edad = 20 }
-};
-
 var compuesto = personas
     .OrderBy(p => p.Nombre)
     .ThenByDescending(p => p.Edad);
-// Ana 30, Ana 20, Juan 25
-```
 
-### Búsqueda
+// Búsqueda binaria — array debe estar ordenado
+int index = Array.BinarySearch(arr, 7);
 
-```csharp
-int[] nums = [1, 3, 5, 7, 9, 11, 13];
+// Búsqueda secuencial con LINQ
+var encontrado = arr.FirstOrDefault(n => n > 5);
+var rango = arr.Where(n => n > 3 && n < 11).ToList();
 
-int index = Array.BinarySearch(nums, 7);
-Console.WriteLine(index);  // 3
-
-var list = new List<int>(nums);
-int idx = list.BinarySearch(7);
-
-int? encontrado = nums.FirstOrDefault(n => n > 5);
-int? ultimo = nums.LastOrDefault(n => n < 10);
-var rango = nums.Where(n => n > 3 && n < 11).ToList();
-```
-
-### Comparadores
-
-```csharp
+// IComparer personalizado
 class ComparadorInverso : IComparer<int>
 {
     public int Compare(int x, int y) => y.CompareTo(x);
 }
-
-Array.Sort(nums, new ComparadorInverso());
-
-Comparison<int> desc = (a, b) => b.CompareTo(a);
-Array.Sort(nums, desc);
+Array.Sort(arr, new ComparadorInverso());
 ```
 
-### Colecciones y Big O
-
+#### 🧪 Cómo probarlo
 ```csharp
-// HashSet<T> — O(1)
+[Fact]
+public void Sort_ordena_ascendente()
+{
+    int[] actual = [3, 1, 2];
+    Array.Sort(actual);
+    Assert.Equal([1, 2, 3], actual);
+}
+
+[Theory]
+[InlineData(new[] { 1, 3, 5, 7 }, 5, 2)]
+[InlineData(new[] { 1, 3, 5, 7 }, 4, -1)]  // no encontrado
+public void BinarySearch_devuelve_indice(int[] arr, int valor, int esperado)
+{
+    Assert.Equal(esperado, Array.BinarySearch(arr, valor));
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `Array.Sort` es O(n log n) promedio, O(n²) worst-case raro (mitigado por Introsort)
+- `BinarySearch` es O(log n) — mucho más rápido que `FirstOrDefault` O(n)
+- `OrderBy` LINQ es estable (preserva orden relativo) pero genera allocation extra
+- `Array.Sort` in-place, sin allocations; LINQ crea nuevas colecciones
+
+#### ✅ Buenas prácticas
+- ✅ Usa `Array.Sort` para arrays grandes cuando no necesites estabilidad
+- ✅ Usa `OrderBy`/`ThenBy` para ordenación compuesta y estable
+- ⚠️ No llames `BinarySearch` sin asegurar que el array está ordenado
+- ❌ No uses `FirstOrDefault` como búsqueda en colecciones grandes donde `HashSet`/`Dictionary` sería más eficiente
+
+#### 🏗️ Metodología
+- **Ordenar en memoria**: `Array.Sort` para arrays, `List.Sort` para listas
+- **Ordenar para UI**: LINQ `OrderBy` (estable, predecible)
+- **Búsqueda frecuente**: índice con `Dictionary` o `HashSet`
+- **Búsqueda binaria**: cuando tienes datos ordenados y estáticos
+
+#### 🔗 Para saber más
+- [Microsoft — Sorting in .NET](https://learn.microsoft.com/en-us/dot api/system.array.sort)
+
+### Colecciones genéricas y Big O
+
+#### ¿Qué es?
+Las colecciones genéricas (`List<T>`, `HashSet<T>`, `Dictionary<,>`, `PriorityQueue<,>`) ofrecen estructuras de datos con garantías de rendimiento definidas. Elegir la correcta es clave para el rendimiento de cualquier aplicación.
+
+🔗 [Microsoft — Collections complexity](https://learn.microsoft.com/en-us/dotnet/standard/collections/)
+
+#### Sintaxis básica
+```csharp
+// HashSet<T> — O(1) Contains
 var hashSet = new HashSet<int> { 1, 2, 3 };
 hashSet.Add(4);
 bool existe = hashSet.Contains(2);
 
-// Dictionary<K,V> — O(1) promedio
-var dict = new Dictionary<string, int>
-{
-    ["Ana"] = 30,
-    ["Juan"] = 25
-};
-dict["Luis"] = 40;
+// Dictionary<K,V> — O(1) por clave
+var dict = new Dictionary<string, int> { ["Ana"] = 30 };
 dict.TryGetValue("Ana", out int edad);
 
-// SortedDictionary<K,V> — árbol rojo-negro, O(log n)
-var sorted = new SortedDictionary<int, string>
-{
-    [3] = "tres",
-    [1] = "uno",
-    [2] = "dos"
-};
+// SortedDictionary — árbol rojo-negro, O(log n)
+var sorted = new SortedDictionary<int, string> { [3] = "tres", [1] = "uno" };
 
-// SortedSet<T> — árbol rojo-negro, O(log n)
-var sortedSet = new SortedSet<int> { 5, 1, 3, 2, 4 };
-
-// PriorityQueue<TElement, TPriority> (.NET 6+)
+// PriorityQueue (.NET 6+)
 var pq = new PriorityQueue<string, int>();
 pq.Enqueue("bajo", 3);
 pq.Enqueue("alto", 1);
-pq.Enqueue("medio", 2);
 Console.WriteLine(pq.Dequeue());  // "alto"
-Console.WriteLine(pq.Dequeue());  // "medio"
 
-// LINQ
+// LINQ agregación
 var suma = nums.Aggregate((a, b) => a + b);
-var producto = nums.Aggregate(1, (a, b) => a * b);
-
-var agrupado = personas.GroupBy(p => p.Nombre)
-    .Select(g => new { Nombre = g.Key, Count = g.Count() });
-
-var pedidos = new[] { new { Id = 1, ClienteId = 1, Total = 100m } };
-var clientes = new[] { new { Id = 1, Nombre = "Ana" } };
-var join = from p in pedidos
-           join c in clientes on p.ClienteId equals c.Id
-           select new { c.Nombre, p.Total };
 ```
 
-### Tabla Big O de colecciones
-
-| Operación | `List<T>` | `HashSet<T>` | `Dictionary<K,V>` | `SortedDictionary<K,V>` | `SortedSet<T>` | `PriorityQueue<T>` |
+| Operación | `List<T>` | `HashSet<T>` | `Dictionary<,>` | `SortedDict<,>` | `SortedSet<T>` | `PriorityQueue` |
 |---|---|---|---|---|---|---|
 | Add | O(1)* | O(1) | O(1) | O(log n) | O(log n) | O(log n) |
 | Remove | O(n) | O(1) | O(1) | O(log n) | O(log n) | O(log n) |
 | Contains | O(n) | O(1) | O(1) | O(log n) | O(log n) | - |
-| Access by index | O(1) | - | - | - | - | - |
-| Search by key | O(n) | - | O(1) | O(log n) | - | - |
+| Access idx | O(1) | - | - | - | - | - |
 | Min/Max | O(n) | O(n) | O(n) | O(log n) | O(log n) | O(1) peek |
 
-*O(n) cuando el array interno necesita redimensionarse.
+*O(n) cuando el array interno se redimensiona.
 
-Fuente: [Array.Sort](https://learn.microsoft.com/en-us/dotnet/api/system.array.sort), [Big O cheat sheet](https://www.bigocheatsheet.com/), [Collections complexity](https://learn.microsoft.com/en-us/dotnet/standard/collections/), [PriorityQueue](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.priorityqueue-2)
+#### 🧪 Cómo probarlo
+```csharp
+[Fact]
+public void Dictionary_inserta_y_recupera()
+{
+    var d = new Dictionary<string, int> { ["clave"] = 42 };
+    Assert.True(d.TryGetValue("clave", out int val));
+    Assert.Equal(42, val);
+}
+
+[Fact]
+public void PriorityQueue_prioriza_menor_valor()
+{
+    var pq = new PriorityQueue<string, int>();
+    pq.Enqueue("bajo", 10);
+    pq.Enqueue("alto", 1);
+    Assert.Equal("alto", pq.Dequeue());
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `List<T>` usa array interno que duplica tamaño al llenarse (evita alocar con `TrimExcess`)
+- `Dictionary` y `HashSet` usan tablas hash con buckets — factor de carga ~0.75
+- `SortedDictionary` y `SortedSet` son árboles rojo‑negro — más lentos que hash pero ordenados
+- `PriorityQueue` usa heap binario — excelente para colas de prioridad
+
+#### ✅ Buenas prácticas
+- ✅ Prefiere `Dictionary` para lookup por clave, `HashSet` para pertenencia
+- ✅ Si necesitas orden, usa `SortedSet` o `SortedDictionary`
+- ⚠️ No uses `List` cuando necesites `Contains` frecuente — pasa a `HashSet`
+- ❌ No iteres y modifiques una colección en el mismo `foreach` — usa `ToList()` para copia
+
+#### 🏗️ Metodología
+- **Datos únicos sin orden**: `HashSet<T>`
+- **Lookup por clave**: `Dictionary<K, V>`
+- **Cola FIFO**: `Queue<T>`; **pila LIFO**: `Stack<T>`
+- **Prioridad**: `PriorityQueue<TElement, TPriority>` (.NET 6+)
+- **Orden natural**: `SortedSet<T>` o `SortedDictionary<K, V>`
+
+#### 🔗 Para saber más
+- [Big O cheat sheet](https://www.bigocheatsheet.com/)
+- [Microsoft — PriorityQueue](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.priorityqueue-2)
 
 ---
 
@@ -3522,6 +3746,189 @@ Fuente: [Task Parallel Library docs](https://learn.microsoft.com/en-us/dotnet/st
 
 ---
 
+## Testing y calidad
+
+### xUnit / NUnit
+
+#### ¿Qué es?
+**xUnit** es el framework de testing más usado en .NET (el propio Microsoft lo usa internamente). **NUnit** es otra alternativa popular. Ambos soportan `[Fact]` (tests simples), `[Theory]` (tests parametrizados) y `[InlineData]`.
+
+🔗 [xUnit docs](https://xunit.net/docs/getting-started/netcore/cmdline)
+
+#### Sintaxis básica
+```bash
+dotnet new xunit -o MiProyecto.Tests
+dotnet add MiProyecto.Tests reference MiProyecto
+```
+```csharp
+public class CalculadoraTests
+{
+    [Fact]
+    public void Suma_devuelve_resultado_correcto()
+    {
+        var calc = new Calculadora();
+        var resultado = calc.Sumar(2, 3);
+        Assert.Equal(5, resultado);
+    }
+
+    [Theory]
+    [InlineData(1, 2, 3)]
+    [InlineData(-1, 1, 0)]
+    [InlineData(0, 0, 0)]
+    public void Suma_parametrizada(int a, int b, int esperado)
+    {
+        var calc = new Calculadora();
+        Assert.Equal(esperado, calc.Sumar(a, b));
+    }
+}
+```
+
+#### 🧪 Cómo probarlo
+```bash
+dotnet test                    # Ejecuta todos los tests
+dotnet test --filter "Suma"    # Filtra por nombre
+dotnet test --coverage         # Reporte de cobertura
+```
+
+#### 💡 Memoria y rendimiento
+- Los tests se ejecutan en proceso separado (`dotnet test`)
+- xUnit corre tests en paralelo por defecto (colecciones diferentes)
+- `[Theory]` con `[InlineData]` es más eficiente que múltiples `[Fact]`
+
+#### ✅ Buenas prácticas
+- ✅ Un test por comportamiento, no por método
+- ✅ Usa naming: `[Metodo]_[Escenario]_[ResultadoEsperado]`
+- ⚠️ No uses lógica condicional en tests — cada test debe ser determinista
+- ❌ No dependas del orden de ejecución — los tests deben ser independientes
+
+#### 🏗️ Metodología
+- **Unit tests**: prueban una sola clase/método, mocks para dependencias
+- **Integration tests**: prueban varias capas juntas (BD real, API real)
+- **TDD**: escribe el test antes del código — red → green → refactor
+
+#### 🔗 Para saber más
+- [xUnit — Getting started](https://xunit.net/docs/getting-started/netcore/cmdline)
+
+### Moq y FluentAssertions
+
+#### ¿Qué es?
+**Moq** es la librería de mocking más popular para .NET. **FluentAssertions** ofrece aserciones más legibles con sintaxis fluida.
+
+🔗 [Moq GitHub](https://github.com/devlooped/moq)
+
+#### Sintaxis básica
+```bash
+dotnet add package Moq
+dotnet add package FluentAssertions
+```
+```csharp
+public interface IRepositorio { Task<Usuario?> ObtenerAsync(int id); }
+
+[Fact]
+public async Task Servicio_usa_repositorio()
+{
+    var mockRepo = new Mock<IRepositorio>();
+    mockRepo.Setup(r => r.ObtenerAsync(1))
+            .ReturnsAsync(new Usuario("Ana"));
+
+    var servicio = new UsuarioService(mockRepo.Object);
+    var usuario = await servicio.ObtenerAsync(1);
+
+    usuario.Should().NotBeNull();
+    usuario!.Nombre.Should().Be("Ana");
+    mockRepo.Verify(r => r.ObtenerAsync(1), Times.Once);
+}
+```
+
+#### ✅ Buenas prácticas
+- ✅ Usa `Mock.Of<T>()` para configuraciones simples
+- ✅ Prefiere `Verify` para comprobar interacciones
+- ⚠️ No abuses de mocks — si necesitas mockear demasiado, el diseño necesita revisión
+- ❌ No mockees tipos que no sean interfaces o clases virtuales
+
+#### 🔗 Para saber más
+- [FluentAssertions docs](https://fluentassertions.com/introduction)
+
+### Cobertura y herramientas
+
+```bash
+# Reporte de cobertura con coverlet
+dotnet add package coverlet.msbuild
+dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
+
+# Análisis de mutaciones con Stryker
+dotnet tool install -g dotnet-stryker
+stryker run
+```
+
+---
+
+## Conceptos avanzados
+
+### Source Generators en producción
+
+Los source generators permiten generar código en tiempo de compilación. Ejemplos reales:
+- **System.Text.Json**: genera serializadores sin reflexión
+- **Regex source generator**: compila regex en build time (`[GeneratedRegex]`)
+- **MediatR**: registra handlers dinámicamente
+
+```csharp
+[JsonSerializable(typeof(Producto[]))]
+partial class AppJsonContext : JsonSerializerContext { }
+
+[GeneratedRegex(@"^[\w-\.]+@[\w-]+\.\w{2,4}$")]
+public static partial Regex EmailRegex();
+```
+
+### NativeAOT
+
+Compila a binario nativo sin runtime .NET. Ideal para CLIs, serverless, contenedores pequeños.
+
+```bash
+dotnet publish -r linux-x64 -c Release /p:PublishAot=true
+# Produce un binario autocontenido (~2-3 MB)
+```
+
+**Limitaciones**: no soporta reflexión dinámica, ni carga de assemblies en runtime.
+
+### Span&lt;T&gt;, Memory&lt;T&gt; y Collections Marshal
+
+`Span<T>` es un ref struct que proporciona acceso seguro y eficiente a memoria contigua sin allocations.
+
+```csharp
+Span<int> numeros = stackalloc int[100];  // Stack, sin GC
+Span<int> slice = arr.AsSpan(1, 3);        // Sin copia
+ReadOnlySpan<char> texto = "Hola".AsSpan();
+
+// Collections Marshal — acceso directo al array interno de List<T>
+var lista = new List<int> { 1, 2, 3 };
+Span<int> span = CollectionsMarshal.AsSpan(lista); // Sin copia
+```
+
+### System.Threading.Channels
+
+Channels proporcionan productor-consumidor thread-safe sin locks manuales. Ideales para pipelines de datos.
+
+```csharp
+var channel = Channel.CreateUnbounded<int>();
+var writer = channel.Writer;
+var reader = channel.Reader;
+
+// Productor
+await writer.WriteAsync(42);
+writer.Complete();
+
+// Consumidor
+await foreach (var item in reader.ReadAllAsync())
+    Console.WriteLine(item);
+```
+
+### Govulncheck y análisis de seguridad
+
+Para C#, usa `dotnet list package --vulnerable` para detectar dependencias con vulnerabilidades conocidas.
+
+---
+
 ## Escala de aprendizaje: de 0 a 100
 
 Cada nivel incluye lo que debes saber y un proyecto para fijar los conceptos.
@@ -3629,9 +4036,22 @@ Fuente: [ASP.NET Core docs](https://learn.microsoft.com/en-us/aspnet/core/), [Cl
 
 ---
 
-## Proyectos prácticos detallados
+## Proyecto final integrador
 
-### Gestor de contraseñas CLI (nivel 30)
+### Gestor de contraseñas CLI
+
+#### ¿Qué es?
+Un gestor de contraseñas desde terminal que combina archivos, serialización JSON, criptografía, async I/O y testing. Este proyecto integra todos los conceptos de la guía.
+
+#### 🧪 Cómo probarlo
+```bash
+dotnet new console -o PasswordManager
+dotnet add package System.Text.Json
+dotnet new xunit -o PasswordManager.Tests
+dotnet add PasswordManager.Tests reference PasswordManager
+```
+
+#### Sintaxis básica
 ```csharp
 using System;
 using System.Collections.Generic;
@@ -3679,16 +4099,10 @@ class Vault
         File.WriteAllBytes(_path, Encrypt(json));
     }
     
-    public Entry? Get(string service)
-    {
-        if (!File.Exists(_path)) return null;
-        
-        var encrypted = File.ReadAllBytes(_path);
-        var decrypted = Decrypt(encrypted);
-        var store = JsonSerializer.Deserialize<Dictionary<string, Entry>>(decrypted);
-        
-        return store?.TryGetValue(service, out var entry) == true ? entry : null;
-    }
+    public Entry? Get(string service) { /* ... */ }
+    private byte[] Encrypt(string plaintext) { /* AES */ }
+    private string Decrypt(byte[] ciphertext) { /* AES */ }
+}
     
     private byte[] Encrypt(string plaintext)
     {

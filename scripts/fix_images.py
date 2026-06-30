@@ -202,7 +202,8 @@ def get_gemini_tech_context(title: str, content_snippet: str = "", tags: Optiona
     if not GEMINI_KEY:
         return None
 
-    gemini_key: str = f"_gemini_{hashlib.md5(f'{title}|||{content_snippet}|||{sorted(tags) if tags else ""}'.encode()).hexdigest()}"
+    raw: str = f"{title}|||{content_snippet}|||{sorted(tags) if tags else ''}"
+    gemini_key: str = f"_gemini_{hashlib.md5(raw.encode()).hexdigest()}"
     if gemini_key in cache:
         return cache[gemini_key]
 

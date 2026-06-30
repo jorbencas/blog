@@ -10,7 +10,9 @@ author: "Jorge Beneyto Castelló"
 
 # Guía de TypeScript: De 0 a 100
 
-## ¿Qué es TypeScript?
+---
+
+## 1. ¿Qué es TypeScript?
 
 TypeScript es un lenguaje de programación de tipado estático opcional que compila a JavaScript. Fue creado por **Anders Hejlsberg** (arquitecto de Turbo Pascal y C#) en Microsoft y lanzado públicamente en octubre de 2012. Es un **superset de JavaScript**: todo JS válido es TS válido, y el compilador añade análisis de tipos en tiempo de desarrollo sin modificar el comportamiento runtime.
 
@@ -34,19 +36,12 @@ Fuente: [TypeScript Handbook — The Basics](https://www.typescriptlang.org/docs
 
 ---
 
-## ¿Cómo empezar? Instalación en todos los entornos
+## 2. ¿Cómo empezar? Instalación en todos los entornos
 
 ### npm (Node.js — necesario para compilar)
-
-Primero instala Node.js desde [nodejs.org](https://nodejs.org/) (versión LTS recomendada). Luego:
-
 ```bash
-# Instalación global del compilador
 npm install -g typescript
-
-# Verificar
 tsc --version
-
 # En un proyecto
 npm init -y
 npm install --save-dev typescript @types/node
@@ -54,7 +49,6 @@ npx tsc --init  # crea tsconfig.json
 ```
 
 ### npx (ejecutar sin instalar global)
-
 ```bash
 npx tsc --version
 npx tsc archivo.ts        # Compila un archivo
@@ -62,56 +56,36 @@ npx tsc --init --strict   # Crea tsconfig con strict mode
 ```
 
 ### ts-node (ejecutar TS directamente en Node)
-
 ```bash
 npm install -g ts-node
-ts-node script.ts  # Compila y ejecuta al vuelo
+ts-node script.ts
 ```
 
-### tsx (alternativa moderna a ts-node, más rápida)
-
+### tsx (alternativa moderna, más rápida)
 ```bash
 npm install -g tsx
 tsx script.ts    # Usa esbuild bajo el capó
 ```
 
 ### Bun (runtime nativo con TS incorporado)
-
 ```bash
 curl -fsSL https://bun.sh/install | bash
-bun run archivo.ts           # Sin configuración
-bun init                     # Inicia proyecto bun
+bun run archivo.ts
+bun init
 ```
 
-Bun entiende TypeScript nativamente. No necesita `tsc` ni `tsconfig.json` para ejecutar archivos. Usa el runtime de JavaScriptCore de WebKit.
+Bun entiende TypeScript nativamente. No necesita `tsc` ni `tsconfig.json`.
 
 ### Deno (runtime nativo con TS incorporado)
-
 ```bash
 curl -fsSL https://deno.land/install.sh | sh
-deno run main.ts                  # Sin configuración
-deno run --allow-net main.ts      # Permisos explícitos
-deno init                         # Inicia proyecto
+deno run main.ts
 ```
 
-Deno ejecuta TypeScript nativamente con el compilador TSC integrado. Usa URLs para imports en lugar de npm.
+Deno ejecuta TypeScript nativamente con TSC integrado.
 
 ### Docker
-
 ```dockerfile
-FROM node:22-slim
-WORKDIR /app
-COPY package*.json tsconfig.json ./
-RUN npm ci
-COPY . .
-RUN npx tsc
-CMD ["node", "dist/index.js"]
-```
-
-Usa `node:22-slim` como base (~130 MB). Build en dos etapas para producción:
-
-```dockerfile
-# Build stage
 FROM node:22-slim AS build
 WORKDIR /app
 COPY package*.json tsconfig.json ./
@@ -119,7 +93,6 @@ RUN npm ci
 COPY . .
 RUN npx tsc
 
-# Production stage
 FROM node:22-slim
 WORKDIR /app
 COPY --from=build /app/dist ./dist
@@ -127,30 +100,30 @@ COPY --from=build /app/node_modules ./node_modules
 CMD ["node", "dist/index.js"]
 ```
 
-### Alias útiles para el día a día
+### Versiones (nvm)
+```bash
+nvm install node    # Última versión de Node (contiene TS)
+nvm use node
+```
 
-Añade a tu `~/.bashrc` o `~/.zshrc`:
-
+### Alias útiles
 ```bash
 alias tsc='npx tsc'
 alias tsn='npx tsx'
-alias tsrun='npx tsx'
-alias tsb='npx tsc --noEmit'        # Type-check sin emitir
-alias tsbuild='npm run build'        # Build del proyecto
-alias tsw='npx tsc --watch'          # Watch mode
-alias tsclean='rm -rf dist/'         # Limpiar build
+alias tsb='npx tsc --noEmit'
+alias tsbuild='npm run build'
+alias tsclean='rm -rf dist/'
 ```
 
-Fuente: [TypeScript Download](https://www.typescriptlang.org/download/), [Bun docs](https://bun.sh/docs), [Deno docs](https://deno.land/manual), [Docker Official Images — Node](https://hub.docker.com/_/node/)
+Fuente: [TypeScript Download](https://www.typescriptlang.org/download/), [Bun docs](https://bun.sh/docs), [Deno docs](https://deno.land/manual)
 
 ---
 
-## Primeros pasos y configuración del entorno
+## 3. Primeros pasos y configuración del entorno
+
+Si prefieres ver directamente el "Hola Mundo" en TypeScript, consulta [El Atlas del Hola Mundo](/posts/hola/#typescript).
 
 ### tsconfig.json — el corazón de la configuración
-
-Creado con `npx tsc --init`. Archivo central que controla cómo TypeScript compila:
-
 ```json
 {
   "compilerOptions": {
@@ -176,32 +149,22 @@ Creado con `npx tsc --init`. Archivo central que controla cómo TypeScript compi
 ```
 
 **Opciones críticas:**
-- `strict: true` — activa todas las comprobaciones estrictas (noopUncheckedIndexedAccess no está incluido)
-- `noUncheckedIndexedAccess: true` — al acceder a un índice de array/objeto, el tipo incluye `undefined`. `arr[0]` es `T | undefined`
-- `target: "ES2022"` — a qué versión de JS compilar. ES2022 incluye top-level await, at(), hasOwn
-- `module: "NodeNext"` — para módulos ES nativos con Node.js
-- `declaration: true` — genera archivos `.d.ts` para librerías
-- `skipLibCheck: true` — no comprueba tipos en `node_modules` (acelera build)
+- `strict: true` — activa todas las comprobaciones estrictas
+- `noUncheckedIndexedAccess: true` — `arr[0]` es `T | undefined`
+- `target: "ES2022"` — a qué versión de JS compilar
+- `module: "NodeNext"` — módulos ES nativos con Node.js
+- `declaration: true` — genera `.d.ts` para librerías
 
-### VSCode + TypeScript — el editor por excelencia
-
-VSCode incluye TypeScript nativamente (el TSServer de Microsoft). No necesita extensión adicional, pero estas mejoran la experiencia:
-
-- **Error Lens** — muestra errores inline
-- **Pretty TypeScript Errors** — mensajes de error más legibles
-- **GitLens** — blame y navegación
-
-**Comandos útiles en VSCode:**
-- `Ctrl+Shift+P → TypeScript: Select TypeScript Version` — elige la versión del proyecto
-- `Ctrl+Shift+P → TypeScript: Restart TS Server` — cuando el IDE se desincroniza
-- `Ctrl+.` — quick fix, auto-import, refactors
+### VSCode + TypeScript
+VSCode incluye TypeScript nativamente (TSServer). Comandos útiles:
+- `Ctrl+Shift+P → TypeScript: Select TypeScript Version`
+- `Ctrl+Shift+P → TypeScript: Restart TS Server`
+- `Ctrl+.` — quick fix, auto-import
 
 ### ESLint + typescript-eslint
-
 ```bash
 npm install --save-dev eslint @eslint/js typescript-eslint
 ```
-
 ```typescript
 // eslint.config.js
 import eslint from '@eslint/js';
@@ -220,12 +183,8 @@ export default tseslint.config(
 );
 ```
 
-Ejecuta: `npx eslint src/`
-
-### Project References (monorepos y proyectos grandes)
-
+### Project References (monorepos)
 ```json
-// tsconfig.json (raíz)
 {
   "files": [],
   "references": [
@@ -235,204 +194,885 @@ Ejecuta: `npx eslint src/`
   ]
 }
 ```
-
-Cada paquete tiene su propio `tsconfig.json` con `"composite": true`. Compila con `npx tsc --build`. TypeScript compila solo lo necesario en orden de dependencias.
-
 ```bash
-npx tsc --build --clean       # Limpia todos los builds
-npx tsc --build --force       # Reconstruye todo
-npx tsc --build --watch       # Watch mode en todas las referencias
+npx tsc --build
+npx tsc --build --clean
+npx tsc --build --watch
 ```
 
-Fuente: [TypeScript tsconfig docs](https://www.typescriptlang.org/tsconfig/), [Project References docs](https://www.typescriptlang.org/docs/handbook/project-references.html), [typescript-eslint docs](https://typescript-eslint.io/)
+### Estructura de proyecto
+```
+mi-proyecto/
+├── src/
+│   ├── index.ts
+│   ├── types/
+│   │   └── usuario.ts
+│   └── utils/
+│       └── helpers.ts
+├── dist/
+├── tests/
+├── tsconfig.json
+├── eslint.config.js
+└── package.json
+```
+
+Fuente: [TypeScript tsconfig docs](https://www.typescriptlang.org/tsconfig/), [typescript-eslint docs](https://typescript-eslint.io/)
 
 ---
 
-## Conceptos clave explicados a fondo
+## 4. Paradigmas de programación
 
-### Tipado estructural vs nominal
+TypeScript hereda los paradigmas de JavaScript y añade tipado estático, lo que lo hace único en su combinación.
 
-TypeScript usa **tipado estructural** (structural typing). Si dos tipos tienen la misma forma, son compatibles. No importa el nombre ni la herencia.
+| Paradigma | Soporte nativo | Librerías | Ejemplo |
+|---|---|---|---|
+| **Imperativo / procedural** | Sí | — | `let x = 0; for (let i = 0; i < 10; i++) { x += i; }` |
+| **Orientado a objetos** | Sí (clases, herencia, interfaces) | NestJS, TypeORM | `class Usuario extends Entidad` |
+| **Funcional** | Sí (funciones puras, HOF, inmutabilidad) | fp-ts, Effect TS | `[1,2,3].map(x => x * 2).filter(x => x > 3)` |
+| **Declarativo** | Parcial (JSX, configs) | React, Prisma schema | `<Button onClick={fn}>Click</Button>` |
+| **Reactivo** | Sí (Observables, async generadores) | RxJS, Signals | `fromEvent(btn, 'click').pipe(map(e => e.x))` |
 
+**Paradigma principal:** multiparadigma con inclinación a **POO + funcional**. El ecosistema moderno (React hooks, composición sobre herencia, pipes) favorece el estilo funcional, mientras que NestJS y TypeORM usan POO clásica con decoradores.
+
+**Recomendación para empezar:** comienza con **imperativo + funcional básico** (tipos, funciones, arrays), luego añade POO (clases, interfaces) y finalmente tipos avanzados.
+
+Fuente: [MDN — JavaScript Paradigms](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Details_of_the_Object_Model), [TypeScript Handbook — Classes](https://www.typescriptlang.org/docs/handbook/2/classes.html)
+
+---
+
+## 5. Tipos de datos y variables
+
+### Sistema de tipos estructural
+
+#### ¿Qué es?
+TypeScript usa **tipado estructural** (structural typing): si dos tipos tienen la misma forma, son compatibles. No importa el nombre ni la herencia. Es diferente del tipado nominal de Java o C#.
+
+La inferencia de tipos deduce automáticamente el tipo sin anotaciones explícitas.
+
+#### Sintaxis básica
 ```typescript
-interface Persona {
-  nombre: string;
-  edad: number;
-}
+interface Persona { nombre: string; edad: number; }
+interface Empleado { nombre: string; edad: number; salario: number; }
 
-interface Empleado {
-  nombre: string;
-  edad: number;
-  salario: number;
-}
-
-const p: Persona = { nombre: "Ana", edad: 30 };
 const e: Empleado = { nombre: "Luis", edad: 28, salario: 50000 };
+const p2: Persona = e;  // OK: estructuralmente compatible
 
-// OK: Empleado tiene todas las propiedades de Persona
-const p2: Persona = e;
-```
-
-Esto es diferente de lenguajes como Java o C# (**tipado nominal**), donde `Persona` y `Empleado` serían incompatibles aunque tengan los mismos campos. En TypeScript, mientras la estructura coincida, los tipos son compatibles.
-
-### Inferencia de tipos
-
-TypeScript deduce tipos automáticamente en la mayoría de los casos:
-
-```typescript
-let x = 5;           // x: number (inferido)
-let nombre = "Ana";  // nombre: string (inferido)
-
-// Inferencia en retorno de funciones
-function suma(a: number, b: number) {
-  return a + b;  // Tipo de retorno inferido: number
-}
-
-// Inferencia contextual
+// Inferencia
+let x = 5;           // x: number
+let nombre = "Ana";  // nombre: string
 const nums = [1, 2, 3].map(n => n * 2);  // n inferido como number
 ```
 
-No necesitas anotar todo. Las anotaciones son necesarias en:
-1. Parámetros de función (si no hay contexto)
-2. Declaraciones sin inicializador
-3. Tipos de retorno que quieras forzar explícitamente
+#### 🧪 Cómo probarlo
+```bash
+npx tsx -e "
+interface A { x: number }
+interface B { x: number }
+const b: B = { x: 10 };
+const a: A = b;  // Compatible por estructura
+console.log(a.x); // 10
+"
+```
 
-### Tipos primitivos vs literales
+#### 💡 Memoria y rendimiento
+Los tipos se borran en compilación — no hay costo runtime. El tipado estructural se evalúa en compilación, no afecta al rendimiento. La inferencia no añade overhead.
 
-**Primitivos:** `string`, `number`, `boolean`, `symbol`, `bigint`, `null`, `undefined`
+#### ✅ Buenas prácticas
+- ❌ No uses `any` — desactiva el checker completamente
+- ✅ Prefiere `unknown` cuando no sepas el tipo
+- ✅ Activa `strict: true` desde el día 1
+- ✅ Usa inferencia siempre que puedas; anota solo parámetros de función
 
+#### 🏗️ Metodología
+El tipado estructural es ideal para **duck typing** y **APIs flexibles**. Úsalo cuando trabajes con datos externos (JSON, APIs) donde no controlas la herencia. Para sistemas que necesitan identidad nominal, usa branded types.
+
+#### 🔗 Para saber más
+- [TypeScript Handbook — Types](https://www.typescriptlang.org/docs/handbook/2/types.html)
+- [TypeScript Handbook — Everyday Types](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html)
+
+### Tipos primitivos
+
+#### ¿Qué es?
+TypeScript tiene los mismos primitivos que JavaScript con tipos literales que permiten valores concretos como tipos.
+
+#### Sintaxis básica
 ```typescript
 const nombre: string = "Ana";
 const edad: number = 30;
 const activo: boolean = true;
-```
+const id: symbol = Symbol("id");
+const big: bigint = 100n;
+let nulo: null = null;
+let indefinido: undefined = undefined;
 
-**Literales (tipos que son valores concretos):**
-
-```typescript
+// Tipos literales
 type Direccion = "norte" | "sur" | "este" | "oeste";
 type Par = 2 | 4 | 6 | 8 | 10;
-type SoloTrue = true;
-
-const dir: Direccion = "norte";  // OK
-// dir = "noroeste";  // Error: no es "norte" | "sur" | "este" | "oeste"
+const dir: Direccion = "norte";
 ```
 
-Con `as const`, TypeScript deduce literales en lugar de tipos generales:
+#### 🧪 Cómo probarlo
+```bash
+npx tsx -e "
+type Status = 'activo' | 'inactivo';
+const s: Status = 'activo';
+console.log(typeof s, s);
+"
+```
 
+#### 💡 Memoria y rendimiento
+Primitivos son inmutables y se almacenan por valor en la pila (stack). Objetos van al heap. `string` y `number` tienen optimizaciones del motor V8 (string interning, Smi para enteros pequeños).
+
+#### ✅ Buenas prácticas
+- ✅ Usa `as const` para tipos literales profundos
+- ❌ No uses `number` para IDs que representan conceptos distintos — usa branded types
+- ✅ `null` y `undefined` son tipos distintos; úsalos explícitamente
+
+#### 🏗️ Metodología
+Los tipos literales son ideales para **estados finitos** (status, direcciones, configuraciones). Para valores que cambian en runtime, usa tipos primitivos generales.
+
+#### 🔗 Para saber más
+- [MDN — JavaScript Primitives](https://developer.mozilla.org/en-US/docs/Glossary/Primitive)
+
+### Objetos, arrays y tuplas
+
+#### ¿Qué es?
+Objetos se definen con interfaces o types. Arrays con `T[]` o `Array<T>`. Tuplas son arrays de longitud y tipos fijos.
+
+#### Sintaxis básica
 ```typescript
-const config = {
-  url: "https://api.example.com",
-  timeout: 5000,
-} as const;
+// Objetos
+interface Usuario { nombre: string; edad: number; }
+type Usuario2 = { nombre: string; edad: number; };
 
-// config.timeout es el literal 5000, no number
-// config.url es "https://api.example.com", no string
+// Arrays
+const nums: number[] = [1, 2, 3];
+const strs: Array<string> = ["a", "b"];
+const readonly: ReadonlyArray<number> = [1, 2, 3];
+
+// Tuplas
+type Rango = [inicio: number, fin: number];  // Labeled tuple
+const r: Rango = [0, 100];
+type Variadica<T extends any[]> = [...T, string, number];
+type Result = Variadica<[boolean]>;  // [boolean, string, number]
 ```
+
+#### 🧪 Cómo probarlo
+```bash
+npx tsx -e "
+type Rango = [number, number];
+const r: Rango = [0, 100];
+console.log(r);
+"
+```
+
+#### 💡 Memoria y rendimiento
+Arrays homogéneos (todos del mismo tipo) son más rápidos en V8. Las tuplas tienen ligero overhead de tipo en compilación, no en runtime. Los tipos se borran: una tupla `[string, number]` es un array JS normal.
+
+#### ✅ Buenas prácticas
+- ✅ Usa `ReadonlyArray<T>` o `readonly T[]` para arrays inmutables
+- ✅ Prefiere tuplas con labeled para claridad
+- ❌ Evita arrays heterogéneos sin tupla
+
+#### 🏗️ Metodología
+Objetos: para modelar entidades. Arrays: colecciones homogéneas. Tuplas: pares clave-valor, rangos, coordenadas.
+
+#### 🔗 Para saber más
+- [TypeScript Handbook — Object Types](https://www.typescriptlang.org/docs/handbook/2/objects.html)
+
+### Uniones, intersecciones y narrowing
+
+#### ¿Qué es?
+Uniones (`|`) permiten que un valor sea de varios tipos. Intersecciones (`&`) combinan tipos. Narrowing es el proceso por el que TypeScript reduce el tipo basándose en comprobaciones.
+
+#### Sintaxis básica
+```typescript
+// Unión
+type ID = string | number;
+
+// Intersección
+type Admin = Usuario & { permisos: string[] };
+
+// Narrowing automático
+function procesar(valor: string | number | Date) {
+  if (typeof valor === "string") return valor.toUpperCase();
+  if (valor instanceof Date) return valor.getFullYear();
+  return valor * 2;
+}
+
+// Uniones discriminadas
+type Shape =
+  | { kind: "circle"; radius: number }
+  | { kind: "rectangle"; width: number; height: number };
+
+function area(shape: Shape): number {
+  switch (shape.kind) {
+    case "circle": return Math.PI * shape.radius ** 2;
+    case "rectangle": return shape.width * shape.height;
+  }
+}
+```
+
+#### 🧪 Cómo probarlo
+```bash
+npx tsx -e "
+type Estado = 'ok' | 'error';
+type Resultado = { estado: Estado; datos?: string; error?: string };
+const r: Resultado = { estado: 'ok', datos: 'funciona' };
+console.log(r);
+"
+```
+
+#### 💡 Memoria y rendimiento
+Narrowing es puramente en compilación. El código JS generado no tiene narrowing — solo las comprobaciones runtime que escribiste.
+
+#### ✅ Buenas prácticas
+- ✅ Usa uniones discriminadas para modelar estados (loading, success, error)
+- ❌ No anides narrowing excesivo — refactoriza a type guards
+- ✅ Usa `never` para exhaustiveness checking
+
+#### 🏗️ Metodología
+Uniones discriminadas + switch = la forma más segura de modelar máquinas de estado. Evita jerarquías de clases complejas cuando puedas usar una unión.
+
+#### 🔗 Para saber más
+- [TypeScript Handbook — Narrowing](https://www.typescriptlang.org/docs/handbook/2/narrowing.html)
+
+### Enums
+
+#### ¿Qué es?
+Enums permiten definir un conjunto de constantes con nombre. TypeScript soporta enums numéricos y de string.
+
+#### Sintaxis básica
+```typescript
+// Numérico
+enum Color { Rojo, Verde, Azul }
+console.log(Color.Rojo);    // 0
+console.log(Color[0]);      // "Rojo" (reverse mapping)
+
+// String
+enum Direccion { Norte = "N", Sur = "S", Este = "E", Oeste = "O" }
+
+// Const enum (sin overhead runtime)
+const enum Status { Activo = "activo", Inactivo = "inactivo" }
+```
+
+#### 🧪 Cómo probarlo
+```bash
+npx tsx -e "
+enum Color { Rojo, Verde, Azul }
+const c: Color = Color.Verde;
+console.log(c);  // 1
+"
+```
+
+#### 💡 Memoria y rendimiento
+Los enums numéricos generan código JS (objeto con reverse mapping). `const enum` no genera código — los valores se inlinan. String enums siempre generan código.
+
+#### ✅ Buenas prácticas
+- ✅ Prefiere uniones de string literales sobre enums en APIs públicas
+- ✅ Usa `const enum` solo en código interno
+- ❌ No uses enums numéricos mixtos (con y sin inicializador)
+
+#### 🏗️ Metodología
+Usa enums para conjuntos cerrados de valores que se serializan (guardan en BD, API). Para valores solo en frontend, prefiere uniones literales.
+
+#### 🔗 Para saber más
+- [TypeScript Handbook — Enums](https://www.typescriptlang.org/docs/handbook/enums.html)
+
+### `unknown` vs `any` vs `never` vs `void`
+
+#### ¿Qué es?
+Cuatro tipos especiales que controlan cómo TypeScript maneja valores desconocidos, imposibles o vacíos.
+
+#### Sintaxis básica
+```typescript
+// any: desactiva el checker — EVITAR
+let anyVal: any = 42;
+anyVal.toUpperCase(); // Sin error (runtime: TypeError)
+
+// unknown: tipo seguro para valores desconocidos
+let unkVal: unknown = 42;
+// unkVal.toUpperCase();  // Error
+if (typeof unkVal === "string") unkVal.toUpperCase(); // OK
+
+// never: valores que nunca ocurren
+function error(msg: string): never { throw new Error(msg); }
+
+// void: funciones que no retornan valor útil
+function log(msg: string): void { console.log(msg); }
+```
+
+#### 🧪 Cómo probarlo
+```bash
+npx tsx -e "
+function assertNever(x: never): never { throw new Error('Inalcanzable'); }
+type E = 'a' | 'b';
+function f(e: E) { if (e === 'a') return 1; if (e === 'b') return 2; return assertNever(e); }
+console.log(f('a'));
+"
+```
+
+#### 💡 Memoria y rendimiento
+`any` y `unknown` son idénticos en runtime (sin costo). `never` no genera código. `void` es `undefined` en runtime.
+
+#### ✅ Buenas prácticas
+- ❌ **Nunca uses `any` explícitamente.** Configura `@typescript-eslint/no-explicit-any: "error"`
+- ✅ Usa `unknown` para datos externos (APIs, JSON parse)
+- ✅ Usa `never` para exhaustiveness checking en switches
+
+#### 🏗️ Metodología
+`unknown` → verificar → usar. Es la cadena segura para datos externos. `never` como comprobación de compilación para mantener tu código a prueba de cambios.
+
+#### 🔗 Para saber más
+- [TypeScript Handbook — Basic Types](https://www.typescriptlang.org/docs/handbook/2/basic-types.html)
+
+---
+
+## 6. Control de flujo y modularidad
+
+### Condicionales con narrowing
+
+#### ¿Qué es?
+TypeScript extiende los condicionales JS con narrowing automático: dentro de un bloque `if`, el tipo se estrecha basándose en la condición.
+
+#### Sintaxis básica
+```typescript
+function procesar(valor: string | number | Date | null) {
+  if (typeof valor === "string") return valor.toUpperCase();
+  if (valor instanceof Date) return valor.getFullYear();
+  if (valor == null) return "nulo";
+  return valor * 2;
+}
+
+// Uniones discriminadas + switch
+type Evento =
+  | { tipo: "click"; x: number; y: number }
+  | { tipo: "keydown"; tecla: string }
+  | { tipo: "focus" };
+
+function manejar(e: Evento) {
+  switch (e.tipo) {
+    case "click": return `Click en ${e.x},${e.y}`;
+    case "keydown": return `Tecla: ${e.tecla}`;
+    case "focus": return "Focus";
+  }
+}
+```
+
+#### 🧪 Cómo probarlo
+```bash
+npx tsx -e "
+function f(x: string | number) {
+  if (typeof x === 'string') return x.length;
+  return x * 2;
+}
+console.log(f('hola'), f(5));
+"
+```
+
+#### 💡 Memoria y rendimiento
+Narrowing no tiene costo runtime — el código JS generado solo tiene las comprobaciones que escribiste. El switch con uniones discriminadas compila a un switch JS normal.
+
+#### ✅ Buenas prácticas
+- ✅ Usa uniones discriminadas + switch para máquinas de estado
+- ✅ Usa `never` para exhaustiveness checking
+- ❌ No abuses de type guards innecesarios — deja que TS infiera
+
+#### 🔗 Para saber más
+- [TypeScript Handbook — Narrowing](https://www.typescriptlang.org/docs/handbook/2/narrowing.html)
+
+### Bucles
+
+#### ¿Qué es?
+TypeScript hereda los bucles de JavaScript con tipos inferidos en cada iteración.
+
+#### Sintaxis básica
+```typescript
+const nums: number[] = [1, 2, 3, 4, 5];
+
+// for clásico
+for (let i = 0; i < nums.length; i++) {
+  console.log(nums[i]);  // nums[i]: number | undefined (con noUncheckedIndexedAccess)
+}
+
+// for...of (recomendado)
+for (const num of nums) {
+  console.log(num);  // num: number
+}
+
+// forEach con tipos
+nums.forEach((num, index) => console.log(index, num));
+
+// Métodos de iteración tipados
+const dobles = nums.map(n => n * 2);          // number[]
+const pares = nums.filter(n => n % 2 === 0);  // number[]
+const suma = nums.reduce((a, b) => a + b, 0); // number
+```
+
+#### 🧪 Cómo probarlo
+```bash
+npx tsx -e "
+const nums = [1, 2, 3];
+console.log(nums.map(n => n * 2));
+"
+```
+
+#### 🔗 Para saber más
+- [MDN — Iterators](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Iterators_and_Generators)
+
+### Excepciones
+
+#### ¿Qué es?
+TypeScript no tiene checked exceptions. Los errores se manejan con `try/catch` y el catch por defecto es `unknown` (desde TS 4.0).
+
+#### Sintaxis básica
+```typescript
+class AppError extends Error {
+  constructor(public codigo: number, mensaje: string) {
+    super(mensaje);
+    this.name = "AppError";
+  }
+}
+
+function dividir(a: number, b: number): number {
+  if (b === 0) throw new AppError(400, "División por cero");
+  return a / b;
+}
+
+try {
+  console.log(dividir(10, 0));
+} catch (error) {
+  if (error instanceof AppError) {
+    console.error(`Error ${error.codigo}: ${error.message}`);
+  } else if (error instanceof Error) {
+    console.error(error.message);
+  }
+}
+```
+
+#### 🧪 Cómo probarlo
+```bash
+npx tsx -e "
+try { throw new Error('test'); }
+catch (e) { if (e instanceof Error) console.log(e.message); }
+"
+```
+
+#### ✅ Buenas prácticas
+- ✅ Crea clases de error personalizadas con código
+- ✅ En catch, verifica el tipo antes de usar
+- ❌ No captures errores genéricos sin verificar
+
+#### 🔗 Para saber más
+- [TypeScript Handbook — Error Handling](https://www.typescriptlang.org/docs/handbook/2/types.html#error-handling)
+
+### Módulos y organización
+
+#### ¿Qué es?
+TypeScript sigue el sistema de módulos ES (`import`/`export`) y añade tipos para imports.
+
+#### Sintaxis básica
+```typescript
+// math.ts
+export function sumar(a: number, b: number): number { return a + b; }
+export const PI = 3.1416;
+export type Operacion = (a: number, b: number) => number;
+
+// app.ts
+import { sumar, PI, type Operacion } from "./math.js";
+
+// Re-export
+export { sumar } from "./math.js";
+export type { Operacion } from "./math.js";
+
+// Import tipo-only (más seguro)
+import type { Usuario } from "./types.js";
+```
+
+#### 🧪 Cómo probarlo
+```bash
+npx tsx -e "
+export function hola(n: string): string { return 'Hola ' + n; }
+"
+```
+
+#### ✅ Buenas prácticas
+- ✅ Usa `import type` para imports que solo son tipos (se borran en compilación)
+- ✅ Usa barriles (`index.ts`) para exportar múltiples módulos
+- ✅ Activa `verbatimModuleSyntax` en tsconfig
+
+#### 🔗 Para saber más
+- [TypeScript Handbook — Modules](https://www.typescriptlang.org/docs/handbook/2/modules.html)
+
+---
+
+## 7. Sistema de archivos
+
+TypeScript usa las mismas APIs de Node.js que JavaScript, con tipos para `fs`, `path`, `streams`.
+
+#### ¿Qué es?
+El módulo `fs` de Node.js tiene tipos incluidos en `@types/node`. Soporta síncrono, callback y promesas.
+
+#### Sintaxis básica
+```typescript
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
+import { readFile, writeFile, readdir, mkdir } from "node:fs/promises";
+import { join, dirname, basename, extname } from "node:path";
+
+// Síncrono (tipado)
+const data: string = readFileSync("datos.json", "utf-8");
+const parsed: unknown = JSON.parse(data);
+
+// Async (tipado)
+async function leerJSON<T>(path: string): Promise<T> {
+  const content = await readFile(path, "utf-8");
+  return JSON.parse(content) as T;
+}
+
+// Directorios
+const files: string[] = await readdir("./src");
+for (const file of files) {
+  const ext = extname(file);
+  if (ext === ".ts") console.log(`TypeScript: ${file}`);
+}
+```
+
+#### 🧪 Cómo probarlo
+```bash
+npx tsx -e "
+import { writeFileSync, readFileSync } from 'node:fs';
+writeFileSync('/tmp/test.txt', 'Hola TypeScript');
+console.log(readFileSync('/tmp/test.txt', 'utf-8'));
+"
+```
+
+#### 💡 Memoria y rendimiento
+Usa `fs.promises` para no bloquear el event loop. Para archivos grandes, usa streams. Los tipos no afectan rendimiento.
+
+#### ✅ Buenas prácticas
+- ✅ Prefiere `fs/promises` sobre callbacks
+- ✅ Usa `path.join` para rutas multiplataforma
+- ✅ Tipa los datos parseados con `unknown` + validación (Zod)
+
+#### 🏗️ Metodología
+File system síncrono: scripts y CLIs. Async: servidores y APIs. Streams: archivos grandes (>100MB).
+
+#### 🔗 Para saber más
+- [Node.js — File System](https://nodejs.org/api/fs.html)
+
+---
+
+## 8. Algoritmos y estructuras de datos
+
+#### ¿Qué es?
+TypeScript hereda las estructuras de datos de JavaScript con tipos genéricos para colecciones.
+
+#### Sintaxis básica
+```typescript
+// Arrays y métodos tipados
+const nums: number[] = [3, 1, 4, 1, 5];
+const ordenado = [...nums].sort((a, b) => a - b);
+const encontrado = nums.find(n => n > 3);     // number | undefined
+const filtrados = nums.filter(n => n > 2);    // number[]
+
+// Map y Set genéricos
+const mapa = new Map<string, number>();
+mapa.set("a", 1);
+mapa.set("b", 2);
+
+const conjunto = new Set<number>([1, 2, 3, 3]); // Set {1, 2, 3}
+
+// Búsqueda binaria manual (tipada)
+function busquedaBinaria<T>(arr: T[], target: T): number {
+  let left = 0, right = arr.length - 1;
+  while (left <= right) {
+    const mid = Math.floor((left + right) / 2);
+    if (arr[mid] === target) return mid;
+    if (arr[mid] < target) left = mid + 1;
+    else right = mid - 1;
+  }
+  return -1;
+}
+
+// Ordenación por múltiples criterios
+interface Producto { nombre: string; precio: number; stock: number; }
+const productos: Producto[] = [
+  { nombre: "Laptop", precio: 1200, stock: 5 },
+  { nombre: "Mouse", precio: 25, stock: 100 },
+];
+const ordenado2 = [...productos].sort((a, b) =>
+  a.precio - b.precio || b.stock - a.stock
+);
+```
+
+#### 🧪 Cómo probarlo
+```bash
+npx tsx -e "
+function busquedaBinaria<T>(arr: T[], target: T): number {
+  let l = 0, r = arr.length - 1;
+  while (l <= r) { const m = Math.floor((l+r)/2); if (arr[m] === target) return m; if (arr[m] < target) l = m+1; else r = m-1; }
+  return -1;
+}
+console.log(busquedaBinaria([1,3,5,7,9], 5)); // 2
+"
+```
+
+#### 💡 Memoria y rendimiento
+Los genéricos no tienen overhead runtime (se borran). `Map` y `Set` tienen rendimiento O(1) promedio. `sort()` es O(n log n), estable desde ES2019.
+
+#### ✅ Buenas prácticas
+- ✅ Usa `ReadonlyArray<T>` para arrays que no modifiques
+- ✅ Prefiere `Map` sobre objetos para diccionarios dinámicos
+- ❌ No modifiques el array original — crea copias con spread
+
+#### 🔗 Para saber más
+- [MDN — JavaScript Algorithms](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort)
+
+---
+
+## 9. Conceptos clave de TypeScript
 
 ### Interfaces vs Types
 
-Ambos definen la forma de un objeto, pero con diferencias clave:
+#### ¿Qué es?
+Ambos definen la forma de un objeto. `interface` se puede extender por declaración merging; `type` es más expresivo (uniones, tuplas, mapped types).
 
+#### Sintaxis básica
 ```typescript
-// Interface — extensible por declaración merging
-interface Usuario {
-  nombre: string;
-  email: string;
-}
+// Interface — extensible por declaration merging
+interface Usuario { nombre: string; email: string; }
+interface Usuario { edad?: number; }  // Se fusiona
 
-interface Usuario {
-  edad?: number;  // Se fusiona con la anterior
-}
-
-// Type — no extensible, pero más expresivo
-type Id = string | number;
+// Type — expresivo pero no fusionable
+type ID = string | number;
 type Estado = "activo" | "inactivo" | "pendiente";
 type Callback<T> = (data: T) => void;
-type Parcial<T> = { [K in keyof T]?: T[K] };
+
+// Extension
+interface Admin extends Usuario { permisos: string[]; }
+type Admin2 = Usuario & { permisos: string[]; };
+```
+
+#### 🧪 Cómo probarlo
+```bash
+npx tsx -e "
+interface A { x: number }
+interface A { y: number }
+const a: A = { x: 1, y: 2 };
+console.log(a);
+"
 ```
 
 | Característica | Interface | Type |
 |---|---|---|
-| Declaración merging | Sí | No |
+| Declaration merging | Sí | No |
 | Extender | `extends` | `&` (intersección) |
 | Uniones | No | Sí |
 | Mapped types | No | Sí |
-| Tuplas | Describe con `[]` | Describe con `[]` |
 | Rendimiento | Generalmente mejor | Bien |
 
-**Regla práctica:** usa `interface` para objetos/API públicas; usa `type` para uniones, tuplas, y tipos computados.
+#### ✅ Buenas prácticas
+- ✅ Usa `interface` para objetos/API públicas
+- ✅ Usa `type` para uniones, tuplas, tipos computados
+- ❌ No mezcles interface y type en el mismo proyecto sin criterio
 
-### Uniones discriminadas (Discriminated Unions)
+#### 🔗 Para saber más
+- [TypeScript Handbook — Interfaces vs Types](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#interfaces-vs-type-aliases)
 
-Una unión de objetos con una propiedad literal común (el discriminante). TypeScript puede estrechar el tipo basándose en esa propiedad:
+### Genéricos
 
+#### ¿Qué es?
+Los genéricos permiten escribir código reusable sin perder el tipo. Son como parámetros de tipo que se resuelven en compilación.
+
+#### Sintaxis básica
 ```typescript
-type Shape =
-  | { kind: "circle"; radius: number }
-  | { kind: "rectangle"; width: number; height: number }
-  | { kind: "triangle"; base: number; height: number };
+// Función genérica
+function identidad<T>(arg: T): T { return arg; }
+const num = identidad(42);     // T inferido como number
+const str = identidad("hola"); // T inferido como string
 
-function area(shape: Shape): number {
-  switch (shape.kind) {
-    case "circle":
-      return Math.PI * shape.radius ** 2;
-    case "rectangle":
-      return shape.width * shape.height;
-    case "triangle":
-      return (shape.base * shape.height) / 2;
-  }
+// Múltiples parámetros
+function zip<A, B>(a: A[], b: B[]): [A, B][] {
+  return a.map((x, i) => [x, b[i]]);
+}
+
+// Constraints
+interface Lengthwise { length: number; }
+function logLongitud<T extends Lengthwise>(arg: T): T {
+  console.log(arg.length);
+  return arg;
+}
+
+// Keyof constraint
+function getProperty<T, K extends keyof T>(obj: T, key: K): T[K] {
+  return obj[key];
 }
 ```
 
-El switch/case con el discriminante `kind` permite a TypeScript estrechar el tipo en cada rama. No necesitas type guards manuales.
-
-### Narrowing (estrechamiento de tipos)
-
-TypeScript estrecha tipos automáticamente mediante varias técnicas:
-
-```typescript
-function procesar(valor: string | number | Date | null) {
-  // typeof narrowing
-  if (typeof valor === "string") {
-    console.log(valor.toUpperCase());  // valor: string
-  }
-
-  // instanceof narrowing
-  if (valor instanceof Date) {
-    console.log(valor.getFullYear());  // valor: Date
-  }
-
-  // Truthy/falsy narrowing
-  if (valor == null) {
-    console.log("Es null o undefined");  // valor: null
-  }
-
-  // in narrowing
-  if ("length" in valor) {
-    console.log(valor.length);  // valor: string | (no entra Date)
-  }
-}
+#### 🧪 Cómo probarlo
+```bash
+npx tsx -e "
+function primero<T>(arr: T[]): T | undefined { return arr[0]; }
+console.log(primero([1,2,3])); // 1
+"
 ```
+
+#### 💡 Memoria y rendimiento
+Los genéricos se borran en compilación → cero overhead runtime. No hay reificación como en C# o Java. TS no puede inspeccionar tipos en runtime.
+
+#### ✅ Buenas prácticas
+- ✅ Usa constraints (`extends`) para restringir genéricos
+- ✅ Prefiere inferencia sobre anotación explícita de type params
+- ❌ No uses genéricos cuando un tipo concreto basta
+
+#### 🏗️ Metodología
+Genéricos en: funciones de utilidad, repositorios, colecciones, builders, factories. No uses genéricos en: props internas, tipos que nunca cambian.
+
+#### 🔗 Para saber más
+- [TypeScript Handbook — Generics](https://www.typescriptlang.org/docs/handbook/2/generics.html)
+
+### Conditional Types
+
+#### ¿Qué es?
+Tipos que dependen de una condición evaluada en compilación. Usan `T extends U ? X : Y`.
+
+#### Sintaxis básica
+```typescript
+type IsString<T> = T extends string ? "sí" : "no";
+type A = IsString<string>;  // "sí"
+type B = IsString<number>;  // "no"
+
+// Extraer tipos con infer
+type ReturnType<T> = T extends (...args: any[]) => infer R ? R : never;
+type Fn = (x: number) => string;
+type R = ReturnType<Fn>;  // string
+
+// Distributive conditional types
+type ToArray<T> = T extends unknown ? T[] : never;
+type Result = ToArray<string | number>;  // string[] | number[]
+```
+
+#### 🧪 Cómo probarlo
+```bash
+npx tsx -e "
+type IsString<T> = T extends string ? true : false;
+const a: IsString<'hola'> = true;
+const b: IsString<42> = false;
+console.log(a, b);
+"
+```
+
+#### 💡 Memoria y rendimiento
+Los conditional types se evalúan en compilación. No tienen representación runtime. Con tipos muy grandes y condicionales anidados, pueden ralentizar el compilador.
+
+#### ✅ Buenas prácticas
+- ✅ Usa `infer` para extraer tipos de otros tipos
+- ✅ Los conditional types distribuyen sobre uniones
+- ❌ No anides conditional types más de 3 niveles
+
+#### 🔗 Para saber más
+- [TypeScript Handbook — Conditional Types](https://www.typescriptlang.org/docs/handbook/2/conditional-types.html)
+
+### Mapped Types
+
+#### ¿Qué es?
+Transforman un tipo existente en uno nuevo, propiedad por propiedad. Son la base de los utility types de la stdlib.
+
+#### Sintaxis básica
+```typescript
+type Readonly<T> = { readonly [K in keyof T]: T[K]; };
+type Optional<T> = { [K in keyof T]?: T[K]; };
+type Nullable<T> = { [K in keyof T]: T[K] | null; };
+
+// Con modificación de keys
+type Getters<T> = {
+  [K in keyof T as `get${Capitalize<string & K>}`]: () => T[K];
+};
+
+interface Persona { nombre: string; edad: number; }
+type GettersPersona = Getters<Persona>;
+// { getNombre: () => string; getEdad: () => number; }
+```
+
+#### 🧪 Cómo probarlo
+```bash
+npx tsx -e "
+type Optional<T> = { [K in keyof T]?: T[K] };
+interface U { nombre: string; edad: number; }
+const u: Optional<U> = { nombre: 'test' };
+console.log(u);
+"
+```
+
+#### ✅ Buenas prácticas
+- ✅ Úsalos para crear utility types personalizados
+- ✅ `as` en mapped types permite renombrar/filtrar keys
+- ❌ No uses mapped types cuando un type literal basta
+
+#### 🔗 Para saber más
+- [TypeScript Handbook — Mapped Types](https://www.typescriptlang.org/docs/handbook/2/mapped-types.html)
+
+### Template Literal Types
+
+#### ¿Qué es?
+Construyen tipos a partir de manipulación de strings literales en compilación.
+
+#### Sintaxis básica
+```typescript
+type EventName = `on${Capitalize<string>}`;
+type Route = `/api/${string}`;
+
+// Extracción de parámetros de ruta
+type ExtractParams<T extends string> =
+  T extends `${string}:${infer Param}/${infer Rest}`
+    ? Param | ExtractParams<Rest>
+    : T extends `${string}:${infer Param}`
+      ? Param
+      : never;
+
+type R = ExtractParams<"/api/users/:userId/posts/:postId">;
+// "userId" | "postId"
+
+// Manipuladores nativos
+type Upper = Uppercase<"hola">;     // "HOLA"
+type Lower = Lowercase<"HOLA">;     // "hola"
+type Cap = Capitalize<"hola">;      // "Hola"
+type Uncap = Uncapitalize<"Hola">;  // "hola"
+```
+
+#### 🧪 Cómo probarlo
+```bash
+npx tsx -e "
+type Saludo = 'Hola' | 'Adios';
+type Mensaje = \`\${Saludo}, mundo!\`;
+const m: Mensaje = 'Hola, mundo!';
+console.log(m);
+"
+```
+
+#### 💡 Memoria y rendimiento
+Se evalúan en compilación. Con strings muy largos o template types recursivos, pueden afectar el tiempo de compilación.
+
+#### ✅ Buenas prácticas
+- ✅ Úsalos para tipar rutas, eventos, convenciones de nomenclatura
+- ✅ Combínalos con `infer` para parsing de strings
+- ❌ Evita recursión profunda en template literal types
+
+#### 🔗 Para saber más
+- [TypeScript Handbook — Template Literal Types](https://www.typescriptlang.org/docs/handbook/2/template-literal-types.html)
 
 ### Type Guards personalizados
 
-Cuando el narrowing automático no es suficiente, escribes funciones que verifican tipos en runtime:
+#### ¿Qué es?
+Funciones que verifican un tipo en runtime y le informan a TypeScript mediante `valor is Tipo`.
 
+#### Sintaxis básica
 ```typescript
-interface Pajaro {
-  tipo: "pajaro";
-  volar: () => void;
-}
-
-interface Pez {
-  tipo: "pez";
-  nadar: () => void;
-}
+interface Pajaro { tipo: "pajaro"; volar: () => void; }
+interface Pez { tipo: "pez"; nadar: () => void; }
 
 type Animal = Pajaro | Pez;
 
-// Type guard
 function esPajaro(animal: Animal): animal is Pajaro {
   return animal.tipo === "pajaro";
 }
@@ -446,221 +1086,74 @@ function mover(animal: Animal) {
 }
 ```
 
-### Genéricos
-
-Los genéricos permiten escribir código reusable sin perder el tipo:
-
-```typescript
-// Función genérica básica
-function identidad<T>(arg: T): T {
-  return arg;
-}
-
-const num = identidad(42);     // T inferido como number
-const str = identidad("hola"); // T inferido como string
-
-// Genéricos con arrays
-function primero<T>(arr: T[]): T | undefined {
-  return arr[0];
-}
-
-// Múltiples type parameters
-function zip<A, B>(a: A[], b: B[]): [A, B][] {
-  return a.map((x, i) => [x, b[i]]);
-}
+#### 🧪 Cómo probarlo
+```bash
+npx tsx -e "
+function isString(v: unknown): v is string { return typeof v === 'string'; }
+console.log(isString('hola'), isString(42));
+"
 ```
 
-### Constraints (restricciones en genéricos)
+#### ✅ Buenas prácticas
+- ✅ Usa `v is Type` para type guards personalizados
+- ✅ Combínalos con `unknown` para datos externos
+- ❌ No mientas en el type guard — debe reflejar la realidad runtime
 
-Limitas qué tipos puede aceptar un genérico con `extends`:
+#### 🔗 Para saber más
+- [TypeScript Handbook — Type Guards](https://www.typescriptlang.org/docs/handbook/2/narrowing.html#using-type-predicates)
 
+### `keyof`, `typeof`, `satisfies`
+
+#### ¿Qué es?
+Tres operadores que conectan el mundo de valores con el mundo de tipos.
+
+#### Sintaxis básica
 ```typescript
-interface Lengthwise {
-  length: number;
-}
+// keyof — unión de claves de un tipo
+interface Persona { nombre: string; edad: number; email: string; }
+type Claves = keyof Persona;  // "nombre" | "edad" | "email"
 
-function logLongitud<T extends Lengthwise>(arg: T): T {
-  console.log(arg.length);  // Sabemos que tiene .length
-  return arg;
-}
+// typeof en contexto de tipo — obtiene el tipo de un valor
+const config = { url: "https://api.example.com", timeout: 5000 };
+type ConfigType = typeof config;
+// { url: string; timeout: number; }
 
-logLongitud("hola");    // string tiene .length
-logLongitud([1, 2, 3]); // array tiene .length
-// logLongitud(42);     // Error: number no tiene .length
+// satisfies — verifica sin ensanchar (TS 4.9+)
+const palette = {
+  rojo: "#FF0000",
+  azul: ["#0000FF", "#00BFFF"],
+} satisfies Record<string, string | string[]>;
 
-// Keyof constraint
-function getProperty<T, K extends keyof T>(obj: T, key: K): T[K] {
-  return obj[key];
-}
-
-const user = { nombre: "Ana", edad: 30 };
-getProperty(user, "nombre");  // string
-// getProperty(user, "email");  // Error: "email" no es keyof user
+palette.rojo.toUpperCase();    // OK: TS sabe que es string
+palette.azul.map(c => c);     // OK: TS sabe que es string[]
 ```
 
-### Conditional Types
-
-Tipos que dependen de una condición evaluada en tiempo de compilación:
-
-```typescript
-type IsString<T> = T extends string ? "sí" : "no";
-
-type A = IsString<string>;  // "sí"
-type B = IsString<number>;  // "no"
-
-// Extraer tipos de una función
-type ReturnType<T> = T extends (...args: any[]) => infer R ? R : never;
-
-type Fn = (x: number) => string;
-type R = ReturnType<Fn>;  // string
-
-// Distributive conditional types
-type ToArray<T> = T extends unknown ? T[] : never;
-type Result = ToArray<string | number>;  // string[] | number[]
+#### 🧪 Cómo probarlo
+```bash
+npx tsx -e "
+const obj = { a: 1, b: 'dos' } as const;
+type T = typeof obj;
+console.log(obj);
+"
 ```
 
-### Mapped Types
+#### ✅ Buenas prácticas
+- ✅ `satisfies` es mejor que `as` para verificar sin perder tipos
+- ✅ `typeof` en tipos para extraer tipos de configuraciones/constantes
+- ❌ No uses `typeof` cuando puedes definir el tipo explícitamente
 
-Transforman un tipo existente en uno nuevo, propiedad por propiedad:
+#### 🔗 Para saber más
+- [TypeScript Handbook — satisfies](https://www.typescriptlang.org/docs/handbook/2/objects.html#the-satisfies-constraint)
 
+### Decoradores
+
+#### ¿Qué es?
+Funciones que modifican clases, métodos o propiedades. TypeScript soporta decoradores experimentales y TC39 estándar.
+
+#### Sintaxis básica
 ```typescript
-type Readonly<T> = {
-  readonly [K in keyof T]: T[K];
-};
-
-type Optional<T> = {
-  [K in keyof T]?: T[K];
-};
-
-type Nullable<T> = {
-  [K in keyof T]: T[K] | null;
-};
-
-// Mapped type con modificación
-type Getters<T> = {
-  [K in keyof T as `get${Capitalize<string & K>}`]: () => T[K];
-};
-
-interface Persona {
-  nombre: string;
-  edad: number;
-}
-
-// Equivale a:
-// type GettersPersona = {
-//   getNombre: () => string;
-//   getEdad: () => number;
-// }
-```
-
-### Template Literal Types
-
-Construyen tipos a partir de manipulación de strings literales:
-
-```typescript
-type EventName = `on${Capitalize<string>}`;
-type Handler = `handle${Capitalize<string>}`;
-
-// Ejemplo real: rutas tipadas
-type Route = `/api/${string}`;
-
-// Extracción de parámetros de ruta
-type ExtractParams<T extends string> =
-  T extends `${string}:${infer Param}/${infer Rest}`
-    ? Param | ExtractParams<Rest>
-    : T extends `${string}:${infer Param}`
-      ? Param
-      : never;
-
-type R = ExtractParams<"/api/users/:userId/posts/:postId">;
-// "userId" | "postId"
-```
-
-### `unknown` vs `any`
-
-```typescript
-let any_val: any = 42;
-any_val.toUpperCase();  // Sin error (en runtime: TypeError)
-any_val.prop.no.existe; // Sin error (en runtime: TypeError)
-
-let unknown_val: unknown = 42;
-// unknown_val.toUpperCase();  // Error: Object is of type 'unknown'
-
-// Para usar unknown, debes verificar:
-if (typeof unknown_val === "string") {
-  unknown_val.toUpperCase();  // OK
-}
-
-// Cast necesario
-const str = unknown_val as string;
-```
-
-`any` desactiva completamente el sistema de tipos. `unknown` es el tipo seguro: fuerza verificación antes de usar. **Nunca uses `any` explícitamente.** Configura `@typescript-eslint/no-explicit-any: "error"`.
-
-### `never`
-
-El tipo `never` representa valores que nunca ocurren. Es el **bottom type**:
-
-```typescript
-// Función que nunca retorna
-function error(msg: string): never {
-  throw new Error(msg);
-}
-
-// Bucles infinitos
-function loop(): never {
-  while (true) {}
-}
-```
-
-`never` es útil para exhaustiveness checking en uniones discriminadas:
-
-```typescript
-type Color = "rojo" | "verde" | "azul";
-
-function hexColor(c: Color): string {
-  switch (c) {
-    case "rojo": return "#FF0000";
-    case "verde": return "#00FF00";
-    case "azul": return "#0000FF";
-    default:
-      // Si añades un nuevo color y no lo manejas,
-      // esto da error de compilación
-      const _exhaustive: never = c;
-      return _exhaustive;
-  }
-}
-```
-
-### `void`
-
-`void` es el tipo de retorno de funciones que no devuelven un valor útil:
-
-```typescript
-function log(msg: string): void {
-  console.log(msg);
-  // No hay return, o return undefined implícito
-}
-
-// Diferencia clave:
-// void: la función no debe usar el valor retornado
-// undefined: la función retorna undefined explícitamente
-type FnVoid = () => void;
-type FnUndefined = () => undefined;
-```
-
-### Decoradores (experimentales y TC39)
-
-**Decoradores experimentales (TypeScript 5.x legacy):**
-
-```typescript
-// tsconfig.json: "experimentalDecorators": true
-
-function logMethod(
-  target: any,
-  propertyKey: string,
-  descriptor: PropertyDescriptor
-) {
+// Decorador experimental
+function logMethod(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
   const original = descriptor.value;
   descriptor.value = function (...args: any[]) {
     console.log(`Llamando ${propertyKey} con`, args);
@@ -671,663 +1164,160 @@ function logMethod(
 
 class Calculadora {
   @logMethod
-  sumar(a: number, b: number): number {
-    return a + b;
-  }
+  sumar(a: number, b: number): number { return a + b; }
 }
-```
 
-**Decoradores TC39 (ES standard, desde TypeScript 5.0):**
-
-```typescript
-// Sin flags, nativo en target ES2022+
-
+// Decorador TC39 estándar (TS 5.0+)
 function logged<T extends (...args: any[]) => any>(
-  target: T,
-  context: ClassMethodDecoratorContext
+  target: T, context: ClassMethodDecoratorContext
 ) {
   return function (this: any, ...args: Parameters<T>) {
     console.log(`Llamando ${String(context.name)}`);
     return target.apply(this, args);
   };
 }
-
-class Calculadora {
-  @logged
-  sumar(a: number, b: number): number {
-    return a + b;
-  }
-}
 ```
 
-### `keyof`, `typeof`, `satisfies`
-
-`keyof` — obtiene la unión de claves de un tipo:
-
-```typescript
-interface Persona {
-  nombre: string;
-  edad: number;
-  email: string;
-}
-
-type Claves = keyof Persona;  // "nombre" | "edad" | "email"
+#### 🧪 Cómo probarlo
+```bash
+npx tsx -e "
+function log(target: any, key: string) { console.log('Decorated:', key); }
+class A { @log metodo() {} }
+"
 ```
 
-`typeof` en contexto de tipo — obtiene el tipo de un valor en tiempo de compilación:
+#### ✅ Buenas prácticas
+- ✅ Usa decoradores TC39 estándar (sin `experimentalDecorators`) para código nuevo
+- ✅ Prefiere composición sobre decoradores cuando sea posible
+- ❌ No abuses de decoradores para lógica de negocio crítica
 
+#### 🔗 Para saber más
+- [TypeScript Decorators docs](https://www.typescriptlang.org/docs/handbook/decorators.html)
+
+### Archivos `.d.ts` y `declare`
+
+#### ¿Qué es?
+`.d.ts` son declaration files con solo tipos, sin implementación. `declare` informa al compilador sobre cosas que existen en runtime.
+
+#### Sintaxis básica
 ```typescript
-const config = {
-  url: "https://api.example.com",
-  timeout: 5000,
-};
+// ejemplo.d.ts
+export interface Usuario { id: number; nombre: string; email: string; }
+export function obtenerUsuario(id: number): Promise<Usuario>;
 
-type ConfigType = typeof config;
-// { url: string; timeout: number; }
-```
-
-`satisfies` (TypeScript 4.9+) — verifica que un valor cumple un tipo sin cambiar su tipo inferido:
-
-```typescript
-// Sin satisfies
-const palette: Record<string, string | string[]> = {
-  rojo: "#FF0000",
-  verde: "#00FF00",
-  azul: ["#0000FF", "#00BFFF"],
-};
-palette.rojo.toUpperCase();  // Error: string | string[] no tiene .toUpperCase()
-
-// Con satisfies — verifica pero mantiene el tipo estrecho
-const palette2 = {
-  rojo: "#FF0000",
-  verde: "#00FF00",
-  azul: ["#0000FF", "#00BFFF"],
-} satisfies Record<string, string | string[]>;
-
-palette2.rojo.toUpperCase();  // OK: TypeScript sabe que es string
-palette2.azul.map(c => c);    // OK: TypeScript sabe que es string[]
-```
-
-### Módulos y `declare`
-
-**Módulos ES en TypeScript:**
-
-```typescript
-// math.ts
-export function sumar(a: number, b: number): number {
-  return a + b;
-}
-
-export const PI = 3.1416;
-
-// app.ts
-import { sumar, PI } from "./math.js";  // .js en output, .ts en source
-```
-
-**`declare` — declarar algo que existe en runtime pero TypeScript no conoce:**
-
-```typescript
-// Declarar una variable global
+// declare — variables globales
 declare const API_KEY: string;
-// No genera código JS, solo informa al compilador
 
-// Declarar módulos (para librerías sin tipos)
+// declare module — para librerías sin tipos
 declare module "mi-lib-sin-tipos" {
   export function saludar(nombre: string): string;
 }
-
-// Ambient declarations
-declare namespace MiGlobal {
-  function init(): void;
-}
 ```
 
-### Archivos `.d.ts`
+#### ✅ Buenas prácticas
+- ✅ TS genera `.d.ts` automáticamente con `declaration: true`
+- ✅ Busca tipos en `@types/` para librerías JS
+- ❌ No escribas `.d.ts` manuales si la librería ya tiene tipos
 
-Los archivos `.d.ts` son **declaration files**. Contienen solo tipos, sin implementación. TypeScript los usa para entender librerías JS sin tipo:
+#### 🔗 Para saber más
+- [TypeScript Handbook — Declaration Files](https://www.typescriptlang.org/docs/handbook/declaration-files/introduction.html)
 
-```typescript
-// ejemplo.d.ts
-export interface Usuario {
-  id: number;
-  nombre: string;
-  email: string;
-}
+### Strict Mode
 
-export function obtenerUsuario(id: number): Promise<Usuario>;
-```
-
-Las librerías TS generan `.d.ts` automáticamente con `declaration: true`. Si una librería JS no tiene tipos, busca `@types/paquete` en DefinitelyTyped: `npm install --save-dev @types/express`.
-
-### Strict Mode y `noUncheckedIndexedAccess`
-
-**`strict: true`** activa 7 flags a la vez:
+#### ¿Qué es?
+`strict: true` activa 7 flags de comprobación que convierten errores potenciales en errores de compilación.
 
 | Flag | Efecto |
 |---|---|
-| `strictNullChecks` | `null`/`undefined` no son asignables a otros tipos |
-| `strictFunctionTypes` | Comprobación estricta de tipos en funciones (contravarianza) |
-| `strictBindCallApply` | `bind`/`call`/`apply` con tipos correctos |
-| `strictPropertyInitialization` | Las propiedades de clase deben inicializarse |
-| `noImplicitAny` | Error si TS no puede inferir un tipo |
-| `noImplicitThis` | Error si `this` no tiene tipo explícito |
+| `strictNullChecks` | `null/undefined` no asignables a otros tipos |
+| `strictFunctionTypes` | Contravarianza en funciones |
+| `strictBindCallApply` | `bind/call/apply` tipados |
+| `strictPropertyInitialization` | Props de clase deben inicializarse |
+| `noImplicitAny` | Error si TS no infiere tipo |
+| `noImplicitThis` | `this` debe tener tipo explícito |
 | `alwaysStrict` | `"use strict"` en todo el JS emitido |
 
-**`noUncheckedIndexedAccess`** — al acceder a un índice, el tipo incluye `undefined`:
+#### ✅ Buenas prácticas
+- ✅ Activa `strict: true` desde el día 1 en todo proyecto nuevo
+- ✅ Añade `noUncheckedIndexedAccess: true` para arrays seguros
+- ❌ No desactives strict mode porque "molesta" — arregla los tipos
 
-```typescript
-const arr: string[] = ["a", "b", "c"];
-const first = arr[0];  // string | undefined (con noUncheckedIndexedAccess)
-// string (sin noUncheckedIndexedAccess)
-
-// Te fuerza a verificar
-if (first !== undefined) {
-  first.toUpperCase();  // OK: string
-}
-```
-
-Fuente: [TypeScript Handbook — Types](https://www.typescriptlang.org/docs/handbook/2/types.html), [TypeScript Handbook — Narrowing](https://www.typescriptlang.org/docs/handbook/2/narrowing.html), [TypeScript Handbook — Generics](https://www.typescriptlang.org/docs/handbook/2/generics.html), [TypeScript Handbook — Decorators](https://www.typescriptlang.org/docs/handbook/decorators.html)
+#### 🔗 Para saber más
+- [TypeScript Handbook — Strict Mode](https://www.typescriptlang.org/tsconfig/#strict)
 
 ---
 
-### Decoradores
+## 10. POO y patrones de diseño
 
-TypeScript tiene dos sistemas de decoradores: los experimentales (`experimentalDecorators: true`) y los decoradores TC39 estándar desde TypeScript 5.0.
+#### ¿Qué es?
+TypeScript aporta clases ES6+ con tipos, modificadores de acceso, abstract, y decoradores. Los patrones de diseño se expresan de forma natural con el sistema de tipos.
 
-**Cómo funciona internamente (experimental):**
-
-```typescript
-// Esto:
-@miDecorador
-class MiClase {}
-
-// Es equivalente a:
-MiClase = miDecorador(MiClase) || MiClase;
-```
-
-**Decorador de método (experimental):**
-
-```typescript
-function medirTiempo(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-  const original = descriptor.value;
-  descriptor.value = function (...args: any[]) {
-    const inicio = performance.now();
-    const resultado = original.apply(this, args);
-    const fin = performance.now();
-    console.log(`${propertyKey} tardó ${fin - inicio}ms`);
-    return resultado;
-  };
-  return descriptor;
-}
-
-class Calculadora {
-  @medirTiempo
-  factorial(n: number): number {
-    return n <= 1 ? 1 : n * this.factorial(n - 1);
-  }
-}
-```
-
-**Decoradores con argumentos (experimental):**
-
-```typescript
-function repetir(n: number) {
-  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-    const original = descriptor.value;
-    descriptor.value = function (...args: any[]) {
-      for (let i = 0; i < n; i++) {
-        original.apply(this, args);
-      }
-    };
-    return descriptor;
-  };
-}
-
-class Saludos {
-  @repetir(3)
-  saludar() {
-    console.log("Hola!");
-  }
-}
-```
-
-**Decoradores TC39 estándar (TypeScript 5.0+, sin flags):**
-
-```typescript
-function medirTiempo<This, Args extends any[], Return>(
-  target: (this: This, ...args: Args) => Return,
-  context: ClassMethodDecoratorContext<This, (this: This, ...args: Args) => Return>
-) {
-  return function (this: This, ...args: Args): Return {
-    const inicio = performance.now();
-    const resultado = target.call(this, ...args);
-    const fin = performance.now();
-    console.log(`${String(context.name)} tardó ${fin - inicio}ms`);
-    return resultado;
-  };
-}
-
-class Calculadora {
-  @medirTiempo
-  factorial(n: number): number {
-    return n <= 1 ? 1 : n * this.factorial(n - 1);
-  }
-}
-```
-
-**¿Con qué se relaciona en otras tecnologías?**
-- **Python**: `@decorador` — mismo concepto, misma sintaxis de azúcar
-- **Java**: Anotaciones + Annotation Processors (aunque en Java es metaprogramación en compilación, no runtime)
-- **JavaScript**: Decoradores TC39 — exactamente los mismos, TS está alineado
-- **NestJS**: Los decoradores son la base del framework (`@Controller`, `@Get`, `@Injectable`)
-- **Express.js**: Middleware `app.use((req, res, next) => ...)` funciona como decorador conceptual
-- **AOP (Aspect-Oriented Programming)**: Los decoradores son la forma TypeScript de lograr AOP para logging, caché, autorización
-
-**Decoradores que proporcionan librerías:**
-- **NestJS**: `@Controller()`, `@Get()`, `@Post()`, `@Injectable()`, `@Module()`
-- **TypeORM**: `@Entity()`, `@Column()`, `@PrimaryGeneratedColumn()`, `@ManyToOne()`
-- **class-validator**: `@IsString()`, `@IsEmail()`, `@Min()`, `@Max()`
-- **class-transformer**: `@Exclude()`, `@Expose()`, `@Transform()`
-- **Angular**: `@Component()`, `@Injectable()`, `@Input()`, `@Output()`
-
-Fuente: [TypeScript Decorators docs](https://www.typescriptlang.org/docs/handbook/decorators.html), [TC39 Decorators proposal](https://github.com/tc39/proposal-decorators)
-
-### Variables, memoria y objetos
-
-TypeScript hereda el modelo de memoria de JavaScript. Todo valor es un objeto (excepto primitivos), y las variables son referencias a objetos.
-
-**Primitivos (inmutables, almacenados por valor):**
-
-```typescript
-let a = 5;
-let b = a;  // Copia el valor
-a = 10;
-console.log(b);  // 5 (no cambia)
-
-// Los primitivos se comparan por valor
-console.log(5 === 5);  // true
-console.log("hola" === "hola");  // true
-```
-
-**Objetos (mutables, almacenados por referencia):**
-
-```typescript
-const obj1 = { x: 1 };
-const obj2 = obj1;  // Copia la referencia
-obj1.x = 2;
-console.log(obj2.x);  // 2 (comparten el mismo objeto)
-
-// Se comparan por referencia
-console.log({} === {});  // false (objetos distintos)
-```
-
-**Mutabilidad en TypeScript/JS:**
-
-| Tipo | Mutabilidad | Ejemplo |
-|---|---|---|
-| `number` | Inmutable | `let x = 5; x += 1` — nuevo número |
-| `string` | Inmutable | `let s = "hola"; s += "!"` — nueva cadena |
-| `boolean` | Inmutable | `let b = true; b = false` — nuevo booleano |
-| `object` | Mutable | `obj.prop = "valor"` — modifica el mismo objeto |
-| `Array` | Mutable | `arr.push(1)` — modifica el mismo array |
-| `Map`/`Set` | Mutable | `map.set(k, v)` — modifica el mismo mapa |
-| `symbol` | Inmutable | Único, no modificable |
-
-**Cómo JavaScript/TypeScript optimiza memoria:**
-
-- **String interning**: El motor (V8, SpiderMonkey) cachea cadenas cortas e internas. Cadenas iguales pueden compartir memoria.
-- **Object pooling**: V8 optimiza objetos con la misma "forma" (same hidden class). Añadir propiedades dinámicamente cambia la forma y ralentiza.
-- **Array optimization**: Arrays homogéneos (todos del mismo tipo) son más rápidos que arrays heterogéneos. V8 los optimiza como arrays tipados internamente.
-
-**¿Cuánto ocupa cada cosa? (aproximado en V8):**
-
-```typescript
-// Estos números son aproximados y dependen del motor
-console.log(new Uint8Array(1).byteLength);  // 1 byte
-console.log(new Array(100).fill(0).length); // ~800 bytes + overhead
-```
-
-Cada objeto JS tiene overhead: ~32-64 bytes para el objeto base (hidden class, propiedades inline). Un array de 1M números ocupa ~8 MB para las referencias + memoria de los números.
-
-**Garbage collection en JS:**
-
-JavaScript usa **GC generacional** (V8: Orinoco + Oilpan). No tiene reference counting como Python. El GC Mark-and-Sweep recorre el grafo de objetos desde las raíces (globales, DOM,栈) y recolecta los inalcanzables. Las generaciones jóvenes se recolectan con más frecuencia (Scavenger).
-
-```typescript
-// No puedes forzar GC en JS estándar
-// Pero en Node.js:
-if (global.gc) {
-  global.gc();  // Forzar GC (requiere --expose-gc)
-}
-```
-
-**¿Hay buffer overflow en TypeScript/JS?**
-No en JS puro. Los arrays, strings y TypedArrays tienen bounds checking nativo. `arr[100]` en un array de 5 elementos retorna `undefined` (no corrompe memoria, no lanza error). El peligro real está en:
-1. **TypedArrays mal usados**: `new Uint8Array(buffer, offset, length)` — si offset + length excede el buffer, lanza `RangeError`
-2. **WebAssembly**: código WASM puede acceder a memoria lineal arbitraria si no se valida
-3. **Node.js Buffers**: `Buffer.allocUnsafe(100)` puede contener datos previos (memoria no inicializada)
-4. **Native addons**: módulos nativos (C++, Rust via napi) pueden tener buffer overflows si el código subyacente está mal escrito
-
-Para JS puro, la sobreescritura de buffer no existe. El motor verifica todos los accesos.
-
-**`Object.freeze` y `Readonly` para inmutabilidad:**
-
-```typescript
-import { deepFreeze } from 'some-lib'; // o implementación manual
-
-// En tiempo de compilación
-interface Config {
-  readonly url: string;
-  readonly timeout: number;
-}
-
-// En tiempo de ejecución
-const config = Object.freeze({
-  url: "https://api.example.com",
-  timeout: 5000,
-  // No se puede modificar en runtime
-});
-```
-
-Fuente: [MDN — Memory Management](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Memory_Management), [V8 docs — Object Shapes](https://v8.dev/blog/shapes), [V8 — Garbage Collection](https://v8.dev/blog/trash-talk)
-
-### POO avanzada: herencia, interfaces y patrones
-
-**Clases, abstract e implements:**
-
+#### Sintaxis básica — clases
 ```typescript
 abstract class Animal {
   constructor(protected nombre: string) {}
-
   abstract hacerSonido(): string;
-
-  mover(): void {
-    console.log(`${this.nombre} se mueve`);
-  }
+  mover(): void { console.log(`${this.nombre} se mueve`); }
 }
 
-interface Volador {
-  volar(): void;
-}
-
-interface Nadador {
-  nadar(): void;
-}
+interface Volador { volar(): void; }
+interface Nadador { nadar(): void; }
 
 class Pato extends Animal implements Volador, Nadador {
-  constructor(nombre: string) {
-    super(nombre);
-  }
-
-  hacerSonido(): string {
-    return "Cuac";
-  }
-
-  volar(): void {
-    console.log(`${this.nombre} vuela`);
-  }
-
-  nadar(): void {
-    console.log(`${this.nombre} nada`);
-  }
+  constructor(nombre: string) { super(nombre); }
+  hacerSonido(): string { return "Cuac"; }
+  volar(): void { console.log(`${this.nombre} vuela`); }
+  nadar(): void { console.log(`${this.nombre} nada`); }
 }
 
-const pato = new Pato("Donald");
-pato.mover();        // De Animal
-pato.hacerSonido();  // "Cuac"
-pato.volar();        // De Volador
-pato.nadar();        // De Nadador
-```
-
-**Generic Constraints con POO:**
-
-```typescript
-interface Repositorio<T> {
-  obtener(id: string): Promise<T | undefined>;
-  guardar(item: T): Promise<void>;
-  eliminar(id: string): Promise<boolean>;
-}
-
-class UsuarioRepositorio implements Repositorio<Usuario> {
-  async obtener(id: string): Promise<Usuario | undefined> {
-    // Implementación
-    return undefined;
-  }
-
-  async guardar(item: Usuario): Promise<void> {
-    // Implementación
-  }
-
-  async eliminar(id: string): Promise<boolean> {
-    return true;
-  }
-}
-
-// Factory con genéricos
-class RepositorioFactory {
-  static crear<T>(entidad: new () => T): Repositorio<T> {
-    return new RepositorioGenerico<T>();
-  }
-}
-```
-
-**Métodos y propiedades en clases:**
-
-```typescript
+// Clase completa con getters/setters
 class Usuario {
-  // Propiedades públicas, privadas y protegidas
   public nombre: string;
   private _edad: number;
-  protected email: string;
-
-  // Propiedad de solo lectura
   readonly id: string;
 
-  // Getter/Setter
-  get edad(): number {
-    return this._edad;
-  }
-
+  get edad(): number { return this._edad; }
   set edad(valor: number) {
-    if (valor < 0 || valor > 150) {
-      throw new Error("Edad inválida");
-    }
+    if (valor < 0 || valor > 150) throw new Error("Edad inválida");
     this._edad = valor;
   }
 
-  // Parámetros con modificador de acceso en constructor
-  constructor(
-    public nombre: string,
-    edad: number,
-    protected email: string,
-    readonly id: string = crypto.randomUUID()
-  ) {
+  constructor(public nombre: string, edad: number, readonly id: string = crypto.randomUUID()) {
     this._edad = edad;
   }
 
-  // Método estático
   static crearAdmin(nombre: string): Usuario {
-    return new Usuario(nombre, 30, "admin@system.com");
-  }
-
-  // Método de instancia
-  saludar(): string {
-    return `Hola, soy ${this.nombre}`;
+    return new Usuario(nombre, 30);
   }
 }
 ```
 
-**Patrones de diseño en TypeScript:**
-
-| Patrón | En TypeScript |
-|---|---|
-| **Singleton** | Módulos ES ya son singletons. `export const config = {...}` — siempre la misma instancia. |
-| **Factory** | Función que retorna diferentes tipos según un discriminante. `type ShapeFactory = (kind: ShapeKind) => Shape` |
-| **Strategy** | Función como parámetro o interfaz. `type Estrategia = (data: T) => R` |
-| **Observer** | EventEmitter, RxJS Subjects, o callbacks |
-| **Adapter** | Interfaces estructurales: si tiene `.read()`, funciona |
-| **Decorator** | `@decorador` — integrado en el lenguaje |
-| **Iterator** | `[Symbol.iterator]()` o generadores `function*` |
-| **Builder** | Method chaining con `this` tipado |
-| **Repository** | Interfaces genéricas con `Repositorio<T>` |
-| **Dependency Injection** | NestJS con decoradores, o contenedores como `tsyringe`, `inversify` |
-
-Fuente: [TypeScript Handbook — Classes](https://www.typescriptlang.org/docs/handbook/2/classes.html), [Refactoring Guru — Design Patterns](https://refactoring.guru/design-patterns/typescript)
-
-### Peculiaridades del lenguaje que debes conocer
-
-**1. TypeScript no es JavaScript con tipos — es JS con un sistema de tipos**
-
-TypeScript no añade funcionalidad runtime. No hay `reflect`, no hay type checking en runtime (los tipos se borran). El código que escribes se transforma en JS puro.
-
-```typescript
-// Esto:
-interface Usuario { nombre: string }
-function saludar(u: Usuario) { return u.nombre; }
-
-// Compila a esto:
-function saludar(u) { return u.nombre; }
-// La interfaz desaparece completamente
+#### 🧪 Cómo probarlo
+```bash
+npx tsx -e "
+class Perro { constructor(public nombre: string) {} ladrar(): string { return 'Guau'; } }
+const p = new Perro('Rex');
+console.log(p.ladrar());
+"
 ```
 
-**2. Los tipos son estructurales, no nominales**
-
-```typescript
-interface Persona { nombre: string; edad: number }
-interface Empleado { nombre: string; edad: number; salario: number }
-
-const p: Persona = { nombre: "Ana", edad: 30 };
-const e: Empleado = { nombre: "Luis", edad: 28, salario: 50000 };
-
-// Esto funciona porque Empleado es estructuralmente compatible
-const p2: Persona = e;
-```
-
-Esto es distinto de Java/C# y más parecido a cómo funcionan los Protocols de Python (PEP 544).
-
-**3. Branded types (tipos nominales simulados)**
-
-Cuando necesitas distinción nominal (ej: dos IDs del mismo tipo base), usas branded types:
-
-```typescript
-type UserId = string & { readonly __brand: "UserId" };
-type PostId = string & { readonly __brand: "PostId" };
-
-function createUser(id: UserId) { /* ... */ }
-
-const uid = "abc123" as UserId;
-const pid = "abc123" as PostId;
-
-createUser(uid);  // OK
-// createUser(pid);  // Error: no es UserId
-```
-
-**4. `as const` — el mejor amigo del desarrollador**
-
-```typescript
-// Sin as const
-const colores = { rojo: "#FF0000", verde: "#00FF00" };
-// typeof colores = { rojo: string; verde: string }
-
-// Con as const
-const colores = { rojo: "#FF0000", verde: "#00FF00" } as const;
-// typeof colores = { readonly rojo: "#FF0000"; readonly verde: "#00FF00" }
-```
-
-**5. Type Assertions (`as`) — úsalas con cuidado**
-
-```typescript
-const valor: unknown = "Hola mundo";
-const longitud = (valor as string).length;  // OK, sabemos que es string
-
-// Pero no mientas:
-const num = 42;
-// (num as string).length;  // Compila, pero en runtime es undefined
-```
-
-Prefiere `satisfies` y type guards antes que `as`.
-
-**6. `this` en TypeScript**
-
-TypeScript puede tipar `this` explícitamente:
-
-```typescript
-function saludar(this: { nombre: string }) {
-  console.log(`Hola, ${this.nombre}`);
-}
-
-const obj = { nombre: "Ana", saludar };
-obj.saludar();  // OK: this es el objeto
-```
-
-**7. `readonly` y `const` — diferencias**
-
-- `const` es una declaración: la variable no se puede reasignar
-- `readonly` es una propiedad: no se puede modificar después de la inicialización
-- `as const` hace que todo el objeto sea deep readonly
-
-```typescript
-const obj: { readonly x: number } = { x: 5 };
-// obj.x = 10;  // Error: x es readonly
-// obj = {};    // Error: obj es const
-
-const obj2 = { x: 5, y: { z: 10 } } as const;
-// obj2.y.z = 20;  // Error: deep readonly
-```
-
-**8. Overloads de funciones**
-
-TypeScript permite múltiples firmas para una misma función:
-
-```typescript
-function procesar(valor: string): string;
-function procesar(valor: number): number;
-function procesar(valor: boolean): boolean;
-function procesar(valor: string | number | boolean): string | number | boolean {
-  if (typeof valor === "string") return valor.toUpperCase();
-  if (typeof valor === "number") return valor * 2;
-  return !valor;
-}
-```
-
-**9. Tuple variadic y labeled tuples**
-
-```typescript
-// Tuplas etiquetadas
-type Rango = [inicio: number, fin: number];
-
-// Tuplas variádicas
-type StringNumber<T extends any[]> = [...T, string, number];
-type Result = StringNumber<[boolean]>;  // [boolean, string, number]
-```
-
-**10. `this` parameter en callbacks**
-
-```typescript
-interface UIElement {
-  onClick(callback: (this: void, event: Event) => void): void;
-}
-// this: void significa que el callback no debe usar this
-```
-
-Fuente: [TypeScript Handbook — Everyday Types](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html), [TypeScript Deep Dive](https://basarat.gitbook.io/typescript/)
-
----
-
-## Ejemplo completo de POO en TypeScript
-
-Este ejemplo une todos los conceptos de POO explicados arriba en un sistema realista de biblioteca multimedia. Léelo de arriba a abajo: cada clase añade una capa.
+### Ejemplo completo — sistema multimedia
 
 ```typescript
 import { randomUUID } from "node:crypto";
 
-// ── Enums y tipos base ──
-
-enum FormatoVideo {
-  MP4 = "mp4",
-  WEBM = "webm",
-  AVI = "avi",
-  MKV = "mkv",
+abstract class Contenido {
+  protected _reproducciones = 0;
+  readonly id: string;
+  constructor(protected _metadatos: Metadatos, id?: string) {
+    this.id = id ?? randomUUID();
+  }
+  get metadatos(): Metadatos { return this._metadatos; }
+  abstract obtenerInfo(): string;
+  reproducir(): string {
+    this._reproducciones++;
+    return `▶️ ${this._metadatos.titulo}`;
+  }
 }
 
 interface Metadatos {
@@ -1337,558 +1327,208 @@ interface Metadatos {
   readonly tags: string[];
 }
 
-// ── Clase abstracta base ──
-
-abstract class Contenido {
-  protected _reproducciones = 0;
-  readonly id: string;
-
-  constructor(
-    protected _metadatos: Metadatos,
-    id?: string
-  ) {
-    this.id = id ?? randomUUID();
-  }
-
-  get metadatos(): Metadatos {
-    return this._metadatos;
-  }
-
-  get reproducciones(): number {
-    return this._reproducciones;
-  }
-
-  reproducir(): string {
-    this._reproducciones++;
-    return `▶️ Reproduciendo ${this._metadatos.titulo}...`;
-  }
-
-  abstract obtenerInfo(): string;
-
-  duracionFormateada(): string {
-    const mins = Math.floor(this._metadatos.duracionSegundos / 60);
-    const segs = this._metadatos.duracionSegundos % 60;
-    return `${mins}:${segs.toString().padStart(2, "0")}`;
-  }
-
-  toString(): string {
-    return `[${this.constructor.name}] ${this._metadatos.titulo}`;
-  }
-}
-
-// ── Herencia simple ──
-
 class Audio extends Contenido {
-  constructor(
-    metadatos: Metadatos,
-    public readonly bitrateKbps: number
-  ) {
-    super(metadatos);
-  }
-
-  obtenerInfo(): string {
-    return `🎵 ${this.metadatos.titulo} | ` +
-      `${this.duracionFormateada()} | ` +
-      `${this.bitrateKbps}kbps | ` +
-      `${this.reproducciones} reproducciones`;
-  }
+  constructor(metadatos: Metadatos, public readonly bitrateKbps: number) { super(metadatos); }
+  obtenerInfo(): string { return `🎵 ${this.metadatos.titulo} | ${this.bitrateKbps}kbps`; }
 }
 
 class Video extends Contenido {
-  private _subtitulos = false;
-
-  constructor(
-    metadatos: Metadatos,
-    public readonly resolucion: string,
-    public readonly formato: FormatoVideo
-  ) {
-    super(metadatos);
-  }
-
-  get subtitulos(): boolean {
-    return this._subtitulos;
-  }
-
-  set subtitulos(valor: boolean) {
-    this._subtitulos = valor;
-  }
-
-  obtenerInfo(): string {
-    return `🎬 ${this.metadatos.titulo} | ` +
-      `${this.resolucion} | ` +
-      `${this.formato} | ` +
-      `${this._subtitulos ? "CC" : "Sin subtítulos"}`;
-  }
+  constructor(metadatos: Metadatos, public readonly resolucion: string) { super(metadatos); }
+  obtenerInfo(): string { return `🎬 ${this.metadatos.titulo} | ${this.resolucion}`; }
 }
-
-// ── Mixin (simulado con implements + helper) ──
-
-interface Exportable {
-  exportar(formato?: string): string;
-}
-
-function ExportableMixin<TBase extends abstract new (...args: any[]) => any>(
-  Base: TBase
-) {
-  abstract class ExportableClass extends Base implements Exportable {
-    exportar(formato: string = "json"): string {
-      if (formato === "json") {
-        return JSON.stringify(this, null, 2);
-      }
-      return `Exportación a ${formato} no soportada`;
-    }
-  }
-  return ExportableClass;
-}
-
-class Podcast extends Audio {
-  constructor(
-    metadatos: Metadatos,
-    bitrateKbps: number,
-    public readonly episodio: number,
-    public readonly anfitrion: string
-  ) {
-    super(metadatos, bitrateKbps);
-  }
-
-  obtenerInfo(): string {
-    return `🎙️ Ep.${this.episodio}: ${this.metadatos.titulo} | ` +
-      `con ${this.anfitrion} | ` +
-      `${super.obtenerInfo()}`;
-  }
-}
-
-// ── Composición ──
-
-class ListaReproduccion implements Iterable<Contenido> {
-  private _items: Contenido[] = [];
-
-  constructor(public readonly nombre: string) {}
-
-  agregar(item: Contenido): void {
-    this._items.push(item);
-  }
-
-  quitar(indice: number): void {
-    if (indice >= 0 && indice < this._items.length) {
-      this._items.splice(indice, 1);
-    }
-  }
-
-  reproducirTodo(): string[] {
-    return this._items.map(item => item.reproducir());
-  }
-
-  infoCompleta(): string[] {
-    return this._items.map(item => item.obtenerInfo());
-  }
-
-  get length(): number {
-    return this._items.length;
-  }
-
-  [Symbol.iterator](): Iterator<Contenido> {
-    return this._items[Symbol.iterator]();
-  }
-
-  toString(): string {
-    return `📋 ${this.nombre} (${this._items.length} items)`;
-  }
-}
-
-// ── Genéricos ──
-
-class ContenedorMedio<T extends Contenido> {
-  private items: T[] = [];
-
-  agregar(item: T): void {
-    this.items.push(item);
-  }
-
-  obtenerTodos(): T[] {
-    return [...this.items];
-  }
-}
-
-// ── Uso del sistema ──
-
-const cancion = new Audio(
-  { titulo: "Bohemian Rhapsody", duracionSegundos: 354, fechaCreacion: new Date(), tags: ["rock", "clásico"] },
-  320
-);
-
-const pelicula = new Video(
-  { titulo: "Inception", duracionSegundos: 8880, fechaCreacion: new Date(), tags: ["ciencia ficción", "thriller"] },
-  "4K",
-  FormatoVideo.MKV
-);
-pelicula.subtitulos = true;
-
-const podcast = new Podcast(
-  { titulo: "El futuro de la IA", duracionSegundos: 2700, fechaCreacion: new Date(), tags: ["tecnología", "IA"] },
-  128,
-  42,
-  "Ana López"
-);
-
-// Polimorfismo
-for (const contenido of [cancion, pelicula, podcast]) {
-  console.log(contenido.obtenerInfo());
-}
-
-// Composición
-const lista = new ListaReproduccion("Favoritos");
-lista.agregar(cancion);
-lista.agregar(pelicula);
-lista.agregar(podcast);
-console.log(lista.toString());
-console.log(lista.reproducirTodo());
-console.log(lista.infoCompleta());
-
-// Genéricos
-const contenedor = new ContenedorMedio<Audio>();
-contenedor.agregar(cancion);
 ```
 
-**Conceptos demostrados:**
+### Patrones de diseño
 
-| Concepto | Cómo aparece |
+| Patrón | En TypeScript |
 |---|---|
-| Clase abstracta | `Contenido` con `abstract obtenerInfo()` |
-| Herencia simple | `Audio(Contenido)`, `Video(Contenido)` |
-| `super()` | `super(metadatos)` llama al constructor padre |
-| Encapsulación | `_reproducciones` protegido; getters/setters |
-| Polimorfismo | `obtenerInfo()` da resultados distintos según la clase |
-| Interfaz | `Exportable` define contrato |
-| Composición | `ListaReproduccion` contiene `Contenido[]` |
-| Genéricos con constraints | `ContenedorMedio<T extends Contenido>` |
-| Enums | `FormatoVideo` con valores string |
-| Iterable | `[Symbol.iterator]()` para `for...of` |
-| Readonly fields | `readonly id: string`, `readonly titulo: string` |
-
----
-
-## Patrones de diseño con ejemplos
-
-### Strategy
+| **Singleton** | Módulos ES: `export const config = {...}` |
+| **Factory** | Función que retorna tipos según discriminante |
+| **Strategy** | Función como parámetro o interfaz |
+| **Observer** | EventEmitter, RxJS Subjects |
+| **Adapter** | Interfaces estructurales |
+| **Decorator** | `@decorador` — integrado en el lenguaje |
+| **Repository** | Interfaces genéricas `Repositorio<T>` |
+| **Builder** | Method chaining con `this` tipado |
 
 ```typescript
-type EstrategiaOrdenacion = (datos: number[]) => number[];
-
-const ordenarAscendente: EstrategiaOrdenacion = (datos) =>
-  [...datos].sort((a, b) => a - b);
-
-const ordenarDescendente: EstrategiaOrdenacion = (datos) =>
-  [...datos].sort((a, b) => b - a);
-
-class Analizador {
-  constructor(private estrategia: EstrategiaOrdenacion) {}
-
-  analizar(datos: number[]): number[] {
-    return this.estrategia(datos);
-  }
-
-  cambiarEstrategia(estrategia: EstrategiaOrdenacion): void {
-    this.estrategia = estrategia;
-  }
-}
-
-const a = new Analizador(ordenarDescendente);
-console.log(a.analizar([3, 1, 4, 1, 5, 9]));  // [9, 5, 4, 3, 1, 1]
-```
-
-### Observer con EventEmitter
-
-```typescript
-import { EventEmitter } from "events";
-
-type DatosSensor = { temperatura: number; humedad: number };
-
-class Sensor extends EventEmitter {
-  constructor(private nombre: string) {
-    super();
-  }
-
-  emitirLectura(datos: DatosSensor): void {
-    this.emit("lectura", datos);
-  }
-}
-
-const sensor = new Sensor("sala");
-
-sensor.on("lectura", (datos: DatosSensor) => {
-  console.log(`[LOG] ${JSON.stringify(datos)}`);
-});
-
-sensor.on("lectura", (datos: DatosSensor) => {
-  if (datos.temperatura > 30) {
-    console.log("⚠️ Alerta: temperatura alta!");
-  }
-});
-
-sensor.emitirLectura({ temperatura: 23.5, humedad: 60 });
-sensor.emitirLectura({ temperatura: 32.1, humedad: 55 });
-```
-
-### Singleton con módulos
-
-```typescript
-// config.ts — los módulos ES ya son singletons
-export const CONFIG = {
-  dbUrl: process.env.DB_URL ?? "postgresql://localhost/mydb",
-  debug: process.env.NODE_ENV === "development",
-  apiKey: process.env.API_KEY ?? "",
-} as const;
-
-// Desde cualquier otro archivo:
-// import { CONFIG } from "./config.js";
-```
-
-### Factory con registro dinámico
-
-```typescript
+// Factory con registro dinámico
 type Constructor<T> = new (...args: any[]) => T;
-
-interface Plugin {
-  ejecutar(): string;
-}
+interface Plugin { ejecutar(): string; }
 
 class PluginRegistry {
   private static plugins = new Map<string, Constructor<Plugin>>();
-
   static registrar(nombre: string, plugin: Constructor<Plugin>): void {
     this.plugins.set(nombre, plugin);
   }
-
   static crearPlugin(nombre: string): Plugin {
     const PluginClass = this.plugins.get(nombre);
-    if (!PluginClass) {
-      throw new Error(`Plugin '${nombre}' no existe`);
-    }
+    if (!PluginClass) throw new Error(`Plugin '${nombre}' no existe`);
     return new PluginClass();
   }
 }
 
-class PluginPDF implements Plugin {
-  ejecutar(): string {
-    return "Procesando PDF";
-  }
-}
-
-class PluginCSV implements Plugin {
-  ejecutar(): string {
-    return "Procesando CSV";
-  }
-}
-
-PluginRegistry.registrar("pdf", PluginPDF);
-PluginRegistry.registrar("csv", PluginCSV);
-
-console.log(PluginRegistry.crearPlugin("pdf").ejecutar());
-```
-
-### Adapter (tipado estructural)
-
-```typescript
-interface DBSistema {
-  query(sql: string): Promise<unknown[]>;
-}
-
-class SistemaViejo {
-  query(sql: string): unknown[] {
-    return [{ resultado: "viejo" }];
-  }
-}
-
-class SistemaNuevo {
-  async execute(query: string): Promise<unknown[]> {
-    return [{ resultado: "nuevo" }];
-  }
-}
-
-// Adaptador
-class DBAdapter implements DBSistema {
-  constructor(private backend: SistemaViejo | SistemaNuevo) {}
-
-  async query(sql: string): Promise<unknown[]> {
-    if (this.backend instanceof SistemaViejo) {
-      return this.backend.query(sql);
-    }
-    return this.backend.execute(sql);
-  }
-}
-```
-
-### Chain of Responsibility
-
-```typescript
+// Chain of Responsibility
 abstract class Handler {
   private siguiente?: Handler;
-
-  conectar(handler: Handler): Handler {
-    this.siguiente = handler;
-    return handler;
-  }
-
+  conectar(handler: Handler): Handler { this.siguiente = handler; return handler; }
   async manejar(solicitud: string): Promise<string | undefined> {
     const resultado = await this.procesar(solicitud);
-    if (resultado === undefined && this.siguiente) {
-      return this.siguiente.manejar(solicitud);
-    }
+    if (resultado === undefined && this.siguiente) return this.siguiente.manejar(solicitud);
     return resultado;
   }
-
   protected abstract procesar(solicitud: string): Promise<string | undefined>;
 }
-
-class Validador extends Handler {
-  protected async procesar(solicitud: string): Promise<string | undefined> {
-    if (solicitud.length < 3) return "Error: solicitud muy corta";
-    return undefined;
-  }
-}
-
-class Autenticador extends Handler {
-  protected async procesar(solicitud: string): Promise<string | undefined> {
-    if (!solicitud.includes("token")) return "Error: no autenticado";
-    return undefined;
-  }
-}
-
-class Cache extends Handler {
-  protected async procesar(_solicitud: string): Promise<string | undefined> {
-    return "Respuesta desde caché";
-  }
-}
-
-// Cadena: Validador → Autenticador → Cache
-const cadena = new Validador();
-cadena.conectar(new Autenticador()).conectar(new Cache());
-
-console.log(await cadena.manejar("hola"));        // Error: solicitud muy corta
-console.log(await cadena.manejar("hola token"));  // Respuesta desde caché
 ```
+
+#### 🧪 Cómo probar patrones
+```bash
+npx tsx -e "
+type Estrategia = (a: number, b: number) => number;
+const sumar: Estrategia = (a, b) => a + b;
+const multiplicar: Estrategia = (a, b) => a * b;
+function calcular(a: number, b: number, e: Estrategia) { return e(a, b); }
+console.log(calcular(3, 4, sumar), calcular(3, 4, multiplicar));
+"
+```
+
+#### 💡 Memoria y rendimiento
+Clases tienen overhead similar a JS. Los genéricos y tipos no afectan runtime. Decoradores experimentales añaden ligero overhead (wrap de funciones).
+
+#### ✅ Buenas prácticas
+- ✅ Prefiere composición sobre herencia
+- ✅ Usa `abstract class` para comportamiento compartido, `interface` para contratos
+- ❌ No heredes más de 2 niveles — mejor composición
+
+#### 🔗 Para saber más
+- [TypeScript Handbook — Classes](https://www.typescriptlang.org/docs/handbook/2/classes.html)
+- [Refactoring Guru — Patrones TS](https://refactoring.guru/design-patterns/typescript)
 
 ---
 
-## Polimorfismo en detalle
+## 11. Polimorfismo en detalle
 
-TypeScript tiene tres formas de polimorfismo. Todas coexisten en el mismo código.
+TypeScript tiene tres formas de polimorfismo que coexisten en el mismo código.
 
 ### 1. Polimorfismo paramétrico (genéricos)
-
 ```typescript
-function identidad<T>(valor: T): T {
-  return valor;
-}
-
-// El mismo código funciona con cualquier tipo
-identidad<string>("hola");
-identidad<number>(42);
-identidad<boolean>(true);
-
-// Recipiente genérico
+function identidad<T>(valor: T): T { return valor; }
 class Caja<T> {
   constructor(public contenido: T) {}
-
-  obtener(): T {
-    return this.contenido;
-  }
+  obtener(): T { return this.contenido; }
 }
-
 const cajaString = new Caja("Hola");
 const cajaNumber = new Caja(123);
 ```
 
 ### 2. Polimorfismo por subtipado (herencia)
-
 ```typescript
-abstract class Forma {
-  abstract area(): number;
-}
-
+abstract class Forma { abstract area(): number; }
 class Circulo extends Forma {
-  constructor(private radio: number) {
-    super();
-  }
-
-  area(): number {
-    return Math.PI * this.radio ** 2;
-  }
+  constructor(private radio: number) { super(); }
+  area(): number { return Math.PI * this.radio ** 2; }
 }
-
 class Rectangulo extends Forma {
-  constructor(private ancho: number, private alto: number) {
-    super();
-  }
-
-  area(): number {
-    return this.ancho * this.alto;
-  }
+  constructor(private ancho: number, private alto: number) { super(); }
+  area(): number { return this.ancho * this.alto; }
 }
-
 function mostrarArea(forma: Forma): void {
   console.log(`Área: ${forma.area().toFixed(2)}`);
 }
-
-mostrarArea(new Circulo(5));       // Área: 78.54
-mostrarArea(new Rectangulo(3, 4)); // Área: 12.00
 ```
 
-### 3. Polimorfismo estructural (duck typing en compilación)
-
+### 3. Polimorfismo estructural (duck typing)
 ```typescript
-interface Imprimible {
-  imprimir(): string;
-}
-
-class Documento {
-  imprimir(): string {
-    return "Imprimiendo documento...";
-  }
-}
-
-class Foto {
-  imprimir(): string {
-    return "Imprimiendo foto 4x6...";
-  }
-}
-
-class Impresora {
-  imprimir(): string {
-    return "Imprimiendo informe de estado...";
-  }
-}
-
+interface Imprimible { imprimir(): string; }
+class Documento { imprimir(): string { return "Documento..."; } }
+class Foto { imprimir(): string { return "Foto 4x6..."; } }
 function enviarAImpresion(objeto: Imprimible): void {
   console.log(objeto.imprimir());
 }
-
-// Todas funcionan porque tienen la misma estructura
-enviarAImpresion(new Documento());  // Imprimiendo documento...
-enviarAImpresion(new Foto());       // Imprimiendo foto 4x6...
-enviarAImpresion(new Impresora());  // Imprimiendo informe de estado...
+enviarAImpresion(new Documento());
+enviarAImpresion(new Foto());
 ```
 
-El polimorfismo paramétrico se resuelve en compilación, el de subtipado en runtime (herencia clásica), y el estructural también en compilación (es el sistema de tipos de TypeScript — no necesitas herencia, solo tener la misma forma).
+#### 🧪 Cómo probarlo
+```bash
+npx tsx -e "
+interface TieneLongitud { length: number; }
+function mostrar<T extends TieneLongitud>(x: T) { console.log(x.length); }
+mostrar('hola'); mostrar([1,2,3]);
+"
+```
+
+#### 💡 Memoria y rendimiento
+Polimorfismo paramétrico y estructural: cero costo runtime (tipos se borran). Subtipado: mismo costo que JS (vtable implícita en prototipos).
+
+#### ✅ Buenas prácticas
+- ✅ Usa polimorfismo estructural cuando puedas (es lo más TypeScript)
+- ✅ Genéricos para algoritmos que funcionan con cualquier tipo
+- ❌ No crees jerarquías profundas de clases solo por polimorfismo
+
+#### 🔗 Para saber más
+- [TypeScript Handbook — Polymorphism](https://www.typescriptlang.org/docs/handbook/2/objects.html)
 
 ---
 
-## Bases de datos
+## 12. Interacción con contenido multimedia
+
+#### ¿Qué es?
+TypeScript usa las mismas librerías JS para multimedia, con tipos incluidos o de `@types/`.
+
+#### Sintaxis básica
+```typescript
+import sharp from "sharp";
+
+// Redimensionar imagen (tipado con sharp)
+async function redimensionar(input: string, output: string, ancho: number) {
+  await sharp(input)
+    .resize(ancho)
+    .webp({ quality: 80 })
+    .toFile(output);
+}
+
+// Canvas 2D (navegador)
+const canvas = document.createElement("canvas") as HTMLCanvasElement;
+const ctx = canvas.getContext("2d")!;
+ctx.fillStyle = "red";
+ctx.fillRect(0, 0, 100, 100);
+```
+
+| Tipo | Librería | Formatos | Async |
+|---|---|---|---|
+| Imágenes | sharp | JPEG, PNG, WebP, AVIF | Sí |
+| Video | fluent-ffmpeg | MP4, WebM, AVI | Sí |
+| Audio | node-wav, audiobuffer-to-wav | WAV, MP3 | Sí |
+| Canvas | node-canvas | PNG, JPEG | No |
+
+#### 🧪 Cómo probarlo
+```bash
+npx tsx -e "
+import sharp from 'sharp';
+sharp({ create: { width: 100, height: 100, channels: 3, background: { r: 255, g: 0, b: 0 } } })
+  .webp().toFile('/tmp/test.webp').then(() => console.log('OK'));
+"
+```
+
+#### 🔗 Para saber más
+- [Sharp docs](https://sharp.pixelplumbing.com/)
+
+---
+
+## 13. Bases de datos
 
 ### ORMs y query builders tipados
 
 | Librería | Async | ORM | Para qué |
 |---|---|---|---|
-| **Prisma** | Sí | ORM completo | El más popular. Schema declarativo, tipos generados automáticamente, migrations |
-| **Drizzle ORM** | Sí | ORM ligero | SQL-like, tipos inferidos, bundle pequeño, sin clases |
-| **TypeORM** | Sí | ORM completo | Decoradores, active record / data mapper, similar a Doctrine (PHP) |
-| **Kysely** | Sí | Query builder (no ORM) | SQL tipado, sin abstracción de objetos, máximo control |
-| **MikroORM** | Sí | ORM completo | Unit of Work, Identity Map, similar a Hibernate/Doctrine 2 |
-| **Drizzle Kit** | Sí | Migraciones | Genera migraciones SQL desde el schema |
+| **Prisma** | Sí | ORM completo | Schema declarativo, tipos generados, migrations |
+| **Drizzle ORM** | Sí | ORM ligero | SQL-like, tipos inferidos |
+| **TypeORM** | Sí | ORM completo | Decoradores, active record |
+| **Kysely** | Sí | Query builder | SQL tipado, sin abstracción |
+| **MikroORM** | Sí | ORM completo | Unit of Work, Identity Map |
 
 #### Prisma
-
 ```typescript
 // schema.prisma
 model Usuario {
@@ -1907,329 +1547,141 @@ model Post {
   autor     Usuario   @relation(fields: [autorId], references: [id])
 }
 ```
-
-```bash
-npx prisma generate
-npx prisma db push
-npx prisma migrate dev --name init
-```
-
 ```typescript
 import { PrismaClient } from "@prisma/client";
-
 const prisma = new PrismaClient();
 
-// Tipos inferidos automáticamente del schema
 async function crearUsuario(nombre: string, email: string) {
-  const usuario = await prisma.usuario.create({
-    data: { nombre, email },
-  });
-  // usuario.nombre: string (tipado)
-  // usuario.email: string
-  return usuario;
-}
-
-async function obtenerUsuariosConPosts() {
-  return prisma.usuario.findMany({
-    include: { posts: true },
-  });
+  const usuario = await prisma.usuario.create({ data: { nombre, email } });
+  return usuario;  // Todo tipado
 }
 ```
 
 #### Drizzle ORM
-
 ```typescript
 import { pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
 import { drizzle } from "drizzle-orm/node-postgres";
-import { Pool } from "pg";
 
-// Schema declarativo
 const usuarios = pgTable("usuarios", {
   id: serial("id").primaryKey(),
   nombre: text("nombre").notNull(),
   email: text("email").unique().notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Tipos inferidos
 type Usuario = typeof usuarios.$inferSelect;
 type NuevoUsuario = typeof usuarios.$inferInsert;
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const db = drizzle(pool);
-
-// Queries con autocompletado
-async function crearUsuario(nombre: string, email: string) {
-  const [usuario] = await db.insert(usuarios)
-    .values({ nombre, email })
-    .returning();
-  return usuario;
-}
-
-async function obtenerUsuarios() {
-  return db.select().from(usuarios);
-}
+const usuario = await db.insert(usuarios).values({ nombre, email }).returning();
 ```
 
-#### Kysely (query builder puro, sin ORM)
-
-```typescript
-import { Kysely, PostgresDialect, Generated } from "kysely";
-import { Pool } from "pg";
-
-interface Database {
-  usuarios: UsuarioTable;
-  posts: PostTable;
-}
-
-interface UsuarioTable {
-  id: Generated<string>;
-  nombre: string;
-  email: string;
-}
-
-const db = new Kysely<Database>({
-  dialect: new PostgresDialect({
-    pool: new Pool({ connectionString: process.env.DATABASE_URL }),
-  }),
-});
-
-// Queries totalmente tipadas
-async function buscarUsuario(email: string) {
-  return db
-    .selectFrom("usuarios")
-    .where("email", "=", email)
-    .select(["id", "nombre", "email"])
-    .executeTakeFirst();
-}
+#### 🧪 Cómo probarlo
+```bash
+npx tsx -e "
+// Test de tipo — verifica que PrismaClient se importa bien
+import { PrismaClient } from '@prisma/client';
+console.log(typeof PrismaClient);
+"
 ```
 
 ### Migraciones
-
 ```bash
-# Prisma — incluye migraciones nativas
-npx prisma migrate dev --name crear_usuarios
-npx prisma migrate deploy           # Producción
-
-# Drizzle Kit — migraciones SQL generadas
-npx drizzle-kit generate            # Genera SQL
-npx drizzle-kit migrate             # Aplica
-
-# TypeORM — CLI incluida
-npx typeorm migration:create src/migrations/CrearUsuarios
-npx typeorm migration:run
+npx prisma migrate dev --name init
+npx prisma migrate deploy
+npx drizzle-kit generate
+npx drizzle-kit migrate
 ```
 
-Fuente: [Prisma docs](https://www.prisma.io/docs), [Drizzle docs](https://orm.drizzle.team/), [Kysely docs](https://kysely.dev/), [TypeORM docs](https://typeorm.io/)
+#### 🔗 Para saber más
+- [Prisma docs](https://www.prisma.io/docs)
+- [Drizzle docs](https://orm.drizzle.team/)
+- [Kysely docs](https://kysely.dev/)
 
 ---
 
-## WebSockets
+## 14. WebSockets
 
-### ws (raw WebSocket, Node.js)
-
+#### ws (raw WebSocket)
 ```typescript
-// Servidor
 import { WebSocketServer, WebSocket } from "ws";
 
 const wss = new WebSocketServer({ port: 8080 });
 
 wss.on("connection", (ws: WebSocket) => {
-  console.log("Cliente conectado");
-
   ws.on("message", (data: Buffer) => {
-    const mensaje = data.toString();
-    console.log(`Recibido: ${mensaje}`);
-
-    // Broadcast a todos los clientes
     wss.clients.forEach((client) => {
       if (client.readyState === WebSocket.OPEN) {
-        client.send(`Echo: ${mensaje}`);
+        client.send(`Echo: ${data.toString()}`);
       }
     });
   });
-
-  ws.on("close", () => console.log("Cliente desconectado"));
 });
 ```
 
-```typescript
-// Cliente
-import WebSocket from "ws";
-
-const ws = new WebSocket("ws://localhost:8080");
-
-ws.on("open", () => {
-  ws.send("Hola servidor");
-});
-
-ws.on("message", (data: Buffer) => {
-  console.log(`Servidor: ${data.toString()}`);
-});
-```
-
-### Socket.IO (con fallback y salas)
-
+#### Socket.IO (con salas y eventos)
 ```typescript
 import { Server } from "socket.io";
 import http from "node:http";
 
 const server = http.createServer();
-const io = new Server(server, {
-  cors: { origin: "*" },
-});
+const io = new Server(server, { cors: { origin: "*" } });
 
 io.on("connection", (socket) => {
-  console.log(`Usuario conectado: ${socket.id}`);
-
-  // Unirse a una sala
-  socket.on("unirse-sala", (sala: string) => {
-    socket.join(sala);
-    io.to(sala).emit("notificacion", `${socket.id} se unió a ${sala}`);
-  });
-
-  // Mensaje a sala específica
   socket.on("mensaje-sala", ({ sala, mensaje }: { sala: string; mensaje: string }) => {
     io.to(sala).emit("mensaje", { de: socket.id, mensaje });
   });
-
-  socket.on("disconnect", () => {
-    console.log(`Usuario desconectado: ${socket.id}`);
-  });
 });
 
-server.listen(3000, () => console.log("Socket.IO server en :3000"));
+server.listen(3000);
 ```
 
-```typescript
-// Cliente (navegador o Node)
-import { io } from "socket.io-client";
-
-const socket = io("http://localhost:3000");
-
-socket.emit("unirse-sala", "sala-general");
-socket.emit("mensaje-sala", {
-  sala: "sala-general",
-  mensaje: "Hola a todos!",
-});
-
-socket.on("mensaje", (data: { de: string; mensaje: string }) => {
-  console.log(`${data.de}: ${data.mensaje}`);
-});
+#### 🧪 Cómo probarlo
+```bash
+npx tsx -e "
+import { WebSocketServer } from 'ws';
+const wss = new WebSocketServer({ port: 0 }, () => { console.log('WS OK'); wss.close(); });
+"
 ```
 
-**Cuándo usar cada uno:**
-- **ws**: Comunicación simple y rápida, sin necesidad de fallback. Máximo rendimiento
-- **Socket.IO**: Cuando necesitas salas, broadcasting, eventos nombrados, fallback a HTTP long-polling, o auto-reconexión
-
-Fuente: [ws docs](https://github.com/websockets/ws), [Socket.IO docs](https://socket.io/docs/v4/)
+#### 🔗 Para saber más
+- [ws docs](https://github.com/websockets/ws)
+- [Socket.IO docs](https://socket.io/docs/v4/)
 
 ---
 
-## Concurrencia
+## 15. Concurrencia
 
-TypeScript/JavaScript tiene un solo hilo de ejecución con un event loop asíncrono. La concurrencia se logra mediante asincronía (no paralelismo real), Web Workers en navegador y `worker_threads` en Node.js.
+TypeScript/JavaScript tiene un solo hilo con event loop asíncrono. La concurrencia real viene de `worker_threads` (Node) y Web Workers (navegador).
 
-### Event Loop (el modelo de concurrencia)
-
+### Event Loop
 ```typescript
-// El event loop procesa microtareas (Promises) antes que macrotareas (setTimeout)
 console.log("1: Sincrónico");
-
-setTimeout(() => console.log("2: Macrotarea (setTimeout)"), 0);
-
-Promise.resolve().then(() => console.log("3: Microtarea (Promise)"));
-
+setTimeout(() => console.log("2: Macrotarea"), 0);
+Promise.resolve().then(() => console.log("3: Microtarea"));
 console.log("4: Sincrónico");
-
-// Output:
-// 1: Sincrónico
-// 4: Sincrónico
-// 3: Microtarea (Promise)
-// 2: Macrotarea (setTimeout)
+// Output: 1, 4, 3, 2
 ```
 
-### async/await (concurrencia cooperativa en un hilo)
-
+### async/await y concurrencia
 ```typescript
 async function descargar(url: string): Promise<string> {
   const response = await fetch(url);
   return response.text();
 }
 
-async function main() {
-  const urls = [
-    "https://httpbin.org/delay/2",
-    "https://httpbin.org/delay/1",
-    "https://httpbin.org/delay/3",
-  ];
+// Promise.all — concurrencia real (I/O)
+const resultados = await Promise.all(urls.map(descargar));
 
-  // Secuencial: ~6 segundos
-  console.time("secuencial");
-  for (const url of urls) {
-    await descargar(url);
-  }
-  console.timeEnd("secuencial");
-
-  // Concurrencia real con Promise.all: ~3 segundos
-  console.time("concurrente");
-  const resultados = await Promise.all(urls.map(descargar));
-  console.timeEnd("concurrente");
-
-  // Con Promise.allSettled (no falla si una promesa rechaza)
-  const resultados2 = await Promise.allSettled(urls.map(descargar));
-  for (const r of resultados2) {
-    if (r.status === "fulfilled") {
-      console.log(r.value.length);
-    } else {
-      console.error(r.reason);
-    }
-  }
-}
-```
-
-### Web Workers (navegador)
-
-```typescript
-// worker.ts (archivo separado)
-self.onmessage = (event: MessageEvent<number>) => {
-  const n = event.data;
-  // Cálculo CPU-bound
-  const resultado = fibonacci(n);
-  self.postMessage(resultado);
-};
-
-function fibonacci(n: number): number {
-  return n < 2 ? n : fibonacci(n - 1) + fibonacci(n - 2);
-}
-
-// main.ts
-const worker = new Worker(new URL("./worker.ts", import.meta.url), {
-  type: "module",
-});
-
-worker.postMessage(40);
-worker.onmessage = (event: MessageEvent<number>) => {
-  console.log(`Resultado: ${event.data}`);
-};
+// p-limit — concurrencia controlada
+import pLimit from "p-limit";
+const limit = pLimit(5);
+const datos = await Promise.all(
+  urls.map(url => limit(() => fetch(url).then(r => r.text())))
+);
 ```
 
 ### worker_threads (Node.js)
-
 ```typescript
-// worker.ts
-import { parentPort } from "node:worker_threads";
-
-parentPort?.on("message", (n: number) => {
-  const resultado = fibonacci(n);
-  parentPort?.postMessage(resultado);
-});
-
-function fibonacci(n: number): number {
-  return n < 2 ? n : fibonacci(n - 1) + fibonacci(n - 2);
-}
-
-// main.ts
 import { Worker } from "node:worker_threads";
 import { cpus } from "node:os";
 
@@ -2239,231 +1691,363 @@ function ejecutarEnWorker(n: number): Promise<number> {
     worker.postMessage(n);
     worker.on("message", resolve);
     worker.on("error", reject);
-    worker.on("exit", (code) => {
-      if (code !== 0) reject(new Error(`Worker exit code ${code}`));
-    });
   });
 }
 
 // Usar todos los núcleos
-async function main() {
-  const nums = Array.from({ length: cpus().length }, (_, i) => 40 + i);
-  const resultados = await Promise.all(nums.map(ejecutarEnWorker));
-  console.log(resultados);
-}
+const nums = Array.from({ length: cpus().length }, (_, i) => 40 + i);
+const resultados = await Promise.all(nums.map(ejecutarEnWorker));
 ```
-
-### Librerías que mejoran la concurrencia
-
-| Librería | Mejora | Para qué |
-|---|---|---|
-| **p-limit** | Limita concurrencia | Controlar cuántas promesas se ejecutan a la vez |
-| **p-queue** | Cola de promesas con prioridad | Encolar peticiones a APIs con rate limiting |
-| **p-map** | `map()` concurrente con límite | Procesar arrays en paralelo controlado |
-| **poolifier** | Thread pool para worker_threads | Reutilizar workers sin crear uno cada vez |
-| **Bull / BullMQ** | Colas con Redis | Jobs en background con persistencia |
-
-```typescript
-import pLimit from "p-limit";
-
-const limit = pLimit(5);  // Máximo 5 concurrentes
-
-const urls = ["url1", "url2", /* ... 100 más */];
-const resultados = await Promise.all(
-  urls.map(url => limit(() => fetch(url).then(r => r.text())))
-);
-```
-
-### ¿Cuál usar?
 
 | Escenario | Modelo | Ejemplo |
 |---|---|---|
-| HTTP/API calls, BD | async/await + `Promise.all` | Microservicios, BFF |
-| Cálculo intensivo (CPU) | `worker_threads` (Node) o Web Workers (navegador) | Procesamiento de imágenes, ML |
-| Ambos I/O y CPU | async + worker_threads | API que procesa archivos |
-| Streaming, tiempo real | async/await | WebSockets, SSE |
-| Background jobs | BullMQ, Agenda | Colas, emails, notificaciones |
-| Rate limiting a APIs externas | p-limit, p-queue | Scraping, integraciones |
+| HTTP/API calls | async/await + Promise.all | Microservicios |
+| Cálculo intensivo | worker_threads / Web Workers | Imágenes, ML |
+| Streaming | async/await + streams | WebSockets |
+| Background jobs | BullMQ, Agenda | Colas, emails |
 
-Fuente: [MDN — Event Loop](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Event_Loop), [Node.js — worker_threads](https://nodejs.org/api/worker_threads.html), [MDN — Web Workers API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API)
+#### 🧪 Cómo probarlo
+```bash
+npx tsx -e "
+// Verificar event loop order
+console.log('sync');
+Promise.resolve().then(() => console.log('micro'));
+setTimeout(() => console.log('macro'), 0);
+"
+```
 
----
+#### 💡 Memoria y rendimiento
+El event loop no tiene GIL — no bloquea con I/O bien hecho. Workers tienen su propio V8 isolate (~10-30 MB cada uno). Promise.all no crea threads, solo coordina.
 
-## Librerías esenciales por categoría
+#### ✅ Buenas prácticas
+- ✅ Usa `Promise.all` para operaciones I/O independientes
+- ✅ Usa `p-limit` para controlar concurrencia
+- ✅ Workers para CPU-bound, async para I/O-bound
 
-### Desarrollo web
-| Librería | Para qué |
-|---|---|
-| **Express** | Framework HTTP minimalista, estándar en Node.js |
-| **Fastify** | Alternativa rápida a Express, schema-based, plugins |
-| **NestJS** | Framework progresivo con DI, decoradores, módulos |
-| **Hono** | Framework ultraligero, edge-compatible (Cloudflare Workers, Deno, Bun) |
-| **tRPC** | APIs tipadas de extremo a extremo, sin schema ni codegen |
-| **Next.js** | Full-stack React con SSR, SSG, App Router |
-| **Astro** | Static site generator con islas de interactividad |
-
-### Clientes HTTP
-| Librería | Para qué |
-|---|---|
-| **undici** | Cliente HTTP nativo de Node.js (más rápido que http). Usado por Bun y Node 20+ |
-| **ky** | Cliente HTTP ligero para navegador |
-| **ofetch** | Cliente basado en fetch, usado por Nuxt y Nitro |
-| **axios** | Cliente HTTP clásico, interceptors, timeout |
-
-### Validación y parsing
-| Librería | Para qué |
-|---|---|
-| **zod** | Schema validation con inferencia de tipos. Ligero, sin clases |
-| **valibot** | Alternativa a zod, bundle más pequeño (~1KB) |
-| **yup** | Validación similar a zod, más antiguo |
-| **joi** | Validación para Node.js (sin inferencia de tipos) |
-| **class-validator** | Validación con decoradores (NestJS) |
-
-### Testing
-| Librería | Para qué |
-|---|---|
-| **vitest** | Framework de testing rápido (basado en Vite), compatible con Jest API |
-| **jest** | Framework de testing estándar (más pesado que vitest) |
-| **playwright** | Testing E2E multi-navegador |
-| **cypress** | Testing E2E para frontend |
-| **msw** | Mock de APIs HTTP en tests (intercepta a nivel de red) |
-| **testing-library** | Testing de componentes (React, Svelte, Vue) |
-
-### CLI y herramientas de sistema
-| Librería | Para qué |
-|---|---|
-| **commander** | CLI con argumentos, opciones, subcomandos |
-| **yargs** | CLI con parsing avanzado |
-| **oclif** | Framework para construir CLIs (usado por Heroku, Shopify) |
-| **chalk** | Colores en terminal |
-| **ora** | Spinners y progress bars |
-| **ink** | React para terminal (componentes interactivos) |
-
-### Async y utilidades
-| Librería | Para qué |
-|---|---|
-| **p-map / p-filter / p-limit** | Operaciones concurrentes controladas |
-| **zod** | Validación de datos con tipos |
-| **date-fns** | Manipulación de fechas (tree-shakeable) |
-| **nanoid** | IDs únicos pequeños y rápidos |
-| **rxjs** | Programación reactiva con Observables |
-
-Fuente: [npm trends](https://npmtrends.com/), [Awesome TypeScript](https://github.com/dzharii/awesome-typescript), [TypeScript ESLint](https://typescript-eslint.io/)
+#### 🔗 Para saber más
+- [MDN — Event Loop](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Event_Loop)
+- [Node.js — worker_threads](https://nodejs.org/api/worker_threads.html)
 
 ---
 
-## Escala de aprendizaje: de 0 a 100
+## 16. Testing y calidad
 
-Cada nivel incluye lo que debes saber y un proyecto para fijar los conceptos.
+### Frameworks
+
+| Framework | Propósito | Async | CLI |
+|---|---|---|---|
+| **vitest** | Unitario + integración | Sí | `npx vitest run` |
+| **jest** | Unitario + integración | Sí | `npx jest` |
+| **playwright** | E2E multi-navegador | Sí | `npx playwright test` |
+| **msw** | Mock HTTP | Sí | Integrado en vitest/jest |
+
+### Vitest — configuración y test básico
+```bash
+npm install --save-dev vitest
+```
+```typescript
+// vitest.config.ts
+import { defineConfig } from "vitest/config";
+export default defineConfig({ test: { globals: true } });
+```
+
+```typescript
+// math.test.ts
+import { describe, it, expect } from "vitest";
+
+function sumar(a: number, b: number): number {
+  return a + b;
+}
+
+describe("sumar", () => {
+  it("suma dos números positivos", () => {
+    expect(sumar(2, 3)).toBe(5);
+  });
+  it("suma con negativos", () => {
+    expect(sumar(-1, 1)).toBe(0);
+  });
+});
+```
+
+### Cómo testear cada concepto
+
+**Variables y tipos** — aserciones simples, type narrowing en tests:
+```typescript
+it("type guard funciona", () => {
+  function isString(v: unknown): v is string {
+    return typeof v === "string";
+  }
+  expect(isString("hola")).toBe(true);
+  expect(isString(42)).toBe(false);
+});
+```
+
+**POO** — mocks y stubs:
+```typescript
+import { vi } from "vitest";
+
+it("mock de método", () => {
+  const mockFn = vi.fn().mockReturnValue(42);
+  expect(mockFn()).toBe(42);
+  expect(mockFn).toHaveBeenCalledOnce();
+});
+```
+
+**Async** — test con async/await:
+```typescript
+it("promesa resuelve", async () => {
+  const data = await fetch("https://httpbin.org/get");
+  expect(data.ok).toBe(true);
+});
+```
+
+**File I/O** — directorios temporales:
+```typescript
+import { mkdtempSync, writeFileSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
+
+it("escribe y lee archivo", () => {
+  const dir = mkdtempSync(join(tmpdir(), "test-"));
+  const path = join(dir, "test.txt");
+  writeFileSync(path, "contenido", "utf-8");
+  expect(readFileSync(path, "utf-8")).toBe("contenido");
+});
+```
+
+### Tests parametrizados
+```typescript
+it.each([
+  [1, 1, 2],
+  [0, 0, 0],
+  [-1, 1, 0],
+])("sumar(%i, %i) = %i", (a, b, expected) => {
+  expect(sumar(a, b)).toBe(expected);
+});
+```
+
+### Cobertura
+```bash
+npx vitest run --coverage
+```
+
+### Scripts de verificación
+```bash
+# package.json
+{
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/",
+    "test": "vitest run",
+    "check": "npm run typecheck && npm run lint && npm run test"
+  }
+}
+```
+
+#### 🔗 Para saber más
+- [Vitest docs](https://vitest.dev/)
+- [Playwright docs](https://playwright.dev/)
+- [MSW docs](https://mswjs.io/)
+
+---
+
+## 17. Conceptos avanzados
+
+### Template Literal Types avanzados
+
+#### Parsing de rutas tipadas
+```typescript
+type ExtractParams<T extends string> =
+  T extends `${string}:${infer Param}/${infer Rest}`
+    ? Param | ExtractParams<Rest>
+    : T extends `${string}:${infer Param}`
+      ? Param
+      : never;
+
+type RutasUsuarios = ExtractParams<"/api/users/:userId/posts/:postId">;
+// "userId" | "postId"
+
+// Router tipado
+type Route = `/api/${string}`;
+function apiRoute<T extends string>(path: T): `http://localhost:3000${T}` {
+  return `http://localhost:3000${path}`;
+}
+const url = apiRoute("/api/users/42"); // tipo: "http://localhost:3000/api/users/42"
+```
+
+### Conditional Types avanzados
+
+#### Infer recursivo
+```typescript
+// Extraer tipo de promesas anidadas
+type Awaited<T> = T extends Promise<infer U> ? Awaited<U> : T;
+
+type P1 = Awaited<Promise<string>>;        // string
+type P2 = Awaited<Promise<Promise<number>>>; // number
+
+// Filter de uniones por tipo
+type ExtractByType<T, U> = T extends U ? T : never;
+type SoloNumeros = ExtractByType<string | number | boolean, number>;
+// number
+```
+
+### Mapped Types avanzados
+
+```typescript
+// DeepPartial recursivo
+type DeepPartial<T> = {
+  [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
+};
+
+interface Config {
+  db: { url: string; port: number };
+  server: { host: string; port: number };
+}
+type PartialConfig = DeepPartial<Config>;
+
+// PickByValue — filtrar propiedades por tipo de valor
+type PickByValue<T, V> = {
+  [K in keyof T as T[K] extends V ? K : never]: T[K];
+};
+
+interface Usuario { nombre: string; edad: number; email: string; }
+type SoloStrings = PickByValue<Usuario, string>;
+// { nombre: string; email: string; }
+```
+
+### Branded Types (tipado nominal simulado)
+```typescript
+type UserId = string & { readonly __brand: "UserId" };
+type PostId = string & { readonly __brand: "PostId" };
+
+function getUser(id: UserId): Promise<User>;
+function getPost(id: PostId): Promise<Post>;
+
+const uid = "abc123" as UserId;
+const pid = "abc123" as PostId;
+// getUser(pid);  // Error de compilación
+```
+
+### type-challenges
+
+[type-challenges](https://github.com/type-challenges/type-challenges) es un repositorio de retos progresivos de tipos TypeScript. Ejemplos:
+
+```typescript
+// Pick (fácil)
+type MyPick<T, K extends keyof T> = { [P in K]: T[P]; };
+
+// Readonly (fácil)
+type MyReadonly<T> = { readonly [K in keyof T]: T[K]; };
+
+// ReturnType (medio)
+type MyReturnType<T extends (...args: any[]) => any> =
+  T extends (...args: any[]) => infer R ? R : never;
+
+// DeepReadonly (medio)
+type DeepReadonly<T> = {
+  readonly [K in keyof T]: T[K] extends object ? DeepReadonly<T[K]> : T[K];
+};
+```
+
+**Cómo practicar:**
+1. Clona el repo: `git clone https://github.com/type-challenges/type-challenges`
+2. Empieza por warm-ups → easy → medium → hard → extreme
+3. Cada reto tiene tests de tipo que verifican tu solución
+4. Usa el TypeScript Playground para iterar
+
+#### 🔗 Para saber más
+- [type-challenges](https://github.com/type-challenges/type-challenges)
+- [TypeScript Playground](https://www.typescriptlang.org/play/)
+- [Total TypeScript](https://www.totaltypescript.com/)
+
+---
+
+## 18. Escala de aprendizaje: de 0 a 100
 
 ### Nivel 0–15: Fundamentos absolutos
 **Qué aprender:**
-- Sintaxis básica: `let`, `const`, tipos primitivos (`string`, `number`, `boolean`)
-- TypeScript Playground para practicar sin instalar
-- Tipos inferidos vs anotaciones explícitas
+- Sintaxis básica: `let`, `const`, tipos primitivos, inferencia
 - Funciones: parámetros tipados, retorno tipado
-- Arrays: `number[]`, `string[]`, acceso por índice
-- Objetos literales e interfaces básicas: `interface Usuario { nombre: string }`
-- `tsc` básico: compilar un archivo `.ts` a `.js`
-- **Conceptos clave**: TypeScript es JavaScript con tipos — los tipos se borran al compilar. El tipado es estructural: si dos objetos tienen la misma forma, son compatibles. `const` impide reasignación, no inmutabilidad. La inferencia es tu aliada: no anotes todo.
+- Arrays, objetos e interfaces básicas
+- `tsc` básico: compilar `.ts` a `.js`
+- **Conceptos clave**: los tipos se borran al compilar. Tipado estructural. `const` impide reasignación, no inmutabilidad.
 
-**Proyecto:** *Conversor de temperaturas* — función que convierte Celsius a Fahrenheit y viceversa. Interfaz para los parámetros. Tipos literales para las unidades (`"celsius" | "fahrenheit"`). Script CLI simple que lee argumentos con `process.argv`.
+**Proyecto:** *Conversor de temperaturas* — función que convierte Celsius a Fahrenheit. Interfaz para parámetros. Tipos literales para unidades. CLI simple.
 
-### Nivel 15–30: Union types, funciones y arrays avanzados
+### Nivel 15–30: Union types, narrowing y arrays
 **Qué aprender:**
 - Union types: `string | number`
-- Type narrowing: `typeof`, truthy/falsy, `in`, `instanceof`
-- Funciones: parámetros opcionales (`?`), default values, rest params
-- Tuplas: `[string, number]`, labeled tuples
-- `readonly` arrays y `ReadonlyArray<T>`
-- `as const` para tipos literales profundos
-- Enums (numéricos y string)
-- `unknown` vs `any`: cuándo usar cada uno
-- **Conceptos clave**: narrowing es automático (switch, typeof, truthy checks). `any` desactiva el checker — nunca lo uses. `unknown` es seguro pero fuerza verificación. `as const` convierte todo a tipos literales readonly.
+- Type narrowing: `typeof`, `in`, `instanceof`, truthy/falsy
+- Tuplas, `readonly` arrays, `as const`
+- Enums, `unknown` vs `any`
+- **Conceptos clave**: narrowing automático en switch. `any` desactiva el checker. `as const` para tipos literales profundos.
 
-**Proyecto:** *Validador de formularios* — función que valida diferentes tipos de campos (email, teléfono, url). Union type para los tipos de campo. Type guards personalizados. Tuplas para errores `[campo: string, mensaje: string]`. Enum para los tipos de validación. `readonly` arrays para los campos inmutables.
+**Proyecto:** *Validador de formularios* — función que valida campos (email, teléfono, url). Union type para tipos de campo. Type guards personalizados.
 
 ### Nivel 30–45: Interfaces, types, genéricos y POO
 **Qué aprender:**
-- `interface` vs `type` — diferencias y cuándo usar cada uno
-- Extensión: `extends` en interfaces, `&` en types
-- Interfaces con propiedades opcionales y `readonly`
-- Genéricos básicos: `function identidad<T>(arg: T): T`
-- Constraints: `<T extends { length: number }>`
-- Clases: `constructor`, `public`/`private`/`protected`, `readonly`
-- `abstract class` vs `interface` — diferencias
-- `implements`: una clase puede implementar múltiples interfaces
-- **Conceptos clave**: las interfaces soportan declaration merging; los types no. Los genéricos en TypeScript son como templates en C++ pero sin runtime (se borran). Las clases tienen type y value en el mismo nombre — las interfaces solo type.
+- `interface` vs `type`, extensión, declaration merging
+- Genéricos: básicos, constraints, keyof
+- Clases: `public`/`private`/`protected`, `readonly`, `abstract`
+- `implements`, composición sobre herencia
+- **Conceptos clave**: las interfaces soportan declaration merging. Los genéricos se borran en compilación.
 
-**Proyecto:** *Gestor de tareas con herencia* — clases `TareaBase`, `TareaSimple`, `TareaConFecha`. Interfaz `Exportable` con método `exportar()`. Genéricos en un repositorio `Repositorio<T>` con métodos `agregar()`, `obtener()`, `eliminar()`. Clase abstracta `TareaBase` con `abstract completar(): void`. Enum `EstadoTarea`.
+**Proyecto:** *Gestor de tareas* — clases `TareaBase`, `TareaSimple`, `TareaConFecha`. Interfaz `Exportable`. Genéricos en `Repositorio<T>`. Enum `EstadoTarea`.
 
-### Nivel 45–60: Tipos avanzados, generics profundos, utility types
+### Nivel 45–60: Tipos avanzados y utility types
 **Qué aprender:**
-- Utility types: `Partial<T>`, `Required<T>`, `Pick<T, K>`, `Omit<T, K>`, `Record<K, V>`
-- `Readonly<T>`, `Exclude<T, U>`, `Extract<T, U>`, `NonNullable<T>`
-- `ReturnType<T>`, `Parameters<T>`, `ConstructorParameters<T>`
-- Mapped types: `{ [K in keyof T]: ... }`
-- Conditional types: `T extends U ? X : Y`
-- Template literal types: `` `get${Capitalize<string>}` ``
-- `keyof`, `typeof`, `satisfies`
-- `infer` keyword en conditional types
-- Branded types
-- **Conceptos clave**: los utility types no son magia — son mapped types y conditional types que vienen en la stdlib. `satisfies` verifica sin ensanchar. `infer` extrae tipos de otros tipos en conditional branches.
+- Utility types: `Partial`, `Required`, `Pick`, `Omit`, `Record`
+- Mapped types, Conditional types, Template literal types
+- `keyof`, `typeof`, `satisfies`, `infer`
+- Branded types, DeepPartial
+- **Conceptos clave**: los utility types son mapped/conditional types de la stdlib. `satisfies` verifica sin ensanchar.
 
-**Proyecto:** *API client tipado* — función genérica `createApiClient<T extends Record<string, any>>()` que retorna un objeto con métodos tipados para cada endpoint. Usa template literal types para las rutas. Conditional types para deducir el tipo de respuesta según el método HTTP. Utility types para parámetros opcionales. Branded type para `ApiKey`.
+**Proyecto:** *API client tipado* — función genérica `createApiClient<T>()`. Template literal types para rutas. Conditional types para respuesta según método HTTP.
 
-### Nivel 60–75: Backend, bases de datos y async
+### Nivel 60–75: Backend, BD y async
 **Qué aprender:**
-- Express/Fastify con TypeScript: handlers tipados, request/response types
-- Zod o Valibot para validación de entrada
-- Prisma o Drizzle: schema, queries tipadas, migrations
-- async/await en profundidad: `Promise.all`, `Promise.allSettled`, `Promise.race`
-- Error handling: `try/catch` con tipos, clases de error personalizadas
-- Middleware pattern con tipos
-- Variables de entorno con `zod` (validación al startup)
-- **Conceptos clave**: el event loop de JS no tiene GIL — no hay bloqueo de CPU con asincronía bien hecha. `Promise.all` para concurrencia real (I/O-bound). Los decoradores son compile-time, no runtime. Zod infiere tipos automáticamente.
+- Express/Fastify con TypeScript
+- Prisma o Drizzle: schema, queries, migrations
+- Zod para validación, async/await, Promise.all
+- **Conceptos clave**: el event loop no tiene GIL. Zod infiere tipos automáticamente.
 
-**Proyecto:** *API de recetas con Prisma* — Fastify + Prisma + PostgreSQL. Zod para validación de entrada. CRUD tipado para recetas e ingredientes. Búsqueda por ingrediente con query params tipados. Tests con vitest + `@fastify/inject`. Migraciones con Prisma Migrate.
+**Proyecto:** *API de recetas* — Fastify + Prisma + PostgreSQL. Zod para validación. CRUD tipado. Tests con vitest.
 
 ### Nivel 75–90: Tiempo real, workers y producción
 **Qué aprender:**
-- WebSockets con `ws` y Socket.IO — tipado de eventos
-- Workers: `worker_threads` en Node.js, Web Workers en navegador
-- `p-limit` / `p-map` para concurrencia controlada
-- Docker multi-etapa para apps TS (build + run)
-- Zod en runtime: validación de datos externos
-- Rate limiting, caching con Redis
-- CI/CD: GitHub Actions con lint (ESLint), type-check (`tsc --noEmit`), test (vitest)
-- Logger: `pino` o `winston` con tipos
-- **Conceptos clave**: los tipos se borran en compilación — la validación runtime sigue siendo necesaria (Zod, Valibot). Los Workers permiten paralelismo real porque cada worker tiene su propio V8 isolate. `--strict` en tsconfig desde el día 1.
+- WebSockets con Socket.IO
+- worker_threads en Node.js, Web Workers
+- Docker multi-etapa, CI/CD, ESLint, vitest
+- **Conceptos clave**: Workers tienen su propio V8 isolate. `--strict` desde el día 1.
 
-**Proyecto:** *Dashboard de monitorización en tiempo real* — API Fastify que recolecta métricas (CPU, RAM) usando `os` module. Socket.IO para broadcast de métricas a clientes conectados. Zod para validar los datos entrantes. worker_threads para recolectar métricas pesadas sin bloquear el event loop. Docker Compose con API + Redis. Tests de integración.
+**Proyecto:** *Dashboard de monitorización* — Fastify + Socket.IO + worker_threads. Métricas del sistema. Redis. Tests.
 
-### Nivel 90–100: Arquitectura, sistemas distribuidos y edge
+### Nivel 90–100: Arquitectura y edge
 **Qué aprender:**
-- tRPC: APIs tipadas de extremo a extremo sin schema
-- Arquitectura limpia / hexagonal en TypeScript: casos de uso, repositorios, controladores
-- Colas con BullMQ / RabbitMQ: jobs en background con tipado
-- GraphQL con Pothos o GraphQL Yoga: schema-first, tipos inferidos
-- Edge computing: Cloudflare Workers, Deno Deploy, Vercel Edge Functions
-- OpenTelemetry: tracing y observabilidad
+- tRPC, arquitectura hexagonal
+- BullMQ para colas, GraphQL con Pothos
+- Edge computing (Cloudflare Workers, Deno Deploy)
 - Monorepos con Turborepo + Project References
-- Publicar paquetes npm: `tsup` para build, `changesets` para versionado
-- **Conceptos clave**: TypeScript en edge tiene limitaciones (sin Node.js APIs) — usa `workerd`, Deno, o Bun. tRPC elimina la necesidad de REST/GraphQL en apps full-stack. Los monorepos necesitan `composite: true` y `tsc --build`. Las librerías deben publicar `.d.ts` + `.js` (o `.mjs` + `.cjs` para dual ESM/CJS).
+- **Conceptos clave**: edge tiene limitaciones (sin Node APIs). tRPC elimina REST/GraphQL. Monorepos necesitan `composite: true`.
 
-**Proyecto:** *Sistema de notificaciones distribuidas* — tRPC para comunicación entre servicios (o gRPC). BullMQ para colas de email y push. Edge Functions para webhooks de entrada. Monorepo con Turborepo (paquetes `core`, `api`, `workers`). OpenTelemetry para tracing. Desplegado en Docker Compose con monitoreo.
+**Proyecto:** *Sistema de notificaciones* — tRPC, BullMQ, Edge Functions, Turborepo, OpenTelemetry.
 
-Fuente: [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/), [Express + TS](https://expressjs.com/en/guide/typescript.html), [Prisma docs](https://www.prisma.io/docs), [Fastify docs](https://fastify.dev/), [tRPC docs](https://trpc.io/), [BullMQ docs](https://docs.bullmq.io/)
+#### 🔗 Para saber más
+- [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/)
+- [Prisma docs](https://www.prisma.io/docs)
+- [Fastify docs](https://fastify.dev/)
 
 ---
 
-## Proyectos prácticos detallados
+## 19. Proyecto final integrador
 
-### CLI de notas cifradas (nivel 30)
+### CLI de notas cifradas
+
+Combina file system, cifrado, POO, testing y validación.
 
 ```typescript
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
-import { encrypt, decrypt } from "./crypto";
+import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 
 interface Nota {
   titulo: string;
@@ -2474,20 +2058,34 @@ interface Nota {
 class Vault {
   private notas: Map<string, Nota> = new Map();
 
-  constructor(private path: string) {
+  constructor(private path: string, private key: Buffer) {
     this.cargar();
+  }
+
+  private cifrar(texto: string): string {
+    const iv = randomBytes(16);
+    const cipher = createCipheriv("aes-256-gcm", this.key, iv);
+    let enc = cipher.update(texto, "utf8", "hex");
+    enc += cipher.final("hex");
+    return iv.toString("hex") + ":" + enc + ":" + cipher.getAuthTag().toString("hex");
+  }
+
+  private descifrar(texto: string): string {
+    const [iv, enc, tag] = texto.split(":");
+    const decipher = createDecipheriv("aes-256-gcm", this.key, Buffer.from(iv, "hex"));
+    decipher.setAuthTag(Buffer.from(tag, "hex"));
+    return decipher.update(enc, "hex", "utf8") + decipher.final("utf8");
   }
 
   private cargar(): void {
     if (!existsSync(this.path)) return;
-    const data = decrypt(readFileSync(this.path, "utf-8"));
-    const parsed: Record<string, Nota> = JSON.parse(data);
-    this.notas = new Map(Object.entries(parsed));
+    const data = this.descifrar(readFileSync(this.path, "utf-8"));
+    this.notas = new Map(Object.entries(JSON.parse(data)));
   }
 
   private guardar(): void {
     const data = JSON.stringify(Object.fromEntries(this.notas));
-    writeFileSync(this.path, encrypt(data));
+    writeFileSync(this.path, this.cifrar(data));
   }
 
   agregar(titulo: string, contenido: string): void {
@@ -2505,308 +2103,199 @@ class Vault {
 }
 ```
 
-### Web scraper concurrente (nivel 60)
-
+**Tests (vault.test.ts):**
 ```typescript
-import { JSDOM } from "jsdom";
-import pLimit from "p-limit";
+import { describe, it, expect, beforeEach } from "vitest";
+import { mkdtempSync, existsSync } from "node:fs";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
 
-interface Articulo {
-  titulo: string;
-  url: string;
-  fuente: string;
-}
+describe("Vault", () => {
+  let path: string;
+  const key = Buffer.alloc(32, 0xff);
 
-async function scrapeNews(url: string): Promise<Articulo[]> {
-  const response = await fetch(url, {
-    headers: { "User-Agent": "Mozilla/5.0" },
+  beforeEach(() => {
+    path = join(mkdtempSync(join(tmpdir(), "vault-")), "notas.enc");
   });
-  const html = await response.text();
-  const dom = new JSDOM(html);
-  const document = dom.window.document;
 
-  return Array.from(document.querySelectorAll("article h2 a, .headline a"))
-    .map(el => ({
-      titulo: el.textContent?.trim() ?? "",
-      url: el.getAttribute("href") ?? "",
-      fuente: url,
-    }))
-    .filter(a => a.titulo && a.url);
-}
-
-async function main(sources: string[]): Promise<Articulo[]> {
-  const limit = pLimit(5);
-  const results = await Promise.allSettled(
-    sources.map(url => limit(() => scrapeNews(url)))
-  );
-
-  return results.flatMap(r =>
-    r.status === "fulfilled" ? r.value : []
-  );
-}
-
-const articles = await main([
-  "https://news.ycombinator.com",
-  "https://dev.to",
-]);
-console.log(articles.slice(0, 10));
+  it("guarda y recupera una nota", () => {
+    const vault = new Vault(path, key);
+    vault.agregar("test", "contenido");
+    const nota = vault.obtener("test");
+    expect(nota?.titulo).toBe("test");
+    expect(nota?.contenido).toBe("contenido");
+  });
+});
 ```
+
+### Proyecto integrador: funciones
+| Componente | Implementación |
+|---|---|
+| File system | Lectura/escritura de archivo cifrado |
+| Algoritmo | AES-256-GCM (cifrado simétrico) |
+| POO | Clase `Vault` con métodos privados |
+| Testing | Tests unitarios con vitest |
+| Red (opcional) | Compartir vault por WebSocket |
+
+#### 🔗 Para saber más
+- [Node.js — Crypto](https://nodejs.org/api/crypto.html)
 
 ---
 
-## Hacks y tips de productividad
+## 20. Canales y recursos en español
+
+### YouTube
+- **Midulive** — JavaScript, TypeScript, desarrollo web práctico
+- **MoureDev** — TypeScript, retos de programación
+- **HolaMundo** — Tutoriales cortos sobre JS, TS, React
+- **Fazt** — TypeScript, Node.js, React, proyectos completos
+- **Programación ATS** — Curso de TypeScript desde cero
+- **CodigoFacilito** — Cursos estructurados de TypeScript
+- **Platzi** — Ruta de TypeScript con proyectos
+- **Victor Robles** — TypeScript para backend con NestJS
+- **jonmircha** — Cursos de JavaScript y TypeScript
+
+### Comunidades
+- **r/typescript** (Reddit) — Noticias, discusiones, dudas
+- **TypeScript España** — Comunidad en español, meetups
+- **Discord Midulive / MoureDev** — Canales de ayuda
+- **Stack Overflow en español** — Etiqueta `typescript`
+- **r/SpainDevs** (Reddit) — Desarrolladores españoles
+
+### Repositorios
+- [type-challenges](https://github.com/type-challenges/type-challenges) — Retos de tipos
+- [total-typescript](https://github.com/total-typescript) — Workshops de Matt Pocock
+- [awesome-typescript](https://github.com/dzharii/awesome-typescript) — Recursos curados
+- [typescript-exercises](https://github.com/mdevils/typescript-exercises) — Ejercicios progresivos
+- [DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped) — Tipos para librerías JS
+
+### Newsletters
+- [TypeScript Weekly](https://typescript-weekly.com/)
+- [Total TypeScript Blog](https://www.totaltypescript.com/blog)
+- [dev.to/typescript](https://dev.to/t/typescript)
+
+---
+
+## 21. Hacks y tips de productividad
 
 **1. `satisfies` — verifica sin ensanchar**
-
 ```typescript
-// Quieres que cada color sea string o string[], pero mantener el tipo concreto
-const palette = {
-  rojo: "#FF0000",
-  verde: "#00FF00",
-  azul: ["#0000FF", "#00BFFF"],
-} satisfies Record<string, string | string[]>;
-
-palette.rojo.toUpperCase();    // OK: string
-palette.azul.map(c => c);     // OK: string[]
+const palette = { rojo: "#FF0000", verde: "#00FF00" } satisfies Record<string, string>;
+palette.rojo.toUpperCase();  // OK: string
 ```
 
 **2. Branded types para IDs**
-
 ```typescript
 type UserId = string & { readonly __brand: "UserId" };
 type ProductId = string & { readonly __brand: "ProductId" };
-
-function getUser(id: UserId): Promise<User>;
-function getProduct(id: ProductId): Promise<Product>;
-
-// No puedes mezclar IDs accidentalmente
-const uid = "abc" as UserId;
-const pid = "abc" as ProductId;
-// getUser(pid);  // Error de compilación
+// getUser(pid);  // Error
 ```
 
 **3. Template literal types para routing**
-
 ```typescript
-type Route = `/api/${string}`;
-
-type ExtractParams<T extends string> =
-  T extends `${string}:${infer Param}/${infer Rest}`
-    ? Param | ExtractParams<Rest>
-    : T extends `${string}:${infer Param}`
-      ? Param
-      : never;
-
-type GetUsersParams = ExtractParams<"/api/users/:userId/posts/:postId">;
-// "userId" | "postId"
+type ExtractParams<T> = T extends `${string}:${infer P}/${infer R}` ? P | ExtractParams<R>
+  : T extends `${string}:${infer P}` ? P : never;
 ```
 
-**4. Utility types que deberías saber de memoria**
-
+**4. Utility types que debes saber de memoria**
 ```typescript
-// Partial — todas las propiedades opcionales
-Partial<{ nombre: string; edad: number }>
-// → { nombre?: string; edad?: number }
-
-// Required — todas las propiedades requeridas
-Required<{ nombre?: string; edad?: number }>
-// → { nombre: string; edad: number }
-
-// Pick — solo las propiedades seleccionadas
-Pick<{ nombre: string; edad: number; email: string }, "nombre" | "email">
-// → { nombre: string; email: string }
-
-// Omit — todas excepto las seleccionadas
-Omit<Usuario, "password" | "salt">
-
-// Record — diccionario tipado
-Record<string, number>
-// → { [key: string]: number }
-
-// Extract / Exclude — filtrado de uniones
-type Status = "activo" | "inactivo" | "pendiente";
-type Activo = Extract<Status, "activo">;
-type InactivoOPendiente = Exclude<Status, "activo">;
-
-// ReturnType / Parameters — tipos de funciones
-type Fn = (x: number, y: string) => boolean;
-type Ret = ReturnType<Fn>;     // boolean
-type Params = Parameters<Fn>;  // [number, string]
+Partial<T>, Required<T>, Pick<T, K>, Omit<T, K>
+Record<K, V>, ReturnType<T>, Parameters<T>
+Exclude<T, U>, Extract<T, U>, NonNullable<T>
 ```
 
 **5. `as const` para configuraciones**
-
 ```typescript
-export const HTTP_STATUS = {
-  OK: 200,
-  CREATED: 201,
-  NOT_FOUND: 404,
-  INTERNAL_ERROR: 500,
-} as const;
-
-type HttpStatus = typeof HTTP_STATUS[keyof typeof HTTP_STATUS];
-// 200 | 201 | 404 | 500
+export const HTTP_STATUS = { OK: 200, NOT_FOUND: 404 } as const;
+type HttpStatus = typeof HTTP_STATUS[keyof typeof HTTP_STATUS]; // 200 | 404
 ```
 
 **6. Zod para validación + tipos inferidos**
-
 ```typescript
-import { z } from "zod";
-
-const UsuarioSchema = z.object({
-  nombre: z.string().min(2).max(100),
-  email: z.string().email(),
-  edad: z.number().int().positive().optional(),
-});
-
+const UsuarioSchema = z.object({ nombre: z.string().min(2), email: z.string().email() });
 type Usuario = z.infer<typeof UsuarioSchema>;
-// { nombre: string; email: string; edad?: number }
-
-// Validación runtime + type safety
-const data = JSON.parse(body);
-const usuario: Usuario = UsuarioSchema.parse(data);
 ```
 
-**7. Los 3 comandos que todo proyecto TypeScript debería tener**
-
+**7. Los 3 comandos esenciales**
 ```bash
-npx tsc --noEmit          # Type-check sin emitir JS
-npx eslint src/            # Lint
-npx vitest run             # Tests
+npx tsc --noEmit        # Type-check
+npx eslint src/         # Lint
+npx vitest run          # Tests
 ```
 
-Script en `package.json`:
-```json
-{
-  "scripts": {
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint src/",
-    "test": "vitest run",
-    "check": "npm run typecheck && npm run lint && npm run test"
-  }
-}
-```
-
-**8. Non-null assertion (!) — úsalo con cuidado**
-
+**8. Non-null assertion (!) — con cuidado**
 ```typescript
-const elemento = document.getElementById("app")!;
-// ! le dice a TS: "confía en mí, no es null"
-
+// En vez de:
+const el = document.getElementById("app")!;
 // Mejor:
-const elemento = document.getElementById("app");
-if (!elemento) throw new Error("No se encontró #app");
-elemento.innerHTML = "Hola";
+const el = document.getElementById("app");
+if (!el) throw new Error("No encontrado");
 ```
 
-**9. `noUncheckedIndexedAccess` para seguridad en arrays**
-
+**9. `noUncheckedIndexedAccess` para arrays seguros**
 ```typescript
-// Con noUncheckedIndexedAccess: true
 const arr: string[] = ["a", "b"];
 const first = arr[0];  // string | undefined
-
-if (first !== undefined) {
-  first.toUpperCase();  // OK
-}
 ```
 
-**10. Deep Partial con mapped types recursivos**
-
+**10. Deep Partial con mapped types**
 ```typescript
-type DeepPartial<T> = {
-  [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
-};
-
-interface Config {
-  db: { url: string; port: number };
-  server: { host: string };
-}
-
-type PartialConfig = DeepPartial<Config>;
-// PartialConfig.db?.url es string | undefined
+type DeepPartial<T> = { [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K]; };
 ```
 
-Fuente: [TypeScript Handbook — Utility Types](https://www.typescriptlang.org/docs/handbook/utility-types.html), [Zod docs](https://zod.dev/), [TypeScript Deep Dive — Advanced Types](https://basarat.gitbook.io/typescript/type-system)
+#### 🔗 Para saber más
+- [TypeScript Handbook — Utility Types](https://www.typescriptlang.org/docs/handbook/utility-types.html)
+- [Zod docs](https://zod.dev/)
+- [TypeScript Deep Dive](https://basarat.gitbook.io/typescript/)
 
 ---
 
-## Canales y recursos en español
+## 22. Referencias y documentación oficial
 
-### YouTube
-- **Midulive** — JavaScript, TypeScript, desarrollo web en general con enfoque práctico
-- **MoureDev** — TypeScript, Python, automatización, retos de programación (también en Twitch)
-- **HolaMundo** — Tutoriales cortos sobre JS, TS, React, Next.js
-- **Fazt** — TypeScript, Node.js, React, bases de datos — proyectos completos
-- **Programación ATS** — Curso de TypeScript desde cero, explicaciones claras
-- **CodigoFacilito** — Cursos estructurados de TypeScript y desarrollo web
-- **Platzi** — Ruta de aprendizaje de TypeScript con proyectos prácticos
-- **Victor Robles** — TypeScript para backend con Node.js y NestJS
-
-### Comunidades
-- **r/typescript** (Reddit) — Noticias, discusiones técnicas, dudas
-- **TypeScript España** — Comunidad en español, meetups, recursos
-- **Discord Midulive / MoureDev** — Canales de ayuda en TS, proyectos, mentoría
-- **Stack Overflow en español** — Etiqueta `typescript` para dudas técnicas
-- **r/SpainDevs** (Reddit) — Comunidad de desarrolladores españoles
-
-### Repositorios de código
-- [type-challenges](https://github.com/type-challenges/type-challenges) — Retos de tipos de TypeScript (educativo, altamente recomendado)
-- [total-typescript](https://github.com/total-typescript) — Tutoriales y workshops de Matt Pocock
-- [awesome-typescript](https://github.com/dzharii/awesome-typescript) — Lista curada de recursos
-- [typescript-exercises](https://github.com/mdevils/typescript-exercises) — Ejercicios progresivos de TS
-- [DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped) — Repositorio de tipos para librerías JS
-
-### Blogs y newsletters
-- [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/) — La guía oficial, todo lo que necesitas saber
-- [Total TypeScript Blog](https://www.totaltypescript.com/blog) — Matt Pocock, tips y tricks avanzados
-- [TypeScript Weekly](https://typescript-weekly.com/) — Newsletter semanal
-- [Michal Zalecki Blog](https://michalzalecki.com/) — Artículos profundos sobre tipos avanzados
-- [dev.to/typescript](https://dev.to/t/typescript) — Artículos de la comunidad
-
-Fuente: búsqueda en YouTube y Reddit, listas curadas de Awesome TypeScript
-
----
-
-## Referencias y documentación oficial
-
-- **Docs oficiales**: [typescriptlang.org](https://www.typescriptlang.org/docs/) — Handbook, tsconfig, release notes
-- **Playground**: [typescriptlang.org/play](https://www.typescriptlang.org/play/) — Probar TS en el navegador
+- **TypeScript oficial**: [typescriptlang.org](https://www.typescriptlang.org/)
+- **TS Handbook**: [typescriptlang.org/docs/handbook](https://www.typescriptlang.org/docs/handbook/)
+- **TS Playground**: [typescriptlang.org/play](https://www.typescriptlang.org/play/)
+- **TSConfig Reference**: [typescriptlang.org/tsconfig](https://www.typescriptlang.org/tsconfig/)
 - **TypeScript en GitHub**: [github.com/microsoft/TypeScript](https://github.com/microsoft/TypeScript)
 - **DefinitelyTyped**: [github.com/DefinitelyTyped/DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped)
-- **TypeScript Wiki**: [github.com/microsoft/TypeScript/wiki](https://github.com/microsoft/TypeScript/wiki)
-- **TSConfig Reference**: [typescriptlang.org/tsconfig](https://www.typescriptlang.org/tsconfig/)
 - **Node.js + TypeScript**: [nodejs.org/en/learn/getting-started/nodejs-with-typescript](https://nodejs.org/en/learn/getting-started/nodejs-with-typescript)
-- **TypeScript ESLint**: [typescript-eslint.io](https://typescript-eslint.io/)
+- **typescript-eslint**: [typescript-eslint.io](https://typescript-eslint.io/)
+- **Prisma Docs**: [prisma.io/docs](https://www.prisma.io/docs)
+- **Drizzle Docs**: [orm.drizzle.team](https://orm.drizzle.team/)
+- **Kysely Docs**: [kysely.dev](https://kysely.dev/)
+- **Socket.IO Docs**: [socket.io/docs/v4](https://socket.io/docs/v4/)
+- **Zod Docs**: [zod.dev](https://zod.dev/)
+- **Fastify Docs**: [fastify.dev](https://fastify.dev/)
+- **NestJS Docs**: [docs.nestjs.com](https://docs.nestjs.com/)
+- **tRPC Docs**: [trpc.io](https://trpc.io/)
+- **Vitest Docs**: [vitest.dev](https://vitest.dev/)
+- **MDN — WebSockets**: [developer.mozilla.org/en-US/docs/Web/API/WebSockets_API](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API)
+- **Node.js — worker_threads**: [nodejs.org/api/worker_threads.html](https://nodejs.org/api/worker_threads.html)
+- **V8 — Object Shapes**: [v8.dev/blog/shapes](https://v8.dev/blog/shapes)
 
 ### Fuentes de esta guía
-
-Esta guía se ha elaborado a partir de las siguientes fuentes consultadas durante su desarrollo:
-
-- [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/) — Documentación oficial y tutorial completo
-- [TypeScript Deep Dive](https://basarat.gitbook.io/typescript/) — Libro gratuito y completo sobre TypeScript
-- [Total TypeScript](https://www.totaltypescript.com/) — Tutorials y workshops de Matt Pocock
-- [Type Challenges](https://github.com/type-challenges/type-challenges) — Retos de tipos para aprender avanzado
-- [Prisma Docs](https://www.prisma.io/docs) — Documentación del ORM
-- [Drizzle Docs](https://orm.drizzle.team/) — Documentación del ORM
-- [Kysely Docs](https://kysely.dev/) — Query builder tipado
-- [Socket.IO Docs](https://socket.io/docs/v4/) — WebSockets con fallback
-- [Zod Docs](https://zod.dev/) — Schema validation con inferencia
-- [Fastify Docs](https://fastify.dev/) — Framework HTTP rápido
-- [NestJS Docs](https://docs.nestjs.com/) — Framework progresivo con DI
-- [tRPC Docs](https://trpc.io/) — APIs tipadas end-to-end
-- [Awesome TypeScript (GitHub)](https://github.com/dzharii/awesome-typescript) — Lista curada de recursos
-- [r/typescript](https://reddit.com/r/typescript) — Comunidad y debates
-- [dev.to/t/typescript](https://dev.to/t/typescript) — Artículos de la comunidad
-- [Node.js — worker_threads docs](https://nodejs.org/api/worker_threads.html) — Concurrencia con workers
-- [MDN — WebSockets API](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API) — WebSockets en navegador
-- [Typescript-eslint docs](https://typescript-eslint.io/) — Linter oficial para TS
-- [V8 — Object Shapes](https://v8.dev/blog/shapes) — Optimización de objetos en V8
-- [PEP 703 — Free-threaded Python](https://peps.python.org/pep-0703/) — Contexto de GIL vs event loop (referencia comparativa)
+- [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/) — Documentación oficial
+- [TypeScript Deep Dive](https://basarat.gitbook.io/typescript/) — Libro gratuito
+- [Total TypeScript](https://www.totaltypescript.com/) — Workshops de Matt Pocock
+- [Type Challenges](https://github.com/type-challenges/type-challenges) — Retos de tipos
+- [Prisma Docs](https://www.prisma.io/docs)
+- [Drizzle Docs](https://orm.drizzle.team/)
+- [Kysely Docs](https://kysely.dev/)
+- [Socket.IO Docs](https://socket.io/docs/v4/)
+- [Zod Docs](https://zod.dev/)
+- [Fastify Docs](https://fastify.dev/)
+- [NestJS Docs](https://docs.nestjs.com/)
+- [tRPC Docs](https://trpc.io/)
+- [Awesome TypeScript](https://github.com/dzharii/awesome-typescript) — Lista curada
+- [r/typescript](https://reddit.com/r/typescript) — Comunidad
+- [dev.to/typescript](https://dev.to/t/typescript) — Artículos
+- [Node.js — worker_threads](https://nodejs.org/api/worker_threads.html)
+- [typescript-eslint](https://typescript-eslint.io/)
+- [V8 — Object Shapes](https://v8.dev/blog/shapes)
 
 ---
 
-## 🏆 Retos Relacionados
+## Retos Relacionados
 
 Pon a prueba lo aprendido con estos desafíos:
 - [Plus Reto Avanzado 03 Optimizacion De Rutas Greedy](/retos/guia-plus-reto-avanzado-03-optimizacion-de-rutas-greedy)

@@ -12,49 +12,39 @@ import ResponsiveImage from "@components/ResponsiveImage.astro";
 
 # Guía de Astro: De 0 a 100
 
-## ¿Qué es Astro?
+## 1. ¿Qué es Astro?
 
 Astro es un framework web moderno para construir sitios web rápidos, lanzado como versión 1.0 en 2022 y creado por **Fred Schott** (ex-Google, creador de Snowpack). Su filosofía es **content-driven**: prioriza el contenido sobre la interactividad, enviando cero JavaScript al navegador por defecto.
 
 **Arquitectura:**
-- **Zero JS by default**: Astro renderiza HTML en el servidor (build time o SSR) y elimina todo el JavaScript que no sea necesario. Tu sitio funciona sin JS.
-- **Islands Architecture**: solo los componentes interactivos (islas) envían JavaScript al cliente. El resto es HTML/CSS estático.
-- **MPA (Multi-Page Application)**: cada página es un HTML completo. No hay router del lado del cliente. Con ViewTransitions puedes conseguir navegación SPA-like.
-- **Framework-agnóstico**: puedes usar componentes de React, Svelte, Vue, Solid, Preact, Lit, todos en el mismo proyecto.
+- **Zero JS by default**: Astro renderiza HTML en el servidor (build time o SSR) y elimina todo el JavaScript que no sea necesario
+- **Islands Architecture**: solo los componentes interactivos (islas) envían JavaScript al cliente
+- **MPA (Multi-Page Application)**: cada página es un HTML completo. Con ViewTransitions puedes conseguir navegación SPA-like
+- **Framework-agnóstico**: puedes usar componentes de React, Svelte, Vue, Solid, Preact, Lit en el mismo proyecto
 
 **¿Dónde se usa?**
-- **Blogs y documentación**: el caso de uso original. Sitios como el blog deAstro, docs de Netlify, y el propio docs.astro.build
+- **Blogs y documentación**: el caso de uso original. Ej: docs.astro.build
 - **E-commerce**: tiendas con SSR + BD, carritos interactivos con islas
-- **Dashboards**: paneles de administración con server islands y componentes interactivos
-- **Portfolios y landing pages**: sitios estáticos ultrarrápidos con imágenes optimizadas
+- **Dashboards**: paneles de administración con server islands
+- **Portfolios y landing pages**: sitios estáticos ultrarrápidos
 - **Sitios multilingüe**: i18n routing nativo desde Astro 4
-- **Headless CMS**: Astro como frontend de Contentful, Sanity, Strapi, Decap CMS
 
-**¿Quién lo usa?** Trivius (documentación), Wayfair (e-commerce), Kontent.ai (docs), Google (varios proyectos internos), y cientos de miles de desarrolladores independientes.
+**¿Quién lo usa?** Trivius, Wayfair, Kontent.ai, Google (proyectos internos).
 
-Fuente: [Astro docs — Concepts](https://docs.astro.build/en/concepts/why-astro/), [Astro blog — 1.0 announcement](https://astro.build/blog/astro-1/)
+🔗 [Astro docs — Concepts](https://docs.astro.build/en/concepts/why-astro/), [Astro blog — 1.0 announcement](https://astro.build/blog/astro-1/)
 
 ---
 
-## ¿Cómo empezar? Instalación en todos los entornos
+## 2. ¿Cómo empezar? Instalación en todos los entornos
 
 ### Requisitos
 - **Node.js 18+** (recomendado 20 LTS o 22 LTS)
-- Un editor: **VSCode** con la extensión oficial **Astro** (language server, syntax highlighting, autocompletado)
+- Editor: [VSCode](/posts/resources/#ides-y-editores-de-codigo) con extensión oficial **Astro**
 
-### Crear proyecto con npm
+### Crear proyecto
 ```bash
 npm create astro@latest
-# Sigue el asistente: nombre, plantilla (vacío, blog, portfolio, mínima), TypeScript
-```
-
-### pnpm (más rápido, recomendado)
-```bash
 pnpm create astro@latest
-```
-
-### Bun (runtime alternativo)
-```bash
 bun create astro@latest
 ```
 
@@ -66,15 +56,13 @@ COPY package.json pnpm-lock.yaml ./
 RUN corepack enable && pnpm install --frozen-lockfile
 COPY . .
 RUN pnpm run build
-
 FROM nginx:alpine AS runner
 COPY --from=builder /app/dist /usr/share/nginx/html
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
 ```
 
-### Alias útiles para el día a día
-Añade a tu `~/.bashrc` o `~/.zshrc`:
+### Alias útiles
 ```bash
 alias adev='npm run dev'
 alias abuild='npm run build'
@@ -83,11 +71,11 @@ alias aadd='npx astro add'
 alias acheck='npx astro check'
 ```
 
-Fuente: [Astro docs — Installation](https://docs.astro.build/en/install/auto/), [Docker Hub — Node](https://hub.docker.com/_/node/)
+🔗 [Astro docs — Installation](https://docs.astro.build/en/install/auto/), [Docker Hub — Node](https://hub.docker.com/_/node/)
 
 ---
 
-## Primeros pasos y configuración del entorno
+## 3. Primeros pasos y configuración del entorno
 
 ### Estructura del proyecto
 ```
@@ -96,10 +84,10 @@ mi-proyecto/
 │   ├── pages/         # Rutas basadas en archivos
 │   ├── components/    # Componentes .astro, .svelte, .jsx
 │   ├── layouts/       # Layouts compartidos
-│   ├── content/       # Colecciones de contenido (desde Astro 3)
+│   ├── content/       # Colecciones de contenido
 │   └── styles/        # CSS global
-├── public/            # Archivos estáticos (favicon, robots.txt)
-├── astro.config.mjs   # Configuración de Astro
+├── public/            # Archivos estáticos
+├── astro.config.mjs   # Configuración
 └── package.json
 ```
 
@@ -110,14 +98,12 @@ npm run build  # Genera HTML estático en dist/
 npm run preview # Previsualiza la build localmente
 ```
 
-### Tu primera página (`src/pages/index.astro`)
+### Tu primera página
 ```astro
 ---
-// Todo lo que está entre --- se ejecuta en el servidor
 const titulo = "Hola Mundo";
 const items = ["Astro", "Svelte", "Tailwind"];
 ---
-
 <html>
   <head><title>{titulo}</title></head>
   <body>
@@ -129,12 +115,10 @@ const items = ["Astro", "Svelte", "Tailwind"];
 </html>
 ```
 
-### Layout básico (`src/layouts/Base.astro`)
+### Layout básico
 ```astro
 ---
-export interface Props {
-  title: string;
-}
+export interface Props { title: string; }
 const { title } = Astro.props;
 ---
 <!doctype html>
@@ -145,25 +129,14 @@ const { title } = Astro.props;
     <title>{title}</title>
   </head>
   <body>
-    <slot /> <!-- Aquí se renderiza el contenido de la página -->
+    <slot />
   </body>
 </html>
 ```
 
-Usando el layout en una página:
-```astro
----
-import Base from '../layouts/Base.astro';
----
-<Base title="Mi Página">
-  <main>
-    <h1>Contenido principal</h1>
-  </main>
-</Base>
-```
-
-### Colecciones de contenido básico (`src/content/config.ts`)
+### Colecciones de contenido básico
 ```ts
+// src/content/config.ts
 import { defineCollection, z } from 'astro:content';
 
 const posts = defineCollection({
@@ -180,7 +153,6 @@ const posts = defineCollection({
 export const collections = { posts };
 ```
 
-Consultar colecciones:
 ```astro
 ---
 import { getCollection } from 'astro:content';
@@ -189,68 +161,65 @@ const posts = await getCollection('posts');
 {posts.map(post => <a href={`/posts/${post.id}`}>{post.data.title}</a>)}
 ```
 
-Fuente: [Astro docs — Project Structure](https://docs.astro.build/en/basics/project-structure/), [Astro docs — Pages](https://docs.astro.build/en/basics/astro-pages/)
+### 🧪 Mini-script: verificar instalación
+```bash
+#!/bin/bash
+echo "=== Verificar Astro ==="
+node --version && echo "✅ Node OK" || echo "❌ Node"
+npm --version && echo "✅ npm OK" || echo "❌ npm"
+npm create astro@latest -- --template basics test-astro 2>&1 | tail -3
+cd test-astro && npm run build 2>&1 | tail -3 && echo "✅ Astro build OK" || echo "❌ Build falló"
+cd .. && rm -rf test-astro
+```
+
+🔗 [Astro docs — Project Structure](https://docs.astro.build/en/basics/project-structure/), [Astro docs — Pages](https://docs.astro.build/en/basics/astro-pages/)
 
 ---
 
-## Paradigmas
-
-Astro es un **framework web**, no un lenguaje de programación. Sus paradigmas principales son:
+## 4. Paradigmas
 
 ### Declarativo
-
-Los componentes `.astro` y los templates MDX siguen un estilo **declarativo**: describes *qué* renderizar, no *cómo*. El frontmatter (`---`) es imperativo (código TypeScript que se ejecuta en el servidor), pero el template es declarativo (HTML con expresiones `{}`).
+Los componentes `.astro` siguen un estilo **declarativo**: describes qué renderizar, no cómo.
 
 ```astro
 ---
-// Imperativo: lógica en el frontmatter
 const items = await getCollection('posts');
 const filtrados = items.filter(p => !p.data.draft);
 ---
-// Declarativo: template HTML con expresiones
 <ul>
   {filtrados.map(item => <li>{item.data.title}</li>)}
 </ul>
 ```
 
 ### MPA (Multi-Page Application)
-
-Astro genera **páginas HTML completas** por cada ruta. No es una SPA: no hay router del lado del cliente. Cada navegación recarga el HTML completo (a menos que uses ViewTransitions).
+Astro genera **páginas HTML completas** por cada ruta. No hay router del lado del cliente.
 
 | Característica | Astro (MPA) | Next.js/Nuxt (SPA/SSR) |
 |---|---|---|
 | HTML por ruta | Completo | Shell + JS |
 | JS por defecto | Ninguno | Bundle de cliente |
 | Router | Servidor (URL → archivo) | Cliente (history API) |
-| ViewTransitions | SPA-like opcional | Nativo |
 
 ### Islands Architecture
-
-Astro usa el patrón de **islas** (partial hydration): solo los componentes interactivos envían JavaScript al cliente. El resto permanece como HTML/CSS estático.
+Solo los componentes interactivos envían JavaScript al cliente. El resto es HTML/CSS estático.
 
 ```
 ┌──────────────────────────────┐
 │         HTML estático        │
 │  ┌──────────────────────┐   │
-│  │   Isla interactiva   │   │  ← solo este componente tiene JS
-│  │   (React/Svelte/...) │   │
+│  │   Isla interactiva   │   │
 │  └──────────────────────┘   │
 │         HTML estático        │
 └──────────────────────────────┘
 ```
 
 ### Compilación estática + SSR opcional
-
-Por defecto, Astro genera HTML estático en build time. Puedes activar SSR por página o globalmente con `output: 'server'` o `output: 'hybrid'`.
+Por defecto, Astro genera HTML estático. Puedes activar SSR con `output: 'server'` o `output: 'hybrid'`.
 
 ### Component-based (no POO)
-
-Astro no usa clases ni herencia. Usa **componentes** (`.astro`, `.svelte`, `.jsx`, `.vue`) que reciben props y renderizan HTML. Es el mismo paradigma que React/Svelte/Vue, pero sin JavaScript en el cliente por defecto.
+Astro usa **componentes** (`.astro`, `.svelte`, `.jsx`, `.vue`) que reciben props y renderizan HTML.
 
 ### Multi-framework
-
-Puedes usar múltiples frameworks en el mismo proyecto:
-
 ```bash
 npx astro add react svelte vue solid lit
 ```
@@ -259,62 +228,23 @@ npx astro add react svelte vue solid lit
 ---
 import Mapa from '../components/Mapa.jsx';
 import Contador from '../components/Contador.svelte';
-import Tarjeta from '../components/Tarjeta.vue';
 ---
-
 <Mapa client:only="react" />
 <Contador client:load />
-<Tarjeta client:visible />
 ```
 
-Fuente: [Astro docs — Components](https://docs.astro.build/en/basics/astro-components/), [Astro docs — Islands](https://docs.astro.build/en/concepts/islands/)
+🔗 [Astro docs — Components](https://docs.astro.build/en/basics/astro-components/), [Astro docs — Islands](https://docs.astro.build/en/concepts/islands/)
 
 ---
 
-## Tipos de datos y variables
+## 7. Sistema de archivos: contenido y activos
 
-Astro usa **TypeScript** de forma nativa. El frontmatter de los archivos `.astro` y las configuraciones de colecciones son TypeScript/JavaScript.
+### ¿Qué es?
+Astro es un framework web — el sistema de archivos se usa durante el build o SSR, no en el cliente. Los archivos se organizan en colecciones, activos estáticos y rutas.
 
-### TypeScript en Astro
+### Content Collections
 
-No necesitas configurar nada: Astro incluye TypeScript por defecto. El `tsconfig.json` se genera automáticamente.
-
-```astro
----
-const nombre: string = "Astro";
-const version: number = 5;
-const tags: string[] = ["static", "ssr", "islands"];
-const config = { output: "static" as const };
----
-```
-
-### Props tipados con Astro.props
-
-Cada componente `.astro` puede definir sus props con una interfaz TypeScript exportada:
-
-```astro
----
-export interface Props {
-  name: string;
-  avatar?: string;
-  role: "admin" | "user" | "editor";
-  joinedAt: Date;
-}
-const { name, avatar, role, joinedAt } = Astro.props;
----
-
-<div class="card">
-  {avatar && <img src={avatar} alt={name} />}
-  <h2>{name}</h2>
-  <p>{role} · {joinedAt.toLocaleDateString()}</p>
-  <slot />
-</div>
-```
-
-### Collection types inferidos de Zod
-
-Las content collections generan tipos automáticamente desde los esquemas Zod:
-
+**Configuración con loaders (Astro 3+):**
 ```ts
 // src/content.config.ts
 import { defineCollection, z } from 'astro:content';
@@ -334,183 +264,293 @@ const posts = defineCollection({
 export const collections = { posts };
 ```
 
+**Consultas:**
 ```astro
 ---
-import { getCollection } from 'astro:content';
-const posts = await getCollection('posts');
-// posts: Array<{ id: string; data: { title: string; ... }; body?: string }>
+import { getCollection, getEntry } from 'astro:content';
+
+const allPosts = await getCollection('posts');
+const publishedPosts = await getCollection('posts', ({ data }) => !data.draft);
+const sortedPosts = (await getCollection('posts'))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+const post = await getEntry('posts', 'mi-articulo');
+const { Content, headings } = await post.render();
 ---
+<article><Content /></article>
 ```
 
-### Astro.glob() — array tipado
-
+### Astro.glob() — lectura de archivos en build
 ```astro
 ---
 const posts = await Astro.glob('../content/posts/*.mdx');
-// posts: Array<{ frontmatter: { title: string; ... }; url: string; Content: any }>
+const publicados = posts.filter(p => !p.frontmatter.draft);
 ---
-```
-
-### Variables en el template
-
-```astro
----
-const titulo = "Hola Mundo";
-const usuario = { nombre: "Ana", rol: "admin" };
-const fecha = new Date();
-const datos = await fetch('https://api.example.com/data').then(r => r.json());
----
-
-<h1>{titulo}</h1>
-<p>Usuario: {usuario.nombre} ({usuario.rol})</p>
-<p>Fecha: {fecha.toLocaleDateString()}</p>
-```
-
-### Fragment HTML: `---` separa frontmatter de template
-
-El separador `---` delimita el código servidor (frontmatter) del template HTML:
-
-```astro
----
-const items = [1, 2, 3];
----
-{items.map(i => <span>{i}</span>)}
-```
-
-### Astro.fetch — Response nativo
-
-`fetch` está disponible globalmente en el frontmatter. Devuelve un `Response` estándar:
-
-```astro
----
-const res = await fetch('https://api.github.com/repos/withastro/astro');
-if (!res.ok) throw new Error(`Error: ${res.status}`);
-const data = await res.json();
----
-
-<p>⭐ {data.stargazers_count} estrellas</p>
-```
-
-### Content Collections — tipos con Zod
-
-```ts
-// src/types.ts
-import { getCollection } from 'astro:content';
-export type Post = Awaited<ReturnType<typeof getCollection<'posts'>>>[number];
-```
-
-Fuente: [Astro docs — TypeScript](https://docs.astro.build/en/guides/typescript/), [Astro docs — Content Collections](https://docs.astro.build/en/guides/content-collections/)
-
----
-
-## Control de flujo y modularidad
-
-### Control de flujo en templates .astro
-
-Los templates usan expresiones JavaScript entre `{}`, similares a JSX pero sin Virtual DOM.
-
-**Condicionales:**
-```astro
----
-const usuario = { autenticado: true, nombre: "Ana" };
-const items: string[] = [];
----
-
-{usuario.autenticado ? (
-  <p>Bienvenido, {usuario.nombre}</p>
-) : (
-  <a href="/login">Iniciar sesión</a>
-)}
-
-{usuario.autenticado && <p>Panel de control</p>}
-{items.length === 0 && <p class="empty">No hay elementos</p>}
-```
-
-**Bucles (map):**
-```astro
----
-const productos = [
-  { id: 1, nombre: "Laptop", precio: 999 },
-  { id: 2, nombre: "Mouse", precio: 25 },
-];
----
-
 <ul>
-  {productos.map(p => (
-    <li key={p.id}>{p.nombre} — ${p.precio}</li>
+  {publicados.map(post => (
+    <li><a href={post.url}>{post.frontmatter.title}</a></li>
   ))}
 </ul>
 ```
 
-**Ternarios anidados:**
+### import.meta.glob (Vite)
 ```astro
-{rol === "admin" ? <PanelAdmin />
-  : rol === "editor" ? <PanelEditor />
-  : <PanelUsuario />}
+---
+const modulos = import.meta.glob('../data/*.json', { eager: true });
+const lazyModulos = import.meta.glob('../data/*.json');
+---
 ```
 
-### Componentes: import y export
+### Archivos estáticos: public/ y src/assets
+- `public/`: se sirven tal cual (favicon, robots.txt). No pasan por Vite.
+- `src/assets/`: pasan por Vite (hash, optimización, importación como módulo).
 
 ```astro
 ---
+import logo from '../assets/logo.svg';
+import foto from '../assets/foto.jpg';
+---
+<img src={logo} alt="Logo" />
+<img src="/favicon.ico" alt="" />
+<img src={foto} alt="Foto" />
+```
+
+### Endpoints API
+```ts
+// src/pages/api/productos.ts
+import type { APIRoute } from 'astro';
+
+export const GET: APIRoute = async ({ params, request, locals }) => {
+  const productos = await locals.db.findAll();
+  return new Response(JSON.stringify(productos), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  });
+};
+```
+
+### 🧪 Mini-script: verificar estructura de archivos
+```astro
+---
+import { getCollection } from 'astro:content';
+import { glob } from 'astro/loaders';
+
+const posts = await getCollection('posts');
+const archivosMD = await Astro.glob('../content/posts/*.{md,mdx}');
+---
+<p>Total colecciones: {posts.length}</p>
+<p>Total archivos glob: {archivosMD.length}</p>
+<ul>
+  {posts.map(p => <li>{p.id} — {p.data.title}</li>)}
+</ul>
+```
+
+🔗 [Astro docs — Astro.glob](https://docs.astro.build/en/reference/api-reference/#astroglob), [Astro docs — Content Collections](https://docs.astro.build/en/guides/content-collections/), [Astro docs — Endpoints](https://docs.astro.build/en/guides/endpoints/)
+
+---
+
+## 9. Conceptos clave explicados a fondo
+
+### Islas (Islands Architecture)
+
+**¿Qué es?** Componentes interactivos en medio de HTML estático. Astro renderiza el HTML en el servidor y solo hidrata los componentes que lo necesitan.
+
+**Directivas de hidratación:**
+```astro
+<Contador client:load />            <!-- Inmediato -->
+<MenuDesplegable client:idle />     <!-- Cuando el navegador está inactivo -->
+<GaleriaImagenes client:visible />  <!-- Cuando es visible en viewport -->
+<SidebarComplejo client:media="(min-width: 768px)" />
+<BotonEstatico />                   <!-- Sin hidratación. Solo HTML y CSS -->
+<MapaInteractivo client:only="react" /> <!-- Solo cliente, sin SSR -->
+```
+
+| Directiva | Cuándo usarla | Ejemplo |
+|---|---|---|
+| `client:load` | Debe estar disponible de inmediato | Navbar, header |
+| `client:idle` | No es urgente, puede esperar | Chat widget, notificaciones |
+| `client:visible` | Está abajo en la página | Galería, comentarios |
+| `client:media` | Solo en ciertos tamaños | Sidebar desktop, menú mobile |
+| `client:only` | Usa APIs del navegador | Mapas, canvas, WebGL |
+
+**Server Islands (Astro 4.5+)**
+```astro
+---
+import PrecioProducto from '../components/PrecioProducto.astro';
+---
+<main>
+  <h1>Producto</h1>
+  <PrecioProducto server:defer>
+    <p slot="fallback">Cargando precio...</p>
+  </PrecioProducto>
+</main>
+```
+
+### Archivos `.astro`
+
+**Estructura:**
+```astro
+---
+// Frontmatter: código servidor
 import Base from '../layouts/Base.astro';
-import Card from '../components/Card.astro';
-import Contador from '../components/Contador.svelte';
-
-export interface Props { titulo: string; }
-export const TEMAS = ["claro", "oscuro", "sistema"] as const;
-const { titulo } = Astro.props;
+const titulo = "Página de ejemplo";
 ---
+
+<!-- Template HTML -->
+<Base title={titulo}>
+  <main>
+    <h1>{titulo}</h1>
+    <slot />
+  </main>
+</Base>
+
+<style>
+  /* Estilos scoped por defecto */
+  h1 { font-size: 2rem; }
+</style>
+
+<script>
+  // Código del lado del cliente
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log('Página cargada');
+  });
+</script>
 ```
 
-### Astro.slots y named slots
+### Integraciones
+
+**Frameworks:**
+```bash
+npx astro add react svelte vue solid preact lit
+```
+
+**CSS:** `npx astro add tailwind`
+**Adaptadores:** `npx astro add vercel netlify cloudflare node deno`
+**Utilidades:** `npx astro add mdx sitemap partytown prefetch`
+
+**Ejemplo config:**
+```js
+// astro.config.mjs
+import { defineConfig } from 'astro/config';
+import svelte from '@astrojs/svelte';
+import tailwind from '@astrojs/tailwind';
+import vercel from '@astrojs/vercel/serverless';
+import mdx from '@astrojs/mdx';
+
+export default defineConfig({
+  integrations: [svelte(), tailwind(), mdx()],
+  output: 'server',
+  adapter: vercel(),
+});
+```
+
+### SSR vs SSG
+
+**SSG (Static Site Generation):** Todo se genera en build time. Máximo rendimiento.
+```js
+export default defineConfig({ output: 'static' });
+```
+
+**SSR (Server-Side Rendering):** Las páginas se renderizan en cada petición.
+```js
+export default defineConfig({ output: 'server', adapter: vercel() });
+```
+
+**Hybrid / prerender:**
+```js
+export default defineConfig({ output: 'hybrid' });
+```
+```astro
+---
+export const prerender = false;
+const { id } = Astro.params;
+const producto = await db.getProducto(id);
+---
+<h1>{producto.nombre}</h1>
+```
+
+### ViewTransitions (navegación SPA-like)
+
+**Configuración básica:**
+```astro
+---
+import { ViewTransitions } from 'astro:transitions';
+---
+<html>
+  <head>
+    <ViewTransitions />
+  </head>
+  <body><slot /></body>
+</html>
+```
+
+**Transiciones entre páginas:**
+```astro
+<a href="/blog/post-2" transition:animate="slide">Siguiente artículo</a>
+<h1 transition:animate="slide">Título del artículo</h1>
+```
+
+**Animaciones:** `morph`, `slide`, `fade`, `initial`, `only`, personalizadas con `transition:name`
+
+### Imágenes: astro:assets
+
+**Image component:**
+```astro
+---
+import { Image } from 'astro:assets';
+import miImagen from '../images/foto.jpg';
+---
+<Image src={miImagen} alt="Descripción" width={800} height={600} format="webp" quality={80} />
+```
+
+**Picture component:**
+```astro
+---
+import { Picture } from 'astro:assets';
+import heroDesktop from '../images/hero-desktop.jpg';
+---
+<Picture src={heroDesktop} alt="Hero" widths={[400,800,1200]} formats={['avif','webp','jpg']} />
+```
+
+### i18n routing (Astro 4+)
+```js
+export default defineConfig({
+  i18n: {
+    defaultLocale: 'es',
+    locales: ['es', 'en', 'ca'],
+    routing: { prefixDefaultLocale: false, strategy: 'prefix' },
+  },
+});
+```
 
 ```astro
 ---
-// src/components/Modal.astro
-export interface Props { titulo: string; }
-const { titulo } = Astro.props;
+const { currentLocale } = Astro;
 ---
-
-<div class="modal">
-  <header>
-    <h2>{titulo}</h2>
-    <slot name="acciones" />
-  </header>
-  <section><slot /></section>
-  <footer>
-    <slot name="footer"><button>Cerrar</button></slot>
-  </footer>
-</div>
+<p>Idioma actual: {currentLocale}</p>
 ```
 
-```astro
-<Modal titulo="Confirmar">
-  <button slot="acciones">✕</button>
-  <p>¿Estás seguro?</p>
-  <button slot="footer" class="danger">Eliminar</button>
-</Modal>
+### Markdown/MDX y remark/rehype plugins
+
+```js
+// astro.config.mjs
+import mdx from '@astrojs/mdx';
+import remarkToc from 'remark-toc';
+import rehypeSlug from 'rehype-slug';
+
+export default defineConfig({
+  integrations: [mdx({
+    remarkPlugins: [remarkToc],
+    rehypePlugins: [rehypeSlug],
+    gfm: true,
+  })],
+});
 ```
 
-### Componente Fragment
+### Componentes, composición y slots
 
+**Layouts anidados:**
 ```astro
----
-import { Fragment } from 'astro';
----
-
-<Fragment slot="header">
-  <h2>Título</h2>
-  <p>Subtítulo</p>
-</Fragment>
-```
-
-### Layouts anidados
-
-```astro
----
-// src/layouts/Base.astro
----
+<!-- src/layouts/Base.astro -->
 <!doctype html>
 <html>
   <head><slot name="head" /></head>
@@ -523,331 +563,257 @@ import { Fragment } from 'astro';
 ```
 
 ```astro
----
-// src/layouts/Blog.astro
+<!-- src/layouts/Blog.astro -->
 import Base from './Base.astro';
----
 <Base>
   <article class="prose"><slot /></article>
 </Base>
 ```
 
-### Módulos: estructura del proyecto
-
-```
-src/
-├── pages/         # File-based routing
-├── components/    # Componentes .astro, .svelte, .jsx, .vue
-├── layouts/       # Layouts compartidos
-├── content/       # Colecciones de contenido
-│   ├── config.ts
-│   └── posts/
-├── scripts/       # Scripts del servidor
-├── styles/        # CSS global
-├── actions/       # Astro Actions (5+)
-├── middleware.ts   # Middleware global
-└── lib/           # Utilidades compartidas
-```
-
-Cada directorio tiene un propósito específico y Astro lo reconoce por convención.
-
-Fuente: [Astro docs — Project Structure](https://docs.astro.build/en/basics/project-structure/), [Astro docs — Components](https://docs.astro.build/en/basics/astro-components/)
-
----
-
-## Conceptos clave explicados a fondo
-
-### Islas (Islands Architecture)
-
-Las islas son componentes interactivos en medio de HTML estático. Astro renderiza el HTML en el servidor y solo hidrata (añade JavaScript) los componentes que lo necesitan, usando directivas `client:*`.
-
-**Directivas de hidratación:**
-
-```astro
-<!-- Carga inmediata: tan pronto como la página carga en el cliente -->
-<Contador client:load />
-
-<!-- Cuando el navegador está inactivo (requestIdleCallback) -->
-<MenuDesplegable client:idle />
-
-<!-- Cuando el componente es visible en viewport (IntersectionObserver) -->
-<GaleriaImagenes client:visible />
-
-<!-- Solo en un media query específico -->
-<SidebarComplejo client:media="(min-width: 768px)" />
-
-<!-- Sin hidratación. Solo HTML y CSS -->
-<BotonEstatico />
-
-<!-- Solo cliente (no renderiza en servidor, útil para APIs del navegador) -->
-<MapaInteractivo client:only="react" />
-```
-
+**Slots y named slots:**
 ```astro
 ---
-import Contador from '../components/Contador.svelte';
-import Galeria from '../components/Galeria.jsx';
-import Mapa from '../components/Mapa.jsx';
+// Card.astro
+export interface Props { titulo: string; }
+const { titulo } = Astro.props;
 ---
-
-<!-- Sin JS: HTML estático -->
-<Contador />
-
-<!-- Con JS en carga -->
-<Contador client:load />
-
-<!-- Con JS cuando es visible -->
-<Galeria client:visible />
-
-<!-- Solo en cliente, sin SSR -->
-<Mapa client:only="react" />
-```
-
-**¿Cómo funciona internamente?**
-
-1. Astro renderiza el HTML de cada isla durante el build (o en SSR).
-2. El HTML incluye un placeholder con atributos `data-astro-id`.
-3. El runtime de Astro detecta las islas y aplica la directiva correspondiente.
-4. Solo entonces se descarga y ejecuta el JavaScript del componente.
-
-**¿Cuándo usar cada directiva?**
-
-| Directiva | Cuándo usarla | Ejemplo |
-|---|---|---|
-| `client:load` | El componente debe estar disponible de inmediato | Navbar, header, banner principal |
-| `client:idle` | El componente no es urgente, puede esperar | Analytics, chat widget, notificaciones |
-| `client:visible` | El componente está abajo en la página | Galería de imágenes, footer interactivo, comentarios |
-| `client:media` | El componente solo se ve en ciertos tamaños | Sidebar de escritorio, menú mobile |
-| `client:only` | El componente usa APIs del navegador | Mapas, canvas, WebGL |
-
-**Server Islands (Astro 4.5+)**
-
-Desde Astro 4.5, puedes tener islas que se renderizan en el servidor en cada petición (no en build). Útil para contenido personalizado sin perder las ventajas de las islas.
-
-```astro
----
-import PrecioProducto from '../components/PrecioProducto.astro';
----
-
-<main>
-  <h1>Producto</h1>
-  <!-- Esta isla se renderiza en cada request (SSR) -->
-  <PrecioProducto server:defer>
-    <p slot="fallback">Cargando precio...</p>
-  </PrecioProducto>
-</main>
-```
-
-Fuente: [Astro docs — Islands](https://docs.astro.build/en/concepts/islands/), [Astro docs — Server Islands](https://docs.astro.build/en/guides/server-islands/)
-
-### Archivos `.astro`
-
-Los componentes `.astro` son el corazón de Astro. Combinan HTML, CSS y JavaScript en un solo archivo.
-
-**Estructura de un componente `.astro`:**
-
-```astro
----
-// 1. FRONTMATTER (---)
-// Código JavaScript/TypeScript que se ejecuta en el servidor
-// Aquí van: imports, fetch de datos, lógica, variables
-
-import Base from '../layouts/Base.astro';
-import Boton from '../components/Boton.svelte';
-const titulo = "Página de ejemplo";
-const datos = await fetch('https://api.example.com/data').then(r => r.json());
----
-
-<!-- 2. TEMPLATE HTML -->
-<!-- Las expresiones van entre {} -->
-<Base title={titulo}>
-  <main>
-    <h1>{titulo}</h1>
-    <ul>
-      {datos.map(item => (
-        <li class="item">{item.nombre}</li>
-      ))}
-    </ul>
-    <Boton client:load />
-  </main>
-</Base>
-
-<!-- 3. ESTILOS (opcional) -->
-<!-- Los estilos son scoped por defecto -->
-<style>
-  .item {
-    color: oklch(0.5 0.2 240);
-  }
-  h1 {
-    font-size: 2rem;
-  }
-</style>
-
-<!-- 4. SCRIPTS DEL LADO DEL CLIENTE (opcional) -->
-<script>
-  // Este código se ejecuta en el navegador
-  // No confundir con el frontmatter (---) que es servidor
-  document.addEventListener('DOMContentLoaded', () => {
-    console.log('Página cargada');
-  });
-</script>
-```
-
-**Reglas importantes:**
-- El frontmatter (`---`) se ejecuta en el servidor. No puedes usar `document`, `window`, `localStorage` aquí.
-- El template puede contener componentes de otros frameworks, pero necesitan la directiva `client:*` para ser interactivos.
-- Los estilos son **scoped por defecto**: se añade un hash único a los selectores.
-- Puedes tener múltiples bloques `<style>` y `<script>`.
-- `<script>` se procesa y bundlea por Vite. Si usas `is:inline`, se inserta tal cual.
-
-**Componentes sin framework:**
-```astro
----
-// Card.astro — componente 100% Astro, sin framework
-export interface Props {
-  titulo: string;
-  descripcion: string;
-  imagen?: string;
-}
-const { titulo, descripcion, imagen } = Astro.props;
----
-
-<article class="card">
-  {imagen && <img src={imagen} alt={titulo} />}
+<div class="card">
+  <slot name="icon" />
   <h2>{titulo}</h2>
-  <p>{descripcion}</p>
-  <slot /> <!-- Contenido hijo -->
-</article>
-
-<style>
-  .card {
-    border: 1px solid oklch(0.87 0 0);
-    border-radius: 0.5rem;
-    padding: 1rem;
-  }
-</style>
+  <slot />
+  <slot name="footer"><p>Por defecto</p></slot>
+</div>
 ```
 
-Fuente: [Astro docs — .astro components](https://docs.astro.build/en/basics/astro-components/)
+**Patrones de diseño (reinterpretación de POO/patrones):**
 
-### Integraciones
+- **Layout Pattern**: herencia de layouts anidados
+- **Island Pattern**: componente interactivo mínimo
+- **Composition Pattern**: slots y named slots para composición
+- **Data Fetching Pattern**: `Astro.glob()` para archivos locales, `fetch` para APIs
+- **Route Patterns**: parámetros dinámicos `[slug]`, grupos `(app)`, catch-all `[...slug]`
 
-Astro tiene un ecosistema de integraciones oficiales y de la comunidad que añaden soporte para frameworks, CSS, despliegue, y más.
-
-**Frameworks de UI:**
-```bash
-npx astro add react      # @astrojs/react
-npx astro add svelte     # @astrojs/svelte
-npx astro add vue        # @astrojs/vue
-npx astro add solid      # @astrojs/solid-js
-npx astro add preact     # @astrojs/preact
-npx astro add lit        # @astrojs/lit
-npx astro add alpine     # @astrojs/alpinejs
-```
-
-**CSS y diseño:**
-```bash
-npx astro add tailwind   # @astrojs/tailwind (Tailwind v3)
-# Para Tailwind v4: instalar @tailwindcss/vite manualmente
-```
-
-**Adaptadores de deploy:**
-```bash
-npx astro add vercel     # @astrojs/vercel (serverless, edge, static)
-npx astro add netlify    # @astrojs/netlify (serverless + edge functions)
-npx astro add cloudflare # @astrojs/cloudflare (Workers, Pages)
-npx astro add node       # @astrojs/node (SSR con Node.js)
-npx astro add deno       # @astrojs/deno
-```
-
-**Otras utilidades:**
-```bash
-npx astro add mdx        # @astrojs/mdx (soporte MDX)
-npx astro add sitemap    # @astrojs/sitemap (generación automática)
-npx astro add partytown  # @astrojs/partytown (scripts de terceros en web worker)
-npx astro add prefetch   # @astrojs/prefetch (precarga de enlaces)
-npx astro add image      # @astrojs/image (obsoleto desde Astro 3, usar astro:assets)
-```
-
-**Ejemplo de config con múltiples integraciones:**
-```js
-// astro.config.mjs
-import { defineConfig } from 'astro/config';
-import svelte from '@astrojs/svelte';
-import tailwind from '@astrojs/tailwind';
-import vercel from '@astrojs/vercel/serverless';
-import mdx from '@astrojs/mdx';
-import sitemap from '@astrojs/sitemap';
-
-export default defineConfig({
-  integrations: [svelte(), tailwind(), mdx(), sitemap()],
-  output: 'server',
-  adapter: vercel(),
-});
-```
-
-Fuente: [Astro docs — Integrations](https://docs.astro.build/en/guides/integrations-guide/)
-
-### Colecciones de contenido (Content Collections)
-
-Las colecciones de contenido son la forma oficial de gestionar contenido en Astro. Reemplazan al patrón anterior de `Astro.glob()` para archivos Markdown/MDX.
-
-**Configuración (`src/content/config.ts`):**
-```ts
-import { defineCollection, z } from 'astro:content';
-
-const posts = defineCollection({
-  type: 'content', // 'content' para MDX/Markdown, 'data' para JSON/YAML
-  schema: z.object({
-    title: z.string(),
-    description: z.string(),
-    pubDate: z.date(),
-    updatedDate: z.date().optional(),
-    tags: z.array(z.string()),
-    draft: z.boolean().default(false),
-    image: "img/guia_0_100_astro/guia_0_100_astro_cover-1200.webp"
-  }),
-});
-
-const tools = defineCollection({
-  type: 'data', // Para archivos .json o .yaml
-  schema: z.object({
-    name: z.string(),
-    url: z.string().url(),
-    category: z.enum(['frontend', 'backend', 'devops']),
-  }),
-});
-
-export const collections = { posts, tools };
-```
-
-**Consultar colecciones:**
+**Polimorfismo por props:**
 ```astro
 ---
-import { getCollection, getEntry } from 'astro:content';
-import type { Post } from '../types';
-
-// Todas las entradas
-const allPosts = await getCollection('posts');
-
-// Filtradas
-const publishedPosts = await getCollection('posts', ({ data }) => !data.draft);
-
-// Ordenadas
-const sortedPosts = (await getCollection('posts'))
-  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
-
-// Una entrada específica
-const post = await getEntry('posts', 'mi-articulo');
-
-// Con slug personalizado (desde el frontmatter)
-const postBySlug = await getEntry('posts', ({ data }) => data.slug);
+// Boton.astro
+export interface Props {
+  variant?: 'primary' | 'secondary' | 'danger';
+  size?: 'sm' | 'md' | 'lg';
+  href?: string;
+}
+const { variant = 'primary', size = 'md', href } = Astro.props;
 ---
+{href ? <a href={href} class={`btn btn-${variant} btn-${size}`}><slot /></a>
+ : <button class={`btn btn-${variant} btn-${size}`}><slot /></button>}
 ```
 
-**Astro 3+ Loader (nuevo desde Astro 3):**
-Desde Astro 3, las colecciones usan un sistema de loaders más flexible:
+### Middleware y cookies
 
+```ts
+// src/middleware.ts
+import { defineMiddleware } from 'astro:middleware';
+
+export const onRequest = defineMiddleware(async (context, next) => {
+  context.locals.user = await getUserFromCookie(context.cookies);
+  const response = await next();
+  return response;
+});
+```
+
+### Astro Actions (Astro 5+)
+```ts
+// src/actions/index.ts
+import { defineAction, z } from 'astro:actions';
+
+export const server = {
+  likePost: defineAction({
+    accept: 'form',
+    input: z.object({ postId: z.string(), action: z.enum(['like', 'unlike']) }),
+    handler: async ({ postId, action }, context) => {
+      return await db.updateLikes(postId, action);
+    },
+  }),
+};
+```
+
+### 🧪 Mini-script: verificar conceptos clave
+```bash
+#!/bin/bash
+echo "=== Verificar Astro ==="
+npx astro --version 2>/dev/null && echo "✅ Astro CLI OK" || echo "❌ Astro CLI"
+echo "=== Componentes .astro ==="
+find src -name "*.astro" 2>/dev/null | head -5
+echo "=== Colecciones ==="
+ls src/content/ 2>/dev/null
+echo "=== Config ==="
+cat astro.config.mjs 2>/dev/null | head -10
+```
+
+🔗 [Astro docs — Islands](https://docs.astro.build/en/concepts/islands/), [Astro docs — View Transitions](https://docs.astro.build/en/guides/view-transitions/), [Astro docs — SSR](https://docs.astro.build/en/guides/server-side-rendering/), [Astro docs — i18n](https://docs.astro.build/en/guides/i18n/), [Astro docs — Actions](https://docs.astro.build/en/guides/actions/)
+
+---
+
+## 16. Testing y calidad
+
+### Frameworks y herramientas
+
+| Framework | Propósito | Async | CLI |
+|---|---|---|---|
+| Playwright | E2E testing | Sí | `npx playwright test` |
+| Vitest | Unitario/Integración | Sí | `npx vitest` |
+| Astro check | Type checking | No | `npx astro check` |
+| Pagefind | Búsqueda offline | Sí | `npx pagefind --site dist` |
+
+### Cómo testear cada concepto
+
+**Islas y componentes:**
+```ts
+// tests/island.test.ts
+import { test, expect } from 'vitest';
+import { mount } from '@astro/test-utils';
+
+test('componente se renderiza correctamente', async () => {
+  const html = await mount('./src/components/Card.astro', {
+    props: { titulo: 'Test' },
+    slots: { default: '<p>Contenido</p>' },
+  });
+  expect(html).toContain('Test');
+  expect(html).toContain('Contenido');
+});
+```
+
+**Content Collections:**
+```ts
+// tests/collections.test.ts
+import { test, expect } from 'vitest';
+
+test('posts tienen frontmatter válido', async () => {
+  const posts = await getCollection('posts');
+  for (const post of posts) {
+    expect(post.data.title).toBeTruthy();
+    expect(post.data.pubDate).toBeInstanceOf(Date);
+    expect(Array.isArray(post.data.tags)).toBe(true);
+  }
+});
+```
+
+**E2E con Playwright:**
+```ts
+// tests/e2e/navigation.spec.ts
+import { test, expect } from '@playwright/test';
+
+test('navegación entre páginas', async ({ page }) => {
+  await page.goto('http://localhost:4321');
+  await page.click('a[href="/blog"]');
+  await expect(page.locator('h1')).toContainText('Blog');
+  await page.click('a:first-of-type');
+  await expect(page.locator('article')).toBeVisible();
+});
+```
+
+```ts
+test('vista previa de post en listado', async ({ page }) => {
+  await page.goto('http://localhost:4321/blog');
+  const articles = page.locator('article');
+  const count = await articles.count();
+  expect(count).toBeGreaterThan(0);
+  for (let i = 0; i < count; i++) {
+    await expect(articles.nth(i).locator('h2')).toBeVisible();
+  }
+});
+```
+
+**Integración continua:**
+```yaml
+# .github/workflows/test.yml
+name: Astro Tests
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+      - run: pnpm install
+      - run: pnpm run build
+      - run: npx astro check
+      - run: npx playwright test
+```
+
+### 🧪 Mini-scripts de verificación
+
+**Mini-script 1: Verificar build**
+```bash
+#!/bin/bash
+echo "=== Verificar build ==="
+npm run build 2>&1 | tail -5
+if [ -d "dist" ]; then
+    echo "✅ Build generado en dist/"
+    du -sh dist/
+else
+    echo "❌ Build falló"
+    exit 1
+fi
+```
+
+**Mini-script 2: Verificar colecciones**
+```astro
+---
+import { getCollection } from 'astro:content';
+const posts = await getCollection('posts');
+const errors: string[] = [];
+for (const post of posts) {
+  if (!post.data.title) errors.push(`${post.id}: sin título`);
+  if (!post.data.pubDate) errors.push(`${post.id}: sin fecha`);
+}
+---
+{errors.length === 0 ? <p>✅ Todas las colecciones válidas</p>
+ : <ul>{errors.map(e => <li>{e}</li>)}</ul>}
+<p>Total: {posts.length} posts</p>
+```
+
+🔗 [Playwright docs](https://playwright.dev/), [Vitest docs](https://vitest.dev/), [Astro check CLI](https://docs.astro.build/en/reference/cli-reference/#astro-check)
+
+---
+
+## 17. Conceptos avanzados
+
+### View Transitions avanzadas
+
+```astro
+---
+import { ViewTransitions } from 'astro:transitions';
+---
+<ViewTransitions />
+<!-- Morphing de elementos entre páginas -->
+<img src="foto.jpg" transition:name="hero" />
+<!-- En otra página -->
+<img src="foto-grande.jpg" transition:name="hero" />
+```
+
+### Server Islands anidadas
+
+```astro
+---
+import PanelUsuario from '../components/PanelUsuario.astro';
+import ActividadReciente from '../components/ActividadReciente.astro';
+---
+<PanelUsuario server:defer>
+  <p slot="fallback">Cargando panel...</p>
+  <ActividadReciente server:defer>
+    <p slot="fallback">Cargando actividad...</p>
+  </ActividadReciente>
+</PanelUsuario>
+```
+
+### Content Collections avanzado
+
+**Loaders personalizados:**
 ```ts
 // src/content.config.ts
 import { defineCollection, z } from 'astro:content';
@@ -857,259 +823,85 @@ const posts = defineCollection({
   loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/posts' }),
   schema: z.object({
     title: z.string(),
+    description: z.string(),
     pubDate: z.date(),
+    updatedDate: z.date().optional(),
+    tags: z.array(z.string()),
+    draft: z.boolean().default(false),
+    image: z.string().optional(),
+    author: z.string().default('Jorge Beneyto Castelló'),
   }),
 });
-
-export const collections = { posts };
 ```
 
-**Inferencia de tipos automática:**
-```ts
-// Las colecciones generan tipos automáticamente
-type Post = typeof collections.posts._type;
-// { id: string; data: { title: string; ... }; body?: string; }
+**Consultas avanzadas:**
+```astro
+---
+import { getCollection, getEntry } from 'astro:content';
+
+const postsPorTag = (await getCollection('posts'))
+  .filter(p => p.data.tags?.includes('astro'));
+
+const postsPorAnio = (await getCollection('posts')).reduce((acc, post) => {
+  const anio = post.data.pubDate.getFullYear();
+  if (!acc[anio]) acc[anio] = [];
+  acc[anio].push(post);
+  return acc;
+}, {} as Record<number, typeof posts>);
+---
 ```
 
-Fuente: [Astro docs — Content Collections](https://docs.astro.build/en/guides/content-collections/)
+### i18n avanzado
 
-### SSR vs SSG, prerender, endpoints API, server islands
-
-**SSG (Static Site Generation) — por defecto:**
 ```js
 // astro.config.mjs
 export default defineConfig({
-  output: 'static', // valor por defecto
+  i18n: {
+    defaultLocale: 'es',
+    locales: ['es', 'en', 'ca', 'de', 'fr'],
+    routing: { prefixDefaultLocale: false, strategy: 'prefix' },
+  },
 });
 ```
-Todo se genera en build time. Los archivos HTML se sirven desde CDN. Máximo rendimiento, mínimo coste.
 
-**SSR (Server-Side Rendering):**
+**Selector de idioma:**
+```astro
+---
+const { currentLocale } = Astro;
+const locales = [
+  { code: 'es', label: 'Español' },
+  { code: 'en', label: 'English' },
+  { code: 'ca', label: 'Català' },
+];
+---
+<nav>
+  {locales.map(locale => (
+    <a href={Astro.url.pathname.replace(`/${currentLocale}`, `/${locale.code}`)}
+       class={locale.code === currentLocale ? 'active' : ''}>
+      {locale.label}
+    </a>
+  ))}
+</nav>
+```
+
+### Edge Functions, ISR y rendimiento
+
 ```js
 // astro.config.mjs
 import vercel from '@astrojs/vercel/serverless';
 
 export default defineConfig({
-  output: 'server',
-  adapter: vercel(),
+  output: 'hybrid',
+  adapter: vercel({
+    isr: { expiration: 60, exclude: ['/admin/**'] },
+    edgeMiddleware: true,
+  }),
+  build: { inlineStylesheets: 'auto' },
 });
 ```
-Las páginas se renderizan en cada petición. Necesitas un adapter (Vercel, Netlify, Node).
-
-**Hybrid / prerender (lo mejor de ambos):**
-```js
-// astro.config.mjs
-export default defineConfig({
-  output: 'hybrid', // desde Astro 3
-});
-```
-Cada página decide si es estática o SSR:
-
-```astro
----
-// src/pages/productos/[id].astro
-export const prerender = false; // Esta página usa SSR
-// export const prerender = true;  // Esta página es estática
-
-const { id } = Astro.params;
-const producto = await db.getProducto(id);
----
-
-<h1>{producto.nombre}</h1>
-```
-
-**Endpoints API:**
-```astro
----
-// src/pages/api/productos.json.ts
-import type { APIRoute } from 'astro';
-
-export const GET: APIRoute = async ({ params, request }) => {
-  const productos = await db.findAll();
-  return new Response(JSON.stringify(productos), {
-    status: 200,
-    headers: { 'Content-Type': 'application/json' },
-  });
-};
-
-// También soporta POST, PUT, DELETE
-export const POST: APIRoute = async ({ request }) => {
-  const body = await request.json();
-  const producto = await db.create(body);
-  return new Response(JSON.stringify(producto), { status: 201 });
-};
-```
-
-**Server Islands (Astro 4.5+):**
-Las server islands permiten tener componentes que se renderizan en el servidor dentro de una página estática. Se cargan de forma diferida y asíncrona.
-
-```astro
----
-// Página estática con una isla de servidor
-import Precio from '../components/Precio.astro';
----
-
-<h1>Producto</h1>
-<Precio server:defer>
-  <p slot="fallback">Calculando precio...</p>
-</Precio>
-```
-
-El componente `Precio.astro` se ejecuta en el servidor en cada petición, pero el resto de la página es estática.
-
-Fuente: [Astro docs — SSR](https://docs.astro.build/en/guides/server-side-rendering/), [Astro docs — Server Islands](https://docs.astro.build/en/guides/server-islands/)
-
-### ViewTransitions (navegación SPA-like)
-
-Desde Astro 3.0, Astro incluye soporte nativo para **View Transitions**, permitiendo navegación entre páginas sin recarga completa, con animaciones fluidas.
-
-**Configuración básica:**
-```astro
----
-// En tu layout principal
-import { ViewTransitions } from 'astro:transitions';
----
-
-<!doctype html>
-<html>
-  <head>
-    <ViewTransitions />
-  </head>
-  <body>
-    <slot />
-  </body>
-</html>
-```
-
-**Transiciones entre páginas:**
-```astro
-<!-- Página 1: /blog/post-1 -->
-<a href="/blog/post-2" transition:animate="slide">Siguiente artículo</a>
-
-<!-- Página 2: /blog/post-2 -->
-<h1 transition:animate="slide">Título del artículo</h1>
-```
-
-**Animaciones disponibles:**
-- `morph` — morphing del elemento entre páginas (la más espectacular)
-- `slide` — deslizamiento
-- `fade` — fundido
-- `initial` — animación de entrada
-- `only` — el elemento no se anima
-- Personalizadas con `transition:name`
-
-**Transiciones con nombres:**
-```astro
-<!-- Mismo nombre en ambas páginas = morphing -->
-<!-- Página 1 -->
-<img src="foto.jpg" transition:name="hero" />
-
-<!-- Página 2 -->
-<img src="foto-grande.jpg" transition:name="hero" />
-```
-
-**Modo de navegación:**
-```astro
-<ViewTransitions /> <!-- Por defecto: navegación con transiciones -->
-
-<!-- También puedes controlar el comportamiento -->
-<ViewTransitions
-  client:load  <!-- Precarga los recursos de la página destino -->
-/>
-```
-
-**Cuándo usarlo:**
-- Blogs con navegación entre artículos
-- Portfolios con galerías
-- Cualquier sitio donde quieras evitar la recarga completa de página
-- No lo uses en dashboards o apps con estado complejo (mejor SPA de verdad)
-
-Fuente: [Astro docs — View Transitions](https://docs.astro.build/en/guides/view-transitions/)
-
-### Imágenes: Image component, astro:assets, getImage
-
-Desde Astro 3, el manejo de imágenes se hace con el módulo `astro:assets`.
-
-**Image component:**
-```astro
----
-import { Image } from 'astro:assets';
-import miImagen from '../images/foto.jpg';
----
-
-<Image
-  src={miImagen}
-  alt="Descripción"
-  width={800}
-  height={600}
-  format="webp"
-  quality={80}
-/>
-```
-
-**Ventajas de `Image`:**
-- Genera múltiples tamaños responsivos
-- Convierte a WebP/AVIF automáticamente
-- Añade `loading="lazy"` por defecto
-- Integridad: genera hash para cache busting
-- Optimiza en build time
-
-**getImage (para uso programático):**
-```astro
----
-import { getImage } from 'astro:assets';
-import miImagen from '../images/foto.jpg';
-
-const optimizada = await getImage({
-  src: miImagen,
-  width: 400,
-  format: 'avif',
-});
----
-
-<img src={optimizada.src} width={optimizada.width} height={optimizada.height} alt="" />
-```
-
-**Picture component (art direction):**
-```astro
----
-import { Picture } from 'astro:assets';
-import heroDesktop from '../images/hero-desktop.jpg';
-import heroMobile from '../images/hero-mobile.jpg';
----
-
-<Picture
-  src={heroDesktop}
-  alt="Hero"
-  widths={[400, 800, 1200]}
-  sizes="(max-width: 768px) 100vw, 1200px"
-  formats={['avif', 'webp', 'jpg']}
-  pictureAttributes={{ class: 'hero-image' }}
-/>
-```
-
-**Imágenes en Markdown/MDX:**
-```mdx
-<ResponsiveImage avif="/img/guia_0_100_astro/guia_0_100_astro_1-480.avif 480w, /img/guia_0_100_astro/guia_0_100_astro_1-768.avif 768w, /img/guia_0_100_astro/guia_0_100_astro_1-1200.avif 1200w" webp="/img/guia_0_100_astro/guia_0_100_astro_1-480.webp 480w, /img/guia_0_100_astro/guia_0_100_astro_1-768.webp 768w, /img/guia_0_100_astro/guia_0_100_astro_1-1200.webp 1200w" fallback="/img/guia_0_100_astro/guia_0_100_astro_1-1200.webp" alt="Descripción" blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDCUngZx9aeVwM7lP0p4jTB49O9KI19Kuxk5IZnNFS7F9KKdiOZH//Z" />
-<!-- Las imágenes en MDX se optimizan automáticamente si están en src/ -->
-```
-
-**Configuración global de imágenes:**
-```js
-// astro.config.mjs
-export default defineConfig({
-  image: "img/guia_0_100_astro/guia_0_100_astro_cover-1200.webp"
-    service: 'astro:assets', // o 'sharp' para compatibilidad
-    domains: ['images.ctfassets.net'], // CDNs permitidas para imágenes remotas
-  },
-});
-```
-
-Fuente: [Astro docs — Images](https://docs.astro.build/en/guides/images/)
 
 ### RSS, sitemap, redirects
 
-**RSS:**
 ```astro
 ---
 // src/pages/rss.xml.ts
@@ -1120,7 +912,6 @@ export const GET = async () => {
   const posts = (await getCollection('posts'))
     .filter(p => !p.data.draft)
     .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
-
   return rss({
     title: 'Mi Blog',
     description: 'Descripción del feed',
@@ -1135,1850 +926,161 @@ export const GET = async () => {
 };
 ```
 
-**Sitemap:**
-```js
-// astro.config.mjs
-import sitemap from '@astrojs/sitemap';
-
-export default defineConfig({
-  site: 'https://mi-sitio.com',
-  integrations: [sitemap()],
-});
-```
-
-**Redirects:**
+### 🧪 Mini-script: probar ViewTransitions
 ```astro
 ---
-// src/pages/old-page.astro
-export const GET = () => Astro.redirect('/new-page', 301);
+import { ViewTransitions } from 'astro:transitions';
 ---
-```
-
-O en la configuración:
-```js
-// astro.config.mjs
-export default defineConfig({
-  redirects: {
-    '/old-page': '/new-page',
-    '/old-blog/[...slug]': '/posts/[...slug]',
-  },
-});
-```
-
-Fuente: [Astro docs — RSS](https://docs.astro.build/en/guides/rss/), [Astro docs — Sitemap](https://docs.astro.build/en/guides/integrations-guide/sitemap/)
-
-### i18n routing (Astro 4+)
-
-Astro 4+ tiene soporte nativo para internacionalización con enrutamiento automático.
-
-```js
-// astro.config.mjs
-export default defineConfig({
-  i18n: {
-    defaultLocale: 'es',
-    locales: ['es', 'en', 'ca', 'de'],
-    routing: {
-      prefixDefaultLocale: false, // / → español, /en/ → inglés
-      strategy: 'prefix', // 'prefix' | 'prefix-other-locales' | 'pathname-prefix-other-locales'
-    },
-  },
-});
-```
-
-**Estructura de páginas:**
-```
-src/pages/
-├── index.astro          # / — español (default)
-├── acerca.astro         # /acerca — español
-├── en/
-│   ├── index.astro      # /en/ — inglés
-│   └── about.astro      # /en/about — inglés
-└── ca/
-    └── index.astro      # /ca/ — catalán
-```
-
-**Obtener el locale en una página:**
-```astro
----
-const { currentLocale } = Astro;
-const lang = Astro.currentLocale; // 'es', 'en', 'ca'
----
-
-<p>Idioma actual: {lang}</p>
-```
-
-**Enlaces entre idiomas (Language Selector):**
-```astro
----
-const { currentLocale } = Astro;
-const locales = [
-  { code: 'es', label: 'Español' },
-  { code: 'en', label: 'English' },
-  { code: 'ca', label: 'Català' },
-];
----
-
-<nav>
-  {locales.map(locale => (
-    <a
-      href={Astro.url.pathname.replace(`/${currentLocale}`, `/${locale.code}`)}
-      class={locale.code === currentLocale ? 'active' : ''}
-    >
-      {locale.label}
-    </a>
-  ))}
-</nav>
-```
-
-Fuente: [Astro docs — i18n](https://docs.astro.build/en/guides/i18n/)
-
-### Markdown/MDX: remark/rehype plugins, componentes en MDX
-
-Astro tiene soporte nativo para Markdown y MDX (Markdown + JSX/componentes).
-
-**Configuración de MDX:**
-```js
-// astro.config.mjs
-import mdx from '@astrojs/mdx';
-
-export default defineConfig({
-  integrations: [mdx()],
-});
-```
-
-**Componentes en MDX:**
-```mdx
----
-title: "Mi artículo"
----
-
-import Video from '../../components/Video.astro';
-import Boton from '../../components/Boton.svelte';
-
-# Mi artículo
-
-Contenido en markdown normal.
-
-<Video url="https://youtube.com/watch?v=xyz" />
-
-<Boton client:load>Haz clic</Boton>
-```
-
-**Remark y rehype plugins:**
-```js
-// astro.config.mjs
-import mdx from '@astrojs/mdx';
-import remarkToc from 'remark-toc';
-import rehypeAutolinkHeadings from 'rehype-autolink-headings';
-import remarkReadingTime from './remark-reading-time.mjs';
-
-export default defineConfig({
-  integrations: [
-    mdx({
-      remarkPlugins: [remarkToc, remarkReadingTime],
-      rehypePlugins: [rehypeAutolinkHeadings],
-      gfm: true, // GitHub Flavored Markdown (tablas, tareas, etc.)
-    }),
-  ],
-});
-```
-
-**Remark plugin personalizado (contador de lectura):**
-```js
-// remark-reading-time.mjs
-import { toString } from 'mdast-util-to-string';
-
-export function remarkReadingTime() {
-  return function (tree, { data }) {
-    const text = toString(tree);
-    const words = text.split(/\s+/).length;
-    const minutes = Math.ceil(words / 200); // 200 palabras por minuto
-    data.astro.frontmatter.minutesRead = minutes;
-  };
-}
-```
-
-**Shiki para syntax highlighting:**
-```js
-// astro.config.mjs
-export default defineConfig({
-  markdown: {
-    syntaxHighlight: 'shiki', // o 'prism'
-    shikiConfig: {
-      theme: 'github-dark', // o 'one-dark-pro', 'min-light'
-      wrap: true,
-      transformers: [],
-    },
-  },
-});
-```
-
-Fuente: [Astro docs — MDX](https://docs.astro.build/en/guides/integrations-guide/mdx/), [Astro docs — Markdown](https://docs.astro.build/en/guides/markdown-content/)
-
-### Deploy: Vercel, Netlify, Cloudflare, Docker
-
-**Vercel:**
-```bash
-npx astro add vercel
-```
-```js
-// astro.config.mjs
-import vercel from '@astrojs/vercel/serverless'; // o /static
-
-export default defineConfig({
-  output: 'server',
-  adapter: vercel({
-    webAnalytics: { enabled: true },
-    isr: { expiration: 60 },
-    imageService: true,
-  }),
-});
-```
-
-**Netlify:**
-```bash
-npx astro add netlify
-```
-```js
-// astro.config.mjs
-import netlify from '@astrojs/netlify';
-
-export default defineConfig({
-  output: 'server',
-  adapter: netlify({
-    edgeFunctions: true,
-    cacheOnDemandPages: true,
-  }),
-});
-```
-
-**Cloudflare Pages:**
-```bash
-npx astro add cloudflare
-```
-```js
-// astro.config.mjs
-import cloudflare from '@astrojs/cloudflare';
-
-export default defineConfig({
-  output: 'server',
-  adapter: cloudflare({
-    mode: 'directory',
-    runtime: 'local',
-  }),
-});
-```
-
-**Node.js (Docker):**
-```bash
-npx astro add node
-```
-```js
-// astro.config.mjs
-import node from '@astrojs/node';
-
-export default defineConfig({
-  output: 'server',
-  adapter: node({
-    mode: 'standalone', // app independiente, sin Express
-  }),
-});
-```
-
-Y en el Dockerfile:
-```dockerfile
-FROM node:22-alpine AS builder
-WORKDIR /app
-COPY package.json pnpm-lock.yaml ./
-RUN corepack enable && pnpm install --frozen-lockfile
-COPY . .
-RUN pnpm run build
-
-FROM node:22-alpine AS runner
-WORKDIR /app
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./
-EXPOSE 4321
-CMD ["node", "./dist/server/entry.mjs"]
-```
-
-Fuente: [Astro docs — Deploy](https://docs.astro.build/en/guides/deploy/)
-
-### Styling: Tailwind 4, scoped styles, CSS variables, global.css
-
-**Estilos scoped (por defecto):**
-```astro
-<style>
-  /* Estos estilos solo afectan a este componente */
-  h1 { color: oklch(0.5 0.2 240); }
-  .card { border-radius: 0.5rem; }
-  /* Astro añade un data-astro-id para hacer el scoping */
-</style>
-```
-
-**CSS global:**
-```astro
-<style is:global>
-  /* Estos estilos afectan a toda la página */
-  html { scroll-behavior: smooth; }
-</style>
-```
-
-**CSS Variables:**
-```astro
----
-// src/pages/index.astro
----
-<style>
-  :root {
-    --primary: oklch(0.5 0.2 240);
-    --surface: oklch(0.98 0 0);
-    --text: oklch(0.15 0 0);
-  }
-  body {
-    background: var(--surface);
-    color: var(--text);
-  }
-  .btn {
-    background: var(--primary);
-    color: white;
-  }
-</style>
-```
-
-**Tailwind v4 (con @tailwindcss/vite):**
-```bash
-npm install tailwindcss @tailwindcss/vite
-```
-
-```js
-// astro.config.mjs
-import { defineConfig } from 'astro/config';
-import tailwindcss from '@tailwindcss/vite';
-
-export default defineConfig({
-  vite: {
-    plugins: [tailwindcss()],
-  },
-});
-```
-
-```css
-/* src/styles/global.css */
-@import "tailwindcss";
-
-@theme {
-  --color-primary: oklch(0.5 0.2 240);
-  --color-surface: oklch(0.98 0 0);
-  --font-heading: "Inter", sans-serif;
-}
-
-@layer base {
-  h1 { @apply font-black uppercase italic; }
-}
-```
-
-```astro
----
-// src/layouts/Base.astro
-import '../styles/global.css';
----
-
 <html>
-  <!-- Tailwind funciona en cualquier parte del template -->
-  <body class="bg-surface text-text">
-    <slot />
-  </body>
-</html>
-```
-
-**Dark mode con Tailwind v4:**
-```css
-/* global.css */
-@import "tailwindcss";
-
-@custom-variant dark (&:where(.dark, .dark *));
-
-@theme {
-  --color-surface: oklch(0.98 0 0);
-  --color-surface-dark: oklch(0.15 0 0);
-}
-```
-
-```astro
-<div class="bg-surface dark:bg-surface-dark">
-  <!-- Contenido que se adapta a modo oscuro -->
-</div>
-```
-
-Fuente: [Tailwind CSS v4 docs](https://tailwindcss.com/docs/v4-beta), [Astro docs — Styling](https://docs.astro.build/en/guides/styling/)
-
-### Astro Actions (Astro 5+)
-
-Astro Actions es un sistema de acciones del lado del servidor, similar a Server Actions de Next.js. Disponible desde Astro 5.
-
-```astro
----
-// src/actions/index.ts
-import { defineAction, z } from 'astro:actions';
-
-export const server = {
-  likePost: defineAction({
-    accept: 'form', // o 'json'
-    input: z.object({
-      postId: z.string(),
-      action: z.enum(['like', 'unlike']),
-    }),
-    handler: async ({ postId, action }, context) => {
-      // context tiene cookies, request, Astro.locals, etc.
-      const likes = await db.updateLikes(postId, action);
-      return { likes };
-    },
-  }),
-};
-```
-
-**Usar la acción desde el cliente:**
-```astro
----
-<script>
-import { actions } from 'astro:actions';
-
-async function handleLike(postId) {
-  const { data, error } = await actions.likePost({
-    postId,
-    action: 'like',
-  });
-  if (error) console.error(error);
-  else console.log('Likes:', data.likes);
-}
-</script>
-
-<button onclick={() => handleLike('post-1')}>❤️ Like</button>
-```
-
-Fuente: [Astro docs — Actions](https://docs.astro.build/en/guides/actions/)
-
-### Middleware, cookies, sessions
-
-**Middleware (Astro 3+):**
-```ts
-// src/middleware.ts
-import { defineMiddleware } from 'astro:middleware';
-
-export const onRequest = defineMiddleware(async (context, next) => {
-  const start = Date.now();
-
-  // Añadir datos al contexto
-  context.locals.user = await getUserFromCookie(context.cookies);
-
-  // Continuar con la petición
-  const response = await next();
-
-  // Modificar la respuesta
-  const duration = Date.now() - start;
-  response.headers.set('X-Response-Time', `${duration}ms`);
-
-  return response;
-});
-```
-
-**Cookies:**
-```astro
----
-// Leer cookie
-const theme = Astro.cookies.get('theme')?.value ?? 'light';
-
-// Escribir cookie
-Astro.cookies.set('theme', 'dark', {
-  httpOnly: true,
-  sameSite: 'lax',
-  maxAge: 60 * 60 * 24 * 365, // 1 año
-  path: '/',
-});
-
-// Eliminar cookie
-Astro.cookies.delete('theme');
----
-```
-
-**Sesiones:**
-Astro no incluye sesiones por defecto, pero puedes implementarlas con cookies + BD:
-
-```ts
-// src/lib/session.ts
-import { encode, decode } from 'js-cookie';
-
-export async function getSession(cookies: AstroCookies) {
-  const sessionId = cookies.get('session_id')?.value;
-  if (!sessionId) return null;
-  return await db.getSession(sessionId);
-}
-
-export async function createSession(cookies: AstroCookies, userId: string) {
-  const session = await db.createSession(userId);
-  cookies.set('session_id', session.id, {
-    httpOnly: true,
-    sameSite: 'lax',
-    maxAge: 60 * 60 * 24 * 7, // 1 semana
-    path: '/',
-  });
-  return session;
-}
-```
-
-Fuente: [Astro docs — Middleware](https://docs.astro.build/en/guides/middleware/), [Astro docs — Cookies](https://docs.astro.build/en/reference/api-reference/#astrocookies)
-
----
-
-## Sistema de archivos
-
-Astro es un **framework web** — el sistema de archivos se usa durante el build o SSR, no en el cliente.
-
-### Astro.glob() — lectura de archivos en build
-
-`Astro.glob()` permite importar múltiples archivos en build time. Devuelve un array tipado:
-
-```astro
----
-const posts = await Astro.glob('../content/posts/*.mdx');
-const publicados = posts.filter(p => !p.frontmatter.draft);
-const ordenados = posts.sort((a, b) =>
-  b.frontmatter.pubDate.valueOf() - a.frontmatter.pubDate.valueOf()
-);
----
-
-<ul>
-  {ordenados.map(post => (
-    <li><a href={post.url}>{post.frontmatter.title}</a></li>
-  ))}
-</ul>
-```
-
-### import.meta.glob (Vite El bundler)
-
-Vite ofrece su propio sistema de glob imports:
-
-```astro
----
-// Eager: todas las rutas se resuelven en build
-const modulos = import.meta.glob('../data/*.json', { eager: true });
-
-// Lazy: bajo demanda
-const lazyModulos = import.meta.glob('../data/*.json');
-// lazyModulos: Record<string, () => Promise<{ default: any }>>
----
-```
-
-### Content collections: getCollection, getEntry, render
-
-```astro
----
-import { getCollection, getEntry } from 'astro:content';
-
-const allPosts = await getCollection('posts');
-const publicados = await getCollection('posts', ({ data }) => !data.draft);
-const post = await getEntry('posts', 'mi-articulo');
-const { Content, headings } = await post.render();
----
-
-<article><Content /></article>
-```
-
-### Archivos estáticos: public/ y src/assets
-
-- `public/`: archivos que se sirven tal cual (favicon, robots.txt). No pasan por Vite.
-- `src/assets/` (o `src/images/`): pasan por el pipeline de Vite (hash, optimización, importación como módulo).
-
-```astro
----
-import logo from '../assets/logo.svg';
-import foto from '../assets/foto.jpg';
----
-
-<img src={logo} alt="Logo" />        {/* con hash: logo.a1b2c3d.svg */}
-<img src="/favicon.ico" alt="" />     {/* desde public/, sin procesar */}
-<img src={foto} alt="Foto" />         {/* procesado por Vite */}
-```
-
-### Imágenes: Image, getImage, Picture
-
-```astro
----
-import { Image, getImage, Picture } from 'astro:assets';
-import hero from '../assets/hero.jpg';
-
-const optimizada = await getImage({ src: hero, width: 400, format: 'avif' });
----
-
-<Image src={hero} alt="Hero" width={1200} height={600} format="avif" />
-<img src={optimizada.src} width={optimizada.width} height={optimizada.height} alt="" />
-<Picture src={hero} alt="Hero" widths={[400,800,1200]} formats={['avif','webp','jpg']} />
-```
-
-### Endpoints API: src/pages/api/*.ts
-
-```ts
-// src/pages/api/productos.ts
-import type { APIRoute } from 'astro';
-
-export const GET: APIRoute = async ({ params, request, locals }) => {
-  const productos = await locals.db.findAll();
-  return new Response(JSON.stringify(productos), {
-    status: 200,
-    headers: { 'Content-Type': 'application/json' },
-  });
-};
-
-export const POST: APIRoute = async ({ request }) => {
-  const body = await request.json();
-  const creado = await db.create(body);
-  return new Response(JSON.stringify(creado), { status: 201 });
-};
-```
-
-### Astro Actions (Astro 5+) — server mutations
-
-```ts
-// src/actions/index.ts
-import { defineAction, z } from 'astro:actions';
-
-export const server = {
-  crearPost: defineAction({
-    accept: 'json',
-    input: z.object({ title: z.string().min(3), content: z.string() }),
-    handler: async (input, context) => {
-      return await db.insert(input);
-    },
-  }),
-};
-```
-
-```astro
-<script>
-import { actions } from 'astro:actions';
-async function handleSubmit(e) {
-  e.preventDefault();
-  const fd = new FormData(e.target);
-  const { data, error } = await actions.crearPost({
-    title: fd.get('title'),
-    content: fd.get('content'),
-  });
-}
-</script>
-```
-
-Fuente: [Astro docs — Astro.glob](https://docs.astro.build/en/reference/api-reference/#astroglob), [Astro docs — Content Collections](https://docs.astro.build/en/guides/content-collections/), [Astro docs — Endpoints](https://docs.astro.build/en/guides/endpoints/), [Astro docs — Images](https://docs.astro.build/en/guides/images/)
-
-### Algoritmos
-
-Astro no ejecuta algoritmos en el cliente (a menos que los programes). Todo el procesamiento ocurre en **build time** (SSG) o en **cada request** (SSR).
-
-**Ordenación de colecciones:**
-```astro
----
-import { getCollection } from 'astro:content';
-
-const porFecha = (await getCollection('posts'))
-  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
-
-const porTitulo = (await getCollection('posts'))
-  .sort((a, b) => a.data.title.localeCompare(b.data.title, 'es'));
-
-const mix = (await getCollection('posts')).sort((a, b) => {
-  const d = b.data.pubDate.valueOf() - a.data.pubDate.valueOf();
-  return d !== 0 ? d : a.data.title.localeCompare(b.data.title, 'es');
-});
----
-```
-
-**Filtrado:**
-```astro
-const publicados = await getCollection('posts', ({ data }) => !data.draft);
-const astroPosts = await getCollection('posts', ({ data }) => data.tags?.includes('astro'));
-const recientes = await getCollection('posts', ({ data }) => data.pubDate >= new Date('2025-01-01'));
-```
-
-**Paginación con paginate():**
-```astro
----
-export async function getStaticPaths({ paginate }) {
-  const posts = (await getCollection('posts'))
-    .filter(p => !p.data.draft)
-    .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
-  return paginate(posts, { pageSize: 10 });
-}
-
-const { page } = Astro.props;
-// page.data, page.url.prev, page.url.next, page.currentPage, page.lastPage
----
-
-<h1>Página {page.currentPage} de {page.lastPage}</h1>
-
-{page.data.map(post => (
-  <article><h2><a href={`/blog/${post.id}/`}>{post.data.title}</a></h2></article>
-))}
-
-<nav>
-  {page.url.prev && <a href={page.url.prev}>← Anterior</a>}
-  {page.url.next && <a href={page.url.next}>Siguiente →</a>}
-</nav>
-```
-
-**Búsqueda (Pagefind / Fuse.js):**
-```bash
-npx pagefind --site dist
-```
-
-```astro
-<script>
-const search = await import('/pagefind/pagefind.js');
-const results = await search.search('astro');
-</script>
-```
-
-```astro
----
-import Fuse from 'fuse.js';
-import { getCollection } from 'astro:content';
-
-const posts = await getCollection('posts');
-const fuse = new Fuse(posts, {
-  keys: ['data.title', 'data.description', 'data.tags'],
-  threshold: 0.4,
-});
-const resultados = fuse.search('astro');
----
-```
-
-**Agrupación (groupBy):**
-```astro
----
-const posts = await getCollection('posts');
-
-const porTag = posts.reduce((acc, post) => {
-  post.data.tags?.forEach(tag => {
-    if (!acc[tag]) acc[tag] = [];
-    acc[tag].push(post);
-  });
-  return acc;
-}, {} as Record<string, typeof posts>);
-
-const porAnio = posts.reduce((acc, post) => {
-  const anio = post.data.pubDate.getFullYear();
-  if (!acc[anio]) acc[anio] = [];
-  acc[anio].push(post);
-  return acc;
-}, {} as Record<number, typeof posts>);
----
-```
-
-**Caching en build:**
-En SSG los datos se cachean naturalmente: se calculan una vez en build y se incluyen en el HTML. Para SSR, usa ISR:
-
-```js
-export default defineConfig({
-  output: 'hybrid',
-  adapter: vercel({
-    isr: { expiration: 60, exclude: ['/admin/**'] },
-  }),
-});
-```
-
-**Tabla de complejidad algorítmica en Astro:**
-
-| Operación | Complejidad | Contexto |
-|---|---|---|
-| Recorrer colección (`getCollection`) | O(n) | Build time. n = número de entradas |
-| `Astro.glob()` | O(n) | Build time |
-| Ordenar (sort) | O(n log n) | Build time |
-| Filtrar (filter) | O(n) | Build time |
-| `getEntry('posts', 'id')` | O(1) ~ O(log n) | Acceso directo por id |
-| Paginación (paginate) | O(n) | Build time |
-| Pagefind búsqueda en cliente | O(log n) ~ O(1) | Índice precomputado |
-| Fuse.js búsqueda en cliente | O(n) | Recorre todo el índice |
-
-En la práctica, para sitios content-driven, estas operaciones son **instantáneas** incluso con miles de entradas, porque se ejecutan en build time y no afectan al tiempo de respuesta del usuario.
-
-Fuente: [Astro docs — Pagination](https://docs.astro.build/en/guides/routing/#pagination), [Pagefind docs](https://pagefind.app/), [Fuse.js docs](https://www.fusejs.io/)
-
----
-
-## Componentes, composición y slots en profundidad
-
-Astro no tiene POO clásica (clases, herencia de objetos), pero tiene patrones de **composición** que cumplen el mismo propósito.
-
-### Layouts anidados (herencia de layouts)
-
-```astro
----
-// src/layouts/Base.astro (layout raíz)
-export interface Props {
-  title: string;
-  description?: string;
-}
-const { title, description } = Astro.props;
----
-<!doctype html>
-<html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{title}</title>
-    {description && <meta name="description" content={description} />}
-  </head>
+  <head><ViewTransitions /></head>
   <body>
-    <nav><!-- Navbar común --></nav>
-    <slot /> <!-- Contenido de la página -->
-    <footer><!-- Footer común --></footer>
+    <h1 transition:animate="slide">Inicio</h1>
+    <nav>
+      <a href="/about" transition:animate="morph">Sobre mí</a>
+      <a href="/blog" transition:animate="slide">Blog</a>
+    </nav>
+    <slot />
   </body>
 </html>
 ```
 
-```astro
----
-// src/layouts/BlogPost.astro (hereda de Base)
-import Base from './Base.astro';
-export interface Props {
-  title: string;
-  author: string;
-  date: Date;
-}
-const { title, author, date } = Astro.props;
----
-<Base title={title}>
-  <article>
-    <header>
-      <h1>{title}</h1>
-      <time datetime={date.toISOString()}>{date.toLocaleDateString('es')}</time>
-      <p>Por {author}</p>
-    </header>
-    <slot /> <!-- Contenido del post -->
-  </article>
-</Base>
-```
-
-### Slots y named slots
-
-```astro
----
-// src/components/Card.astro
-export interface Props {
-  titulo: string;
-}
-const { titulo } = Astro.props;
----
-
-<div class="card">
-  <div class="card-header">
-    <slot name="icon" /> <!-- Slot con nombre -->
-    <h2>{titulo}</h2>
-  </div>
-  <div class="card-body">
-    <slot /> <!-- Slot principal (sin nombre) -->
-  </div>
-  <div class="card-footer">
-    <slot name="footer">
-      <!-- Fallback si no se proporciona contenido -->
-      <p>Contenido por defecto</p>
-    </slot>
-  </div>
-</div>
-```
-
-```astro
-<Card titulo="Mi Tarjeta">
-  <img slot="icon" src="icono.svg" alt="" />
-  <p>Este es el contenido principal</p>
-  <button slot="footer">Acción</button>
-</Card>
-```
-
-### Fragmentos (múltiples elementos sin envoltorio)
-
-```astro
----
-// src/components/DosElementos.astro
----
-<Fragment>
-  <h2>Título</h2>
-  <p>Párrafo</p>
-</Fragment>
-<!-- Equivalente en Astro: no necesitas Fragment, puedes poner varios elementos -->
-<h2>Título</h2>
-<p>Párrafo</p>
-```
-
-Los Fragmentos son útiles cuando necesitas un envoltorio que no genere un nodo DOM:
-
-```astro
-<Card titulo="Productos">
-  <Fragment slot="footer">
-    <button>Editar</button>
-    <button>Eliminar</button>
-  </Fragment>
-</Card>
-```
-
-Fuente: [Astro docs — Slots](https://docs.astro.build/en/basics/astro-components/#slots)
-
----
-
-## Patrones de diseño con ejemplos
-
-### Layout Pattern (layouts anidados)
-
-Equivalente a la herencia en POO. Los layouts se anidan para compartir estructura.
-
-```astro
----
-// src/layouts/Base.astro — layout raíz
----
-<!doctype html>
-<html>
-  <head><slot name="head" /></head>
-  <body>
-    <nav><!-- menú --></nav>
-    <slot /> <!-- contenido principal -->
-    <footer><!-- pie --></footer>
-  </body>
-</html>
-```
-
-```astro
----
-// src/layouts/Markdown.astro — layout para contenido markdown
-import Base from './Base.astro';
----
-<Base>
-  <article class="prose">
-    <slot />
-  </article>
-</Base>
-```
-
-```astro
----
-// src/pages/blog/post.astro
-import Markdown from '../../layouts/Markdown.astro';
----
-<Markdown>
-  <!-- El contenido MDX se renderiza aquí -->
-</Markdown>
-```
-
-### Island Pattern (componente interactivo mínimo)
-
-Cada isla debe ser lo más pequeña posible. No envuelvas toda la página en un componente React.
-
-```astro
----
-import Comentarios from '../components/Comentarios.svelte';
-import Mapa from '../components/Mapa.jsx';
----
-
-<main>
-  <article>
-    <h1>Artículo estático</h1>
-    <!-- Contenido HTML estático -->
-  </article>
-
-  <!-- Isla pequeña: solo los comentarios son interactivos -->
-  <Comentarios postId="123" client:visible />
-
-  <!-- Otra isla independiente -->
-  <Mapa lat="40.4168" lng="-3.7038" client:only="react" />
-</main>
-```
-
-### Composition Pattern (slots y named slots)
-
-Los slots son el equivalente a la composición en React (`children`) pero a nivel de template.
-
-```astro
----
-// src/components/Modal.astro
-export interface Props {
-  abierto: boolean;
-  titulo: string;
-}
-const { abierto, titulo } = Astro.props;
----
-
-{abierto && (
-  <div class="modal-overlay">
-    <div class="modal">
-      <header>
-        <h2>{titulo}</h2>
-        <button class="close">✕</button>
-      </header>
-      <div class="modal-body">
-        <slot name="body" />
-      </div>
-      <footer>
-        <slot name="footer">
-          <button>Cerrar</button>
-        </slot>
-      </footer>
-    </div>
-  </div>
-)}
-```
-
-```astro
-<Modal titulo="Confirmar" abierto={true}>
-  <p slot="body">¿Estás seguro de eliminar este elemento?</p>
-  <div slot="footer">
-    <button class="btn-danger">Eliminar</button>
-    <button class="btn-secondary">Cancelar</button>
-  </div>
-</Modal>
-```
-
-### Data Fetching Pattern
-
-**Astro.glob() (archivos locales):**
-```astro
----
-// Importa todos los archivos MDX de una carpeta
-const posts = await Astro.glob('../content/posts/*.mdx');
-posts.sort((a, b) => b.frontmatter.pubDate - a.frontmatter.pubDate);
----
-
-{posts.map(post => (
-  <article>
-    <h2><a href={post.url}>{post.frontmatter.title}</a></h2>
-    <p>{post.frontmatter.description}</p>
-  </article>
-))}
-```
-
-**Fetch (API externas):**
-```astro
----
-const res = await fetch('https://api.github.com/repos/withastro/astro');
-const repo = await res.json();
----
-
-<p>⭐ {repo.stargazers_count} estrellas en GitHub</p>
-```
-
-**Múltiples fuentes en paralelo:**
-```astro
----
-const [posts, githubData, weather] = await Promise.all([
-  getCollection('posts'),
-  fetch('https://api.github.com/...').then(r => r.json()),
-  fetch('https://api.weather.com/...').then(r => r.json()),
-]);
----
-```
-
-### Route Patterns
-
-**Parámetros dinámicos:**
-```
-src/pages/
-├── blog/
-│   └── [slug].astro    # /blog/mi-articulo → params.slug = "mi-articulo"
-└── productos/
-    └── [categoria]/
-        └── [id].astro  # /productos/electronica/123
-```
-
-```astro
----
-// src/pages/productos/[categoria]/[id].astro
-export async function getStaticPaths() {
-  const productos = await db.getAll();
-  return productos.map(p => ({
-    params: { categoria: p.categoria, id: p.id },
-    props: { producto: p },
-  }));
-}
-
-const { producto } = Astro.props;
----
-```
-
-**Grupos de rutas (sin cambiar URL):**
-```
-src/pages/
-├── (app)/
-│   ├── dashboard.astro  # /dashboard
-│   └── perfil.astro     # /perfil
-└── (marketing)/
-    ├── index.astro       # /
-    └── precios.astro     # /precios
-```
-
-**Rutas de catch-all:**
-```
-src/pages/docs/[...slug].astro  # /docs/intro, /docs/api/reference, etc.
-```
-
-```astro
----
-const { slug } = Astro.params; // slug = "api/reference" | undefined
-const segments = slug?.split('/') ?? [];
----
-```
-
-### Middleware Chain
-
-```ts
-// src/middleware.ts
-import { defineMiddleware, sequence } from 'astro:middleware';
-
-const auth = defineMiddleware(async (context, next) => {
-  const token = context.cookies.get('token')?.value;
-  context.locals.user = token ? await verifyToken(token) : null;
-  return next();
-});
-
-const logger = defineMiddleware(async (context, next) => {
-  const start = Date.now();
-  const response = await next();
-  console.log(`${context.request.method} ${context.url.pathname} — ${Date.now() - start}ms`);
-  return response;
-});
-
-const security = defineMiddleware(async (context, next) => {
-  const response = await next();
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('X-Frame-Options', 'DENY');
-  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  return response;
-});
-
-export const onRequest = sequence(auth, logger, security);
-```
-
-Fuente: [Astro docs — Routing](https://docs.astro.build/en/guides/routing/), [Astro docs — Middleware](https://docs.astro.build/en/guides/middleware/)
-
----
-
-## Polimorfismo en Astro
-
-En Astro, el polimorfismo se consigue mediante **props**, **slots con fallback**, y **componentes condicionales**.
-
-### Polimorfismo por props (mismo componente, comportamiento distinto)
-
-```astro
----
-// src/components/Boton.astro
-export interface Props {
-  variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
-  size?: 'sm' | 'md' | 'lg';
-  href?: string;
-}
-const { variant = 'primary', size = 'md', href } = Astro.props;
-const classes = `btn btn-${variant} btn-${size}`;
----
-
-{href ? (
-  <a href={href} class={classes}><slot /></a>
-) : (
-  <button class={classes}><slot /></button>
-)}
-
-<style>
-  .btn { font-weight: 700; border-radius: 0.375rem; display: inline-flex; align-items: center; gap: 0.5rem; }
-  .btn-primary { background: oklch(0.5 0.2 240); color: white; }
-  .btn-secondary { background: oklch(0.87 0 0); color: oklch(0.3 0 0); }
-  .btn-danger { background: oklch(0.6 0.25 20); color: white; }
-  .btn-ghost { background: transparent; border: 1px solid oklch(0.8 0 0); }
-  .btn-sm { padding: 0.25rem 0.75rem; font-size: 0.875rem; }
-  .btn-md { padding: 0.5rem 1rem; }
-  .btn-lg { padding: 0.75rem 1.5rem; font-size: 1.125rem; }
-</style>
-```
-
-```astro
-<Boton variant="primary" size="lg">Comprar ahora</Boton>
-<Boton variant="secondary" size="sm">Cancelar</Boton>
-<Boton variant="danger">Eliminar cuenta</Boton>
-<Boton variant="ghost" href="/mas-info">Más información</Boton>
-```
-
-### Polimorfismo por slot fallback
-
-```astro
----
-// src/components/Tarjeta.astro
-export interface Props {
-  tipo: 'default' | 'destacada' | 'mini';
-}
-const { tipo } = Astro.props;
----
-
-<article class={`tarjeta tarjeta-${tipo}`}>
-  <slot name="imagen">
-    <!-- Fallback: imagen por defecto si no se proporciona -->
-    <img src="/img/default-card.jpg" alt="Imagen por defecto" />
-  </slot>
-  <div class="contenido">
-    <slot />
-  </div>
-  <slot name="acciones">
-    <!-- Fallback: botón por defecto -->
-    <button>Ver más</button>
-  </slot>
-</article>
-```
-
-```astro
-<Tarjeta tipo="destacada">
-  <img slot="imagen" src="/img/mi-foto.jpg" alt="Mi foto" />
-  <h3>Título personalizado</h3>
-  <p>Descripción</p>
-  <button slot="acciones" class="btn-comprar">Añadir al carrito</button>
-</Tarjeta>
-
-<Tarjeta tipo="mini">
-  <!-- Usa los fallbacks: imagen por defecto y "Ver más" -->
-  <p>Producto básico</p>
-</Tarjeta>
-```
-
-### Polimorfismo por componente dinámico
-
-```astro
----
-// src/components/ListaItems.astro
-import TarjetaProducto from './TarjetaProducto.astro';
-import TarjetaPost from './TarjetaPost.astro';
-import TarjetaUsuario from './TarjetaUsuario.astro';
-
-export interface Props {
-  items: Array<{ tipo: 'producto' | 'post' | 'usuario'; datos: Record<string, unknown> }>;
-}
-const { items } = Astro.props;
----
-
-<div class="grid">
-  {items.map(item => {
-    switch (item.tipo) {
-      case 'producto': return <TarjetaProducto {...item.datos} />;
-      case 'post': return <TarjetaPost {...item.datos} />;
-      case 'usuario': return <TarjetaUsuario {...item.datos} />;
-    }
-  })}
-</div>
-```
-
----
-
-## Multimedia
-
-### Astro Image (astro:assets)
-
-El sistema de imágenes de Astro (`astro:assets`) está disponible desde Astro 3 y reemplaza a `@astrojs/image` (obsoleto). Proporciona `Image`, `Picture` y `getImage` para optimización en build time.
-
-**Image component:**
-```astro
----
-import { Image } from 'astro:assets';
-import hero from '../images/hero.jpg';
----
-
-<Image
-  src={hero}
-  alt="Hero image"
-  width={1200}
-  height={600}
-  format="webp"
-  quality={85}
-  loading="lazy"
-  decoding="async"
-/>
-```
-
-Genera: múltiples tamaños responsivos (srcset), conversión a WebP/AVIF, `loading="lazy"` por defecto, hash en nombre (cache busting), optimización en build time.
-
-**Picture component (art direction):**
-```astro
----
-import { Picture } from 'astro:assets';
-import heroDesktop from '../images/hero-desktop.jpg';
-import heroMobile from '../images/hero-mobile.jpg';
----
-
-<Picture
-  src={heroDesktop}
-  alt="Hero"
-  widths={[400, 800, 1200, 1600]}
-  sizes="(max-width: 768px) 100vw, 1200px"
-  formats={['avif', 'webp', 'jpg']}
-  pictureAttributes={{ class: 'hero-img' }}
-/>
-```
-
-**getImage (uso programático):**
-```astro
----
-import { getImage } from 'astro:assets';
-import avatar from '../images/avatar.jpg';
-
-const img = await getImage({
-  src: avatar,
-  width: 150,
-  height: 150,
-  format: 'avif',
-  quality: 90,
-});
----
-
-<img src={img.src} width={img.width} height={img.height} alt="Avatar" />
-```
-
-### @astrojs/image (deprecated)
-
-La integración `@astrojs/image` está obsoleta desde Astro 3. Usa `astro:assets` en su lugar.
-
-### Video
-
-Astro no tiene un componente de video nativo. Usa `<video>` HTML estándar:
-
-```astro
-<video controls width="100%" preload="metadata">
-  <source src="/videos/tutorial.mp4" type="video/mp4" />
-  <source src="/videos/tutorial.webm" type="video/webm" />
-  <p>Tu navegador no soporta video.</p>
-</video>
-```
-
-Para YouTube/Vimeo, crea un componente diferido:
-
-```astro
----
-// src/components/YouTube.astro
-export interface Props {
-  id: string;
-  title?: string;
-}
-const { id, title = "Video" } = Astro.props;
----
-
-<div class="video-wrapper">
-  <iframe
-    src={`https://www.youtube-nocookie.com/embed/${id}`}
-    title={title}
-    loading="lazy"
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-    allowfullscreen
-  ></iframe>
-</div>
-
-<style>
-  .video-wrapper { position: relative; width: 100%; aspect-ratio: 16 / 9; }
-  iframe { width: 100%; height: 100%; border: 0; }
-</style>
-```
-
-### Audio
-
-```astro
-<audio controls preload="metadata">
-  <source src="/audios/podcast.mp3" type="audio/mpeg" />
-  <source src="/audios/podcast.ogg" type="audio/ogg" />
-  <p>Tu navegador no soporta audio.</p>
-</audio>
-```
-
-Para podcasts, RSS feed con enclosure:
-
-```astro
----
-// src/pages/podcast.xml.ts
-import rss from '@astrojs/rss';
-
-export const GET = async () => rss({
-  title: 'Mi Podcast',
-  description: 'Descripción',
-  site: 'https://mi-sitio.com',
-  items: episodios.map(ep => ({
-    title: ep.titulo,
-    pubDate: ep.fecha,
-    description: ep.descripcion,
-    link: `/podcast/${ep.id}`,
-    customData: `<enclosure url="${ep.audioUrl}" length="${ep.duracion}" type="audio/mpeg" />`,
-  })),
-});
-```
-
-### SVG
-
-```astro
----
-import Logo from '../assets/logo.svg?raw';
-import Icono from '../assets/icono.svg';
----
-
-<Fragment set:html={Logo} />
-<img src={Icono} alt="Icono" />
-
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-  <circle cx="12" cy="12" r="10" />
-  <path d="M12 8v8M8 12h8" />
-</svg>
-```
-
-### Sharp (procesamiento server-side)
-
-Sharp es el motor de imágenes por defecto de Astro. Se instala automáticamente con `astro:assets`:
-
-```astro
----
-import sharp from 'sharp';
-import fs from 'node:fs/promises';
-
-const buffer = await fs.readFile('src/images/original.jpg');
-const processed = await sharp(buffer)
-  .resize(800, 600)
-  .webp({ quality: 80 })
-  .toBuffer();
----
-```
-
-### MDX embebido: imágenes en markdown
-
-En archivos MDX, las imágenes se escriben con sintaxis Markdown estándar:
-
-```mdx
-<ResponsiveImage avif="/img/guia_0_100_astro/guia_0_100_astro_2-480.avif 480w, /img/guia_0_100_astro/guia_0_100_astro_2-768.avif 768w, /img/guia_0_100_astro/guia_0_100_astro_2-1200.avif 1200w" webp="/img/guia_0_100_astro/guia_0_100_astro_2-480.webp 480w, /img/guia_0_100_astro/guia_0_100_astro_2-768.webp 768w, /img/guia_0_100_astro/guia_0_100_astro_2-1200.webp 1200w" fallback="/img/guia_0_100_astro/guia_0_100_astro_2-1200.webp" alt="Descripción" blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDCUngZx9aeVwM7lP0p4jTB49O9KI19Kuxk5IZnNFS7F9KKdiOZH//Z" />
-```
-
-Las imágenes dentro de `src/` se optimizan automáticamente con `astro:assets`.
-
-### Canvas (client-side)
-
-Canvas no puede ejecutarse en el servidor. Se usa en componentes con `client:only`:
-
-```astro
----
-import GraficoCanvas from '../components/GraficoCanvas.svelte';
----
-
-<GraficoCanvas client:only="svelte" />
-```
-
-```svelte
-<script>
-  import { onMount } from 'svelte';
-  let canvas;
-  onMount(() => {
-    const ctx = canvas.getContext('2d');
-  });
-</script>
-<canvas bind:this={canvas} width={400} height={300} />
-```
-
-Fuente: [Astro docs — Images](https://docs.astro.build/en/guides/images/), [Sharp docs](https://sharp.pixelplumbing.com/)
-
----
-
-## Bases de datos
-
-### Astro DB (Astro Studio / libSQL)
-
-Astro DB es una base de datos SQL integrada, con soporte nativo desde Astro 4.
-
-```bash
-npx astro add db
-```
-
-```ts
-// src/db/config.ts
-import { defineDb, defineTable, column } from 'astro:db';
-
-const Producto = defineTable({
-  columns: {
-    id: column.number({ primaryKey: true }),
-    nombre: column.text(),
-    precio: column.number(),
-    stock: column.number({ default: 0 }),
-    creado: column.date({ default: new Date() }),
-  },
-});
-
-const Usuario = defineTable({
-  columns: {
-    id: column.text({ primaryKey: true }),
-    email: column.text({ unique: true }),
-    nombre: column.text(),
-  },
-});
-
-export default defineDb({
-  tables: { Producto, Usuario },
-});
-```
-
-```astro
----
-import { db, Producto, Usuario } from 'astro:db';
-import { eq } from 'astro:db';
-
-// Insertar
-await db.insert(Producto).values({
-  nombre: 'Laptop',
-  precio: 999.99,
-  stock: 10,
-});
-
-// Consultar
-const productos = await db.select().from(Producto);
-const producto = await db.select()
-  .from(Producto)
-  .where(eq(Producto.id, 1))
-  .get();
----
-```
+🔗 [Astro docs — View Transitions](https://docs.astro.build/en/guides/view-transitions/), [Astro docs — Server Islands](https://docs.astro.build/en/guides/server-islands/), [Astro docs — i18n](https://docs.astro.build/en/guides/i18n/), [Astro docs — RSS](https://docs.astro.build/en/guides/rss/)
 
-**Turso/libSQL (base remota):**
-```ts
-// db/config.ts
-import { defineDb } from 'astro:db';
-import { turso } from 'astro:db';
-
-export default defineDb({
-  db: turso({
-    url: import.meta.env.TURSO_DB_URL,
-    authToken: import.meta.env.TURSO_AUTH_TOKEN,
-  }),
-  tables: { Producto },
-});
-```
-
-### Supabase
-
-```astro
----
-// SSR o endpoint
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  import.meta.env.PUBLIC_SUPABASE_URL,
-  import.meta.env.SUPABASE_SERVICE_KEY
-);
-
-const { data: productos } = await supabase
-  .from('productos')
-  .select('*')
-  .limit(10);
-
-const { data: usuario } = await supabase.auth.getUser(Astro.cookies.get('sb-access-token')?.value);
----
-```
-
-### Contentful (headless CMS)
-
-```astro
----
-import contentful from 'contentful';
-
-const client = contentful.createClient({
-  space: import.meta.env.CONTENTFUL_SPACE_ID,
-  accessToken: import.meta.env.CONTENTFUL_ACCESS_TOKEN,
-});
-
-const entries = await client.getEntries({
-  content_type: 'blogPost',
-  limit: 10,
-});
----
-
-{entries.items.map(entry => (
-  <article>
-    <h2>{entry.fields.title}</h2>
-    <p>{entry.fields.excerpt}</p>
-  </article>
-))}
-```
-
-### Decap CMS (ex-Netlify CMS)
-
-```
-public/admin/config.yml
-```
-
-```yaml
-backend:
-  name: git-gateway
-  branch: main
-
-media_folder: public/img
-public_folder: /img
-
-collections:
-  - name: posts
-    label: Posts
-    folder: src/content/posts
-    create: true
-    fields:
-      - { label: Título, name: title, widget: string }
-      - { label: Descripción, name: description, widget: text }
-      - { label: Fecha, name: pubDate, widget: datetime }
-      - { label: Tags, name: tags, widget: list }
-      - { label: Imagen, name: image, widget: image }
-      - { label: Cuerpo, name: body, widget: markdown }
-```
-
-Fuente: [Astro docs — DB](https://docs.astro.build/en/guides/astro-db/), [Decap CMS docs](https://decapcms.org/docs/)
-
----
-
-## WebSockets
-
-Astro no tiene soporte nativo para WebSockets. Pero puedes implementarlos con SSR + Node.js.
-
-### WebSocket con Node.js adapter (SSR)
-
-```astro
----
-// src/pages/ws.astro — página que carga el cliente WebSocket
----
-<script>
-const ws = new WebSocket('ws://localhost:3001/ws');
-
-ws.onopen = () => console.log('Conectado');
-ws.onmessage = (event) => {
-  const data = JSON.parse(event.data);
-  document.getElementById('messages').innerHTML += `<p>${data.text}</p>`;
-};
-
-function sendMessage() {
-  ws.send(JSON.stringify({ text: 'Hola servidor' }));
-}
-</script>
-
-<button onclick="sendMessage()">Enviar mensaje</button>
-<div id="messages"></div>
-```
-
-```ts
-// server/ws.ts — servidor WebSocket independiente
-import { WebSocketServer } from 'ws';
-
-const wss = new WebSocketServer({ port: 3001 });
-
-wss.on('connection', (ws) => {
-  console.log('Cliente conectado');
-
-  ws.on('message', (data) => {
-    const msg = JSON.parse(data.toString());
-    // Broadcast a todos los clientes
-    wss.clients.forEach(client => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(JSON.stringify(msg));
-      }
-    });
-  });
-
-  ws.on('close', () => console.log('Cliente desconectado'));
-});
-
-console.log('WebSocket server en puerto 3001');
-```
-
-### WebSocket desde endpoint de Astro (Node.js)
-
-```astro
----
-// src/pages/api/ws.ts — endpoint especial para WebSocket
-import type { APIRoute } from 'astro';
-
-export const GET: APIRoute = ({ request }) => {
-  // El upgrade WebSocket se maneja fuera de Astro
-  // Necesitas un servidor Node.js aparte
-  return new Response(null, { status: 426, statusText: 'Upgrade Required' });
-};
-```
-
-**Alternativas:**
-- **Server Actions + polling**: para necesidades simples de tiempo real, usa Astro Actions con polling
-- **Server-Sent Events (SSE)**: más simple que WebSocket, unidireccional (servidor → cliente). Puedes implementarlo con endpoints de Astro + `ReadableStream`
-- **Socket.IO**: implementa el servidor Socket.IO aparte y conéctalo desde el cliente con `client:only`
-
-Fuente: [ws — WebSocket library](https://github.com/websockets/ws)
-
----
-
-## Concurrencia
-
-Astro maneja la concurrencia de forma diferente según el modo:
-
-**Build (SSG):**
-- Astro paraleliza la generación de páginas tanto como permite el hardware
-- Las imágenes se optimizan en paralelo durante el build
-- `Astro.glob()` carga archivos en paralelo
-- `Promise.all()` para fetchs múltiples en el frontmatter
-
-**SSR (Server):**
-- Cada petición es independiente y concurrente
-- El adapter (Vercel, Node) maneja la concurrencia de peticiones
-- Puedes usar `Promise.all()` para paralelizar llamadas a BD/APIs dentro de una página
-
-**ISR (Incremental Static Regeneration):**
-- Con Vercel adapter: genera páginas bajo demanda y las cachea
-- `isr: { expiration: 60 }` — la página se regenera cada 60 segundos
-- Mezcla de estático y dinámico sin perder rendimiento
-
-```astro
----
-// Ejemplo: concurrencia con Promise.all en frontmatter
-const [posts, usuarios, categorias] = await Promise.all([
-  getCollection('posts'),
-  fetch('https://api.example.com/usuarios').then(r => r.json()),
-  db.query('SELECT * FROM categorias'),
-]);
----
-```
-
-```js
-// astro.config.mjs — ISR en Vercel
-import vercel from '@astrojs/vercel/serverless';
-
-export default defineConfig({
-  output: 'hybrid',
-  adapter: vercel({
-    isr: {
-      expiration: 60, // segundos
-      exclude: ['/admin/**'], // estas páginas siempre SSR
-    },
-  }),
-});
-```
-
 ---
-
-## Escala de aprendizaje: de 0 a 100
 
-Cada nivel incluye lo que debes saber y un proyecto para fijar los conceptos.
+## 18. Escala de aprendizaje 0–100
 
 ### Nivel 0–15: Fundamentos absolutos
 
 **Qué aprender:**
-- ¿Qué es Astro? Diferencia con Next.js, Nuxt, SvelteKit. Zero JS vs SPA.
+- ¿Qué es Astro? Zero JS vs SPA. Diferencia con Next.js, Nuxt
 - `npm create astro@latest` y estructura del proyecto
-- Archivos `.astro`: frontmatter (`---`), template HTML, expresiones `{}`
+- Archivos `.astro`: frontmatter, template HTML, expresiones `{}`
 - Páginas en `src/pages/`, rutas basadas en archivos
 - Layouts simples con `<slot />`
-- Componentes `.astro` básicos sin framework
 - `npm run dev`, `npm run build`, `npm run preview`
-- **Paradigmas**: Astro es declarativo (componentes .astro, MDX), MPA (no SPA), islands architecture (hidratación parcial), compilación estática + SSR opcional, multi-framework (React, Svelte, Vue en un proyecto)
-- **Conceptos clave**: Zero JS by default — Astro no envía JavaScript a menos que lo pidas. El frontmatter se ejecuta en build/server, nunca en el navegador. Las llaves `{}` en el template son para expresiones, no para JSX. El HTML que escribes es el HTML que se envía (no hay virtual DOM).
+- **Conceptos clave**: Astro es declarativo, MPA, islands architecture
 
-**Proyecto:** *Página personal estática* — Crea un sitio de 3 páginas (inicio, sobre mí, contacto) con layouts compartidos. Usa `Astro.glob()` para cargar datos desde archivos JSON locales. Sin JavaScript en el cliente. Despliega en Vercel (gratuito).
+**Proyecto:** *Página personal estática* — 3 páginas (inicio, sobre mí, contacto) con layouts compartidos. Sin JS en cliente.
 
 ### Nivel 15–30: Colecciones de contenido y MDX
 
 **Qué aprender:**
-- `src/content/` y `defineCollection` con esquemas Zod
+- `src/content/` y `defineCollection` con Zod
 - `getCollection()`, `getEntry()`, filtros, ordenación
-- Archivos MDX: componentes dentro de Markdown
-- `remark`/`rehype` plugins (TOC, autolink headings, reading time)
-- `Astro.glob()` vs content collections (cuándo usar cada uno)
-- Slugs generados automáticos y personalizados
-- Imágenes en contenido: `<ResponsiveImage avif="/img/guia_0_100_astro/guia_0_100_astro_3-480.avif 480w, /img/guia_0_100_astro/guia_0_100_astro_3-768.avif 768w, /img/guia_0_100_astro/guia_0_100_astro_3-1200.avif 1200w" webp="/img/guia_0_100_astro/guia_0_100_astro_3-480.webp 480w, /img/guia_0_100_astro/guia_0_100_astro_3-768.webp 768w, /img/guia_0_100_astro/guia_0_100_astro_3-1200.webp 1200w" fallback="/img/guia_0_100_astro/guia_0_100_astro_3-1200.webp" alt="alt" blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDBBOOtP/EGpBEmDx6d6URr6VdjJyQzOaKl2L6UU7EcyP/Z" />` y optimización
-- **Tipos de datos**: TypeScript en frontmatter, `Astro.props` tipado, tipos inferidos de Zod, `Astro.glob()` array tipado, variables en template con `{}`
-- **Control de flujo**: condicionales `{condition &&}`, bucles `{items.map()}`, ternarios, `Astro.slots` y named slots, layouts anidados, módulos del proyecto
-- **Conceptos clave**: Zod schemas — validan el frontmatter en build time y generan tipos TypeScript automáticamente. Content collections reemplazan a `Astro.glob()` para contenido. Los archivos MDX pueden importar y renderizar componentes. El slug se genera desde el nombre del archivo por defecto.
+- Archivos MDX con componentes
+- `remark`/`rehype` plugins
 
-**Proyecto:** *Blog personal* — Colección MDX con schema Zod. Página de listado ordenado por fecha. Página de detalle con layout de post. Sidebar con tabla de contenidos (remark-toc). Tags como taxonomía. RSS feed. Despliega en Netlify.
+**Proyecto:** *Blog personal* — Colección MDX con schema Zod. Página de listado ordenado. Tags. RSS feed.
 
-### Nivel 30–45: Islas, componentes interactivos y Tailwind
+### Nivel 30–45: Islas, componentes y Tailwind
 
 **Qué aprender:**
-- Directivas `client:load`, `client:idle`, `client:visible`, `client:media`, `client:only`
-- Integrar Svelte/React/Vue en Astro
-- `astro add` para frameworks y utilidades
-- Tailwind CSS v3 o v4 con Astro
-- Estilos scoped vs globales, `is:global`
-- CSS vars y modo oscuro con Tailwind
-- Slots y named slots para composición
-- Componentes con props y tipos (TypeScript)
-- **Multimedia**: `Image`, `Picture`, `getImage` con formatos responsivos (WebP, AVIF), `<video>` y `<audio>` HTML, SVGs inline, Sharp para procesamiento
-- **Sistema de archivos**: `Astro.glob()` e `import.meta.glob`, `public/` vs `src/assets/`, endpoints API, acciones de servidor
-- **Conceptos clave**: Las islas deben ser pequeñas — no envuelvas toda la página en un componente de framework. La hidratación ocurre después de que el HTML se haya renderizado. Las props se definen con `Astro.props` y se tipan con `export interface Props`. Los `<style>` son scoped por defecto usando un hash único.
+- Directivas `client:load`, `client:idle`, `client:visible`
+- Integrar Svelte/React/Vue
+- Tailwind CSS, estilos scoped
+- Slots y named slots
 
-**Proyecto:** *Portfolio con galería* — Página principal con layout atractivo. Galería de proyectos con imágenes optimizadas. Componente interactivo Svelte (lightbox, carrusel o filtros). Modo oscuro con Tailwind. Layout responsivo. Despliega en Cloudflare Pages.
+**Proyecto:** *Portfolio con galería* — Componente interactivo Svelte. Modo oscuro. Layout responsivo.
 
 ### Nivel 45–60: SSR, endpoints API, autenticación
 
 **Qué aprender:**
-- SSR vs SSG vs Hybrid: `output: 'server'` y `prerender`
-- Adaptadores: Vercel, Netlify, Node, Cloudflare
-- Endpoints API: `GET`, `POST`, `PUT`, `DELETE` en `src/pages/api/`
-- `Astro.request`, `Astro.response`, `Astro.url`
-- Formularios: `accept: 'form'` en Astro Actions, manejo de formularios clásicos
-- Cookies: `Astro.cookies.get/set/delete`
-- Middleware: `defineMiddleware`, `sequence`
-- `context.locals` para datos compartidos
-- **Algoritmos**: ordenar y filtrar colecciones, paginación con `paginate()`, búsqueda con Pagefind/Fuse.js, agrupación por tags/año, caching en build vs ISR, tabla de complejidad O(n)/O(log n)
-- **Conceptos clave**: SSR requiere un adapter — no puedes hacer SSR sin uno. `prerender = true/false` decide por página si es estática o dinámica. Los endpoints devuelven `Response` (Web API standard). El middleware se ejecuta en orden con `sequence()`. `Astro.locals` es el lugar para datos de auth, sesiones, etc.
+- SSR vs SSG vs Hybrid
+- Adaptadores: Vercel, Netlify, Node
+- Endpoints API, middleware, cookies
+- Paginación con `paginate()`, búsqueda con Pagefind
 
-**Proyecto:** *Gestor de tareas con login* — SSR con Node adapter. Página de login con cookies de sesión. CRUD de tareas con endpoints API. Middleware de autenticación. Base de datos SQLite (o Turso). Componente interactivo Svelte para el formulario de tareas.
+**Proyecto:** *Gestor de tareas con login* — SSR, cookies, CRUD con endpoints API.
 
 ### Nivel 60–75: Server Islands, ViewTransitions, i18n
 
 **Qué aprender:**
-- Server Islands: `server:defer`, slots de fallback, streaming
-- ViewTransitions: `transition:animate`, `transition:name`, morphing
-- i18n routing: `locales`, `strategy`, `currentLocale`
-- Astro DB: tablas, consultas, inserciones
-- Imágenes: `Image`, `Picture`, `getImage`, formatos responsivos
-- Optimización: `preload`, `prefetch`, `Partytown`
-- **Conceptos clave**: ViewTransitions convierte un MPA en una experiencia SPA-like sin framework de cliente. Server islands permiten contenido dinámico en páginas estáticas. i18n routing genera las rutas `/es/`, `/en/`, etc. automáticamente. Astro DB usa libSQL embebido — no necesitas servidor de BD para desarrollo.
+- Server Islands `server:defer`
+- ViewTransitions con morphing
+- i18n routing multilingüe
+- Astro DB, optimización de imágenes
 
-**Proyecto:** *E-commerce básico* — Catálogo de productos con colecciones. Página de producto con server island para el precio (consultado en cada request). Carrito con Svelte store y `client:load`. ViewTransitions entre categorías. Rutas i18n (es/en). Checkout con endpoint API. Despliega en Vercel con ISR.
+**Proyecto:** *E-commerce básico* — Catálogo, server island para precio, carrito Svelte, ViewTransitions, i18n.
 
-### Nivel 75–90: Actions, BD avanzada, CMS, Stripe
+### Nivel 75–90: Actions, BD, CMS, Stripe
 
 **Qué aprender:**
-- Astro Actions (5+): `defineAction`, `accept: 'form' | 'json'`, validación Zod
-- Astro DB remoto con Turso/libSQL
-- Integración con CMS externo: Contentful, Sanity, Strapi
-- Stripe Checkout: integración de pagos
-- Webhooks: endpoints para recibir eventos
-- `crypto` para firmas y validación
-- CI/CD: GitHub Actions para build + deploy
-- Testing: `astro check`, pruebas con Playwright
-- **Búsqueda avanzada**: Pagefind con indexado en build, Fuse.js con índice precargado, Algolia para búsqueda en tiempo real
-- **Conceptos clave**: Las Actions son Server Actions con validación Zod integrada. Turso es libSQL distribuido — réplicas en edge. Stripe requiere secret key en entorno seguro (nunca en cliente). Los webhooks deben validarse con la firma de Stripe.
+- Astro Actions con validación Zod
+- Turso/libSQL remoto, integración CMS
+- Stripe Checkout, webhooks
+- Testing con Playwright
 
-**Proyecto:** *Tienda con pagos* — SSR con Vercel. Productos en Astro DB (Turso). Stripe Checkout para pagos. Webhook de Stripe para confirmar pedidos. Panel de admin con server island. Astro Actions para el formulario de envío. Tests con Playwright para el flujo completo de compra.
+**Proyecto:** *Tienda con pagos* — SSR, Stripe, webhooks, Astro Actions, tests E2E.
 
-### Nivel 90–100: Arquitectura, sistemas distribuidos, edge
+### Nivel 90–100: Edge, arquitectura, monorepo
 
 **Qué aprender:**
-- Patrón de composición avanzado: layouts anidados multi-nivel, fragmentos
-- Edge Functions: Vercel Edge, Cloudflare Workers con Astro
-- Streaming SSR: contenido que se renderiza progresivamente
-- Server Islands anidadas: islas dentro de islas
-- Caché: CDN, ISR, stale-while-revalidate
-- Monorepo: Turborepo + Astro + apps adicionales
-- Performance: Lighthouse 100, Core Web Vitals, bundle analysis
-- Observabilidad: OpenTelemetry, logs estructurados
-- **Algoritmos avanzados**: optimización de consultas, estrategias de caché distribuida, stale-while-revalidate, invalidación selectiva de ISR
-- **Conceptos clave**: Edge Functions ejecutan SSR en 50+ ubicaciones globales — reduce la latencia. El streaming SSR mejora el Time To First Byte (TTFB). En un monorepo, Astro puede ser el frontend de múltiples servicios. Con server islands puedes tener componentes que se renderizan en edge y otros en Node.
+- Edge Functions, streaming SSR
+- Monorepo con Turborepo
+- Caché CDN, ISR, stale-while-revalidate
+- Performance, Core Web Vitals, observabilidad
 
-**Proyecto:** *Sitio multilingüe con búsqueda* — 5 idiomas con i18n routing. Server islands para el panel de usuario. Edge Functions para personalización por geolocalización. Stripe + webhooks. Búsqueda con Pagefind o Algolia. Monorepo con Turborepo (Astro + API en Hono + admin en SvelteKit). Despliegue en Vercel Edge con ISR. Dashboard de monitoreo con OpenTelemetry.
-
-Fuente: [Astro docs — Guides](https://docs.astro.build/en/guides/), [Astro blog — Roadmap](https://astro.build/blog/)
+**Proyecto:** *Sitio multilingüe completo* — 5 idiomas, edge functions, Stripe, búsqueda, monorepo, ISR.
 
 ---
 
-## Proyectos prácticos detallados
+## 19. Proyecto final integrador
 
-### Blog con colecciones de contenido (nivel 30)
+### Blog personal con Astro
 
+Proyecto que combina: file system (content collections), conceptos (islas, SSR, views), testing, y red (RSS, deploy).
+
+**Estructura del proyecto:**
+```
+astro-blog/
+├── src/
+│   ├── content/
+│   │   ├── config.ts
+│   │   └── posts/
+│   │       ├── post-1.mdx
+│   │       └── post-2.mdx
+│   ├── components/
+│   │   ├── Card.astro
+│   │   ├── YouTube.astro
+│   │   └── Contador.svelte
+│   ├── layouts/
+│   │   ├── Base.astro
+│   │   └── BlogPost.astro
+│   └── pages/
+│       ├── index.astro
+│       ├── blog/
+│       │   ├── [...page].astro
+│       │   └── [slug].astro
+│       └── rss.xml.ts
+├── astro.config.mjs
+└── package.json
+```
+
+**Content Collections:**
+```ts
+// src/content/config.ts
+import { defineCollection, z } from 'astro:content';
+import { glob } from 'astro/loaders';
+
+const posts = defineCollection({
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/posts' }),
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    pubDate: z.date(),
+    tags: z.array(z.string()),
+    image: z.string().optional(),
+    author: z.string().default('Jorge Beneyto'),
+  }),
+});
+
+export const collections = { posts };
+```
+
+**Listado con paginación:**
 ```astro
 ---
-// src/pages/blog/[...page].astro
-// Página de listado con paginación
 import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 
@@ -2986,15 +1088,12 @@ export async function getStaticPaths({ paginate }) {
   const posts = (await getCollection('posts'))
     .filter(p => !p.data.draft)
     .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
-
   return paginate(posts, { pageSize: 10 });
 }
 
 const { page } = Astro.props;
 ---
-
 <Base title="Blog">
-  <h1>Blog</h1>
   {page.data.map(post => (
     <article>
       <time datetime={post.data.pubDate.toISOString()}>
@@ -3007,16 +1106,17 @@ const { page } = Astro.props;
       </div>
     </article>
   ))}
-
-  {page.url.prev && <a href={page.url.prev}>Anterior</a>}
-  {page.url.next && <a href={page.url.next}>Siguiente</a>}
+  <nav>
+    {page.url.prev && <a href={page.url.prev}>← Anterior</a>}
+    {page.url.next && <a href={page.url.next}>Siguiente →</a>}
+  </nav>
 </Base>
 ```
 
+**Página de detalle:**
 ```astro
 ---
-// src/pages/blog/[slug].astro — página de detalle
-import { getCollection, getEntry } from 'astro:content';
+import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import BlogPost from '../../layouts/BlogPost.astro';
 
@@ -3031,7 +1131,6 @@ export async function getStaticPaths() {
 const { post } = Astro.props;
 const { Content } = await post.render();
 ---
-
 <Base title={post.data.title}>
   <BlogPost title={post.data.title} author={post.data.author} date={post.data.pubDate}>
     <Content />
@@ -3039,154 +1138,36 @@ const { Content } = await post.render();
 </Base>
 ```
 
-### Dashboard con server islands (nivel 75)
-
-```astro
----
-// src/pages/dashboard.astro — página estática con islas de servidor
-import Base from '../layouts/Base.astro';
-import Metricas from '../components/Metricas.astro';
-import ActividadReciente from '../components/ActividadReciente.astro';
----
-
-<Base title="Dashboard">
-  <h1>Panel de control</h1>
-
-  <div class="grid">
-    <Metricas server:defer>
-      <div slot="fallback" class="skeleton">Cargando métricas...</div>
-    </Metricas>
-  </div>
-
-  <div class="grid">
-    <ActividadReciente server:defer>
-      <div slot="fallback" class="skeleton">Cargando actividad...</div>
-    </ActividadReciente>
-  </div>
-</Base>
-```
-
-```astro
----
-// src/components/Metricas.astro — server island
-import { db } from 'astro:db';
-
-const totalUsuarios = await db.select().from(Usuarios).count();
-const ventasHoy = await db.select().from(Ventas)
-  .where(eq(fecha, new Date().toISOString().split('T')[0]))
-  .count();
----
-
-<div class="metricas">
-  <div class="metrica">
-    <h3>Usuarios</h3>
-    <p class="valor">{totalUsuarios}</p>
-  </div>
-  <div class="metrica">
-    <h3>Ventas hoy</h3>
-    <p class="valor">{ventasHoy}</p>
-  </div>
-</div>
-```
-
-Fuente: [Astro docs — Pagination](https://docs.astro.build/en/guides/routing/#pagination)
-
----
-
-## Hacks y tips de productividad
-
-**1. Content collections con imágenes locales**
-```astro
----
-// Las imágenes dentro de src/ se optimizan automáticamente
-import { getCollection } from 'astro:content';
-
-const posts = await getCollection('posts');
-// En el frontmatter: image: "img/guia_0_100_astro/guia_0_100_astro_cover-1200.webp"
-// En el componente:
-import { Image } from 'astro:assets';
----
-{posts.map(async post => {
-  const { image } = await post.data.image ? import(`../images/${post.data.image}`) : null;
-  return image ? <Image src={image} alt={post.data.title} /> : null;
-})}
-```
-
-**2. `--host` para pruebas en dispositivos móviles**
+**Tests:**
 ```bash
-# Expone el servidor a tu red local
-npm run dev -- --host
+#!/bin/bash
+# test_proyecto.sh
+echo "=== Test 1: Build ==="
+npm run build || exit 1
 
-# O especifica el host
-npm run dev -- --host 0.0.0.0
-# Prueba en tu móvil: http://IP_DEL_ORDENADOR:4321
+echo "=== Test 2: RSS existe ==="
+test -f dist/rss.xml && echo "✅ RSS generado" || echo "⚠️ Sin RSS"
+
+echo "=== Test 3: Páginas generadas ==="
+find dist -name "*.html" | wc -l
+echo "páginas HTML generadas"
+
+echo "=== Test 4: Type check ==="
+npx astro check 2>&1 | grep -q "No errors" && echo "✅ Types OK" || echo "⚠️ Revisar types"
+
+echo "=== Todos los tests pasaron ==="
 ```
 
-**3. Hybrid rendering para rutas mixtas**
-```js
-// astro.config.mjs
-export default defineConfig({
-  output: 'hybrid',
-});
-```
-```astro
----
-// src/pages/productos/[id].astro
-// Esta página se genera como SSR
-export const prerender = false;
-
-// Obtén el producto de la BD en cada request
-const { id } = Astro.params;
-const producto = await getProducto(id);
----
-```
-
-```astro
----
-// src/pages/acerca.astro
-// Esta página es estática (por defecto con hybrid)
----
-
-<h1>Acerca de</h1>
-```
-
-**4. Asset pipeline con Vite**
-```astro
----
-// Los archivos en src/ pasan por el pipeline de Vite
-// Puedes importar SVGs como componentes (con @astropub/icons o manual)
-import Logo from '../images/logo.svg?raw'; // contenido raw
-import foto from '../images/foto.jpg'; // URL del asset procesado
----
-
-{/* SVGs inline */}
-<Fragment set:html={Logo} />
-
-{/* Imágenes con hash en nombre para cache busting */}
-<img src={foto} alt="" />
-```
-
-**5. Content collections con slug generado desde frontmatter**
-```astro
----
-import { getCollection } from 'astro:content';
-
-// Si tienes un campo slug en el frontmatter
-const posts = await getCollection('posts');
-// Puedes consultar por slug personalizado:
-const post = posts.find(p => p.data.slug === 'mi-slug-personalizado');
-// O usar getEntry con un filtro
-const post2 = await getEntry('posts', ({ data }) => data.slug === 'mi-slug');
----
-```
-
-**6. Deploy previews automáticos**
+**CI/CD:**
 ```yaml
-# .github/workflows/deploy-preview.yml
-name: Deploy Preview
-on: [pull_request]
+# .github/workflows/deploy.yml
+name: Build and Deploy
+on:
+  push:
+    branches: [main]
+    paths: ['src/content/**', 'src/**']
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -3197,109 +1178,157 @@ jobs:
           cache: 'pnpm'
       - run: pnpm install
       - run: pnpm run build
+      - run: npx astro check
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          github-comment: true
 ```
 
-**7. El comando `astro check` para TypeScript**
+---
+
+## 20. Canales y recursos en español
+
+### YouTube
+- **Midulive** — Astro, JavaScript, desarrollo web
+- **MoureDev** — Astro, proyectos web, automatización
+- **HolaMundo** — Tutoriales rápidos de tecnologías web
+- **Carlos Azaustre** — Desarrollo web con Astro, React
+- **Código 369** — Astro, Jamstack, frontend moderno
+
+### Comunidades
+- **r/astrojs** (Reddit) — Comunidad oficial
+- **Astro Discord** ([astro.build/chat](https://astro.build/chat))
+- **Stack Overflow en español** — Etiqueta `astro`
+- **Dev.to** — Artículos en español con `astro`
+
+### Repositorios
+- [withastro/astro](https://github.com/withastro/astro) — Código fuente
+- [one-aalam/awesome-astro](https://github.com/one-aalam/awesome-astro) — Recursos curados
+- [withastro/astro.new](https://astro.new/) — Playground
+- [astro/themes](https://astro.build/themes/) — Temas oficiales
+
+### Blogs y newsletters
+- [Astro Blog](https://astro.build/blog/) — Anuncios oficiales
+- [Netlify Blog](https://www.netlify.com/blog/) — Tutoriales de deploy
+- [Vercel Blog](https://vercel.com/blog) — Guías de rendimiento
+- [Astro Weekly](https://astroweekly.com/) — Newsletter semanal
+
+---
+
+## 21. Hacks y tips de productividad
+
+**1. Content collections con imágenes locales**
+```astro
+---
+import { getCollection } from 'astro:content';
+import { Image } from 'astro:assets';
+const posts = await getCollection('posts');
+---
+{posts.map(async post => {
+  const { image } = await post.data.image ? import(`../images/${post.data.image}`) : null;
+  return image ? <Image src={image} alt={post.data.title} /> : null;
+})}
+```
+
+**2. `--host` para pruebas en móviles**
+```bash
+npm run dev -- --host 0.0.0.0
+```
+
+**3. Hybrid rendering**
+```js
+export default defineConfig({ output: 'hybrid' });
+```
+```astro
+---
+export const prerender = false;
+---
+```
+
+**4. Asset pipeline con Vite**
+```astro
+---
+import Logo from '../images/logo.svg?raw';
+---
+<Fragment set:html={Logo} />
+```
+
+**5. Slug personalizado desde frontmatter**
+```astro
+---
+import { getCollection } from 'astro:content';
+const post = await getEntry('posts', ({ data }) => data.slug === 'mi-slug');
+---
+```
+
+**6. Deploy previews automáticos**
+```yaml
+on: [pull_request]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pnpm install && pnpm run build
+      - uses: amondnet/vercel-action@v25
+```
+
+**7. `astro check` para TypeScript**
 ```bash
 npx astro check
-# Analiza todo el proyecto en busca de errores de tipos
-# Ideal para CI
 ```
 
-**8. Prefetch de enlaces en vista**
+**8. Prefetch de enlaces**
 ```astro
 ---
 import { ViewTransitions } from 'astro:transitions';
 ---
-
 <ViewTransitions />
-<!-- Todos los enlaces dentro de <nav> se precargan en hover -->
-<nav>
-  <a href="/blog">Blog</a>
-  <a href="/about">Sobre mí</a>
-</nav>
 ```
 
-**9. Inline crítico CSS automático**
+**9. Inline CSS crítico**
 ```js
-// astro.config.mjs
 export default defineConfig({
-  build: {
-    inlineStylesheets: 'auto', // inline CSS crítico automáticamente
-  },
+  build: { inlineStylesheets: 'auto' },
 });
 ```
 
-Fuente: [Astro docs — CLI](https://docs.astro.build/en/reference/cli-reference/), [Astro docs — Build](https://docs.astro.build/en/reference/configuration-reference/#build)
+**10. Depurar frontmatter**
+```astro
+---
+const posts = await getCollection('posts');
+---
+<pre>{JSON.stringify(posts.map(p => p.data), null, 2)}</pre>
+```
 
 ---
 
-## Canales y recursos en español
+## 22. Referencias y documentación oficial
 
-### YouTube
-- **Midulive** — Astro, JavaScript, desarrollo web. Tiene videos prácticos sobre Astro con integrraciones
-- **MoureDev** — Astro, proyectos web, automatización. Cubre Astro en su serie de desarrollo web
-- **HolaMundo** — Tutoriales rápidos de tecnologías web, incluye Astro
-- **Carlos Azaustre** — Desarrollo web con Astro, React, y JavaScript. Tutoriales claros
-- **Código 369** — Contenido variado sobre Astro, Jamstack, y frontend moderno
-- **midulive** (canal en español) — Streams semanales con proyectos prácticos
-
-### Comunidades
-- **r/astrojs** (Reddit) — Comunidad oficial de Astro en inglés, pero muy activa y receptiva
-- **Astro Discord** ([astro.build/chat](https://astro.build/chat)) — Canal en español dentro del Discord oficial
-- **Stack Overflow en español** — Etiqueta `astro` para dudas técnicas
-- **Dev.to** — Artículos en español etiquetados con `astro`
-
-### Repositorios de código
-- [withastro/astro](https://github.com/withastro/astro) — Código fuente del framework
-- [one-aalam/awesome-astro](https://github.com/one-aalam/awesome-astro) — Lista curada de recursos, temas, plugins
-- [withastro/astro.new](https://astro.new/) — Playground para probar Astro en el navegador
-- [astro/themes](https://astro.build/themes/) — Temas oficiales y de la comunidad
-
-### Blogs y newsletters
-- [Astro Blog](https://astro.build/blog/) — Anuncios oficiales, tutoriales, casos de estudio
-- [Netlify Blog](https://www.netlify.com/blog/) — Tutoriales de deploy, Jamstack, Astro
-- [Vercel Blog](https://vercel.com/blog) — Guías de deploy, rendimiento, edge functions
-- [Astro Weekly](https://astroweekly.com/) — Newsletter semanal sobre el ecosistema Astro
-
-Fuente: búsqueda en YouTube y Reddit, listas curadas de Awesome Astro
-
----
-
-## Referencias y documentación oficial
-
-- **Docs oficiales**: [docs.astro.build](https://docs.astro.build/) — documentación completa en inglés
-- **Astro Blog**: [astro.build/blog](https://astro.build/blog/) — anuncios, tutoriales, novedades
-- **GitHub**: [github.com/withastro/astro](https://github.com/withastro/astro) — código fuente, issues, discusiones
-- **Discord**: [astro.build/chat](https://astro.build/chat) — comunidad oficial
-- **Playground**: [astro.new](https://astro.new/) — prueba Astro en el navegador
-- **Themes**: [astro.build/themes](https://astro.build/themes/) — temas oficiales y comunitarios
-- **Integrations**: [astro.build/integrations](https://astro.build/integrations/) — catálogo de integraciones
-
-### Fuentes de esta guía
-
-Esta guía se ha elaborado a partir de las siguientes fuentes consultadas durante su desarrollo:
-
-- [Astro — Documentación oficial](https://docs.astro.build/)
-- [Astro Blog — Anuncios y tutoriales](https://astro.build/blog/)
-- [Astro GitHub — Código fuente](https://github.com/withastro/astro)
-- [Awesome Astro — Lista curada](https://github.com/one-aalam/awesome-astro)
-- [Netlify Blog — Guías de Astro + Netlify](https://www.netlify.com/blog/)
-- [Vercel Blog — Guías de Astro + Vercel](https://vercel.com/blog)
-- [Astro Discord — Comunidad oficial](https://astro.build/chat)
-- [r/astrojs — Comunidad Reddit](https://reddit.com/r/astrojs)
-- [Tailwind CSS v4 Docs](https://tailwindcss.com/docs/v4-beta)
-- [Stripe Docs — Checkout](https://stripe.com/docs/checkout)
-- [Contentful Docs — Astro integration](https://www.contentful.com/developers/docs/)
-- [Decap CMS Docs](https://decapcms.org/docs/)
-- [Supabase Docs — Astro integration](https://supabase.com/docs/guides/with-astro)
+- **Docs oficiales**: [docs.astro.build](https://docs.astro.build/)
+- **Astro Blog**: [astro.build/blog](https://astro.build/blog/)
+- **GitHub**: [github.com/withastro/astro](https://github.com/withastro/astro)
+- **Discord**: [astro.build/chat](https://astro.build/chat)
+- **Playground**: [astro.new](https://astro.new/)
+- **Themes**: [astro.build/themes](https://astro.build/themes/)
+- **Integrations**: [astro.build/integrations](https://astro.build/integrations/)
+- **Awesome Astro**: [github.com/one-aalam/awesome-astro](https://github.com/one-aalam/awesome-astro)
+- **Netlify Blog**: [netlify.com/blog](https://www.netlify.com/blog/)
+- **Vercel Blog**: [vercel.com/blog](https://vercel.com/blog)
+- **Tailwind CSS v4 Docs**: [tailwindcss.com/docs/v4-beta](https://tailwindcss.com/docs/v4-beta)
+- **Stripe Docs**: [stripe.com/docs](https://stripe.com/docs/checkout)
+- **Playwright Docs**: [playwright.dev](https://playwright.dev/)
+- **Vitest Docs**: [vitest.dev](https://vitest.dev/)
+- **Pagefind Docs**: [pagefind.app](https://pagefind.app/)
+- **Contentful Docs**: [contentful.com/developers/docs](https://www.contentful.com/developers/docs/)
+- **Decap CMS Docs**: [decapcms.org/docs](https://decapcms.org/docs/)
+- **Supabase Docs**: [supabase.com/docs](https://supabase.com/docs/guides/with-astro)
+- **r/astrojs**: [reddit.com/r/astrojs](https://reddit.com/r/astrojs)
+- **Astro Weekly**: [astroweekly.com](https://astroweekly.com/)
+- **MDX Docs**: [mdxjs.com](https://mdxjs.com/)
 
 ---
 

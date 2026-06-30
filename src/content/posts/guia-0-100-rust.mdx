@@ -49,29 +49,24 @@ cargo --version
 Esto instala: **rustup** (gestor de versiones), **rustc** (compilador), **cargo** (gestor de paquetes/build).
 
 ### Windows
-
 - Ejecuta `rustup-init.exe` desde [rustup.rs](https://rustup.rs/)
 - Necesita **Visual Studio Build Tools** con workload "Desktop C++" (o MSYS2/MinGW)
 - Alternativa: `winget install Rustlang.Rustup`
 
 ### macOS
-
 ```bash
 xcode-select --install  # Xcode CLT necesario para linker
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
 ### Linux (Debian/Ubuntu)
-
 ```bash
 curl ... | sh
 sudo apt install build-essential pkg-config libssl-dev
 ```
-
 Fedora: `sudo dnf install gcc pkg-config openssl-devel`
 
 ### rustup avanzado
-
 ```bash
 rustup update                     # Actualizar
 rustup install nightly            # Canal nightly
@@ -83,7 +78,6 @@ rustup default nightly            # Cambiar default
 ```
 
 ### Docker multi-stage
-
 ```dockerfile
 FROM rust:1.85-slim-bookworm AS builder
 WORKDIR /app
@@ -99,7 +93,6 @@ CMD ["mi-app"]
 ```
 
 ### Alias útiles
-
 ```bash
 alias rlb='cargo build --release'
 alias rchk='cargo check'
@@ -120,10 +113,11 @@ Fuente: [rustup.rs](https://rustup.rs/), [Docker Rust](https://hub.docker.com/_/
 
 ---
 
-## Primeros pasos
+## Primeros pasos y configuración del entorno
+
+Si prefieres ver directamente el "Hola Mundo" en Rust, consulta [El Atlas del Hola Mundo](/posts/hola/#rust).
 
 ### Crear proyecto
-
 ```bash
 cargo new mi-proyecto
 cd mi-proyecto
@@ -138,7 +132,6 @@ mi-proyecto/
 ```
 
 ### Cargo.toml
-
 ```toml
 [package]
 name = "mi-proyecto"
@@ -157,7 +150,6 @@ strip = true
 ```
 
 ### Compilar y ejecutar
-
 ```bash
 cargo build           # Debug
 cargo build --release # Optimizado
@@ -167,7 +159,6 @@ cargo run -- arg1 arg2
 ```
 
 ### rustfmt
-
 ```bash
 rustup component add rustfmt
 cargo fmt               # Formatea
@@ -182,30 +173,17 @@ edition = "2021"
 ```
 
 ### Clippy
-
 ```bash
 rustup component add clippy
 cargo clippy                       # Lints
 cargo clippy -- -W clippy::pedantic  # Pedante
 cargo clippy --fix                 # Auto-fix
 ```
+### Editores recomendados
 
-### rust-analyzer (IDE)
-
-**VSCode:** extensión `rust-analyzer` (oficial).
-**Neovim:** `mrcjkb/rustaceanvim` o `lspconfig.rust_analyzer`.
-**Helix:** built-in.
-
-Config VSCode `.vscode/settings.json`:
-```json
-{
-  "rust-analyzer.check.command": "clippy",
-  "rust-analyzer.inlayHints.typeHints.enable": true
-}
-```
+Los IDEs y editores más usados son [VSCode](/posts/resources/#ides-y-editores-de-codigo), [JetBrains](/posts/resources/#ides-y-editores-de-codigo) y [Neovim](/posts/resources/#ides-y-editores-de-codigo). Extensiones y configuraciones recomendadas en [Recursos](/posts/resources/#ides-y-editores-de-codigo).
 
 ### Ediciones de Rust
-
 | Edition | Rust | Novedades |
 |---------|------|-----------|
 | 2015 | 1.0 | Original |
@@ -219,14 +197,20 @@ Fuente: [The Rust Book — Getting Started](https://doc.rust-lang.org/book/ch01-
 
 ---
 
-## Paradigmas
+## Paradigmas de programación
 
 Rust es un lenguaje **multi-paradigma** con énfasis en funcional y sistémico. Puedes mezclar paradigmas según el problema.
 
+| Paradigma | Soporte en Rust |
+|-----------|----------------|
+| Imperativo | Statements, loops, mutabilidad explícita |
+| Funcional | Inmutabilidad, iterators, closures, pattern matching, Option/Result |
+| POO | Structs + impl, traits, composición, encapsulación |
+| Concurrente | Ownership + Send/Sync, canales, Arc\<Mutex\> |
+| Sistémico | Sin GC, control de memoria, zero-cost, FFI, no_std |
+
 ### Imperativo
-
 Rust tiene statements y expressions. Casi todo es una expresión (retorna un valor):
-
 ```rust
 let x = if cond { 10 } else { 20 };  // if es expresión
 let y = loop { break 42; };          // loop retorna valor
@@ -237,9 +221,7 @@ let z = match n {
 ```
 
 ### Funcional
-
 Rust adopta varios conceptos funcionales:
-
 - **Inmutabilidad por defecto**: `let` crea variables inmutables. Solo `let mut` permite mutación.
 - **Iterators**: lazy, zero-cost, chainable (`map`, `filter`, `fold`, `flat_map`)
 - **Closures**: `|args| expr`, capturan entorno por referencia/move, traits `Fn`/`FnMut`/`FnOnce`
@@ -259,9 +241,7 @@ let r = Some(10)
 ```
 
 ### POO parcial
-
 Rust no tiene clases ni herencia, pero ofrece:
-
 - **Structs + `impl`**: datos + métodos (como clases sin herencia)
 - **Traits como interfaces**: definen comportamiento compartido
 - **Composición sobre herencia**: agregar campos en lugar de extender
@@ -279,9 +259,7 @@ impl Volador for Avion { fn volar(&self) { println!("{} enciende motores", self.
 ```
 
 ### Concurrente
-
 El **ownership** garantiza thread-safety en compilación:
-
 - El borrow checker previene data races: no puedes tener `&mut` simultáneos entre threads
 - Traits `Send`/`Sync`: el compilador verifica qué tipos son seguros entre threads
 - `Rc<T>` no es `Send` (contador no atómico), `Arc<T>` sí
@@ -305,9 +283,7 @@ println!("{}", contador.lock().unwrap()); // 10
 ```
 
 ### Sistémico
-
 Rust da control de memoria sin GC:
-
 - **Sin garbage collector**: la memoria se libera en compile-time con ownership
 - **Zero-cost abstractions**: iterators, closures, genéricos se compilan a código tan eficiente como el escrito a mano
 - **Control manual**: puedes elegir stack vs heap (`Box`), memoria compartida (`Rc`/`Arc`), representaciones con `repr(C)`
@@ -318,302 +294,992 @@ Rust da control de memoria sin GC:
 let suma: u32 = (0..1000).filter(|x| x % 2 == 0).map(|x| x * x).sum();
 ```
 
-| Paradigma | Soporte en Rust |
-|-----------|----------------|
-| Imperativo | Statements, loops, mutabilidad explícita |
-| Funcional | Inmutabilidad, iterators, closures, pattern matching, Option/Result |
-| POO | Structs + impl, traits, composición, encapsulación |
-| Concurrente | Ownership + Send/Sync, canales, Arc\<Mutex\> |
-| Sistémico | Sin GC, control de memoria, zero-cost, FFI, no_std |
-
 Fuente: [Rust Book — FP](https://doc.rust-lang.org/book/ch13-00-functional-features.html), [Rust Book — OOP](https://doc.rust-lang.org/book/ch17-00-oop.html), [Rust Book — Concurrency](https://doc.rust-lang.org/book/ch16-00-concurrency.html), [Rustonomicon](https://doc.rust-lang.org/nomicon/)
 
 ---
 
 ## Tipos de datos y variables
 
+### Sistema de tipos
+
+#### ¿Qué es?
+Rust tiene **tipado estático fuerte con inferencia**: el compilador conoce el tipo de cada variable en compile-time y no realiza conversiones implícitas entre tipos incompatibles. Es como un molde rígido: cada pieza encaja exactamente en su lugar.
+
+El sistema de tipos es **nominal** (los tipos se identifican por su nombre, no por su estructura) y **lineal** (cada valor tiene exactamente un propietario).
+
+🔗 [Wikipedia — Tipado estático](https://es.wikipedia.org/wiki/Tipado_est%C3%A1tico), [Rust Book — Tipos](https://doc.rust-lang.org/book/ch03-02-data-types.html)
+
+#### Sintaxis básica
+```rust
+let x: i32 = 42;       // Anotación explícita
+let y = 42;            // Inferencia: i32 por defecto
+let z = 3.14;          // Inferencia: f64 por defecto
+
+// Error: tipos no coinciden
+// let suma = "42" + 1;  // ❌ No compila
+```
+
+#### 🧪 Cómo probarlo
+```rust
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_tipado_estatico() {
+        let x: i32 = 42;
+        assert_eq!(x, 42);
+    }
+
+    #[test]
+    fn test_inferencia() {
+        let x = 42;
+        let y = 3.14;
+        assert_eq!(std::mem::size_of_val(&x), 4); // i32 = 4 bytes
+        assert_eq!(std::mem::size_of_val(&y), 8); // f64 = 8 bytes
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- Coste cero en runtime: el tipado se resuelve en compilación
+- Los tipos ocupan exactamente el tamaño declarado (sin overhead de cabecera)
+- La inferencia no añade tiempo de compilación significativo
+
+#### ✅ Buenas prácticas
+- ✅ Prefiere inferencia de tipos para código local y legible
+- ✅ Anota tipos explícitamente en APIs públicas y funciones
+- ⚠️ No uses `i8`/`u8` para números pequeños sin necesidad real de ahorro de memoria
+- ❌ No abuses de `as` para conversiones — prefiere `From`/`TryFrom`
+
+#### 🏗️ Metodología
+- En bibliotecas: siempre anota tipos en la interfaz pública
+- En scripts/CLIs: inferencia es aceptable
+- En embebido: usa tipos explícitos para controlar el tamaño exacto
+
+#### 🔗 Para saber más
+- [Rust Book — Data Types](https://doc.rust-lang.org/book/ch03-02-data-types.html)
+- [Rust Reference — Type System](https://doc.rust-lang.org/reference/types.html)
+- [Rust by Example — Types](https://doc.rust-lang.org/rust-by-example/types.html)
+
 ### Escalares
 
-| Tipo | Rango/Tamaño |
-|------|-------------|
-| `i8`..`i128` | Enteros con signo (8..128 bits) |
-| `u8`..`u128` | Enteros sin signo (8..128 bits) |
-| `isize`/`usize` | Según arquitectura (64 bits en x86-64) |
-| `f32`/`f64` | IEEE 754, 32 y 64 bits |
-| `bool` | `true`/`false` |
-| `char` | Unicode de 4 bytes (32 bits) |
+#### ¿Qué es?
+Los tipos escalares representan valores simples y únicos. En Rust, todos los escalares tienen tamaño fijo conocido en compilación y viven en el stack.
 
+| Tipo | Tamaño | Rango |
+|------|--------|-------|
+| `i8`/`u8` | 8 bits | -128..127 / 0..255 |
+| `i16`/`u16` | 16 bits | -32768..32767 / 0..65535 |
+| `i32`/`u32` | 32 bits | -2^31..2^31-1 / 0..2^32-1 |
+| `i64`/`u64` | 64 bits | -2^63..2^63-1 / 0..2^64-1 |
+| `i128`/`u128` | 128 bits | -2^127..2^127-1 / 0..2^128-1 |
+| `isize`/`usize` | arq. nativa | depende de la arquitectura |
+| `f32`/`f64` | 32/64 bits | IEEE 754 |
+| `bool` | 8 bits | `true` / `false` |
+| `char` | 32 bits | Unicode escalar |
+
+🔗 [Rust Book — Scalar Types](https://doc.rust-lang.org/book/ch03-02-data-types.html)
+
+#### Sintaxis básica
 ```rust
 let decimal = 98_222;
 let hex = 0xff;
 let octal = 0o77;
-let bin = 0b1111_0000;
+let binario = 0b1111_0000;
 let byte = b'A';
-let c: char = '😊';
+let flotante = 3.14;
+let cientifico = 1.5e10;
+let activo: bool = true;
+let letra: char = 'ñ';
 ```
+
+#### 🧪 Cómo probarlo
+```rust
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_escalares() {
+        assert_eq!(98_222, 98222);
+        assert_eq!(0xff, 255);
+        assert_eq!(1.5e10 as u64, 15_000_000_000);
+        assert_eq!(b'A', 65u8);
+    }
+
+    #[test]
+    fn test_tamanos() {
+        assert_eq!(std::mem::size_of::<i32>(), 4);
+        assert_eq!(std::mem::size_of::<f64>(), 8);
+        assert_eq!(std::mem::size_of::<char>(), 4);
+        assert_eq!(std::mem::size_of::<bool>(), 1);
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- Los escalares viven en el **stack**: acceso O(1), sin asignación dinámica
+- `char` ocupa 4 bytes (no 1 como en C) para soportar Unicode completo
+- `bool` ocupa 1 byte completo (no 1 bit) — es un trade-off de acceso a memoria
+
+#### ✅ Buenas prácticas
+- ✅ Usa `i32`/`f64` por defecto como tipos escalares principales
+- ✅ Usa `usize` para índices de colecciones y tamaños
+- ⚠️ `isize`/`usize` varían según plataforma — no los serialices sin anotar el tamaño
+- ❌ No uses `as` para truncar valores sin verificar el rango
+
+#### 🏗️ Metodología
+- Por defecto: `i32` para enteros, `f64` para flotantes
+- Rendimiento extremo: usa `i8`-`i64` según el rango real esperado
+- Embebido: prefiere `u8`/`i16` para ahorrar registros y memoria
+
+#### 🔗 Para saber más
+- [Rust Book — Scalar Types](https://doc.rust-lang.org/book/ch03-02-data-types.html)
+- [Rust Reference — Numeric Types](https://doc.rust-lang.org/reference/types/numeric.html)
+- [Rust by Example — Primitives](https://doc.rust-lang.org/rust-by-example/primitives.html)
 
 ### Compuestos
 
-| Tipo | Descripción |
-|------|-------------|
-| `(T1, T2, ...)` | Tupla: tamaño fijo, tipos distintos |
-| `[T; N]` | Array: tamaño fijo, mismo tipo |
-| `&[T]` | Slice: vista de un array/vec |
+#### ¿Qué es?
+Los tipos compuestos agrupan múltiples valores en una sola entidad. Rust ofrece tuplas (producto de tipos) y arrays (colección homogénea de tamaño fijo). Ambos tienen tamaño conocido en compilación y viven en el stack.
 
+🔗 [Rust Book — Compound Types](https://doc.rust-lang.org/book/ch03-02-data-types.html#compound-types)
+
+#### Sintaxis básica
 ```rust
-let tup: (i32, f64, char) = (42, 3.14, 'R');
-let (x, y, z) = tup;
-let primero = tup.0;
+// Tupla: grupo heterogéneo de tamaño fijo
+let persona: (&str, u8, bool) = ("Alice", 30, true);
+let (nombre, edad, activo) = persona; // destructuring
+println!("{}", persona.0); // acceso por índice
 
-let arr: [i32; 3] = [1, 2, 3];
-let slice: &[i32] = &arr[1..3];
+// Array: grupo homogéneo de tamaño fijo
+let numeros: [i32; 5] = [1, 2, 3, 4, 5];
+let ceros = [0; 100]; // [0, 0, 0, ..., 0]
+println!("{}", numeros[2]); // acceso por índice
 ```
+
+#### 🧪 Cómo probarlo
+```rust
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_tuplas() {
+        let t = (42, "hola");
+        assert_eq!(t.0, 42);
+        assert_eq!(t.1, "hola");
+
+        let (a, b) = t;
+        assert_eq!(a, 42);
+    }
+
+    #[test]
+    fn test_arrays() {
+        let arr = [1, 2, 3];
+        assert_eq!(arr.len(), 3);
+        assert_eq!(arr[1], 2);
+    }
+
+    #[test]
+    #[should_panic(expected = "index out of bounds")]
+    fn test_array_out_of_bounds() {
+        let arr = [1, 2, 3];
+        let _ = arr[10]; // panic en runtime
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- Tuplas y arrays viven en el **stack**: acceso directo, cero overhead
+- El tamaño es parte del tipo: `[i32; 5]` y `[i32; 6]` son tipos distintos
+- Arrays se almacenan contiguamente en memoria (cache-friendly)
+- Tuplas pueden tener padding por alineación entre campos
+
+#### ✅ Buenas prácticas
+- ✅ Usa arrays para colecciones de tamaño conocido en compilación
+- ✅ Usa tuplas para agrupar valores sin nombre (retorno múltiple)
+- ⚠️ Para colecciones dinámicas, prefiere `Vec<T>` sobre arrays
+- ❌ No accedas a arrays con índices sin verificar el límite
+
+#### 🏗️ Metodología
+- Tuplas: útiles para retornar múltiples valores sin crear un struct
+- Arrays: usa para buffers de tamaño fijo, lookup tables, datos embebidos
+- Cuando el tamaño es dinámico, refactoriza a `Vec<T>`
+
+#### 🔗 Para saber más
+- [Rust Book — Tuples](https://doc.rust-lang.org/book/ch03-02-data-types.html#the-tuple-type)
+- [Rust Book — Arrays](https://doc.rust-lang.org/book/ch03-02-data-types.html#the-array-type)
+- [Rust by Example — Tuples](https://doc.rust-lang.org/rust-by-example/primitives/tuples.html)
 
 ### Structs
 
+#### ¿Qué es?
+Un `struct` es un tipo compuesto con campos nombrados. Es la unidad fundamental de organización de datos en Rust, equivalente a las clases en otros lenguajes pero sin herencia.
+
+🔗 [Rust Book — Structs](https://doc.rust-lang.org/book/ch05-00-structs.html)
+
+#### Sintaxis básica
 ```rust
-struct Usuario { nombre: String, edad: u8 }
+struct Usuario {
+    nombre: String,
+    email: String,
+    activo: bool,
+    edad: u8,
+}
 
-struct Edad(u8);
+// Instanciación
+let u = Usuario {
+    nombre: String::from("Alice"),
+    email: String::from("alice@example.com"),
+    activo: true,
+    edad: 30,
+};
 
-struct SinDatos;
+// Tuple struct (campos sin nombre)
+struct Color(u8, u8, u8);
+let rojo = Color(255, 0, 0);
 
-struct Email(String);
-fn enviar(a: &Email, msg: &str) {}
+// Unit struct (sin campos)
+struct Marker;
+
+// Spread syntax
+let u2 = Usuario { nombre: String::from("Bob"), ..u };
 ```
+
+#### 🧪 Cómo probarlo
+```rust
+#[cfg(test)]
+mod tests {
+    struct Punto { x: i32, y: i32 }
+
+    #[test]
+    fn test_struct() {
+        let p = Punto { x: 10, y: 20 };
+        assert_eq!(p.x, 10);
+        assert_eq!(p.y, 20);
+    }
+
+    #[test]
+    fn test_mutabilidad() {
+        let mut p = Punto { x: 0, y: 0 };
+        p.x = 5;
+        assert_eq!(p.x, 5);
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- Los structs se almacenan en stack por defecto, sin overhead
+- El tamaño es la suma de sus campos más padding por alineación
+- `#[repr(C)]` cambia el layout para FFI (compatible con C)
+- `#[repr(packed)]` elimina padding pero penaliza acceso
+
+#### ✅ Buenas prácticas
+- ✅ Usa `impl` blocks para asociar métodos al struct
+- ✅ Implementa `Display` y `Debug` para logging y depuración
+- ⚠️ No expongas campos privados sin getters si necesitas invariantes
+- ❌ No abuses de `pub` en campos — prefiere métodos de acceso
+
+#### 🏗️ Metodología
+- Structs simples: datos planos sin validación (DTOs)
+- Structs con lógica: usa constructores (`new()`) que validen invariantes
+- Para configuración: usa el builder pattern con structs
+
+#### 🔗 Para saber más
+- [Rust Book — Defining Structs](https://doc.rust-lang.org/book/ch05-01-defining-structs.html)
+- [Rust by Example — Structs](https://doc.rust-lang.org/rust-by-example/custom_types/structs.html)
+- [Rust Reference — Structs](https://doc.rust-lang.org/reference/items/structs.html)
 
 ### Enums
 
+#### ¿Qué es?
+Los `enum` en Rust son **algebraicos**: cada variante puede llevar datos asociados. Son la herramienta principal para modelar estados y opciones, y combinados con `match` proporcionan exhaustividad en compilación.
+
+🔗 [Rust Book — Enums](https://doc.rust-lang.org/book/ch06-00-enums.html)
+
+#### Sintaxis básica
 ```rust
-enum Color { Rojo, Verde, Azul }
-enum Mensaje { Texto(String), Coord(f64, f64), Salir }
+enum Estado {
+    Activo,
+    Inactivo,
+    Pendiente(String), // con datos
+}
 
-enum Option<T> { Some(T), None }
+enum Mensaje {
+    Texto(String),
+    Coordenadas { x: f64, y: f64 }, // struct-like
+    Cerrar,
+}
 
-enum Result<T, E> { Ok(T), Err(E) }
+// Uso
+let msg = Mensaje::Texto(String::from("hola"));
+match msg {
+    Mensaje::Texto(s) => println!("{}", s),
+    Mensaje::Coordenadas { x, y } => println!("{},{}", x, y),
+    Mensaje::Cerrar => println!("adios"),
+}
 ```
 
-### String vs &str (diferencia crítica)
-
-| Aspecto | `String` | `&str` |
-|---------|----------|--------|
-| Propietario | Sí (owning) | No (borrowed) |
-| Mutabilidad | Sí (con `let mut`) | No |
-| Almacenamiento | Heap | Cualquier lado (heap, stack, data segment) |
-| Growable | Sí | No |
-| Deref | `&String` → `&str` | — |
-
+#### 🧪 Cómo probarlo
 ```rust
-let mut s = String::from("hola");
-s.push_str(" mundo");
+#[cfg(test)]
+mod tests {
+    enum Resultado { Exito(i32), Error(String) }
 
-let r: &str = &s;
-let literal: &str = "hola";
-let slice: &str = &s[0..4];
+    #[test]
+    fn test_enum() {
+        let r = Resultado::Exito(42);
+        match r {
+            Resultado::Exito(v) => assert_eq!(v, 42),
+            _ => panic!("esperaba éxito"),
+        }
+    }
+
+    #[test]
+    fn test_option() {
+        let x: Option<i32> = Some(10);
+        assert_eq!(x.unwrap(), 10);
+        assert_eq!(x.unwrap_or(0), 10);
+        assert_eq!(None::<i32>.unwrap_or(0), 0);
+    }
+}
 ```
+
+#### 💡 Memoria y rendimiento
+- El tamaño de un enum es el de su variante más grande + discriminant (tag)
+- `Option<&T>` tiene tamaño 0 overhead (optimización de puntero nulo)
+- El discriminant se almacena como un entero pequeño (1-4 bytes normalmente)
+- Pattern matching en enum es tan rápido como un switch en C
+
+#### ✅ Buenas prácticas
+- ✅ Usa `Option<T>` en lugar de null pointers
+- ✅ Usa `Result<T, E>` para operaciones que pueden fallar
+- ⚠️ No uses `unwrap()` en producción — prefiere `match` o `?`
+- ❌ No crees enums con variantes que deberían ser structs separados
+
+#### 🏗️ Metodología
+- Enums pequeños: modelan estados finitos (Activo/Inactivo/Pendiente)
+- Enums grandes: pueden representar ASTs, comandos, protocolos
+- Combina enums con traits para comportamientos polimórficos sin herencia
+
+#### 🔗 Para saber más
+- [Rust Book — Enums](https://doc.rust-lang.org/book/ch06-00-enums.html)
+- [Rust Book — Pattern Matching](https://doc.rust-lang.org/book/ch06-02-match.html)
+- [Rust by Example — Enums](https://doc.rust-lang.org/rust-by-example/custom_types/enum.html)
+
+### String vs &str
+
+#### ¿Qué es?
+Rust tiene dos tipos principales de cadenas: `String` (propietaria, heap, mutable) y `&str` (prestada, vista de una cadena). Es una distinción fundamental para entender la gestión de memoria en Rust.
+
+🔗 [Rust Book — Strings](https://doc.rust-lang.org/book/ch08-02-strings.html)
+
+#### Sintaxis básica
+```rust
+let s: &str = "Hola";       // string literal (hardcodeado en binario)
+let owned: String = "Hola".to_string();
+let from_str: String = String::from("Hola");
+
+// Conversiones
+let vista: &str = &owned;           // String → &str
+let otra_owned: String = vista.to_string(); // &str → String
+let slice: &str = &owned[0..4];     // slicing (cuidado con bytes vs chars)
+
+// Iteración segura
+for c in "ñññ".chars() {
+    println!("{c}");
+}
+```
+
+#### 🧪 Cómo probarlo
+```rust
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_string_types() {
+        let s: &str = "hello";
+        let owned: String = s.to_string();
+        assert_eq!(owned, "hello");
+        assert_eq!(&owned[..], s);
+    }
+
+    #[test]
+    fn test_string_concatenacion() {
+        let mut s = String::from("hola ");
+        s.push_str("mundo");
+        s.push('!');
+        assert_eq!(s, "hola mundo!");
+    }
+
+    #[test]
+    fn test_chars_vs_bytes() {
+        assert_eq!("ñ".len(), 2);   // bytes
+        assert_eq!("ñ".chars().count(), 1); // caracteres
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `&str` apunta a una secuencia contigua de bytes UTF-8 (len, capacidad, datos)
+- `&str` puede estar en stack (vista), heap (vista de String), o data segment (literales)
+- `String` tiene 3 palabras: puntero, longitud, capacidad (24 bytes en 64-bit)
+- Slicing con índices byte puede romper caracteres multi-byte — usa `chars()` para safe iteration
+
+#### ✅ Buenas prácticas
+- ✅ Usa `&str` para parámetros de función (más flexible: acepta String y &str)
+- ✅ Usa `String` cuando necesites propietario y mutabilidad
+- ⚠️ No indices bytes directamente en UTF-8 — prefiere métodos de `char`/`str`
+- ❌ No uses `String` donde baste `&str` — es un 50% más grande en memoria
+
+#### 🏗️ Metodología
+- APIs públicas: parámetros `&str`, retorno `String`
+- Procesamiento de texto: `String` para construcción, `&str` para análisis
+- Constantes y literales: siempre `&str` (vive en el binario)
+
+#### 🔗 Para saber más
+- [Rust Book — Strings](https://doc.rust-lang.org/book/ch08-02-strings.html)
+- [Rust by Example — Strings](https://doc.rust-lang.org/rust-by-example/std/str.html)
+- [Rustonomicon — String Representation](https://doc.rust-lang.org/nomicon/repr-rust.html)
 
 ### Vec\<T\> vs &[T]
 
-| Aspecto | `Vec<T>` | `&[T]` |
-|---------|----------|--------|
-| Propietario | Sí | No |
-| Tamaño | Dinámico (growable) | Fijo (vista) |
-| Heap | Sí | Puede referenciar cualquier memoria |
+#### ¿Qué es?
+`Vec<T>` es un array dinámico propietario (heap, redimensionable). `&[T]` es una vista prestada de una secuencia contigua de elementos. La relación es análoga a `String` vs `&str`.
 
-### Colecciones estándar
+🔗 [Rust Book — Vectors](https://doc.rust-lang.org/book/ch08-01-vectors.html)
 
+#### Sintaxis básica
 ```rust
-let mut map = std::collections::HashMap::new();
-map.insert("clave".to_string(), 42);
-map.get("clave");
+let mut v: Vec<i32> = Vec::new();
+v.push(1);
+v.push(2);
 
-use std::collections::BTreeMap;
-let mut btree = BTreeMap::new();
-btree.insert("b", 2);
-btree.insert("a", 1);
+let v2 = vec![1, 2, 3]; // macro
 
-use std::collections::HashSet;
-let mut set = HashSet::new();
-set.insert(1);
+// Slice (vista prestada)
+let slice: &[i32] = &v[0..2];
+let slice_completo: &[i32] = &v;
 
-use std::collections::BinaryHeap;
-let mut heap = BinaryHeap::new();
-heap.push(3);
-heap.push(1);
-heap.push(5);
-assert_eq!(heap.pop(), Some(5));
+// Iteración
+for x in &v { println!("{x}"); }
+for x in v.iter() { println!("{x}"); }
 ```
 
-### Smart Pointers
-
-| Tipo | Uso |
-|------|-----|
-| `Box<T>` | Heap allocation simple, un propietario |
-| `Rc<T>` | Reference counting (single-thread) |
-| `Arc<T>` | Reference counting atómico (multi-thread) |
-| `Cell<T>` | Interior mutability (Copy types, sin runtime check) |
-| `RefCell<T>` | Interior mutability (runtime borrow check, single-thread) |
-| `Mutex<T>` | Interior mutability multi-thread |
-
-### Variables: const vs let vs let mut
-
+#### 🧪 Cómo probarlo
 ```rust
-const MAX_PUNTOS: u32 = 100_000;
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_vec() {
+        let mut v = vec![1, 2, 3];
+        v.push(4);
+        assert_eq!(v, vec![1, 2, 3, 4]);
+        assert_eq!(v.pop(), Some(4));
+    }
 
-let x = 5;
-let mut y = 5;
-y += 1;
+    #[test]
+    fn test_slice() {
+        let v = vec![1, 2, 3, 4, 5];
+        let s = &v[1..4];
+        assert_eq!(s, &[2, 3, 4]);
+    }
 
-let nombre = String::from("  Ana  ");
-let nombre = nombre.trim();
-let nombre = nombre.to_uppercase();
-
-type Kilometros = u32;
-let distancia: Kilometros = 100;
-```
-
-### Newtype pattern
-
-```rust
-struct UsuarioId(u64);
-struct PedidoId(u64);
-
-fn buscar_usuario(id: UsuarioId) {}
-
-struct Precio(f64);
-impl Precio {
-    fn con_iva(&self) -> f64 { self.0 * 1.21 }
-}
-```
-
-### Memoria: Stack vs Heap
-
-| Aspecto | Stack | Heap |
-|---------|-------|------|
-| Velocidad | Instantáneo | Más lento (allocador) |
-| Tamaño | Conocido en compile-time | Dinámico |
-| Límite | Pequeño (8 MB típico) | Grandísimo |
-| Tipos | Escalares, tuplas pequeñas, arrays fijos | Box, Vec, String, Rc, Arc |
-
-**Regla general:** todo se almacena en stack por defecto. `Box<T>`, `Vec<T>`, `String`, `Rc<T>`, `Arc<T>` almacenan sus datos en heap.
-
-### Ownership y RAII
-
-El ownership garantiza:
-- **No dangling pointers**: cada referencia tiene un lifetime verificado
-- **No double free**: cada valor tiene exactamente un owner
-- **No memory leaks** (en la práctica): RAII libera recursos al salir de ámbito
-
-RAII (Resource Acquisition Is Initialization): el `Drop` trait se ejecuta automáticamente al salir del ámbito:
-
-```rust
-struct Archivo { fd: i32 }
-impl Drop for Archivo {
-    fn drop(&mut self) {
-        println!("Cerrando archivo {}", self.fd);
+    #[test]
+    fn test_vec_capacity() {
+        let mut v = Vec::with_capacity(10);
+        assert!(v.capacity() >= 10);
+        v.push(1);
+        assert_eq!(v.len(), 1);
     }
 }
-{
-    let f = Archivo { fd: 42 };
+```
+
+#### 💡 Memoria y rendimiento
+- `Vec<T>` tiene 3 palabras (puntero, len, capacity) — 24 bytes overhead
+- El crecimiento es exponencial (factor ~1.5-2) para amortiguar reallocaciones
+- `&[T]` es 2 palabras (puntero, len) — 16 bytes, no tiene capacidad
+- Acceso por índice es O(1) en ambos
+
+#### ✅ Buenas prácticas
+- ✅ Usa `Vec::with_capacity(n)` cuando sepas el tamaño aproximado
+- ✅ Prefiere `&[T]` en parámetros de función sobre `&Vec<T>`
+- ⚠️ Redimensionar un `Vec` muy grande puede ser costoso
+- ❌ No retornes referencias a datos locales de la función
+
+#### 🏗️ Metodología
+- `Vec<T>`: colección dinámica principal, casi siempre la elección correcta
+- `&[T]`: lectura de secuencias sin ownership
+- Arrays `[T; N]`: cuando el tamaño se conoce en compilación
+
+#### 🔗 Para saber más
+- [Rust Book — Vectors](https://doc.rust-lang.org/book/ch08-01-vectors.html)
+- [Rust by Example — Vectors](https://doc.rust-lang.org/rust-by-example/std/vec.html)
+- [Rust Reference — Slices](https://doc.rust-lang.org/reference/types/slice.html)
+
+### Mutabilidad: const vs let vs let mut
+
+#### ¿Qué es?
+Rust distingue tres niveles de inmutabilidad: `const` (constante de compilación), `let` (variable inmutable), `let mut` (variable mutable). Es una elección deliberada: la inmutabilidad por defecto evita efectos secundarios no deseados.
+
+🔗 [Rust Book — Variables](https://doc.rust-lang.org/book/ch03-01-variables-and-mutability.html)
+
+#### Sintaxis básica
+```rust
+const MAX_PUNTOS: u32 = 100_000;  // Compile-time, tipo obligatorio
+let x = 5;                         // Inmutable: no se puede reasignar
+let mut y = 5;                     // Mutable
+y = 10;                            // ✓ permitido
+// x = 10;                         // ❌ error: variable inmutable
+
+// Shadowing: re-declarar con mismo nombre
+let nombre = "  Hola  ";
+let nombre = nombre.trim(); // nuevo binding
+```
+
+#### 🧪 Cómo probarlo
+```rust
+#[cfg(test)]
+mod tests {
+    const CONST_VAL: i32 = 42;
+
+    #[test]
+    fn test_const() {
+        assert_eq!(CONST_VAL, 42);
+    }
+
+    #[test]
+    fn test_inmutabilidad() {
+        let x = 5;
+        // x = 10; // no compilaría
+        assert_eq!(x, 5);
+    }
+
+    #[test]
+    fn test_mutabilidad() {
+        let mut x = 5;
+        x += 1;
+        assert_eq!(x, 6);
+    }
+
+    #[test]
+    fn test_shadowing() {
+        let x = 5;
+        let x = x * 2; // shadow
+        assert_eq!(x, 10);
+    }
 }
 ```
 
-**No garbage collector:** toda la gestión de memoria ocurre en compile-time. No hay pausas de GC, no hay runtime overhead de memoria.
+#### 💡 Memoria y rendimiento
+- `const` se inlinea en el punto de uso: cero overhead en runtime
+- `let` vs `let mut` no tiene diferencia de rendimiento: la mutabilidad es una restricción del compilador
+- El shadowing permite reusar el nombre sin mutar la variable original
 
-Fuente: [The Rust Book — Data Types](https://doc.rust-lang.org/book/ch03-02-data-types.html), [Rust Book — Variables](https://doc.rust-lang.org/book/ch03-01-variables-and-mutability.html), [Rustonomicon — RAII](https://doc.rust-lang.org/nomicon/), [Rust Reference — Memory](https://doc.rust-lang.org/reference/expressions.html)
+#### ✅ Buenas prácticas
+- ✅ Usa `const` para valores mágicos y configuración en compilación
+- ✅ Prefiere `let` (inmutable) por defecto; solo usa `let mut` cuando sea necesario
+- ⚠️ No abuses del shadowing: puede confundir en scopes grandes
+- ❌ No uses mutabilidad global (`static mut`) sin `unsafe`
+
+#### 🏗️ Metodología
+- `const`: valores fijos conocidos en compilación
+- `let`: variables que no cambian tras la inicialización (preferido)
+- `let mut`: estado local que evoluciona (contadores, acumuladores)
+
+#### 🔗 Para saber más
+- [Rust Book — Variables and Mutability](https://doc.rust-lang.org/book/ch03-01-variables-and-mutability.html)
+- [Rust Reference — Constants](https://doc.rust-lang.org/reference/items/constant-items.html)
+- [Rust by Example — Mutability](https://doc.rust-lang.org/rust-by-example/variable_bindings/mut.html)
 
 ---
 
 ## Control de flujo y modularidad
 
-### if/else (expresión)
+### Condicionales: if/else (expresión)
 
+#### ¿Qué es?
+En Rust, `if`/`else` no es un statement — es una **expresión** que retorna un valor. Esto permite asignar el resultado de un condicional directamente a una variable. Es una de las influencias funcionales del lenguaje.
+
+🔗 [Rust Book — if Expressions](https://doc.rust-lang.org/book/ch03-05-control-flow.html#if-expressions)
+
+#### Sintaxis básica
 ```rust
-let x = if cond { 10 } else { 20 };
-let y = if cond { 10 } else if otra { 20 } else { 30 };
-```
+let x = 5;
+let resultado = if x > 0 { "positivo" } else { "no positivo" };
 
-### Loops
-
-```rust
-let mut contador = 0;
-let resultado = loop {
-    contador += 1;
-    if contador == 10 { break contador * 2; }
+// if/else if/else como expresión
+let categoria = if x > 0 {
+    "positivo"
+} else if x < 0 {
+    "negativo"
+} else {
+    "cero"
 };
-println!("{resultado}");
-
-while n > 0 { n -= 1; }
-
-for x in 0..10 { println!("{x}"); }
-for (i, item) in items.iter().enumerate() { }
-for item in &collection { }
 ```
+
+#### 🧪 Cómo probarlo
+```rust
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_if_expresion() {
+        let cond = true;
+        let val = if cond { 10 } else { 20 };
+        assert_eq!(val, 10);
+    }
+
+    #[test]
+    fn test_if_encadenado() {
+        let x = 0;
+        let res = if x > 0 { "pos" } else if x < 0 { "neg" } else { "cero" };
+        assert_eq!(res, "cero");
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- Las expresiones if se compilan a saltos condicionales como en C
+- No hay overhead: el compilador elige la rama en runtime con una instrucción `cmp`+`jmp`
+- Ambas ramas deben ser del mismo tipo (el compilador lo exige)
+
+#### ✅ Buenas prácticas
+- ✅ Usa if como expresión cuando el resultado se asigna directamente
+- ✅ Prefiere `match` para 3+ ramas sobre if/else if/else
+- ⚠️ No anides if dentro de if — refactoriza a match o guard clauses
+- ❌ No uses if sin else cuando se asigna el resultado
+
+#### 🏗️ Metodología
+- 2 ramas: if/else
+- 3+ ramas: match
+- Validación previa: guard clauses con `if cond { return }` al inicio
+
+#### 🔗 Para saber más
+- [Rust Book — if](https://doc.rust-lang.org/book/ch03-05-control-flow.html#if-expressions)
+- [Rust by Example — if/else](https://doc.rust-lang.org/rust-by-example/flow_control/if_else.html)
+
+### Loops: loop, while, for
+
+#### ¿Qué es?
+Rust ofrece tres tipos de bucles: `loop` (infinito con break), `while` (condicional), `for` (iteración sobre colecciones). `loop` es único de Rust porque puede retornar un valor con `break`.
+
+🔗 [Rust Book — Loops](https://doc.rust-lang.org/book/ch03-05-control-flow.html#repetition-with-loops)
+
+#### Sintaxis básica
+```rust
+// loop: infinito hasta break, puede retornar valor
+let contador = loop {
+    break 42;
+};
+
+// while: condicional
+let mut n = 3;
+while n > 0 {
+    n -= 1;
+}
+
+// for: iteración idiomática
+let v = vec![10, 20, 30];
+for elemento in &v {
+    println!("{elemento}");
+}
+
+// Rango
+for i in 0..5 { println!("{i}"); }       // 0..4
+for i in 0..=5 { println!("{i}"); }      // 0..5
+
+// Enumerate
+for (i, val) in v.iter().enumerate() {
+    println!("v[{i}] = {val}");
+}
+```
+
+#### 🧪 Cómo probarlo
+```rust
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_loop_retorna_valor() {
+        let r = loop { break 42; };
+        assert_eq!(r, 42);
+    }
+
+    #[test]
+    fn test_for_range() {
+        let mut suma = 0;
+        for i in 0..=5 { suma += i; }
+        assert_eq!(suma, 15); // 0+1+2+3+4+5
+    }
+
+    #[test]
+    fn test_for_iter() {
+        let v = vec![1, 2, 3];
+        let mut suma = 0;
+        for x in &v { suma += x; }
+        assert_eq!(suma, 6);
+    }
+
+    #[test]
+    fn test_break_label() {
+        let mut count = 0;
+        'outer: loop {
+            loop {
+                count += 1;
+                if count == 3 { break 'outer; }
+            }
+        }
+        assert_eq!(count, 3);
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `for` sobre iteradores se compila a código tan eficiente como while manual (zero-cost)
+- Los iteradores son lazy: no crean colecciones intermedias
+- `loop` con `break` retornando valor no tiene overhead extra
+
+#### ✅ Buenas prácticas
+- ✅ Usa `for` por defecto para iterar colecciones — es más idiomático
+- ✅ Usa `while` para bucles con condición mutable
+- ✅ Usa `loop` cuando necesites retornar un valor con break
+- ⚠️ No uses `while` con índices cuando `for` con iterador es más claro
+- ❌ No abuses de `break` con labels — suele indicar que el bucle hace demasiadas cosas
+
+#### 🏗️ Metodología
+- `for i in iter`: 90% de los bucles
+- `while cond`: bucles con condición mutable no ligada a una colección
+- `loop`: drivers, event loops, servidores
+
+#### 🔗 Para saber más
+- [Rust Book — Loops](https://doc.rust-lang.org/book/ch03-05-control-flow.html#repetition-with-loops)
+- [Rust by Example — Loops](https://doc.rust-lang.org/rust-by-example/flow_control/loop.html)
+- [Rust Reference — Loop Expressions](https://doc.rust-lang.org/reference/expressions/loop-expr.html)
 
 ### Match (exhaustivo obligatorio)
 
+#### ¿Qué es?
+`match` es la herramienta de control de flujo más poderosa de Rust. Compara un valor contra una serie de patrones y **debe cubrir todos los casos posibles** (exhaustividad). El compilador rechazará cualquier match no exhaustivo.
+
+🔗 [Rust Book — Match](https://doc.rust-lang.org/book/ch06-02-match.html)
+
+#### Sintaxis básica
 ```rust
-match valor {
+let numero = 2;
+let texto = match numero {
     1 => "uno",
-    2 | 3 => "dos o tres",
-    4..=10 => "rango",
-    n if n > 10 => format!("grande {n}"),
-    _ => "otro",
-}
+    2 => "dos",
+    3 => "tres",
+    _ => "otro", // comodín: cubre el resto
+};
 
-match p {
-    Point { x: 0, y } => format!("eje Y en {y}"),
-    Point { x, y } => format!("({x}, {y})"),
-}
-
-match id {
-    e @ 1..=5 => format!("temprano {e}"),
-    _ => "tarde".into(),
-}
+// Con enum
+enum Color { Rojo, Verde, Azul }
+let c = Color::Verde;
+let nombre = match c {
+    Color::Rojo => "rojo",
+    Color::Verde => "verde",
+    Color::Azul => "azul",
+    // No necesitamos _ porque cubrimos todas las variantes
+};
 ```
 
-### if let / while let (pattern matching no exhaustivo)
-
+#### 🧪 Cómo probarlo
 ```rust
-if let Some(val) = opt { println!("{val}"); }
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_match_exhaustivo() {
+        let x = 3;
+        let res = match x {
+            1 => "uno",
+            2 => "dos",
+            _ => "muchos",
+        };
+        assert_eq!(res, "muchos");
+    }
 
-while let Some(top) = pila.pop() { procesar(top); }
+    #[test]
+    fn test_match_option() {
+        let val = Some(42);
+        let result = match val {
+            Some(v) => v * 2,
+            None => 0,
+        };
+        assert_eq!(result, 84);
+    }
+}
 ```
+
+#### 💡 Memoria y rendimiento
+- `match` se compila a tabla de saltos o comparaciones encadenadas, como un switch en C
+- El compilador optimiza el orden de las ramas para minimizar comparaciones
+- En enums con discriminant pequeño, el salto es O(1) (tabla)
+
+#### ✅ Buenas prácticas
+- ✅ Usa `match` para 3+ ramas en lugar de if/else if
+- ✅ Usa `_` como comodín para el caso por defecto
+- ⚠️ El orden importa: las ramas se evalúan de arriba abajo
+- ❌ No uses `match` cuando `if let` es más conciso (un solo patrón)
+
+#### 🏗️ Metodología
+- Match exhaustivo: obligatorio para enums (el compilador exige cubrir todo)
+- Match con wildcard: útil cuando solo importan algunos casos específicos
+- Match con guards: añade condiciones adicionales a los patrones
+
+#### 🔗 Para saber más
+- [Rust Book — Match](https://doc.rust-lang.org/book/ch06-02-match.html)
+- [Rust by Example — Match](https://doc.rust-lang.org/rust-by-example/flow_control/match.html)
+- [Rust Reference — Match Expressions](https://doc.rust-lang.org/reference/expressions/match-expr.html)
+
+### if let / while let
+
+#### ¿Qué es?
+`if let` y `while let` son azúcar sintáctico para `match` cuando solo te interesa un patrón. Son ideales para trabajar con `Option` y `Result` sin el boilerplate del match completo.
+
+🔗 [Rust Book — if let](https://doc.rust-lang.org/book/ch06-03-if-let.html)
+
+#### Sintaxis básica
+```rust
+let valor = Some(42);
+
+// En lugar de:
+match valor {
+    Some(v) => println!("{v}"),
+    _ => {},
+}
+
+// if let simplifica:
+if let Some(v) = valor {
+    println!("{v}");
+}
+
+// while let: extraer mientras el patrón coincida
+let mut pila = vec![1, 2, 3];
+while let Some(tope) = pila.pop() {
+    println!("{tope}");
+}
+```
+
+#### 🧪 Cómo probarlo
+```rust
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_if_let_option() {
+        let val = Some(42);
+        let mut result = 0;
+        if let Some(v) = val {
+            result = v;
+        }
+        assert_eq!(result, 42);
+    }
+
+    #[test]
+    fn test_while_let() {
+        let mut v = vec![1, 2, 3];
+        let mut sum = 0;
+        while let Some(x) = v.pop() {
+            sum += x;
+        }
+        assert_eq!(sum, 6);
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `if let` se compila exactamente igual que un `match` con un solo brazo
+- No hay penalización por usar el azúcar sintáctico
+- `while let` tiene el mismo rendimiento que `loop { match } { break }`
+
+#### ✅ Buenas prácticas
+- ✅ Usa `if let` cuando solo te interese un patrón
+- ✅ Usa `while let` para bucles que extraen de un Option/Iterator
+- ⚠️ Si necesitas también el caso else, usa `if let ... else`
+- ❌ No uses `if let` cuando necesites cubrir múltiples patrones — usa `match`
+
+#### 🏗️ Metodología
+- `if let Some(x)`: la forma idiomática de trabajar con Option
+- `if let Ok(x)`: la forma idiomática de trabajar con Result (cuando no importa el error)
+- `while let Some(x)`: extraer elementos de un iterador sin for
+
+#### 🔗 Para saber más
+- [Rust Book — if let](https://doc.rust-lang.org/book/ch06-03-if-let.html)
+- [Rust by Example — if let](https://doc.rust-lang.org/rust-by-example/flow_control/if_let.html)
 
 ### Módulos y visibilidad
 
-```
-src/
-├── main.rs
-├── lib.rs
-└── routes/
-    ├── mod.rs
-    ├── auth.rs
-    └── admin.rs
-```
+#### ¿Qué es?
+El sistema de módulos de Rust organiza el código en namespaces y controla la visibilidad con `pub`. Cada archivo es un módulo, y los directorios pueden ser módulos con `mod.rs` o `nombre.rs`.
 
+🔗 [Rust Book — Modules](https://doc.rust-lang.org/book/ch07-00-managing-growing-projects-with-packages-crates-and-modules.html)
+
+#### Sintaxis básica
 ```rust
-mod routes;
-use routes::auth::login;
+// src/main.rs
+mod utils; // busca src/utils.rs
 
-pub fn login() {}
-fn validar() {}
-pub(crate) fn interno() {}
-pub(super) fn helper() {}
+fn main() {
+    utils::saludar();
+}
+
+// src/utils.rs
+pub fn saludar() {
+    println!("Hola!");
+}
+
+// Visibilidad
+pub fn publica() {}        // accesible fuera del módulo
+fn privada() {}            // solo dentro del módulo
+pub(crate) fn interna() {} // dentro del crate
+pub(super) fn padre() {}   // solo en el módulo padre
 ```
 
-### Re-exports y organización
-
+#### 🧪 Cómo probarlo
 ```rust
-mod auth_impl;
-pub use auth_impl::login;
+// src/lib.rs
+pub mod math {
+    pub fn suma(a: i32, b: i32) -> i32 { a + b }
+    fn privada() {} // no accesible fuera
+}
+
+#[cfg(test)]
+mod tests {
+    use super::math;
+
+    #[test]
+    fn test_modulo() {
+        assert_eq!(math::suma(2, 2), 4);
+    }
+}
 ```
+
+#### 💡 Memoria y rendimiento
+- Los módulos son puramente en tiempo de compilación: cero coste en runtime
+- No afectan al layout de memoria ni al rendimiento
+- El compilador inlinea funciones a través de fronteras de módulos si es beneficioso
+
+#### ✅ Buenas prácticas
+- ✅ Usa `pub(crate)` para APIs internas del crate
+- ✅ Organiza módulos por funcionalidad, no por tipo (ej: `mod database` mejor que `mod structs`)
+- ⚠️ No expongas campos privados de structs — usa métodos getter
+- ❌ No crees módulos con una sola función — agrupa por dominio
+
+#### 🏗️ Metodología
+- Proyecto pequeño (`< 5 archivos`): módulos planos en src/
+- Proyecto mediano: módulos anidados por funcionalidad
+- Proyecto grande: subcrates o workspaces
+
+#### 🔗 Para saber más
+- [Rust Book — Module System](https://doc.rust-lang.org/book/ch07-02-defining-modules-to-control-scope-and-privacy.html)
+- [Rust by Example — Modules](https://doc.rust-lang.org/rust-by-example/mod.html)
+- [Rust Reference — Modules](https://doc.rust-lang.org/reference/items/modules.html)
 
 ### Cargo.toml y workspaces
 
+#### ¿Qué es?
+`Cargo.toml` es el manifiesto del proyecto. Los workspaces permiten gestionar múltiples crates relacionados en un solo repositorio, compartiendo dependencias y lockfile.
+
+🔗 [Cargo Book — Workspaces](https://doc.rust-lang.org/cargo/reference/workspaces.html)
+
+#### Sintaxis básica
 ```toml
 [package]
-name = "mi-app"
+name = "mi-proyecto"
 version = "0.1.0"
 edition = "2021"
 
@@ -621,1697 +1287,2517 @@ edition = "2021"
 serde = { version = "1", features = ["derive"] }
 tokio = { version = "1", features = ["full"] }
 
-[lib]
-name = "mi_app"
-path = "src/lib.rs"
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+```
 
-[[bin]]
-name = "cli"
-path = "src/bin/cli.rs"
-
+Workspace:
+```toml
+# Cargo.toml (raíz)
 [workspace]
 members = ["crates/*"]
+resolver = "2"
 ```
 
+#### 🧪 Cómo probarlo
 ```bash
-cargo new --lib crate/utilerias
-cargo build --package utilerias
-cargo test -p utilerias
+cargo check                      # Verifica todo el workspace
+cargo test -p nombre-del-crate   # Testea un crate específico
+cargo build --workspace          # Compila todo
 ```
 
-| Concepto | Explicación |
-|----------|-------------|
-| `mod` | Declara un módulo |
-| `pub` | Hace público un item |
-| `use` | Trae items al ámbito |
-| `super` | Módulo padre (equivalente a `..`) |
-| `crate` | Raíz del crate (equivalente a `/`) |
-| `pub use` | Re-exporta (público) |
-| `extern crate` | Legacy (< 2018 edition) |
+#### 💡 Memoria y rendimiento
+- Cargo compila en paralelo dentro de un workspace
+- Las dependencias comunes se comparten entre crates
+- `target/` se comparte en el workspace (un solo directorio de build)
 
-Fuente: [The Rust Book — Control Flow](https://doc.rust-lang.org/book/ch03-05-control-flow.html), [Rust Book — Modules](https://doc.rust-lang.org/book/ch07-00-managing-growing-projects-with-packages-crates-and-modules.html)
+#### ✅ Buenas prácticas
+- ✅ Usa workspaces para separar librería, binarios y tests
+- ✅ Usa `[profile.release]` con `lto = true` y `codegen-units = 1` para optimizar
+- ⚠️ No pongas todo en un solo crate — separa por responsabilidad
+- ❌ No abuses de workspaces para proyectos pequeños (añade complejidad)
+
+#### 🏗️ Metodología
+- Proyecto pequeño: un solo crate
+- Librería + binario: workspace con `crates/` separados
+- Monorepo: workspace con múltiples paquetes inter-dependientes
+
+#### 🔗 Para saber más
+- [Cargo Book — Workspaces](https://doc.rust-lang.org/cargo/reference/workspaces.html)
+- [Cargo Book — Profiles](https://doc.rust-lang.org/cargo/reference/profiles.html)
+- [Rust Book — Cargo](https://doc.rust-lang.org/book/ch01-03-hello-cargo.html)
+
+
 
 ---
 
-## Conceptos clave
+## Sistema de archivos (File System I/O)
 
-### Ownership, Borrowing y Lifetimes
+### std::fs (lectura/escritura básica)
 
-**Tres reglas del ownership:**
-1. Cada valor tiene un **único propietario**
-2. Al salir del ámbito, el valor se **dropea** (libera)
-3. El propietario puede mover (transferir) o prestar (borrow) el valor
+#### ¿Qué es?
+`std::fs` es el módulo estándar para operaciones con el sistema de archivos: leer, escribir, crear, borrar archivos y directorios. Toda la E/S en Rust es **bloqueante por defecto** y devuelve `Result` para manejar errores.
 
+🔗 [Rust std::fs docs](https://doc.rust-lang.org/std/fs/index.html)
+
+#### Sintaxis básica
 ```rust
-// Move semantics
-let s1 = String::from("hola");
-let s2 = s1;             // s1 se mueve a s2
-// println!("{s1}");     // ERROR: moved
-
-// Clone (deep copy)
-let s1 = String::from("hola");
-let s2 = s1.clone();     // Copia explícita
-println!("{s1} {s2}");   // OK ambos
-
-// Copy types (stack)
-let x = 5;
-let y = x;               // Copy, no move (i32: Copy)
-println!("{x} {y}");     // OK
-```
-
-**Borrowing:**
-
-```rust
-fn largo(s: &String) -> usize { s.len() }  // Presta, no mueve
-
-let s = String::from("hola");
-let l = largo(&s);
-println!("{s} tiene {l}");  // s sigue vivo
-```
-
-**Reglas del borrow checker:**
-
-| Situación | Permitido | Por qué |
-|-----------|-----------|---------|
-| Múltiples `&T` | ✅ | Solo lectura |
-| Un `&mut T` | ✅ | Escritura exclusiva |
-| `&T` + `&mut T` simultáneo | ❌ | Data race en potencia |
-| Referencia a variable local | ❌ | Dangling pointer |
-
-```rust
-let mut s = String::from("hola");
-let r1 = &s;      // OK
-let r2 = &s;      // OK (múltiples inmutables)
-// let r3 = &mut s; // ERROR: ya hay inmutables
-println!("{r1} {r2}");  // Las inmutables dejan de usarse aquí
-let r3 = &mut s;   // OK ahora
-r3.push_str(" mundo");
-```
-
-**Lifetimes:**
-
-```rust
-// 'a: el output vive tanto como el input más corto
-fn mas_largo<'a>(x: &'a str, y: &'a str) -> &'a str {
-    if x.len() > y.len() { x } else { y }
-}
-
-// Elisión: el compilador infiere lifetimes automáticamente
-fn primera(s: &str) -> &str {    // fn primera<'a>(s: &'a str) -> &'a str
-    s.split_whitespace().next().unwrap_or("")
-}
-```
-
-**Diagrama conceptual:**
-
-```
-Stack:
-  let s1 = String::from("hola")
-  ┌──────────────┐
-  │ s1: ptr ──────┼────→ Heap: ['h','o','l','a']
-  │     len: 4    │
-  │     cap: 4    │
-  └──────────────┘
-
-  let s2 = s1;  // MOVE
-  ┌──────────────┐
-  │ s1: inválido │
-  │ s2: ptr ──────┼────→ Heap: ['h','o','l','a']
-  └──────────────┘
-
-  let r = &s2;   // BORROW
-  ┌──────────────┐
-  │ r: ptr ──────┼──→ s2.ptr → Heap
-  └──────────────┘
-```
-
-**¿Qué previene el borrow checker?**
-
-| Bug C/C++ | Cómo lo previene Rust |
-|---|---|
-| Use-after-free | Ownership: se dropea al salir de ámbito |
-| Double free | Move: un solo owner |
-| Buffer overflow | Bounds checking en indexación |
-| Data race | `&mut T` es exclusivo entre threads |
-| Dangling pointer | Lifetimes verificados |
-
-**Consejo:** La primera semana peleas con el borrow checker. No te frustres. Cada error te enseña un patrón que antes permitías sin saberlo. Con el tiempo, *piensas en ownership* antes de escribir.
-
-Fuente: [The Rust Book — Ownership](https://doc.rust-lang.org/book/ch04-00-understanding-ownership.html)
-
-### String vs &str, Box, Rc, Arc, Cell, RefCell, Mutex
-
-| Tipo | Propietario | Thread-safe | Almacenamiento |
-|------|-------------|-------------|----------------|
-| `String` | Sí | Sí | Heap, mutable, growable |
-| `&str` | No | Sí | Referencia a string |
-| `Box<T>` | Sí | Sí | Heap allocation simple |
-| `Rc<T>` | Compartido | No | Reference counting single-thread |
-| `Arc<T>` | Compartido | Sí | Reference counting atómico |
-| `Cell<T>` | Interior mut | No | Copy in/out, sin runtime check |
-| `RefCell<T>` | Interior mut | No | Borrow check en runtime |
-| `Mutex<T>` | Interior mut | Sí | Lock en runtime |
-| `RwLock<T>` | Interior mut | Sí | Múltiples readers/writer exclusivo |
-
-```rust
-// Box — heap allocation, tipos recursivos
-enum Lista {
-    Nodo(i32, Box<Lista>),
-    Fin,
-}
-
-// Rc — reference counting single-thread
-use std::rc::Rc;
-let a = Rc::new(42);
-let b = Rc::clone(&a);  // contador = 2
-
-// Arc — reference counting multi-thread (atómico)
-use std::sync::Arc;
-let datos = Arc::new(vec![1, 2, 3]);
-// Arc::clone(&datos) en cada thread
-
-// RefCell — interior mutability (single-thread)
-use std::cell::RefCell;
-struct Logger { logs: RefCell<Vec<String>> }
-impl Logger {
-    fn log(&self, msg: &str) {
-        self.logs.borrow_mut().push(msg.into());
-    }
-}
-
-// Mutex — interior mutability multi-thread
-use std::sync::{Arc, Mutex};
-let contador = Arc::new(Mutex::new(0));
-{
-    let mut num = contador.lock().unwrap();
-    *num += 1;
-}  // Lock liberado automáticamente (RAII)
-```
-
-**Cuándo usar cada uno:**
-
-| Escenario | Solución |
-|---|---|
-| Un propietario, heap | `Box<T>` |
-| Múltiples owners, 1 thread | `Rc<T>` |
-| Múltiples owners, multi-thread | `Arc<T>` |
-| Mutabilidad interior, 1 thread | `RefCell<T>` |
-| Mutabilidad interior, multi-thread | `Mutex<T>` / `RwLock<T>` |
-| Lectura frecuente escritura rara | `RwLock<T>` |
-| Thread-safe + mutabilidad | `Arc<Mutex<T>>` |
-
-Fuente: [The Rust Book — Smart Pointers](https://doc.rust-lang.org/book/ch15-00-smart-pointers.html)
-
-### Structs, enums y pattern matching
-
-```rust
-// Struct con campos
-struct Usuario { nombre: String, email: String, activo: bool, edad: u8 }
-
-// Tuple struct
-struct Color(u8, u8, u8);
-
-// Unit struct
-struct Marcador;
-
-// Instanciación y spread
-let u = Usuario { nombre: "Ana".into(), email: "ana@email.com".into(), activo: true, edad: 30 };
-let u2 = Usuario { nombre: "Luis".into(), ..u };  // El resto se mueve de u
-
-// Enum con datos
-enum Estado {
-    Activo,
-    Inactivo,
-    Suspendido { razon: String, hasta: String },
-}
-```
-
-**Pattern matching exhaustivo:**
-
-```rust
-enum Moneda { Euro(f64), Dolar(f64), Libra(f64) }
-
-fn convertir(m: Moneda) -> f64 {
-    match m {
-        Moneda::Euro(c) => c,
-        Moneda::Dolar(c) => c * 0.92,
-        Moneda::Libra(c) => c * 1.17,
-        // El compilador verifica que TODOS los casos están cubiertos
-    }
-}
-```
-
-**Patrones avanzados:**
-
-```rust
-match numero {
-    1 => "uno",
-    2 | 3 | 5 | 7 | 11 => "primo",
-    13..=19 => "adolescente",
-    n if n % 2 == 0 => "par",
-    _ => "otro",
-}
-
-// if let — cuando solo te importa un caso
-if let Some(val) = config { println!("{val}"); }
-
-// while let
-while let Some(top) = pila.pop() { println!("{top}"); }
-```
-
-Fuente: [The Rust Book — Enums](https://doc.rust-lang.org/book/ch06-00-enums.html)
-
-### Traits, derives, bounds, impl Trait, dyn Trait
-
-```rust
-trait Hablador {
-    fn hablar(&self) -> String;
-    fn presentarse(&self) -> String { format!("Digo: {}", self.hablar()) }
-}
-
-struct Perro;
-struct Gato;
-
-impl Hablador for Perro {
-    fn hablar(&self) -> String { "Guau".into() }
-}
-impl Hablador for Gato {
-    fn hablar(&self) -> String { "Miau".into() }
-}
-```
-
-**Derives más comunes:**
-
-```rust
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Default)]
-struct Usuario { nombre: String, edad: u8 }
-```
-
-| Derive | Genera |
-|--------|--------|
-| `Debug` | `{:?}` formateo |
-| `Clone` | `.clone()` |
-| `Copy` | Copia implícita (bitwise) |
-| `PartialEq` | `==`, `!=` |
-| `Eq` | `==` reflexivo |
-| `PartialOrd` | `<`, `>`, `<=`, `>=` |
-| `Hash` | `hash()` |
-| `Default` | `T::default()` |
-
-**Trait bounds:**
-
-```rust
-fn imprimir<T: Display + Debug>(item: T) { println!("{item:?}"); }
-
-// Sintaxis where (preferible con múltiples bounds)
-fn procesar<T>(item: T) where T: Display + Clone + Serialize { }
-```
-
-**`impl Trait` (estático, sin overhead):**
-
-```rust
-fn saludar(nombre: impl Display) { println!("Hola {nombre}"); }
-
-fn obtener_hablador() -> impl Hablador { Perro }
-```
-
-**`dyn Trait` (dinámico, vtable):**
-
-```rust
-let animales: Vec<Box<dyn Hablador>> = vec![Box::new(Perro), Box::new(Gato)];
-for a in animales { println!("{}", a.hablar()); }
-```
-
-| | Generics / `impl Trait` | `dyn Trait` |
-|---|---|---|
-| Dispatch | Estático (monomorfización) | Dinámico (vtable) |
-| Overhead | Cero | 1 indirección |
-| Mixed types | No | Sí |
-
-Fuente: [The Rust Book — Traits](https://doc.rust-lang.org/book/ch10-02-traits.html)
-
-### Genéricos, const genéricos, GATs
-
-```rust
-struct Par<T, U> { primero: T, segundo: U }
-
-// Const genéricos (Rust 1.51+)
-fn fib<const N: usize>() -> [u64; N] {
-    let mut arr = [0u64; N];
-    if N > 1 { arr[1] = 1; }
-    for i in 2..N { arr[i] = arr[i-1] + arr[i-2]; }
-    arr
-}
-let f: [u64; 10] = fib();  // N = 10
-
-// GATs — Generic Associated Types (Rust 1.65+)
-trait Contenedor {
-    type Item<'a> where Self: 'a;
-    fn obtener<'a>(&'a self) -> Self::Item<'a>;
-}
-```
-
-Fuente: [RFC 2000](https://rust-lang.github.io/rfcs/2000-const-generics.html), [RFC 1598 — GATs](https://rust-lang.github.io/rfcs/1598-generic_associated_types.html)
-
-### Option y Result
-
-```rust
-// Option<T> — sin null
-fn encontrar(id: u32) -> Option<String> {
-    if id == 42 { Some("Ana".into()) } else { None }
-}
-
-// Formas de extraer:
-match encontrar(42) { Some(n) => println!("{n}"), None => {} }
-if let Some(n) = encontrar(42) { println!("{n}"); }
-let n = encontrar(42).unwrap();             // panic si None
-let n = encontrar(42).expect("msg");        // panic con mensaje
-let n = encontrar(42).map(|s| s.to_uppercase()).unwrap_or_else(|| "ANON".into());
-let n = encontrar(42)?;                      // Propaga None (solo en fn que retorna Option)
-
-// Result<T, E> — operaciones que fallan
 use std::fs;
-fn leer(path: &str) -> Result<String, std::io::Error> {
-    fs::read_to_string(path)  // ? propaga el error
-}
+use std::io;
 
-// Formas de manejar:
-match leer("datos.txt") { Ok(c) => println!("{c}"), Err(e) => eprintln!("{e}") }
-let datos = leer("config.toml").expect("debe existir");
-let len = leer("datos.txt").map(|c| c.len()).unwrap_or(0);
+fn main() -> io::Result<()> {
+    // Leer archivo completo
+    let contenido = fs::read_to_string("datos.txt")?;
+    println!("{}", contenido);
 
-// ? con errores mixtos (necesita Box<dyn Error>)
-fn procesar() -> Result<i32, Box<dyn std::error::Error>> {
-    let archivo = fs::read_to_string("datos.txt")?;
-    Ok(archivo.trim().parse()?)
-}
-```
+    // Escribir archivo (sobrescribe)
+    fs::write("salida.txt", "Hola mundo")?;
 
-| Método | Cuándo |
-|--------|--------|
-| `match` | Lógica distinta por caso |
-| `if let` | Solo importa el caso positivo |
-| `unwrap()` | Prototipos/tests |
-| `expect()` | Bugs que nunca deberían pasar |
-| `?` | Delegar al llamador (estándar) |
-| `map/and_then` | Transformar sin match verboso |
+    // Leer binario
+    let bytes = fs::read("imagen.png")?;
 
-Fuente: [The Rust Book — Error Handling](https://doc.rust-lang.org/book/ch09-00-error-handling.html)
+    // Crear directorio
+    fs::create_dir("nueva_carpeta")?;
+    // create_dir_all crea toda la jerarquía
+    fs::create_dir_all("a/b/c")?;
 
-### Error handling: thiserror y anyhow
+    // Listar directorio
+    for entrada in fs::read_dir(".")? {
+        let entrada = entrada?;
+        println!("{}", entrada.path().display());
+    }
 
-```rust
-// thiserror — errores tipados (librerías)
-use thiserror::Error;
-
-#[derive(Error, Debug)]
-pub enum ApiError {
-    #[error("no encontrado: {0}")]
-    NotFound(String),
-    #[error("error BD: {0}")]
-    Database(#[from] sqlx::Error),
-    #[error("validación: {field} - {msg}")]
-    Validation { field: String, msg: String },
-}
-
-// anyhow — errores con contexto (binarios/aplicaciones)
-use anyhow::{Context, Result};
-
-fn procesar(path: &str) -> Result<()> {
-    let c = std::fs::read_to_string(path)
-        .with_context(|| format!("no se pudo leer {path}"))?;
-    let json: serde_json::Value = serde_json::from_str(&c)
-        .context("JSON inválido")?;
     Ok(())
 }
 ```
 
-Patrón recomendado: **thiserror en librerías, anyhow en binarios**.
-
-Fuente: [thiserror docs](https://docs.rs/thiserror/), [anyhow docs](https://docs.rs/anyhow/)
-
-### Macros
-
-**Declarativas (`macro_rules!`):**
-
+#### 🧪 Cómo probarlo
 ```rust
-macro_rules! vec2 {
-    ( $( $x:expr ),* ) => {{
-        let mut v = Vec::new();
-        $( v.push($x); )*
-        v
-    }};
-}
+#[cfg(test)]
+mod tests {
+    use std::fs;
+    use std::io;
 
-// debug macro
-macro_rules! trace {
-    ($val:expr) => {{
-        eprintln!("{} = {:?}", stringify!($val), &$val);
-        $val
-    }};
-}
-```
-
-**Procedurales (syn + quote):**
-
-Requieren crate separada con `proc-macro = true`.
-
-```rust
-// macros/Cargo.toml: [lib] proc-macro = true
-use proc_macro::TokenStream;
-use quote::quote;
-use syn;
-
-#[proc_macro_derive(Responder)]
-pub fn responder_derive(input: TokenStream) -> TokenStream {
-    let ast = syn::parse_macro_input!(input as syn::DeriveInput);
-    let name = &ast.ident;
-    quote! { impl Responder for #name { fn responder(&self) -> String { format!("{:?}", self) } } }.into()
-}
-```
-
-**Librerías clave:** `syn` (parsea AST), `quote` (genera tokens).
-
-Fuente: [The Little Book of Rust Macros](https://veykril.github.io/tlborm/), [syn docs](https://docs.rs/syn/)
-
-### unsafe, FFI y no_std
-
-`unsafe` habilita exactamente 5 operaciones:
-
-```rust
-// 1. Desreferenciar raw pointer
-let mut n = 5;
-let r = &n as *const i32;
-unsafe { println!("{}", *r); }
-
-// 2. Llamar funciones unsafe (FFI)
-extern "C" { fn abs(i: i32) -> i32; }
-unsafe { println!("{}", abs(-3)); }
-
-// 3. Acceder/modificar static mut
-static mut C: u32 = 0;
-unsafe { C += 1; }
-
-// 4. Implementar traits unsafe
-// 5. Acceder a campos de union
-```
-
-**FFI — Llamar C desde Rust / Rust desde C:**
-
-```rust
-// Binding seguro a C
-mod ffi {
-    extern "C" { pub(super) fn sqrt(x: f64) -> f64; }
-}
-fn raiz(x: f64) -> f64 { unsafe { ffi::sqrt(x) } }
-
-// Llamar Rust desde C
-#[no_mangle]
-pub extern "C" fn suma(a: i32, b: i32) -> i32 { a + b }
-```
-
-**no_std:**
-
-```rust
-#![no_std]
-#![no_main]
-use core::panic::PanicInfo;
-
-#[panic_handler]
-fn panic(_: &PanicInfo) -> ! { loop {} }
-// Sin std, sin alloc (a menos que implementes allocator)
-```
-
-**Cuándo usar unsafe:** FFI, optimizaciones con raw pointers, implementar Vec/HashMap internamente, acceso a hardware embebido. El 99% del código debe ser safe.
-
-Fuente: [The Rustonomicon](https://doc.rust-lang.org/nomicon/)
-
-### async/await, Tokio, Send + Sync
-
-**async/await en Rust es único: las Futures son lazy, no hacen nada hasta que se poll (await).** Esto permite ejecutar I/O sin bloquear threads.
-
-```toml
-[dependencies]
-tokio = { version = "1", features = ["full"] }
-```
-
-```rust
-use tokio::time::{sleep, Duration};
-
-#[tokio::main]  // Macro que transforma main en async + inicia runtime multi-thread
-async fn main() {
-    // spawn: lanza tarea en el thread pool (work-stealing)
-    let handle = tokio::spawn(async {
-        sleep(Duration::from_millis(100)).await;
-        "tarea completada"
-    });
-    println!("{}", handle.await.unwrap());
-
-    // join!: ejecuta múltiples tareas concurrentemente
-    let (r1, r2) = tokio::join!(tarea_io(), tarea_io());
-    println!("{r1}, {r2}");
-
-    // select!: espera la primera tarea que termine
-    tokio::select! {
-        val = canal.recv() => println!("recibido: {val}"),
-        _ = sleep(Duration::from_secs(1)) => println!("timeout"),
+    #[test]
+    fn test_write_and_read() -> io::Result<()> {
+        let path = "test_archivo.txt";
+        fs::write(path, "test contenido")?;
+        let contenido = fs::read_to_string(path)?;
+        assert_eq!(contenido, "test contenido");
+        fs::remove_file(path)?;
+        Ok(())
     }
 
-    // timeout: límite de tiempo para una operación
-    use tokio::time::timeout;
-    match timeout(Duration::from_secs(5), operacion_lenta()).await {
-        Ok(val) => println!("{val}"),
-        Err(_) => eprintln!("timeout"),
+    #[test]
+    fn test_create_and_remove_dir() -> io::Result<()> {
+        fs::create_dir("test_dir")?;
+        assert!(fs::metadata("test_dir")?.is_dir());
+        fs::remove_dir("test_dir")?;
+        Ok(())
     }
 }
-
-// Runtime single-thread (útil para WASM o embebido)
-#[tokio::main(flavor = "current_thread")]
-async fn main_single() {}
-
-// Runtime manual
-fn main() {
-    let rt = tokio::runtime::Runtime::new().unwrap();
-    rt.block_on(async { println!("Hola"); });
-}
 ```
 
-```rust
-async fn tarea_io() -> String { sleep(Duration::from_millis(50)).await; "ok".into() }
-```
+#### 💡 Memoria y rendimiento
+- `read_to_string` carga todo el archivo en memoria — no apto para archivos grandes
+- `read` carga como `Vec<u8>`: el archivo completo en heap
+- Para archivos grandes, usa `BufReader`/`BufWriter` (lectura/escritura por fragmentos)
+- Las operaciones de FS son lentas (orden de ms) — considéralas I/O bound
 
-**Runtimes async:**
+#### ✅ Buenas prácticas
+- ✅ Usa `read_to_string` solo para archivos pequeños (config, logs pequeños)
+- ✅ Usa `write` para sobrescritura completa de archivos pequeños
+- ⚠️ Siempre maneja `io::Result` — no asumas que un archivo existe
+- ❌ No uses `read_to_string` para archivos de más de unos pocos MB
 
-| Runtime | Uso |
-|---------|-----|
-| **Tokio** | Multi-thread work-stealing, estándar de facto para servidores |
-| **async-std** | API similar a stdlib, más simple |
-| **smol** | Minimalista (~2k LOC), single-thread por defecto |
-| **embassy** | Embebido, microcontroladores (STM32, nRF, RP2040) |
+#### 🏗️ Metodología
+- Archivos pequeños (< 1 MB): `read_to_string` / `write`
+- Archivos grandes: `BufReader` + `BufWriter`
+- Directorios: `read_dir` con filter/map para procesar
 
-**Send + Sync: la magia de concurrencia de Rust**
-
-El borrow checker se aplica entre threads. La mayoría de tipos implementan `Send` y `Sync` automáticamente, pero algunos no:
-
-```rust
-// Send: el tipo se puede transferir entre threads de forma segura
-// Sync: el tipo se puede compartir entre threads (&T es Send)
-
-// NO son Send/Sync:
-// - Rc<T>: el contador no es atómico
-// - RefCell<T>: el contador de borrows no es atómico
-// - *const T / *mut T: raw pointers no tienen garantías
-
-// SÍ son Send + Sync:
-// - Arc<T>: contador atómico
-// - Mutex<T>, RwLock<T>: sincronización nativa
-// - mpsc::Sender<T>: Send (pero Receiver no es Sync)
-```
-
-| Tipo | Send | Sync |
-|------|------|------|
-| `i32`, `bool`, `String` | ✅ | ✅ |
-| `Rc<T>` | ❌ | ❌ |
-| `Arc<T>` | ✅ (si T: Send+Sync) | ✅ |
-| `RefCell<T>` | ✅ | ❌ |
-| `Mutex<T>` | ✅ (si T: Send) | ✅ |
-| `mpsc::Sender<T>` | ✅ | ❌ |
-| `*const T` | ❌ | ❌ |
-| `Pin<Box<T>>` | ✅ (si T: Send) | ✅ |
-
-**Pin:** garantiza que un valor no se mueve en memoria. Las futures de Rust a menudo contienen auto-referencias, y `Pin` asegura que sean seguras. Normalmente no lo tocas directamente — async/await lo maneja internamente.
-
-Fuente: [Tokio docs](https://tokio.rs/tokio/tutorial), [Async Book](https://rust-lang.github.io/async-book/)
-
----
-
-## Sistema de archivos
-
-### std::fs
-
-```rust
-use std::fs;
-use std::io::{self, BufRead, BufReader, Write};
-
-let contenido = fs::read_to_string("archivo.txt")?;
-fs::write("salida.txt", "contenido")?;
-
-fs::create_dir("nueva-carpeta")?;
-fs::create_dir_all("a/b/c")?;
-fs::remove_dir("vacia")?;
-fs::remove_dir_all("carpeta")?;
-fs::remove_file("archivo.txt")?;
-
-for entry in fs::read_dir(".")? {
-    let entry = entry?;
-    println!("{:?} {}", entry.path(), entry.file_name().to_string_lossy());
-}
-
-let meta = fs::metadata("archivo.txt")?;
-println!("tamaño: {}, permisos: {:?}", meta.len(), meta.permissions());
-```
-
-### std::fs::File (control fino)
-
-```rust
-use std::fs::{File, OpenOptions};
-use std::io::{Read, Write, Seek, SeekFrom};
-
-let mut f = File::open("datos.bin")?;
-let mut buf = Vec::new();
-f.read_to_end(&mut buf)?;
-
-let mut f = File::create("salida.bin")?;
-f.write_all(b"datos binarios")?;
-
-let mut f = OpenOptions::new()
-    .read(true)
-    .write(true)
-    .create(true)
-    .append(true)
-    .open("log.txt")?;
-
-f.seek(SeekFrom::Start(0))?;
-f.seek(SeekFrom::End(-10))?;
-```
+#### 🔗 Para saber más
+- [Rust std::fs](https://doc.rust-lang.org/std/fs/index.html)
+- [Rust by Example — File I/O](https://doc.rust-lang.org/rust-by-example/std_misc/file.html)
+- [Rust Cookbook — File I/O](https://rust-lang-nursery.github.io/rust-cookbook/file.html)
 
 ### BufReader / BufWriter
 
+#### ¿Qué es?
+`BufReader` y `BufWriter` añaden un buffer interno para reducir las llamadas al sistema (syscalls). En lugar de leer byte a byte, leen en bloques (por defecto 8KB). Esencial para procesar archivos grandes de forma eficiente.
+
+🔗 [Rust std::io::BufReader](https://doc.rust-lang.org/std/io/struct.BufReader.html)
+
+#### Sintaxis básica
 ```rust
-let f = File::open("grande.txt")?;
-let reader = BufReader::new(f);
-for line in reader.lines() {
-    let line = line?;
-    println!("{line}");
+use std::fs::File;
+use std::io::{BufRead, BufReader, Write, BufWriter};
+
+// Leer línea por línea (eficiente)
+let archivo = File::open("datos.txt")?;
+let reader = BufReader::new(archivo);
+for linea in reader.lines() {
+    let linea = linea?;
+    println!("{}", linea);
 }
 
-let f = File::create("salida.txt")?;
-let mut writer = io::BufWriter::new(f);
-write!(writer, "línea 1\n")?;
-write!(writer, "línea 2\n")?;
+// Escribir con buffer
+let archivo = File::create("salida.txt")?;
+let mut writer = BufWriter::new(archivo);
+writeln!(writer, "Hola mundo")?;
 ```
+
+#### 🧪 Cómo probarlo
+```rust
+#[cfg(test)]
+mod tests {
+    use std::fs::File;
+    use std::io::{BufRead, BufReader, Write, BufWriter};
+
+    #[test]
+    fn test_bufreader() -> std::io::Result<()> {
+        let file = File::open("Cargo.toml")?;
+        let reader = BufReader::new(file);
+        let mut lineas = 0;
+        for _ in reader.lines() { lineas += 1; }
+        assert!(lineas > 0);
+        Ok(())
+    }
+
+    #[test]
+    fn test_bufwriter() -> std::io::Result<()> {
+        let file = File::create("test_buf.txt")?;
+        let mut writer = BufWriter::new(file);
+        writeln!(writer, "línea 1")?;
+        writeln!(writer, "línea 2")?;
+        writer.flush()?;
+        Ok(())
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- BufReader reduce las syscalls de N a N/buffer_size (8KB por defecto)
+- Sin buffer: cada `read()` es una syscall (~1µs de overhead)
+- Con buffer: se leen 8KB de una vez, se sirven desde memoria
+- BufWriter hace lo mismo en escritura: acumula hasta 8KB antes de escribir
+
+#### ✅ Buenas prácticas
+- ✅ Usa BufReader para archivos de más de unos pocos KB
+- ✅ Usa `read_until` o `lines` para procesamiento línea a línea
+- ⚠️ `flush()` o el Drop de BufWriter escribe el buffer restante
+- ❌ No envuelvas un archivo pequeño en BufReader si solo haces una lectura
+
+#### 🏗️ Metodología
+- BufReader: archivos de texto grandes (logs, CSVs, archivos de datos)
+- BufWriter: archivos de salida grandes (resultados, exportaciones)
+- Sin buffer: lecturas de una sola vez con `read_to_string` (archivos pequeños)
+
+#### 🔗 Para saber más
+- [Rust std::io::BufReader](https://doc.rust-lang.org/std/io/struct.BufReader.html)
+- [Rust std::io::BufWriter](https://doc.rust-lang.org/std/io/struct.BufWriter.html)
+- [Rust by Example — BufReader](https://doc.rust-lang.org/rust-by-example/std_misc/file/read_lines.html)
 
 ### std::path::Path y PathBuf
 
+#### ¿Qué es?
+`Path` es una slice de un path de archivo (como `&str` para strings). `PathBuf` es la versión propietaria (como `String`). Proporcionan métodos multiplataforma para manipular rutas.
+
+🔗 [Rust std::path docs](https://doc.rust-lang.org/std/path/index.html)
+
+#### Sintaxis básica
 ```rust
 use std::path::{Path, PathBuf};
 
-let p = Path::new("/home/user/docs/file.txt");
+// PathBuf (propietario, mutable)
+let mut ruta = PathBuf::from("/usr/local/bin");
+ruta.push("mi-app");
+assert_eq!(ruta, Path::new("/usr/local/bin/mi-app"));
 
-p.exists();
-p.is_file();
-p.is_dir();
-p.join("subdir");
-p.parent();
-p.file_name();
-p.extension();
-p.file_stem();
-p.canonicalize();
+// Path (vista prestada)
+let p = Path::new("/home/user/documentos/archivo.txt");
+println!("padre: {:?}", p.parent());
+println!("nombre: {:?}", p.file_name());
+println!("extensión: {:?}", p.extension());
+println!("sin extensión: {:?}", p.file_stem());
 
-let mut pb = PathBuf::from("/home");
-pb.push("user");
-pb.set_extension("bak");
+// Métodos útiles
+assert!(p.is_absolute());
+assert!(!p.is_relative());
+assert_eq!(p.to_str(), Some("/home/user/documentos/archivo.txt"));
 ```
+
+#### 🧪 Cómo probarlo
+```rust
+#[cfg(test)]
+mod tests {
+    use std::path::{Path, PathBuf};
+
+    #[test]
+    fn test_path_manipulation() {
+        let mut pb = PathBuf::from("/a");
+        pb.push("b");
+        pb.push("c.txt");
+        assert_eq!(pb, Path::new("/a/b/c.txt"));
+    }
+
+    #[test]
+    fn test_path_components() {
+        let p = Path::new("/usr/local/bin");
+        assert_eq!(p.parent(), Some(Path::new("/usr/local")));
+        assert_eq!(p.file_name(), Some(std::ffi::OsStr::new("bin")));
+    }
+
+    #[test]
+    fn test_path_extension() {
+        let p = Path::new("datos.csv");
+        assert_eq!(p.extension(), Some(std::ffi::OsStr::new("csv")));
+        assert_eq!(p.file_stem(), Some(std::ffi::OsStr::new("datos")));
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `Path` es una slice (2 palabras: puntero + len)
+- `PathBuf` es 3 palabras (puntero, len, capacity) como String
+- Las operaciones de path no acceden al disco — solo manipulan strings
+- Usa `PathBuf::with_capacity` si sabes la longitud máxima
+
+#### ✅ Buenas prácticas
+- ✅ Usa `Path` en parámetros de función (más flexible que `&str` para rutas)
+- ✅ Usa `PathBuf` para construir y almacenar rutas
+- ⚠️ Usa `to_str()` en lugar de `to_string_lossy()` solo si estás seguro de que es UTF-8 válido
+- ❌ No concatenes rutas con formato de strings — usa `push` o `join`
+
+#### 🏗️ Metodología
+- `Path`: referencia a una ruta (parámetros de funciones)
+- `PathBuf`: almacenar y construir rutas
+- `join` vs `push`: `join` crea un PathBuf nuevo, `push` modifica in-place
+
+#### 🔗 Para saber más
+- [Rust std::path docs](https://doc.rust-lang.org/std/path/index.html)
+- [Rust by Example — Path](https://doc.rust-lang.org/rust-by-example/std_misc/path.html)
 
 ### Procesar CSV y escribir JSON
 
+#### ¿Qué es?
+El ecosistema Rust tiene crates especializados para formatos de datos. `csv` para CSV y `serde_json` para JSON son los estándares de la industria. Combinados con `serde` permiten serialización/deserialización automática.
+
+🔗 [serde.rs](https://serde.rs/), [csv crate](https://docs.rs/csv/)
+
+#### Sintaxis básica
 ```rust
 use serde::{Deserialize, Serialize};
-use std::fs;
+use std::fs::File;
+use std::io::BufReader;
 
 #[derive(Debug, Serialize, Deserialize)]
-struct Producto {
+struct Usuario {
     nombre: String,
-    precio: f64,
-    stock: u32,
+    edad: u8,
+    email: String,
 }
 
-fn leer_csv(path: &str) -> Result<Vec<Producto>, Box<dyn std::error::Error>> {
-    let mut reader = csv::Reader::from_path(path)?;
-    let mut productos = Vec::new();
-    for result in reader.deserialize() {
-        productos.push(result?);
+// Leer CSV
+let archivo = File::open("usuarios.csv")?;
+let reader = BufReader::new(archivo);
+let mut csv_reader = csv::Reader::from_reader(reader);
+for result in csv_reader.deserialize() {
+    let usuario: Usuario = result?;
+    println!("{:?}", usuario);
+}
+
+// Escribir JSON
+let usuarios = vec![
+    Usuario { nombre: "Alice".into(), edad: 30, email: "alice@ex.com".into() },
+];
+let json = serde_json::to_string_pretty(&usuarios)?;
+fs::write("usuarios.json", json)?;
+```
+
+#### 🧪 Cómo probarlo
+```rust
+#[cfg(test)]
+mod tests {
+    use serde::{Deserialize, Serialize};
+
+    #[derive(Serialize, Deserialize, PartialEq, Debug)]
+    struct Punto { x: i32, y: i32 }
+
+    #[test]
+    fn test_json_serialize() {
+        let p = Punto { x: 1, y: 2 };
+        let json = serde_json::to_string(&p).unwrap();
+        assert_eq!(json, r#"{"x":1,"y":2}"#);
     }
-    Ok(productos)
+
+    #[test]
+    fn test_json_deserialize() {
+        let json = r#"{"x":3,"y":4}"#;
+        let p: Punto = serde_json::from_str(json).unwrap();
+        assert_eq!(p, Punto { x: 3, y: 4 });
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- serde_json serializa/deserializa en memoria: O(n) en el tamaño de los datos
+- csv::Reader es streaming: no carga todo el archivo en memoria
+- serde usa derive macros que se ejecutan en compilación (zero-cost)
+- Para archivos enormes, usa csv + serde en modo streaming
+
+#### ✅ Buenas prácticas
+- ✅ Añade serde con `cargo add serde --features derive`
+- ✅ Usa `#[serde(rename_all = "snake_case")]` para convenciones
+- ⚠️ No serialices tipos con referencias internas — serde necesita owned data
+- ❌ No uses `serde_json::from_str` en archivos enormes — prefiere `from_reader`
+
+#### 🏗️ Metodología
+- CSV: datos tabulares grandes, logs, exportaciones de bases de datos
+- JSON: APIs, configuración, intercambio de datos entre servicios
+- Para rendimiento extremo: considera `bincode`, `msgpack`, o `protobuf`
+
+#### 🔗 Para saber más
+- [serde.rs](https://serde.rs/)
+- [csv crate docs](https://docs.rs/csv/)
+- [serde_json docs](https://docs.rs/serde_json/)
+
+
+---
+
+## Algoritmos y estructuras de datos
+
+### Ordenación
+
+#### ¿Qué es?
+Rust proporciona ordenación estable (`sort`) e inestable (`sort_unstable`) en slices. La ordenación por defecto usa el orden natural del tipo (a través del trait `Ord`), y se puede personalizar con `sort_by`.
+
+🔗 [Rust std::slice::sort](https://doc.rust-lang.org/std/primitive.slice.html#method.sort)
+
+#### Sintaxis básica
+```rust
+let mut nums = vec![3, 1, 4, 1, 5];
+nums.sort();
+assert_eq!(nums, vec![1, 1, 3, 4, 5]);
+
+let mut floats = vec![3.2, 1.5, 4.1];
+floats.sort_unstable_by(|a, b| a.partial_cmp(b).unwrap());
+
+// Ordenación personalizada
+let mut items = vec![(3, "c"), (1, "a"), (2, "b")];
+items.sort_by(|a, b| a.0.cmp(&b.0));
+
+// sort por campo
+items.sort_by_key(|k| k.0);
+```
+
+#### 🧪 Cómo probarlo
+```rust
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_sort() {
+        let mut v = vec![3, 1, 4, 1, 5];
+        v.sort();
+        assert_eq!(v, vec![1, 1, 3, 4, 5]);
+    }
+
+    #[test]
+    fn test_sort_reverse() {
+        let mut v = vec![1, 2, 3];
+        v.sort_by(|a, b| b.cmp(a));
+        assert_eq!(v, vec![3, 2, 1]);
+    }
+
+    #[test]
+    fn test_sort_by_key() {
+        let mut v = [(3, "c"), (1, "a"), (2, "b")];
+        v.sort_by_key(|k| k.0);
+        assert_eq!(v, [(1, "a"), (2, "b"), (3, "c")]);
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `sort_unstable` es más rápido pero no preserva el orden de elementos iguales
+- `sort` (estable) usa merge sort optimizado: O(n log n) peor caso, O(n) mejor caso
+- `sort_unstable` usa pattern-defeating quicksort: O(n log n) promedio
+- `sort_unstable` no asigna memoria extra; `sort` puede asignar un buffer temporal
+
+#### ✅ Buenas prácticas
+- ✅ Usa `sort_unstable` por defecto — es más rápido y no asigna memoria
+- ✅ Usa `sort` solo cuando necesites estabilidad (orden relativo preservado)
+- ⚠️ `f32`/`f64` no implementan `Ord` (NaN no es ordenable) — usa `sort_by` con `partial_cmp`
+- ❌ No implementes tu propia ordenación a menos que tengas datos muy concretos
+
+#### 🏗️ Metodología
+- sort: estabilidad necesaria (ej: ordenar por fecha, luego por nombre)
+- sort_unstable: rendimiento crítico, estabilidad no necesaria
+- sort_by_key: ordenar por un campo calculado sin crear struct temporal
+
+#### 🔗 Para saber más
+- [Rust std::slice::sort](https://doc.rust-lang.org/std/primitive.slice.html#method.sort)
+- [Rust std::slice::sort_unstable](https://doc.rust-lang.org/std/primitive.slice.html#method.sort_unstable)
+- [Wikipedia — Pattern-defeating Quicksort](https://en.wikipedia.org/wiki/Introsort)
+
+### Búsqueda
+
+#### ¿Qué es?
+Rust ofrece búsqueda binaria en slices ordenados con `binary_search`, y búsqueda lineal con los iteradores `find` y `position`. La búsqueda binaria es O(log n) pero requiere datos ordenados.
+
+🔗 [Rust std::slice::binary_search](https://doc.rust-lang.org/std/primitive.slice.html#method.binary_search)
+
+#### Sintaxis básica
+```rust
+let nums = vec![1, 3, 5, 7, 9];
+
+// Búsqueda binaria (O(log n))
+match nums.binary_search(&5) {
+    Ok(i) => println!("encontrado en índice {i}"),
+    Err(i) => println!("debería estar en índice {i}"),
 }
 
-fn escribir_json(path: &str, data: &[Producto]) -> Result<(), Box<dyn std::error::Error>> {
-    let json = serde_json::to_string_pretty(data)?;
-    fs::write(path, json)?;
+// Búsqueda lineal con iteradores
+let encontrado = nums.iter().find(|&&x| x == 5);
+let posicion = nums.iter().position(|&x| x == 5);
+
+// Búsqueda en vectores no ordenados
+let items = vec!["a", "b", "c"];
+assert!(items.contains(&"b"));
+```
+
+#### 🧪 Cómo probarlo
+```rust
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_binary_search() {
+        let v = vec![1, 3, 5, 7, 9];
+        assert_eq!(v.binary_search(&5), Ok(2));
+        assert_eq!(v.binary_search(&4), Err(2));
+    }
+
+    #[test]
+    fn test_find() {
+        let v = vec![10, 20, 30, 40];
+        let result: Option<&i32> = v.iter().find(|&&x| x > 25);
+        assert_eq!(result, Some(&30));
+    }
+
+    #[test]
+    fn test_contains() {
+        let v = vec!["manzana", "pera", "uva"];
+        assert!(v.contains(&"pera"));
+        assert!(!v.contains(&"platano"));
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `binary_search`: O(log n), requiere datos ordenados, no asigna memoria
+- `find`/`position`: O(n), early exit al encontrar el primer match
+- `contains`: O(n) en slices/vec (lineal), O(1) en HashSet
+- Para búsquedas frecuentes, considera convertir a `HashSet` o `BTreeSet`
+
+#### ✅ Buenas prácticas
+- ✅ Usa `binary_search` en datos ordenados (más rápido que find)
+- ✅ Usa `find` para búsquedas con condición compleja
+- ⚠️ binary_search requiere el tipo `Ord` — no funciona con floats directamente
+- ❌ No conviertas a HashSet para una sola búsqueda — el overhead de hash es mayor
+
+#### 🏗️ Metodología
+- Una búsqueda: `find` (lineal)
+- Muchas búsquedas en datos estáticos: ordenar + `binary_search`
+- Muchas búsquedas en datos dinámicos: `HashSet` / `BTreeSet`
+
+#### 🔗 Para saber más
+- [Rust std::slice::binary_search](https://doc.rust-lang.org/std/primitive.slice.html#method.binary_search)
+- [Rust std::iter::Iterator::find](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.find)
+- [Rust by Example — Binary Search](https://doc.rust-lang.org/rust-by-example/algorithms/binary_search.html)
+
+### Iterator API completa
+
+#### ¿Qué es?
+Los iteradores en Rust son **lazy, zero-cost** y componibles. El compilador optimiza cadenas completas de iteradores a código máquina tan eficiente como un loop manual. La API de `Iterator` proporciona docenas de métodos adaptadores.
+
+🔗 [Rust std::iter::Iterator](https://doc.rust-lang.org/std/iter/trait.Iterator.html)
+
+#### Sintaxis básica
+```rust
+let nums = vec![1, 2, 3, 4, 5, 6];
+
+// Chain de iteradores (zero-cost)
+let resultado: Vec<i32> = nums.iter()
+    .filter(|x| *x % 2 == 0)     // pares: 2, 4, 6
+    .map(|x| x * 2)               // doble: 4, 8, 12
+    .take(2)                      // solo 2: 4, 8
+    .collect();
+
+// fold (reduce)
+let suma = nums.iter().fold(0, |acc, x| acc + x);
+
+// any / all
+let hay_pares = nums.iter().any(|x| x % 2 == 0);
+let todos_pares = nums.iter().all(|x| x % 2 == 0);
+
+// flat_map
+let nested = vec![vec![1, 2], vec![3, 4]];
+let flat: Vec<i32> = nested.into_iter().flatten().collect();
+
+// chain: concatenar dos iteradores
+let a = vec![1, 2];
+let b = vec![3, 4];
+let ab: Vec<i32> = a.into_iter().chain(b).collect();
+```
+
+#### 🧪 Cómo probarlo
+```rust
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_iterator_chain() {
+        let v: Vec<i32> = (1..=5)
+            .filter(|x| x % 2 == 0)
+            .map(|x| x * 10)
+            .collect();
+        assert_eq!(v, vec![20, 40]);
+    }
+
+    #[test]
+    fn test_fold() {
+        let sum: i32 = (1..=100).fold(0, |acc, x| acc + x);
+        assert_eq!(sum, 5050);
+    }
+
+    #[test]
+    fn test_any_all() {
+        let v = vec![1, 2, 3, 4, 5];
+        assert!(v.iter().any(|x| x > 3));
+        assert!(!v.iter().all(|x| x > 3));
+    }
+
+    #[test]
+    fn test_flat_map() {
+        let v = vec![vec![1, 2], vec![3, 4]];
+        let flat: Vec<i32> = v.into_iter().flatten().collect();
+        assert_eq!(flat, vec![1, 2, 3, 4]);
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- Los adaptadores de iterador son **cero coste**: el compilador los fusiona en un solo loop
+- `collect` es el único punto donde se asigna memoria
+- Los iteradores son lazy: `map`/`filter` no ejecutan nada hasta que se consume
+- Usa `size_hint` para que `collect` pre-asigne capacidad exacta
+
+#### ✅ Buenas prácticas
+- ✅ Prefiere chains de iteradores sobre loops manuales con lógica compleja
+- ✅ Usa `collect` con tipos concretos (`Vec`, `HashMap`, `HashSet`)
+- ⚠️ No abuses de `collect` intermedios — rompe la lazy evaluation
+- ❌ No conviertas a Vec solo para iterar — usa el iterador directamente
+
+#### 🏗️ Metodología
+- `map`/`filter`: transformaciones de colecciones (90% de los casos)
+- `fold`/`reduce`: agregaciones y acumulaciones
+- `flat_map`/`flatten`: desanidar estructuras jerárquicas
+- `chain`: concatenar varias fuentes de datos
+
+#### 🔗 Para saber más
+- [Rust std::iter::Iterator](https://doc.rust-lang.org/std/iter/trait.Iterator.html)
+- [Rust Book — Iterators](https://doc.rust-lang.org/book/ch13-02-iterators.html)
+- [Rust by Example — Iterators](https://doc.rust-lang.org/rust-by-example/trait/iter.html)
+
+### Big O de colecciones estándar
+
+| Operación | Vec | VecDeque | LinkedList | HashMap | BTreeMap | HashSet | BTreeSet |
+|-----------|-----|----------|------------|---------|----------|---------|----------|
+| Acceso | O(1) | O(1) | O(n) | O(1)* | O(log n) | — | — |
+| Inserción final | O(1)** | O(1) | O(1) | — | — | — | — |
+| Inserción inicio | O(n) | O(1) | O(1) | — | — | — | — |
+| Búsqueda | O(n) | O(n) | O(n) | O(1)* | O(log n) | O(1)* | O(log n) |
+| Eliminación | O(n) | O(n) | O(1) | O(1)* | O(log n) | O(1)* | O(log n) |
+| Ordenación | O(n log n) | O(n log n) | — | — | — | — | — |
+
+*Amortizado, asumiendo buen hash function
+**Amortizado O(1); O(n) cuando hay que redimensionar
+
+🔗 [Rust std::collections](https://doc.rust-lang.org/std/collections/)
+
+#### ✅ Buenas prácticas
+- ✅ Vec: la colección por defecto para secuencias
+- ✅ HashMap: mapeo clave-valor con O(1) promedio
+- ✅ BTreeMap: mapeo ordenado, O(log n) consistente
+- ⚠️ LinkedList casi nunca es necesario en Rust — Vec o VecDeque son mejores
+- ❌ No uses HashMap con claves que no implementan Eq + Hash
+
+#### 🔗 Para saber más
+- [Rust std::collections](https://doc.rust-lang.org/std/collections/)
+- [Rust Book — Collections](https://doc.rust-lang.org/book/ch08-00-common-collections.html)
+- [Rust by Example — Collections](https://doc.rust-lang.org/rust-by-example/std/hash.html)
+
+
+---
+
+## Conceptos clave del lenguaje
+
+### Ownership, Borrowing y Lifetimes
+
+#### ¿Qué es?
+**Ownership** es el sistema de gestión de memoria de Rust: cada valor tiene un único propietario, y se libera automáticamente cuando el propietario sale de scope. **Borrowing** permite prestar una referencia sin transferir la propiedad. **Lifetimes** son anotaciones que verifican que las referencias vivan lo suficiente.
+
+🔗 [Rust Book — Ownership](https://doc.rust-lang.org/book/ch04-00-understanding-ownership.html)
+
+#### Sintaxis básica
+```rust
+// Ownership: cada valor tiene un único dueño
+let s1 = String::from("hola");
+let s2 = s1; // s1 se mueve a s2
+// println!("{}", s1); // ❌ error: s1 ya no es válido
+
+// Borrowing: prestar sin mover
+let s3 = String::from("mundo");
+let len = calcular_largo(&s3); // &s3 presta una referencia
+println!("{}", s3); // s3 sigue siendo válido
+
+fn calcular_largo(s: &str) -> usize { s.len() }
+
+// Mutable borrowing: una sola referencia mutable a la vez
+let mut s = String::from("hola");
+let r1 = &mut s;
+// let r2 = &mut s; // ❌ error: dos refs mut simultáneas no permitidas
+
+// Lifetimes: las referencias deben vivir lo suficiente
+fn el_mas_largo<'a>(x: &'a str, y: &'a str) -> &'a str {
+    if x.len() > y.len() { x } else { y }
+}
+```
+
+#### 🧪 Cómo probarlo
+```rust
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_ownership_move() {
+        let s1 = String::from("hola");
+        let s2 = s1;
+        // s1 ya no es válido aquí
+        assert_eq!(s2, "hola");
+    }
+
+    #[test]
+    fn test_borrowing() {
+        let s = String::from("mundo");
+        let r = &s;
+        assert_eq!(*r, "mundo");
+        assert_eq!(s, "mundo"); // s sigue vivo
+    }
+
+    #[test]
+    fn test_mutable_borrow() {
+        let mut s = String::from("hola");
+        let r = &mut s;
+        r.push_str(" mundo");
+        assert_eq!(*r, "hola mundo");
+    }
+
+    #[test]
+    fn test_lifetime_elision() {
+        fn first_word(s: &str) -> &str {
+            s.split_whitespace().next().unwrap_or("")
+        }
+        assert_eq!(first_word("hola mundo"), "hola");
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- Ownership **no tiene overhead en runtime**: el compilador inserta `free`/`drop` en compile-time
+- Las referencias (`&T`) son punteros de tamaño palabra (8 bytes en 64-bit)
+- El borrow checker se ejecuta en compilación: cero impacto en rendimiento
+- Los lifetimes son puramente en compilación: no existen en runtime
+
+#### ✅ Buenas prácticas
+- ✅ Prefiere referencias (`&T`) sobre ownership cuando no necesites propietario
+- ✅ Usa `&mut T` solo cuando necesites modificar
+- ⚠️ No luches contra el borrow checker — suele indicar un diseño mejorable
+- ❌ No abuses de `clone()` para evitar problemas de ownership — aprende a prestar
+
+#### 🏗️ Metodología
+- Funciones que solo leen datos: `&T` (referencia compartida)
+- Funciones que modifican: `&mut T` (referencia mutable)
+- Funciones que consumen: `T` (ownership) — el caller pierde acceso
+- Funciones que crean datos: retorna `T`
+
+#### 🔗 Para saber más
+- [Rust Book — Ownership](https://doc.rust-lang.org/book/ch04-00-understanding-ownership.html)
+- [Rust Book — Lifetimes](https://doc.rust-lang.org/book/ch10-03-lifetime-syntax.html)
+- [Rustonomicon — Ownership](https://doc.rust-lang.org/nomicon/ownership.html)
+
+### Option y Result
+
+#### ¿Qué es?
+`Option<T>` representa un valor que puede ser `Some(T)` o `None` (alternativa a null pointers). `Result<T, E>` representa una operación que puede ser `Ok(T)` o `Err(E)` (alternativa a excepciones). Ambos son enums y el compilador exige que los manejes.
+
+🔗 [Rust std::option](https://doc.rust-lang.org/std/option/), [Rust std::result](https://doc.rust-lang.org/std/result/)
+
+#### Sintaxis básica
+```rust
+// Option
+fn dividir(a: f64, b: f64) -> Option<f64> {
+    if b == 0.0 { None } else { Some(a / b) }
+}
+
+let resultado = dividir(10.0, 2.0);
+match resultado {
+    Some(v) => println!("{v}"),
+    None => println!("error"),
+}
+
+// Combinadores
+let doblado = dividir(10.0, 2.0).map(|x| x * 2.0);
+let con_default = dividir(10.0, 0.0).unwrap_or(0.0);
+
+// Result
+fn leer_archivo(path: &str) -> Result<String, std::io::Error> {
+    std::fs::read_to_string(path)
+}
+
+// ? operator (propagación de errores)
+fn procesar() -> Result<(), std::io::Error> {
+    let contenido = leer_archivo("datos.txt")?; // Si error, retorna
+    println!("{}", contenido);
     Ok(())
 }
 ```
 
-| Crate | Propósito |
-|-------|-----------|
-| `serde` + `serde_json` | Serializar/deserializar JSON |
-| `serde_yaml` | YAML |
-| `csv` | Leer/escribir CSVs con tipado |
-| `tempfile` | Archivos/directorios temporales |
-| `notify` | Watch de archivos (file system events) |
-
-Fuente: [std::fs docs](https://doc.rust-lang.org/std/fs/), [std::io docs](https://doc.rust-lang.org/std/io/), [std::path docs](https://doc.rust-lang.org/std/path/), [csv crate](https://docs.rs/csv/), [serde_json](https://docs.rs/serde_json/)
-
----
-
-## Algoritmos
-
-### Ordenación
-
+#### 🧪 Cómo probarlo
 ```rust
-let mut v = vec![3, 1, 4, 1, 5, 9, 2, 6];
-v.sort();                          // Timsort (estable, O(n log n))
-v.sort_unstable();                 // Pattern-defeating Quicksort (inestable, más rápido)
-v.sort_by(|a, b| b.cmp(a));
-v.sort_by_key(|x| x.abs());
-
-v.select_nth_unstable(3);          // Ordena solo el percentil N (O(n))
-```
-
-### Búsqueda
-
-```rust
-let v = vec![1, 3, 5, 7, 9];
-v.binary_search(&5);               // Ok(2) — O(log n)
-v.contains(&3);                    // true
-v.iter().position(|x| x > 5);     // Some(3)
-```
-
-### Vec + Iterators API
-
-```rust
-let v: Vec<i32> = (0..10).collect();
-let cuadrados: Vec<i32> = v.iter().map(|x| x * x).collect();
-let pares: Vec<&i32> = v.iter().filter(|x| *x % 2 == 0).collect();
-
-let suma: i32 = v.iter().fold(0, |acc, x| acc + x);
-let producto: i32 = v.iter().product();
-let max = v.iter().max();
-let min = v.iter().min();
-
-let (pares, impares): (Vec<_>, Vec<_>) = v.iter().partition(|&&x| x % 2 == 0);
-
-let algun_par = v.iter().any(|x| x % 2 == 0);
-let todos_pares = v.iter().all(|x| x % 2 == 0);
-
-let nums: Vec<i32> = ["1", "a", "3"].iter()
-    .filter_map(|s| s.parse::<i32>().ok())
-    .collect();
-```
-
-### Iterator API completa
-
-| Método | Descripción |
-|--------|-------------|
-| `chain` | Concatena dos iteradores |
-| `zip` | Combina dos iteradores en tuplas |
-| `enumerate` | Añade índice |
-| `skip` | Salta N elementos |
-| `take` | Toma N elementos |
-| `cycle` | Repite infinitamente |
-| `inspect` | Inspecciona sin consumir |
-| `fold` | Reduce con acumulador |
-| `reduce` | fold sin valor inicial |
-| `any` | ¿Alguno cumple condición? |
-| `all` | ¿Todos cumplen? |
-| `partition` | Divide en dos colecciones |
-| `filter_map` | filter + map |
-| `flat_map` | Aplana iterador de iteradores |
-| `flatten` | Aplana Option/Result/Iterator anidados |
-
-```rust
-let r: Vec<_> = (0..3).chain(10..13).collect();
-
-for (i, (a, b)) in (0..3).zip(10..13).enumerate() {
-    println!("{i}: ({a}, {b})");
-}
-
-let r: Vec<_> = (0..3).cycle().take(7).collect();
-
-let palabras = vec!["hola mundo", "adios"];
-let r: Vec<_> = palabras.iter()
-    .flat_map(|s| s.split_whitespace())
-    .collect();
-
-let nums = vec![Some(1), None, Some(3)];
-let r: Vec<_> = nums.into_iter().flatten().collect();
-```
-
-### Big O de colecciones estándar
-
-| Operación | Vec | HashMap | BTreeMap | HashSet | BTreeSet | BinaryHeap |
-|-----------|-----|---------|----------|---------|----------|------------|
-| Insertar | O(1)* | O(1)** | O(log n) | O(1)** | O(log n) | O(log n) |
-| Obtener | O(1) | O(1)** | O(log n) | — | — | — |
-| Eliminar | O(n) | O(1)** | O(log n) | O(1)** | O(log n) | O(log n) |
-| Buscar | O(n) | O(1)** | O(log n) | O(1)** | O(log n) | O(n) |
-| Min/Max | O(1) | O(n) | O(log n) | O(n) | O(log n) | O(1) |
-| Ordenado | No | No | Sí | No | Sí | No |
-
-* Amortizado (ocasionalmente O(n) cuando crece)
-** Hash perfecto esperado; peor caso O(n)
-
-Fuente: [Rust std docs — sort](https://doc.rust-lang.org/std/primitive.slice.html#method.sort), [Vec docs](https://doc.rust-lang.org/std/vec/struct.Vec.html), [Iterator docs](https://doc.rust-lang.org/std/iter/trait.Iterator.html)
-
----
-
-## POO en Rust (composición sobre herencia)
-
-Rust no tiene clases ni herencia. Usa **traits + structs + composición**.
-
-```rust
-trait Contenido: Debug + Send + Sync {
-    fn metadatos(&self) -> &Metadatos;
-    fn reproducir(&self) -> String {
-        format!("▶️ Reproduciendo {}...", self.metadatos().titulo)
+#[cfg(test)]
+mod tests {
+    fn mitad(x: i32) -> Option<i32> {
+        if x % 2 == 0 { Some(x / 2) } else { None }
     }
-    fn obtener_info(&self) -> String;
-}
 
-struct Audio { metadatos: Metadatos, bitrate_kbps: u32, reproducciones: u64 }
-struct Video { metadatos: Metadatos, resolucion: String, formato: FormatoVideo, subtitulos: bool, reproducciones: u64 }
+    #[test]
+    fn test_option_some() {
+        assert_eq!(mitad(4), Some(2));
+    }
 
-impl Contenido for Audio { /* ... */ }
-impl Contenido for Video { /* ... */ }
+    #[test]
+    fn test_option_none() {
+        assert_eq!(mitad(3), None);
+    }
 
-// Composición: Vec de trait objects
-struct ListaReproduccion {
-    items: Vec<Box<dyn Contenido>>,
-}
-```
+    #[test]
+    fn test_option_combinators() {
+        let r = mitad(10).map(|x| x * 3);
+        assert_eq!(r, Some(15));
 
-| Concepto Python | Rust |
-|---|---|
-| Clase abstracta (ABC) | Trait |
-| Herencia simple | `impl Trait for Struct` |
-| Herencia múltiple | Múltiples traits |
-| `super().__init__()` | No existe; cada struct construye sus campos |
-| `@property` | Métodos getter |
-| Duck typing | Traits (estructural, compile-time) |
-| Mixin | Trait con métodos por defecto |
-| `dataclass` | `#[derive(Debug, Clone)]` |
-| Protocol (PEP 544) | Traits (nativos) |
+        let r = mitad(3).unwrap_or(-1);
+        assert_eq!(r, -1);
+    }
 
-Fuente: [The Rust Book — OOP](https://doc.rust-lang.org/book/ch17-00-oop.html)
+    #[test]
+    fn test_result() {
+        let ok: Result<i32, &str> = Ok(42);
+        assert_eq!(ok.unwrap(), 42);
 
----
-
-## Patrones de diseño
-
-| Patrón | Rust |
-|--------|------|
-| **Strategy** | Traits o closures |
-| **Builder** | Struct con métodos que retornan `Self` |
-| **Observer** | `tokio::sync::broadcast`, `mpsc`, `watch` |
-| **Factory** | `From`/`TryFrom`/`FromStr` |
-| **RAII** | `Drop` trait (nativo) |
-| **Newtype** | Tuple struct `struct Email(String)` |
-| **State** | `enum` + `match` exhaustivo |
-| **Adapter** | `From`/`Into` |
-| **Iterator** | `IntoIterator` / `Iterator` |
-
-```rust
-// Builder
-struct ServidorBuilder { host: String, port: u16, tls: bool }
-impl ServidorBuilder {
-    fn new(host: &str) -> Self { Self { host: host.into(), port: 8080, tls: false } }
-    fn port(mut self, p: u16) -> Self { self.port = p; self }
-    fn tls(mut self, e: bool) -> Self { self.tls = e; self }
-    fn build(self) -> Servidor { Servidor { host: self.host, port: self.port, tls: self.tls } }
-}
-
-// RAII — Drop se ejecuta al salir de ámbito
-struct Db { id: u32 }
-impl Drop for Db { fn drop(&mut self) { println!("Cerrando DB {}", self.id); } }
-
-// Newtype — tipos fuertes
-struct Email(String);
-struct Telefono(String);
-fn notificar(email: &Email, tlf: &Telefono) {}  // El compilador no permite mezclar
-
-// State — enum + match verificados
-enum Estado { Pendiente, EnProceso, Completado }
-fn transicion(actual: &Estado, nuevo: Estado) -> Result<(), String> {
-    match (actual, &nuevo) {
-        (Pendiente, EnProceso) | (EnProceso, Completado) | (Pendiente, Completado) => { Ok(()) }
-        (Completado, _) => Err("Completado no cambia".into()),
-        _ => Err("Transición inválida".into()),
+        let err: Result<i32, &str> = Err("fallo");
+        assert_eq!(err.unwrap_or(0), 0);
     }
 }
 ```
 
-Fuente: [Rust Design Patterns](https://rust-unofficial.github.io/patterns/)
+#### 💡 Memoria y rendimiento
+- `Option<&T>` tiene tamaño 0 overhead (optimización de puntero nulo: niche)
+- `Option<Box<T>>` también es del tamaño de un puntero (niche optimization)
+- `Result<T, E>` ocupa tamaño máximo entre T y E + discriminant
+- `?` operator se compila a early return condicional — tan eficiente como un goto
 
----
+#### ✅ Buenas prácticas
+- ✅ Usa `Option` para valores opcionales (mejor que null)
+- ✅ Usa `Result` para operaciones que pueden fallar
+- ✅ Usa `?` para propagar errores — evita `unwrap` en producción
+- ⚠️ No uses `unwrap()` o `expect()` sin una razón muy justificada
+- ❌ No uses `None` como `Some(error_sin_info)` — usa Result con errores concretos
 
-## Polimorfismo
+#### 🏗️ Metodología
+- `Option` -> operaciones que pueden no tener resultado (ej: buscar en colección)
+- `Result` -> operaciones que pueden fallar con causa (ej: E/S, parseo)
+- `?` -> propagación de errores en funciones que retornan Result
+- Combinadores (map, and_then, or_else) -> transformaciones sin match explícito
 
-Rust tiene tres formas, cada una con sus compensaciones.
+#### 🔗 Para saber más
+- [Rust Book — Option](https://doc.rust-lang.org/book/ch06-01-defining-an-enum.html)
+- [Rust Book — Error Handling](https://doc.rust-lang.org/book/ch09-00-error-handling.html)
+- [Rust by Example — Option](https://doc.rust-lang.org/rust-by-example/error/option_unwrap.html)
 
-### 1. Genéricos (monomorfización)
+### Error handling: thiserror y anyhow
 
+#### ¿Qué es?
+`thiserror` permite definir errores personalizados con derive macros. `anyhow` proporciona un tipo `Error` dinámico para errores ad-hoc. `thiserror` es para librerías (errores concretos), `anyhow` para aplicaciones (errores genéricos).
+
+🔗 [thiserror crate](https://docs.rs/thiserror/), [anyhow crate](https://docs.rs/anyhow/)
+
+#### Sintaxis básica
 ```rust
-fn sonido<T: Sonido>(cosa: T) { println!("{}", cosa.hacer_sonido()); }
-// Compilador genera N copias (1 por tipo concreto)
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum MiError {
+    #[error("archivo no encontrado: {0}")]
+    NoEncontrado(String),
+    #[error("error de red: {0}")]
+    Red(#[from] std::io::Error),
+    #[error("formato inválido en línea {linea}")]
+    Formato { linea: usize },
+}
+
+// Uso con anyhow (para aplicaciones)
+use anyhow::{Result, Context};
+
+fn procesar() -> Result<()> {
+    let data = std::fs::read_to_string("datos.txt")
+        .context("no se pudo leer el archivo de datos")?;
+    // ...
+    Ok(())
+}
 ```
 
-### 2. Trait objects (`dyn Trait`)
-
+#### 🧪 Cómo probarlo
 ```rust
-let cosas: Vec<Box<dyn Sonido>> = vec![Box::new(Perro), Box::new(Gato)];
-// Indirección vtable, colección heterogénea
-```
+#[cfg(test)]
+mod tests {
+    use thiserror::Error;
 
-### 3. Enum dispatch
+    #[derive(Error, Debug, PartialEq)]
+    enum CalcError {
+        #[error("división por cero")]
+        DivisionPorCero,
+        #[error("desbordamiento")]
+        Desbordamiento,
+    }
 
-```rust
-enum Animal { Perro(Perro), Gato(Gato) }
-impl Animal {
-    fn sonido(&self) -> String {
-        match self { Animal::Perro(p) => p.hacer_sonido(), Animal::Gato(g) => g.hacer_sonido() }
+    fn dividir(a: i32, b: i32) -> Result<i32, CalcError> {
+        if b == 0 { Err(CalcError::DivisionPorCero) }
+        else { Ok(a / b) }
+    }
+
+    #[test]
+    fn test_error_personalizado() {
+        assert_eq!(dividir(10, 0), Err(CalcError::DivisionPorCero));
+        assert_eq!(dividir(10, 2), Ok(5));
+    }
+
+    #[test]
+    fn test_error_mensaje() {
+        let err = CalcError::DivisionPorCero;
+        assert_eq!(err.to_string(), "división por cero");
     }
 }
-// Cero overhead, exhaustividad, pero conjunto cerrado de tipos
 ```
 
-| | Genéricos | `dyn Trait` | Enum dispatch |
-|---|---|---|---|
-| Overhead | Cero | 1 indirección vtable | Cero |
-| Binario | N copias | 1 copia | 1 copia |
-| Colección heterogénea | No | Sí | No (enum fijo) |
-| Extensible externamente | Sí | Sí | No |
+#### 💡 Memoria y rendimiento
+- `thiserror` genera tipos concretos en compilación: cero overhead en runtime
+- `anyhow::Error` es un trait object: asigna en heap y tiene indirección
+- `anyhow` es ideal para prototipos y aplicaciones; `thiserror` para librerías
+- La macro `#[from]` genera impl `From` automático (sin overhead extra)
 
-**¿Cuál usar?** Enum dispatch para conjuntos cerrados; genéricos para máximo rendimiento; `dyn Trait` para colecciones heterogéneas.
+#### ✅ Buenas prácticas
+- ✅ Usa `thiserror` en librerías: errores concretos, documentados, exhaustivos
+- ✅ Usa `anyhow` en binarios: errores ad-hoc con contexto
+- ⚠️ No mezcles `thiserror` y `anyhow` en el mismo módulo sin necesidad
+- ❌ No definas errores genéricos como `String` — usa enums con variantes específicas
+
+#### 🏗️ Metodología
+- Librerías: `thiserror` devuelve `Result<T, MiError>` específico
+- Aplicaciones: `anyhow` devuelve `anyhow::Result<T>` genérico
+- La aplicación puede convertir errores de librerías con `Context`
+
+#### 🔗 Para saber más
+- [thiserror docs](https://docs.rs/thiserror/)
+- [anyhow docs](https://docs.rs/anyhow/)
+- [Rust Book — Custom Error Types](https://doc.rust-lang.org/rust-by-example/error/multiple_error_types/define_error_type.html)
+
+### Traits, derives, bounds, impl Trait, dyn Trait
+
+#### ¿Qué es?
+Los **traits** son la herramienta de abstracción de Rust (equivalente a interfaces en otros lenguajes). Definen comportamiento compartido. `derive` genera implementaciones automáticas. `impl Trait` y `dyn Trait` ofrecen dos formas de polimorfismo.
+
+🔗 [Rust Book — Traits](https://doc.rust-lang.org/book/ch10-02-traits.html)
+
+#### Sintaxis básica
+```rust
+// Definir un trait
+trait Area {
+    fn area(&self) -> f64;
+}
+
+// Implementar
+struct Circulo { radio: f64 }
+impl Area for Circulo {
+    fn area(&self) -> f64 { std::f64::consts::PI * self.radio * self.radio }
+}
+
+// Derive automático
+#[derive(Debug, Clone, PartialEq)]
+struct Punto { x: i32, y: i32 }
+
+// impl Trait (monomorfización)
+fn imprimir_area(forma: &impl Area) {
+    println!("{}", forma.area());
+}
+
+// Trait bounds con genéricos
+fn area_doble<T: Area>(forma: &T) -> f64 {
+    forma.area() * 2.0
+}
+
+// dyn Trait (trait objects, dispatch dinámico)
+fn area_dinamica(forma: &dyn Area) -> f64 {
+    forma.area()
+}
+```
+
+#### 🧪 Cómo probarlo
+```rust
+#[cfg(test)]
+mod tests {
+    trait Sumable { fn sumar(&self, other: &Self) -> Self; }
+
+    impl Sumable for i32 {
+        fn sumar(&self, other: &i32) -> i32 { self + other }
+    }
+
+    fn sumar_gen<T: Sumable>(a: &T, b: &T) -> T {
+        a.sumar(b)
+    }
+
+    #[test]
+    fn test_trait() {
+        assert_eq!(sumar_gen(&5, &3), 8);
+    }
+
+    #[test]
+    fn test_derive_debug() {
+        #[derive(Debug)]
+        struct X { a: i32 }
+        let x = X { a: 42 };
+        assert_eq!(format!("{:?}", x), "X { a: 42 }");
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `impl Trait` y genéricos con bounds: **monomorfización** — código duplicado por tipo, máximo rendimiento
+- `dyn Trait`: **vtable** — indirección, un sola implementación, menor rendimiento
+- Los derives se expanden en compile-time: no afectan a runtime
+- Los trait objects tienen tamaño de 2 palabras (data ptr + vtable ptr)
+
+#### ✅ Buenas prácticas
+- ✅ Prefiere genéricos con `impl Trait` o bounds para máximo rendimiento
+- ✅ Usa `dyn Trait` cuando necesites heterogeneidad (colecciones de diferentes tipos)
+- ✅ Deriva `Debug`, `Clone`, `PartialEq` siempre que tenga sentido
+- ⚠️ No abuses de `dyn Trait` en hot paths — la indirección tiene coste
+- ❌ No implementes traits externos para tipos externos (orphan rule)
+
+#### 🏗️ Metodología
+- Genéricos + bounds: APIs genéricas, librerías, hot paths
+- `impl Trait`: parámetros de función simples
+- `dyn Trait`: colecciones heterogéneas, plugins, inyección de dependencias
+
+#### 🔗 Para saber más
+- [Rust Book — Traits](https://doc.rust-lang.org/book/ch10-02-traits.html)
+- [Rust Book — Trait Objects](https://doc.rust-lang.org/book/ch17-02-trait-objects.html)
+- [Rust by Example — Traits](https://doc.rust-lang.org/rust-by-example/trait.html)
+
+### Smart Pointers: Box, Rc, Arc, Cell, RefCell, Mutex
+
+#### ¿Qué es?
+Los smart pointers envuelven valores con comportamiento adicional. `Box<T>` asigna en heap, `Rc<T>` permite ownership compartido (single-thread), `Arc<T>` es thread-safe, `Cell`/`RefCell` proporcionan mutabilidad interior.
+
+🔗 [Rust Book — Smart Pointers](https://doc.rust-lang.org/book/ch15-00-smart-pointers.html)
+
+#### Sintaxis básica
+```rust
+use std::rc::Rc;
+use std::sync::{Arc, Mutex};
+use std::cell::RefCell;
+
+// Box: heap allocation
+let b = Box::new(42);
+let lista = Box::new(Lista::Nodo(1, Box::new(Lista::Nodo(2, Box::new(Lista::Fin)))));
+
+// Rc: referencia contada (single-thread)
+let a = Rc::new(42);
+let b = Rc::clone(&a); // incrementa contador
+println!("{}", Rc::strong_count(&a)); // 2
+
+// Arc: referencia contada thread-safe
+let a = Arc::new(42);
+let b = Arc::clone(&a);
+
+// RefCell: mutabilidad interior en tiempo de ejecución
+let celda = RefCell::new(42);
+*celda.borrow_mut() = 100;
+println!("{}", celda.borrow());
+
+// Mutex: acceso exclusivo entre threads
+let m = Mutex::new(42);
+{
+    let mut dato = m.lock().unwrap();
+    *dato = 100;
+} // drop libera el lock
+```
+
+#### 🧪 Cómo probarlo
+```rust
+#[cfg(test)]
+mod tests {
+    use std::rc::Rc;
+    use std::sync::{Arc, Mutex};
+
+    #[test]
+    fn test_box() {
+        let b = Box::new(42);
+        assert_eq!(*b, 42);
+    }
+
+    #[test]
+    fn test_rc() {
+        let r = Rc::new(5);
+        assert_eq!(Rc::strong_count(&r), 1);
+        let _r2 = Rc::clone(&r);
+        assert_eq!(Rc::strong_count(&r), 2);
+    }
+
+    #[test]
+    fn test_mutex() {
+        let m = Mutex::new(10);
+        {
+            let mut v = m.lock().unwrap();
+            *v += 5;
+        }
+        assert_eq!(*m.lock().unwrap(), 15);
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `Box<T>`: 1 palabra en stack (puntero), datos en heap. Sin overhead de contador
+- `Rc<T>`: 2 palabras (puntero + contador). El contador es `usize` — no atómico
+- `Arc<T>`: 2 palabras (puntero + contador atómico). Más caro en incrementos/decrementos
+- `RefCell<T>`: verifica borrows en runtime (no en compilación) — paniquea si violas reglas
+- `Mutex<T>`: bloquea el hilo si está en uso. Overhead de syscall en contención
+
+#### ✅ Buenas prácticas
+- ✅ Usa `Box` para tipos de tamaño dinámico (enums recursivos, trait objects)
+- ✅ Usa `Rc`/`Arc` para ownership compartido (solo cuando no puedas tener un único owner)
+- ⚠️ `RefCell` rompe las garantías de borrow checking en compile-time — úsalo con cuidado
+- ❌ No uses `Rc` cuando necesites threads — usa `Arc`
+- ❌ No uses `Arc` en single-thread — Rc es más ligero
+
+#### 🏗️ Metodología
+- Un único propietario: valor directo o `Box`
+- Múltiples propietarios (single-thread): `Rc`
+- Múltiples propietarios (multi-thread): `Arc`
+- Mutabilidad interior: `Cell` (Copy), `RefCell` (no-Copy), `Mutex` (threads)
+
+#### 🔗 Para saber más
+- [Rust Book — Smart Pointers](https://doc.rust-lang.org/book/ch15-00-smart-pointers.html)
+- [Rust by Example — Box](https://doc.rust-lang.org/rust-by-example/std/box.html)
+- [Rustonomicon — Interior Mutability](https://doc.rust-lang.org/nomicon/borrow-splitting.html)
+
 
 ---
 
-## Multimedia
+## POO y patrones de diseño
 
-### image crate (PNG, JPEG, GIF, BMP, WebP, ICO)
+### Structs + impl (composición sobre herencia)
 
+#### ¿Qué es?
+Rust no tiene clases ni herencia. En su lugar, usa **structs** para datos e **impl blocks** para métodos, con **composición** como alternativa a la herencia. Los **traits** proporcionan polimorfismo sin jerarquías de clases.
+
+🔗 [Rust Book — OOP](https://doc.rust-lang.org/book/ch17-00-oop.html)
+
+#### Sintaxis básica
 ```rust
-use image: "img/guia_0_100_rust/guia_0_100_rust_cover-1200.webp"
+struct Multimedia {
+    nombre: String,
+    duracion: u32,
+}
 
-let img = open("foto.png")?;
-img.save("copia.png")?;
+impl Multimedia {
+    fn new(nombre: &str, duracion: u32) -> Self {
+        Self { nombre: nombre.to_string(), duracion }
+    }
+
+    fn describir(&self) -> String {
+        format!("{} ({}s)", self.nombre, self.duracion)
+    }
+}
+
+// Composición en lugar de herencia
+struct Video {
+    base: Multimedia,
+    resolucion: (u32, u32),
+}
+
+struct Audio {
+    base: Multimedia,
+    bitrate: u32,
+}
+```
+
+#### 🧪 Cómo probarlo
+```rust
+#[cfg(test)]
+mod tests {
+    struct Punto { x: i32, y: i32 }
+
+    impl Punto {
+        fn new(x: i32, y: i32) -> Self { Self { x, y } }
+        fn distancia(&self, otro: &Punto) -> f64 {
+            ((self.x - otro.x).pow(2) + (self.y - otro.y).pow(2)) as f64
+        }
+    }
+
+    #[test]
+    fn test_struct_methods() {
+        let a = Punto::new(0, 0);
+        let b = Punto::new(3, 4);
+        assert_eq!(a.distancia(&b), 5.0);
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- Composición sin herencia: no hay vtable overhead (como en C++)
+- Layout lineal en memoria (más cache-friendly que jerarquías con herencia)
+- `impl` blocks se compilan a funciones estáticas: cero overhead
+
+#### ✅ Buenas prácticas
+- ✅ Prefiere composición sobre herencia
+- ✅ Usa traits para definir comportamiento compartido en lugar de clases base
+- ⚠️ No intentes emular herencia con structs anidados a menos que sea necesario
+- ❌ No crees jerarquías profundas con composición — refactoriza en traits
+
+#### 🏗️ Metodología
+- Structs planos: datos + métodos (90% de los casos)
+- Composición: struct A contiene struct B (relación "tiene un")
+- Traits: comportamiento compartido entre tipos no relacionados
+
+#### 🔗 Para saber más
+- [Rust Book — OOP](https://doc.rust-lang.org/book/ch17-00-oop.html)
+- [Rust by Example — impl](https://doc.rust-lang.org/rust-by-example/fn/methods.html)
+
+### Patrones de diseño en Rust
+
+#### ¿Qué es?
+Los patrones de diseño se adaptan al paradigma del lenguaje. Rust tiene implementaciones idiomáticas para los patrones clásicos, aprovechando ownership, traits y enums.
+
+| Patrón | En Rust | Ejemplo |
+|--------|---------|---------|
+| Strategy | Funciones/closures + traits | `Box<dyn Fn()>` o genéricos |
+| Observer | Canales (std::sync::mpsc) o callbacks | `tokio::sync::broadcast` |
+| Factory | Funciones constructoras o From trait | `T::new()`, `From<T>` |
+| Singleton | No recommended; módulos como singleton | `once_cell::sync::Lazy` |
+| Builder | Struct builder con métodos chain | `struct ConfigBuilder` |
+| Adapter | Wrapper struct + From/Into traits | `struct MiTipo(Wrapped)` |
+
+#### Sintaxis básica: Builder
+```rust
+#[derive(Debug)]
+struct Config {
+    host: String,
+    puerto: u16,
+    timeout: u32,
+}
+
+struct ConfigBuilder {
+    host: String,
+    puerto: u16,
+    timeout: u32,
+}
+
+impl ConfigBuilder {
+    fn new() -> Self {
+        Self { host: "localhost".into(), puerto: 8080, timeout: 30 }
+    }
+
+    fn host(mut self, host: &str) -> Self { self.host = host.into(); self }
+    fn puerto(mut self, puerto: u16) -> Self { self.puerto = puerto; self }
+    fn build(self) -> Config {
+        Config { host: self.host, puerto: self.puerto, timeout: self.timeout }
+    }
+}
+
+let config = ConfigBuilder::new()
+    .host("example.com")
+    .puerto(443)
+    .build();
+```
+
+#### 🧪 Cómo probarlo
+```rust
+#[cfg(test)]
+mod tests {
+    trait Estrategia { fn ejecutar(&self, a: i32, b: i32) -> i32; }
+
+    struct Suma;
+    impl Estrategia for Suma { fn ejecutar(&self, a: i32, b: i32) -> i32 { a + b } }
+
+    struct Resta;
+    impl Estrategia for Resta { fn ejecutar(&self, a: i32, b: i32) -> i32 { a - b } }
+
+    fn calcular(estrategia: &dyn Estrategia, a: i32, b: i32) -> i32 {
+        estrategia.ejecutar(a, b)
+    }
+
+    #[test]
+    fn test_strategy_pattern() {
+        assert_eq!(calcular(&Suma, 10, 5), 15);
+        assert_eq!(calcular(&Resta, 10, 5), 5);
+    }
+
+    #[test]
+    fn test_builder() {
+        #[derive(Debug, PartialEq)]
+        struct Conf { host: String, port: u16 }
+
+        let c = Conf { host: "test".into(), port: 80 };
+        assert_eq!(c, Conf { host: "test".into(), port: 80 });
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- Builder pattern: cero overhead si usa tipos concretos (no Box)
+- Strategy con genéricos: monomorfización, máximo rendimiento
+- Strategy con `dyn Fn`: indirección de vtable, overhead mínimo
+- Los patrones en Rust suelen resolverse con tipos concretos y traits
+
+#### ✅ Buenas prácticas
+- ✅ Usa el builder pattern para constructores con muchos parámetros
+- ✅ Prefiere `From`/`Into` traits sobre `new()` conversiones
+- ⚠️ Singleton no es idiomático en Rust — usa módulos con lazy_static o once_cell
+- ❌ No implements Factory pattern con `Box<dyn>` a menos que necesites heterogeneidad
+
+#### 🔗 Para saber más
+- [Rust Design Patterns](https://rust-unofficial.github.io/patterns/)
+- [Rust by Example — Builder](https://doc.rust-lang.org/rust-by-example/types/conversions.html)
+
+---
+
+## Polimorfismo en detalle
+
+### Polimorfismo paramétrico (genéricos)
+
+#### ¿Qué es?
+Rust ofrece polimorfismo paramétrico vía genéricos. A diferencia de Java (erasure), Rust **monomorfiza** los genéricos: genera código máquina específico para cada combinación de tipos usada.
+
+🔗 [Rust Book — Generics](https://doc.rust-lang.org/book/ch10-01-syntax.html)
+
+#### Sintaxis básica
+```rust
+// Función genérica
+fn el_mayor<T: PartialOrd>(a: T, b: T) -> T {
+    if a > b { a } else { b }
+}
+
+// Struct genérico
+struct Par<T, U> { primero: T, segundo: U }
+
+// impl genérico
+impl<T> Par<T, T> {
+    fn ambos(self) -> (T, T) { (self.primero, self.segundo) }
+}
+
+// Const genéricos (Rust 1.51+)
+fn suma_array<const N: usize>(arr: &[i32; N]) -> i32 {
+    arr.iter().sum()
+}
+```
+
+#### 🧪 Cómo probarlo
+```rust
+#[cfg(test)]
+mod tests {
+    fn id<T>(x: T) -> T { x }
+
+    #[test]
+    fn test_generic_fn() {
+        assert_eq!(id(42), 42);
+        assert_eq!(id("hola"), "hola");
+    }
+
+    #[test]
+    fn test_generic_struct() {
+        let p = (1, "a");
+        assert_eq!(p, (1, "a"));
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- Monomorfización: el compilador duplica el código por cada tipo usado
+- Sin overhead en runtime: cada instancia tiene su propia implementación
+- El tamaño del binario puede crecer — `dyn Trait` lo evita (trade-off)
+- Const genéricos: completamente en compilación, zero-cost
+
+#### ✅ Buenas prácticas
+- ✅ Prefiere monomorfización en hot paths para máximo rendimiento
+- ✅ Usa `const` genéricos para arrays de tamaño fijo
+- ⚠️ La monomorfización puede inflar el binario — agrupa tipos similares si es crítico
+- ❌ No pongas demasiados bounds en genéricos sin necesidad
+
+#### 🔗 Para saber más
+- [Rust Book — Generics](https://doc.rust-lang.org/book/ch10-01-syntax.html)
+- [Rust by Example — Generics](https://doc.rust-lang.org/rust-by-example/generics.html)
+
+### Polimorfismo ad-hoc (traits)
+
+#### ¿Qué es?
+El polimorfismo ad-hoc permite que diferentes tipos respondan a la misma interfaz de formas diferentes. En Rust se implementa con **traits** y operator overloading.
+
+🔗 [Rust Book — Traits](https://doc.rust-lang.org/book/ch10-02-traits.html)
+
+#### Sintaxis básica
+```rust
+use std::ops::Add;
+
+#[derive(Debug, Clone, Copy)]
+struct Punto { x: i32, y: i32 }
+
+impl Add for Punto {
+    type Output = Punto;
+    fn add(self, other: Punto) -> Punto {
+        Punto { x: self.x + other.x, y: self.y + other.y }
+    }
+}
+
+// Overloading con operador +
+let a = Punto { x: 1, y: 2 };
+let b = Punto { x: 3, y: 4 };
+let c = a + b; // usa nuestro impl Add
+```
+
+#### 🧪 Cómo probarlo
+```rust
+#[cfg(test)]
+mod tests {
+    use std::ops::Add;
+
+    #[derive(Debug, PartialEq)]
+    struct Metros(f64);
+
+    impl Add for Metros {
+        type Output = Metros;
+        fn add(self, other: Metros) -> Metros { Metros(self.0 + other.0) }
+    }
+
+    #[test]
+    fn test_operator_overloading() {
+        assert_eq!(Metros(10.0) + Metros(5.0), Metros(15.0));
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- Operator overloading via traits: se resuelve en compilación (monomorfización)
+- Igual de eficiente que una función manual
+- `Copy` + `Add` evita clonaciones innecesarias
+
+#### ✅ Buenas prácticas
+- ✅ Implementa `Add`, `Mul`, etc. para tipos matemáticos (vectores, matrices)
+- ⚠️ No abuses del operator overloading — si no es obvio, usa métodos con nombre
+- ❌ No implementes `Add` para tipos donde `+` no tenga sentido semántico
+
+#### 🔗 Para saber más
+- [Rust std::ops](https://doc.rust-lang.org/std/ops/index.html)
+- [Rust by Example — Operator Overloading](https://doc.rust-lang.org/rust-by-example/trait/ops.html)
+
+---
+
+## Interacción con contenido multimedia
+
+### image crate (PNG, JPEG, WebP, GIF)
+
+#### ¿Qué es?
+La crate `image` es la librería estándar de Rust para procesamiento de imágenes. Soporta decenas de formatos, lectura/escritura, redimensionado, recorte y conversión.
+
+🔗 [image crate](https://docs.rs/image/)
+
+#### Sintaxis básica
+```rust
+use image::{GenericImageView, ImageFormat};
+
+// Cargar y obtener información
+let img = image::open("foto.png")?;
+println!("{}x{}", img.width(), img.height());
 
 // Redimensionar
-let pequena = img.resize(200, 200, image: "img/guia_0_100_rust/guia_0_100_rust_cover-1200.webp"
-pequena.save("thumb.jpg")?;
-
-// Recortar
-let recorte = img.crop_imm(100, 100, 300, 300);
-
-// Desenfocar
-let borroso = image: "img/guia_0_100_rust/guia_0_100_rust_cover-1200.webp"
+let redimensionada = img.resize(800, 600, image::imageops::FilterType::Lanczos3);
+redimensionada.save("foto_800x600.jpg")?;
 
 // Convertir formato
-img.save_with_format("output.webp", ImageFormat::WebP)?;
+let img = image::open("foto.png")?;
+img.save_with_format("foto.webp", ImageFormat::WebP)?;
 
-// Desde/hacia bytes
-use std::io::Cursor;
-let mut bytes: Vec<u8> = Vec::new();
-img.write_to(&mut Cursor::new(&mut bytes), ImageFormat::Png)?;
-let img2 = image: "img/guia_0_100_rust/guia_0_100_rust_cover-1200.webp"
+// Recortar
+let recortada = img.crop_imm(100, 100, 200, 200);
+recortada.save("recorte.png")?;
 
-// Filtros
-use image: "img/guia_0_100_rust/guia_0_100_rust_cover-1200.webp"
-let filtrada = img.resize_exact(200, 200, Gaussian);
+// Escala de grises
+let gris = img.grayscale();
+gris.save("gris.jpg")?;
 ```
 
-### imageproc (procesamiento avanzado)
-
+#### 🧪 Cómo probarlo
 ```rust
-// use imageproc::{drawing, contours, morphology, template_matching};
-```
+#[cfg(test)]
+mod tests {
+    use image::{RgbImage, Rgb};
 
-### GIFs animados
-
-```rust
-use gif::{Encoder, Frame, Repeat};
-use std::fs::File;
-
-let mut encoder = Encoder::new(
-    File::create("animado.gif")?,
-    100, 100,
-    &[0, 0, 0],
-)?;
-encoder.set_repeat(Repeat::Infinite)?;
-
-for i in 0..10 {
-    let mut pixels = vec![0; 100 * 100 * 3];
-    let frame = Frame::from_rgb(100, 100, &pixels);
-    encoder.write_frame(&frame)?;
+    #[test]
+    fn test_crear_imagen() {
+        let mut img = RgbImage::new(2, 2);
+        img.put_pixel(0, 0, Rgb([255, 0, 0]));
+        img.put_pixel(1, 0, Rgb([0, 255, 0]));
+        assert_eq!(img.width(), 2);
+        assert_eq!(img.height(), 2);
+    }
 }
 ```
 
-### 2D rendering (raqote)
+#### 💡 Memoria y rendimiento
+- Las imágenes se cargan en memoria como `Vec<u8>` sin comprimir
+- Una imagen 4K (3840x2160) RGBA ocupa ~32 MB en RAM
+- El decodificador es streaming para JPEG (línea por línea)
+- PNG/WebP se decodifican completamente antes de acceder a los píxeles
 
+#### ✅ Buenas prácticas
+- ✅ Usa `image::open` para cargar cualquier formato soportado
+- ✅ Usa `save_with_format` para controlar el formato de salida
+- ⚠️ No redimensiones con `Nearest` para reducciones grandes (aliasing)
+- ❌ No cargues imágenes enormes sin verificar el tamaño primero
+
+#### 🔗 Para saber más
+- [image crate docs](https://docs.rs/image/)
+- [Rust Cookbook — Images](https://rust-lang-nursery.github.io/rust-cookbook/science/misc/image_processing.html)
+
+### Procesamiento de audio
+
+#### ¿Qué es?
+Para procesamiento de audio en Rust, las crates principales son `hound` (WAV), `rodio` (reproducción) y `symphonia` (decodificación de múltiples formatos).
+
+🔗 [hound crate](https://docs.rs/hound/), [rodio crate](https://docs.rs/rodio/)
+
+#### Sintaxis básica
 ```rust
-// use raqote::{DrawTarget, Source, PathBuilder, StrokeStyle, DrawOptions};
-```
-
-### Audio
-
-```rust
-// hound — leer WAV
+// Leer WAV con hound
 use hound::WavReader;
+
 let mut reader = WavReader::open("audio.wav")?;
 let spec = reader.spec();
-println!("{:?}", spec);
-let samples: Vec<i16> = reader.samples::<i16>()
+println!("{:?}", spec); // 44100 Hz, 16 bits, stereo
+
+// Acceder a muestras
+let muestras: Vec<i16> = reader.samples::<i16>()
     .filter_map(|s| s.ok())
     .collect();
+
+// Reproducir con rodio
+use rodio::{OutputStream, Source, source::SineWave};
+let (_stream, handle) = OutputStream::try_default()?;
+let source = SineWave::new(440.0); // La A4
+handle.play_raw(source.convert_samples());
+std::thread::sleep(std::time::Duration::from_secs(1));
 ```
 
-### FFmpeg bindings
-
+#### 🧪 Cómo probarlo
 ```rust
-// use ffmpeg_next as ffmpeg;
-// ffmpeg::init()?;
-// let mut ictx = ffmpeg::format::input(&path)?;
+#[cfg(test)]
+mod tests {
+    use hound::{WavSpec, WavWriter, WavReader};
+    use std::io::Cursor;
+
+    #[test]
+    fn test_write_read_wav() {
+        let spec = WavSpec {
+            channels: 1, sample_rate: 44100,
+            bits_per_sample: 16, sample_format: hound::SampleFormat::Int,
+        };
+        let mut buf = Cursor::new(Vec::new());
+        {
+            let mut writer = WavWriter::new(&mut buf, spec).unwrap();
+            for s in 0..100 { writer.write_sample(s as i16).unwrap(); }
+        }
+        buf.set_position(0);
+        let reader = WavReader::new(buf).unwrap();
+        assert_eq!(reader.len(), 100);
+    }
+}
 ```
 
-| Crate | Propósito |
-|-------|-----------|
-| `image` | Cargar, guardar, redimensionar, recortar, filtrar imágenes (PNG, JPEG, GIF, BMP, WebP, ICO) |
-| `imageproc` | Procesamiento: dibujo, contornos, morfología, template matching |
-| `gif` | Decodificar/crear GIFs animados |
-| `raqote` | Render 2D tipo Skia |
-| `symphonia` | Decodificación de audio (MP3, FLAC, Ogg, WAV, AAC) |
-| `kira` | Reproducción de audio |
-| `hound` | WAV read/write |
-| `rodio` | Reproducción simple de audio |
-| `ffmpeg-next` | FFmpeg bindings seguros |
+#### 💡 Memoria y rendimiento
+- WAV sin comprimir: ~10 MB/minuto a 44100 Hz/16 bits/stereo
+- hound lee/escribe muestras en streaming: no carga todo en memoria
+- rodio usa buffers internos para reproducción continua
 
-Fuente: [image crate docs](https://docs.rs/image/), [imageproc docs](https://docs.rs/imageproc/), [gif crate](https://docs.rs/gif/), [symphonia docs](https://docs.rs/symphonia/), [kira docs](https://docs.rs/kira/)
+#### ✅ Buenas prácticas
+- ✅ Usa hound para leer/escribir WAV directamente
+- ✅ Usa rodio para reproducción en tiempo real
+- ⚠️ El audio en tiempo real necesita manejo cuidadoso de buffers (evita underruns)
+- ❌ No proceses audio en el hilo principal de UI — usa un hilo separado
+
+#### 🔗 Para saber más
+- [hound crate](https://docs.rs/hound/)
+- [rodio crate](https://docs.rs/rodio/)
+- [symphonia crate](https://docs.rs/symphonia/)
+
 
 ---
 
 ## Bases de datos
 
-| Librería | Async | ORM | BD |
-|----------|-------|-----|----|
-| **Diesel** | No | ORM | Pg, MySQL, SQLite |
-| **SQLx** | Sí | Query builder | Pg, MySQL, SQLite |
-| **SeaORM** | Sí | ORM | Pg, MySQL, SQLite |
-| **redis-rs** | Sí | No | Redis |
-| **mongodb** | Sí | Driver | MongoDB |
+### Diesel (ORM)
 
-```rust
-// SQLx — queries verificadas en compilación
-use sqlx::postgres::PgPool;
-#[derive(sqlx::FromRow)]
-struct User { id: i32, nombre: String, email: String }
+#### ¿Qué es?
+Diesel es el ORM más maduro de Rust. Es seguro en tipos, generación de esquemas en compilación, y compatible con PostgreSQL, MySQL y SQLite. Define la estructura de la base de datos en Rust y genera consultas verificadas en compilación.
 
-async fn crear(pool: &PgPool) -> Result<User, sqlx::Error> {
-    sqlx::query_as("INSERT INTO usuarios (nombre) VALUES ($1) RETURNING *")
-        .bind("Ana").fetch_one(pool).await
-}
+🔗 [Diesel docs](https://diesel.rs/)
 
-// Diesel — ORM sync, schema first
-// #[derive(Queryable, Insertable)]
-// #[diesel(table_name = usuarios)]
-// struct User { id: i32, nombre: String }
-// usuarios.filter(email.eq("a@b.com")).first(&mut conn)
-
-// Redis
-use redis::AsyncCommands;
-let mut conn = client.get_multiplexed_async_connection().await?;
-conn.set("clave", "valor").await?;
-let v: String = conn.get("clave").await?;
-
-// Migraciones
-// SQLx: migrations/ archivos .sql + sqlx::migrate!("./migrations")
-// Diesel: diesel migration generate nombre
-```
-
-Fuente: [SQLx docs](https://docs.rs/sqlx/), [Diesel docs](https://diesel.rs/), [SeaORM docs](https://www.sea-ql.org/SeaORM/)
-
----
-
-## WebSockets
-
+#### Sintaxis básica
 ```toml
 [dependencies]
-axum = { version = "0.8", features = ["ws"] }
-tokio = { version = "1", features = ["full"] }
+diesel = { version = "2", features = ["postgres"] }
+diesel_cli = { version = "2", features = ["postgres"] }
 ```
 
 ```rust
-use axum::extract::ws::{WebSocket, WebSocketUpgrade, Message};
-
-async fn ws_handler(ws: WebSocketUpgrade) -> impl IntoResponse {
-    ws.on_upgrade(move |socket| manejar(socket))
-}
-
-async fn manejar(mut socket: WebSocket) {
-    while let Some(Ok(msg)) = socket.recv().await {
-        match msg {
-            Message::Text(t) => { socket.send(Message::Text(format!("Echo: {t}"))).await.unwrap(); }
-            Message::Close(_) => break,
-            _ => {}
-        }
+// schema.rs (generado por diesel_cli)
+table! {
+    usuarios (id) {
+        id -> Int4,
+        nombre -> Varchar,
+        email -> Varchar,
+        activo -> Bool,
     }
 }
 
-// Broadcast con tokio::sync::broadcast
-async fn ws_broadcast(ws: WebSocketUpgrade, tx: Arc<broadcast::Sender<String>>) -> impl IntoResponse {
-    ws.on_upgrade(move |socket| async {
-        let mut rx = tx.subscribe();
-        loop {
-            tokio::select! {
-                msg = socket.recv() => { if let Some(Ok(Message::Text(t))) = msg { tx.send(t).ok(); } else { break; } }
-                msg = rx.recv() => { if let Ok(t) = msg { socket.send(Message::Text(t)).await.unwrap(); } }
-            }
-        }
-    })
+// models.rs
+#[derive(Queryable, Selectable)]
+#[diesel(table_name = crate::schema::usuarios)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+struct Usuario {
+    id: i32,
+    nombre: String,
+    email: String,
+    activo: bool,
+}
+
+// Consultas
+use crate::schema::usuarios::dsl::*;
+let results = usuarios.filter(activo.eq(true))
+    .limit(10)
+    .load::<Usuario>(&mut conn)?;
+```
+
+#### 🧪 Cómo probarlo
+```rust
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_query_builder() {
+        use diesel::prelude::*;
+        let query = diesel::dsl::select(1.into_sql::<diesel::sql_types::Integer>());
+        assert!(query.is_some());
+    }
 }
 ```
 
-Alternativa: `tokio-tungstenite` para WebSocket sin servidor HTTP.
+#### 💡 Memoria y rendimiento
+- Diesel usa query builders en compilación — cero overhead en runtime
+- Las consultas se verifican contra el esquema en compilación
+- La conexión a BD es pooling: reusa conexiones para evitar overhead de handshake
 
-Fuente: [axum WebSocket docs](https://docs.rs/axum/latest/axum/extract/ws/index.html)
+#### ✅ Buenas prácticas
+- ✅ Usa `diesel_cli` para generar schema.rs automáticamente
+- ✅ Usa migrations para cambios de esquema versionados
+- ⚠️ No exponer queries SQL crudas sin verificar — usa el DSL siempre que puedas
+- ❌ No compartas una conexión entre threads sin pool
+
+#### 🔗 Para saber más
+- [Diesel Getting Started](https://diesel.rs/guides/getting-started)
+- [Diesel docs](https://docs.diesel.rs/)
+
+### SQLx (async, compile-time checked)
+
+#### ¿Qué es?
+SQLx es un crate async para SQL que verifica las queries en compilación (contra una BD real o con un archivo de datos). Soporta PostgreSQL, MySQL, SQLite. No es ORM: escribes SQL directamente.
+
+🔗 [SQLx docs](https://github.com/launchbadge/sqlx)
+
+#### Sintaxis básica
+```rust
+use sqlx::postgres::PgPool;
+
+let pool = PgPool::connect("postgres://user:pass@localhost/db").await?;
+
+// Query verificada en compilación
+let usuarios: Vec<(i32, String)> = sqlx::query_as(
+    "SELECT id, nombre FROM usuarios WHERE activo = $1"
+)
+    .bind(true)
+    .fetch_all(&pool)
+    .await?;
+```
+
+#### 🧪 Cómo probarlo
+```rust
+#[cfg(test)]
+mod tests {
+    use sqlx::PgPool;
+
+    #[sqlx::test]
+    async fn test_insert(pool: PgPool) -> sqlx::Result<()> {
+        sqlx::query("INSERT INTO test (val) VALUES ($1)")
+            .bind(42)
+            .execute(&pool)
+            .await?;
+        Ok(())
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- SQLx usa connection pooling por defecto: reusa conexiones
+- Las queries verificadas en compilación tienen costo de compilación adicional
+- En runtime: mínimo overhead, similar a drivers nativos
+
+#### ✅ Buenas prácticas
+- ✅ Prefiere SQLx para proyectos async (Tokio/Axum)
+- ✅ Usa `sqlx::test` para tests con BD real o docker
+- ⚠️ Las queries verificadas en compilación necesitan `DATABASE_URL` en build
+- ❌ No mezcles ORM y queries crudas sin una capa de abstracción
+
+#### 🔗 Para saber más
+- [SQLx docs](https://docs.rs/sqlx/)
+- [SQLx GitHub](https://github.com/launchbadge/sqlx)
 
 ---
 
-## Concurrencia
+## WebSockets y mensajería
 
-El borrow checker se aplica entre threads: si compila, **no tiene data races**.
+### tokio-tungstenite (WebSocket)
 
+#### ¿Qué es?
+`tokio-tungstenite` proporciona soporte WebSocket asíncrono sobre Tokio. Permite comunicación bidireccional en tiempo real entre cliente y servidor.
+
+🔗 [tokio-tungstenite](https://docs.rs/tokio-tungstenite/)
+
+#### Sintaxis básica
 ```rust
-let datos = vec![1, 2, 3];
-std::thread::spawn(move || { /* datos movido aquí */ });
-// datos.push(4);  // ERROR: datos ya no es válido
+use tokio_tungstenite::connect_async;
+use futures_util::StreamExt;
+
+let url = url::Url::parse("ws://echo.websocket.org").unwrap();
+let (ws_stream, _) = connect_async(url).await?;
+let (_, mut read) = ws_stream.split();
+
+while let Some(msg) = read.next().await {
+    let msg = msg?;
+    if let tokio_tungstenite::tungstenite::Message::Text(text) = msg {
+        println!("recibido: {text}");
+    }
+}
 ```
 
-### Tokio channels
-
+#### 🧪 Cómo probarlo
 ```rust
-// mpsc: múltiples productores, 1 consumidor
-let (tx, mut rx) = mpsc::channel::<String>(32);
-tokio::spawn(async move { tx.send("msg".into()).await.unwrap(); });
-while let Some(msg) = rx.recv().await { println!("{msg}"); }
-
-// broadcast: 1 productor, N consumidores
-let (tx, _) = broadcast::channel::<String>(16);
-let mut rx1 = tx.subscribe();
-let mut rx2 = tx.subscribe();
-tx.send("global".into()).unwrap();
-
-// watch: 1 valor que cambia, N observadores
-let (tx, mut rx) = watch::channel(0);
-tokio::spawn(async move { while rx.changed().await.is_ok() { println!("{}", *rx.borrow()); } });
-tx.send(1).unwrap();
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_websocket_url() {
+        let url = url::Url::parse("ws://localhost:8080/ws").unwrap();
+        assert_eq!(url.scheme(), "ws");
+        assert_eq!(url.host_str(), Some("localhost"));
+    }
+}
 ```
+
+#### 💡 Memoria y rendimiento
+- Las conexiones WebSocket son persistentes: sin overhead de handshake por mensaje
+- tokio-tungstenite maneja miles de conexiones concurrentes con una sola tarea por conexión
+- El overhead por conexión es ~2-4 KB (TCP buffer + estructura de estado)
+
+#### ✅ Buenas prácticas
+- ✅ Usa WebSocket para comunicación en tiempo real (chats, notificaciones, streaming)
+- ⚠️ Siempre maneja reconexión y heartbeats
+- ❌ No uses WebSocket para APIs REST tradicionales — HTTP es más simple y cacheable
+
+#### 🔗 Para saber más
+- [tokio-tungstenite docs](https://docs.rs/tokio-tungstenite/)
+- [MDN — WebSocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket)
+
+---
+
+## Concurrencia y paralelismo
+
+### Tokio: async/await
+
+#### ¿Qué es?
+Tokio es el runtime asíncrono de Rust. Proporciona un scheduler work-stealing para tareas async, E/S no bloqueante, timers, canales y sincronización. Es el estándar de facto para aplicaciones de red.
+
+🔗 [Tokio docs](https://tokio.rs/)
+
+#### Sintaxis básica
+```rust
+use tokio::time::{sleep, Duration};
+
+#[tokio::main]
+async fn main() {
+    let tarea1 = tokio::spawn(async {
+        sleep(Duration::from_millis(100)).await;
+        "tarea 1"
+    });
+
+    let tarea2 = tokio::spawn(async {
+        sleep(Duration::from_millis(50)).await;
+        "tarea 2"
+    });
+
+    let r1 = tarea1.await.unwrap();
+    let r2 = tarea2.await.unwrap();
+    println!("{r1} y {r2}");
+}
+```
+
+#### 🧪 Cómo probarlo
+```rust
+#[cfg(test)]
+mod tests {
+    #[tokio::test]
+    async fn test_async() {
+        let result = tokio::spawn(async { 42 }).await.unwrap();
+        assert_eq!(result, 42);
+    }
+
+    #[tokio::test]
+    async fn test_sleep() {
+        let start = std::time::Instant::now();
+        tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+        assert!(start.elapsed() >= std::time::Duration::from_millis(10));
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- Tokio usa un scheduler work-stealing: distribuye tareas entre hilos del thread pool
+- Cada tarea async ocupa ~1-2 KB de overhead (frente a ~8 KB de un hilo OS)
+- El cambio de contexto es ~0.1 µs (frente a ~1 µs para hilos de OS)
+- Para tareas CPU-bound, usa `spawn_blocking` (no bloquees el pool async)
+
+#### ✅ Buenas prácticas
+- ✅ Usa `#[tokio::main]` para entry points async
+- ✅ Usa `tokio::spawn` para tareas concurrentes
+- ⚠️ No bloquees tareas con `std::thread::sleep` — usa `tokio::time::sleep`
+- ❌ No mezcles async y sync sin `spawn_blocking`
+
+#### 🏗️ Metodología
+- I/O bound (red, disco): async con Tokio
+- CPU bound (cálculo pesado): `spawn_blocking` o hilos separados
+- Mixto: async con canales a workers CPU-bound
+
+#### 🔗 Para saber más
+- [Tokio tutorial](https://tokio.rs/tokio/tutorial)
+- [Rust Book — Async](https://doc.rust-lang.org/book/ch16-00-concurrency.html)
 
 ### Rayon: paralelismo CPU-bound
 
+#### ¿Qué es?
+Rayon convierte fácilmente iteraciones secuenciales en paralelo con `.par_iter()`. Usa un thread pool work-stealing para dividir el trabajo automáticamente.
+
+🔗 [Rayon docs](https://docs.rs/rayon/)
+
+#### Sintaxis básica
 ```rust
 use rayon::prelude::*;
-let suma: u64 = (0..1_000_000u64).into_par_iter().sum();
-let sorted: Vec<i32> = vec![3, 1, 4].par_sort(); // sort paralelo
+
+fn main() {
+    let nums: Vec<u64> = (0..1_000_000).collect();
+
+    // Secuencial
+    let suma: u64 = nums.iter().sum();
+
+    // Paralelo (cambia .iter() por .par_iter())
+    let suma_par: u64 = nums.par_iter().sum();
+
+    // Map-reduce paralelo
+    let resultado: u64 = (0..1_000_000u64)
+        .into_par_iter()
+        .map(|x| x * x)
+        .sum();
+}
 ```
 
-### Tabla de decisión
+#### 🧪 Cómo probarlo
+```rust
+#[cfg(test)]
+mod tests {
+    use rayon::prelude::*;
 
-| Escenario | Herramienta |
-|---|---|
-| I/O-bound (HTTP, BD) | Tokio async |
-| CPU-bound (cálculos) | Rayon |
-| 1:N productor-consumidor | `tokio::sync::mpsc` |
-| Broadcast 1:N | `tokio::sync::broadcast` |
-| Valor que cambia | `tokio::sync::watch` |
-| Estado exclusivo | `Arc<Mutex<T>>` |
-| Múltiples lectores | `Arc<RwLock<T>>` |
-| Background tasks | `tokio::spawn` |
-| Rate limiting | `tokio::sync::Semaphore` |
+    #[test]
+    fn test_par_iter() {
+        let v: Vec<i32> = (0..100).collect();
+        let sum: i32 = v.par_iter().sum();
+        assert_eq!(sum, 4950);
+    }
+}
+```
 
-Fuente: [Tokio docs](https://tokio.rs/tokio/tutorial), [Rayon docs](https://docs.rs/rayon/)
+#### 💡 Memoria y rendimiento
+- Rayon divide el trabajo en chunks y los distribuye entre hilos
+- El thread pool se inicializa una vez: número de hilos = núcleos lógicos
+- Overhead de división: ~1 µs por chunk — solo rentable para trabajo significativo
+- Recomendado para operaciones CPU-bound pesadas (cálculos, procesamiento de imágenes)
+
+#### ✅ Buenas prácticas
+- ✅ Usa `par_iter()` para operaciones CPU-bound con colecciones grandes
+- ✅ Usa `par_sort()` en lugar de `sort()` para vectores grandes (>10K elementos)
+- ⚠️ No uses Rayon para E/S (red, archivos) — prefiere Tokio o hilos
+- ❌ No anides par_iter() dentro de par_iter() — el pool se satura
+
+#### 🔗 Para saber más
+- [Rayon docs](https://docs.rs/rayon/)
+- [Rayon GitHub](https://github.com/rayon-rs/rayon)
+
+### Tabla de decisión: threading vs async vs Rayon
+
+| | threading | async (Tokio) | Rayon |
+|---|---|---|---|
+| **Propósito** | CPU-bound o I/O blocking | I/O-bound no bloqueante | CPU-bound paralelo |
+| **Overhead por tarea** | ~8 KB (pila) | ~1-2 KB | ~0 (pool reusado) |
+| **Context switch** | ~1 µs | ~0.1 µs | N/A (work-stealing) |
+| **Escala** | Cientos | Cientos de miles | Núcleos de CPU |
+| **Facilidad** | Manual (join, sync) | Fácil (async/await) | Muy fácil (par_iter) |
+| **Uso típico** | Cálculo pesado, FFI | Servidores web, BD | Procesamiento de datos |
+
 
 ---
 
-## Escala 0-100
+## Testing y calidad
 
-Cada nivel incluye lo que debes saber y un proyecto para fijar los conceptos.
+### Frameworks de testing en Rust
 
-### Nivel 0–15: Fundamentos
+Rust tiene soporte nativo de testing con `#[test]`. Además, existen herramientas especializadas:
 
-**Qué aprender:**
-- `fn main()`, `let`/`mut`, tipos primitivos (`i32`, `f64`, `bool`, `char`)
-- `println!`, `eprintln!`, `format!`
-- `if`/`else`, `loop`, `while`, `for x in collection`
-- `String` vs `&str`, `String::from()`, `push_str()`
-- `Vec<T>`: `vec![]`, `push()`, `pop()`, `len()`, indexación `[]`
-- Ownership: `let s2 = s1` mueve. Para compartir, usa `&` o `.clone()`. `i32`, `bool` implementan `Copy` — se copian automáticamente.
-- **Concepto clave**: entender **ownership** desde el día uno. No puedes tener dos `&mut` al mismo tiempo.
+| Framework | Propósito | Async? | CLI |
+|-----------|-----------|--------|-----|
+| `#[test]` (built-in) | Unit tests | No (necesita `#[tokio::test]`) | `cargo test` |
+| `cargo test` | Integración + doc tests | Sí | `cargo test --test` |
+| `proptest` | Property-based testing | No | `cargo test` |
+| `criterion` | Benchmarks | No | `cargo bench` |
+| `tarpaulin` | Cobertura | Sí | `cargo tarpaulin` |
 
+🔗 [Rust Book — Testing](https://doc.rust-lang.org/book/ch11-00-testing.html)
+
+#### Sintaxis básica
 ```rust
-fn main() {
-    let secreto = rand::random::<u32>() % 100 + 1;
-    let mut intentos = 0;
-    loop {
-        intentos += 1;
-        let mut entrada = String::new();
-        std::io::stdin().read_line(&mut entrada).unwrap();
-        let n: u32 = match entrada.trim().parse() {
-            Ok(n) => n,
-            Err(_) => { println!("No es número"); continue; }
-        };
-        if n < secreto { println!("Más grande"); }
-        else if n > secreto { println!("Más pequeño"); }
-        else { println!("¡Acertaste en {intentos}!"); break; }
-    }
-}
-```
+// Unit test
+pub fn suma(a: i32, b: i32) -> i32 { a + b }
 
-**Proyecto:** *Adivina el número* — número aleatorio con `rand::Rng`, pistas mayor/menor, contador de intentos, manejo de parse con `match`. Reflexión: ¿por qué `String::new()` y no `let s = ""`? (String vs &str, ownership).
-
-### Nivel 15–30: Structs, enums, traits
-
-**Qué aprender:**
-- Structs con campos, tuple structs, unit structs
-- `impl` blocks: métodos y funciones asociadas
-- Enums con/sin datos, `match` exhaustivo, `if let`, `while let`
-- `Option<T>`: `Some`/`None`, `unwrap`, `expect`, `map`
-- `Result<T, E>`: `Ok`/`Err`, `?` operator, `unwrap_or`
-- Traits: definirlos, implementarlos, trait bounds
-- `#[derive(Debug, Clone, PartialEq)]`
-- `HashMap<K, V>`: `insert`, `get`, `entry`
-- **Concepto clave**: el match exhaustivo — el compilador te obliga a cubrir todos los casos. `?` propaga errores automáticamente. Los traits son interfaces, no herencia.
-
-```rust
-#[derive(Debug, Clone, PartialEq)]
-enum Estado { Pendiente, Completada }
-struct Tarea { titulo: String, estado: Estado }
-struct Gestor { tareas: HashMap<u32, Tarea>, siguiente_id: u32 }
-impl Gestor {
-    fn new() -> Self { Self { tareas: HashMap::new(), siguiente_id: 1 } }
-    fn agregar(&mut self, titulo: &str) -> u32 {
-        let id = self.siguiente_id;
-        self.tareas.insert(id, Tarea { titulo: titulo.into(), estado: Estado::Pendiente });
-        self.siguiente_id += 1;
-        id
-    }
-    fn completar(&mut self, id: u32) -> Result<(), String> {
-        self.tareas.get_mut(&id).map(|t| t.estado = Estado::Completada).ok_or("No encontrada".into())
-    }
-}
-```
-
-**Proyecto:** *Gestor de tareas CLI* — comandos `add`, `list`, `done`, `rm`. Persistencia JSON con `serde_json`. Errores con `anyhow`. Usa `clap` o `std::env::args()`. Implementa `Drop` para mensaje al salir.
-
-### Nivel 30–45: Smart pointers e iterators
-
-**Qué aprender:**
-- `Box<T>`: heap allocation, tipos recursivos
-- `Rc<T>` / `Arc<T>`: reference counting
-- `RefCell<T>` / `Cell<T>` / `Mutex<T>`: interior mutability
-- Iterators: `Iterator` trait, adapters (`map`, `filter`, `fold`, `take`, `collect`)
-- Closures: `|args| expr`, `Fn`/`FnMut`/`FnOnce`
-- Slicing: `&[T]`, `split_at`, `windows`
-- **Concepto clave**: `Box` resuelve tipos de tamaño desconocido. `Rc` no es `Send` (no atómico). `RefCell` mueve el borrow check a runtime — panic si violas reglas.
-
-```rust
-enum Arbol<T> { Vacio, Nodo(T, Box<Arbol<T>>, Box<Arbol<T>>) }
-struct Fib { actual: u64, siguiente: u64 }
-impl Iterator for Fib {
-    type Item = u64;
-    fn next(&mut self) -> Option<u64> {
-        let n = self.actual + self.siguiente;
-        self.actual = self.siguiente;
-        self.siguiente = n;
-        Some(self.actual)
-    }
-}
-let suma: u64 = fib().take(20).filter(|&x| x % 2 == 0).map(|x| x * 2).sum();
-```
-
-**Proyecto:** *Árbol binario de búsqueda* con `Box`. Métodos: `insertar`, `buscar`, `en_orden`. `IntoIterator`. `Drop` para contar nodos liberados. `cargo test`.
-
-### Nivel 45–60: Testing, documentación y módulos
-
-**Qué aprender:**
-- `#[test]`, `#[should_panic]`, `assert_eq!`, `assert!`
-- `#[cfg(test)] mod tests`, integración en `tests/`
-- Doc tests con `///` + código en ejemplos
-- `cargo doc --open`, documentación con markdown
-- Módulos: `mod`, `pub`, `pub use`, `mod.rs` vs carpetas
-- Workspaces: `[workspace]` en Cargo.toml
-- `criterion` para benchmarks
-- **Concepto clave**: los tests son ciudadanos de primera clase en Rust. Los doc tests garantizan que los ejemplos funcionan. Los módulos siguen el sistema de archivos.
-
-```rust
-/// Raíz cuadrada entera (Newton-Raphson).
-/// ```
-/// use mi_crate::raiz;
-/// assert_eq!(raiz(16), 4);
-/// ```
-pub fn raiz(n: u64) -> u64 {
-    if n < 2 { return n; }
-    let mut x = n; let mut y = (x + 1) / 2;
-    while y < x { x = y; y = (x + n / x) / 2; }
-    x
-}
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[test] fn raiz_cero() { assert_eq!(raiz(0), 0); }
-    #[test] fn raiz_perfecta() { assert_eq!(raiz(144), 12); }
+
+    #[test]
+    fn test_suma() {
+        assert_eq!(suma(2, 2), 4);
+    }
+
+    #[test]
+    fn test_suma_negativos() {
+        assert_eq!(suma(-1, 1), 0);
+    }
+
+    #[test]
+    #[should_panic(expected = "desbordamiento")]
+    fn test_panic() {
+        panic!("desbordamiento");
+    }
+}
+
+// Integration test (tests/integration.rs)
+use mi_crate::suma;
+
+#[test]
+fn test_integracion() {
+    assert_eq!(suma(2, 2), 4);
+}
+
+// Doc test
+/// ```
+/// let r = mi_crate::suma(2, 2);
+/// assert_eq!(r, 4);
+/// ```
+pub fn suma(a: i32, b: i32) -> i32 { a + b }
+```
+
+#### 🧪 Cómo probarlo
+```bash
+# Ejecutar todos los tests
+cargo test
+
+# Tests específicos
+cargo test test_suma
+cargo test tests::test_suma -- --nocapture
+
+# Con filtro
+cargo test --test integration_test
+cargo test --lib
+
+# Doc tests
+cargo test --doc
+
+# Benchmarks (criterion)
+cargo bench
+
+# Cobertura
+cargo install cargo-tarpaulin
+cargo tarpaulin --out Html
+```
+
+#### 💡 Memoria y rendimiento
+- Los tests se ejecutan en paralelo por defecto (`cargo test -- --test-threads=1` para serial)
+- Doc tests verifican que los ejemplos en la documentación funcionan
+- Los tests de integración van en `tests/` y son archivos separados del crate
+- Cada test recibe un hilo separado; el overhead es mínimo
+
+#### ✅ Buenas prácticas
+- ✅ Escribe tests para toda función pública
+- ✅ Usa doc tests para documentación con ejemplos ejecutables
+- ⚠️ No dejes `println!` en tests que ejecutas en CI (usa `--nocapture` solo localmente)
+- ❌ No escribas tests que dependan del orden de ejecución
+
+#### 🏗️ Metodología de testing
+- **Unit tests**: junto al código (`#[cfg(test)] mod tests`)
+- **Integration tests**: en `tests/` — prueban el crate como API pública
+- **Doc tests**: documentación con ejemplos ejecutables (siempre funcionan)
+- **Property-based**: con `proptest` para verificar invariantes con datos aleatorios
+- **Fuzzing**: con `cargo-fuzz` para testing de seguridad
+
+#### 🔗 Para saber más
+- [Rust Book — Testing](https://doc.rust-lang.org/book/ch11-00-testing.html)
+- [Rust by Example — Testing](https://doc.rust-lang.org/rust-by-example/testing.html)
+- [cargo-tarpaulin](https://github.com/xd009642/tarpaulin)
+- [proptest](https://docs.rs/proptest/)
+
+---
+
+## Conceptos avanzados
+
+### unsafe, FFI y no_std
+
+#### ¿Qué es?
+`unsafe` permite operaciones que el borrow checker no puede verificar: desreferenciar punteros crudos, llamar a funciones C (FFI), acceder a `static mut`, e implementar traits unsafe. `no_std` elimina la stdlib para entornos embebidos.
+
+🔗 [Rustonomicon](https://doc.rust-lang.org/nomicon/)
+
+#### Sintaxis básica
+```rust
+// unsafe: desreferenciar puntero crudo
+let x = 42;
+let r = &x as *const i32;
+unsafe {
+    println!("{}", *r);
+}
+
+// FFI: llamar a C
+extern "C" {
+    fn abs(x: i32) -> i32;
+}
+
+unsafe { println!("{}", abs(-5)); }
+
+// no_std (para embebido)
+// #![no_std]
+// use core::panic::PanicInfo;
+
+#[panic_handler]
+fn panic(_info: &PanicInfo) -> ! {
+    loop {}
 }
 ```
 
-**Proyecto:** *Calculadora como crate* — tipos `Operacion`, trait `Calculadora`. Tests unitarios + integración + doc tests + CI (GitHub Actions: check, test, clippy, fmt).
+#### 🧪 Cómo probarlo
+```rust
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_ffi_wrapper() {
+        extern "C" fn suma_c(a: i32, b: i32) -> i32 { a + b }
+        let result = unsafe { suma_c(2, 3) };
+        assert_eq!(result, 5);
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `unsafe` no desactiva el borrow checker — solo permite operaciones adicionales
+- FFI tiene overhead de llamada (ABI C) ~5-10 ns
+- no_std elimina ~100 KB del binario para entornos embebidos
+- Las llamadas FFI no pueden ser inlineadas
+
+#### ✅ Buenas prácticas
+- ✅ Minimiza unsafe: encapsúlalo en funciones seguras
+- ✅ Usa `#[no_mangle]` y `extern "C"` para exportar funciones a C
+- ⚠️ unsafe no significa "sin checks" — documenta cada invariante
+- ❌ No uses unsafe sin una razón muy concreta y documentada
+
+#### 🔗 Para saber más
+- [Rustonomicon](https://doc.rust-lang.org/nomicon/)
+- [Rust Book — unsafe](https://doc.rust-lang.org/book/ch19-01-unsafe-rust.html)
+- [The Embedded Rust Book](https://docs.rust-embedded.org/book/)
+
+### Pin y async traits
+
+#### ¿Qué es?
+`Pin` garantiza que un valor no se mueva en memoria, necesario para self-referential structs en async. Los async traits (Rust 1.75+) permiten métodos async en traits, eliminando la necesidad de cajas como `async-trait`.
+
+🔗 [Rust Book — Pin](https://doc.rust-lang.org/std/pin/index.html)
+
+#### Sintaxis básica
+```rust
+use std::pin::Pin;
+
+// Pin: valor que no se moverá
+let mut dato = Box::new(42);
+let pinned = Pin::new(&mut dato);
+
+// Async trait (Rust 1.75+)
+#[async_trait]
+trait Servicio {
+    async fn obtener(&self) -> String;
+}
+
+struct MiServicio;
+#[async_trait]
+impl Servicio for MiServicio {
+    async fn obtener(&self) -> String {
+        "datos".to_string()
+    }
+}
+```
+
+#### 🧪 Cómo probarlo
+```rust
+#[cfg(test)]
+mod tests {
+    #[tokio::test]
+    async fn test_async_trait() {
+        trait Simple {
+            async fn get(&self) -> i32;
+        }
+        struct X;
+        impl Simple for X {
+            async fn get(&self) -> i32 { 42 }
+        }
+        assert_eq!(X.get().await, 42);
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- Pin es un wrapper de compilación: cero overhead en runtime
+- self-referential structs ocupan el tamaño del valor + padding
+- async traits generan state machines por implementación: monomorfización
+
+#### ✅ Buenas prácticas
+- ✅ Usa async traits nativos (Rust 1.75+) en lugar de `async-trait` crate
+- ✅ Pin es interno a los generadores async — no necesitas usarlo directamente
+- ⚠️ No implementes tu propio Pin a menos que estés haciendo unsafe
+- ❌ No muevas un valor después de haberlo pinned
+
+#### 🔗 Para saber más
+- [Rust std::pin](https://doc.rust-lang.org/std/pin/index.html)
+- [Rust Book — Pin](https://doc.rust-lang.org/book/ch19-04-advanced-types.html)
+- [Async Book — Pin](https://rust-lang.github.io/async-book/04_pinning/01_chapter.html)
+
+### WASM (WebAssembly)
+
+#### ¿Qué es?
+Rust compila a WebAssembly, permitiendo ejecutar código de alto rendimiento en el navegador. Con `wasm-pack` puedes empaquetar y publicar en npm.
+
+🔗 [Rust + WASM](https://rustwasm.github.io/docs/book/)
+
+#### Sintaxis básica
+```rust
+use wasm_bindgen::prelude::*;
+
+#[wasm_bindgen]
+pub fn fibonacci(n: u32) -> u32 {
+    match n {
+        0 => 0,
+        1 => 1,
+        _ => fibonacci(n - 1) + fibonacci(n - 2),
+    }
+}
+
+// En JavaScript:
+// import { fibonacci } from './pkg';
+// console.log(fibonacci(10));
+```
+
+#### 🧪 Cómo probarlo
+```rust
+#[cfg(test)]
+mod tests {
+    use wasm_bindgen_test::*;
+
+    #[wasm_bindgen_test]
+    fn test_fib() {
+        assert_eq!(super::fibonacci(10), 55);
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- WASM ejecuta en una VM sandboxed dentro del navegador
+- El binario WASM suele ser 10-50 KB para aplicaciones pequeñas
+- WASM no tiene acceso directo a DOM (necesita JS glue)
+- Las llamadas WASM ↔ JS tienen overhead de ~1-10 µs
+
+#### ✅ Buenas prácticas
+- ✅ Usa wasm-pack para build, test y publish
+- ✅ Prefiere WASM para código CPU-bound (cálculos, juegos, procesamiento)
+- ⚠️ No uses WASM para tareas triviales de DOM — JS es más rápido para eso
+- ❌ No compartas grandes estructuras entre JS y WASM sin serialización eficiente
+
+#### 🔗 Para saber más
+- [Rust WASM Book](https://rustwasm.github.io/docs/book/)
+- [wasm-pack](https://rustwasm.github.io/wasm-pack/)
+- [MDN — WebAssembly](https://developer.mozilla.org/en-US/docs/WebAssembly)
+
+
+---
+
+## Escala de aprendizaje 0–100 (7 niveles)
+
+### Nivel 0–15: Fundamentos
+**Conceptos**: sintaxis básica, variables, tipos escalares, if/else, loops, funciones, `cargo new`, `cargo run`.
+
+**Proyecto**: calculadora CLI — suma, resta, multiplica, divide con manejo de errores.
+
+```rust
+use std::io;
+
+fn main() -> Result<(), String> {
+    let mut input = String::new();
+    println!("Primer número:");
+    io::stdin().read_line(&mut input).unwrap();
+    let a: f64 = input.trim().parse().map_err(|_| "número inválido")?;
+
+    input.clear();
+    println!("Operación (+, -, *, /):");
+    io::stdin().read_line(&mut input).unwrap();
+    let op = input.trim().to_string();
+
+    input.clear();
+    println!("Segundo número:");
+    io::stdin().read_line(&mut input).unwrap();
+    let b: f64 = input.trim().parse().map_err(|_| "número inválido")?;
+
+    let result = match op.as_str() {
+        "+" => a + b,
+        "-" => a - b,
+        "*" => a * b,
+        "/" => if b != 0.0 { a / b } else { return Err("división por cero".into()) },
+        _ => return Err("operación inválida".into()),
+    };
+    println!("Resultado: {result}");
+    Ok(())
+}
+```
+
+### Nivel 15–30: Structs, enums, traits
+**Conceptos**: structs, enums, pattern matching, traits, Option/Result, Vec, String.
+
+**Proyecto**: gestor de tareas (TODO list) en memoria con persistencia JSON.
+
+### Nivel 30–45: Smart pointers e iterators
+**Conceptos**: Box, Rc, Arc, closures, iterators (map, filter, fold), colecciones (HashMap, HashSet).
+
+**Proyecto**: procesador de logs — lee archivo, parsea líneas, cuenta ocurrencias por nivel (INFO, WARN, ERROR), genera reporte.
+
+### Nivel 45–60: Testing, documentación y módulos
+**Conceptos**: tests unitarios/de integración, doc tests, módulos, visibilidad, clippy, rustfmt.
+
+**Proyecto**: librería de validación — funciones validadoras con tests exhaustivos, documentación, CI configurado.
 
 ### Nivel 60–75: Web APIs asíncronas
+**Conceptos**: async/await, Tokio, Axum/Actix, serialización JSON, SQLx/Diesel, WebSockets.
 
-**Qué aprender:**
-- Axum: routers, extractors (`Path`, `Query`, `Json`, `State`), responders
-- `serde`: `Serialize`/`Deserialize`
-- Tokio: `#[tokio::main]`, `spawn`, `join!`, `select!`
-- SQLx: queries asíncronas, migraciones, `query_as!`
-- Tower: middleware, logging, CORS
-- `tracing`: spans, eventos, subscribers
-- **Concepto clave**: los extractors implementan `FromRequestParts`. `State` es `Arc<T>` compartido. Las queries SQLx se verifican en compilación.
-
-```rust
-async fn listar(State(db): State<Db>) -> Json<Vec<Receta>> {
-    Json(db.read().await.clone())
-}
-async fn crear(State(db): State<Db>, Json(r): Json<Receta>) -> Result<(StatusCode, Json<Receta>), (StatusCode, String)> {
-    db.write().await.push(r.clone());
-    Ok((StatusCode::CREATED, Json(r)))
-}
-#[tokio::main]
-async fn main() {
-    let app = Router::new()
-        .route("/recetas", get(listar).post(crear))
-        .with_state(Arc::new(RwLock::new(Vec::new())));
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-    axum::serve(listener, app).await.unwrap();
-}
-```
-
-**Proyecto:** *API de recetas* — Axum + SQLx + PostgreSQL. CRUD recetas con ingredientes. Búsqueda por ingrediente. Validación con `validator`. Tests con `axum_test`. Middleware `tracing`.
+**Proyecto**: API REST de URLs acortadas — endpoints CRUD, BD PostgreSQL, tests de integración, Docker.
 
 ### Nivel 75–90: Producción
+**Conceptos**: release profiles (LTO, codegen-units), Docker multi-stage, CI/CD (GitHub Actions), logging (tracing), benchmarks (criterion), profiling (perf, flamegraph).
 
-**Qué aprender:**
-- Docker multi-stage para Rust (distroless, slim)
-- Graceful shutdown: `tokio::signal` + `with_graceful_shutdown`
-- WebSockets con axum, broadcast con canales
-- Observabilidad: `tracing` + `opentelemetry` + Jaeger
-- Caché con `redis-rs`
-- Rate limiting: `governor` crate
-- Workers asíncronos con Tokio
-- `cargo audit` para seguridad de dependencias
-- **Concepto clave**: en producción Rust brilla por predictibilidad (sin GC, sin pausas). `tracing` permite spans con contexto que cruzan awaits — ideal para debugging distribuido.
-
-```rust
-serve(listener, app)
-    .with_graceful_shutdown(async {
-        signal::ctrl_c().await.unwrap();
-        tracing::info!("Apagando servidor...");
-    })
-    .await.unwrap();
-```
-
-**Proyecto:** *Dashboard de monitorización* — Tokio recolecta métricas (`sysinfo`). Axum + WebSocket. Cache Redis. Workers background. Docker Compose. Graceful shutdown.
+**Proyecto**: el proyecto del nivel anterior con CI/CD, Docker, benchmarks, profiling y monitoreo.
 
 ### Nivel 90–100: Sistemas y arquitectura
+**Conceptos**: unsafe, FFI, no_std, WASM, Pin, async traits, arquitectura hexagonal, patrones avanzados, sistemas distribuidos.
 
-**Qué aprender:**
-- Arquitectura hexagonal: dominio, puertos (traits), adaptadores
-- CQRS/Event sourcing con canales o Kafka (`rdkafka`)
-- `unsafe`: cuándo es necesario (FFI, optimizaciones, embebido)
-- `no_std` embebido: Embassy, `cortex-m`, `esp-rs`
-- WASM: `wasm-pack`, `wasm-bindgen`, `web-sys`
-- FFI: `extern "C"`, `#[no_mangle]`, `cbindgen`, `bindgen`
-- gRPC: `tonic` + `prost` + protobuf
-- GraphQL: `async-graphql` o `juniper`
-- PGO (Profile Guided Optimization)
-- `#[target_feature]` para SIMD
-- **Concepto clave**: `unsafe` no desactiva el borrow checker. Solo permite 5 operaciones. El 99.9% del código debe ser safe. Las abstracciones `unsafe` bien diseñadas (como `Vec`, `HashMap`) exponen APIs seguras.
-
-```rust
-// gRPC con Tonic
-#[tonic::async_trait]
-impl Saludos for MiServicio {
-    async fn saludar(&self, req: Request<SaludoRequest>) -> Result<Response<SaludoResponse>, Status> {
-        Ok(Response::new(SaludoResponse { mensaje: format!("Hola {}!", req.into_inner().nombre) }))
-    }
-}
-```
-
-**Proyecto:** *Sistema de notificaciones* — arquitectura hexagonal con traits. gRPC entre servicios. Kafka como event bus (`rdkafka`). GraphQL como BFF (`async-graphql`). OpenTelemetry tracing. Docker Compose multi-servicio.
-
-Fuente: [axum docs](https://docs.rs/axum/), [Tokio docs](https://tokio.rs/), [SQLx docs](https://docs.rs/sqlx/)
+**Proyecto**: intérprete de un lenguaje pequeño (AST, lexer, parser, evaluador) — compila a WASM.
 
 ---
 
-## Proyectos prácticos detallados
+## Proyecto final integrador: Procesador de logs
 
-### Gestor de contraseñas CLI (nivel 30)
+Un procesador de logs que combina file system, algoritmos, módulos, testing y red.
 
 ```rust
-use clap::{Parser, Subcommand};
-use serde::{Serialize, Deserialize};
+use std::fs;
+use std::io::{BufRead, BufReader};
+use std::path::Path;
 use std::collections::HashMap;
 
-#[derive(Serialize, Deserialize)]
-struct Entry { service: String, username: String, password: String }
-#[derive(Serialize, Deserialize, Default)]
-struct Vault { entries: HashMap<String, Entry> }
-
-#[derive(Parser)]
-#[command(name = "passman")]
-struct Cli {
-    #[command(subcommand)]
-    command: Commands,
-}
-
-#[derive(Subcommand)]
-enum Commands {
-    Add { service: String, username: String, password: String },
-    Get { service: String },
-    List,
-}
-
-fn main() -> anyhow::Result<()> {
-    let cli = Cli::parse();
-    let mut vault: Vault = if std::path::Path::new("vault.json").exists() {
-        serde_json::from_str(&std::fs::read_to_string("vault.json")?)?
-    } else { Vault::default() };
-
-    match cli.command {
-        Commands::Add { service, username, password } => {
-            vault.entries.insert(service.clone(), Entry { service, username, password });
-            std::fs::write("vault.json", serde_json::to_string_pretty(&vault)?)?;
-            println!("✅ Guardado");
-        }
-        Commands::Get { service } => match vault.entries.get(&service) {
-            Some(e) => println!("Usuario: {}\nPass: {}", e.username, e.password),
-            None => println!("❌ No encontrado"),
-        },
-        Commands::List => { for (s, _) in &vault.entries { println!("  • {s}"); } }
-    }
-    Ok(())
-}
-```
-
-### Web scraper asíncrono (nivel 60)
-
-```rust
-use reqwest::Client;
-use scraper::{Html, Selector};
-use tokio::sync::Semaphore;
-use std::sync::Arc;
+#[derive(Debug, PartialEq)]
+enum Nivel { INFO, WARN, ERROR }
 
 #[derive(Debug)]
-struct Article { title: String, url: String, source: String }
-
-async fn scrape(url: &str, client: &Client, sem: &Semaphore) -> Vec<Article> {
-    let _permit = sem.acquire().await.unwrap();
-    let resp = client.get(url).send().await.ok()?;
-    let doc = Html::parse_document(&resp.text().await.ok()?);
-    let sel = Selector::parse("a.title, a.storylink, h2 a").unwrap();
-    Some(doc.select(&sel).filter_map(|el| {
-        let title = el.text().collect::<String>().trim().to_string();
-        let href = el.value().attr("href")?;
-        let full = if href.starts_with("http") { href.into() } else { format!("{}{}", url.trim_end_matches('/'), href) };
-        if title.is_empty() { None } else { Some(Article { title, url: full, source: url.into() }) }
-    }).collect())
+struct LogEntry {
+    nivel: Nivel,
+    mensaje: String,
+    linea: usize,
 }
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = Client::builder().user_agent("Mozilla/5.0").timeout(std::time::Duration::from_secs(10)).build()?;
-    let sem = Arc::new(Semaphore::new(5));
-    let urls = vec!["https://news.ycombinator.com", "https://blog.rust-lang.org/"];
-
-    let mut handles = vec![];
-    for url in urls {
-        let (c, s) = (client.clone(), Arc::clone(&sem));
-        handles.push(tokio::spawn(async move { scrape(url, &c, &s).await }));
+fn parse_nivel(s: &str) -> Option<Nivel> {
+    match s {
+        "INFO" => Some(Nivel::INFO),
+        "WARN" => Some(Nivel::WARN),
+        "ERROR" => Some(Nivel::ERROR),
+        _ => None,
     }
-    for h in handles { for a in h.await.unwrap_or_default() { println!("{} - {}", a.source, a.title); } }
+}
+
+fn procesar_log<P: AsRef<Path>>(path: P) -> Result<Vec<LogEntry>, String> {
+    let file = fs::File::open(path).map_err(|e| format!("error abriendo: {e}"))?;
+    let reader = BufReader::new(file);
+
+    reader.lines()
+        .enumerate()
+        .filter_map(|(i, line)| {
+            let line = match line {
+                Ok(l) => l,
+                Err(_) => return None,
+            };
+            let parts: Vec<&str> = line.splitn(2, "]: ").collect();
+            if parts.len() < 2 { return None; }
+            let nivel_str = parts[0].trim_start_matches('[');
+            let mensaje = parts[1].to_string();
+            parse_nivel(nivel_str).map(|nivel| LogEntry { nivel, mensaje, linea: i + 1 })
+        })
+        .collect::<Vec<_>>()
+        .into_iter()
+        .collect::<Result<Vec<_>, _>>()
+        .or_else(|_| Ok(vec![]))
+}
+
+fn reportar(entries: &[LogEntry]) -> HashMap<&str, usize> {
+    let mut stats: HashMap<&str, usize> = HashMap::new();
+    for entry in entries {
+        let key = match entry.nivel {
+            Nivel::INFO => "INFO",
+            Nivel::WARN => "WARN",
+            Nivel::ERROR => "ERROR",
+        };
+        *stats.entry(key).or_insert(0) += 1;
+    }
+    stats
+}
+
+fn main() -> Result<(), String> {
+    let entries = procesar_log("app.log")?;
+    let stats = reportar(&entries);
+    for (nivel, count) in &stats {
+        println!("{nivel}: {count}");
+    }
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_nivel() {
+        assert_eq!(parse_nivel("INFO"), Some(Nivel::INFO));
+        assert_eq!(parse_nivel("DEBUG"), None);
+    }
+
+    #[test]
+    fn test_procesar_log() {
+        let path = "test.log";
+        fs::write(path, "[INFO]: inicio
+[ERROR]: fallo
+").unwrap();
+        let entries = procesar_log(path).unwrap();
+        assert_eq!(entries.len(), 2);
+        assert_eq!(entries[0].nivel, Nivel::INFO);
+        assert_eq!(entries[1].nivel, Nivel::ERROR);
+        fs::remove_file(path).unwrap();
+    }
+
+    #[test]
+    fn test_reportar() {
+        let entries = vec![
+            LogEntry { nivel: Nivel::INFO, mensaje: "ok".into(), linea: 1 },
+            LogEntry { nivel: Nivel::ERROR, mensaje: "fail".into(), linea: 2 },
+            LogEntry { nivel: Nivel::INFO, mensaje: "otro".into(), linea: 3 },
+        ];
+        let stats = reportar(&entries);
+        assert_eq!(*stats.get("INFO").unwrap(), 2);
+        assert_eq!(*stats.get("ERROR").unwrap(), 1);
+    }
+}
 ```
 
 ---
 
-## Hacks de productividad
+## Canales y recursos en español
 
-**1. `dbg!` — depuración instantánea**
-```rust
-let r = dbg!(x * 2);  // [src/main.rs:1] x * 2 = 10
-// Se puede insertar en cualquier expresión
-```
+### Canales de YouTube
+- [**Midudev**](https://youtube.com/@midudev) — Rust, JavaScript, web, entrevistas
+- [**HolaMundo**](https://youtube.com/@HolaMundo) — Rust, sistemas, tutoriales prácticos
+- [**Programación en Español**](https://youtube.com/@ProgramacionEnEspanol) — Rust, Go, sistemas
+- [**Código Espinoza**](https://youtube.com/@CodigoEspinoza) — Rust, desarrollo de videojuegos
+- [**Ringa Tech**](https://youtube.com/@RingaTech) — Rust, sistemas, WASM, rendimiento
 
-**2. Patrones borrow checker**
-```rust
-// Iterar con índices para modificar
-for i in 0..items.len() { if items[i] % 2 == 0 { items.push(items[i] * 2); } }
+### Comunidades
+- [r/rust](https://reddit.com/r/rust) — comunidad global
+- [Rust en Español (Telegram)](https://t.me/rust_es)
+- [Discord Rust Lang (ES)](https://discord.gg/rust-lang)
+- [Rust Es (Twitter/X)](https://x.com/rust_es)
 
-// Separar colección
-let (even, odd): (Vec<_>, Vec<_>) = items.iter().partition(|&&x| x % 2 == 0);
-```
+### Repositorios GitHub destacados
+- [rust-unofficial/awesome-rust](https://github.com/rust-unofficial/awesome-rust) — lista curada de recursos Rust
+- [learning-rust](https://github.com/learning-rust/site) — recursos para aprender Rust
+- [rust-gym](https://github.com/warycat/rustgym) — problemas resueltos en Rust
 
-**3. Newtype para type safety**
-```rust
-struct UserId(u64);
-struct PedidoId(u64);
-fn buscar_usuario(id: UserId) {}
-// buscar_usuario(PedidoId(42));  // Error de tipos
-```
+---
 
-**4. `#[derive(Debug)]`** — imprescindible en todo struct/enum.
+## Hacks y tips de productividad
 
-**5. Clippy pedante:** `cargo clippy -- -W clippy::pedantic -W clippy::nursery`
-
-**6. `cargo expand`** — expande macros procedurales: `cargo install cargo-expand && cargo expand`
-
-**7. `cargo-watch`** — auto-rebuild: `cargo watch -x check -x test`
-
-**8. `cargo-insta`** — snapshot testing.
-
-**9. `include_str!` / `include_bytes!`** — embebe archivos en compilación:
-```rust
-const SQL: &str = include_str!("../migrations/001.sql");
-const ICON: &[u8] = include_bytes!("../static/favicon.ico");
-```
-
-**10. Comandos del día a día:**
+### 1. cargo-watch (auto-rebuild en cambios)
 ```bash
-cargo check              # Verifica errores (rápido)
-cargo clippy --fix       # Auto-fix de lints
-cargo test -- --nocapture  # Tests con output
-cargo tree               # Árbol de dependencias
-cargo outdated           # Deps desactualizadas
-cargo upgrade            # Actualiza
-cargo audit              # Seguridad (cargo install cargo-audit)
-cargo udeps              # Deps no usadas (cargo install cargo-udeps)
+cargo install cargo-watch
+cargo watch -x check -x test
+cargo watch -x run  # para servidores
 ```
 
-**11. `todo!()` y `unreachable!()`:**
+### 2. cargo-expand (ver macros expandidas)
+```bash
+cargo install cargo-expand && cargo expand
+```
+
+### 3. cargo-edit (gestión de dependencias desde CLI)
+```bash
+cargo add serde --features derive
+cargo rm old-crate
+cargo upgrade
+```
+
+### 4. cargo-outdated (dependencias desactualizadas)
+```bash
+cargo install cargo-outdated && cargo outdated
+```
+
+### 5. cargo-audit (vulnerabilidades de seguridad)
+```bash
+cargo install cargo-audit && cargo audit
+```
+
+### 6. Rust Analyzer tricks
+- `Alt+Enter` (VSCode) → ver code actions (auto-import, add derive, add impl)
+- `:RustAnalyzerExpandMacro` en Neovim → expandir macros
+- Config `rust-analyzer.checkOnSave.command` = `"clippy"` para lints automáticos
+
+### 7. Replace `match` pesados con `if let`
 ```rust
-fn pendiente() { todo!("implementar") }
-fn dispatch() -> &'static str { match t { A => "a", B => "b", _ => unreachable!() } }
+// ❌ Verboso
+match opt {
+    Some(v) => println!("{v}"),
+    None => {}
+}
+
+// ✅ Concisa
+if let Some(v) = opt { println!("{v}"); }
 ```
 
-**12. Config global `~/.cargo/config.toml`:**
-```toml
-[alias]
-check-all = "check --workspace"
-test-all = "test --workspace"
-[registries.crates-io]
-protocol = "sparse"
+### 8. Unit structs como type-level markers
+```rust
+struct Metros;
+struct Segundos;
+
+fn velocidad<T>(d: f64, t: f64) -> f64 { d / t }
+// El parámetro T es un marker — no ocupa memoria
 ```
 
-Fuente: [Clippy docs](https://doc.rust-lang.org/clippy/), [cargo-expand](https://docs.rs/cargo-expand/)
+### 9. Debuggear con `dbg!`
+```rust
+let x = 42;
+let y = dbg!(x * 2);  // imprime "[src/main.rs:2] x * 2 = 84"
+```
+
+### 10. Testeo de errores con `#[should_panic]`
+```rust
+#[test]
+#[should_panic(expected = "índice fuera de rango")]
+fn test_panico() {
+    let v = vec![1, 2, 3];
+    let _ = v[10];
+}
+```
+
+### 11. Perfilamiento con flamegraphs
+```bash
+cargo install flamegraph
+cargo flamegraph --bin mi-app
+```
+
+### 12. Profile-guided optimization (PGO)
+```bash
+# Compila con instrumentación
+RUSTFLAGS="-Cprofile-generate=/tmp/pgo-data" cargo build --release
+# Ejecuta con datos reales
+./target/release/mi-app
+# Recompila con los datos de perfil
+RUSTFLAGS="-Cprofile-use=/tmp/pgo-data" cargo build --release
+```
 
 ---
 
-## Canales en español
+## Referencias y documentación oficial
 
-**YouTube:**
-- **midulive** — Rust, TypeScript, proyectos prácticos
-- **MoureDev** — Rust desde cero, comparativas
-- **Jamir Soto** — Curso completo de Rust (~30 videos)
-- **Carlos Aznarán** — Conceptos difíciles (ownership, lifetimes)
-- **Programa en Rust** — Canal dedicado a Rust: proyectos y patrones
-
-**Comunidades:**
-- **r/rust** (Reddit) — Comunidad principal
-- **Rust Lang en Español** (Telegram)
-- **Discord Rust Latino**
-- **Stack Overflow español** — etiqueta `rust`
-- **Rust Latam** — Conferencia anual (YouTube)
-
-**Newsletters:**
-- **This Week in Rust** ([this-week-in-rust.org](https://this-week-in-rust.org/))
-- **Rust Blog** ([blog.rust-lang.org](https://blog.rust-lang.org/))
-
-**Repositorios:**
-- [awesome-rust](https://github.com/rust-unofficial/awesome-rust)
-- [rustlings](https://github.com/rust-lang/rustlings) — ejercicios interactivos
-
----
-
-## Fuentes
-
-**Documentación oficial:**
-- [The Rust Book](https://doc.rust-lang.org/book/)
-- [Rust by Example](https://doc.rust-lang.org/stable/rust-by-example/)
-- [Rustonomicon](https://doc.rust-lang.org/nomicon/)
-- [Rust Reference](https://doc.rust-lang.org/reference/)
-- [Edition Guide](https://doc.rust-lang.org/edition-guide/)
-- [Async Book](https://rust-lang.github.io/async-book/)
-
-**Frameworks y librerías:**
-- [Tokio](https://tokio.rs/)
-- [Axum](https://docs.rs/axum/)
-- [SQLx](https://docs.rs/sqlx/)
-- [Diesel](https://diesel.rs/)
-- [SeaORM](https://www.sea-ql.org/SeaORM/)
-- [Tonic (gRPC)](https://docs.rs/tonic/)
-- [wasm-pack](https://rustwasm.github.io/docs/wasm-pack/)
-- [Serde](https://serde.rs/)
-- [Clap](https://docs.rs/clap/)
-- [Rayon](https://docs.rs/rayon/)
-
-**Comunidad y patrones:**
-- [Rust Design Patterns](https://rust-unofficial.github.io/patterns/)
-- [Rust Playground](https://play.rust-lang.org/)
-- [Rust Compiler Error Index](https://doc.rust-lang.org/error-index.html)
-- [r/rust](https://reddit.com/r/rust)
-- [This Week in Rust](https://this-week-in-rust.org/)
-- [Rust Latam](https://rustlatam.org/)
-
-**Fuentes de esta guía:**
-
-- [The Rust Book](https://doc.rust-lang.org/book/)
-- [Rust by Example](https://doc.rust-lang.org/stable/rust-by-example/)
-- [Rustonomicon](https://doc.rust-lang.org/nomicon/)
-- [Tokio tutorial](https://tokio.rs/tokio/tutorial)
-- [Axum docs](https://docs.rs/axum/)
-- [SQLx docs](https://docs.rs/sqlx/)
-- [Diesel docs](https://diesel.rs/guides/getting-started)
-- [Rust Design Patterns](https://rust-unofficial.github.io/patterns/)
-- [Awesome Rust](https://github.com/rust-unofficial/awesome-rust)
-- [This Week in Rust](https://this-week-in-rust.org/)
-- [r/rust](https://reddit.com/r/rust)
-- [Rust Blog](https://blog.rust-lang.org/)
-- [RFCs de Rust](https://rust-lang.github.io/rfcs/)
-
----
-
-## 🏆 Retos Relacionados
-
-Pon a prueba lo aprendido con estos desafíos:
-- [Plus Reto Inicial 06 Par O Impar](/retos/guia-plus-reto-inicial-06-par-o-impar)
-- [Fibonacci Recursivo](/retos/guia-fibonacci-recursivo)
-- [Plus Reto Intermedio 05 Generador De Contrasenas](/retos/guia-plus-reto-intermedio-05-generador-de-contrasenas)
-- [Plus Reto Intermedio 13 Contador De Palabras Únicas](/retos/guia-plus-reto-intermedio-13-contador-de-palabras-unicas)
-- [Plus Reto Avanzado 05 Asyncio Para Scrapers](/retos/guia-plus-reto-avanzado-05-asyncio-para-scrapers)
+1. [Rust Programming Language (oficial)](https://www.rust-lang.org/)
+2. [Rust Book (The Book)](https://doc.rust-lang.org/book/)
+3. [Rust by Example](https://doc.rust-lang.org/rust-by-example/)
+4. [Rustonomicon](https://doc.rust-lang.org/nomicon/)
+5. [Rust Reference](https://doc.rust-lang.org/reference/)
+6. [Rust Edition Guide](https://doc.rust-lang.org/edition-guide/)
+7. [Cargo Book](https://doc.rust-lang.org/cargo/)
+8. [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/)
+9. [Rust Design Patterns](https://rust-unofficial.github.io/patterns/)
+10. [Tokio Tutorial](https://tokio.rs/tokio/tutorial)
+11. [Rust WASM Book](https://rustwasm.github.io/docs/book/)
+12. [Rust Embedded Book](https://docs.rust-embedded.org/book/)
+13. [Rust Cookbook](https://rust-lang-nursery.github.io/rust-cookbook/)
+14. [Awesome Rust (GitHub)](https://github.com/rust-unofficial/awesome-rust)
+15. [This Week in Rust (newsletter)](https://this-week-in-rust.org/)
+16. [Rust Blog (oficial)](https://blog.rust-lang.org/)
+17. [Inside Rust Blog](https://blog.rust-lang.org/inside-rust/)
+18. [Rust Playground](https://play.rust-lang.org/)
+19. [crates.io](https://crates.io/)
+20. [docs.rs](https://docs.rs/)

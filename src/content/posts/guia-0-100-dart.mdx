@@ -116,6 +116,8 @@ Fuente: [dart.dev — Get Dart](https://dart.dev/get-dart), [SDKMAN — Dart](ht
 
 ## Primeros pasos y configuración del entorno
 
+Si prefieres ver directamente el "Hola Mundo" en Dart, consulta [El Atlas del Hola Mundo](/posts/hola/#dart).
+
 ### DartPad (online)
 DartPad ([dartpad.dev](https://dartpad.dev/)) es el editor online oficial. No requiere instalación, incluye Flutter snippets y soporta Dart 3 completo. Perfecto para probar fragmentos sin configurar nada.
 
@@ -149,9 +151,8 @@ flutter create mi_app               # Proyecto Flutter
 ```
 
 ### Editores recomendados
-- **VSCode**: extensión "Dart" de Dart Code (dart-code.dart). Incluye análisis en vivo, autocompletado, refactors, debugger. Extensión "Flutter" adicional si usas Flutter.
-- **Android Studio / IntelliJ**: plugin oficial de Dart/Flutter. Excelente depurador visual y hot reload.
-- **Neovim/LSP**: `dartls` (Dart language server) vía `dart language-server --protocol=lsp`. Configurable con `mason.nvim`.
+
+Los IDEs y editores más usados son [VSCode](/posts/resources/#ides-y-editores-de-codigo), [JetBrains](/posts/resources/#ides-y-editores-de-codigo) y [Neovim](/posts/resources/#ides-y-editores-de-codigo). Extensiones y configuraciones recomendadas en [Recursos](/posts/resources/#ides-y-editores-de-codigo).
 
 ### analysis_options.yaml (configuración del linter)
 ```yaml
@@ -348,6 +349,12 @@ Fuente: [dart.dev — Language Tour](https://dart.dev/language), [dart.dev — S
 
 ### var vs final vs const
 
+#### ¿Qué es?
+Dart tiene tres formas de declarar variables: `var` (inferida, mutable), `final` (asignación única en runtime) y `const` (constante en compile-time). Dart es de tipado estático — una vez que una variable tiene un tipo, no puede cambiar.
+
+🔗 [dart.dev — Built-in Types](https://dart.dev/language/built-in-types)
+
+#### Sintaxis básica
 ```dart
 var x = 42;        // Inferido como int, se puede reasignar
 final y = 42;      // Se asigna una vez en runtime
@@ -360,7 +367,46 @@ final ahora = DateTime.now();  // OK: se evalúa en runtime
 // const ahora2 = DateTime.now();  // Error: no es compile-time constant
 ```
 
+| Declaración | Mutabilidad | Momento de asignación |
+|---|---|---|
+| `var` | Mutable | Runtime |
+| `final` | Inmutable | Runtime (una vez) |
+| `const` | Inmutable | Compile-time |
+
+#### 🧪 Cómo probarlo
+```bash
+dart -e '
+var x = 42;
+final y = x + 1;
+const z = 42;
+print("$x $y $z");
+'
+```
+
+#### 💡 Memoria y rendimiento
+- `const` permite al compilador hacer optimizaciones (canonicalización, inline)
+- `final` y `const` no afectan al rendimiento en runtime pero mejoran la seguridad
+- Los objetos `const` se crean una sola vez en toda la aplicación (identical)
+- Usar `const` en constructores de Flutter evita reconstrucciones innecesarias
+
+#### ✅ Buenas prácticas
+- ✅ Usa `final` por defecto — solo usa `var` si necesitas reasignar
+- ✅ Usa `const` para valores que conoces en compile-time
+- ✅ Prefiere `const` constructor en widgets de Flutter
+- ⚠️ `var` infiere el tipo — si necesitas un tipo específico, decláralo explícitamente
+- ❌ No uses `dynamic` a menos que sea estrictamente necesario
+
+#### 🏗️ Metodología
+En Dart moderno, `final` es la opción por defecto para la mayoría de variables. `const` para valores fijos y constructores. `var` para contadores de bucle y acumuladores. En Flutter, haz que todos los widgets posibles tengan `const` constructor.
+
+#### 🔗 Para saber más
+- [dart.dev — Variables](https://dart.dev/language/variables)
+- [Dart style guide](https://dart.dev/guides/language/effective-dart/style)
+
 ### Tipos built-in
+
+#### ¿Qué es?
+Dart tiene tipos nativos para números, booleanos, strings y colecciones. El sistema de tipos es estático con inferencia y null safety desde Dart 2.12.
 
 ```dart
 int entero = 42;             // 64-bit en plataformas nativas
@@ -373,7 +419,15 @@ bool cierto = true;
 String texto = 'Hola';
 ```
 
+#### 💡 Memoria y rendimiento
+- `int` es 64-bit en nativo, 64-bit con precisión de 53 bits en web
+- `double` sigue IEEE 754 — no es exacto para decimales
+- El boxing/unboxing ocurre automáticamente
+
 ### Records (Dart 3)
+
+#### ¿Qué es?
+Los records son tuplas con nombre o posicionales. Permiten retornar múltiples valores sin crear una clase. Son tipos de valor (value equality).
 
 ```dart
 var punto = (3.0, 4.0);
@@ -386,6 +440,9 @@ var (x, y) = punto; // destructuring
 ```
 
 ### Nullable types
+
+#### ¿Qué es?
+Dart tiene null safety desde Dart 2.12. Los tipos con `?` pueden ser `null`, los tipos sin `?` nunca lo son. `late` permite asignación diferida.
 
 ```dart
 int? nulable = null;
@@ -400,31 +457,11 @@ nombre = 'Ana'; // Debe asignarse antes de leer
 void saludar({required String nombre}) => print('Hola $nombre');
 ```
 
-### Type promotion
-
-```dart
-void procesar(Object obj) {
-  if (obj is String) print(obj.length); // Promovido a String
-
-  String? texto;
-  if (texto != null) print(texto.length); // Promovido a String
-}
-```
-
-### dynamic vs Object vs void vs Never
-
-```dart
-dynamic d = 42;       // Sin verificación de tipos en compile-time
-d = 'hola';           // OK
-d.metodoRaro();       // Solo falla en runtime
-
-Object o = 42;        // Tipo base conocido, requiere cast
-if (o is String) print(o.length); // Promovido
-
-void v;               // Función que no devuelve valor útil
-
-Never nunca() => throw UnimplementedError(); // Nunca retorna
-```
+#### ✅ Buenas prácticas
+- ✅ Usa `??` (null coalescing) para valores por defecto: `texto ?? 'default'`
+- ✅ Usa `?.` (null safe access): `usuario?.nombre`
+- ✅ Usa `!` solo cuando estés 100% seguro de que no es null
+- ⚠️ `late` + inicialización perezosa es útil pero lanza error si accedes antes de asignar
 
 ### Colecciones
 
@@ -440,7 +477,10 @@ print(set.length); // 2
 final mapa = <String, int>{'uno': 1, 'dos': 2};
 ```
 
-### String (UTF-16, Runes, interpolación)
+### String
+
+#### ¿Qué es?
+Dart usa UTF-16 internamente. `length` cuenta code units UTF-16 (no caracteres). Usa `runes` para caracteres Unicode reales.
 
 ```dart
 String emoji = '😀';
@@ -501,12 +541,21 @@ void main() {
 
 ### Memoria y compilación
 
-- **Dart VM generational GC**: new space (objetos jóvenes, se recolectan rápido) y old space (objetos que sobreviven varias colecciones). El GC es generacional: la mayoría de objetos muertos se recolectan en new space con un barrido rápido.
-- **Isolates**: cada Isolate tiene su propio heap aislado. No comparten memoria, se comunican por paso de mensajes (SendPort/ReceivePort). Esto elimina carreras de datos y locks.
-- **AOT (Ahead-Of-Time)**: compila a código nativo ARM/x64. Arranque rápido, rendimiento predecible. Para producción.
-- **JIT (Just-In-Time)**: compila durante el desarrollo. Permite hot reload. Máxima velocidad de iteración.
+#### ¿Qué es?
+Dart VM tiene un GC generacional (new/old space). Los Isolates tienen heap propio. Dart compila AOT para producción (nativo ARM/x64) y JIT para desarrollo (hot reload).
 
-Fuente: [dart.dev — Built-in Types](https://dart.dev/language/built-in-types), [dart.dev — Records](https://dart.dev/language/records), [dart.dev — Enums](https://dart.dev/language/enums), [dart.dev — Sealed classes](https://dart.dev/language/class-modifiers#sealed), [dart.dev — Extension types](https://dart.dev/language/extension-types), [Dart VM — mrale.ph](https://mrale.ph/dartvm/)
+```dart
+// Dart VM GC: new space se recolecta rápido, old space menos frecuente
+// Isolates: sin memoria compartida, comunicación por mensajes
+// AOT: arranque rápido, rendimiento predecible
+// JIT: hot reload, desarrollo rápido
+```
+
+#### 💡 Memoria y rendimiento
+- El GC generacional recolecta objetos jóvenes rápidamente
+- Los isolates no comparten memoria — no hay locks ni carreras
+- AOT compila a código nativo para producción
+- JIT permite hot reload en desarrollo
 
 ---
 
@@ -2748,6 +2797,180 @@ Fuente: [dart.dev — Concurrency](https://dart.dev/language/concurrency), [dart
 
 ---
 
+## Testing y calidad
+
+### Test unitarios con Dart test
+
+#### ¿Qué es?
+Dart incluye un framework de testing en su SDK (`package:test`). Para Flutter se usa `flutter_test` con widgets testing. El testing en Dart es rápido y expresivo.
+
+🔗 [dart.dev — Testing](https://dart.dev/guides/testing)
+
+#### Sintaxis básica
+```dart
+// test/calculadora_test.dart
+import 'package:test/test.dart';
+import '../lib/calculadora.dart';
+
+void main() {
+  group('Calculadora', () {
+    late Calculadora calc;
+
+    setUp(() {
+      calc = Calculadora();
+    });
+
+    test('suma dos números', () {
+      expect(calc.suma(2, 2), equals(4));
+    });
+
+    test('lanza excepción al dividir por cero', () {
+      expect(() => calc.divide(10, 0), throwsA(isA<ArgumentError>()));
+    });
+
+    group('#suma', () {
+      test('con números positivos', () {
+        expect(calc.suma(1, 2), equals(3));
+      });
+
+      test('con números negativos', () {
+        expect(calc.suma(-1, 1), equals(0));
+      });
+    });
+  });
+}
+```
+
+#### 🧪 Cómo ejecutarlo
+```bash
+dart test                              # Todos los tests
+dart test test/calculadora_test.dart   # Archivo específico
+dart test --name suma                  # Por nombre
+dart test --coverage=coverage          # Cobertura
+```
+
+#### ✅ Buenas prácticas
+- ✅ Usa `group` para organizar tests por funcionalidad
+- ✅ Usa `setUp`/`tearDown` para inicialización/limpieza
+- ✅ Mockea dependencias con `mockito` o `mocktail`
+- ⚠️ No uses `print` en tests — usa `expect` para aserciones
+- ❌ No dependas del orden de ejecución — cada test debe ser independiente
+
+#### 🔗 Para saber más
+- [package:test](https://pub.dev/packages/test)
+- [package:mocktail](https://pub.dev/packages/mocktail)
+
+### Flutter testing (widget + integration)
+
+```dart
+// Widget test
+void main() {
+  testWidgets('MiWidget muestra título', (tester) async {
+    await tester.pumpWidget(MaterialApp(home: MiWidget(titulo: 'Hola')));
+    expect(find.text('Hola'), findsOneWidget);
+  });
+}
+
+// Integration test
+// test_driver/app_test.dart
+void main() {
+  group('App', () {
+    testWidgets('navega a detalle', (tester) async {
+      await tester.pumpWidget(MyApp());
+      await tester.tap(find.text('Ir a detalle'));
+      await tester.pumpAndSettle();
+      expect(find.text('Pantalla de detalle'), findsOneWidget);
+    });
+  });
+}
+```
+
+🔗 [Flutter — Testing](https://docs.flutter.dev/testing)
+
+---
+
+## Conceptos avanzados
+
+### Metaprogramación con generics y extensions
+
+#### ¿Qué es?
+Dart soporta genéricos con tipos reificados (se mantienen en runtime), extension methods (Dart 2.7+), y desde Dart 3.0 macros experimentales.
+
+```dart
+// Genéricos con restricciones
+T first<T extends num>(List<T> items) => items.first;
+T? firstOrNull<T>(List<T> items) => items.isEmpty ? null : items.first;
+
+// Extension methods
+extension ListUtils<T> on List<T> {
+  T? get safeFirst => isEmpty ? null : this[0];
+  List<T> replaceAll(T old, T Function() replacement) {
+    return map((e) => e == old ? replacement() : e).toList();
+  }
+}
+
+void main() {
+  final nums = [1, 2, 3];
+  print(nums.safeFirst);  // 1
+}
+```
+
+🔗 [Dart — Generics](https://dart.dev/language/generics), [Dart — Extension methods](https://dart.dev/language/extension-methods)
+
+### Isolates avanzados
+
+Los isolates pueden compartir memoria mediante `SendPort`/`ReceivePort`. Dart 3.0 introdujo `Isolate.exit` para devolver valores sin matar el isolate manualmente.
+
+```dart
+import 'dart:isolate';
+
+Future<int> calcularPesado(int n) async {
+  final result = await Isolate.run(() {
+    // Cálculo intensivo en isolate separado
+    var total = 0;
+    for (var i = 0; i < 1000000; i++) {
+      total += i;
+    }
+    return total;
+  });
+  return result;
+}
+```
+
+🔗 [dart.dev — Isolates](https://dart.dev/language/isolates)
+
+### Records, patterns y sealed classes (Dart 3.0)
+
+```dart
+// Records — tuplas con nombre
+(String, int) usuario() => ('Ana', 28);
+({String nombre, int edad}) usuario2() => (nombre: 'Ana', edad: 28);
+
+// Pattern matching
+switch (object) {
+  case (int a, int b) when a > b: print('$a > $b');
+  case [String first, ...rest]: print('$first, rest: $rest');
+  case {'name': String name}: print('Name: $name');
+}
+
+// Sealed class para sum types
+sealed class Result<T> {}
+class Success<T> extends Result<T> { final T data; Success(this.data); }
+class Error<T> extends Result<T> { final String message; Error(this.message); }
+
+Result<int> dividir(int a, int b) =>
+  b == 0 ? Error('División por cero') : Success(a ~/ b);
+
+void procesar(Result<int> r) => switch (r) {
+  Success(data: var d) => print('Resultado: $d'),
+  Error(message: var m) => print('Error: $m'),
+};
+```
+
+🔗 [Dart 3.0 — Records](https://dart.dev/language/records), [Dart 3.0 — Patterns](https://dart.dev/language/patterns)
+
+---
+
 ## Escala de aprendizaje: de 0 a 100
 
 Cada nivel incluye lo que debes saber y un proyecto para fijar los conceptos.
@@ -2858,6 +3081,151 @@ Cada nivel incluye lo que debes saber y un proyecto para fijar los conceptos.
 **Proyecto:** *App de chat en tiempo real* — Flutter + Serverpod o Firebase. Autenticación con Firebase Auth. Mensajería con Streams y WebSockets. Isolate para procesar imágenes antes de subirlas. Notificaciones push. CI/CD con GitHub Actions que corre tests, lint, y build para iOS/Android. Monitoreo con Sentry.
 
 Fuente: [Flutter docs](https://docs.flutter.dev/), [Serverpod docs](https://docs.serverpod.dev/), [Riverpod docs](https://riverpod.dev/), [freezed pub.dev](https://pub.dev/packages/freezed)
+
+---
+
+## Proyecto final integrador: App de notas con Flutter
+
+Construye una app de notas multiplataforma con Flutter, usando todos los conceptos de la guía.
+
+### Fase 1 — Configuración
+
+```bash
+flutter create --org com.tunombre notes_app
+cd notes_app
+
+# Dependencias
+flutter pub add sqflite path_provider riverpod
+flutter pub add flutter_test --dev
+flutter pub add mocktail --dev
+```
+
+### Fase 2 — Modelo y almacenamiento
+
+```dart
+// lib/models/note.dart
+class Note {
+  final int? id;
+  final String title;
+  final String content;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  const Note({
+    this.id,
+    required this.title,
+    required this.content,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  })  : createdAt = createdAt ?? DateTime.now(),
+       updatedAt = updatedAt ?? DateTime.now();
+
+  Note copyWith({int? id, String? title, String? content}) {
+    return Note(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      content: content ?? this.content,
+      createdAt: createdAt,
+      updatedAt: DateTime.now(),
+    );
+  }
+
+  Map<String, dynamic> toMap() => {
+    'id': id,
+    'title': title,
+    'content': content,
+    'created_at': createdAt.toIso8601String(),
+    'updated_at': updatedAt.toIso8601String(),
+  };
+
+  factory Note.fromMap(Map<String, dynamic> map) => Note(
+    id: map['id'] as int?,
+    title: map['title'] as String,
+    content: map['content'] as String,
+    createdAt: DateTime.parse(map['created_at'] as String),
+    updatedAt: DateTime.parse(map['updated_at'] as String),
+  );
+}
+```
+
+### Fase 3 — UI con Riverpod
+
+```dart
+// lib/providers/notes_provider.dart
+final notesProvider = StateNotifierProvider<NotesNotifier, List<Note>>((ref) {
+  return NotesNotifier(ref.read(databaseProvider));
+});
+
+class NotesNotifier extends StateNotifier<List<Note>> {
+  final Database _db;
+  NotesNotifier(this._db) : super([]) {
+    _loadNotes();
+  }
+
+  Future<void> _loadNotes() async {
+    final notes = await _db.getAllNotes();
+    state = notes;
+  }
+
+  Future<void> addNote(String title, String content) async {
+    final note = Note(title: title, content: content);
+    final id = await _db.insertNote(note);
+    state = [note.copyWith(id: id), ...state];
+  }
+
+  Future<void> deleteNote(int id) async {
+    await _db.deleteNote(id);
+    state = state.where((n) => n.id != id).toList();
+  }
+}
+```
+
+### Fase 4 — Testing
+
+```dart
+// test/providers/notes_provider_test.dart
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+
+class MockDatabase extends Mock implements Database {}
+
+void main() {
+  late MockDatabase mockDb;
+  late NotesNotifier notifier;
+
+  setUp(() {
+    mockDb = MockDatabase();
+    when(() => mockDb.getAllNotes()).thenAnswer((_) async => []);
+    notifier = NotesNotifier(mockDb);
+  });
+
+  test('addNote añade nota al estado', () async {
+    when(() => mockDb.insertNote(any())).thenAnswer((_) async => 1);
+    await notifier.addNote('Título', 'Contenido');
+    expect(notifier.state.length, equals(1));
+    expect(notifier.state.first.title, equals('Título'));
+  });
+}
+```
+
+### Fase 5 — Build para producción
+
+```bash
+# Android
+flutter build apk --release
+flutter build appbundle --release
+
+# iOS
+flutter build ios --release
+
+# Web
+flutter build web
+
+# Desktop
+flutter build linux
+flutter build windows
+flutter build macos
+```
 
 ---
 

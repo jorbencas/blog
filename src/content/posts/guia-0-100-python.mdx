@@ -52,14 +52,13 @@ Para Fedora/RHEL: `sudo dnf install python3 python3-pip`
 ### pyenv (Linux/macOS/WSL) — versión múltiple
 ```bash
 curl https://pyenv.run | bash
-# Añade al ~/.bashrc o ~/.zshrc:
 echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
 echo 'command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
 echo 'eval "$(pyenv init -)"' >> ~/.bashrc
 exec $SHELL
 
 pyenv install 3.12 3.11 3.10
-pyenv global 3.12   # Establece versión por defecto
+pyenv global 3.12
 ```
 
 ### Docker
@@ -90,6 +89,8 @@ Fuente: [pyenv GitHub](https://github.com/pyenv/pyenv), [Docker Official Images 
 
 ## Primeros pasos y configuración del entorno
 
+Si prefieres ver directamente el "Hola Mundo" en Python, consulta [El Atlas del Hola Mundo](/posts/hola/#python).
+
 ### El REPL
 Python incluye un intérprete interactivo. Ejecuta `python3` en terminal y escribe directamente:
 ```python
@@ -101,7 +102,6 @@ Para salir: `exit()` o Ctrl+D.
 
 ### Scripts y estructura de proyecto
 ```python
-# hola.py
 def main():
     print("Hola mundo")
 
@@ -112,10 +112,8 @@ Ejecuta: `python3 hola.py`
 
 ### Entornos virtuales (aislamiento de dependencias)
 ```bash
-# venv (incluido en stdlib)
 python3 -m venv .venv
-source .venv/bin/activate   # Linux/macOS
-.venv\Scripts\activate      # Windows
+source .venv/bin/activate
 
 # Poetry (moderno, declarativo)
 curl -sSL https://install.python-poetry.org | python3
@@ -128,10 +126,11 @@ uv venv
 uv pip install requests
 ```
 
+
+
 ### Editores recomendados
-- **VSCode**: extensión Python de Microsoft (Pylance como language server). Perfil recomendado: `Ctrl+Shift+P → Preferences: Open Profile → Python`
-- **PyCharm**: Community Edition gratuita, Professional para Django/web. Depurador visual excelente
-- **Neovim**: con mason.nvim + null-ls para ruff, mypy, pyright
+
+Los IDEs y editores más usados son [VSCode](/posts/resources/#ides-y-editores-de-codigo), [JetBrains](/posts/resources/#ides-y-editores-de-codigo) y [Neovim](/posts/resources/#ides-y-editores-de-codigo). Extensiones y configuraciones recomendadas en [Recursos](/posts/resources/#ides-y-editores-de-codigo).
 
 ### Configuración inicial del proyecto
 ```bash
@@ -209,25 +208,11 @@ from functools import reduce
 
 numeros = [1, 2, 3, 4, 5]
 
-# Lambda
-doble = list(map(lambda x: x * 2, numeros))          # [2, 4, 6, 8, 10]
-pares = list(filter(lambda x: x % 2 == 0, numeros))  # [2, 4]
-suma = reduce(lambda a, b: a + b, numeros)            # 15
+doble = list(map(lambda x: x * 2, numeros))
+pares = list(filter(lambda x: x % 2 == 0, numeros))
+suma = reduce(lambda a, b: a + b, numeros)
 
-# Comprensiones (alternativa más legible)
 doble2 = [x * 2 for x in numeros]
-```
-
-**itertools** para composición funcional avanzada:
-
-```python
-from itertools import chain, cycle, permutations, combinations, groupby, product
-
-list(chain("abc", "123"))                    # ['a', 'b', 'c', '1', '2', '3']
-list(cycle("AB"))                            # ['A', 'B', 'A', 'B', ...]
-list(permutations("ABC", 2))                 # [('A','B'), ('A','C'), ('B','A'), ('B','C'), ('C','A'), ('C','B')]
-list(combinations("ABC", 2))                 # [('A','B'), ('A','C'), ('B','C')]
-list(product("AB", "12"))                    # [('A','1'), ('A','2'), ('B','1'), ('B','2')]
 ```
 
 ### Declarativo (compresiones)
@@ -235,10 +220,8 @@ list(product("AB", "12"))                    # [('A','1'), ('A','2'), ('B','1'),
 Las comprensiones describen *qué* quieres, no *cómo*:
 
 ```python
-# Declarativo: qué
 pares = [n for n in range(20) if n % 2 == 0]
 
-# Imperativo: cómo
 pares2 = []
 for n in range(20):
     if n % 2 == 0:
@@ -262,22 +245,21 @@ Fuente: [Python docs — Functional Programming](https://docs.python.org/3/howto
 
 ### Sistema de tipos
 
-Python tiene **tipado dinámico fuerte**: el tipo se infiere en tiempo de ejecución y no se realizan conversiones implícitas entre tipos incompatibles.
-
-```python
-# Dinámico: la variable cambia de tipo
-x = 42          # int
-x = "hola"      # ahora str
-
-# Fuerte: no mezcla tipos automáticamente
-# "42" + 1      # TypeError: can only concatenate str (not "int") to str
-```
+#### ¿Qué es?
+Python tiene **tipado dinámico fuerte**: el tipo se infiere en tiempo de ejecución y no se realizan conversiones implícitas entre tipos incompatibles. Es como una caja sin etiqueta: sabes lo que contiene solo cuando la abres.
 
 **Duck typing**: "si camina como pato y habla como pato, entonces es un pato". Python mira el comportamiento, no el tipo nominal.
 
-**Type hints** (PEP 484) añaden tipado gradual opcional para herramientas estáticas:
+**Type hints** (PEP 484) añaden tipado gradual opcional para herramientas estáticas.
 
+🔗 [Wikipedia — Tipado dinámico](https://es.wikipedia.org/wiki/Tipado_din%C3%A1mico), [PEP 484](https://peps.python.org/pep-0484/)
+
+#### Sintaxis básica
 ```python
+x = 42          # int
+x = "hola"      # ahora str — dinámico
+# "42" + 1      # TypeError: tipado fuerte
+
 def saludo(nombre: str) -> str:
     return f"Hola {nombre}"
 
@@ -286,8 +268,52 @@ def procesar(items: List[Union[int, str]]) -> Dict[str, Any]:
     return {"count": len(items), "data": items}
 ```
 
+#### 🧪 Cómo probarlo
+```python
+import pytest
+
+def test_tipado_dinamico():
+    x = 42
+    assert isinstance(x, int)
+    x = "hola"
+    assert isinstance(x, str)
+
+def test_tipado_fuerte():
+    with pytest.raises(TypeError):
+        "42" + 1
+
+def test_type_hints():
+    assert procesar([1, "a"]) == {"count": 2, "data": [1, "a"]}
+```
+
+#### 💡 Memoria y rendimiento
+- Los type hints no tienen impacto en memoria ni rendimiento: se descartan en runtime
+- `isinstance()` es O(1) gracias al caché de tipos de CPython
+- El duck typing añade overhead de búsqueda de atributos en cada llamada
+
+#### ✅ Buenas prácticas
+- ✅ Usa type hints siempre en código nuevo — facilitan el mantenimiento y detección de errores
+- ⚠️ No uses `type()` para comparar tipos; prefiere `isinstance()`
+- ❌ No confíes en type hints para validación en runtime — no son vinculantes
+
+#### 🏗️ Metodología
+- Usa type hints desde el primer día en proyectos nuevos
+- En scripts pequeños (< 100 líneas), los hints son opcionales
+- En bibliotecas y APIs, los hints son obligatorios para buena experiencia de desarrollador
+
+#### 🔗 Para saber más
+- [Real Python — Python Type Checking](https://realpython.com/python-type-checking/)
+- [Python docs — typing](https://docs.python.org/3/library/typing.html)
+- [mypy docs](https://mypy.readthedocs.io/)
+
 ### Primitivos
 
+#### ¿Qué es?
+Los tipos primitivos son los bloques básicos de datos en Python. A diferencia de C o Java, en Python **todo es un objeto**, incluso los enteros. Esto significa que tienen métodos, ocupan memoria en heap y tienen overhead.
+
+🔗 [Wikipedia — Tipo de dato elemental](https://es.wikipedia.org/wiki/Tipo_de_dato_elemental)
+
+#### Sintaxis básica
 | Tipo | Descripción | Ejemplo |
 |---|---|---|
 | `int` | Precisión arbitraria (no hay desbordamiento) | `x = 2**1000` |
@@ -297,136 +323,352 @@ def procesar(items: List[Union[int, str]]) -> Dict[str, Any]:
 | `NoneType` | Valor nulo | `resultado = None` |
 
 ```python
-# int: precisión arbitraria
-print(2**1000)       # Entero enorme sin overflow
-
-# float: precisión limitada
-print(0.1 + 0.2)     # 0.30000000000000004 (IEEE 754)
-
-# complex
+print(2**1000)
+print(0.1 + 0.2)       # 0.30000000000000004 (IEEE 754)
 z = 3 + 4j
 print(z.real, z.imag, abs(z))  # 3.0 4.0 5.0
-
-# bool es int
-print(True + True)   # 2
+print(True + True)     # 2
 ```
+
+#### 🧪 Cómo probarlo
+```python
+import pytest
+import math
+
+def test_int_precision_arbitraria():
+    assert 2**1000 > 10**300
+
+def test_float_precision():
+    assert math.isclose(0.1 + 0.2, 0.3, rel_tol=1e-9)
+
+def test_bool_es_int():
+    assert True + True == 2
+    assert issubclass(bool, int)
+
+@pytest.mark.parametrize("valor, tipo", [
+    (42, int), (3.14, float), (True, bool), (None, type(None))
+])
+def test_tipos_primitivos(valor, tipo):
+    assert isinstance(valor, tipo)
+```
+
+#### 💡 Memoria y rendimiento
+```python
+import sys
+print(sys.getsizeof(1))        # 28 bytes
+print(sys.getsizeof(2**1000))  # ~160 bytes (crece con el número)
+print(sys.getsizeof(3.14))     # 24 bytes
+```
+- `int` tiene overhead variable: un entero pequeño cabe en 28 bytes, uno grande crece
+- `float` siempre ocupa 24 bytes (doble precisión)
+- `bool` ocupa 28 bytes (es subclase de `int`)
+- **Small integer caching**: enteros -5 a 256 son singletons
+
+#### ✅ Buenas prácticas
+- ✅ Usa `isinstance(x, int)` en vez de `type(x) == int`
+- ⚠️ No compares floats con `==` — usa `math.isclose()`
+- ❌ No asumas que `is` funciona para comparar números fuera del rango -5 a 256
+
+#### 🏗️ Metodología
+- En scripts de datos, prefiere `Decimal` del módulo `decimal` para dinero o precisión exacta
+- Para números grandes, `int` nativo es suficiente (no hay overflow)
+- En computación científica, `numpy` ofrece tipos más compactos (`np.int32`, `np.float32`)
+
+#### 🔗 Para saber más
+- [Python docs — Numeric Types](https://docs.python.org/3/library/stdtypes.html#numeric-types-int-float-complex)
+- [Real Python — Python Numbers](https://realpython.com/python-numbers/)
+- [IEEE 754 Wikipedia](https://es.wikipedia.org/wiki/IEEE_754)
+
 
 ### Compuestos
 
-| Tipo | Mutabilidad | Descripción |
+#### ¿Qué es?
+Los tipos compuestos (o contenedores) agrupan múltiples valores. Python ofrece listas, tuplas, diccionarios, conjuntos y más. Son como diferentes tipos de mochilas: algunas mantienen el orden, otras son más rápidas para buscar, otras no permiten duplicados.
+
+🔗 [Python docs — Data Structures](https://docs.python.org/3/tutorial/datastructures.html)
+
+#### Sintaxis básica
+| Tipo | Mutabilidad | Sintaxis |
 |---|---|---|
-| `list` | Mutable | Secuencia ordenada de elementos |
-| `tuple` | Inmutable | Secuencia ordenada fija |
-| `dict` | Mutable | Mapa clave-valor (hash table) |
-| `set` | Mutable | Colección no ordenada sin duplicados |
-| `frozenset` | Inmutable | Set congelado, usable como clave de dict |
-| `bytearray` | Mutable | Secuencia de bytes mutable |
-| `bytes` | Inmutable | Secuencia de bytes inmutable |
-| `memoryview` | — | Vista de buffer sin copia |
+| `list` | Mutable | `[1, 2, 3]` |
+| `tuple` | Inmutable | `(1, 2, 3)` |
+| `dict` | Mutable | `{"a": 1}` |
+| `set` | Mutable | `{1, 2, 3}` |
+| `frozenset` | Inmutable | `frozenset([1, 2])` |
 
 ```python
-# bytearray y memoryview para manipulación binaria eficiente
+from array import array
 datos = bytearray(b"hola")
 datos[0] = 77  # b'mola'
 
-mv = memoryview(datos)
-print(mv[0])  # 109 (sin copiar datos)
-
-# array del módulo array (más compacto que list para tipos homogéneos)
-from array import array
-arr = array('i', [1, 2, 3, 4])  # 'i' = signed int, ~4 bytes por elemento
+arr = array('i', [1, 2, 3, 4])
 ```
+
+#### 🧪 Cómo probarlo
+```python
+import pytest
+
+def test_lista_mutable():
+    a = [1, 2, 3]
+    a.append(4)
+    assert a == [1, 2, 3, 4]
+
+def test_tupla_inmutable():
+    t = (1, 2, 3)
+    with pytest.raises(TypeError):
+        t[0] = 99
+
+def test_set_elimina_duplicados():
+    assert {1, 2, 2, 3} == {1, 2, 3}
+
+def test_dict_acceso():
+    d = {"a": 1, "b": 2}
+    assert d["a"] == 1
+    with pytest.raises(KeyError):
+        _ = d["z"]
+```
+
+#### 💡 Memoria y rendimiento
+```python
+import sys
+print(sys.getsizeof([]))        # 56 bytes + elementos
+print(sys.getsizeof([1, 2, 3])) # 88 bytes
+print(sys.getsizeof({}))        # 72 bytes
+print(sys.getsizeof(set()))     # 216 bytes
+```
+- `list`: O(1) acceso por índice, O(n) búsqueda
+- `dict`/`set`: O(1) promedio en búsqueda, inserción, borrado
+- `tuple`: más ligera que list (inmutable, menor overhead)
+- `array.array`: ~4 bytes por entero frente a ~28 bytes de `list[int]`
+
+#### ✅ Buenas prácticas
+- ✅ Prefiere `list.append()` sobre `list += [item]` (evita crear nueva lista)
+- ⚠️ No uses listas como valores por defecto en funciones — usa `None`
+- ❌ No modifiques una lista mientras la iteras — crea una copia
+
+#### 🏗️ Metodología
+- `list`: colección ordenada que cambia de tamaño (pila, cola)
+- `tuple`: coordenadas, claves de diccionario, datos inmutables
+- `dict`: búsqueda rápida por clave, mapeos
+- `set`: membresía, operaciones de conjunto (unión, intersección)
+
+#### 🔗 Para saber más
+- [Python docs — Built-in Types](https://docs.python.org/3/library/stdtypes.html)
+- [Real Python — Lists vs Tuples](https://realpython.com/python-lists-tuples/)
+- [Python Wiki — Time Complexity](https://wiki.python.org/moin/TimeComplexity)
 
 ### Mutabilidad
 
-| Mutables | Inmutables |
-|---|---|
-| `list`, `dict`, `set`, `bytearray` | `int`, `float`, `str`, `tuple`, `frozenset`, `bytes`, `bool`, `NoneType` |
+#### ¿Qué es?
+La mutabilidad determina si un objeto puede cambiar después de creado. Es como la diferencia entre escribir en una pizarra (mutable — puedes borrar y reescribir) y escribir en piedra (inmutable — necesitas una piedra nueva para cambiar el mensaje).
 
+🔗 [Python docs — mutable](https://docs.python.org/3/glossary.html#term-mutable)
+
+#### Sintaxis básica
 ```python
-# Mutable: se modifica el mismo objeto
-a = [1, 2, 3]
+a = [1, 2, 3]  # mutable
 b = a
 a.append(4)
 print(b)  # [1, 2, 3, 4] — b también cambió
 
-# Inmutable: cada operación crea un nuevo objeto
-s = "hola"
+s = "hola"     # inmutable
 s += " mundo"  # nueva cadena, la original no se modifica
 ```
 
-### Strings en detalle
-
+#### 🧪 Cómo probarlo
 ```python
-# Codificación/decodificación
-texto = "Español ñ"
-bytes_utf8 = texto.encode("utf-8")    # b'Espa\xc3\xb1ol \xc3\xb1'
-bytes_latin = texto.encode("latin-1")  # b'Espa\xf1ol \xf1'
-texto_recuperado = bytes_utf8.decode("utf-8")
+import pytest
 
-# Unicode: Python 3 str es Unicode
-print("\u00F1")        # ñ
-print("\N{LATIN SMALL LETTER N WITH TILDE}")  # ñ
+def test_mutable_compartido():
+    a = [1, 2, 3]
+    b = a
+    a.append(4)
+    assert b == [1, 2, 3, 4]
+    assert a is b
 
-# f-strings (3.6+)
-nombre = "Ana"
-edad = 30
-print(f"{nombre} tiene {edad} años")           # Ana tiene 30 años
-print(f"{nombre:>10}")                         # alineación derecha:        Ana
-print(f"{edad:03d}")                           # zero-padding: 030
-print(f"{1000_000:,}")                         # separador miles: 1,000,000
+def test_inmutable_nuevo_objeto():
+    s = "hola"
+    original_id = id(s)
+    s += " mundo"
+    assert id(s) != original_id
 
-# Raw strings (ignoran escapes)
-ruta = r"C:\Users\nombre\archivo.txt"  # no interpreta \n como salto de línea
-regex = r"\d+\.\d+"                    # patrón regex sin doble escape
-
-# bytes vs str
-datos_binarios = b"esto son bytes"
-texto_str = "esto es texto"
-# datos_binarios + texto_str  # TypeError!
+def test_mutable_default_arg():
+    def fn(items=[]):
+        items.append(1)
+        return items
+    assert fn() == [1]
+    assert fn() == [1, 1]
 ```
 
-### Memoria
+#### 💡 Memoria y rendimiento
+- Mutables: se pasan por referencia (sin copia) — eficiente pero peligroso
+- Inmutables: cualquier "cambio" crea un nuevo objeto (más memoria, predecible)
+- **Default args mutables**: se evalúan una vez en definición, no en llamada — causa bugs sutiles
 
+#### ✅ Buenas prácticas
+- ✅ Usa `tuple` para datos que no deben cambiar (coordenadas, settings)
+- ⚠️ Nunca uses `list` o `dict` como valor por defecto de un parámetro
+- ❌ No asumas que modificar un mutable dentro de una función no afecta al exterior
+
+#### 🏗️ Metodología
+- Datos inmutables = más seguros en concurrencia (no hay race conditions)
+- En APIs públicas, prefiere devolver tuplas o `frozenset` en vez de listas
+- En algoritmos que requieren muchos cambios, usa mutables por rendimiento
+
+#### 🔗 Para saber más
+- [Real Python — mutable vs immutable](https://realpython.com/python-mutable-vs-immutable-types/)
+- [Python docs — objects](https://docs.python.org/3/reference/datamodel.html)
+
+### Strings en detalle
+
+#### ¿Qué es?
+Las cadenas en Python 3 son secuencias inmutables de caracteres Unicode. Cada carácter es un código Unicode de hasta 4 bytes, lo que permite representar cualquier idioma y símbolo del mundo.
+
+🔗 [Wikipedia — Unicode](https://es.wikipedia.org/wiki/Unicode)
+
+#### Sintaxis básica
+```python
+texto = "Español ñ"
+bytes_utf8 = texto.encode("utf-8")
+bytes_latin = texto.encode("latin-1")
+texto_recuperado = bytes_utf8.decode("utf-8")
+
+print("\u00F1")
+print("\N{LATIN SMALL LETTER N WITH TILDE}")
+
+nombre = "Ana"
+edad = 30
+print(f"{nombre} tiene {edad} años")
+print(f"{nombre:>10}")
+print(f"{edad:03d}")
+print(f"{1000_000:,}")
+
+ruta = r"C:\Users\nombre\archivo.txt"  # raw string
+```
+
+#### 🧪 Cómo probarlo
+```python
+import pytest
+
+def test_codificacion_utf8():
+    texto = "Español ñ"
+    encoded = texto.encode("utf-8")
+    assert isinstance(encoded, bytes)
+    assert encoded.decode("utf-8") == texto
+
+def test_f_string():
+    nombre = "Ana"
+    assert f"Hola {nombre}" == "Hola Ana"
+
+@pytest.mark.parametrize("entrada, esperado", [
+    ("hola", "HOLA"), ("MUNDO", "mundo"), ("Python", "PYTHON")
+])
+def test_upper_lower(entrada, esperado):
+    resultado = entrada.upper() if esperado.isupper() else entrada.lower()
+    assert resultado == esperado
+```
+
+#### 💡 Memoria y rendimiento
+- Cada objeto `str` tiene overhead (~49 bytes + 1-4 bytes por carácter)
+- *String interning*: cadenas cortas con forma de identificador se cachean automáticamente
+- La concatenación con `+` en bucles es O(n²) — prefiere `join()`
+
+#### ✅ Buenas prácticas
+- ✅ Prefiere f-strings sobre `%` o `.format()` (más legibles, más rápidas)
+- ⚠️ No anides f-strings en Python < 3.12 — causan SyntaxError
+- ❌ No concatenes strings en bucles — usa `''.join(lista)`
+
+#### 🏗️ Metodología
+- Para manipulación intensiva de texto, considera `io.StringIO` como buffer
+- Para búsquedas complejas, usa `re.compile()` una vez
+- Para datos binarios, usa `bytes` o `bytearray`, no strings
+
+#### 🔗 Para saber más
+- [Python docs — Text Sequence Type](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str)
+- [Real Python — Python String Formatting](https://realpython.com/python-string-formatting/)
+- [Unicode HOWTO](https://docs.python.org/3/howto/unicode.html)
+
+### Memoria y objetos
+
+#### ¿Qué es?
+Python no tiene variables al estilo C. Tiene **nombres** que referencian **objetos** en memoria. Es como una guía telefónica: los nombres (variables) apuntan a números (objetos). Varios nombres pueden apuntar al mismo número.
+
+🔗 [Python docs — data model](https://docs.python.org/3/reference/datamodel.html)
+
+#### Sintaxis básica
 ```python
 import sys
 
-# id() — dirección de memoria del objeto
 x = 42
-print(id(x))  # ej: 140735202345152
+print(id(x))
 
-# is — compara identidad (mismo objeto), no igualdad
 a = [1, 2]
 b = [1, 2]
 print(a == b)  # True (mismo valor)
 print(a is b)  # False (distinto objeto)
 
-# Small integer caching: enteros -5 a 256 son singletons
-print(256 is 256)     # True
-print(257 is 257)     # False (depende de implementación)
-
-# String interning: cadenas cortas se cachean
-print("hola" is "hola")  # True (interning automático)
-
 print(sys.getsizeof(1))           # 28 bytes
 print(sys.getsizeof("a"))         # 50 bytes
 print(sys.getsizeof([]))          # 56 bytes
-print(sys.getsizeof([1,2,3]))     # 88 bytes
 ```
 
-### Conversiones entre tipos
-
+#### 🧪 Cómo probarlo
 ```python
-# Conversiones explícitas (casting)
+import pytest
+import sys
+
+def test_identidad_vs_igualdad():
+    a = [1, 2]
+    b = [1, 2]
+    assert a == b
+    assert a is not b
+
+def test_small_integer_caching():
+    assert 256 is 256
+
+def test_getsizeof_crece_con_elementos():
+    size_vacia = sys.getsizeof([])
+    size_con = sys.getsizeof([1, 2, 3])
+    assert size_con > size_vacia
+```
+
+#### 💡 Memoria y rendimiento
+- **Reference counting**: cuando el contador llega a 0, el objeto se libera inmediatamente
+- **GC cíclico**: detecta ciclos de referencias
+- `__slots__` elimina el `__dict__` (~50% menos memoria)
+- `sys.getsizeof()` mide el objeto, no sus contenidos anidados
+
+#### ✅ Buenas prácticas
+- ✅ Usa `is` para comparar con `None` (`x is None`), no `==`
+- ⚠️ No uses `is` para comparar números o strings — usa `==`
+- ❌ No asumas que `del` libera memoria inmediatamente
+
+#### 🏗️ Metodología
+- Para millones de objetos, usa `__slots__` o `array.array`/`numpy.ndarray`
+- Para datos temporales grandes, el GC cíclico libera automáticamente
+- En scripts de corta duración, `gc.disable()` puede mejorar rendimiento
+
+#### 🔗 Para saber más
+- [Python docs — gc](https://docs.python.org/3/library/gc.html)
+- [CPython internals (Real Python)](https://realpython.com/cpython-source-code-guide/)
+- [Python docs — sys.getsizeof](https://docs.python.org/3/library/sys.html#sys.getsizeof)
+
+### Type casting
+
+#### ¿Qué es?
+Convertir un valor de un tipo a otro. Python hace **conversiones implícitas mínimas** (tipado fuerte) y requiere **conversiones explícitas** (casting) para la mayoría de los casos.
+
+🔗 [Python docs — built-in functions](https://docs.python.org/3/library/functions.html)
+
+#### Sintaxis básica
+```python
 int("42")          # 42
 float("3.14")      # 3.14
 str(42)            # "42"
 list("hola")       # ['h', 'o', 'l', 'a']
 tuple([1, 2, 3])   # (1, 2, 3)
 set([1, 2, 2, 3])  # {1, 2, 3}
-dict([("a", 1)])   # {"a": 1}
 
-# Conversiones seguras
 def safe_int(valor, default=0):
     try:
         return int(valor)
@@ -436,7 +678,43 @@ def safe_int(valor, default=0):
 print(safe_int("abc"))  # 0
 ```
 
-Fuente: [Python docs — Built-in Types](https://docs.python.org/3/library/stdtypes.html), [PEP 484 — Type Hints](https://peps.python.org/pep-0484/), [Real Python — Python Types](https://realpython.com/python-data-types/)
+#### 🧪 Cómo probarlo
+```python
+import pytest
+
+def test_casting_explicito():
+    assert int("42") == 42
+    assert str(42) == "42"
+    assert list("abc") == ["a", "b", "c"]
+
+def test_casting_seguro():
+    assert safe_int("abc") == 0
+    assert safe_int("42") == 42
+
+@pytest.mark.parametrize("entrada", ["abc", None, 3.14])
+def test_int_raise(entrada):
+    with pytest.raises((ValueError, TypeError)):
+        int(entrada)
+```
+
+#### 💡 Memoria y rendimiento
+- `int()` y `float()` son O(n) para strings largos (parsean carácter por carácter)
+- `list()` y `tuple()` copian el iterable completo — O(n) en tiempo y memoria
+- Las conversiones crean nuevos objetos; el original no se modifica
+
+#### ✅ Buenas prácticas
+- ✅ Siempre maneja excepciones al convertir entradas de usuario
+- ⚠️ No confíes en conversiones implícitas — sé explícito con `int()`, `str()`
+- ❌ No uses `eval()` para convertir strings a tipos — es inseguro
+
+#### 🏗️ Metodología
+- Para parsing de datos masivos, prefiere validación temprana con `try/except`
+- En APIs, usa Pydantic para validación y casting automático
+- En ETL, maneja errores de casting con logging
+
+#### 🔗 Para saber más
+- [Real Python — Python Type Conversion](https://realpython.com/python-type-conversion/)
+- [Python docs — built-in functions](https://docs.python.org/3/library/functions.html)
 
 ---
 
@@ -444,8 +722,13 @@ Fuente: [Python docs — Built-in Types](https://docs.python.org/3/library/stdty
 
 ### Condicionales
 
+#### ¿Qué es?
+Las estructuras condicionales permiten ejecutar diferentes bloques de código según condiciones booleanas. Python ofrece `if/elif/else`, ternarios y `match/case` (3.10+). Es como un semáforo: el camino que tomas depende del color que veas.
+
+🔗 [Wikipedia — Estructuras de control](https://es.wikipedia.org/wiki/Estructuras_de_control)
+
+#### Sintaxis básica
 ```python
-# if/elif/else clásico
 edad = 18
 if edad < 12:
     categoria = "niño"
@@ -456,10 +739,8 @@ elif edad < 65:
 else:
     categoria = "senior"
 
-# Ternario
 categoria = "mayor" if edad >= 18 else "menor"
 
-# match/case (Python 3.10+)
 def procesar_comando(comando: str) -> str:
     match comando.lower().split():
         case ["salir"]:
@@ -471,30 +752,75 @@ def procesar_comando(comando: str) -> str:
             return f"Buscando {entidad} con id {id_}"
         case _:
             return "Comando no reconocido"
-
-print(procesar_comando("suma 1 2 3 4"))     # Total: 10
 ```
+
+#### 🧪 Cómo probarlo
+```python
+import pytest
+
+@pytest.mark.parametrize("edad, esperado", [
+    (5, "niño"), (12, "adolescente"), (18, "adulto"), (70, "senior")
+])
+def test_categorias(edad, esperado):
+    if edad < 12:
+        cat = "niño"
+    elif edad < 18:
+        cat = "adolescente"
+    elif edad < 65:
+        cat = "adulto"
+    else:
+        cat = "senior"
+    assert cat == esperado
+
+def test_match_case():
+    assert procesar_comando("salir") == "Saliendo..."
+    assert procesar_comando("suma 1 2 3") == "Total: 6"
+    assert procesar_comando("info usuario 42") == "Buscando usuario con id 42"
+```
+
+#### 💡 Memoria y rendimiento
+- `if/elif` es O(1) por condición (evaluación lazy)
+- `match/case` es similar en rendimiento a `if/elif`
+- Cadenas muy largas de `elif` (>10) deberían ser un `dict` de funciones
+
+#### ✅ Buenas prácticas
+- ✅ Usa `match/case` para pattern matching estructural (Python 3.10+)
+- ⚠️ No encadenes más de 5 `elif` — refactoriza a un dict de dispatch
+- ❌ No uses `if x:` para comprobar `None` — usa `if x is not None:`
+
+#### 🏗️ Metodología
+- Condicionales simples: `if/elif/else` es suficiente
+- Múltiples variantes de un algoritmo: patrón Strategy con funciones
+- Múltiples condiciones sobre el mismo valor: `match/case`
+- Búsquedas en tablas: `dict` como dispatch table
+
+#### 🔗 Para saber más
+- [Python docs — Control Flow](https://docs.python.org/3/tutorial/controlflow.html)
+- [PEP 636 — match/case](https://peps.python.org/pep-0636/)
+- [Real Python — Conditional Statements](https://realpython.com/python-conditional-statements/)
 
 ### Bucles
 
+#### ¿Qué es?
+Los bucles ejecutan un bloque de código repetidamente. Python ofrece `for` (sobre iterables) y `while` (condicional), más `for/else` que ejecuta código si no hubo `break`.
+
+🔗 [Python docs — for](https://docs.python.org/3/tutorial/controlflow.html#for-statements)
+
+#### Sintaxis básica
 ```python
-# for sobre iterables
 for i, valor in enumerate(["a", "b", "c"], start=1):
     print(f"{i}: {valor}")
 
-# while
 contador = 0
 while contador < 5:
     contador += 1
 
-# break / continue
 for n in range(100):
     if n % 2 == 0:
-        continue  # salta pares
+        continue
     if n > 10:
-        break     # termina al llegar a 11
+        break
 
-# for/else: else se ejecuta si NO hubo break
 for n in range(2, 10):
     for divisor in range(2, int(n**0.5) + 1):
         if n % divisor == 0:
@@ -503,29 +829,108 @@ for n in range(2, 10):
         print(f"{n} es primo")
 ```
 
+#### 🧪 Cómo probarlo
+```python
+import pytest
+
+def test_for_sobre_lista():
+    resultado = []
+    for i, v in enumerate(["a", "b"], 1):
+        resultado.append(f"{i}:{v}")
+    assert resultado == ["1:a", "2:b"]
+
+def test_while_condicion():
+    contador = 0
+    while contador < 3:
+        contador += 1
+    assert contador == 3
+
+def test_for_else_sin_break():
+    resultado = []
+    for n in range(2, 5):
+        pass
+    else:
+        resultado.append("completado")
+    assert resultado == ["completado"]
+```
+
+#### 💡 Memoria y rendimiento
+- `for` en Python es más lento que en C porque itera a través del protocolo de iteración
+- Los bucles anidados profundos son candidatos a refactorizar con `itertools.product`
+
+#### ✅ Buenas prácticas
+- ✅ Prefiere `for` sobre `while` cuando recorres colecciones
+- ⚠️ No modifiques la lista que estás iterando — itera sobre una copia
+- ❌ No uses `while True` sin una condición de salida clara
+
+#### 🏗️ Metodología
+- Para transformar colecciones, prefiere comprehensions o `map/filter`
+- Para operaciones costosas dentro del bucle, extrae a una función
+- En procesamiento de datos grande, considera `numpy` vectorizado
+
+#### 🔗 Para saber más
+- [Python docs — Loops](https://docs.python.org/3/tutorial/controlflow.html)
+- [Real Python — Python Loops](https://realpython.com/python-for-loop/)
+
 ### Comprehensions
 
+#### ¿Qué es?
+Las comprehensions son una forma concisa de crear secuencias aplicando una expresión a cada elemento de un iterable, opcionalmente filtrando. Es azúcar sintáctico sobre bucles `for`, más legible y ligeramente más rápido.
+
+🔗 [Python docs — list comprehensions](https://docs.python.org/3/tutorial/datastructures.html#list-comprehensions)
+
+#### Sintaxis básica
 ```python
-# Lista
 cuadrados = [x**2 for x in range(10) if x % 2 == 0]
-# [0, 4, 16, 36, 64]
-
-# Diccionario
 cuadrados_dict = {x: x**2 for x in range(5)}
-# {0: 0, 1: 1, 2: 4, 3: 9, 4: 16}
-
-# Set
 pares_unicos = {x % 3 for x in range(10)}
-# {0, 1, 2}
-
-# Generador (tupla implícita, lazy)
 suma_cuadrados = sum(x**2 for x in range(1_000_000))
 ```
 
+#### 🧪 Cómo probarlo
+```python
+import pytest
+
+def test_list_comprehension():
+    resultado = [x**2 for x in range(5) if x % 2 == 0]
+    assert resultado == [0, 4, 16]
+
+def test_dict_comprehension():
+    resultado = {x: x**2 for x in range(3)}
+    assert resultado == {0: 0, 1: 1, 2: 2}
+
+def test_generator_expression():
+    total = sum(x for x in range(10) if x % 2 == 0)
+    assert total == 20
+```
+
+#### 💡 Memoria y rendimiento
+- Las comprehensions son ~10-30% más rápidas que bucles `for` equivalentes
+- Las expresiones generadoras (`(...)`) son lazy — no ocupan memoria hasta que se iteran
+
+#### ✅ Buenas prácticas
+- ✅ Úsalas para transformaciones simples y filtros
+- ⚠️ No anides comprehensions más de 2 niveles — usa bucles
+- ❌ No abuses de ellas para efectos secundarios
+
+#### 🏗️ Metodología
+- Para transformaciones simples: comprehension
+- Para transformaciones complejas: pipeline con generadores
+- Para datos masivos: expresión generadora (lazy)
+
+#### 🔗 Para saber más
+- [Real Python — Comprehensions](https://realpython.com/list-comprehension-python/)
+- [Python docs — itertools](https://docs.python.org/3/library/itertools.html)
+
 ### Excepciones
 
+#### ¿Qué es?
+Las excepciones son el mecanismo de Python para manejar errores en tiempo de ejecución. Siguen el estilo **EAFP** (Easier to Ask Forgiveness than Permission): intenta la operación y maneja el error si ocurre.
+
+🔗 [Python docs — Errors and Exceptions](https://docs.python.org/3/tutorial/errors.html)
+
+#### Sintaxis básica
 ```python
-# try/except/else/finally
 try:
     archivo = open("datos.txt")
     datos = archivo.read()
@@ -538,32 +943,81 @@ else:
 finally:
     archivo.close()
 
-# raise
 def dividir(a, b):
     if b == 0:
         raise ValueError("No se puede dividir por cero")
     return a / b
 
-# Excepciones personalizadas
 class SaldoInsuficienteError(Exception):
     def __init__(self, saldo: float, intento: float):
         self.saldo = saldo
         self.intento = intento
         super().__init__(f"Saldo insuficiente: ${saldo}, se requieren ${intento}")
 
-# Cadena de excepciones (raise from)
 try:
     int("no_numero")
 except ValueError as e:
     raise RuntimeError("Error al procesar entrada") from e
 ```
 
+#### 🧪 Cómo probarlo
+```python
+import pytest
+
+def test_excepcion_esperada():
+    with pytest.raises(ValueError, match="No se puede dividir por cero"):
+        dividir(10, 0)
+
+def test_excepcion_personalizada():
+    with pytest.raises(SaldoInsuficienteError) as exc:
+        raise SaldoInsuficienteError(50, 100)
+    assert exc.value.saldo == 50
+
+def test_try_except_else():
+    resultado = []
+    try:
+        resultado.append("try")
+    except:
+        pass
+    else:
+        resultado.append("else")
+    finally:
+        resultado.append("finally")
+    assert resultado == ["try", "else", "finally"]
+```
+
+#### 💡 Memoria y rendimiento
+- Lanzar excepciones es relativamente caro (construcción del traceback)
+- El bloque `try` sin excepción tiene overhead casi nulo
+- No uses excepciones para control de flujo normal
+
+#### ✅ Buenas prácticas
+- ✅ Sé específico con los tipos de excepción que capturas
+- ⚠️ No captures `Exception` genérica sin una razón muy concreta
+- ❌ No uses `except: pass` — como mínimo, registra el error
+
+#### 🏗️ Metodología
+- EAFP es el estilo Pythonic: intenta y maneja errores después
+- Para APIs públicas, documenta las excepciones que puede lanzar cada función
+- En programas grandes, crea una jerarquía de excepciones personalizadas
+
+#### 🔗 Para saber más
+- [Python docs — Built-in Exceptions](https://docs.python.org/3/library/exceptions.html)
+- [Real Python — Python Exceptions](https://realpython.com/python-exceptions/)
+- [PEP 3134 — Exception Chaining](https://peps.python.org/pep-3134/)
+
 ### Módulos y paquetes
 
+#### ¿Qué es?
+Un módulo es un archivo `.py` que puede contener funciones, clases y variables. Un paquete es un directorio con `__init__.py` que agrupa módulos relacionados. Es la unidad de organización del código en Python.
+
+🔗 [Python docs — Modules](https://docs.python.org/3/tutorial/modules.html)
+
+#### Sintaxis básica
 ```
 mi_paquete/
-├── __init__.py      # Marca el directorio como paquete
-├── __main__.py      # Permite `python -m mi_paquete`
+├── __init__.py
+├── __main__.py
 ├── modulo_a.py
 └── subpaquete/
     ├── __init__.py
@@ -571,54 +1025,790 @@ mi_paquete/
 ```
 
 ```python
-# Import absoluto
 from mi_paquete.subpaquete import modulo_b
 from mi_paquete import modulo_a
-
-# Import relativo (solo dentro del paquete)
 from . import modulo_a
 from .subpaquete import modulo_b
 
-# __all__ — controla qué se exporta con `from modulo import *`
-# En modulo_a.py:
-# __all__ = ["funcion_publica", "ClasePublica"]
-
-# sys.path y PYTHONPATH
 import sys
-print(sys.path)  # Directorios donde Python busca módulos
+print(sys.path)
 ```
 
-### Visibilidad
-
+#### 🧪 Cómo probarlo
 ```python
-class Demo:
-    def __init__(self):
-        self.publico = "accesible desde fuera"
-        self._protegido = "convención: no acceder directamente"
-        self.__privado = "name mangling: se transforma a _Demo__privado"
-    
-    def mostrar_privado(self):
-        return self.__privado
+import pytest
+import sys
+from pathlib import Path
 
-d = Demo()
-print(d.publico)         # OK
-print(d._protegido)      # Funciona, pero por convención no deberías
-print(d._Demo__privado)  # Name mangling: _Clase__nombre
+def test_sys_path_es_lista():
+    assert isinstance(sys.path, list)
+    assert "" in sys.path or Path.cwd() in sys.path
+
+def test_import_relativo(tmp_path):
+    pkg = tmp_path / "mipkg"
+    pkg.mkdir()
+    (pkg / "__init__.py").write_text("")
+    (pkg / "modulo.py").write_text("VALOR = 42")
+    sys.path.insert(0, str(tmp_path))
+    from mipkg.modulo import VALOR
+    assert VALOR == 42
+    sys.path.pop(0)
 ```
 
-### Entry points
+#### 💡 Memoria y rendimiento
+- `import` carga el módulo en `sys.modules` — las siguientes importaciones son instantáneas
+- `from modulo import *` puede cargar símbolos no deseados (usa `__all__`)
 
+#### ✅ Buenas prácticas
+- ✅ Usa imports absolutos siempre que sea posible
+- ⚠️ No uses `from modulo import *` fuera de `__init__.py`
+- ❌ No tengas módulos con el mismo nombre que la stdlib (ej: `json.py`)
+
+#### 🏗️ Metodología
+- Divide en módulos por responsabilidad (un módulo = una preocupación)
+- Usa `__init__.py` para exportar la API pública del paquete
+- Para proyectos grandes, estructura en subpaquetes
+
+#### 🔗 Para saber más
+- [Python docs — Packages](https://docs.python.org/3/tutorial/modules.html#packages)
+- [Real Python — Python Modules and Packages](https://realpython.com/python-modules-packages/)
+- [PEP 420 — Implicit Namespace Packages](https://peps.python.org/pep-0420/)
+
+---
+
+## Sistema de archivos (File System I/O)
+
+### Lectura/escritura clásica
+
+#### ¿Qué es?
+El sistema de archivos permite leer y escribir datos en el disco. Python ofrece la función `open()` con múltiples modos para texto y binario. Es como un archivador: abres el cajón (archivo), lees o escribes documentos, y lo cierras cuando terminas.
+
+🔗 [Python docs — File I/O](https://docs.python.org/3/tutorial/inputoutput.html)
+
+#### Sintaxis básica
 ```python
-if __name__ == "__main__":
-    main()
+with open("ejemplo.txt", "w", encoding="utf-8") as f:
+    f.write("Hola mundo\n")
+    f.writelines(["línea 2\n", "línea 3\n"])
+
+with open("ejemplo.txt", "r", encoding="utf-8") as f:
+    contenido = f.read()
+    lineas = f.readlines()
+
+with open("imagen.jpg", "rb") as f:
+    datos = f.read(1024)
+
+with open("datos.bin", "wb+") as f:
+    f.write(b"\x00\x01\x02")
+    f.seek(0)
+    print(f.read())
 ```
 
-```toml
-[project.scripts]
-mi-app = "mi_paquete.modulo_principal:main"
+#### 🧪 Cómo probarlo
+```python
+import pytest
+from pathlib import Path
+
+def test_escritura_lectura(tmp_path):
+    archivo = tmp_path / "test.txt"
+    with open(archivo, "w", encoding="utf-8") as f:
+        f.write("contenido")
+    with open(archivo, "r", encoding="utf-8") as f:
+        assert f.read() == "contenido"
+
+def test_binary_mode(tmp_path):
+    archivo = tmp_path / "data.bin"
+    with open(archivo, "wb") as f:
+        f.write(b"\x00\xff")
+    with open(archivo, "rb") as f:
+        assert f.read() == b"\x00\xff"
+
+def test_archivo_no_existe():
+    with pytest.raises(FileNotFoundError):
+        open("/no/existe.txt")
 ```
 
-Fuente: [Python docs — Control Flow](https://docs.python.org/3/tutorial/controlflow.html), [Python docs — Modules](https://docs.python.org/3/tutorial/modules.html), [PEP 636 — match/case](https://peps.python.org/pep-0636/)
+#### 💡 Memoria y rendimiento
+- `read()` carga todo el archivo en memoria — peligroso para archivos grandes
+- Usa `for linea in f:` para streaming (carga una línea a la vez)
+- El buffering por defecto (4096-8192 bytes) es óptimo para la mayoría de casos
+
+#### ✅ Buenas prácticas
+- ✅ Siempre usa `with open()` — cierra el archivo automáticamente
+- ⚠️ No leas archivos completos si son grandes — usa iteración línea por línea
+- ❌ No especifiques `encoding` en modo binario
+
+#### 🏗️ Metodología
+- Archivos pequeños (< 100 MB): `read()`/`write()` sin problemas
+- Archivos grandes: streaming línea por línea o en fragmentos
+- Procesamiento por lotes: `iter(f.readline, '')` para archivos enormes
+
+#### 🔗 Para saber más
+- [Real Python — File Handling](https://realpython.com/read-write-files-python/)
+- [Python docs — open()](https://docs.python.org/3/library/functions.html#open)
+
+### pathlib
+
+#### ¿Qué es?
+`pathlib` es la forma moderna y orientada a objetos de manejar rutas de archivos. Reemplaza a `os.path` con una API más limpia y multiplataforma. En lugar de strings, usas objetos `Path`.
+
+🔗 [Python docs — pathlib](https://docs.python.org/3/library/pathlib.html)
+
+#### Sintaxis básica
+```python
+from pathlib import Path
+
+ruta = Path("/usr/local/bin/python3")
+print(ruta.name, ruta.stem, ruta.parent)
+
+p = Path("datos")
+p.mkdir(parents=True, exist_ok=True)
+
+archivo = Path("datos/notas.txt")
+archivo.write_text("contenido", encoding="utf-8")
+texto = archivo.read_text(encoding="utf-8")
+
+for py in Path("src").rglob("*.py"):
+    print(py)
+
+from pathlib import PurePath
+pp = PurePath("/usr/local/bin")
+print(pp.joinpath("python3"))
+```
+
+#### 🧪 Cómo probarlo
+```python
+import pytest
+from pathlib import Path
+
+def test_path_propiedades():
+    ruta = Path("/usr/local/bin/python3")
+    assert ruta.name == "python3"
+    assert ruta.stem == "python3"
+    assert ruta.parent == Path("/usr/local/bin")
+
+def test_mkdir_y_escritura(tmp_path):
+    d = tmp_path / "subdir"
+    d.mkdir()
+    f = d / "test.txt"
+    f.write_text("hola")
+    assert f.read_text() == "hola"
+
+def test_glob(tmp_path):
+    (tmp_path / "a.py").write_text("")
+    (tmp_path / "b.txt").write_text("")
+    archivos_py = list(tmp_path.glob("*.py"))
+    assert len(archivos_py) == 1
+    assert archivos_py[0].name == "a.py"
+
+### Tempfile
+
+#### ¿Qué es?
+El módulo `tempfile` crea archivos y directorios temporales que se limpian automáticamente. Útil para tests, caché en disco, y procesamiento de datos intermedios.
+
+🔗 [Python docs — tempfile](https://docs.python.org/3/library/tempfile.html)
+
+#### Sintaxis básica
+```python
+import tempfile
+from pathlib import Path
+
+with tempfile.TemporaryFile(mode="w+") as f:
+    f.write("datos temporales")
+    f.seek(0)
+    print(f.read())
+
+with tempfile.NamedTemporaryFile(suffix=".csv", delete=True) as f:
+    print(f.name)
+
+with tempfile.TemporaryDirectory() as tmpdir:
+    p = Path(tmpdir) / "archivo.txt"
+    p.write_text("temporal")
+    print(p.read_text())
+```
+
+#### 🧪 Cómo probarlo
+```python
+import pytest
+import tempfile
+from pathlib import Path
+
+def test_temporary_file():
+    with tempfile.TemporaryFile(mode="w+") as f:
+        f.write("test data")
+        f.seek(0)
+        assert f.read() == "test data"
+
+def test_temporary_directory():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        p = Path(tmpdir) / "test.txt"
+        p.write_text("contenido")
+        assert p.exists()
+    assert not Path(tmpdir).exists()
+```
+
+#### 💡 Memoria y rendimiento
+- Los archivos temporales se crean en `/tmp` (Linux) o `%TEMP%` (Windows)
+- El overhead de crear/eliminar archivos temporales es mínimo
+
+#### ✅ Buenas prácticas
+- ✅ Úsalos en tests para evitar limpieza manual
+- ⚠️ No asumas una ubicación específica para los archivos temporales
+- ❌ No crees archivos temporales en el directorio de trabajo
+
+#### 🏗️ Metodología
+- Tests: `tmp_path` fixture de pytest
+- Caché: `TemporaryDirectory` para conjuntos de archivos
+- Archivos grandes temporales: `NamedTemporaryFile(delete=False)`
+
+#### 🔗 Para saber más
+- [Real Python — tempfile](https://realpython.com/python-tempfile/)
+- [pytest tmp_path docs](https://docs.pytest.org/en/stable/howTo/tmp_path.html)
+
+### Streams en memoria
+
+#### ¿Qué es?
+`io.StringIO` y `io.BytesIO` son buffers en memoria que se comportan como archivos. Permiten usar la misma API de archivos sin tocar el disco. Ideales para tests y mockear I/O.
+
+🔗 [Python docs — io](https://docs.python.org/3/library/io.html)
+
+#### Sintaxis básica
+```python
+import io
+
+buffer = io.StringIO()
+buffer.write("línea 1\nlínea 2\n")
+buffer.seek(0)
+print(buffer.read())
+print(buffer.getvalue())
+
+buf = io.BytesIO()
+buf.write(b"\x00\x01\x02")
+buf.seek(0)
+print(buf.read())
+
+def procesar_archivo(f: io.TextIOBase) -> int:
+    return len(f.read())
+```
+
+#### 🧪 Cómo probarlo
+```python
+import pytest
+import io
+
+def test_stringio_como_archivo():
+    f = io.StringIO("contenido de prueba")
+    assert f.read() == "contenido de prueba"
+
+def test_bytesio_binario():
+    buf = io.BytesIO()
+    buf.write(b"\x01\x02\x03")
+    buf.seek(0)
+    assert buf.read() == b"\x01\x02\x03"
+
+def test_mock_archivo_con_stringio():
+    def contar_lineas(f):
+        return len(f.readlines())
+    f = io.StringIO("a\nb\nc\n")
+    assert contar_lineas(f) == 3
+```
+
+#### 💡 Memoria y rendimiento
+- `StringIO` y `BytesIO` operan en RAM — rápidos pero limitados por memoria disponible
+- Para buffers muy grandes (>100 MB), considera archivos temporales
+- `getvalue()` devuelve el contenido completo — O(n) en tiempo
+
+#### ✅ Buenas prácticas
+- ✅ Úsalos para mockear archivos en tests
+- ⚠️ No uses `StringIO` para datos binarios — usa `BytesIO`
+- ❌ No olvides `seek(0)` después de escribir antes de leer
+
+#### 🏗️ Metodología
+- Tests: mockea archivos reales con StringIO/BytesIO
+- Procesamiento: úsalos como buffers intermedios
+- Logging: `logging.StreamHandler(io.StringIO())` para capturar logs
+
+#### 🔗 Para saber más
+- [Python docs — io.StringIO](https://docs.python.org/3/library/io.html#io.StringIO)
+- [Real Python — StringIO](https://realpython.com/python-stringio/)
+
+### CSV y JSON
+
+#### ¿Qué es?
+CSV (Comma-Separated Values) y JSON (JavaScript Object Notation) son los formatos de datos estructurados más comunes. Python incluye módulos para leerlos y escribirlos en la stdlib.
+
+🔗 [Wikipedia — CSV](https://es.wikipedia.org/wiki/CSV), [Wikipedia — JSON](https://es.wikipedia.org/wiki/JSON)
+
+#### Sintaxis básica
+```python
+import csv, json
+
+with open("datos.csv", "w", newline="", encoding="utf-8") as f:
+    writer = csv.writer(f)
+    writer.writerow(["nombre", "edad"])
+    writer.writerows([["Ana", 30], ["Luis", 25]])
+
+with open("datos.csv", "r", encoding="utf-8") as f:
+    reader = csv.DictReader(f)
+    for fila in reader:
+        print(fila["nombre"], fila["edad"])
+
+datos = {"usuarios": [{"nombre": "Ana", "edad": 30}]}
+with open("datos.json", "w", encoding="utf-8") as f:
+    json.dump(datos, f, indent=2, ensure_ascii=False)
+```
+
+#### 🧪 Cómo probarlo
+```python
+import pytest, csv, json, io
+
+def test_csv_escritura_lectura():
+    buffer = io.StringIO()
+    writer = csv.writer(buffer)
+    writer.writerow(["nombre", "edad"])
+    writer.writerow(["Ana", "30"])
+    buffer.seek(0)
+    reader = csv.DictReader(buffer)
+    rows = list(reader)
+    assert rows[0]["nombre"] == "Ana"
+    assert rows[0]["edad"] == "30"
+
+def test_json_serializacion():
+    data = {"clave": "valor", "numero": 42}
+    serializado = json.dumps(data)
+    deserializado = json.loads(serializado)
+    assert deserializado == data
+```
+
+#### 💡 Memoria y rendimiento
+- `csv.DictReader` carga una fila a la vez — eficiente para archivos grandes
+- `json.load()` carga todo el archivo en memoria — O(n) en RAM
+- Para datasets enormes, considera formatos binarios como Parquet
+
+#### ✅ Buenas prácticas
+- ✅ Usa `newline=""` al escribir CSV para evitar filas en blanco extra
+- ⚠️ No asumas que CSV tiene un encoding específico — especifícalo siempre
+- ❌ No uses `eval()` para deserializar JSON — usa `json.loads()`
+
+#### 🏗️ Metodología
+- CSV: datos tabulares simples, intercambio con hojas de cálculo
+- JSON: APIs, configuración, intercambio entre servicios
+- Para datos complejos: JSON con esquemas (Pydantic) para validación
+
+#### 🔗 Para saber más
+- [Python docs — csv](https://docs.python.org/3/library/csv.html)
+- [Python docs — json](https://docs.python.org/3/library/json.html)
+- [Real Python — CSV](https://realpython.com/python-csv/)
+
+### Archivos binarios con struct
+
+#### ¿Qué es?
+El módulo `struct` convierte datos Python a bytes y viceversa usando formatos compactos. Es el estándar para leer/escribir archivos binarios, protocolos de red y datos de C.
+
+🔗 [Python docs — struct](https://docs.python.org/3/library/struct.html)
+
+#### Sintaxis básica
+```python
+import struct
+
+datos_binarios = struct.pack("If", 42, 3.14)
+numero, flotante = struct.unpack("If", datos_binarios)
+
+struct.pack_into("H", bytearray(b"\x00\x00\x00\x00"), 2, 1024)
+```
+
+#### 🧪 Cómo probarlo
+```python
+import pytest, struct
+
+def test_pack_unpack():
+    packed = struct.pack("If", 42, 3.14)
+    n, f = struct.unpack("If", packed)
+    assert n == 42
+    assert abs(f - 3.14) < 0.001
+
+def test_pack_into():
+    buf = bytearray(8)
+    struct.pack_into("I", buf, 0, 255)
+    struct.pack_into("I", buf, 4, 65535)
+    assert struct.unpack_from("I", buf, 0)[0] == 255
+    assert struct.unpack_from("I", buf, 4)[0] == 65535
+```
+
+#### 💡 Memoria y rendimiento
+- `struct.pack` es extremadamente rápido (escrito en C)
+- Los formatos compactos de struct son más eficientes que JSON o pickle
+- Sin alineación: `struct.pack("II", 1, 2)` ocupa 8 bytes exactos
+
+#### ✅ Buenas prácticas
+- ✅ Usa estructuras de tamaño fijo para archivos binarios
+- ⚠️ Respeta el alignment nativo
+- ❌ No asumas el mismo endianness en todas las plataformas
+
+#### 🏗️ Metodología
+- `struct` para formatos binarios simples
+- `numpy` para arrays grandes (más rápido y flexible)
+- `pickle` para serializar objetos Python arbitrarios
+
+#### 🔗 Para saber más
+- [Python docs — struct](https://docs.python.org/3/library/struct.html)
+- [Real Python — struct](https://realpython.com/python-struct/)
+
+---
+
+## Algoritmos y estructuras de datos
+
+### Búsqueda
+
+#### ¿Qué es?
+La búsqueda localiza un elemento dentro de una colección. Python soporta búsqueda lineal (`list.index`, `in`) que es O(n), y búsqueda binaria (`bisect`) que es O(log n) en datos ordenados.
+
+🔗 [Wikipedia — Búsqueda binaria](https://es.wikipedia.org/wiki/B%C3%BAsqueda_binaria)
+
+#### Sintaxis básica
+```python
+import bisect
+
+datos = [1, 3, 5, 7, 9, 11]
+
+print(datos.index(7))          # 3 (lineal)
+pos = bisect.bisect_left(datos, 7)  # 3 (binaria)
+
+print(7 in [1, 3, 5, 7])      # O(n)
+print(7 in {1, 3, 5, 7})      # O(1)
+```
+
+#### 🧪 Cómo probarlo
+```python
+import pytest, bisect
+
+def test_busqueda_lineal():
+    datos = [1, 3, 5, 7]
+    assert datos.index(5) == 2
+    with pytest.raises(ValueError):
+        datos.index(99)
+
+def test_busqueda_binaria():
+    datos = [1, 3, 5, 7, 9]
+    pos = bisect.bisect_left(datos, 5)
+    assert datos[pos] == 5
+
+def test_in_operator():
+    assert 3 in [1, 2, 3]
+    assert 3 in {1, 2, 3}
+    assert "k" in {"k": 1}
+```
+
+#### 💡 Memoria y rendimiento
+- `list.index()`: O(n) tiempo, O(1) memoria extra
+- `bisect.bisect_left()`: O(log n) tiempo, O(1) memoria extra
+- `in` en set/dict: O(1) promedio, O(n) peor caso
+
+#### ✅ Buenas prácticas
+- ✅ Si buscas frecuentemente, convierte la lista a `set`
+- ⚠️ `bisect` requiere datos ordenados
+- ❌ No abuses de `in` en listas grandes para búsquedas repetitivas
+
+#### 🏗️ Metodología
+- Búsqueda única: `list.index()` o `in` es suficiente
+- Búsquedas múltiples: convierte a `set`/`dict` (O(1))
+- Búsqueda en datos ordenados: `bisect` (O(log n))
+
+#### 🔗 Para saber más
+- [Python docs — bisect](https://docs.python.org/3/library/bisect.html)
+- [Big O Cheat Sheet](https://www.bigocheatsheet.com/)
+
+### Ordenación
+
+#### ¿Qué es?
+Python incluye Timsort, un algoritmo híbrido estable (O(n log n)) que combina Merge Sort y Insertion Sort. Es el algoritmo de ordenación por defecto en `sorted()` y `list.sort()`.
+
+🔗 [Wikipedia — Timsort](https://es.wikipedia.org/wiki/Timsort)
+
+#### Sintaxis básica
+```python
+numeros = [3, 1, 4, 1, 5]
+ordenados = sorted(numeros)
+inverso = sorted(numeros, reverse=True)
+numeros.sort()
+
+palabras = ["python", "java", "c", "rust"]
+sorted(palabras, key=len)
+
+from operator import attrgetter
+class Usuario:
+    def __init__(self, nombre, edad):
+        self.nombre, self.edad = nombre, edad
+usuarios = [Usuario("Ana", 30), Usuario("Luis", 25)]
+sorted(usuarios, key=attrgetter("edad"))
+
+#### 🧪 Cómo probarlo
+```python
+import pytest
+
+def test_sorted():
+    assert sorted([3, 1, 2]) == [1, 2, 3]
+
+def test_sorted_reverse():
+    assert sorted([1, 2, 3], reverse=True) == [3, 2, 1]
+
+def test_sort_inplace():
+    nums = [3, 1, 2]
+    nums.sort()
+    assert nums == [1, 2, 3]
+
+def test_sort_key():
+    palabras = ["aa", "b", "ccc"]
+    assert sorted(palabras, key=len) == ["b", "aa", "ccc"]
+
+def test_estabilidad():
+    datos = [(1, "a"), (2, "b"), (1, "c")]
+    ordenados = sorted(datos, key=lambda x: x[0])
+    assert ordenados[0][1] == "a"
+```
+
+#### 💡 Memoria y rendimiento
+- Timsort: O(n log n) peor caso, O(n) mejor caso (datos ya ordenados)
+- `sorted()` devuelve una nueva lista (O(n) memoria extra)
+- `list.sort()` ordena in-place (O(1) memoria extra)
+- Estable: elementos iguales mantienen su orden relativo
+
+#### ✅ Buenas prácticas
+- ✅ Usa `key` en vez de `cmp` (no existe `cmp` en Python 3)
+- ⚠️ Si ordenas objetos, implementa `__lt__` o usa `attrgetter`
+- ❌ No redefinas `sorted` — usa `key` para personalizar
+
+#### 🏗️ Metodología
+- Lista pequeña (< 1000 elementos): cualquier método funciona
+- Lista grande pero ya casi ordenada: Timsort rinde mejor que QuickSort
+- Ordenación estable: necesaria cuando hay criterios múltiples
+
+#### 🔗 Para saber más
+- [Python docs — sorting](https://docs.python.org/3/howto/sorting.html)
+- [Wikipedia — Timsort](https://en.wikipedia.org/wiki/Timsort)
+
+### Estructuras de datos de la stdlib
+
+#### ¿Qué es?
+Además de listas, dicts y sets, la stdlib incluye estructuras especializadas: `deque` (cola doble), `defaultdict` (dict con valor por defecto), `Counter` (contador), `heapq` (cola de prioridad) y más.
+
+🔗 [Python docs — collections](https://docs.python.org/3/library/collections.html)
+
+#### Sintaxis básica
+```python
+from collections import deque, defaultdict, Counter, ChainMap
+from heapq import heappush, heappop, nlargest
+
+d = deque([1, 2, 3])
+d.append(4)
+d.appendleft(0)
+d.pop()
+d.popleft()
+
+dd = defaultdict(list)
+dd["frutas"].append("manzana")
+
+frecuencia = Counter("python es genial")
+print(frecuencia.most_common(3))
+
+heap = []
+heappush(heap, 3)
+heappush(heap, 1)
+heappush(heap, 2)
+print(heappop(heap))
+```
+
+#### 🧪 Cómo probarlo
+```python
+import pytest
+from collections import deque, defaultdict, Counter
+from heapq import heappush, heappop
+
+def test_deque():
+    d = deque([1, 2])
+    d.appendleft(0)
+    d.append(3)
+    assert list(d) == [0, 1, 2, 3]
+
+def test_defaultdict():
+    dd = defaultdict(int)
+    dd["a"] += 1
+    assert dd["a"] == 1
+    assert dd["b"] == 0
+
+def test_counter():
+    c = Counter("abbccc")
+    assert c.most_common(1) == [("c", 3)]
+
+def test_heapq():
+    h = []
+    heappush(h, 5)
+    heappush(h, 1)
+    heappush(h, 3)
+    assert heappop(h) == 1
+```
+
+#### 💡 Memoria y rendimiento
+- `deque`: O(1) en ambos extremos (vs O(n) en list para el inicio)
+- `defaultdict`: mismo rendimiento que `dict`, sin overhead por valores ausentes
+- `Counter`: O(n) para construir, O(n log n) para `most_common`
+- `heapq`: O(log n) push/pop, O(1) para ver el mínimo
+
+#### ✅ Buenas prácticas
+- ✅ Usa `deque` para colas (FIFO) y pilas (LIFO)
+- ⚠️ No uses `list.pop(0)` — es O(n); usa `deque.popleft()`
+- ❌ No confundas `set` con `Counter` — `Counter` guarda frecuencias
+
+#### 🏗️ Metodología
+- `deque`: colas, historial, buffers deslizantes
+- `defaultdict`: agrupar elementos, acumular valores
+- `Counter`: análisis de frecuencias, estadísticas
+- `heapq`: prioridades, top-N elementos
+- `ChainMap`: configuración por capas
+
+#### 🔗 Para saber más
+- [Python docs — collections](https://docs.python.org/3/library/collections.html)
+- [Python docs — heapq](https://docs.python.org/3/library/heapq.html)
+- [Real Python — deque](https://realpython.com/python-deque/)
+
+### itertools y functools
+
+#### ¿Qué es?
+`itertools` proporciona iteradores eficientes para composición de datos (producto cartesiano, permutaciones, agrupación). `functools` ofrece herramientas para funciones de orden superior (parciales, memoización, sobrecarga).
+
+🔗 [Python docs — itertools](https://docs.python.org/3/library/itertools.html), [functools](https://docs.python.org/3/library/functools.html)
+
+#### Sintaxis básica
+```python
+from itertools import chain, cycle, permutations, combinations, groupby, product, accumulate
+from functools import reduce, partial, cache, singledispatch
+
+list(chain([1, 2], [3, 4]))
+list(zip(range(5), cycle("AB")))
+list(permutations("ABC", 2))
+list(combinations("ABC", 2))
+list(accumulate([1, 2, 3, 4]))
+
+@cache
+def fibonacci(n):
+    return n if n < 2 else fibonacci(n-1) + fibonacci(n-2)
+
+@singledispatch
+def procesar(x):
+    raise NotImplementedError
+@procesar.register(str)
+def _(x): return f"Texto: {x}"
+@procesar.register(int)
+def _(x): return f"Número: {x}"
+```
+
+#### 🧪 Cómo probarlo
+```python
+import pytest
+from itertools import chain, accumulate
+from functools import partial, cache
+
+def test_chain():
+    assert list(chain([1, 2], [3, 4])) == [1, 2, 3, 4]
+
+def test_accumulate():
+    assert list(accumulate([1, 2, 3, 4])) == [1, 3, 6, 10]
+
+def test_partial():
+    def potencia(base, exp): return base ** exp
+    cuadrado = partial(potencia, exp=2)
+    assert cuadrado(5) == 25
+
+def test_cache():
+    llamadas = 0
+    @cache
+    def suma(a, b):
+        nonlocal llamadas
+        llamadas += 1
+        return a + b
+    assert suma(1, 2) == 3
+    assert suma(1, 2) == 3
+    assert llamadas == 1
+```
+
+#### 💡 Memoria y rendimiento
+- `itertools` funciones son lazy — no crean listas intermedias
+- `chain` evita concatenar listas (O(1) vs O(n) memoria)
+- `cache` (3.9+) es memoización sin límite
+- `groupby` requiere datos ordenados por la clave
+
+#### ✅ Buenas prácticas
+- ✅ Usa `itertools` para evitar bucles anidados y listas intermedias
+- ⚠️ `groupby` solo agrupa elementos consecutivos — ordena primero
+- ❌ No abuses de `reduce` si una comprehension es más legible
+
+#### 🏗️ Metodología
+- `chain`: concatenar múltiples iterables sin copiar
+- `groupby`: procesar datos agrupados (logs, eventos)
+- `cache`: funciones costosas con llamadas repetidas
+- `singledispatch`: sobrecarga de funciones por tipo sin herencia
+
+#### 🔗 Para saber más
+- [Real Python — itertools](https://realpython.com/python-itertools/)
+- [Python docs — functools](https://docs.python.org/3/library/functools.html)
+
+### Complejidad Big O
+
+#### ¿Qué es?
+Big O describe cómo crece el tiempo de ejecución (o memoria) de un algoritmo según el tamaño de la entrada. Es el lenguaje universal para hablar de rendimiento de algoritmos.
+
+🔗 [Wikipedia — Big O](https://es.wikipedia.org/wiki/Gran_notaci%C3%B3n_O)
+
+#### Sintaxis básica
+| Operación | `list` | `dict` | `set` | `deque` | `heapq` |
+|---|---|---|---|---|---|
+| Acceso por índice | O(1) | — | — | O(1) | — |
+| Búsqueda | O(n) | O(1) avg | O(1) avg | O(n) | O(n) |
+| Inserción al final | O(1) amortizado | — | — | O(1) | O(log n) |
+| Inserción al inicio | O(n) | — | — | O(1) | — |
+| Eliminación | O(n) | O(1) avg | O(1) avg | O(n) | O(log n) |
+| Mínimo/Máximo | O(n) | O(n) | O(n) | O(n) | O(1) min |
+
+#### 🧪 Cómo probarlo
+```python
+import pytest
+import time
+
+def test_big_o_lineal():
+    n = 100_000
+    lista = list(range(n))
+    inicio = time.perf_counter()
+    99999 in lista
+    t_lista = time.perf_counter() - inicio
+
+    conjunto = set(lista)
+    inicio = time.perf_counter()
+    99999 in conjunto
+    t_set = time.perf_counter() - inicio
+
+    assert t_set < t_lista
+```
+
+#### 💡 Memoria y rendimiento
+- `list.append()` es O(1) amortizado — ocasionalmente O(n) cuando redimensiona
+- `dict`/`set` tienen factor de carga ~2/3 — ocupan más memoria que listas
+- No optimices prematuramente — primero perfila con datos reales
+
+#### ✅ Buenas prácticas
+- ✅ Elige la estructura según la operación dominante
+- ⚠️ No optimices prematuramente
+- ❌ No asumas que O(1) en teoría significa rápido en la práctica
+
+#### 🏗️ Metodología
+- Búsqueda intensiva: `set`/`dict` (O(1))
+- Cola FIFO: `deque` (O(1))
+- Prioridad: `heapq` (O(log n))
+- Ordenación única: `sorted()` (Timsort O(n log n))
+
+#### 🔗 Para saber más
+- [Python Wiki — Time Complexity](https://wiki.python.org/moin/TimeComplexity)
+- [Big O Cheat Sheet](https://www.bigocheatsheet.com/)
+- [Real Python — Big O](https://realpython.com/python-bigo/)
 
 ---
 
@@ -626,26 +1816,18 @@ Fuente: [Python docs — Control Flow](https://docs.python.org/3/tutorial/contro
 
 ### Decoradores
 
-Un decorador es una función que envuelve a otra función para extender su comportamiento sin modificar su código fuente. Es una aplicación directa del **patrón Decorator**, pero integrado en la sintaxis del lenguaje con el símbolo `@`.
+#### ¿Qué es?
+Un decorador es una función que envuelve a otra para extender su comportamiento sin modificar su código fuente. Es el patrón Decorator integrado en la sintaxis del lenguaje con `@`. Como ponerle una funda a tu móvil: el móvil sigue siendo el mismo, pero ahora tiene protección extra.
 
-**Cómo funciona internamente:**
-```python
-# Esto:
-@mi_decorador
-def funcion():
-    pass
+🔗 [Python docs — Decorators](https://docs.python.org/3/reference/compound_stmts.html#function-definitions)
 
-# Es equivalente a esto:
-funcion = mi_decorador(funcion)
-```
-
-**Crear un decorador simple:**
+#### Sintaxis básica
 ```python
 from functools import wraps
 import time
 
 def medir_tiempo(func):
-    @wraps(func)  # Preserva nombre, docstring y metadata de func
+    @wraps(func)
     def wrapper(*args, **kwargs):
         inicio = time.perf_counter()
         resultado = func(*args, **kwargs)
@@ -655,12 +1837,9 @@ def medir_tiempo(func):
     return wrapper
 
 @medir_tiempo
-def calcular_algo():
+def calcular():
     return sum(range(10_000_000))
-```
 
-**Decoradores con argumentos (doble nivel):**
-```python
 def repetir(n: int):
     def decorador(func):
         @wraps(func)
@@ -675,136 +1854,353 @@ def saludar():
     print("Hola!")
 ```
 
-**Decoradores como clases (con `__call__`):**
+#### 🧪 Cómo probarlo
 ```python
-class ContadorLlamadas:
-    def __init__(self, func):
-        self.func = func
-        self.contador = 0
-    
-    def __call__(self, *args, **kwargs):
-        self.contador += 1
-        print(f"Llamada #{self.contador}")
-        return self.func(*args, **kwargs)
+import pytest
+from functools import wraps
 
-@ContadorLlamadas
-def di_hola():
-    print("Hola")
+def test_decorador_simple():
+    llamado = []
+    def decorador(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            llamado.append(1)
+            return func(*args, **kwargs)
+        return wrapper
+
+    @decorador
+    def suma(a, b):
+        return a + b
+
+    assert suma(2, 3) == 5
+    assert len(llamado) == 1
+
+def test_decorador_con_argumentos():
+    def repetir(n):
+        def decorador(func):
+            @wraps(func)
+            def wrapper(*args, **kwargs):
+                for _ in range(n):
+                    func(*args, **kwargs)
+            return wrapper
+        return decorador
+
+    resultados = []
+    @repetir(3)
+    def registrar():
+        resultados.append("ok")
+
+    registrar()
+    assert len(resultados) == 3
 ```
 
-**¿Con qué se relaciona en otras tecnologías?**
-- **JavaScript**: `function decorador(func) { return function(...args) { ... } }` — mismo concepto, mismo patrón
-- **Java**: Anotaciones + Annotation Processors (aunque en Java es metaprogramación en compilación, no runtime)
-- **TypeScript/ES**: Decorators experimentales con `@decorador` (similar sintaxis)
-- **Express.js**: Middleware `app.use((req, res, next) => ...)` funciona como decorador conceptual: envuelve el handler original
-- **AOP (Aspect-Oriented Programming)**: Los decoradores son la forma Pythonic de lograr programación orientada a aspectos para logging, caché, autorización, etc.
+#### 💡 Memoria y rendimiento
+- Cada nivel de decoración añade overhead de llamada a función
+- `@wraps` es importante pero añade mínima sobrecarga
+- Cadenas de decoradores (>5) pueden afectar legibilidad y rendimiento
 
-**Decoradores que ya vienen en la stdlib:**
-- `@functools.lru_cache` y `@functools.cache` — memoización automática
-- `@functools.singledispatch` — sobrecarga de funciones por tipo
-- `@contextlib.contextmanager` — convierte un generador en context manager
-- `@property`, `@staticmethod`, `@classmethod` — decoradores built-in
-- `@dataclasses.dataclass` — genera `__init__`, `__repr__`, `__eq__` automáticamente
+#### ✅ Buenas prácticas
+- ✅ Siempre usa `@functools.wraps` en decoradores
+- ⚠️ No anides más de 3-4 decoradores — la legibilidad se resiente
+- ❌ No uses decoradores para efectos secundarios en tiempo de importación
 
-Fuente: [Python docs — Decorators](https://docs.python.org/3/reference/compound_stmts.html#function-definitions), [PEP 318](https://peps.python.org/pep-0318/)
+#### 🏗️ Metodología
+- Decoradores para concerns transversales: logging, timing, caché, autorización
+- En APIs web: FastAPI usa decoradores (`@app.get()`)
+- En proyectos grandes: considera decoradores de clase
 
-### Variables, memoria y objetos
+#### 🔗 Para saber más
+- [PEP 318 — Decorators](https://peps.python.org/pep-0318/)
+- [Real Python — Primer on Decorators](https://realpython.com/primer-on-python-decorators/)
+- [Python docs — functools.wraps](https://docs.python.org/3/library/functools.html#functools.wraps)
 
-Python no tiene variables al estilo C o Java. Tiene **nombres** que referencian **objetos** en memoria. Todo en Python es un objeto, incluso los enteros.
+### El GIL (Global Interpreter Lock)
 
-**Pass-by-object-reference:**
+#### ¿Qué es?
+El GIL es un mutex que protege el intérprete de CPython: solo un thread ejecuta bytecode Python a la vez. Esto significa que threading no sirve para paralelismo CPU-bound, pero sí para I/O-bound. Es como un turno en una tienda: aunque haya varios dependientes, solo un cliente puede ser atendido a la vez.
+
+🔗 [Real Python — GIL](https://realpython.com/python-gil/)
+
+#### Sintaxis básica
 ```python
-def modificar(lista):
-    lista.append(4)  # Modifica el objeto original
+import threading, time, multiprocessing
 
-def reasignar(lista):
-    lista = [1, 2, 3]  # Crea un nuevo objeto, no afecta al exterior
+def contar(n):
+    while n > 0:
+        n -= 1
 
-mi_lista = [1, 2]
-modificar(mi_lista)  # mi_lista ahora es [1, 2, 4]
-reasignar(mi_lista)  # mi_lista sigue siendo [1, 2, 4]
+t1 = threading.Thread(target=contar, args=(10_000_000,))
+t2 = threading.Thread(target=contar, args=(10_000_000,))
+inicio = time.time()
+t1.start(); t2.start()
+t1.join(); t2.join()
+print(time.time() - inicio)
+
+p1 = multiprocessing.Process(target=contar, args=(10_000_000,))
+p2 = multiprocessing.Process(target=contar, args=(10_000_000,))
 ```
 
-**Objetos mutables vs inmutables:**
-
-| Tipo | Mutabilidad | Ejemplo | Comportamiento |
-|---|---|---|---|
-| `int` | Inmutable | `a = 5; a += 1` | Crea un nuevo `int` (6) y reasigna `a` |
-| `str` | Inmutable | `s = "hola"; s += "!"` | Crea un nuevo `str` |
-| `tuple` | Inmutable | `t = (1, 2)` | No se puede modificar |
-| `list` | Mutable | `l = [1]; l.append(2)` | Modifica el mismo objeto |
-| `dict` | Mutable | `d = {}; d["a"] = 1` | Modifica el mismo objeto |
-| `set` | Mutable | `s = {1}; s.add(2)` | Modifica el mismo objeto |
-
-**Cómo Python optimiza memoria:**
-
-- **Small integer caching**: Los enteros de -5 a 256 son objetos singleton. `a = 256; b = 256; a is b → True`. Pero `a = 257; b = 257; a is b → False` (depende de la implementación, no confíes en `is` para comparar números).
-- **String interning**: Cadenas cortas y con formato de identificador se cachean automáticamente. Python reusa el mismo objeto en memoria.
-- **`sys.intern()`**: Puedes forzar el interning de cadenas para ahorrar memoria y acelerar comparaciones.
-
-**¿Cuánto ocupa cada cosa?**
+#### 🧪 Cómo probarlo
 ```python
-import sys
+import pytest, time, threading
 
-print(sys.getsizeof(1))         # 28 bytes
-print(sys.getsizeof("a"))       # 50 bytes
-print(sys.getsizeof([]))        # 56 bytes + los elementos
-print(sys.getsizeof([1,2,3]))   # 88 bytes (56 + 3 * 8 para las referencias)
-print(sys.getsizeof({}))        # 72 bytes
+def test_gil_io_bound():
+    import urllib.request
+    urls = ["https://httpbin.org/delay/1"] * 3
+
+    def descargar(url):
+        urllib.request.urlopen(url, timeout=5)
+
+    threads = [threading.Thread(target=descargar, args=(u,)) for u in urls]
+    inicio = time.time()
+    for t in threads: t.start()
+    for t in threads: t.join()
+    duracion = time.time() - inicio
+    assert duracion < 3
 ```
-Cada objeto tiene overhead: 16–24 bytes de cabecera (referencia al tipo, contador de referencias, etc.). Una `list` de 1M enteros ocupa ~8 MB solo para las referencias, más 28 MB para los enteros (aprox. 36 MB total). Un `array('i')` del módulo `array` ocupa ~4 MB para los mismos 1M enteros.
 
-**Reference counting y garbage collection:**
+#### 💡 Memoria y rendimiento
+- Threading CPU-bound: peor que secuencial (contienda por el GIL)
+- Threading I/O-bound: hasta 10x más rápido que secuencial
+- multiprocessing: paralelismo real, pero mayor overhead de memoria
+- asyncio: cooperativo, sin GIL (un solo hilo, sin contienda de lock)
+
+#### ✅ Buenas prácticas
+- ✅ I/O-bound → asyncio o threading
+- ⚠️ CPU-bound → multiprocessing o librerías C (numpy) que liberan el GIL
+- ❌ No mezcles asyncio con threading sin entender las implicaciones
+
+#### 🏗️ Metodología
+- I/O (HTTP, BD, archivos): asyncio (más eficiente que threads)
+- CPU puro: multiprocessing
+- CPU + I/O: asyncio con ProcessPoolExecutor
+- Librerías C (numpy, pandas): liberan el GIL automáticamente
+
+#### 🔗 Para saber más
+- [Python docs — GIL](https://docs.python.org/3/glossary.html#term-global-interpreter-lock)
+- [Real Python — GIL](https://realpython.com/python-gil/)
+- [PEP 703 — free-threaded Python](https://peps.python.org/pep-0703/)
+
+### Duck typing
+
+#### ¿Qué es?
+"Si camina como pato y habla como pato, entonces es un pato". Python no mira el tipo nominal del objeto, sino su comportamiento: si tiene el método que necesitas, funciona.
+
+🔗 [Wikipedia — Duck typing](https://es.wikipedia.org/wiki/Duck_typing)
+
+#### Sintaxis básica
 ```python
-import sys
-import gc
+class Pato:
+    def hablar(self): return "Cuac"
 
-a = []
-b = a
-print(sys.getrefcount(a))  # 3 (a, b, argumento de getrefcount)
+class Persona:
+    def hablar(self): return "Hola"
 
-# Ciclo de referencia (problema para reference counting)
-a = []
-b = []
-a.append(b)
-b.append(a)
-# Reference counting no puede liberar esto → GC cíclico lo detecta
-del a, b
-gc.collect()  # Forzar recolección
+def hacer_hablar(cosa):
+    print(cosa.hablar())
+
+hacer_hablar(Pato())     # Cuac
+hacer_hablar(Persona())  # Hola
+
+from typing import Protocol
+
+class Hablador(Protocol):
+    def hablar(self) -> str: ...
 ```
-Python usa **reference counting** como mecanismo principal de gestión de memoria. Cuando el contador llega a 0, el objeto se libera inmediatamente. Complementa con un **garbage collector cíclico** que detecta ciclos de referencias. Puedes desactivarlo con `gc.disable()` si sabes que no hay ciclos (rendimiento predecible).
 
-**¿Hay buffer overflow en Python?**
-No en Python puro. Las listas, `str` y `bytes` tienen bounds checking nativo. Hacer `lista[100]` en una lista de 5 elementos lanza `IndexError`, no corrompe memoria. El peligro real está en:
-1. **C extensions**: módulos como `numpy`, `ctypes`, o `CFFI` pueden tener buffer overflows si el código C subyacente tiene bugs
-2. **`memoryview` mal usado**: `memoryview` permite acceso al buffer subyacente sin copia, pero el slicing respeta límites
-3. **`struct.pack_into` / `unpack_from`**: si calculas mal el offset, puedes leer/escribir fuera del buffer
-4. **`ctypes`**: acceder a memoria arbitraria es posible con `ctypes.string_at()` o creando punteros. Si usas `ctypes`, estás en territorio C
-
-Para Python puro, la sobreescritura de buffer no existe. Python verifica cada acceso a índice en tiempo de ejecución.
-
-**`__slots__` para reducir memoria:**
+#### 🧪 Cómo probarlo
 ```python
-class SinSlots:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
+import pytest
 
-class ConSlots:
-    __slots__ = ("x", "y")
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
+def test_duck_typing():
+    class Perro:
+        def sonido(self): return "Guau"
+    class Gato:
+        def sonido(self): return "Miau"
 
-# ConSlots ocupa ~50% menos memoria porque no tiene __dict__
+    def hacer_sonido(animal):
+        return animal.sonido()
+
+    assert hacer_sonido(Perro()) == "Guau"
+    assert hacer_sonido(Gato()) == "Miau"
+
+    class Coche:
+        def sonido(self): return "Brum"
+    assert hacer_sonido(Coche()) == "Brum"
 ```
-Cada objeto Python tiene un `__dict__` que es un diccionario: flexible pero costoso en memoria. `__slots__` elimina el `__dict__` y almacena los atributos en una estructura compacta similar a un array. A cambio, no puedes añadir atributos dinámicamente.
 
-Fuente: [Python docs — sys.getsizeof](https://docs.python.org/3/library/sys.html#sys.getsizeof), [Python docs — gc](https://docs.python.org/3/library/gc.html), [CPython internals (Real Python)](https://realpython.com/cpython-source-code-guide/)
+#### 💡 Memoria y rendimiento
+- Duck typing tiene overhead: cada llamada a método busca el atributo en el diccionario del objeto
+- Protocol es solo para type checkers — no tiene impacto en runtime
 
-### POO avanzada: herencia, protocolos y patrones
+#### ✅ Buenas prácticas
+- ✅ Usa Protocol para documentar interfaces esperadas
+- ⚠️ No confíes en duck typing para APIs públicas sin documentar
+- ❌ No abuses de `hasattr()` para comprobar capacidades — prefiere EAFP
 
-**Herencia múltiple y MRO (Method Resolution Order):**
+#### 🏗️ Metodología
+- Duck typing para código interno y tests
+- Protocol para interfaces públicas y APIs
+- ABC para jerarquías de clases con implementación compartida
+
+#### 🔗 Para saber más
+- [PEP 544 — Protocols](https://peps.python.org/pep-0544/)
+- [Python docs — duck typing](https://docs.python.org/3/glossary.html#term-duck-typing)
+
+### EAFP vs LBYL
+
+#### ¿Qué es?
+Python prefiere **EAFP** (Easier to Ask Forgiveness than Permission): intenta la operación y captura la excepción si falla. El enfoque alternativo es **LBYL** (Look Before You Leap): verifica antes de hacer la operación.
+
+🔗 [Python glossary — EAFP](https://docs.python.org/3/glossary.html#term-eafp)
+
+#### Sintaxis básica
+```python
+# LBYL
+if os.path.exists(archivo):
+    with open(archivo) as f:
+        ...
+
+# EAFP — Pythonic
+try:
+    with open(archivo) as f:
+        ...
+except FileNotFoundError:
+    print("Archivo no encontrado")
+```
+
+#### 🧪 Cómo probarlo
+```python
+import pytest
+
+def test_eafp_mas_rapido():
+    datos_validos = {"a": 1}
+    import time
+
+    def lbyl(d):
+        if "a" in d:
+            return d["a"]
+        return None
+
+    def eafp(d):
+        try:
+            return d["a"]
+        except KeyError:
+            return None
+
+    inicio = time.perf_counter()
+    for _ in range(100_000):
+        lbyl(datos_validos)
+    t_lbyl = time.perf_counter() - inicio
+
+    inicio = time.perf_counter()
+    for _ in range(100_000):
+        eafp(datos_validos)
+    t_eafp = time.perf_counter() - inicio
+
+    assert t_eafp < t_lbyl * 2
+```
+
+#### 💡 Memoria y rendimiento
+- EAFP es más rápido cuando el caso exitoso es común
+- LBYL es más rápido cuando el fallo es común
+- Construir una excepción es caro (~50μs)
+
+#### ✅ Buenas prácticas
+- ✅ Usa EAFP para operaciones que esperas que funcionen la mayoría del tiempo
+- ⚠️ No uses EAFP si la condición previa es barata y el error es caro
+- ❌ No uses EAFP para control de flujo normal
+
+#### 🏗️ Metodología
+- APIs de archivos y red: EAFP (los errores son esperados)
+- Validación de datos externos: LBYL primero, luego EAFP
+- Operaciones atómicas: EAFP evita race conditions
+
+#### 🔗 Para saber más
+- [Python glossary — EAFP](https://docs.python.org/3/glossary.html#term-eafp)
+- [Stack Overflow — EAFP vs LBYL](https://stackoverflow.com/questions/11360858/what-is-the-eafp-principle-in-python)
+
+### Peculiaridades del lenguaje
+
+#### ¿Qué es?
+Python tiene peculiaridades que lo hacen único: chaining de comparaciones, unpacking con `*`, `for...else`, `_` como throwaway, y type hints no vinculantes.
+
+🔗 [Python docs — Expressions](https://docs.python.org/3/reference/expressions.html)
+
+#### Sintaxis básica
+```python
+# Chaining
+if 1 < x < 10:
+    ...
+
+# Unpacking
+primero, *resto, ultimo = [1, 2, 3, 4, 5]
+
+# for...else
+for n in range(2, 10):
+    for divisor in range(2, int(n**0.5) + 1):
+        if n % divisor == 0:
+            break
+    else:
+        print(f"{n} es primo")
+
+# Type hints no vinculantes
+def suma(a: int, b: int) -> int:
+    return a + b
+suma("hola", "mundo")  # funciona
+```
+
+#### 🧪 Cómo probarlo
+```python
+import pytest
+
+def test_chaining():
+    x = 5
+    assert 1 < x < 10
+
+def test_unpacking():
+    primero, *resto, ultimo = [1, 2, 3, 4]
+    assert primero == 1
+    assert resto == [2, 3]
+    assert ultimo == 4
+
+def test_type_hints_no_vinculantes():
+    def suma(a: int, b: int) -> int:
+        return a + b
+    assert suma("hola", " mundo") == "hola mundo"
+```
+
+#### 💡 Memoria y rendimiento
+- Chaining de comparaciones no tiene overhead adicional
+- Unpacking es O(n) pero implementado en C — muy rápido
+- Type hints se descartan en runtime — no tienen impacto
+
+#### ✅ Buenas prácticas
+- ✅ Usa chaining para rangos (`0 <= x < 100`)
+- ⚠️ No abuses de unpacking con muchos elementos
+- ❌ No confíes en type hints para validación en runtime
+
+#### 🏗️ Metodología
+- Chaining: mejora legibilidad en rangos y comparaciones múltiples
+- Unpacking: intercambio de variables, división de secuencias
+- `for...else`: búsquedas con flag de encontrado
+
+#### 🔗 Para saber más
+- [Python docs — Expressions](https://docs.python.org/3/reference/expressions.html)
+- [Real Python — Python's for-else Loop](https://realpython.com/python-for-else-loop/)
+
+---
+
+## POO avanzada: herencia, protocolos y patrones
+
+### Herencia y MRO
+
+#### ¿Qué es?
+Python soporta herencia múltiple. El MRO (Method Resolution Order) determina el orden en que se buscan los métodos. Python usa el algoritmo C3 linearization para resolver conflictos.
+
+🔗 [Python docs — MRO](https://docs.python.org/3/howto/mro.html)
+
+#### Sintaxis básica
 ```python
 class A:
     def metodo(self): return "A"
@@ -819,27 +2215,80 @@ class D(B, C):
     pass
 
 d = D()
-print(d.metodo())  # "B" — MRO: D → B → C → A
-print(D.__mro__)   # (D, B, C, A, object)
+print(d.metodo())          # "B"
+print(D.__mro__)           # (D, B, C, A, object)
 ```
-Python usa el algoritmo C3 linearization para resolver el orden de resolución de métodos. Puedes consultar `Clase.__mro__` para ver el orden exacto. `super()` sigue el MRO, no la jerarquía lineal de padres (cooperative multiple inheritance).
 
-**ABC y Protocolos:**
+#### 🧪 Cómo probarlo
+```python
+import pytest
+
+def test_mro():
+    class A:
+        def metodo(self): return "A"
+    class B(A):
+        def metodo(self): return "B"
+    class C(A):
+        def metodo(self): return "C"
+    class D(B, C):
+        pass
+
+    d = D()
+    assert d.metodo() == "B"
+    assert D.__mro__[1] == B
+
+def test_super_sigue_mro():
+    class A:
+        def nombre(self): return "A"
+    class B(A):
+        def nombre(self): return "B" + super().nombre()
+    class C(A):
+        def nombre(self): return "C" + super().nombre()
+    class D(B, C):
+        def nombre(self): return "D" + super().nombre()
+
+    assert D().nombre() == "DBCA"
+```
+
+#### 💡 Memoria y rendimiento
+- El MRO se calcula una vez en la definición de la clase
+- `super()` es ligeramente más lento que llamar al método directamente
+- El MRO se almacena en `__mro__` (tupla) — O(1) acceso
+
+#### ✅ Buenas prácticas
+- ✅ Usa `super().__init__()` en lugar de `ClaseBase.__init__(self)`
+- ⚠️ La herencia múltiple es compleja — prefiere composición o mixins
+- ❌ No crees diamantes profundos (>3 niveles) sin entender el MRO
+
+#### 🏗️ Metodología
+- Herencia simple para "es un" (Animal → Perro)
+- Mixins para "tiene la capacidad de" (Exportable, Serializable)
+- Composición para "tiene un" (Coche → Motor, Ruedas)
+- Protocols para "puede ser usado como"
+
+#### 🔗 Para saber más
+- [Python docs — Inheritance](https://docs.python.org/3/tutorial/classes.html#inheritance)
+- [Real Python — super()](https://realpython.com/python-super/)
+
+### ABC y Protocolos
+
+#### ¿Qué es?
+ABC (Abstract Base Class) define interfaces mediante herencia explícita. Protocol (PEP 544) define interfaces por estructura: si un objeto tiene los métodos, implementa el protocolo.
+
+🔗 [PEP 544 — Protocols](https://peps.python.org/pep-0544/)
+
+#### Sintaxis básica
 ```python
 from abc import ABC, abstractmethod
 from typing import Protocol
 
-# Abstract Base Class (herencia nominal)
 class Animal(ABC):
     @abstractmethod
-    def hacer_sonido(self) -> str:
-        ...
+    def hacer_sonido(self) -> str: ...
 
 class Perro(Animal):
-    def hacer_sonido(self) -> str:
-        return "Guau"
+    def hacer_sonido(self) -> str: return "Guau"
 
-# Protocol (structural subtyping — PEP 544)
 class Volador(Protocol):
     def volar(self) -> None: ...
 
@@ -850,11 +2299,58 @@ class Pajaro:
 def lanzar(objeto: Volador):
     objeto.volar()
 
-lanzar(Pajaro())  # OK — Pajaro implementa Volador sin herencia explícita
+lanzar(Pajaro())  # OK
 ```
-`ABC` requiere herencia explícita (nominal). `Protocol` usa tipado estructural (duck typing en tiempo de compilación con mypy).
 
-**Dataclasses en profundidad:**
+#### 🧪 Cómo probarlo
+```python
+import pytest
+from abc import ABC, abstractmethod
+from typing import Protocol
+
+def test_abc_no_instanciable():
+    class Base(ABC):
+        @abstractmethod
+        def metodo(self): ...
+    with pytest.raises(TypeError):
+        Base()
+
+def test_protocol_estructural():
+    class Imprimible(Protocol):
+        def imprimir(self) -> str: ...
+    class Doc:
+        def imprimir(self) -> str: return "doc"
+    def procesar(x: Imprimible):
+        return x.imprimir()
+    assert procesar(Doc()) == "doc"
+```
+
+#### 💡 Memoria y rendimiento
+- ABC y Protocol tienen zero overhead en runtime
+- `isinstance()` con ABC registrado es más caro que sin él
+
+#### ✅ Buenas prácticas
+- ✅ Usa ABC cuando hay implementación compartida (template method)
+- ⚠️ Usa Protocol cuando solo importa la interfaz
+- ❌ No mezcles ABC y Protocol en la misma jerarquía sin necesidad
+
+#### 🏗️ Metodología
+- Frameworks: ABC para hooks que el usuario debe implementar
+- Librerías: Protocol para tipos genéricos sin acoplar
+- Tests: Protocol para mockear dependencias fácilmente
+
+#### 🔗 Para saber más
+- [Python docs — abc](https://docs.python.org/3/library/abc.html)
+- [Real Python — Python Protocols](https://realpython.com/python-protocol/)
+
+### Dataclasses
+
+#### ¿Qué es?
+`@dataclass` genera automáticamente `__init__`, `__repr__`, `__eq__` (y opcionalmente `__hash__`, `__lt__`). Elimina el boilerplate de clases que solo almacenan datos.
+
+🔗 [Python docs — dataclasses](https://docs.python.org/3/library/dataclasses.html)
+
+#### Sintaxis básica
 ```python
 from dataclasses import dataclass, field
 from typing import List
@@ -864,718 +2360,246 @@ class Usuario:
     nombre: str
     email: str
     edad: int = 0
-    tags: List[str] = field(default_factory=list)  # ¡Nunca uses list mutable como default!
+    tags: List[str] = field(default_factory=list)
     activo: bool = field(default=True, repr=False)
-    
+
     def __post_init__(self):
-        """Se ejecuta después de __init__ generado automáticamente"""
         if self.edad < 0:
             raise ValueError("La edad no puede ser negativa")
 ```
-`dataclass` genera `__init__`, `__repr__`, `__eq__`, `__hash__` (opcional), `__lt__` (con `order=True`). El `default_factory` evita el problema de mutables compartidos.
 
-**Métodos mágicos esenciales:**
+#### 🧪 Cómo probarlo
+```python
+import pytest
+from dataclasses import dataclass
+
+def test_dataclass_basico():
+    @dataclass
+    class Punto:
+        x: int
+        y: int
+
+    p = Punto(1, 2)
+    assert p.x == 1
+    assert p.y == 2
+    assert repr(p) == "Punto(x=1, y=2)"
+    assert Punto(1, 2) == Punto(1, 2)
+
+def test_dataclass_frozen():
+    @dataclass(frozen=True)
+    class Inmutable:
+        valor: int
+    i = Inmutable(42)
+    with pytest.raises(AttributeError):
+        i.valor = 99
+
+def test_default_factory():
+    @dataclass
+    class Caja:
+        items: list = None
+    c = Caja()
+    assert c.items is None
+```
+
+#### 💡 Memoria y rendimiento
+- Las dataclasses son clases Python normales — mismo overhead
+- `frozen=True` usa `__setattr__` más lento
+- `__slots__` no es compatible directamente con dataclasses
+
+#### ✅ Buenas prácticas
+- ✅ Usa `default_factory` para valores mutables
+- ⚠️ No uses `list`/`dict` como valor por defecto
+- ❌ No abuses de dataclasses para objetos con mucha lógica de negocio
+
+#### 🏗️ Metodología
+- DTOs, configuraciones, resultados: dataclasses son perfectas
+- Objetos de dominio con comportamiento: clases normales
+- Validación compleja: `__post_init__` o Pydantic
+
+#### 🔗 Para saber más
+- [Real Python — Data Classes](https://realpython.com/python-data-classes/)
+- [Python docs — dataclasses](https://docs.python.org/3/library/dataclasses.html)
+
+### Métodos mágicos
+
+#### ¿Qué es?
+Los métodos mágicos (dunder methods) son métodos con doble guion bajo que permiten que tus objetos se comporten como tipos nativos de Python.
+
+🔗 [Python docs — Special method names](https://docs.python.org/3/reference/datamodel.html#special-method-names)
+
+#### Sintaxis básica
 ```python
 class ListaPersonalizada:
     def __init__(self, datos=None):
         self._datos = datos or []
-    
-    def __getitem__(self, idx):      # objeto[0], objeto[1:3]
+
+    def __getitem__(self, idx):      # objeto[0]
         return self._datos[idx]
-    
+
     def __setitem__(self, idx, val): # objeto[0] = "nuevo"
         self._datos[idx] = val
-    
+
     def __len__(self):               # len(objeto)
         return len(self._datos)
-    
+
     def __iter__(self):              # for x in objeto:
         return iter(self._datos)
-    
+
     def __contains__(self, item):    # item in objeto
         return item in self._datos
-    
+
     def __call__(self, *args):       # objeto(args)
         print(f"Llamado con {args}")
-    
+
     def __enter__(self):             # with objeto as x:
         return self
-    
-    def __exit__(self, *args):       # Sale del with
-        pass
-    
-    def __str__(self):               # str(objeto), print(objeto)
+
+    def __exit__(self, *args): pass
+
+    def __str__(self):               # str(objeto)
         return str(self._datos)
-    
-    def __repr__(self):              # repr(objeto), representación en REPL
+
+    def __repr__(self):              # repr(objeto)
         return f"ListaPersonalizada({self._datos!r})"
 ```
 
-**Patrones de diseño en Python (con peculiaridades del lenguaje):**
+#### 🧪 Cómo probarlo
+```python
+import pytest
 
+def test_metodos_magicos():
+    class Contenedor:
+        def __init__(self, items):
+            self._items = items
+        def __getitem__(self, idx):
+            return self._items[idx]
+        def __len__(self):
+            return len(self._items)
+        def __contains__(self, item):
+            return item in self._items
+        def __str__(self):
+            return f"Contenedor({self._items})"
+
+    c = Contenedor([1, 2, 3])
+    assert c[0] == 1
+    assert len(c) == 3
+    assert 2 in c
+    assert str(c) == "Contenedor([1, 2, 3])"
+```
+
+#### 💡 Memoria y rendimiento
+- Los métodos mágicos se buscan en la clase (no en la instancia)
+- `__call__` añade overhead de llamada a función
+- Cada método mágico tiene propósitos específicos
+
+#### ✅ Buenas prácticas
+- ✅ Implementa `__repr__` siempre (útil para debugging)
+- ⚠️ Si implementas `__eq__`, considera implementar `__hash__`
+- ❌ No implementes `__del__` a menos que sea estrictamente necesario
+
+#### 🏗️ Metodología
+- `__str__` vs `__repr__`: `__repr__` para debugging, `__str__` para usuario
+- `__enter__`/`__exit__`: para context managers personalizados
+- `__getitem__`/`__len__`: para objetos que parecen colecciones
+
+#### 🔗 Para saber más
+- [Python docs — Special Methods](https://docs.python.org/3/reference/datamodel.html#special-method-names)
+- [Real Python — Magic Methods](https://realpython.com/python-magic-methods/)
+
+### Patrones de diseño en Python
+
+#### ¿Qué es?
+Los patrones de diseño son soluciones reutilizables a problemas comunes. Python simplifica muchos patrones gracias a funciones como ciudadanos de primera clase, duck typing y módulos como singletons.
+
+🔗 [Wikipedia — Patrón de diseño](https://es.wikipedia.org/wiki/Patr%C3%B3n_de_dise%C3%B1o)
+
+#### Sintaxis básica
 | Patrón | En Python |
 |---|---|
-| **Singleton** | Los módulos son singletons. `from config import settings` — siempre la misma instancia. No necesitas clase. |
-| **Factory** | `__init_subclass__` o un dict de clases. `registro = {"json": JSONParser, "xml": XMLParser}` |
-| **Strategy** | Funciones son ciudadanos de primera clase. `estrategia = lambda x: x**2` o pasar un método directamente |
-| **Observer** | `blinker` library o `property` + setters con callbacks |
-| **Adapter** | Duck typing. Si aceptas un objeto con `.read()`, cualquier cosa con `.read()` funciona. |
-| **Decorator** | `@decorador` — integrado en el lenguaje |
-| **Iterator** | `__iter__`/`__next__` o generadores con `yield` |
-| **Context Manager** | `with` statement + `__enter__`/`__exit__` o `@contextmanager` |
-| **Template Method** | `abc.ABC` + métodos abstractos, subclases implementan |
-| **Chain of Responsibility** | `__init_subclass__` para registrar handlers, o `if/elif` encadenados como primer acercamiento |
-
-Fuente: [Python docs — dataclasses](https://docs.python.org/3/library/dataclasses.html), [PEP 544 — Protocols](https://peps.python.org/pep-0544/), [Fluent Python (Luciano Ramalho)](https://www.oreilly.com/library/view/fluent-python-2nd/9781492056348/)
-
-### Peculiaridades del lenguaje que debes conocer
-
-**1. El GIL (Global Interpreter Lock)**
-
-El GIL es un mutex que protege el intérprete de CPython: solo un thread ejecuta bytecode Python a la vez. Esto significa que **threading no sirve para paralelismo CPU-bound**, pero sí para I/O-bound.
+| Strategy | Funciones como estrategias |
+| Observer | Callbacks en lista |
+| Singleton | Módulos son singletons |
+| Factory | `__init_subclass__` |
+| Adapter | Duck typing |
+| Decorator | `@decorador` integrado |
 
 ```python
-import threading
-import time
+class Plugin:
+    _registry = {}
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        cls._registry[cls.__name__.lower()] = cls
 
-# CPU-bound — GIL empeora el rendimiento
-def contar(n):
-    while n > 0:
-        n -= 1
+class PluginPDF(Plugin):
+    def ejecutar(self): return "PDF"
 
-# Con threads: MÁS LENTO que secuencial
-t1 = threading.Thread(target=contar, args=(10_000_000,))
-t2 = threading.Thread(target=contar, args=(10_000_000,))
-inicio = time.time()
-t1.start(); t2.start()
-t1.join(); t2.join()
-print(time.time() - inicio)  # ~1.5s (peor que 1.0s secuencial)
-
-# Solución para CPU-bound: multiprocessing
-from multiprocessing import Process
-p1 = Process(target=contar, args=(10_000_000,))
-p2 = Process(target=contar, args=(10_000_000,))
-# ~1.0s (aprovecha 2 núcleos)
+def crear_plugin(tipo: str) -> Plugin:
+    return Plugin._registry[tipo]()
 ```
 
-Alternativas al GIL: PyPy (sin GIL en algunas configuraciones), Jython/IronPython (no tienen GIL), o free-threaded Python (experimental desde 3.13).
-
-**2. Duck typing ("si camina como pato...")**
-
-Python no mira el tipo, mira el comportamiento. Si un objeto tiene el método que necesitas, funciona.
-
+#### 🧪 Cómo probarlo
 ```python
-class Pato:
-    def hablar(self): return "Cuac"
+import pytest
 
-class Persona:
-    def hablar(self): return "Hola"
+def test_strategy_con_funciones():
+    def ordenar_asc(datos): return sorted(datos)
+    def ordenar_desc(datos): return sorted(datos, reverse=True)
 
-def hacer_hablar(cosa):
-    print(cosa.hablar())  # Acepta cualquier cosa que tenga .hablar()
+    class Analizador:
+        def __init__(self, estrategia):
+            self.estrategia = estrategia
+        def analizar(self, datos):
+            return self.estrategia(datos)
 
-hacer_hablar(Pato())     # Cuac
-hacer_hablar(Persona())  # Hola (¡funciona!)
+    a = Analizador(ordenar_desc)
+    assert a.analizar([3, 1, 2]) == [3, 2, 1]
+
+def test_observer():
+    llamado = []
+    class Observable:
+        def __init__(self):
+            self._obs = []
+        def conectar(self, cb):
+            self._obs.append(cb)
+        def notificar(self, dato):
+            for cb in self._obs:
+                cb(dato)
+
+    obs = Observable()
+    obs.conectar(lambda d: llamado.append(d))
+    obs.notificar("test")
+    assert llamado == ["test"]
 ```
 
-Esto se formaliza con **Protocols** (PEP 544) para type checking estático.
-
-**3. EAFP vs LBYL**
-
-Python prefiere **EAFP** (Easier to Ask Forgiveness than Permission):
-```python
-# LBYL (Look Before You Leap) — típico en C/Java
-if os.path.exists(archivo):
-    with open(archivo) as f:
-        ...
-
-# EAFP (Easier to Ask Forgiveness than Permission) — Pythonic
-try:
-    with open(archivo) as f:
-        ...
-except FileNotFoundError:
-    print("Archivo no encontrado")
-```
-EAFP es más rápido cuando el éxito es el caso común (no pagas el check en cada llamada) y evita race conditions.
-
-**4. `for...else` y `while...else`**
-
-El bloque `else` se ejecuta si el bucle no fue interrumpido por `break`:
-```python
-for n in range(2, 10):
-    for divisor in range(2, int(n**0.5) + 1):
-        if n % divisor == 0:
-            print(f"{n} no es primo")
-            break
-    else:
-        print(f"{n} es primo")
-```
-Útil para búsquedas donde quieres saber si encontraste algo o no.
-
-**5. Chaining de comparaciones**
-
-```python
-# En otros lenguajes:
-if 1 < x and x < 10:
-
-# En Python:
-if 1 < x < 10:    # También funciona con !=, ==, etc.
-```
-
-**6. Unpacking con `*` y `**`**
-
-```python
-primero, *resto, ultimo = [1, 2, 3, 4, 5]
-# primero = 1, resto = [2, 3, 4], ultimo = 5
-
-def conectar(**kwargs):
-    print(kwargs)  # {"host": "localhost", "port": 5432}
-
-conectar(host="localhost", port=5432)
-
-# Merge de diccionarios (3.9+)
-base = {"a": 1}
-base |= {"b": 2}     # base ahora es {"a": 1, "b": 2}
-merge = {**base, **otro}
-```
-
-**7. `_` como variable throwaway**
-
-```python
-for _ in range(10):  # No necesito la variable
-    print("Hola")
-    
-a, _, b = (1, 2, 3)  # Ignoro el segundo valor
-```
-
-**8. Cadenas de documentación (docstrings)**
-
-```python
-def suma(a: int, b: int) -> int:
-    """Suma dos números enteros.
-    
-    Args:
-        a: Primer sumando
-        b: Segundo sumando
-    
-    Returns:
-        La suma de a y b
-    
-    Raises:
-        TypeError: Si a o b no son enteros
-    """
-    return a + b
-```
-Accesible via `help(suma)`, `suma.__doc__`. Usado por herramientas de documentación como Sphinx, MkDocs.
-
-**9. `__name__ == "__main__"`**
-
-```python
-if __name__ == "__main__":
-    main()
-```
-Este bloque solo se ejecuta cuando el script se lanza directamente, no cuando se importa como módulo. Es el punto de entrada estándar en Python.
-
-**10. Type hints no son vinculantes**
-
-```python
-def suma(a: int, b: int) -> int:
-    return a + b
-
-suma("hola", "mundo")  # ¡Funciona! Devuelve "holamundo"
-```
-Los type hints son para herramientas (mypy, pyright, IDE) y documentación, no para el intérprete. Python sigue siendo de tipado dinámico en runtime.
-
-Fuente: [Python docs — GIL](https://docs.python.org/3/glossary.html#term-global-interpreter-lock), [Real Python — GIL](https://realpython.com/python-gil/), [Python docs — EAFP](https://docs.python.org/3/glossary.html#term-eafp)
-
----
-
-## Sistema de archivos (File System I/O)
-
-### Lectura/escritura clásica
-
-```python
-# Modos: r (lectura), w (escritura), a (append), b (binario), x (creación exclusiva), + (lectura+escritura)
-with open("ejemplo.txt", "w", encoding="utf-8") as f:
-    f.write("Hola mundo\n")
-    f.writelines(["línea 2\n", "línea 3\n"])
-
-with open("ejemplo.txt", "r", encoding="utf-8") as f:
-    contenido = f.read()           # todo el archivo
-    lineas = f.readlines()         # lista de líneas
-
-# Binary mode
-with open("imagen.jpg", "rb") as f:
-    datos = f.read(1024)           # primeros 1024 bytes
-
-# rb+ (lectura y escritura binaria)
-with open("datos.bin", "wb+") as f:
-    f.write(b"\x00\x01\x02")
-    f.seek(0)
-    print(f.read())                # b'\x00\x01\x02'
-```
-
-### pathlib (moderno, recomendado)
-
-```python
-from pathlib import Path
-
-ruta = Path("/usr/local/bin/python3")
-print(ruta.name)           # python3
-print(ruta.stem)           # python3
-print(ruta.parent)         # /usr/local/bin
-print(ruta.parents[0])     # /usr/local/bin
-print(ruta.parents[2])     # /usr
-
-# Métodos principales
-p = Path("datos")
-p.mkdir(parents=True, exist_ok=True)
-p.rmdir()
-
-archivo = Path("datos/notas.txt")
-archivo.write_text("contenido", encoding="utf-8")
-texto = archivo.read_text(encoding="utf-8")
-archivo.write_bytes(b"\x00\x01")
-datos = archivo.read_bytes()
-
-# Globbing
-for py in Path("src").rglob("*.py"):
-    print(py)
-for md in Path(".").glob("*.md"):
-    print(md)
-
-# Información
-print(archivo.stat())
-print(archivo.exists())
-print(archivo.is_file(), archivo.is_dir())
-print(archivo.absolute())
-
-# Renombrar y mover
-archivo.rename("datos/nuevas_notas.txt")
-
-# PurePath para manipulación sin acceso al sistema
-from pathlib import PurePath
-pp = PurePath("/usr/local/bin")
-print(pp.joinpath("python3"))             # /usr/local/bin/python3
-```
-
-### Tempfile (archivos temporales)
-
-```python
-import tempfile
-from pathlib import Path
-
-# Archivo temporal (se elimina al cerrar)
-with tempfile.TemporaryFile(mode="w+") as f:
-    f.write("datos temporales")
-    f.seek(0)
-    print(f.read())
-
-# Archivo temporal con nombre
-with tempfile.NamedTemporaryFile(suffix=".csv", delete=True) as f:
-    print(f.name)  # /tmp/tmpXXXXXX.csv
-
-# Directorio temporal
-with tempfile.TemporaryDirectory() as tmpdir:
-    p = Path(tmpdir) / "archivo.txt"
-    p.write_text("temporal")
-    print(p.read_text())
-```
-
-### Streams en memoria (io.StringIO / io.BytesIO)
-
-```python
-import io
-
-# StringIO — buffer de texto en memoria
-buffer = io.StringIO()
-buffer.write("línea 1\nlínea 2\n")
-buffer.seek(0)
-print(buffer.read())
-print(buffer.getvalue())
-
-# BytesIO — buffer binario en memoria
-buf = io.BytesIO()
-buf.write(b"\x00\x01\x02")
-buf.seek(0)
-print(buf.read())          # b'\x00\x01\x02'
-
-# Mockear archivos en tests
-def procesar_archivo(f: io.TextIOBase) -> int:
-    return len(f.read())
-
-# En tests: procesar_archivo(io.StringIO("datos de prueba"))
-```
-
-### CSV y JSON
-
-```python
-import csv
-import json
-
-# --- CSV ---
-with open("datos.csv", "w", newline="", encoding="utf-8") as f:
-    writer = csv.writer(f)
-    writer.writerow(["nombre", "edad", "email"])
-    writer.writerows([
-        ["Ana", 30, "ana@email.com"],
-        ["Luis", 25, "luis@email.com"],
-    ])
-
-# DictWriter
-with open("datos.csv", "w", newline="", encoding="utf-8") as f:
-    campos = ["nombre", "edad", "email"]
-    writer = csv.DictWriter(f, fieldnames=campos)
-    writer.writeheader()
-    writer.writerow({"nombre": "Ana", "edad": 30, "email": "ana@email.com"})
-
-# Lectura
-with open("datos.csv", "r", encoding="utf-8") as f:
-    reader = csv.DictReader(f)
-    for fila in reader:
-        print(fila["nombre"], fila["edad"])
-
-# --- JSON ---
-datos = {"usuarios": [{"nombre": "Ana", "edad": 30}, {"nombre": "Luis", "edad": 25}]}
-
-with open("datos.json", "w", encoding="utf-8") as f:
-    json.dump(datos, f, indent=2, ensure_ascii=False)
-
-with open("datos.json", "r", encoding="utf-8") as f:
-    datos_cargados = json.load(f)
-
-# En memoria
-json_str = json.dumps(datos, indent=2)
-datos_recuperados = json.loads(json_str)
-
-# Serialización de tipos no estándar
-from datetime import datetime
-def serializador(obj):
-    if isinstance(obj, datetime):
-        return obj.isoformat()
-    raise TypeError(f"Tipo {type(obj)} no serializable")
-
-json.dumps({"fecha": datetime.now()}, default=serializador)
-```
-
-### Archivos binarios con struct
-
-```python
-import struct
-
-# Pack: convertir Python → bytes
-datos_binarios = struct.pack("If", 42, 3.14)
-print(len(datos_binarios))  # 8 bytes
-
-# Unpack: convertir bytes → Python
-numero, flotante = struct.unpack("If", datos_binarios)
-
-# Escribir/leer binario
-with open("datos.bin", "wb") as f:
-    for i in range(10):
-        f.write(struct.pack("If", i, float(i**2)))
-
-with open("datos.bin", "rb") as f:
-    while chunk := f.read(8):
-        n, sq = struct.unpack("If", chunk)
-        print(f"{n}² = {sq:.1f}")
-
-# memoryview — vista sin copia del buffer
-arr = bytearray(b"\x01\x02\x03\x04")
-mv = memoryview(arr)
-mv[0] = 255
-print(arr)                 # bytearray(b'\xff\x02\x03\x04')
-
-# struct.pack_into para escribir en posiciones concretas
-struct.pack_into("H", arr, 2, 1024)
-```
-
-### Watch files (monitorear cambios)
-
-```python
-# watchfiles
-import watchfiles
-
-async def monitorear():
-    async for cambios in watchfiles.awatch("./src"):
-        for cambio, ruta in cambios:
-            print(f"{cambio}: {ruta}")
-
-# watchdog (más configurable)
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
-
-class MiHandler(FileSystemEventHandler):
-    def on_modified(self, event):
-        if not event.is_directory and event.src_path.endswith(".py"):
-            print(f"Modificado: {event.src_path}")
-
-observer = Observer()
-observer.schedule(MiHandler(), "./src", recursive=True)
-observer.start()
-```
-
-### Ejemplo completo: procesar CSV y exportar resultados
-
-```python
-from pathlib import Path
-import csv
-import json
-from collections import Counter
-
-def procesar_csvs(directorio: Path, salida_json: Path) -> dict:
-    resultados = {}
-    todas_palabras = Counter()
-
-    for csv_file in directorio.glob("*.csv"):
-        with open(csv_file, "r", encoding="utf-8") as f:
-            reader = csv.DictReader(f)
-            datos = list(reader)
-        
-        resultados[csv_file.stem] = {
-            "total_filas": len(datos),
-            "columnas": reader.fieldnames,
-            "archivo": str(csv_file),
-        }
-        
-        if "texto" in reader.fieldnames:
-            for fila in datos:
-                todas_palabras.update(fila["texto"].lower().split())
-
-    resultados["top_palabras"] = todas_palabras.most_common(10)
-    
-    with open(salida_json, "w", encoding="utf-8") as f:
-        json.dump(resultados, f, indent=2, ensure_ascii=False)
-    
-    return resultados
-
-if __name__ == "__main__":
-    res = procesar_csvs(Path("./datos_csv"), Path("./resultados.json"))
-    print(json.dumps(res, indent=2))
-```
-
-Fuente: [Python docs — File I/O](https://docs.python.org/3/tutorial/inputoutput.html), [Python docs — pathlib](https://docs.python.org/3/library/pathlib.html), [Python docs — csv](https://docs.python.org/3/library/csv.html), [Python docs — json](https://docs.python.org/3/library/json.html), [watchfiles docs](https://watchfiles.helpmanual.io/)
-
----
-
-## Algoritmos y estructuras de datos
-
-### Búsqueda
-
-```python
-import bisect
-
-datos = [1, 3, 5, 7, 9, 11]
-
-# Búsqueda lineal con list.index
-print(datos.index(7))          # 3 (lanza ValueError si no existe)
-
-# Búsqueda binaria con bisect (O(log n))
-pos = bisect.bisect_left(datos, 7)  # 3
-print(pos < len(datos) and datos[pos] == 7)  # True
-
-# in operator — O(n) para listas, O(1) para dict/set
-print(7 in [1, 3, 5, 7])      # True (O(n))
-print(7 in {1, 3, 5, 7})      # True (O(1))
-print("clave" in {"clave": 1}) # True (O(1))
-```
-
-### Ordenación
-
-```python
-# sorted() — devuelve nueva lista
-numeros = [3, 1, 4, 1, 5]
-ordenados = sorted(numeros)              # [1, 1, 3, 4, 5]
-inverso = sorted(numeros, reverse=True)  # [5, 4, 3, 1, 1]
-
-# list.sort() — ordena in-place
-numeros.sort()
-
-# key parameter
-palabras = ["python", "java", "c", "rust"]
-sorted(palabras, key=len)               # ['c', 'java', 'rust', 'python']
-sorted(palabras, key=lambda s: s[-1])   # ordenar por última letra
-
-# operator.attrgetter para objetos
-from operator import attrgetter
-class Usuario:
-    def __init__(self, nombre, edad):
-        self.nombre, self.edad = nombre, edad
-    def __repr__(self):
-        return f"{self.nombre}({self.edad})"
-
-usuarios = [Usuario("Ana", 30), Usuario("Luis", 25), Usuario("Zara", 28)]
-sorted(usuarios, key=attrgetter("edad"))   # Luis(25), Zara(28), Ana(30)
-sorted(usuarios, key=attrgetter("nombre")) # Ana(30), Luis(25), Zara(28)
-
-# Estable: Timsort (O(n log n))
-# El orden relativo de elementos iguales se conserva
-```
-
-### Estructuras de datos en la stdlib
-
-```python
-from collections import deque, defaultdict, Counter, OrderedDict, ChainMap
-from heapq import heappush, heappop, nlargest, nsmallest
-from queue import Queue
-
-# deque — cola doble (O(1) en ambos extremos)
-d = deque([1, 2, 3])
-d.append(4)      # derecha
-d.appendleft(0)  # izquierda
-d.pop()          # 4
-d.popleft()      # 0
-print(d)         # deque([1, 2, 3])
-
-# defaultdict — valor por defecto automático
-dd = defaultdict(list)
-dd["frutas"].append("manzana")  # no KeyError
-dd["frutas"].append("pera")
-print(dd)  # defaultdict(<class 'list'>, {'frutas': ['manzana', 'pera']})
-
-# Counter — contar elementos
-frecuencia = Counter("python es genial")
-print(frecuencia.most_common(3))   # [('n', 2), ('e', 1), ...]
-
-# OrderedDict — mantiene orden de inserción (Python 3.7+ dict ya lo hace)
-od = OrderedDict()
-od["a"] = 1
-od["b"] = 2
-od.move_to_end("a")
-
-# ChainMap — múltiples dicts como uno solo
-config = ChainMap({"debug": True}, {"debug": False, "port": 8080})
-print(config["debug"])  # True (primer dict gana)
-print(config["port"])   # 8080
-
-# heapq — priority queue
-heap = []
-heappush(heap, 3)
-heappush(heap, 1)
-heappush(heap, 2)
-print(heappop(heap))   # 1 (el más pequeño)
-print(nlargest(2, [1, 3, 5, 2, 4]))  # [5, 4]
-print(nsmallest(2, [1, 3, 5, 2, 4])) # [1, 2]
-
-# queue.Queue — thread-safe
-from queue import Queue
-q = Queue()
-q.put("tarea1")
-q.put("tarea2")
-print(q.get())  # tarea1
-```
-
-### itertools y functools
-
-```python
-from itertools import chain, cycle, permutations, combinations, groupby, product, count, repeat, accumulate
-from functools import reduce, partial, lru_cache, cache, cmp_to_key, singledispatch
-
-# chain — concatenar iterables
-list(chain([1, 2], [3, 4]))          # [1, 2, 3, 4]
-
-# cycle — ciclo infinito
-list(zip(range(5), cycle("AB")))     # [(0,'A'),(1,'B'),(2,'A'),(3,'B'),(4,'A')]
-
-# permutations / combinations
-list(permutations("ABC", 2))         # [('A','B'),('A','C'),('B','A'),('B','C'),('C','A'),('C','B')]
-list(combinations("ABC", 2))         # [('A','B'),('A','C'),('B','C')]
-
-# groupby — agrupar elementos (requiere datos ordenados por clave)
-datos = [("a", 1), ("a", 2), ("b", 3)]
-for clave, grupo in groupby(datos, lambda x: x[0]):
-    print(clave, list(grupo))        # a [(a,1),(a,2)]  b [(b,3)]
-
-# product — producto cartesiano
-list(product("AB", "12"))            # [('A','1'),('A','2'),('B','1'),('B','2')]
-
-# accumulate — suma acumulada
-list(accumulate([1, 2, 3, 4]))       # [1, 3, 6, 10]
-
-# reduce
-reduce(lambda a, b: a * b, [1, 2, 3, 4])  # 24
-
-# partial — fijar argumentos
-def potencia(base, exp): return base ** exp
-cuadrado = partial(potencia, exp=2)
-print(cuadrado(5))  # 25
-
-# lru_cache / cache — memoización
-@cache
-def fibonacci(n):
-    return n if n < 2 else fibonacci(n-1) + fibonacci(n-2)
-
-# singledispatch — sobrecarga por tipo
-@singledispatch
-def procesar(x):
-    raise NotImplementedError("Tipo no soportado")
-
-@procesar.register(str)
-def _(x):
-    return f"Texto: {x}"
-
-@procesar.register(int)
-def _(x):
-    return f"Número: {x}"
-
-print(procesar("hola"))  # Texto: hola
-print(procesar(42))      # Número: 42
-```
-
-### Complejidad Big O
-
-| Operación | `list` | `dict` | `set` | `deque` | `heapq` |
-|---|---|---|---|---|---|
-| Acceso por índice | O(1) | — | — | O(1) | — |
-| Búsqueda | O(n) | O(1) avg | O(1) avg | O(n) | O(n) |
-| Inserción al final | O(1) amortizado | — | — | O(1) | O(log n) (push) |
-| Inserción al inicio | O(n) | — | — | O(1) | — |
-| Eliminación | O(n) | O(1) avg | O(1) avg | O(n) | O(log n) (pop) |
-| Mínimo/Máximo | O(n) | O(n) | O(n) | O(n) | O(1) min |
-
-### Ejemplo: top-N palabras más frecuentes
-
-```python
-from collections import Counter
-from heapq import nlargest
-from pathlib import Path
-
-def top_n_palabras(archivo: Path, n: int = 10) -> list[tuple[str, int]]:
-    texto = archivo.read_text(encoding="utf-8")
-    palabras = texto.lower().split()
-    contador = Counter(palabras)
-    return nlargest(n, contador.items(), key=lambda x: x[1])
-
-# Para archivos grandes (streaming)
-def top_n_streaming(archivo: Path, n: int = 10) -> list[tuple[str, int]]:
-    contador = Counter()
-    with open(archivo, "r", encoding="utf-8") as f:
-        for linea in f:
-            contador.update(linea.lower().split())
-    return contador.most_common(n)
-
-if __name__ == "__main__":
-    print(top_n_palabras(Path("quijote.txt"), 10))
-```
-
-Fuente: [Python docs — bisect](https://docs.python.org/3/library/bisect.html), [Python docs — heapq](https://docs.python.org/3/library/heapq.html), [Python docs — collections](https://docs.python.org/3/library/collections.html), [Python docs — itertools](https://docs.python.org/3/library/itertools.html), [Python docs — functools](https://docs.python.org/3/library/functools.html)
-
----
-
-## Ejemplo completo de POO en Python
-
-Este ejemplo une todos los conceptos de POO explicados arriba en un sistema realista de biblioteca multimedia. Léelo de arriba a abajo: cada clase añade una capa.
+#### 💡 Memoria y rendimiento
+- Strategy con funciones: mínimo overhead
+- Observer con callbacks: O(n) para notificar a n observadores
+- Factory con `__init_subclass__`: registro automático O(1) por subclase
+- Singleton con módulos: sin overhead
+
+#### ✅ Buenas prácticas
+- ✅ Prefiere el patrón más simple que funcione (YAGNI)
+- ⚠️ Singleton está considerado antipatrón — usa un módulo en vez de clase
+- ❌ No implementes todos los patrones de GoF — muchos son innecesarios en Python
+
+#### 🏗️ Metodología
+- Strategy: cuando tienes múltiples variantes de un algoritmo
+- Observer: eventos, señales, sistemas de plugins
+- Factory: cuando la creación de objetos es compleja o dinámica
+
+#### 🔗 Para saber más
+- [Real Python — Python Design Patterns](https://realpython.com/python-patterns/)
+- [Python Design Patterns (GitHub)](https://github.com/faif/python-patterns)
+- [Refactoring Guru — Patrones](https://refactoring.guru/es/design-patterns)
+
+### Ejemplo completo de POO
 
 ```python
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from typing import List, Optional, Protocol
+from datetime import datetime
+from typing import List, Protocol
 from enum import Enum, auto
-import re
-
-
-# ── Enum y Dataclass (modelos de datos) ──
 
 class FormatoVideo(Enum):
     MP4 = auto()
@@ -1583,10 +2607,8 @@ class FormatoVideo(Enum):
     AVI = auto()
     MKV = auto()
 
-
 @dataclass
 class Metadatos:
-    """Metadatos comunes a todo contenido multimedia."""
     titulo: str
     duracion_segundos: int
     fecha_creacion: datetime = field(default_factory=datetime.now)
@@ -1599,701 +2621,375 @@ class Metadatos:
     def __str__(self) -> str:
         return f"{self.titulo} ({self.duracion_formateada()})"
 
-
-# ── Clase abstracta base ──
-
 class Contenido(ABC):
-    """Clase base abstracta. Define el contrato que todo contenido debe cumplir."""
-
     def __init__(self, metadatos: Metadatos):
-        self._metadatos = metadatos  # encapsulación: atributo protegido
-        self._reproducciones: int = 0
+        self._metadatos = metadatos
+        self._reproducciones = 0
 
-    # Propiedad con getter (encapsulación)
     @property
     def metadatos(self) -> Metadatos:
         return self._metadatos
 
-    # Propiedad de solo lectura
     @property
     def reproducciones(self) -> int:
         return self._reproducciones
 
     def reproducir(self) -> str:
-        """Método concreto compartido por todas las subclases."""
         self._reproducciones += 1
-        return f"▶️ Reproduciendo {self._metadatos.titulo}..."
+        return f"Reproduciendo {self._metadatos.titulo}..."
 
     @abstractmethod
-    def obtener_info(self) -> str:
-        """Cada subclase debe implementar cómo se describe a sí misma."""
-        ...
+    def obtener_info(self) -> str: ...
 
-    # Método mágico: representación en string
     def __str__(self) -> str:
         return f"[{type(self).__name__}] {self._metadatos}"
 
-    def __repr__(self) -> str:
-        return f"{type(self).__name__}(metadatos={self._metadatos!r})"
-
-
-# ── Herencia simple ──
-
 class Audio(Contenido):
-    """hereda de Contenido: recibe metadatos, reproducciones y reproducir()."""
-
     def __init__(self, metadatos: Metadatos, bitrate_kbps: int):
-        super().__init__(metadatos)  # llama al constructor de la clase padre
+        super().__init__(metadatos)
         self.bitrate_kbps = bitrate_kbps
 
     def obtener_info(self) -> str:
-        return (f"🎵 {self.metadatos.titulo} | "
-                f"{self.metadatos.duracion_formateada()} | "
-                f"{self.bitrate_kbps}kbps | "
-                f"{self.reproducciones} reproducciones")
-
+        return f"Audio: {self.metadatos.titulo} | {self.bitrate_kbps}kbps"
 
 class Video(Contenido):
     def __init__(self, metadatos: Metadatos, resolucion: str, formato: FormatoVideo):
         super().__init__(metadatos)
         self.resolucion = resolucion
         self.formato = formato
-        self._subtitulos: bool = False
-
-    # Propiedad con getter y setter
-    @property
-    def subtitulos(self) -> bool:
-        return self._subtitulos
-
-    @subtitulos.setter
-    def subtitulos(self, valor: bool) -> None:
-        if not isinstance(valor, bool):
-            raise TypeError("subtitulos debe ser booleano")
-        self._subtitulos = valor
 
     def obtener_info(self) -> str:
-        return (f"🎬 {self.metadatos.titulo} | "
-                f"{self.resolucion} | "
-                f"{self.formato.name} | "
-                f"{'CC' if self._subtitulos else 'Sin subtítulos'}")
-
-
-# ── Herencia múltiple y Mixin ──
-
-class Exportable:
-    """Mixin: aporta funcionalidad de exportación sin ser una clase base."""
-
-    def exportar(self, formato: str = "json") -> str:
-        if formato == "json":
-            import json
-            return json.dumps(self.__dict__, default=str, indent=2)
-        return f"Exportación a {formato} no soportada"
-
-
-class Podcast(Audio, Exportable):
-    """Herencia múltiple: hereda de Audio (y por tanto de Contenido) y de Exportable."""
-
-    def __init__(self, metadatos: Metadatos, bitrate_kbps: int, episodio: int, anfitrion: str):
-        super().__init__(metadatos, bitrate_kbps)
-        self.episodio = episodio
-        self.anfitrion = anfitrion
-
-    def obtener_info(self) -> str:
-        return (f"🎙️ Ep.{self.episodio}: {self.metadatos.titulo} | "
-                f"con {self.anfitrion} | "
-                f"{super().obtener_info()}")  # reusa el método del padre Audio
-
-
-# ── Composición: un objeto contiene otros objetos ──
+        return f"Video: {self.metadatos.titulo} | {self.resolucion}"
 
 class ListaReproduccion:
-    """Composición: una lista contiene múltiples objetos Contenido."""
-
     def __init__(self, nombre: str):
         self.nombre = nombre
-        self._items: List[Contenido] = []  # composición: "tiene una" lista de Contenido
+        self._items: List[Contenido] = []
 
-    def agregar(self, item: Contenido) -> None:
+    def agregar(self, item: Contenido):
         self._items.append(item)
 
-    def quitar(self, indice: int) -> None:
-        if 0 <= indice < len(self._items):
-            self._items.pop(indice)
-
-    def reproducir_todo(self) -> List[str]:
-        """Polimorfismo: cada item se reproduce según su tipo concreto."""
-        return [item.reproducir() for item in self._items]
-
     def info_completa(self) -> List[str]:
-        """Polimorfismo: obtener_info() se comporta distinto según la subclase."""
         return [item.obtener_info() for item in self._items]
 
-    # Métodos mágicos para que la lista se comporte como una secuencia
-    def __len__(self) -> int:
+    def __len__(self):
         return len(self._items)
 
-    def __getitem__(self, idx: int) -> Contenido:
+    def __getitem__(self, idx):
         return self._items[idx]
-
-    def __iter__(self):
-        return iter(self._items)
-
-    def __str__(self) -> str:
-        return f"📋 {self.nombre} ({len(self._items)} items)"
-
-
-# ── Protocol: tipado estructural ──
-
-class Reproductor(Protocol):
-    """Protocol: cualquier objeto con .reproducir() y .metadatos cumple este contrato."""
-    def reproducir(self) -> str: ...
-    @property
-    def metadatos(self) -> Metadatos: ...
-
-
-def emitir(contenido: Reproductor) -> None:
-    """Acepta cualquier cosa que implemente el protocolo Reproductor.
-    No necesita herencia explícita."""
-    print(f"📡 Emitiendo: {contenido.reproducir()}")
-
-
-# ── Uso del sistema ──
-
-if __name__ == "__main__":
-    # Crear contenido de distintos tipos
-    cancion = Audio(
-        Metadatos("Bohemian Rhapsody", 354, tags=["rock", "clásico"]),
-        bitrate_kbps=320
-    )
-
-    pelicula = Video(
-        Metadatos("Inception", 8880, tags=["ciencia ficción", "thriller"]),
-        resolucion="4K",
-        formato=FormatoVideo.MKV
-    )
-    pelicula.subtitulos = True  # usa el setter
-
-    podcast = Podcast(
-        Metadatos("El futuro de la IA", 2700, tags=["tecnología", "IA"]),
-        bitrate_kbps=128,
-        episodio=42,
-        anfitrion="Ana López"
-    )
-
-    # Polimorfismo: cada uno implementa obtener_info() a su manera
-    for contenido in [cancion, pelicula, podcast]:
-        print(contenido.obtener_info())
-
-    # Composición
-    lista = ListaReproduccion("Favoritos")
-    lista.agregar(cancion)
-    lista.agregar(pelicula)
-    lista.agregar(podcast)
-    print(lista)
-    print(lista.reproducir_todo())
-    print(lista.info_completa())
-
-    # Protocol
-    emitir(pelicula)  # Funciona porque Video tiene .reproducir() y .metadatos
-
-    # Dataclass + método
-    print(podcast.metadatos.duracion_formateada())  # "45:00"
-
-    # Herencia múltiple: exportación
-    print(podcast.exportar("json"))
 ```
 
-**Conceptos demostrados:**
-
-| Concepto | Cómo aparece |
-|---|---|
-| Clase abstracta | `Contenido(ABC)` con `@abstractmethod` |
-| Herencia simple | `Audio(Contenido)`, `Video(Contenido)` |
-| Herencia múltiple | `Podcast(Audio, Exportable)` — MRO resuelve el orden |
-| `super()` | `super().__init__()` llama al constructor padre; `super().obtener_info()` reusa lógica |
-| Encapsulación | `_metadatos` y `_reproducciones` protegidos; propiedades con `@property` |
-| Polimorfismo | `obtener_info()` da resultados distintos según la clase concreta |
-| Mixin | `Exportable` aporta `exportar()` sin ser una clase base |
-| Composición | `ListaReproduccion` contiene `List[Contenido]` |
-| Dataclass | `Metadatos` con `field()`, `default_factory`, métodos |
-| Métodos mágicos | `__str__`, `__repr__`, `__len__`, `__getitem__`, `__iter__` |
-| Protocol | `Reproductor` con tipado estructural |
-| Enum | `FormatoVideo` con valores auto-numerados |
-
----
-
-## Patrones de diseño con ejemplos
-
-### Strategy
-Permite intercambiar algoritmos en tiempo de ejecución. En Python las funciones son ciudadanos de primera clase, así que el patrón se simplifica.
-
+#### 🧪 Cómo probarlo
 ```python
-from typing import List, Callable
+import pytest
 
-# Estrategias como funciones
-def ordenar_ascendente(datos: List[int]) -> List[int]:
-    return sorted(datos)
+def test_sistema_multimedia():
+    cancion = Audio(Metadatos("Bohemian Rhapsody", 354), bitrate_kbps=320)
+    assert cancion.reproducir() == "Reproduciendo Bohemian Rhapsody..."
+    assert cancion.reproducciones == 1
+    assert "Bohemian" in cancion.obtener_info()
 
-def ordenar_descendente(datos: List[int]) -> List[int]:
-    return sorted(datos, reverse=True)
+    pelicula = Video(Metadatos("Inception", 8880), "4K", FormatoVideo.MKV)
+    assert "Inception" in pelicula.obtener_info()
 
-def ordenar_mitades(datos: List[int]) -> List[int]:
-    mid = len(datos) // 2
-    return sorted(datos[:mid]) + sorted(datos[mid:], reverse=True)
+def test_polimorfismo():
+    items = [
+        Audio(Metadatos("b", 100), 128),
+        Video(Metadatos("c", 200), "1080p", FormatoVideo.MP4),
+    ]
+    for item in items:
+        assert isinstance(item.obtener_info(), str)
 
-# Contexto que usa la estrategia
-class Analizador:
-    def __init__(self, estrategia: Callable[[List[int]], List[int]]):
-        self.estrategia = estrategia
-    
-    def analizar(self, datos: List[int]) -> List[int]:
-        return self.estrategia(datos)
-
-# Uso
-a = Analizador(ordenar_descendente)
-print(a.analizar([3, 1, 4, 1, 5, 9]))  # [9, 5, 4, 3, 1, 1]
-```
-
-**Cuándo usarlo**: tienes múltiples variantes de un algoritmo y quieres cambiarlas sin condicionales.
-
-### Observer
-Un objeto (sujeto) notifica a múltiples dependientes (observadores) cuando cambia su estado.
-
-```python
-from typing import List, Callable
-
-class Observable:
-    def __init__(self):
-        self._observadores: List[Callable] = []
-    
-    def conectar(self, callback: Callable) -> None:
-        self._observadores.append(callback)
-    
-    def desconectar(self, callback: Callable) -> None:
-        self._observadores.remove(callback)
-    
-    def notificar(self, dato: any) -> None:
-        for cb in self._observadores:
-            cb(dato)
-
-# Uso real: logger + dashboard
-def logger(dato):
-    print(f"[LOG] {dato}")
-
-def dashboard(dato):
-    print(f"[DASH] Actualizando gráfico con {dato}")
-
-sensor = Observable()
-sensor.conectar(logger)
-sensor.conectar(dashboard)
-sensor.notificar({"temperatura": 23.5, "humedad": 60})
-```
-
-**Cuándo usarlo**: eventos, señales, sistemas de plugins, actualizaciones en tiempo real. Librería `blinker` para versiones más completas.
-
-### Singleton (el patrón que Python hace por ti)
-```python
-# Módulo config.py — los módulos ya son singletons
-SETTINGS = {
-    "db_url": "postgresql://localhost/mydb",
-    "debug": True,
-    "api_key": "secret"
-}
-
-# Desde cualquier otro archivo:
-# from config import SETTINGS  # siempre la misma instancia
-
-# Si insistes en clase:
-class Config:
-    _instancia = None
-    
-    def __new__(cls):
-        if cls._instancia is None:
-            cls._instancia = super().__new__(cls)
-            cls._instancia._cargado = False
-        return cls._instancia
-    
-    def cargar(self):
-        if not self._cargado:
-            print("Cargando configuración (una sola vez)")
-            self._cargado = True
-
-c1 = Config()
-c2 = Config()
-assert c1 is c2  # mismo objeto
-```
-
-### Factory (con registro dinámico)
-```python
-from typing import Dict, Type
-
-class Plugin:
-    """Base para plugins. Cada subclase se registra automáticamente."""
-    _registry: Dict[str, Type["Plugin"]] = {}
-    
-    def __init_subclass__(cls, **kwargs):
-        """Se ejecuta automáticamente cuando se crea una subclase."""
-        super().__init_subclass__(**kwargs)
-        cls._registry[cls.__name__.lower()] = cls
-    
-    def ejecutar(self) -> str:
-        raise NotImplementedError
-
-class PluginPDF(Plugin):
-    def ejecutar(self) -> str:
-        return "Procesando PDF"
-
-class PluginCSV(Plugin):
-    def ejecutar(self) -> str:
-        return "Procesando CSV"
-
-# Factory automática: no hay que registrar nada manualmente
-def crear_plugin(tipo: str) -> Plugin:
-    if tipo not in Plugin._registry:
-        raise ValueError(f"Plugin '{tipo}' no existe. Disponibles: {list(Plugin._registry)}")
-    return Plugin._registry[tipo]()
-
-print(crear_plugin("pluginpdf").ejecutar())  # Procesando PDF
-```
-
-### Adapter (duck typing)
-```python
-class SistemaViejo:
-    def query(self, sql: str) -> list:
-        return [("resultado",)]
-
-class SistemaNuevo:
-    async def execute(self, query: str) -> list:
-        return [("resultado",)]
-
-# Adaptador: unifica la interfaz
-class DBAdapter:
-    def __init__(self, backend):
-        self._backend = backend
-    
-    def query(self, sql: str) -> list:
-        if hasattr(self._backend, "query"):
-            return self._backend.query(sql)
-        # Si es asíncrono, usamos un event loop
-        import asyncio
-        return asyncio.run(self._backend.execute(sql))
-
-# Uso: ambos se usan igual gracias al adaptador
-viejo = DBAdapter(SistemaViejo())
-nuevo = DBAdapter(SistemaNuevo())
-print(viejo.query("SELECT 1"))
-print(nuevo.query("SELECT 1"))
-```
-
-### Chain of Responsibility
-```python
-from typing import Optional
-
-class Handler:
-    def __init__(self):
-        self._siguiente: Optional["Handler"] = None
-    
-    def conectar(self, handler: "Handler") -> "Handler":
-        self._siguiente = handler
-        return handler  # permite encadenamiento
-    
-    def manejar(self, solicitud: str) -> Optional[str]:
-        resultado = self._procesar(solicitud)
-        if resultado is None and self._siguiente:
-            return self._siguiente.manejar(solicitud)
-        return resultado
-    
-    def _procesar(self, solicitud: str) -> Optional[str]:
-        raise NotImplementedError
-
-class Validador(Handler):
-    def _procesar(self, solicitud: str) -> Optional[str]:
-        if len(solicitud) < 3:
-            return "Error: solicitud muy corta"
-        return None  # pasa al siguiente
-
-class Autenticador(Handler):
-    def _procesar(self, solicitud: str) -> Optional[str]:
-        if "token" not in solicitud:
-            return "Error: no autenticado"
-        return None
-
-class Cache(Handler):
-    def _procesar(self, solicitud: str) -> Optional[str]:
-        return "Respuesta desde caché"
-
-# Cadena: Validador → Autenticador → Cache
-cadena = Validador()
-cadena.conectar(Autenticador()).conectar(Cache())
-print(cadena.manejar("hola"))        # Error: solicitud muy corta
-print(cadena.manejar("hola token"))  # Respuesta desde caché
+def test_lista_reproduccion():
+    a1 = Audio(Metadatos("a1", 100), 128)
+    a2 = Audio(Metadatos("a2", 200), 256)
+    lista = ListaReproduccion("Fav")
+    lista.agregar(a1)
+    lista.agregar(a2)
+    assert len(lista) == 2
+    assert len(lista.info_completa()) == 2
 ```
 
 ---
 
 ## Polimorfismo en detalle
 
-Python tiene tres formas de polimorfismo. Todas coexisten en el mismo código.
+#### ¿Qué es?
+Polimorfismo significa "muchas formas": la misma interfaz se comporta distinto según el tipo concreto. Python ofrece tres formas: duck typing (runtime), herencia (clásico) y protocols (estructural).
 
-### 1. Duck typing (el original de Python)
+🔗 [Wikipedia — Polimorfismo](https://es.wikipedia.org/wiki/Polimorfismo_(inform%C3%A1tica))
+
+#### Sintaxis básica
 ```python
+# Duck typing
 class Perro:
-    def sonido(self) -> str: return "Guau"
-
+    def sonido(self): return "Guau"
 class Gato:
-    def sonido(self) -> str: return "Miau"
-
-class Coche:
-    def sonido(self) -> str: return "Brum"
-
+    def sonido(self): return "Miau"
 def hacer_sonido(cualquier_cosa):
-    print(cualquier_cosa.sonido())  # mientras tenga .sonido(), funciona
+    return cualquier_cosa.sonido()
 
-hacer_sonido(Perro())  # Guau
-hacer_sonido(Gato())   # Miau
-hacer_sonido(Coche())  # Brum (¡no es un animal!)
-```
-
-### 2. Polimorfismo por herencia (clásico)
-```python
-from abc import ABC, abstractmethod
-
+# Herencia (ABC)
 class Forma(ABC):
     @abstractmethod
     def area(self) -> float: ...
-
 class Circulo(Forma):
-    def __init__(self, radio): self.radio = radio
-    def area(self) -> float: return 3.1416 * self.radio ** 2
+    def __init__(self, r): self.r = r
+    def area(self): return 3.14 * self.r ** 2
 
-class Rectangulo(Forma):
-    def __init__(self, ancho, alto): self.ancho = ancho; self.alto = alto
-    def area(self) -> float: return self.ancho * self.alto
-
-def mostrar_area(forma: Forma):
-    print(f"Área: {forma.area():.2f}")
-
-mostrar_area(Circulo(5))      # Área: 78.54
-mostrar_area(Rectangulo(3, 4)) # Área: 12.00
-```
-
-### 3. Polimorfismo por Protocol (estructural, PEP 544)
-```python
-from typing import Protocol
-
+# Protocol
 class Imprimible(Protocol):
     def imprimir(self) -> str: ...
-
-class Documento:
-    def imprimir(self) -> str: return "Imprimiendo documento..."
-
-class Foto:
-    def imprimir(self) -> str: return "Imprimiendo foto 4x6..."
-
-class Impresora:
-    def imprimir(self) -> str: return "Imprimiendo informe de estado..."
-
-def enviar_a_impresion(objeto: Imprimible):
-    print(objeto.imprimir())
-
-enviar_a_impresion(Documento())  # Imprimiendo documento...
-enviar_a_impresion(Foto())       # Imprimiendo foto 4x6...
-enviar_a_impresion(Impresora())  # Imprimiendo informe de estado...
 ```
 
-El duck typing se resuelve en runtime, el Protocol (con mypy) en tiempo de análisis estático, y la herencia ABC requiere relación explícita. Los tres son polimorfismo: el mismo interfaz, comportamientos distintos.
+#### 🧪 Cómo probarlo
+```python
+import pytest
+from abc import ABC, abstractmethod
+from typing import Protocol
+
+def test_duck_typing():
+    class Perro:
+        def sonido(self): return "Guau"
+    class Gato:
+        def sonido(self): return "Miau"
+    def hacer_sonido(animal):
+        return animal.sonido()
+    assert hacer_sonido(Perro()) == "Guau"
+    assert hacer_sonido(Gato()) == "Miau"
+
+def test_polimorfismo_herencia():
+    class Forma(ABC):
+        @abstractmethod
+        def area(self): ...
+    class Circulo(Forma):
+        def __init__(self, r): self.r = r
+        def area(self): return 3.14 * self.r ** 2
+    class Rectangulo(Forma):
+        def __init__(self, a, b): self.a, self.b = a, b
+        def area(self): return self.a * self.b
+    assert abs(Circulo(1).area() - 3.14) < 0.01
+    assert Rectangulo(2, 3).area() == 6
+
+def test_polimorfismo_protocol():
+    class Imprimible(Protocol):
+        def imprimir(self) -> str: ...
+    class Doc:
+        def imprimir(self): return "doc"
+    def enviar(x: Imprimible):
+        return x.imprimir()
+    assert enviar(Doc()) == "doc"
+```
+
+#### 💡 Memoria y rendimiento
+- Duck typing: resuelve en runtime — ligero overhead
+- Herencia: resuelve usando MRO — O(1) lookup
+- Protocol: resuelto en tiempo de análisis (mypy) — zero runtime overhead
+
+#### ✅ Buenas prácticas
+- ✅ Duck typing para código interno y rápido
+- ⚠️ Protocol para APIs públicas con type hints
+- ❌ No combines los tres en la misma función sin necesidad
+
+#### 🏗️ Metodología
+- Duck typing: scripts, prototipos, testing
+- ABC: frameworks, jerarquías con implementación compartida
+- Protocol: bibliotecas, APIs, contratos desacoplados
+
+#### 🔗 Para saber más
+- [Real Python — Polymorphism](https://realpython.com/python-polymorphism/)
+- [PEP 544 — Protocols](https://peps.python.org/pep-0544/)
 
 ---
 
 ## Interacción con contenido multimedia
 
-### Imágenes con Pillow (PIL)
+### Imágenes (Pillow)
 
+#### ¿Qué es?
+Pillow (PIL Fork) es la librería estándar de Python para procesamiento de imágenes. Soporta decenas de formatos y operaciones: redimensionar, filtrar, dibujar, convertir.
+
+🔗 [Pillow docs](https://pillow.readthedocs.io/)
+
+#### Sintaxis básica
 ```python
 from PIL import Image, ImageEnhance, ImageFilter, ImageDraw
 
-# Abrir y mostrar información
 img = Image.open("foto.jpg")
-print(img.size, img.mode, img.format)  # (1920, 1080) RGB JPEG
+print(img.size, img.mode, img.format)
 
-# Redimensionar
-img.thumbnail((300, 300))              # in-place, mantiene proporción
-img_resized = img.resize((800, 600))   # explícito
-
-# Convertir formato
-img.save("foto.png", "PNG")
+img.thumbnail((300, 300))
 img.save("foto.webp", "WEBP", quality=85)
 
-# Filtros
-img_filtrada = img.filter(ImageFilter.BLUR)
-img_filtrada = img.filter(ImageFilter.SHARPEN)
-img_filtrada = img.filter(ImageFilter.CONTOUR)
-
-# Mejoras
 enhancer = ImageEnhance.Contrast(img)
-img_contraste = enhancer.enhance(1.5)    # factor > 1 aumenta contraste
-img_color = ImageEnhance.Color(img).enhance(0.5)
-img_bright = ImageEnhance.Brightness(img).enhance(1.2)
+img_contraste = enhancer.enhance(1.5)
 
-# Recortar
-crop = img.crop((100, 100, 400, 400))   # (left, upper, right, lower)
-
-# Dibujar
 draw = ImageDraw.Draw(img)
 draw.text((10, 10), "Hola", fill="white")
-draw.rectangle([50, 50, 150, 150], outline="red", width=3)
-
-# EXIF
-exif = img._getexif()
-if exif:
-    print(exif.get(271))  # Fabricante de la cámara
 ```
 
-### Video con OpenCV y moviepy
-
+#### 🧪 Cómo probarlo
 ```python
-# OpenCV (cv2) — procesamiento frame a frame
-import cv2
+import pytest
+from PIL import Image, ImageDraw
 
+def test_crear_imagen():
+    img = Image.new("RGB", (100, 50), "red")
+    assert img.size == (100, 50)
+    assert img.mode == "RGB"
+
+def test_redimensionar(tmp_path):
+    img = Image.new("RGB", (200, 100), "blue")
+    img.thumbnail((50, 50))
+    assert img.size[0] <= 50
+    assert img.size[1] <= 50
+
+#### 💡 Memoria y rendimiento
+- Cada píxel RGB ocupa 3 bytes; una imagen 4K ocupa ~25 MB en RAM
+- Pillow está escrito en C — las operaciones de píxel son rápidas
+- `thumbnail()` mantiene proporción y es más eficiente que `resize()`
+
+#### ✅ Buenas prácticas
+- ✅ Usa `thumbnail()` en lugar de `resize()` para miniaturas
+- ⚠️ Las imágenes grandes (>4000px) pueden ocupar mucha RAM
+- ❌ No guardes en JPEG sin especificar `quality`
+
+#### 🏗️ Metodología
+- Procesamiento por lotes: itera con `Path.glob()` y procesa cada imagen
+- Pipelines: carga → filtra → redimensiona → guarda
+- Web: convierte a WebP/AVIF para mejor compresión
+
+#### 🔗 Para saber más
+- [Pillow docs — Handbook](https://pillow.readthedocs.io/en/stable/handbook/)
+- [Real Python — Pillow](https://realpython.com/image-processing-with-the-python-pillow-library/)
+
+### Video (OpenCV, moviepy)
+
+#### ¿Qué es?
+OpenCV procesa video frame a frame con control total. Moviepy ofrece edición de alto nivel. ffmpeg-python es un wrapper de ffmpeg.
+
+🔗 [OpenCV docs](https://docs.opencv.org/)
+
+#### Sintaxis básica
+```python
+import cv2
 cap = cv2.VideoCapture("video.mp4")
 while cap.isOpened():
     ret, frame = cap.read()
-    if not ret:
-        break
+    if not ret: break
     gris = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    cv2.imshow("Frame", gris)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+    if cv2.waitKey(1) & 0xFF == ord('q'): break
 cap.release()
-cv2.destroyAllWindows()
 
-# moviepy — edición de alto nivel
-from moviepy.editor import VideoFileClip, concatenate_videoclips, AudioFileClip
-
-# Recortar y concatenar
+from moviepy.editor import VideoFileClip, concatenate_videoclips
 clip1 = VideoFileClip("video1.mp4").subclip(0, 10)
 clip2 = VideoFileClip("video2.mp4").subclip(5, 15)
 final = concatenate_videoclips([clip1, clip2])
 final.write_videofile("final.mp4")
-
-# Extraer audio
-video = VideoFileClip("video.mp4")
-video.audio.write_audiofile("audio.mp3")
-
-# ffmpeg-python (wrapper de ffmpeg)
-import ffmpeg
-ffmpeg.input("video.mp4").output("output.gif", fps=10).run()
 ```
 
-### Audio con pydub
+#### 🧪 Cómo probarlo
+```python
+import pytest
+import cv2
+import numpy as np
 
+def test_crear_video_temporal(tmp_path):
+    ruta = str(tmp_path / "test.avi")
+    fourcc = cv2.VideoWriter_fourcc(*"XVID")
+    out = cv2.VideoWriter(ruta, fourcc, 30, (100, 100))
+    for _ in range(10):
+        frame = np.zeros((100, 100, 3), dtype=np.uint8)
+        out.write(frame)
+    out.release()
+
+    cap = cv2.VideoCapture(ruta)
+    assert cap.isOpened()
+    frames = 0
+    while cap.read()[0]:
+        frames += 1
+    cap.release()
+    assert frames == 10
+```
+
+#### 💡 Memoria y rendimiento
+- OpenCV procesa en CPU — 30 fps en 1080p es factible
+- Moviepy carga clips en RAM — videos largos pueden ocupar GBs
+- ffmpeg-python delega en ffmpeg (C) — muy rápido
+
+#### ✅ Buenas prácticas
+- ✅ Usa `cv2.VideoWriter_fourcc` con el codec adecuado
+- ⚠️ Libera recursos con `cap.release()` y `cv2.destroyAllWindows()`
+- ❌ No proceses videos largos enteros en RAM con moviepy
+
+#### 🏗️ Metodología
+- Análisis frame a frame: OpenCV
+- Edición simple: moviepy
+- Pipeline completo: ffmpeg-python
+
+#### 🔗 Para saber más
+- [OpenCV Python Tutorials](https://docs.opencv.org/master/d6/d00/tutorial_py_root.html)
+- [moviepy docs](https://zulko.github.io/moviepy/)
+
+### Audio (pydub, librosa)
+
+#### ¿Qué es?
+pydub es una librería simple para manipulación de audio (cortar, unir, cambiar velocidad). librosa está orientada al análisis musical y extracción de características (BPM, espectrogramas, MFCC). soundfile lee/escribe archivos WAV/FLAC.
+
+🔗 [pydub docs](https://github.com/jiaaro/pydub)
+
+#### Sintaxis básica
 ```python
 from pydub import AudioSegment
 
-# Cargar y convertir
 audio = AudioSegment.from_file("cancion.mp3")
-audio.export("cancion.wav", format="wav")
+cortado = audio[:10_000]  # primeros 10s
+mas_lento = audio.speed_change(playback_speed=0.8)
+mezcla = audio.overlay(AudioSegment.silent(1000), position=5000)
+cortado.export("intro.mp3", format="mp3")
 
-# Cortar (milisegundos)
-intro = audio[:5000]      # primeros 5 segundos
-final = audio[-3000:]     # últimos 3 segundos
-
-# Mezclar
-otro = AudioSegment.from_file("base.mp3")
-mezcla = audio.overlay(otro, position=10000)  # superpone en el segundo 10
-
-# Cambiar velocidad
-rapido = audio.speedup(playback_speed=1.5)
-
-# Silencio y tonos
-from pydub.generators import Sine
-tono = Sine(440).to_audio_segment(duration=1000)  # La 440 Hz, 1 segundo
-
-# wave (stdlib, WAV básico)
-import wave
-with wave.open("audio.wav", "rb") as w:
-    print(w.getnchannels(), w.getframerate(), w.getnframes())
-    frames = w.readframes(w.getnframes())
-
-# librosa — análisis musical avanzado
-# import librosa
-# y, sr = librosa.load("cancion.mp3")
-# tempo, beats = librosa.beat.beat_track(y=y, sr=sr)
+# librosa
+import librosa
+import librosa.display
+y, sr = librosa.load("cancion.mp3")
+tempo, beats = librosa.beat.beat_track(y=y, sr=sr)
+mfccs = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13)
 ```
 
-### GIFs con imageio y Pillow
-
+#### 🧪 Cómo probarlo
 ```python
-# imageio — leer/escribir GIFs
-import imageio
+import pytest
+from pydub import AudioSegment
 
-frames = imageio.mimread("animacion.gif")
-print(len(frames))  # número de frames
+def test_silencio():
+    silencio = AudioSegment.silent(500)
+    assert len(silencio) == 500
+    assert silencio.max == 0
 
-# Crear GIF desde imágenes
-with imageio.get_writer("salida.gif", mode="I", duration=0.5) as writer:
-    for i in range(10):
-        writer.append_data(frames[i])
-
-# Pillow — crear GIF animado
-from PIL import Image
-frames_pil = [Image.open(f"frame{i}.png") for i in range(5)]
-frames_pil[0].save("animacion.gif",
-    save_all=True,
-    append_images=frames_pil[1:],
-    duration=200,
-    loop=0)
+def test_cortar_audio(tmp_path):
+    audio = AudioSegment.silent(1000) + AudioSegment.silent(500)
+    cortado = audio[:800]
+    assert len(cortado) == 800
 ```
 
-### Visualización (matplotlib, seaborn, plotly)
+#### 💡 Memoria y rendimiento
+- pydub carga archivos enteros en RAM — archivos largos (>1h) pueden ocupar >100 MB
+- librosa también carga en RAM pero ofrece submuestreo (`res_type`)
+- WAV sin comprimir ocupa ~10 MB/minuto (44100 Hz, 16-bit)
 
-```python
-# matplotlib — estático
-import matplotlib.pyplot as plt
+#### ✅ Buenas prácticas
+- ✅ Usa `pydub` para edición simple y `librosa` para análisis
+- ⚠️ Archivos largos: procesa por fragmentos con `pydub`
+- ❌ No cargues audios de >2h enteros en RAM
 
-x = [1, 2, 3, 4, 5]
-y = [2, 4, 6, 8, 10]
-plt.plot(x, y, marker="o")
-plt.xlabel("Eje X")
-plt.ylabel("Eje Y")
-plt.title("Gráfico lineal")
-plt.savefig("grafico.png", dpi=300)
-plt.close()
+#### 🏗️ Metodología
+- Edición: pydub (cortar, unir, exportar)
+- Análisis: librosa (BPM, espectrograma, transcripción)
+- Pipeline: carga → preprocesa → analiza → exporta
 
-# seaborn — estadístico
-import seaborn as sns
-# sns.scatterplot(data=df, x="col1", y="col2", hue="categoria")
-
-# plotly — interactivo (HTML)
-import plotly.express as px
-# fig = px.scatter(df, x="col1", y="col2", color="categoria")
-# fig.write_html("grafico_interactivo.html")
-
-# Pillow ImageDraw — dibujo programático
-from PIL import Image, ImageDraw
-img = Image.new("RGB", (400, 200), "white")
-draw = ImageDraw.Draw(img)
-draw.rectangle([10, 10, 390, 190], outline="black")
-draw.ellipse([50, 50, 150, 150], fill="blue")
-draw.text((200, 80), "Python", fill="green")
-img.show()
-```
-
-### Tabla resumen
-
-| Tipo | Librería | Formatos | Async | Ejemplo mínimo |
-|---|---|---|---|---|
-| Imágenes | Pillow | JPEG, PNG, WebP, GIF, TIFF | No | `Image.open("f.jpg")` |
-| Video | OpenCV | MP4, AVI, MOV, FLV | No | `cv2.VideoCapture("v.mp4")` |
-| Video | moviepy | MP4, GIF, WebM | No | `VideoFileClip("v.mp4").subclip(0,5)` |
-| Video | ffmpeg-python | Todos (wrapper ffmpeg) | No | `ffmpeg.input("v.mp4").output("g.gif").run()` |
-| Audio | pydub | MP3, WAV, OGG, FLAC | No | `AudioSegment.from_file("a.mp3")` |
-| Audio | librosa | MP3, WAV, FLAC | No | `librosa.load("a.mp3")` |
-| GIF | imageio | GIF, PNG, TIFF | No | `imageio.mimread("a.gif")` |
-| Gráficos | matplotlib | PNG, PDF, SVG | No | `plt.plot(x,y); plt.savefig("g.png")` |
-| Gráficos | plotly | HTML, PNG, SVG | Sí | `px.scatter(df, x="a", y="b")` |
-
-Fuente: [Pillow docs](https://pillow.readthedocs.io/), [OpenCV docs](https://docs.opencv.org/), [moviepy docs](https://zulko.github.io/moviepy/), [pydub docs](https://github.com/jiaaro/pydub), [imageio docs](https://imageio.readthedocs.io/), [matplotlib docs](https://matplotlib.org/), [seaborn docs](https://seaborn.pydata.org/), [plotly docs](https://plotly.com/python/)
+#### 🔗 Para saber más
+- [librosa docs](https://librosa.org/doc/main/)
+- [Real Python — Audio](https://realpython.com/python-audio/)
 
 ---
 
@@ -2301,17 +2997,13 @@ Fuente: [Pillow docs](https://pillow.readthedocs.io/), [OpenCV docs](https://doc
 
 ### SQL (relacionales)
 
-| Librería | Async | ORM | Para qué |
-|---|---|---|---|
-| **SQLAlchemy 2.0** | Sí (`asyncpg`) | ORM completo | Estándar de facto. Soporta PostgreSQL, MySQL, SQLite |
-| **psycopg3** | Sí | No (driver puro) | Conexión directa a PostgreSQL. Más rápido que SQLAlchemy puro |
-| **databases** | Sí | No (query builder) | Ligero, funciona con SQLAlchemy core o queries raw |
-| **SQLite (stdlib)** | No | No | `sqlite3` viene incluido. Perfecto para prototipos y tests |
-| **Tortoise-ORM** | Sí | ORM completo | Similar a Django ORM, 100% async, pensado para FastAPI |
-| **Peewee** | No | ORM ligero | Menos features que SQLAlchemy, pero más simple de aprender |
+#### ¿Qué es?
+Python se conecta a bases de datos relacionales mediante drivers nativos (psycopg3, asyncpg) o a través de ORMs como SQLAlchemy 2.0.
 
+🔗 [SQLAlchemy docs](https://docs.sqlalchemy.org/)
+
+#### Sintaxis básica
 ```python
-# SQLAlchemy 2.0 async con modelos
 from sqlalchemy import create_engine, select, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
 
@@ -2324,75 +3016,70 @@ class Usuario(Base):
     nombre: Mapped[str] = mapped_column(String(100))
     email: Mapped[str] = mapped_column(String(255), unique=True)
 
-# Sincrónico
 engine = create_engine("sqlite:///db.sqlite3")
 Base.metadata.create_all(engine)
 with Session(engine) as session:
     usuario = Usuario(nombre="Ana", email="ana@email.com")
     session.add(usuario)
     session.commit()
-    print(session.execute(select(Usuario)).scalars().all())
 ```
 
+#### 🧪 Cómo probarlo
 ```python
-# Async con asyncpg directo
-import asyncpg
-import asyncio
+import pytest
+from sqlalchemy import create_engine, select
+from sqlalchemy.orm import Session, DeclarativeBase, Mapped, mapped_column
 
-async def main():
-    conn = await asyncpg.connect("postgresql://user:pass@localhost/db")
-    await conn.execute("""
-        CREATE TABLE IF NOT EXISTS usuarios (
-            id SERIAL PRIMARY KEY,
-            nombre TEXT NOT NULL,
-            email TEXT UNIQUE
-        )
-    """)
-    await conn.execute("INSERT INTO usuarios (nombre, email) VALUES ($1, $2)", "Ana", "ana@email.com")
-    rows = await conn.fetch("SELECT * FROM usuarios")
-    print(rows)
-    await conn.close()
+def test_sqlite_en_memoria():
+    class Base(DeclarativeBase):
+        pass
+    class Item(Base):
+        __tablename__ = "items"
+        id: Mapped[int] = mapped_column(primary_key=True)
+        nombre: Mapped[str] = mapped_column(String(50))
 
-asyncio.run(main())
+    engine = create_engine("sqlite:///:memory:")
+    Base.metadata.create_all(engine)
+    with Session(engine) as session:
+        session.add(Item(nombre="test"))
+        session.commit()
+        resultado = session.execute(select(Item)).scalars().all()
+        assert len(resultado) == 1
+        assert resultado[0].nombre == "test"
 ```
 
-### NoSQL
+#### 💡 Memoria y rendimiento
+- SQLite en memoria: muy rápido para tests (~1000 ops/s)
+- SQLAlchemy añade ~5-10% overhead sobre SQL plano
+- Async drivers (asyncpg) pueden manejar >10000 conexiones simultáneas
 
-| Librería | Base de datos | Para qué |
-|---|---|---|
-| **redis-py** | Redis | Caché, sesiones, colas (`redis` o `hiredis`) |
-| **motor** | MongoDB | Driver async oficial de MongoDB |
-| **beanie** | MongoDB | ODM sobre motor, con modelos tipo Pydantic |
-| **cassandra-driver** | Cassandra / ScyllaDB | Escritura masiva, series temporales |
-| **elasticsearch-py** | Elasticsearch | Búsqueda de texto completo, logs |
+#### ✅ Buenas prácticas
+- ✅ Usa SQLite para prototipos y tests (:memory:)
+- ⚠️ Siempre cierra sesiones — usa `with Session()`
+- ❌ No compartas sesiones entre hilos
 
-### Migraciones
-```bash
-# Alembic (estándar con SQLAlchemy)
-alembic init alembic
-alembic revision --autogenerate -m "crear usuarios"
-alembic upgrade head
+#### 🏗️ Metodología
+- Prototipos: SQLite
+- Producción: PostgreSQL con asyncpg
+- Migraciones: Alembic
+- ORM vs raw SQL: ORM para el 80%, raw SQL para el 20% crítico
 
-# Alternativas: Django migrations (si usas Django), yoyo-migrations (mínimalista)
-```
-
-Fuente: [SQLAlchemy docs](https://docs.sqlalchemy.org/), [asyncpg docs](https://magicstack.github.io/asyncpg/), [Alembic docs](https://alembic.sqlalchemy.org/)
+#### 🔗 Para saber más
+- [SQLAlchemy 2.0 docs](https://docs.sqlalchemy.org/)
+- [Real Python — SQLAlchemy](https://realpython.com/python-sqlalchemy/)
+- [Alembic docs](https://alembic.sqlalchemy.org/)
 
 ---
 
 ## WebSockets y MQTT
 
-### WebSockets
+#### ¿Qué es?
+WebSockets permiten comunicación bidireccional en tiempo real entre servidor y cliente. MQTT es un protocolo pub/sub ligero para IoT. Ambos son esenciales para aplicaciones en tiempo real.
 
-| Librería | Para qué |
-|---|---|
-| **websockets** | Servidor/cliente WebSocket puro, sin dependencias |
-| **FastAPI WebSockets** | Integrado en FastAPI, `@app.websocket()` |
-| **python-socketio** | Socket.IO con fallback a HTTP long-polling |
-| **Starlette WebSocket** | Si usas Starlette directamente |
+🔗 [FastAPI WebSockets docs](https://fastapi.tiangolo.com/advanced/websockets/)
 
+#### Sintaxis básica
 ```python
-# Servidor WebSocket mínimo con FastAPI
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from typing import Set
 
@@ -2406,125 +3093,94 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         while True:
             data = await websocket.receive_text()
-            # Broadcast a todos los conectados
             for conn in conexiones:
                 await conn.send_text(f"Echo: {data}")
     except WebSocketDisconnect:
         conexiones.discard(websocket)
-```
 
-```python
-# Cliente WebSocket con websockets
-import asyncio
-import websockets
-
-async def escuchar():
-    async with websockets.connect("wss://ejemplo.com/ws") as ws:
-        await ws.send("Hola servidor")
-        respuesta = await ws.recv()
-        print(f"Recibido: {respuesta}")
-
-asyncio.run(escuchar())
-```
-
-### MQTT (protocolo IoT, mensajería publish/subscribe)
-
-| Librería | Async | Para qué |
-|---|---|---|
-| **paho-mqtt** | No (callbacks) | Cliente MQTT clásico, estándar de facto |
-| **aiomqtt** | Sí | Wrapper async sobre paho-mqtt |
-| **gmqtt** | Sí | Cliente MQTT nativo async, más moderno |
-
-```python
-# Publicar/recibir con paho-mqtt (clásico)
-import paho.mqtt.client as mqtt
-
-def on_connect(client, userdata, flags, rc):
-    print(f"Conectado (código {rc})")
-    client.subscribe("casa/temperatura")
-
-def on_message(client, userdata, msg):
-    print(f"{msg.topic}: {msg.payload.decode()}")
-
-client = mqtt.Client()
-client.on_connect = on_connect
-client.on_message = on_message
-client.connect("broker.hivemq.com", 1883)
-client.loop_start()  # hilo en background
-# client.publish("casa/led", "ON")
-```
-
-```python
-# aiomqtt (async moderno)
+# MQTT con aiomqtt
 import asyncio
 import aiomqtt
 
-async def main():
+async def mqtt_main():
     async with aiomqtt.Client("broker.hivemq.com") as client:
         await client.subscribe("casa/#")
         async for message in client.messages:
             print(f"{message.topic}: {message.payload.decode()}")
-
-asyncio.run(main())
 ```
 
-**Cuándo usar cada uno:**
-- **WebSockets**: comunicación bidireccional en tiempo real entre navegador y servidor (chats, dashboards, juegos)
-- **MQTT**: dispositivos IoT, sensores, sistemas con ancho de banda limitado, redes inestables (QoS levels)
-- **Socket.IO**: cuando necesitas WebSocket con fallback y eventos named (salas, broadcasting)
+#### 🧪 Cómo probarlo
+```python
+import pytest
+import asyncio
+import websockets
 
-Fuente: [FastAPI WebSockets docs](https://fastapi.tiangolo.com/advanced/websockets/), [paho-mqtt docs](https://pypi.org/project/paho-mqtt/), [aiomqtt docs](https://aiomqtt.aio-libs.org/)
+@pytest.mark.asyncio
+async def test_websocket():
+    async def echo_server(ws):
+        async for msg in ws:
+            await ws.send(msg)
+        return
+
+    async with websockets.serve(echo_server, "localhost", 8765):
+        async with websockets.connect("ws://localhost:8765") as ws:
+            await ws.send("hola")
+            respuesta = await ws.recv()
+            assert respuesta == "hola"
+```
+
+#### 💡 Memoria y rendimiento
+- WebSockets: overhead bajo (~2-10 bytes por frame)
+- MQTT: extremadamente ligero (2 bytes header mínimo)
+- asyncio es ideal para manejar miles de conexiones simultáneas
+
+#### ✅ Buenas prácticas
+- ✅ Usa WebSockets para comunicación bidireccional navegador-servidor
+- ⚠️ Usa MQTT para IoT y dispositivos con recursos limitados
+- ❌ No uses WebSockets para comunicación request-response simple
+
+#### 🏗️ Metodología
+- Chats, dashboards en tiempo real: WebSockets
+- Sensores, dispositivos IoT: MQTT
+- Fallback para navegadores antiguos: Socket.IO
+
+#### 🔗 Para saber más
+- [FastAPI WebSockets](https://fastapi.tiangolo.com/advanced/websockets/)
+- [paho-mqtt docs](https://pypi.org/project/paho-mqtt/)
+- [aiomqtt docs](https://aiomqtt.aio-libs.org/)
 
 ---
 
-## Threading, concurrencia y paralelismo
+## Concurrencia y paralelismo
 
-Python tiene tres modelos de concurrencia. Cada uno sirve para un escenario distinto.
+#### ¿Qué es?
+Python tiene tres modelos de concurrencia: threading (I/O-bound, limitado por GIL), multiprocessing (CPU-bound, sortea el GIL) y asyncio (I/O-bound cooperativo, un solo hilo).
 
-### threading (I/O-bound, no CPU-bound)
+🔗 [Python docs — asyncio](https://docs.python.org/3/library/asyncio.html)
 
+#### Sintaxis básica
 ```python
-import threading
-import time
-import requests
+import asyncio
+import httpx
 
-urls = [
-    "https://httpbin.org/delay/2",
-    "https://httpbin.org/delay/1",
-    "https://httpbin.org/delay/3",
-]
+async def descargar(url: str):
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(url)
+        return resp.status_code
 
-def descargar(url: str):
-    print(f"Iniciando {url}")
-    requests.get(url)
-    print(f"Completado {url}")
+async def main():
+    urls = ["https://httpbin.org/delay/1"] * 5
+    resultados = await asyncio.gather(*[descargar(u) for u in urls])
+    print(resultados)
 
-# Secuencial: ~6 segundos
-inicio = time.time()
-for url in urls:
-    descargar(url)
-print(f"Secuencial: {time.time() - inicio:.1f}s")
+asyncio.run(main())
 
-# Con threads: ~3 segundos (I/O-bound, GIL no bloquea)
-inicio = time.time()
-threads = [threading.Thread(target=descargar, args=(u,)) for u in urls]
-for t in threads: t.start()
-for t in threads: t.join()
-print(f"Threads: {time.time() - inicio:.1f}s")
-```
-
-### concurrent.futures (ThreadPool + ProcessPool unificados)
-
-```python
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 
-# ThreadPool para I/O-bound
 with ThreadPoolExecutor(max_workers=5) as pool:
     resultados = list(pool.map(descargar, urls))
 
-# ProcessPool para CPU-bound (sortea el GIL)
-def calcular_primo(n: int) -> bool:
-    if n < 2: return False
+def calcular_primo(n):
     for i in range(2, int(n**0.5) + 1):
         if n % i == 0: return False
     return True
@@ -2533,496 +3189,531 @@ with ProcessPoolExecutor() as pool:
     resultados = list(pool.map(calcular_primo, range(10_000_000, 10_001_000)))
 ```
 
-### asyncio (I/O-bound, cooperativo, un solo hilo)
+#### 🧪 Cómo probarlo
+```python
+import pytest
+import asyncio
 
+@pytest.mark.asyncio
+async def test_async():
+    async def suma_async(a, b):
+        await asyncio.sleep(0.01)
+        return a + b
+
+    resultado = await suma_async(2, 3)
+    assert resultado == 5
+    resultados = await asyncio.gather(suma_async(1, 1), suma_async(2, 2))
+    assert resultados == [2, 4]
+```
+
+#### 💡 Memoria y rendimiento
+| Escenario | Modelo | Ejemplo |
+|---|---|---|
+| I/O-bound (HTTP, BD) | asyncio | Microservicios, scrapers |
+| CPU-bound | multiprocessing | ML, procesamiento imágenes |
+| Ambos | asyncio + ProcessPoolExecutor | API que calcula y consulta BD |
+| Streaming | asyncio | WebSockets, dashboards |
+
+#### ✅ Buenas prácticas
+- ✅ asyncio para la mayoría de I/O-bound
+- ⚠️ No uses threading para CPU-bound (el GIL lo empeora)
+- ❌ No mezcles asyncio y threading sin sincronización explícita
+
+#### 🏗️ Metodología
+- I/O-bound: asyncio (más eficiente que threads)
+- CPU-bound: multiprocessing o librerías C (numpy)
+- Archivos: aiofiles para async
+- Cálculos pesados: ProcessPoolExecutor con asyncio
+
+#### 🔗 Para saber más
+- [Python docs — asyncio](https://docs.python.org/3/library/asyncio.html)
+- [Real Python — Async IO](https://realpython.com/async-io-python/)
+- [PEP 703 — free-threaded Python](https://peps.python.org/pep-0703/)
+
+---
+
+## Testing y calidad
+
+### Frameworks y herramientas
+
+| Framework | Propósito | Async | CLI |
+|---|---|---|---|
+| pytest | Unitario e integración | Sí (`pytest-asyncio`) | `python -m pytest` |
+| unittest | Stdlib para testing | Sí (3.8+) | `python -m unittest` |
+| hypothesis | Property-based testing | No | `pytest --hypothesis` |
+| coverage.py | Cobertura de código | Sí | `coverage run -m pytest` |
+
+### Cómo testear cada concepto
+
+**Variables y tipos** → aserciones simples
+```python
+def test_tipos():
+    assert isinstance(42, int)
+    assert isinstance("hola", str)
+    assert isinstance([1, 2], list)
+```
+
+**Control de flujo** → boundary testing con parametrización
+```python
+@pytest.mark.parametrize("input, expected", [
+    (0, "cero"), (1, "positivo"), (-1, "negativo")
+])
+def test_signo(input, expected):
+    if input > 0: result = "positivo"
+    elif input < 0: result = "negativo"
+    else: result = "cero"
+    assert result == expected
+```
+
+**POO** → mocks con monkeypatch
+```python
+def test_con_mock(monkeypatch):
+    def mock_obtener_info(self):
+        return "mock info"
+    monkeypatch.setattr(Audio, "obtener_info", mock_obtener_info)
+    a = Audio(Metadatos("test", 100), 128)
+    assert a.obtener_info() == "mock info"
+```
+
+**File I/O** → tmp_path fixture
+```python
+def test_archivo(tmp_path):
+    f = tmp_path / "test.txt"
+    f.write_text("contenido")
+    assert f.read_text() == "contenido"
+```
+
+**Async** → pytest-asyncio
+```python
+@pytest.mark.asyncio
+async def test_async():
+    async def fn(): return 42
+    assert await fn() == 42
+```
+
+### Parametrización avanzada
+```python
+@pytest.mark.parametrize("a, b, expected", [
+    (1, 2, 3), (0, 0, 0), (-1, 1, 0), (100, 200, 300)
+])
+def test_suma(a, b, expected):
+    assert a + b == expected
+```
+
+### Property-based testing
+```python
+from hypothesis import given, strategies as st
+
+@given(st.lists(st.integers()))
+def test_sort_siempre_ordenado(lista):
+    resultado = sorted(lista)
+    for i in range(len(resultado) - 1):
+        assert resultado[i] <= resultado[i + 1]
+```
+
+### Cobertura y CI
+```bash
+coverage run -m pytest
+coverage report -m
+coverage html  # abre htmlcov/index.html
+```
+
+### Mini‑scripts de verificación
+```python
+# Mini-script: verifica tipos y mutabilidad
+# python3 -c "
+# a = [1, 2, 3]
+# b = a
+# a.append(4)
+# assert b == [1, 2, 3, 4], 'mutabilidad'
+# assert isinstance('hola', str)
+# print('Todo OK')
+# "
+```
+
+---
+
+## Conceptos avanzados para Python
+
+### asyncio profundo
+
+#### ¿Qué es?
+asyncio permite concurrencia cooperativa con un solo hilo. Usa un event loop que multiplexa tareas mediante `async/await`. Ideal para I/O-bound.
+
+🔗 [Python docs — asyncio](https://docs.python.org/3/library/asyncio.html)
+
+#### Sintaxis básica
 ```python
 import asyncio
-import httpx
 
-async def descargar_async(url: str):
-    async with httpx.AsyncClient() as client:
-        resp = await client.get(url)
-        return resp.status_code
+async def tarea(n):
+    await asyncio.sleep(1)
+    return f"Tarea {n} completada"
 
 async def main():
-    tareas = [descargar_async(u) for u in urls]
-    resultados = await asyncio.gather(*tareas)
-    print(resultados)
+    async with asyncio.TaskGroup() as tg:
+        t1 = tg.create_task(tarea(1))
+        t2 = tg.create_task(tarea(2))
+    print(t1.result(), t2.result())
 
 asyncio.run(main())
 ```
 
-### Librerías que mejoran la concurrencia
-
-| Librería | Mejora | Para qué |
-|---|---|---|
-| **uvloop** | Sustituye `asyncio` event loop por uno basado en libuv (2-4x más rápido) | `pip install uvloop && uvloop.install()` — mejora TODO el async I/O |
-| **trio** | Framework async con cancelación estructurada, canales, y mejor manejo de errores | Alternativa más segura a asyncio |
-| **anyio** | Backend-agnóstico (asyncio + trio). Usa la misma API con cualquier backend | Librerías que quieren funcionar con ambos |
-| **curio** | Async minimalista, sin herencia complicada | Proyectos que quieren async simple |
-| **aioshutil** | Operaciones de archivo async | Copiar/mover archivos sin bloquear |
-| **aiofiles** | I/O de archivos async | `async with aiofiles.open("file") as f:` |
-
+#### 🧪 Cómo probarlo
 ```python
-# uvloop: una línea y todo asyncio va más rápido
-import uvloop
-uvloop.install()  # A partir de aquí, asyncio.run() usa uvloop
+import pytest
+import asyncio
 
-# anyio: mismo código funciona con asyncio y trio
-import anyio
+@pytest.mark.asyncio
+async def test_task_group():
+    async def fn(x):
+        await asyncio.sleep(0.01)
+        return x * 2
 
-async def main():
-    async with anyio.create_task_group() as tg:
-        tg.start_soon(descargar_async, urls[0])
-        tg.start_soon(descargar_async, urls[1])
-
-anyio.run(main, backend="trio")  # o backend="asyncio"
+    async with asyncio.TaskGroup() as tg:
+        t1 = tg.create_task(fn(2))
+        t2 = tg.create_task(fn(3))
+    assert t1.result() == 4
+    assert t2.result() == 6
 ```
 
-### ¿Cuál usar?
+### C extensions
 
-| Escenario | Modelo | Ejemplo |
-|---|---|---|
-| Llamadas HTTP, BD, API externas | asyncio (o threading) | Microservicios, scrapers |
-| Archivos grandes, disco | asyncio + aiofiles | Procesamiento de archivos |
-| Cálculo intensivo (CPU) | multiprocessing | ML, procesamiento de imágenes |
-| Ambos I/O y CPU | asyncio + ProcessPoolExecutor | API que calcula y consulta BD |
-| Streaming, tiempo real | asyncio | WebSockets, MQTT, dashboards |
-| Scripts simples | threading | Automatizaciones pequeñas |
-
-### free-threaded Python (3.13+ experimental)
-
-Python 3.13 introdujo un modo experimental sin GIL (`--disable-gil` en build). Permite paralelismo real con threads. Aún no es estable para producción, pero es el futuro del lenguaje en este aspecto.
+Python puede extender su funcionalidad con módulos escritos en C usando la API de CPython, Cython, ctypes o CFFI.
 
 ```python
-# Comprobar si el GIL está activo
-import sys
-print(sys._is_gil_enabled())  # False en free-threaded build
+from ctypes import CDLL
+
+libc = CDLL("libc.so.6")
+libc.printf(b"Hola desde C\n")
 ```
 
-Fuente: [Python docs — asyncio](https://docs.python.org/3/library/asyncio.html), [uvloop docs](https://uvloop.readthedocs.io/), [trio docs](https://trio.readthedocs.io/), [PEP 703 — free-threaded Python](https://peps.python.org/pep-0703/)
+🔗 [Python docs — ctypes](https://docs.python.org/3/library/ctypes.html)
 
----
+### Profile-guided optimization (PGO)
 
-## Librerías esenciales por categoría
+PGO permite optimizar Python compilando con profiling de uso real.
 
-### Desarrollo web
-| Librería | Para qué |
-|---|---|
-| **FastAPI** | APIs REST modernas con async, validación automática, OpenAPI |
-| **Django** | Full-stack, ORM, admin, auth (gran ecosistema) |
-| **Flask** | Microframework minimalista, ideal para APIs pequeñas |
-| **Starlette** | ASGI puro, base de FastAPI |
-| **httpx** | Cliente HTTP async con interfaz similar a requests |
+```bash
+./configure --enable-optimizations
+make -j$(nproc)
+```
 
-### Ciencia de datos y ML
-| Librería | Para qué |
-|---|---|
-| **NumPy** | Arrays N-dimensionales, álgebra lineal, operaciones vectorizadas |
-| **Pandas** | DataFrames, análisis tabular, CSV/Excel/Parquet |
-| **Matplotlib / Seaborn** | Visualización estática |
-| **Plotly** | Gráficos interactivos |
-| **Scikit-learn** | ML clásico: regresión, clasificación, clustering |
-| **PyTorch / TensorFlow** | Deep learning |
-| **Jupyter / JupyterLab** | Notebooks interactivos para exploración |
+🔗 [Python Developer's Guide — PGO](https://devguide.python.org/compiling/)
 
-### CLI y herramientas de sistema
-| Librería | Para qué |
-|---|---|
-| **click / typer** | Interfaces CLI con argumentos y subcomandos |
-| **rich** | Terminal con colores, tablas, markdown y progress bars |
-| **textual** | TUI (interfaces de terminal interactivas) |
-| **watchfiles** | File watcher para auto-reload |
-| **subprocess / shutil** | Stdlib para comandos del sistema y manipulación de archivos |
+### Performance tips
 
-### Testing
-| Librería | Para qué |
-|---|---|
-| **pytest** | Framework de testing estándar |
-| **pytest-cov** | Cobertura de código |
-| **pytest-asyncio** | Testing de código async |
-| **hypothesis** | Property-based testing (encuentra casos que no esperabas) |
-| **tox / nox** | Testing multi-versión de Python |
-
-### Async y concurrencia
-| Librería | Para qué |
-|---|---|
-| **asyncio** | Stdlib para I/O asíncrona |
-| **anyio** | Backend-agnóstico (asyncio + trio) |
-| **trio** | Framework async con enfoque en correctness |
-| **aiohttp** | Cliente y servidor HTTP async |
-
-Fuente: [PyPI stats](https://pypistats.org/), [Awesome Python](https://github.com/vinta/awesome-python)
+```python
+from array import array
+arr = array('i', range(1_000_000))  # ~4 MB
+lista = list(range(1_000_000))      # ~28 MB
+```
 
 ---
 
 ## Escala de aprendizaje: de 0 a 100
 
-Cada nivel incluye lo que debes saber y un proyecto para fijar los conceptos.
-
-### Nivel 0–15: Fundamentos absolutos
+### Nivel 0-15: Fundamentos absolutos
 **Qué aprender:**
-- Sintaxis básica: variables, tipos (`int`, `str`, `float`, `bool`), `print()`, `input()`
-- Condicionales: `if`/`elif`/`else`, operadores de comparación
-- Bucles: `for` sobre listas, `while`, `range()`
-- Listas y diccionarios básicos: `append()`, acceso por índice, slicing `lista[1:3]`
-- Funciones: `def`, `return`, parámetros
-- File system básico: `open()`, modos `r/w/a`, `with` statement, `read()`/`write()`
-- Tipos inmutables vs mutables: `int`, `str`, `tuple` vs `list`, `dict`, `set`
-- **Conceptos clave**: entiende que las variables son nombres que referencian objetos, no cajas. Un `int` es inmutable — `x += 1` crea un nuevo objeto. Usa `type()` para inspeccionar tipos y `id()` para ver la dirección de memoria.
+- Sintaxis básica, variables, tipos (`int`, `str`, `float`, `bool`)
+- Condicionales, bucles, listas, diccionarios
+- Funciones, file system básico
+- Mutabilidad, small integer caching
 
-**Proyecto:** *Adivina el número* — el programa elige un número aleatorio entre 1 y 100, el usuario intenta adivinarlo. Pistas de "mayor/menor". Contador de intentos. Manejo de entrada no numérica con `try/except`. Reflexión: ¿por qué `5 is 5` da True pero `500 is 500` puede dar False? (small integer caching)
+**Proyecto:** Adivina el número — número aleatorio entre 1-100, pistas mayor/menor, contador de intentos, manejo de errores con `try/except`.
 
-### Nivel 15–30: Estructuras de datos y funciones avanzadas
+**Testing:** pytest con aserciones simples, `pytest.raises` para entrada inválida.
+
+### Nivel 15-30: Estructuras de datos y funciones avanzadas
 **Qué aprender:**
-- Tuplas, sets, frozen sets
-- Comprensiones de listas, diccionarios y sets
-- `*args`, `**kwargs`, funciones lambda, `map()`/`filter()`/`reduce()`
-- Slicing avanzado: `lista[::2]`, `cadena[::-1]`
-- Cadenas: `split()`, `join()`, `strip()`, f-strings, `.format()`
-- `pathlib.Path` sobre `os.path`: `read_text()`, `write_text()`, `glob()`, `mkdir()`
-- `csv` y `json`: leer/escribir archivos estructurados
-- `sorted()`, `list.sort()`, `key` parameter, `bisect` para búsqueda binaria
-- **Conceptos clave**: mutabilidad — una lista se modifica in-place, una tupla no. El slicing crea copias (shallow). `is` vs `==`: `is` compara identidad, `==` compara valor. EAFP: es más Pythonic pedir perdón que permiso (`try` en lugar de `if`).
+- Tuplas, sets, comprehensions, `*args`/`**kwargs`
+- Lambdas, `map`/`filter`/`reduce`, f-strings avanzadas
+- `pathlib`, `csv`, `json`, `sorted` con `key`
+- EAFP, `is` vs `==`
 
-**Proyecto:** *Gestor de tareas CLI* — añadir (`add "Comprar leche"`), listar (`list`), completar (`done 3`), eliminar (`rm 3`). Persistencia en JSON. Usa `argparse` o `click` para los comandos. Bonus: `for...else` para detectar si un id no existe.
+**Proyecto:** Gestor de tareas CLI — añadir, listar, completar, eliminar. Persistencia en JSON. Usa `argparse` o `click`.
 
-### Nivel 30–45: POO, módulos y errores
+**Testing:** `@pytest.mark.parametrize`, `tmp_path` para archivos.
+
+### Nivel 30-45: POO, módulos y errores
 **Qué aprender:**
-- Clases: `__init__`, `self`, métodos de instancia
-- Herencia, `super()`, MRO, métodos abstractos (`abc.ABC`)
-- Propiedades (`@property`), métodos de clase (`@classmethod`), estáticos (`@staticmethod`)
-- Excepciones personalizadas: crear excepciones, `raise from` para cadena de excepciones
-- `match/case` (3.10+): pattern matching estructural
-- `collections`: `deque`, `defaultdict`, `Counter`, `heapq` para priority queues
-- Módulos y paquetes: `__init__.py`, `__all__`, `if __name__ == "__main__"`
-- `dataclasses.dataclass` para clases de datos sin boilerplate
-- **Conceptos clave**: decoradores — qué son, cómo crearlos, `@wraps`. Herencia múltiple y MRO: `Clase.__mro__`. Métodos mágicos: `__str__`, `__repr__`, `__eq__`, `__call__`. `__slots__` para ahorrar memoria (~50% menos). El patrón Strategy se implementa con funciones, no con interfaces.
+- Clases, herencia, `super()`, MRO, ABC, `@property`
+- Excepciones personalizadas, `match/case`
+- `dataclasses`, `collections`, `heapq`
+- Decoradores básicos
 
-**Proyecto:** *Sistema de inventario* — clases `Producto`, `Inventario`. Métodos: `agregar()`, `retirar()`, `buscar()`, `valor_total()`. Persistencia con pickle o JSON. Excepciones personalizadas (`StockInsuficiente`, `ProductoNoExiste`). Implementa un decorador `@loguear_operacion` que registre cada llamada. Usa `dataclass` para Producto y `__slots__` si hay muchos productos.
+**Proyecto:** Sistema de inventario con clases `Producto`, `Inventario`. Persistencia con JSON. Decorador `@loguear_operacion`.
 
-### Nivel 45–60: Testing, logging y empaquetado
+**Testing:** Fixtures, mocks con `monkeypatch`, `pytest.raises` para excepciones personalizadas.
+
+### Nivel 45-60: Testing, logging y empaquetado
 **Qué aprender:**
-- `pytest`: `assert`, fixtures, `tmp_path`, parametrized tests
-- `pytest-cov`: medir cobertura
-- `logging` vs `print`: niveles, handlers, formateadores
-- Type hints avanzados: `Optional`, `Union`, `TypeVar`, `Generic`, `Protocol`
-- `mypy` en modo estricto
-- `pyproject.toml`: empaquetar tu proyecto, `pip install -e .`
-- `tempfile`: `TemporaryFile`, `TemporaryDirectory` para archivos temporales
-- `io.StringIO` / `io.BytesIO`: buffers en memoria para tests y procesamiento
-- `itertools`: `chain`, `cycle`, `permutations`, `combinations`, `groupby`, `product`
-- `functools`: `partial`, `lru_cache`, `singledispatch`, `reduce`
-- Pillow básico: abrir, redimensionar, convertir formato de imágenes
-- **Conceptos clave**: Protocols (tipado estructural, PEP 544) — no necesitas herencia, solo implementar los métodos. EAFP en testing: pytest espera excepciones con `pytest.raises`. El patrón Adapter en Python es duck typing puro. Type hints son para herramientas, no vinculan en runtime.
+- pytest avanzado (fixtures, parametrización, `tmp_path`)
+- `coverage.py`, `logging`, type hints avanzados (`Protocol`, `Generic`)
+- `pyproject.toml`, empaquetado pip
+- `itertools`, `functools`, Pillow básico
 
-**Proyecto:** *Calculadora empaquetada* — paquete pip instalable con `pyproject.toml`. Tests con pytest (parametrize para operaciones, `pytest.raises` para errores). Logging a archivo con rotación. Type hints en todas las funciones con `Protocol` para soportar operaciones personalizadas. CI con GitHub Actions que ejecuta `pytest`, `mypy --strict`, y `ruff`.
+**Proyecto:** Calculadora empaquetada — paquete pip instalable. Tests con parametrize, logging, CI con GitHub Actions (`pytest`, `mypy --strict`, `ruff`).
 
-### Nivel 60–75: Web APIs y async
+### Nivel 60-75: Web APIs y async
 **Qué aprender:**
-- FastAPI: `@app.get/post/put/delete`, Path/Query params, `Body`, `Depends`
-- Pydantic: modelos de validación, `BaseModel`, validadores personalizados
-- SQLAlchemy 2.0: ORM declarativo, sesiones, `select()`, relaciones
-- Alembic: migraciones de base de datos
-- `asyncio`: `async/await`, `asyncio.gather()`, `asyncio.create_task()`
-- `httpx.AsyncClient` para peticiones HTTP concurrentes
-- Streams: `io.StringIO`, `io.BytesIO` para buffers en memoria
-- `watchfiles`: monitorear cambios en archivos en tiempo real
-- `moviepy`: edición básica de video (recortar, concatenar)
-- `pydub`: edición básica de audio (cortar, mezclar, conversión)
-- **Conceptos clave**: el GIL — threading no sirve para CPU-bound, pero asyncio sí para I/O-bound. Los decoradores son la base de FastAPI (`@app.get()`). Los context managers asíncronos (`async with`). Diferencia entre concurrencia (asyncio) y paralelismo (multiprocessing).
+- FastAPI, Pydantic, SQLAlchemy 2.0
+- asyncio, httpx.AsyncClient, WebSockets
+- moviepy/pydub para multimedia básico
 
-**Proyecto:** *API de recetas* — FastAPI + SQLAlchemy + PostgreSQL. Endpoints CRUD para recetas e ingredientes. Búsqueda por ingrediente. Autenticación básica con JWT usando un decorador `@require_auth`. Tests con `pytest-asyncio` y `httpx.AsyncClient`. Migraciones con Alembic. Caché con `@lru_cache` en endpoints de consulta frecuente.
+**Proyecto:** API de recetas — FastAPI + SQLAlchemy + PostgreSQL. Tests con `pytest-asyncio` y `httpx.AsyncClient`.
 
-### Nivel 75–90: Data pipelines y producción
+### Nivel 75-90: Producción
 **Qué aprender:**
-- Docker: Dockerfile multi-etapa para Python, `docker-compose` con app + db + redis
-- pytest + Docker: levantar servicios de prueba con `testcontainers`
-- CI/CD: GitHub Actions con matrix testing (3.10, 3.11, 3.12), lint + typecheck + test
-- Caching con Redis: `redis-py`, rate limiting
-- Workers asíncronos: Celery + Redis, tareas en background
-- WebSockets con FastAPI: `@app.websocket()`, conexiones en tiempo real
-- `pydantic-settings`: configuración por variables de entorno
-- `multiprocessing` + file processing: procesar archivos en paralelo
-- OpenCV: procesamiento de video frame a frame
-- `ffmpeg-python`: conversión y manipulación de multimedia
-- Watch + processing pipeline: `watchfiles` + procesamiento automático
-- **Conceptos clave**: el patrón Factory con `__init_subclass__` para registrar workers. Observer con señales de Blinker o callbacks. Context managers para conexiones a BD. Descriptors (`__get__`/`__set__`) para crear campos validados reutilizables. Metaclasses para registrar automáticamente todos los workers.
+- Docker, docker-compose, CI/CD, Redis, Celery
+- OpenCV, WebSockets en producción
+- `pydantic-settings`, `watchfiles`
 
-**Proyecto:** *Dashboard de monitorización* — API que recolecta métricas del sistema (CPU, RAM, disco). FastAPI como backend. Redis como cola de métricas. WebSocket para actualizaciones en tiempo real. Workers registrados via `__init_subclass__`. Docker Compose (api + redis + worker). Tests de integración con testcontainers. `pydantic-settings` para configuración.
+**Proyecto:** Dashboard de monitorización — FastAPI + Redis + WebSocket. Docker Compose (api + redis + worker). Tests de integración.
 
-### Nivel 90–100: Arquitectura y sistemas distribuidos
+### Nivel 90-100: Arquitectura
 **Qué aprender:**
-- Arquitectura hexagonal / clean architecture en Python: separación de dominios, casos de uso, repositorios
-- Event sourcing / CQRS con Kafka o RabbitMQ: `faststream` o `faust` para stream processing
-- gRPC: `grpcio`, protobuf, servicios bidi-streaming
-- GraphQL: `strawberry` o `ariadne`, subscription por WebSocket
-- Observabilidad: OpenTelemetry (tracing + metrics + logs), Prometheus + Grafana
-- Distribución: `twine` + PyPI, GitHub Releases, versionado semántico
-- Performance: profiling con `cProfile` / `py-spy`, optimización con `cython` / `numba`
-- Procesamiento multimedia distribuido: paralelizar tareas de imágenes/video con `ray` o `dask`
-- Algoritmos paralelos en imágenes/video: OpenCV con `multiprocessing`, filtros en pipelines distribuidos
-- **Conceptos clave**: el GIL como limitación para CPU-bound en sistemas distribuidos (usa multiprocessing o free-threaded Python 3.13). Patrón Repository con Protocols para desacoplar infraestructura. Singleton natural de los módulos Python para settings y conexiones. Cómo `memoryview` y `array` evitan copias de memoria en pipelines de datos. Buffer overflow en C extensions: verifica librerías C con fuzzing.
+- Arquitectura hexagonal, gRPC, GraphQL, Kafka
+- OpenTelemetry, profiling con `cProfile`/`py-spy`
+- free-threaded Python 3.13, Cython
 
-**Proyecto:** *Sistema de notificaciones distribuidas* — microservicios con FastAPI + gRPC para comunicación interna. Kafka como event bus entre servicios (usuarios, notificaciones, templates). GraphQL como BFF (Backend For Frontend). OpenTelemetry para tracing distribuido. Desplegado con Docker Compose y monitoreado con Prometheus + Grafana.
-
-Fuente: [FastAPI docs](https://fastapi.tiangolo.com/learn/), [SQLAlchemy 2.0 docs](https://docs.sqlalchemy.org/), [Architecture Patterns with Python](https://www.cosmicpython.com/)
+**Proyecto:** Sistema de notificaciones distribuidas — microservicios con FastAPI + gRPC + Kafka. OpenTelemetry para tracing.
 
 ---
 
-## Proyectos prácticos detallados
+## Proyecto final integrador: Procesador de logs
 
-### Gestor de contraseñas CLI (nivel 30)
+Este proyecto combina file I/O, algoritmos, POO, testing y red. Es ejecutable de principio a fin.
+
 ```python
-# password_manager.py
-import json
-import random
-import string
 from pathlib import Path
-from dataclasses import dataclass, asdict
-from cryptography.fernet import Fernet
-
-@dataclass
-class Entry:
-    service: str
-    username: str
-    password: str
-
-class Vault:
-    def __init__(self, path: Path = Path("vault.enc")):
-        self.path = path
-        self.key = self._load_or_create_key()
-        self.cipher = Fernet(self.key)
-    
-    def _load_or_create_key(self) -> bytes:
-        key_file = Path("vault.key")
-        if key_file.exists():
-            return key_file.read_bytes()
-        key = Fernet.generate_key()
-        key_file.write_bytes(key)
-        return key
-    
-    def add(self, entry: Entry) -> None:
-        data = self.path.read_text() if self.path.exists() else "{}"
-        store = json.loads(self.cipher.decrypt(data.encode()))
-        store[entry.service] = asdict(entry)
-        encrypted = self.cipher.encrypt(json.dumps(store).encode())
-        self.path.write_bytes(encrypted)
-    
-    def get(self, service: str) -> Entry | None:
-        if not self.path.exists():
-            return None
-        data = json.loads(self.cipher.decrypt(self.path.read_bytes()))
-        return Entry(**data[service]) if service in data else None
-
-def generate_password(length: int = 20) -> str:
-    chars = string.ascii_letters + string.digits + "!@#$%^&*"
-    return "".join(random.choice(chars) for _ in range(length))
-```
-
-### Web scraper con async (nivel 60)
-```python
-import asyncio
-from typing import List
+from collections import Counter
 from dataclasses import dataclass
-import httpx
-from bs4 import BeautifulSoup
+from typing import List
+import json
+import re
+import urllib.request
 
 @dataclass
-class Article:
-    title: str
-    url: str
-    source: str
+class LogEntry:
+    ip: str
+    timestamp: str
+    metodo: str
+    ruta: str
+    status: int
+    tamano: int
 
-async def scrape_news(url: str, session: httpx.AsyncClient) -> List[Article]:
-    resp = await session.get(url, headers={"User-Agent": "Mozilla/5.0"})
-    resp.raise_for_status()
-    soup = BeautifulSoup(resp.text, "html.parser")
-    articles = []
-    for item in soup.select("article h2 a, .headline a"):
-        articles.append(Article(
-            title=item.get_text(strip=True),
-            url=item["href"] if item["href"].startswith("http") else url + item["href"],
-            source=url
-        ))
-    return articles
+class LogParser:
+    PATRON = re.compile(
+        r'(?P<ip>[\d.]+).*\[(?P<ts>[^\]]+)\].*'
+        r'"(?P<metodo>\w+)\s+(?P<ruta>\S+).*".*'
+        r'(?P<status>\d+)\s+(?P<size>\d+)'
+    )
 
-async def main(sources: List[str]) -> List[Article]:
-    async with httpx.AsyncClient(timeout=15.0) as session:
-        tasks = [scrape_news(s, session) for s in sources]
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-    all_articles = []
-    for r in results:
-        if isinstance(r, list):
-            all_articles.extend(r)
-    return all_articles
+    def __init__(self, archivo: Path):
+        self.archivo = archivo
+
+    def parsear(self) -> List[LogEntry]:
+        entradas = []
+        with open(self.archivo, "r", encoding="utf-8") as f:
+            for linea in f:
+                match = self.PATRON.search(linea)
+                if match:
+                    entradas.append(LogEntry(
+                        ip=match.group("ip"),
+                        timestamp=match.group("ts"),
+                        metodo=match.group("metodo"),
+                        ruta=match.group("ruta"),
+                        status=int(match.group("status")),
+                        tamano=int(match.group("tamano")),
+                    ))
+        return entradas
+
+class LogAnalyzer:
+    def __init__(self, entradas: List[LogEntry]):
+        self.entradas = entradas
+
+    def top_ips(self, n: int = 5) -> List[str]:
+        return [ip for ip, _ in Counter(e.ip for e in self.entradas).most_common(n)]
+
+    def errores_por_ruta(self) -> dict:
+        return dict(Counter(
+            e.ruta for e in self.entradas if e.status >= 400
+        ).most_common(10))
+
+    def resumen(self) -> dict:
+        return {
+            "total": len(self.entradas),
+            "ips_unicas": len(set(e.ip for e in self.entradas)),
+            "top_ips": self.top_ips(),
+            "errores": self.errores_por_ruta(),
+        }
+
+def main():
+    ruta_log = Path("muestra.log")
+    if not ruta_log.exists():
+        print("Crea un archivo muestra.log con formato Apache/Nginx")
+        return
+
+    parser = LogParser(ruta_log)
+    entradas = parser.parsear()
+    analyzer = LogAnalyzer(entradas)
+    print(json.dumps(analyzer.resumen(), indent=2))
 
 if __name__ == "__main__":
-    articles = asyncio.run(main([
-        "https://news.ycombinator.com",
-        "https://www.python.org/blogs/"
-    ]))
-    for a in articles[:10]:
-        print(f"[{a.source}] {a.title}")
+    main()
 ```
+
+### Tests
+```python
+import pytest
+from pathlib import Path
+
+def test_log_parser(tmp_path):
+    log = '192.168.1.1 - - [10/Oct/2023:13:55:36] "GET /index.html HTTP/1.1" 200 2326'
+    f = tmp_path / "test.log"
+    f.write_text(log)
+
+    parser = LogParser(f)
+    entradas = parser.parsear()
+    assert len(entradas) == 1
+    assert entradas[0].ip == "192.168.1.1"
+    assert entradas[0].status == 200
+
+def test_log_analyzer():
+    entradas = [
+        LogEntry("1.1.1.1", "ts", "GET", "/", 200, 100),
+        LogEntry("1.1.1.1", "ts", "GET", "/", 404, 50),
+        LogEntry("2.2.2.2", "ts", "POST", "/api", 200, 200),
+    ]
+    analyzer = LogAnalyzer(entradas)
+    resumen = analyzer.resumen()
+    assert resumen["total"] == 3
+    assert resumen["ips_unicas"] == 2
+    assert resumen["top_ips"][0] == "1.1.1.1"
+    assert "/" in resumen["errores"]
+
+def test_log_processor_integracion(tmp_path):
+    log_data = """192.168.1.1 - - [10/Oct/2023:13:55:36] "GET / HTTP/1.1" 200 100
+192.168.1.2 - - [10/Oct/2023:13:55:37] "POST /api HTTP/1.1" 404 50"""
+    f = tmp_path / "muestra.log"
+    f.write_text(log_data)
+
+    parser = LogParser(f)
+    entradas = parser.parsear()
+    assert len(entradas) == 2
+    analyzer = LogAnalyzer(entradas)
+    assert analyzer.resumen()["total"] == 2
 
 ---
 
-## Hacks y tips de productividad
+## 🎯 Recursos, tips y referencias
 
-**1. El depurador integrado (`breakpoint()`)**
+### Libros y cursos
+
+| Recurso | Tipo | Enlace |
+|---|---|---|
+| *Python Crash Course* (Eric Matthes) | Libro | NoStarch |
+| *Fluent Python* (Luciano Ramalho) | Libro | O'Reilly |
+| *Automate the Boring Stuff* | Curso gratis | [automatetheboringstuff.com](https://automatetheboringstuff.com/) |
+| CS50's Python | Curso Harvard | [cs50.harvard.edu/python](https://cs50.harvard.edu/python/) |
+| FastAPI official tutorial | Docs | [fastapi.tiangolo.com/tutorial](https://fastapi.tiangolo.com/tutorial/) |
+
+### Canales y comunidades
+
+- **Reddit**: r/learnpython, r/Python
+- **Discord**: Python Discord, FastAPI Discord
+- **YouTube**: ArjanCodes (código limpio), Tech With Tim (proyectos), Corey Schafer (fundamentos)
+- **Blogs**: Real Python, Talk Python, PyCoder's Weekly
+
+### Herramientas recomendadas
+
+| Herramienta | Para qué |
+|---|---|
+| `uv` / `rye` | Gestión de proyectos y empaquetado |
+| `ruff` | Linter + formatter ultra-rápido |
+| `mypy --strict` | Type checking |
+| `pre-commit` | Hooks automáticos |
+| `copier` | Templates de proyectos |
+| `nox` | Automatización de tests multi-versión |
+
+---
+
+## 💡 Tips y trucos
+
+### Diarios
+
 ```python
-def calcular(x, y):
-    breakpoint()  # Pausa aquí, modo pdb interactivo
-    return x / y
-```
-En Python 3.7+ no necesitas importar `pdb`. Ejecuta y escribe `c` para continuar, `p variable` para inspeccionar, `q` para salir.
+# Diario de aprendizaje — escribe cada día qué aprendiste
+import json
+from pathlib import Path
+from datetime import date
 
-**2. `__slots__` para ahorrar memoria**
-```python
-class Punto:
-    __slots__ = ("x", "y")  # Sin __dict__, ~50% menos memoria
-    def __init__(self, x, y):
-        self.x, self.y = x, y
-```
+diario = Path("diario.json")
+entradas = json.loads(diario.read_text()) if diario.exists() else []
 
-**3. `defaultdict` y `Counter` del día a día**
-```python
-from collections import defaultdict, Counter
-
-agrupado = defaultdict(list)
-agrupado["fruta"].append("manzana")  # No KeyError
-
-frecuencia = Counter("python es genial")
-print(frecuencia.most_common(3))  # [('n', 2), ('e', 1), ('s', 1)]
-```
-
-**4. La sentencia walrus `:=` (3.8+)**
-```python
-if (n := len(archivo)) > 100:
-    print(f"Archivo grande: {n} líneas")
-```
-
-**5. `@lru_cache` para memoización automática**
-```python
-from functools import lru_cache
-
-@lru_cache(maxsize=128)
-def fibonacci(n: int) -> int:
-    if n < 2:
-        return n
-    return fibonacci(n-1) + fibonacci(n-2)
-```
-
-**6. Context managers personalizados con `contextlib`**
-```python
-from contextlib import contextmanager
-
-@contextmanager
-def temporizador(nombre: str):
-    import time
-    inicio = time.time()
-    yield
-    print(f"{nombre}: {time.time() - inicio:.2f}s")
+hoy = {"fecha": str(date.today()), "aprendizaje": input("¿Qué aprendiste hoy? ")}
+entradas.append(hoy)
+diario.write_text(json.dumps(entradas, indent=2))
 ```
 
-**7. Los 3 comandos que todo proyecto Python debería tener**
+### Debugging
+
+```python
+# breakpoint() te da un REPL interactivo en el punto exacto
+def bug_function(x):
+    breakpoint()
+    return 100 / x  # ¿por qué falla?
+```
+
+### Perfilado rápido
+
 ```bash
-pip install -e ".[dev]"      # Instala el paquete en modo editable
-pytest --cov=src --cov-report=term-missing  # Tests con cobertura
-ruff check src/ && mypy src/  # Lint + type check
+python -m cProfile -s cumulative mi_script.py | head -20
+python -m timeit "sum(range(1000))"
 ```
 
-**8. Tip: entorno `.env` con pydantic**
-```python
-from pydantic_settings import BaseSettings
+---
 
-class Settings(BaseSettings):
-    database_url: str = "sqlite:///dev.db"
-    debug: bool = False
-    api_key: str = ""
+## 📚 Referencias clave
 
-    model_config = {"env_file": ".env"}
-
-settings = Settings()  # Lee automáticamente de .env
-```
-
-Fuente: [Python docs — functools](https://docs.python.org/3/library/functools.html), [Pydantic docs](https://docs.pydantic.dev/latest/)
+- [Python.org docs](https://docs.python.org/3/) — La fuente de verdad
+- [Python Enhancement Proposals](https://peps.python.org/) — PEPs
+- [Awesome Python](https://github.com/vinta/awesome-python) — Lista curada de librerías
+- [pytest docs](https://docs.pytest.org/) — Testing en Python
+- [Real Python](https://realpython.com/) — Tutoriales de alta calidad
+- [FastAPI docs](https://fastapi.tiangolo.com/) — Web APIs modernas
+- [SQLAlchemy docs](https://docs.sqlalchemy.org/) — ORM y SQL toolkit
+- [The Hitchhiker's Guide to Python](https://docs.python-guide.org/) — Guía de estilo y proyecto
 
 ---
 
-## Canales y recursos en español
+## 🎯 Retos y próximos pasos
 
-### YouTube
-- **Midulive** — Python, JavaScript, desarrollo en general con enfoque práctico y directo
-- **HolaMundo** — Tutoriales cortos y claros sobre Python y tecnologías web
-- **MoureDev** — Python, automatización, proyectos reales (también en Twitch)
-- **Programación ATS** — Curso de Python desde cero, muy completo para empezar
-- **CodigoFacilito** — Cursos estructurados de Python, Django, ciencia de datos
-- **Platzi** — Ruta de aprendizaje de Python con proyectos prácticos
-- **Victor Robles** — Python para desarrollo web con Django
+### Nivel 1 (0-15)
+- **Calculadora CLI** — suma, resta, multiplica, divide. Maneja errores de entrada y división por cero.
+- **Adivina el número** — número aleatorio, pistas mayor/menor, contador de intentos.
 
-### Comunidades
-- **r/Python** (Reddit) — Noticias, discusiones, proyectos, dudas
-- **Python España** ([es.python.org](https://es.python.org/)) — Asociación, eventos, PyConES
-- **Discord Python en español** — Canales de ayuda, proyectos, mentoría
-- **Stack Overflow en español** — Etiqueta `python` para dudas técnicas
+### Nivel 2 (15-30)
+- **Gestor de tareas** — CLI con añadir, listar, completar, eliminar. Persistencia en JSON.
+- **Analizador de texto** — cuenta palabras, líneas, letras; busca palabras más frecuentes.
 
-### Repositorios de código
-- [vinta/awesome-python](https://github.com/vinta/awesome-python) — Lista curada de frameworks, librerías y recursos
-- [practical-tutorials/project-based-learning](https://github.com/practical-tutorials/project-based-learning) — Proyectos guiados en Python y otros lenguajes
-- [TheAlgorithms/Python](https://github.com/TheAlgorithms/Python) — Algoritmos implementados en Python (educativo)
-- [fastapi/fastapi](https://github.com/fastapi/fastapi) — Código fuente y ejemplos del framework
-- [josephernest/writing](https://github.com/josephernest/writing) — Herramientas de escritura en Python
+### Nivel 3 (30-45)
+- **Sistema de inventario POO** — clases Producto, Inventario, persistencia JSON, logging con decoradores.
+- **API de clima** — FastAPI + httpx para consultar OpenWeatherMap.
 
-### Blogs y newsletters
-- [Real Python](https://realpython.com/) — Tutorials semanales de calidad (inglés, pero muy accesible)
-- [PyCoder’s Weekly](https://pycoders.com/) — Newsletter semanal con lo mejor del ecosistema
-- [planetpython.org](https://planetpython.org/) — Agregador de blogs Python
-- [Python en Medium](https://medium.com/tag/python) — Artículos variados de la comunidad
+### Nivel 4 (45-60)
+- **Web scraper de noticias** — httpx + BeautifulSoup + análisis de sentimiento básico.
+- **Pipeline de datos** — extrae → transforma → carga (ETL) usando pandas.
 
-Fuente: búsqueda en YouTube y Reddit, listas curadas de Awesome Python
+### Nivel 5 (60-75)
+- **Dashboard en tiempo real** — FastAPI + WebSocket + Redis pub/sub para métricas en vivo.
+- **Procesador de imágenes async** — carga imágenes, aplica filtros, guarda resultados con aiofiles.
 
----
+### Nivel 6 (75-90)
+- **Sistema de colas** — Celery + Redis para procesamiento asíncrono de tareas pesadas.
+- **Microservicio dockerizado** — FastAPI + PostgreSQL + Redis con docker-compose y tests E2E.
 
-## Referencias y documentación oficial
-
-- **Docs oficiales**: [docs.python.org/3](https://docs.python.org/3/) — tutorial, library reference, language reference
-- **PEPs**: [peps.python.org](https://peps.python.org/) — Python Enhancement Proposals (PEP 8, PEP 484, PEP 572, etc.)
-- **PyPI**: [pypi.org](https://pypi.org/) — índice oficial de paquetes
-- **Python Packaging**: [packaging.python.org](https://packaging.python.org/) — guía oficial de empaquetado
-- **Python Debugger**: [docs.python.org/3/library/pdb.html](https://docs.python.org/3/library/pdb.html)
-- **CPython en GitHub**: [github.com/python/cpython](https://github.com/python/cpython)
-- **Python Developer's Guide**: [devguide.python.org](https://devguide.python.org/) — cómo contribuir al core
-
-### Fuentes de esta guía
-
-Esta guía se ha elaborado a partir de las siguientes fuentes consultadas durante su desarrollo:
-
-- [Python.org — Documentación oficial y tutorial](https://docs.python.org/3/tutorial/)
-- [FastAPI — Documentación oficial](https://fastapi.tiangolo.com/learn/)
-- [Real Python — Tutorials y guías prácticas](https://realpython.com/)
-- [SQLAlchemy 2.0 — Documentación](https://docs.sqlalchemy.org/)
-- [Pydantic — Documentación oficial](https://docs.pydantic.dev/latest/)
-- [Architecture Patterns with Python](https://www.cosmicpython.com/) — libro gratuito sobre DDD y arquitectura hexagonal
-- [Full Stack Python](https://www.fullstackpython.com/) — guía completa del ecosistema
-- [Awesome Python (GitHub)](https://github.com/vinta/awesome-python) — lista curada de recursos
-- [Python Packaging Authority](https://www.pypa.io/) — guías de empaquetado y distribución
-- [Hacker News](https://news.ycombinator.com/) — discusiones y tendencias del ecosistema
-- [r/Python](https://reddit.com/r/Python) — comunidad, debates y proyectos destacados
-- [PEP 8 — Style Guide](https://peps.python.org/pep-0008/)
-- [PEP 20 — Zen of Python](https://peps.python.org/pep-0020/)
-- [PEP 257 — Docstring Conventions](https://peps.python.org/pep-0257/)
-- [Python Testing with pytest (Brian Okken)](https://pragprog.com/titles/bopytest2/python-testing-with-pytest-second-edition/) — referencia para testing
-- [Using Asyncio in Python (Caleb Hattingh)](https://www.oreilly.com/library/view/using-asyncio-in/9781492075325/) — guía avanzada de asyncio
-
----
-
-## 🏆 Retos Relacionados
-
-Pon a prueba lo aprendido con estos desafíos:
-- [Plus Reto Inicial 06 Par O Impar](/retos/guia-plus-reto-inicial-06-par-o-impar)
-- [Fibonacci Recursivo](/retos/guia-fibonacci-recursivo)
-- [Plus Reto Intermedio 05 Generador De Contrasenas](/retos/guia-plus-reto-intermedio-05-generador-de-contrasenas)
-- [Plus Reto Intermedio 13 Contador De Palabras Unicas](/retos/guia-plus-reto-intermedio-13-contador-de-palabras-unicas)
-- [Plus Reto Avanzado 05 Asyncio Para Scrapers](/retos/guia-plus-reto-avanzado-05-asyncio-para-scrapers)
+### Nivel 7 (90-100)
+- **Plataforma de streaming** — WebRTC + Python + OpenCV para transmisión de video en vivo.
+- **Sistema distribuido** — gRPC + Kafka + OpenTelemetry para trazabilidad completa.

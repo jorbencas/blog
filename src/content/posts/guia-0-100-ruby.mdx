@@ -116,6 +116,8 @@ Fuente: [rbenv GitHub](https://github.com/rbenv/rbenv), [RVM](https://rvm.io/), 
 
 ## Primeros pasos
 
+Si prefieres ver directamente el "Hola Mundo" en Ruby, consulta [El Atlas del Hola Mundo](/posts/hola/#ruby).
+
 ### IRB — El REPL de Ruby
 Ruby incluye un intérprete interactivo llamado IRB (Interactive Ruby). Ejecuta `irb` en terminal y escribe directamente:
 ```ruby
@@ -177,9 +179,8 @@ bundle outdated             # Muestra gems desactualizadas
 ```
 
 ### Editores recomendados
-- **VSCode**: extensión Ruby de Shopify (mejor LSP), Ruby Solargraph para autocompletado. Instala también Endwise (auto-end), Sorbet (type checking).
-- **RubyMine**: IDE dedicado de JetBrains, depurador visual excelente, refactors automáticos. De pago pero con trial.
-- **Neovim**: con nvim-lspconfig + solargraph, ruby-lsp, o el LSP de Shopify. `vim-endwise` para `end` automático.
+
+Los IDEs y editores más usados son [VSCode](/posts/resources/#ides-y-editores-de-codigo), [JetBrains](/posts/resources/#ides-y-editores-de-codigo) y [Neovim](/posts/resources/#ides-y-editores-de-codigo). Extensiones y configuraciones recomendadas en [Recursos](/posts/resources/#ides-y-editores-de-codigo).
 
 ### Configuración inicial del proyecto
 ```bash
@@ -366,8 +367,14 @@ Fuente: [Ruby-Lang — About](https://www.ruby-lang.org/en/about/), [Metaprogram
 
 ### Variables en Ruby
 
+#### ¿Qué es?
+Ruby usa convenciones de nomenclatura para el ámbito (scope) de las variables. No hay declaración de tipo — el tipo se determina por el objeto asignado. Todo es una referencia a un objeto.
+
+🔗 [Ruby-Doc — Variables](https://ruby-doc.org/core/doc/syntax/assignment_rdoc.html)
+
+#### Sintaxis básica
 | Tipo | Scope | Sintaxis | Ejemplo |
-|------|-------|----------|---------|
+|---|---|---|---|
 | Local | Método/bloque | `nombre` | `edad = 25` |
 | Instancia | Objeto | `@nombre` | `@edad = 25` |
 | Clase | Clase y sus instancias | `@@nombre` | `@@cuenta = 0` |
@@ -382,9 +389,36 @@ $global = "accesible desde cualquier lugar"
 CONSTANTE = "puede reasignarse pero con warning"
 ```
 
-### Tipos built-in
+#### 🧪 Cómo probarlo
+```bash
+irb -e '
+@instancia = "test"
+puts @instancia
+'
+```
 
-**Integer — precisión arbitraria:**
+#### 💡 Memoria y rendimiento
+- Todo en Ruby es una referencia a un objeto — no hay tipos por valor
+- Las variables de instancia (`@`) tienen lookup más rápido que las de clase (`@@`)
+- Las variables globales (`$`) son visibles globalmente — difíciles de rastrear
+- Las constantes muestran warning al reasignarse pero no error
+
+#### ✅ Buenas prácticas
+- ✅ Prefiere variables de instancia (`@`) sobre globales (`$`)
+- ✅ Usa `attr_reader`/`attr_accessor` en lugar de `@` directamente
+- ⚠️ Las constantes en Ruby se reasignan (con warning) — congélalas con `freeze` si es necesario
+- ❌ No uses variables globales — usa constantes de clase o configuración
+
+#### 🏗️ Metodología
+Para scripts pequeños, las variables locales y de instancia bastan. Para aplicaciones grandes, encapsula estado en objetos con `attr_reader`/`attr_writer`. Las constantes son para valores fijos (URLs, config). Las globales solo para flags de debug.
+
+#### 🔗 Para saber más
+- [Ruby-Doc — Variable Scope](https://ruby-doc.org/core/doc/syntax/assignment_rdoc.html)
+
+### Integer — precisión arbitraria
+
+#### ¿Qué es?
+En Ruby, `Integer` tiene precisión arbitraria — no hay límite de bits. Los `Fixnum` y `Bignum` se unificaron en `Integer` desde Ruby 2.4.
 
 ```ruby
 42                             # Integer
@@ -393,7 +427,12 @@ CONSTANTE = "puede reasignarse pero con warning"
 (2 ** 1000).to_s.length        # 302 dígitos — precisión arbitraria
 ```
 
-**Float:**
+#### 💡 Memoria y rendimiento
+- Enteros pequeños (-2^62 a 2^62-1 en 64-bit) se almacenan como `FIXNUM` inline (sin heap allocation)
+- Enteros grandes usan `BIGNUM` (heap allocation, más lento)
+- Las operaciones aritméticas son O(n) para BIGNUM donde n es número de dígitos
+
+### Float
 
 ```ruby
 3.1416                         # Float (double precision IEEE 754)
@@ -401,7 +440,9 @@ CONSTANTE = "puede reasignarse pero con warning"
 0.1 + 0.2                      # 0.30000000000000004 (típico de IEEE 754)
 ```
 
-**Complex y Rational:**
+⚠️ IEEE 754 no es exacto para decimales — usa `BigDecimal` para dinero.
+
+### Complex y Rational
 
 ```ruby
 Complex(1, 2)                  # 1+2i
@@ -409,17 +450,21 @@ Rational(1, 3)                 # 1/3
 Rational(1, 3) + Rational(1, 3)  # 2/3
 ```
 
-**BigDecimal** (requiere `require "bigdecimal"`):
+### BigDecimal
 
 ```ruby
 require "bigdecimal"
 BigDecimal("0.1") + BigDecimal("0.2")  # 0.3 exacto
 ```
 
-**String:**
+### String
 
-Las strings en Ruby son **mutables por defecto**. Para inmutabilidad usa `freeze`:
+#### ¿Qué es?
+Las strings en Ruby son mutables por defecto. Para inmutabilidad usa `freeze`. Ruby hace distinción entre `bytesize` (bytes) y `length` (caracteres).
 
+🔗 [Ruby-Doc — String](https://ruby-doc.org/core/String.html)
+
+#### Sintaxis básica
 ```ruby
 s = "hola"
 s << " mundo"                  # "hola mundo" — muta el mismo objeto
@@ -444,9 +489,21 @@ TEXTO
 %w(uno dos tres)               # ["uno", "dos", "tres"]
 ```
 
-**Symbol:**
+#### 💡 Memoria y rendimiento
+- Las strings son mutables — `<<` modifica el objeto, `+` crea uno nuevo
+- `freeze` permite compartir strings inmutables entre objetos
+- `"".freeze` es una optimización común (frozen string literal)
 
-Los símbolos son **inmutables e internados** (únicos en memoria):
+#### ✅ Buenas prácticas
+- ✅ Prefiere interpolación `"#{var}"` sobre concatenación `+`
+- ✅ Usa `freeze` en strings que no cambian
+- ⚠️ `gsub!` y `sub!` mutan — pueden devolver `nil` si no hay cambio
+- ❌ No uses `+` en bucles — usa `<<` o `join`
+
+### Symbol
+
+#### ¿Qué es?
+Los símbolos son strings inmutables e internados: cada símbolo único tiene el mismo `object_id`. Ideales como keys de hash y para introspección.
 
 ```ruby
 :nombre                        # símbolo
@@ -459,14 +516,25 @@ usuario = { nombre: "Ana", edad: 30 }     # keys de hash
 respond_to?(:nombre)                      # introspección
 ```
 
-**Array:**
+#### 💡 Memoria y rendimiento
+- Los símbolos no se recolectan por GC — se acumulan para siempre
+- Crear símbolos dinámicamente (`:"key_#{id}"`) con datos externos puede ser un vector de DoS (symbol exhaustion)
 
-Los arrays son **dinámicos y pueden contener tipos mixtos**:
+#### ✅ Buenas prácticas
+- ✅ Usa símbolos como keys de hash — más rápidos que strings
+- ⚠️ No uses `to_sym` o `intern` con datos del usuario
+
+### Array
+
+#### ¿Qué es?
+Los arrays en Ruby son dinámicos, pueden contener tipos mixtos y ofrecen un rico conjunto de métodos de Enumerable.
+
+🔗 [Ruby-Doc — Array](https://ruby-doc.org/core/Array.html)
 
 ```ruby
 arr = [1, "dos", :tres, 4.0]   # tipos mixtos
 arr = %w[a b c]                 # ["a", "b", "c"]
-arr = Array.new(3, 0)           # [0, 0, 0]
+arr = Array.new(3, 0)           # [0, 0, 0] — cuidado: mismo objeto
 
 [1, 2, 3] + [4, 5]             # [1, 2, 3, 4, 5]  (concatenación)
 [1, 2, 3] - [2]                # [1, 3]            (diferencia)
@@ -484,7 +552,21 @@ arr = Array.new(3, 0)           # [0, 0, 0]
 [1, 2, 3].reverse              # [3, 2, 1]
 ```
 
-**Hash:**
+#### 💡 Memoria y rendimiento
+- `Array.new(3, 0)` usa el mismo objeto 0 para los 3 elementos — para arrays de objetos mutables usa `Array.new(3) { {} }`
+- `push`/`pop` son O(1), `shift`/`unshift` son O(n)
+- `include?` es O(n), `sort` es O(n log n)
+
+#### ✅ Buenas prácticas
+- ✅ Usa `map`/`select`/`reduce` en lugar de bucles explícitos
+- ✅ Prefiere `&` (intersección) y `|` (unión) sobre bucles
+
+### Hash
+
+#### ¿Qué es?
+Los hashes en Ruby son mapas clave-valor que mantienen orden de inserción (desde Ruby 1.9).
+
+🔗 [Ruby-Doc — Hash](https://ruby-doc.org/core/Hash.html)
 
 ```ruby
 h = { "nombre" => "Ana", "edad" => 30 }  # hash-rocket
@@ -506,7 +588,12 @@ h.transform_keys(&:to_s)
 h.transform_values(&:to_s)
 ```
 
-**Range:**
+#### ✅ Buenas prácticas
+- ✅ Usa `fetch` en lugar de `[]` para acceso con fallback
+- ✅ Prefiere símbolos sobre strings como keys
+- ⚠️ `Hash.new(0)` usa el mismo objeto default — no es problema con inmutables
+
+### Range
 
 ```ruby
 (1..5).to_a                      # [1, 2, 3, 4, 5]  inclusivo
@@ -520,9 +607,7 @@ else "Suspenso"
 end
 ```
 
-**nil:**
-
-`nil` es el **único objeto de NilClass**. Representa la ausencia de valor:
+### nil
 
 ```ruby
 nil.class                        # NilClass
@@ -536,7 +621,10 @@ end
 
 ### Gestión de memoria
 
-Ruby usa **GC generacional (mark-and-sweep)** desde Ruby 2.1:
+#### ¿Qué es?
+Ruby usa GC generacional (mark-and-sweep) desde Ruby 2.1 separa objetos por edad (young/old). Las variables guardan referencias, no valores.
+
+🔗 [Ruby-Doc — GC](https://ruby-doc.org/core/GC.html)
 
 ```ruby
 ObjectSpace.count_objects[:T_STRING]  # strings en heap
@@ -544,22 +632,28 @@ ObjectSpace.count_objects[:T_STRING]  # strings en heap
 GC.start                         # forzar recolección
 GC.disable                       # no recomendado
 GC.stat                          # estadísticas
-```
 
-**Todo es referencia a objeto:** Ruby no tiene tipos por valor. Cada variable guarda una referencia:
-
-```ruby
 a = "hola"
 b = a
 a << " mundo"
-puts b  # "hola mundo"
+puts b  # "hola mundo" — misma referencia
 
 a = "hola"
 b = a.dup       # copia superficial
 c = a.clone     # copia más profunda
 ```
 
-Fuente: [Ruby-Doc — Core](https://ruby-doc.org/core/), [Ruby-Doc — GC](https://ruby-doc.org/core/GC.html), [ObjectSpace](https://ruby-doc.org/core/ObjectSpace.html)
+#### 💡 Memoria y rendimiento
+- El GC corre automáticamente cuando se alcanza un límite de memoria
+- Los símbolos NO se recolectan — se acumulan permanentemente
+- Las strings mutables pueden causar retención de memoria inesperada
+- `ObjectSpace` permite inspeccionar pero es lento — no lo uses en producción
+
+#### ✅ Buenas prácticas
+- ✅ `freeze` strings que no cambian — reduce allocations
+- ✅ Usa `dup` para copiar objetos mutables
+- ❌ No uses `GC.start` en producción — deja que Ruby gestione
+- ❌ No crees símbolos dinámicamente con datos de usuario (DoS vector)
 ---
 
 ## Control de flujo y modularidad
@@ -3029,6 +3123,204 @@ Fuente: [Ruby docs — Thread](https://ruby-doc.org/core/Thread.html), [Ruby 3.0
 
 ---
 
+## Testing y calidad
+
+### RSpec — el framework de testing estándar
+
+#### ¿Qué es?
+RSpec es el framework de testing BDD más usado en Ruby. Sigue el patrón describe/it/expect con un DSL muy expresivo. Alternativas: Minitest (stdlib, más simple), Test::Unit.
+
+🔗 [RSpec docs](https://rspec.info/)
+
+#### Sintaxis básica
+```ruby
+# spec/calculadora_spec.rb
+require_relative '../calculadora'
+
+RSpec.describe Calculadora do
+  subject(:calc) { described_class.new }
+
+  it 'suma dos números' do
+    expect(calc.suma(2, 2)).to eq(4)
+  end
+
+  it 'divide, lanzando error al dividir por cero' do
+    expect { calc.divide(10, 0) }.to raise_error(ZeroDivisionError)
+  end
+
+  describe '#suma' do
+    context 'con números positivos' do
+      it 'retorna la suma' do
+        expect(calc.suma(1, 2)).to eq(3)
+      end
+    end
+
+    context 'con números negativos' do
+      it 'retorna la suma algebraica' do
+        expect(calc.suma(-1, 1)).to eq(0)
+      end
+    end
+  end
+end
+```
+
+#### 🧪 Cómo ejecutarlo
+```bash
+bundle exec rspec
+bundle exec rspec spec/calculadora_spec.rb:15  # línea específica
+bundle exec rspec --tag focus                    # tests marcados :focus
+bundle exec rspec --format documentation          # salida verbose
+```
+
+#### ✅ Buenas prácticas
+- ✅ Usa `let` y `subject` para reducir duplicación
+- ✅ Usa `context` para describir estados
+- ✅ FactoryBot para datos de prueba: `let(:user) { create(:user) }`
+- ⚠️ No uses `should` (deprecado) — usa `expect`
+- ❌ No hagas peticiones HTTP reales en tests unitarios — usa VCR o WebMock
+
+#### 🔗 Para saber más
+- [RSpec docs](https://rspec.info/documentation/)
+- [Better Specs](https://www.betterspecs.org/)
+
+### Minitest — testing incluido en stdlib
+
+#### ¿Qué es?
+Minitest es el framework de testing que viene con Ruby. Es más simple y rápido que RSpec, sin dependencias externas.
+
+```ruby
+# test/calculadora_test.rb
+require 'minitest/autorun'
+require_relative '../calculadora'
+
+class CalculadoraTest < Minitest::Test
+  def setup
+    @calc = Calculadora.new
+  end
+
+  def test_suma
+    assert_equal 4, @calc.suma(2, 2)
+  end
+
+  def test_division_por_cero
+    assert_raises(ZeroDivisionError) { @calc.divide(10, 0) }
+  end
+end
+```
+
+```bash
+ruby test/calculadora_test.rb
+ruby test/calculadora_test.rb --name test_suma
+```
+
+🔗 [Minitest docs](https://docs.ruby-lang.org/en/master/Minitest.html)
+
+---
+
+## Conceptos avanzados
+
+### Pattern matching (Ruby 3.0+)
+
+#### ¿Qué es?
+Pattern matching permite desestructurar objetos comparando su estructura. Similar a `match` en Rust o pattern matching en Elixir.
+
+```ruby
+case [1, 2, 3]
+in [Integer => first, *rest]
+  puts "Primero: #{first}, resto: #{rest}"
+end
+
+case { nombre: 'Ana', edad: 28 }
+in { nombre:, edad: }
+  puts "#{nombre} tiene #{edad} años"
+end
+
+# Array pattern
+case data
+in [a, b] then a + b
+in [a, b, c] then a + b + c
+else 0
+end
+
+# Find pattern (Ruby 3.2+)
+case [1, 2, 3, 4, 5]
+in [*pre, 3, *post]
+  puts "Antes: #{pre}, después: #{post}"
+end
+```
+
+🔗 [Ruby 3.0 Pattern Matching](https://docs.ruby-lang.org/en/3.0/syntax/pattern_matching_rdoc.html)
+
+### Fiber Scheduler — async I/O nativo
+
+#### ¿Qué es?
+Ruby 3.0 introdujo Fiber Scheduler para I/O asíncrono sin gems externas. Permite manejar múltiples conexiones concurrentes con un solo thread.
+
+```ruby
+require 'async'
+
+Async do
+  tasks = urls.map do |url|
+    Async do
+      Net::HTTP.get(URI(url))
+    end
+  end
+  results = tasks.map(&:wait)
+end
+```
+
+🔗 [Ruby Fiber Scheduler](https://docs.ruby-lang.org/en/3.0/doc/scheduler_md.html)
+
+### Ractor — paralelismo real sin GIL
+
+#### ¿Qué es?
+Ractor (Ruby 3.0+) permite paralelismo real en CRuby evitando el GIL. Cada Ractor tiene su propio espacio de memoria y se comunican por mensajes.
+
+```ruby
+ractor = Ractor.new do
+  Ractor.receive
+end
+
+ractor.send('mensaje')
+puts ractor.take
+
+# Múltiples Ractors
+ractors = (1..4).map do |i|
+  Ractor.new(i) do |n|
+    n * 100
+  end
+end
+
+results = ractors.map(&:take)
+puts results.inspect  # [100, 200, 300, 400]
+```
+
+🔗 [Ruby 3.0 Ractor](https://docs.ruby-lang.org/en/3.0/ractor_md.html)
+
+### Refinements
+
+#### ¿Qué es?
+Los refinements (Ruby 2.0+) permiten extender clases de forma controlada y léxicamente acotada, sin contaminar globalmente.
+
+```ruby
+module StringExtensions
+  refine String do
+    def palindrome?
+      self == reverse
+    end
+  end
+end
+
+using StringExtensions
+
+puts "ana".palindrome?  # true
+puts "ruby".palindrome? # false
+```
+
+🔗 [Ruby Refinements](https://docs.ruby-lang.org/en/master/syntax/refinements_rdoc.html)
+
+---
+
 ## Librerías esenciales por categoría
 
 ### Desarrollo web
@@ -3175,6 +3467,144 @@ Cada nivel incluye lo que debes saber y un proyecto para fijar los conceptos.
 
 Fuente: [Rails Guides](https://guides.rubyonrails.org/), [Ruby API docs](https://ruby-doc.org/), [Ruby 3.0 — Ractor](https://docs.ruby-lang.org/en/3.0/ractor_md.html)
 
+
+---
+
+## Proyecto final integrador: API REST con Rails API
+
+Construye una API REST de gestión de tareas usando Rails en modo API. Este proyecto cubre todos los conceptos de la guía.
+
+### Fase 1 — Configuración
+
+```bash
+rails new task-manager --api --database=postgresql --skip-test
+cd task-manager
+
+# Gems útiles
+bundle add rspec-rails factory_bot_rails
+bundle add rack-cors jwt
+rails generate rspec:install
+```
+
+### Fase 2 — Modelo y endpoints
+
+```ruby
+# app/models/task.rb
+class Task < ApplicationRecord
+  validates :title, presence: true
+  validates :completed, inclusion: { in: [true, false] }
+
+  scope :pending, -> { where(completed: false) }
+  scope :completed, -> { where(completed: true) }
+end
+
+# app/controllers/api/v1/tasks_controller.rb
+module Api
+  module V1
+    class TasksController < ApplicationController
+      before_action :set_task, only: [:show, :update, :destroy]
+
+      def index
+        tasks = Task.all
+        tasks = tasks.pending if params[:filter] == 'pending'
+        tasks = tasks.completed if params[:filter] == 'completed'
+        render json: tasks
+      end
+
+      def show
+        render json: @task
+      end
+
+      def create
+        task = Task.new(task_params)
+        if task.save
+          render json: task, status: :created
+        else
+          render json: { errors: task.errors.full_messages }, status: :unprocessable_entity
+        end
+      end
+
+      def update
+        if @task.update(task_params)
+          render json: @task
+        else
+          render json: { errors: @task.errors.full_messages }, status: :unprocessable_entity
+        end
+      end
+
+      def destroy
+        @task.destroy
+        head :no_content
+      end
+
+      private
+
+      def set_task
+        @task = Task.find(params[:id])
+      rescue ActiveRecord::RecordNotFound
+        render json: { error: 'Task not found' }, status: :not_found
+      end
+
+      def task_params
+        params.require(:task).permit(:title, :description, :completed, :due_date)
+      end
+    end
+  end
+end
+```
+
+### Fase 3 — Testing
+
+```ruby
+# spec/requests/api/v1/tasks_spec.rb
+require 'rails_helper'
+
+RSpec.describe 'Api::V1::Tasks', type: :request do
+  let(:headers) { { 'Content-Type' => 'application/json' } }
+
+  describe 'POST /api/v1/tasks' do
+    it 'crea una tarea' do
+      params = { task: { title: 'Aprender Ruby', description: 'Completar la guía' } }
+      post '/api/v1/tasks', params: params.to_json, headers: headers
+
+      expect(response).to have_http_status(:created)
+      expect(JSON.parse(response.body)['title']).to eq('Aprender Ruby')
+    end
+
+    it 'retorna error si falta el título' do
+      post '/api/v1/tasks', params: { task: { title: '' } }.to_json, headers: headers
+      expect(response).to have_http_status(:unprocessable_entity)
+    end
+  end
+
+  describe 'GET /api/v1/tasks' do
+    it 'lista tareas' do
+      create_list(:task, 3)
+      get '/api/v1/tasks'
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body).length).to eq(3)
+    end
+  end
+end
+```
+
+### Fase 4 — Producción
+
+```bash
+# Precompilar assets (si los hay)
+RAILS_ENV=production bundle exec rails assets:precompile
+
+# Migraciones
+RAILS_ENV=production bundle exec rails db:migrate
+
+# Servir con Puma + Nginx
+# config/puma.rb
+# workers ENV.fetch("WEB_CONCURRENCY") { 2 }
+# thread_count = ENV.fetch("RAILS_MAX_THREADS") { 5 }
+
+# Kamal para deploy (antes MRSK)
+# kamal deploy
+```
 
 ---
 

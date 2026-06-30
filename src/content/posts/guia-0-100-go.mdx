@@ -118,6 +118,8 @@ Fuente: [Go dev — Download](https://go.dev/dl/), [gvm GitHub](https://github.c
 
 ## Primeros pasos y configuración del entorno
 
+Si prefieres ver directamente el "Hola Mundo" en Go, consulta [El Atlas del Hola Mundo](/posts/hola/#go).
+
 ### Estructura de proyecto con módulos
 
 Go moderno usa **módulos** (go mod). El `GOPATH` es cosa del pasado desde Go 1.16.
@@ -172,9 +174,7 @@ go list ./...     # Lista todos los paquetes del módulo
 
 ### Editores recomendados
 
-- **VSCode**: extensión Go de Google (gopls como language server). Características: autocompletado, refactor, navegación, debugging integrado. Perfil recomendado: instalar `gopls`, `dlv` (delve debugger), `staticcheck`.
-- **GoLand**: IDE de JetBrains especializado en Go. Refactorings avanzados, depurador visual, cobertura de tests integrada. Característica única: detección de race conditions en el editor.
-- **Neovim**: con `gopls` via `mason.nvim`, `nvim-dap` para debugging con delve.
+Los IDEs y editores más usados son [VSCode](/posts/resources/#ides-y-editores-de-codigo), [JetBrains](/posts/resources/#ides-y-editores-de-codigo) y [Neovim](/posts/resources/#ides-y-editores-de-codigo). Extensiones y configuraciones recomendadas en [Recursos](/posts/resources/#ides-y-editores-de-codigo).
 
 ### GOPATH vs módulos
 
@@ -284,332 +284,373 @@ Fuente: [Effective Go](https://go.dev/doc/effective_go), [Go FAQ](https://go.dev
 
 ## Tipos de datos y variables
 
-### Tipos built-in
+### Tipos built-in y zero values
 
-| Categoría | Tipos |
-|---|---|
-| Booleano | `bool` |
-| Enteros con signo | `int`, `int8`, `int16` (`rune`), `int32`, `int64` |
-| Enteros sin signo | `uint`, `uint8` (`byte`), `uint16`, `uint32`, `uint64` |
-| Flotantes | `float32`, `float64` |
-| Complejos | `complex64`, `complex128` |
-| Texto | `string` (UTF-8, inmutable) |
+#### ¿Qué es?
+Go tiene un conjunto pequeño de tipos built-in: booleanos, enteros (con/sin signo), flotantes, complejos y `string`. Todos tienen **zero values** automáticos sin necesidad de inicialización. Go no tiene `null`, solo `nil` para ciertos tipos.
 
-`int` y `uint` tienen el tamaño de la arquitectura (32 o 64 bits). `byte` es alias de `uint8`. `rune` es alias de `int32` y representa un code point Unicode.
+🔗 [Go dev — Spec types](https://go.dev/ref/spec#Types)
 
-### Zero values
-
-Go no deja variables sin inicializar. Si declaras sin valor, se asigna el **zero value** automáticamente:
-
+#### Sintaxis básica
 ```go
-var s string    // ""
-var i int       // 0
-var f float64   // 0.0
-var b bool      // false
-var p *int      // nil
-var sl []string // nil
-var m map[string]int // nil
-var ch chan int // nil
-var iface any   // nil
+// Tipos built-in
+var activo bool          // false
+var edad int             // 0 (32 o 64 bits según arquitectura)
+var peso float64         // 0.0
+var nombre string        // ""
+var puntero *int         // nil
+var lista []string       // nil
+var mapa map[string]int  // nil
+var canal chan int       // nil
+
+// byte y rune son alias
+var b byte = 255         // uint8
+var r rune = '世'         // int32 (code point Unicode)
+
+// Zero values: no puedes usar variable sin inicializar
+var s string
+fmt.Println(s)           // "" (vacío, no panic)
 ```
 
-### Short declaration `:=`
-
-Dentro de funciones, `:=` declara e infiere el tipo:
-
+#### 🧪 Cómo probarlo
 ```go
-nombre := "Ana"     // string
-edad := 30          // int
-precio := 19.99     // float64
-activo := true      // bool
-```
-
-No se puede usar fuera de funciones. Requiere al menos una variable nueva a la izquierda.
-
-### Type inference (inferencia de tipos)
-
-Go infiere el tipo del valor asignado:
-
-```go
-var x = 42           // int (por defecto entero)
-var y = 3.14         // float64 (por defecto flotante)
-var z = 3 + 4i       // complex128 (por defecto complejo)
-```
-
-### Conversión explícita
-
-Go **no** convierte implícitamente entre tipos. Incluso entre `int` y `int32`:
-
-```go
-var a int = 42
-var b int32 = int32(a)  // ✅ explícita
-// var c int32 = a       // ❌ no compila
-var d float64 = float64(a)
-var e string = strconv.Itoa(a) // int → string requiere strconv
-```
-
-### Tipos compuestos
-
-**Struct** — tipo compuesto con campos nombrados:
-
-```go
-type Punto struct {
-    X float64
-    Y float64
+func TestZeroValues(t *testing.T) {
+    var s string
+    var i int
+    var b bool
+    if s != "" { t.Error("string zero value should be empty") }
+    if i != 0 { t.Error("int zero value should be 0") }
+    if b != false { t.Error("bool zero value should be false") }
 }
+```
+
+#### 💡 Memoria y rendimiento
+- `int`/`uint` son tamaño de palabra nativa (64 bits en x86-64) — óptimo para la CPU
+- `byte` y `rune` ocupan 1 y 4 bytes respectivamente
+- `string` es un descriptor de 16 bytes (puntero + longitud) — el contenido está en heap
+- `nil` en slices/maps/channels evita alocar hasta que se usan
+
+#### ✅ Buenas prácticas
+- ✅ Usa `int` por defecto para enteros (no `int8`/`int16` a menos que ahorres memoria)
+- ✅ Usa `float64` por defecto para flotantes
+- ⚠️ No confundas `byte` (uint8) con `rune` (int32)
+- ❌ No accedas a campos de un `*struct` que es `nil` — panic
+
+#### 🏗️ Metodología
+- **APIs**: usa `int` y `float64` para valores numéricos
+- **Serialización**: `int`/`float64` están optimizados en encoding/json
+- **Juegos/embebido**: usa `int8`/`int16`/`float32` para ahorrar memoria
+
+#### 🔗 Para saber más
+- [Go dev — Zero value](https://go.dev/ref/spec#The_zero_value)
+
+### Declaración de variables e inferencia
+
+#### ¿Qué es?
+Go soporta `var` (explícito, ámbito global o local) y `:=` (corto, solo dentro de funciones). La inferencia de tipos siempre elige el tipo por defecto según el valor.
+
+🔗 [Go dev — Spec variables](https://go.dev/ref/spec#Variables)
+
+#### Sintaxis básica
+```go
+// Declaración explícita
+var nombre string = "Ana"
+var edad = 30  // inferido: int
+
+// Short declaration (solo dentro de funciones)
+nombre := "Ana"
+edad := 30
+
+// Múltiples variables
+var x, y int = 1, 2
+a, b := "hola", 42
+
+// La inferencia elige tipos por defecto
+var x = 42       // int
+var y = 3.14     // float64
+var z = 3 + 4i   // complex128
+```
+
+#### 🧪 Cómo probarlo
+```go
+func TestTypeInference(t *testing.T) {
+    x := 42
+    y := 3.14
+    if fmt.Sprintf("%T", x) != "int" { t.Error("42 should be int") }
+    if fmt.Sprintf("%T", y) != "float64" { t.Error("3.14 should be float64") }
+}
+```
+
+#### ✅ Buenas prácticas
+- ✅ Usa `:=` dentro de funciones para código conciso
+- ✅ Usa `var` para valores zero explícitos (`var i int`)
+- ⚠️ No uses `:=` fuera de funciones — no compila
+- ❌ No declares variables que no usas — error de compilación
+
+### Conversión explícita y tipos compuestos
+
+#### ¿Qué es?
+Go **no** convierte implícitamente entre tipos. Incluso entre `int` y `int32` necesitas cast explícito. Los tipos compuestos incluyen `struct`, `array`, `slice`, `map`, punteros, `any` y `error`.
+
+🔗 [Go dev — Conversions](https://go.dev/ref/spec#Conversions)
+
+#### Sintaxis básica
+```go
+// Conversión explícita
+var a int = 42
+var b int32 = int32(a)
+var c float64 = float64(a)
+var d string = strconv.Itoa(a)  // int → string requiere strconv
+
+// Struct
+type Punto struct { X, Y float64 }
 p := Punto{X: 3.0, Y: 4.0}
-```
 
-**Array** — tamaño fijo, en línea (no es puntero interno):
+// Array (tamaño fijo) vs Slice (dinámico)
+arr := [3]int{1, 2, 3}    // array fijo
+sl := []int{1, 2, 3}      // slice dinámico
+sl = append(sl, 4)
 
-```go
-var arr [3]int = [3]int{1, 2, 3}
-```
-
-**Slice** — vista dinámica sobre un array subyacente. **Diferencia crítica con array:** el slice es un descriptor (puntero, longitud, capacidad), el array son los datos en línea:
-
-```go
-arr := [3]int{1, 2, 3}        // array — tamaño fijo
-sl := []int{1, 2, 3}          // slice — tamaño dinámico
-sl = append(sl, 4)            // reasigna si no cabe
-```
-
-**Map** — tabla hash:
-
-```go
+// Map
 m := make(map[string]int)
 m["clave"] = 42
-val, ok := m["clave"] // ok=false si no existe
-```
+val, ok := m["clave"]
 
-**Punteros (`*T`):**
-
-```go
+// Punteros (sin aritmética)
 var x int = 42
 var p *int = &x
-*p = 100 // modifica x
+*p = 100  // modifica x
+
+// any (interface{} genérico)
+var v any = 42
+v = "texto"
+
+// error es una interfaz
+type error interface { Error() string }
 ```
 
-No hay aritmética de punteros.
-
-**`interface{}` y `any`:**
-
+#### 🧪 Cómo probarlo
 ```go
-var x any = 42
-x = "texto"
-x = []int{1, 2, 3}
-```
+func TestMapOk(t *testing.T) {
+    m := map[string]int{"a": 1}
+    v, ok := m["a"]
+    if !ok { t.Error("key should exist") }
+    if v != 1 { t.Error("value should be 1") }
+}
 
-`any` es un alias de `interface{}` desde Go 1.18.
-
-**Tipo `error`:**
-
-```go
-type error interface {
-    Error() string
+func TestNilSlice(t *testing.T) {
+    var s []int
+    // nil slice: append funciona sin panic
+    s = append(s, 1)
+    if len(s) != 1 { t.Error("append should work on nil slice") }
 }
 ```
 
-**`nil`:** Go no tiene `null`. Solo puede ser `nil`: punteros, slices, maps, canales, interfaces y funciones. Acceder a un mapa `nil` no panic (devuelve zero value). Acceder a campos de un struct pointer `nil` sí panic.
+#### 💡 Memoria y rendimiento
+- Structs son value types — se copian al asignar o pasar por parámetro
+- Slice es un descriptor de 24 bytes (ptr + len + cap) — el array subyacente está en heap
+- Map es un puntero a una tabla hash interna — pasarlo es barato
+- `any` implica boxing para value types (como interface{} en C#/Java)
 
-### Strings
+#### ✅ Buenas prácticas
+- ✅ Usa `make()` para maps y slices con capacidad inicial conocida
+- ✅ Usa structs por puntero solo si necesitas mutación o el struct es grande (>64 bytes)
+- ⚠️ No uses `any` a menos que sea estrictamente necesario — pierdes type safety
+- ❌ No compares slices directamente con `==` (solo con `nil`) — usa `reflect.DeepEqual` o `slices.Equal`
 
-Los strings en Go son **inmutables** y contienen **UTF-8** (no ASCII ni bytes planos):
+#### 🏗️ Metodología
+- **Datos inmutables**: structs por valor
+- **Colecciones dinámicas**: slices (no arrays de tamaño fijo)
+- **Lookups**: maps con `ok` idiom
+- **Errores**: siempre devuelve `error` como último valor
 
+#### 🔗 Para saber más
+- [Go dev — Effective Go](https://go.dev/doc/effective_go)
+
+### Strings (UTF-8)
+
+#### ¿Qué es?
+Los strings en Go son **inmutables** y contienen **UTF-8** (no ASCII). `len(s)` devuelve bytes, no caracteres. `string` es un slice de bytes de solo lectura.
+
+🔗 [Go dev — Strings](https://go.dev/blog/strings)
+
+#### Sintaxis básica
 ```go
 s := "Hello, 世界"
-fmt.Println(len(s))                         // 13 bytes (no 9 caracteres)
-fmt.Println(utf8.RuneCountInString(s))      // 9 runas
-```
+fmt.Println(len(s))                    // 13 bytes
+fmt.Println(utf8.RuneCountInString(s)) // 9 runas (caracteres)
 
-Se pueden convertir a `[]byte` (copia) o `[]rune`:
-
-```go
+// Convertir a bytes o runas
 b := []byte(s)  // cada byte
-r := []rune(s)  // cada runa (code point)
+r := []rune(s)  // cada code point Unicode
+
+// Iteración correcta
+for i, r := range s {
+    fmt.Printf("%d: %c\n", i, r)  // i es offset en bytes
+}
 ```
 
-### Memoria: stack vs heap
-
-Go tiene **escape analysis** en tiempo de compilación. Decide automáticamente si una variable va al stack o al heap:
-
+#### 🧪 Cómo probarlo
 ```go
+func TestStringUTF8(t *testing.T) {
+    s := "Hello, 世界"
+    if len(s) != 13 { t.Error("len should be bytes, not chars") }
+    if utf8.RuneCountInString(s) != 9 { t.Error("should be 9 runes") }
+}
+```
+
+#### ✅ Buenas prácticas
+- ✅ Usa `range` para iterar strings (itera por runa, no por byte)
+- ✅ Usa `strings.Builder` para concatenación en bucles
+- ⚠️ No asumas que un carácter = 1 byte — UTF-8 es variable
+- ❌ No modifiques un string directamente — son inmutables
+
+### Memoria: stack vs heap y GC
+
+#### ¿Qué es?
+Go tiene **escape analysis** en compilación: decide si una variable va al stack o al heap. El **GC** es concurrente, no generacional, con pausas típicas &lt;1ms desde Go 1.8.
+
+🔗 [Go dev — GC Guide](https://go.dev/doc/gc-guide)
+
+#### Sintaxis básica
+```go
+// Stack: la variable no escapa
 func enStack() int {
-    x := 42       // stack — no escapa
+    x := 42
     return x
 }
 
+// Heap: la variable escapa (se referencia fuera)
 func enHeap() *int {
-    x := 42       // heap — escapa (se referencia fuera)
+    x := 42
     return &x
 }
+
+// Ver decisiones del compilador
+// go build -gcflags='-m' ./...
 ```
 
-Usa `go build -gcflags='-m' ./...` para ver las decisiones del compilador.
+#### 💡 Memoria y rendimiento
+- Escape analysis decide stack vs heap — no hay control manual como en C/C++
+- El GC es concurrente (mark-sweep) con pausas de &lt;1ms típicamente
+- Pasar structs por puntero no siempre es más rápido — los structs pequeños pueden ser más rápidos por valor
+- `sync.Pool` reusa objetos para reducir presión de GC
 
-Go tiene un **garbage collector concurrente** (no generacional) desde Go 1.5. El GC marca y barre mientras el programa se ejecuta, con pausas de `&lt;1ms` típicamente.
+#### ✅ Buenas prácticas
+- ✅ Prefiere devolver valores por valor (no punteros) a menos que necesites mutación
+- ✅ Usa `-gcflags='-m'` para diagnosticar fugas al heap inesperadas
+- ⚠️ No obsesiones con stack vs heap — el compilador optimiza bien
+- ❌ No uses punteros para "ahorrar memoria" en structs pequeños — suele ser peor
 
-Fuente: [Go dev — Spec variables](https://go.dev/ref/spec#Variables), [Go dev — Spec types](https://go.dev/ref/spec#Types), [Go dev — Strings](https://go.dev/blog/strings), [Go GC](https://go.dev/doc/gc-guide)
-
----
+#### 🔗 Para saber más
+- [Go dev — Escape analysis](https://go.dev/wiki/EscapeAnalysis)
 
 ## Control de flujo, modularidad y funciones
 
-### if/else
+### Control de flujo
 
+#### ¿Qué es?
+Go tiene `if`, `switch`, `for` (único bucle), `defer` (ejecución diferida al salir del ámbito) y `panic`/`recover` (sin try/catch). El switch no tiene fallthrough por defecto.
+
+🔗 [Go dev — Control flow](https://go.dev/ref/spec#If_statements)
+
+#### Sintaxis básica
 ```go
-if x > 0 {
-    fmt.Println("positivo")
-} else if x < 0 {
-    fmt.Println("negativo")
-} else {
-    fmt.Println("cero")
-}
-```
-
-**Short statement:** declarar variable en la misma línea del `if`:
-
-```go
+// if con short statement
 if err := f(); err != nil {
     return err
 }
-// err no visible aquí — ámbito del if
-```
 
-### switch
-
-**Con expresión:**
-
-```go
-switch dia {
-case "lunes", "martes", "miercoles":
-    fmt.Println("entre semana")
-case "sabado", "domingo":
-    fmt.Println("finde")
-default:
-    fmt.Println("día inválido")
-}
-```
-
-**Sin expresión (equivale a if/else if):**
-
-```go
+// switch sin expresión (if/else if)
 switch {
-case nota >= 9:
-    fmt.Println("sobresaliente")
-case nota >= 7:
-    fmt.Println("notable")
-default:
-    fmt.Println("aprobado o suspenso")
-}
-```
-
-**`fallthrough`:** por defecto NO hay fallthrough (a diferencia de C/C++). Si quieres que continúe al siguiente caso, usa `fallthrough` explícitamente.
-
-### for (único bucle)
-
-Go tiene **un solo bucle**: `for`. Tres formas:
-
-**Init/cond/post (como for de C):**
-
-```go
-for i := 0; i < 10; i++ {
-    fmt.Println(i)
-}
-```
-
-**Solo condición (como while):**
-
-```go
-for x < 100 {
-    x *= 2
-}
-```
-
-**Range (slices, maps, canales, strings):**
-
-```go
-for i, v := range []int{10, 20, 30} {
-    fmt.Println(i, v)
+case nota >= 9: fmt.Println("sobresaliente")
+case nota >= 7: fmt.Println("notable")
+default: fmt.Println("aprobado o suspenso")
 }
 
-for k, v := range map[string]int{"a": 1} {
-    fmt.Println(k, v)
-}
+// for — único bucle, 3 formas
+for i := 0; i < 10; i++ { fmt.Println(i) }
+for x < 100 { x *= 2 }                          // como while
+for i, v := range []int{10, 20, 30} { }         // range sobre slice/map/chan/string
 
-for i, r := range "Hola 世界" {
-    fmt.Printf("%d: %c\n", i, r) // i es byte offset, no índice de runa
-}
-```
-
-**break / continue:**
-
-```go
-for {
-    if condicion {
-        break      // sale del bucle
-    }
-    if otraCond {
-        continue   // siguiente iteración
-    }
-}
-```
-
-### defer
-
-Ejecuta una función al salir del ámbito. Ideal para cleanup (cerrar archivos, liberar recursos):
-
-```go
-f, err := os.Open("archivo.txt")
-if err != nil {
-    return err
-}
+// defer — LIFO, se ejecuta al salir del ámbito
+f, _ := os.Open("archivo.txt")
 defer f.Close()
-```
 
-Los `defer` se ejecutan en orden **LIFO** (pila):
-
-```go
-defer fmt.Println("primero")  // se ejecuta último
-defer fmt.Println("segundo")
-defer fmt.Println("tercero")  // se ejecuta primero
-```
-
-### panic / recover
-
-No hay `try/catch`. `panic` detiene el flujo normal. `recover` lo captura, pero solo funciona dentro de un `defer`:
-
-```go
+// panic / recover (sin try/catch)
 defer func() {
-    if r := recover(); r != nil {
-        fmt.Println("panic capturado:", r)
-    }
+    if r := recover(); r != nil { fmt.Println("panic:", r) }
 }()
 panic("algo terrible")
 ```
 
-### Funciones
-
-Funciones con múltiples retornos, valores nombrados, variádicas:
-
+#### 🧪 Cómo probarlo
 ```go
-func suma(a, b int) int {
-    return a + b
+func TestSwitchSinExpresion(t *testing.T) {
+    nota := 85
+    resultado := ""
+    switch {
+    case nota >= 90: resultado = "sobresaliente"
+    case nota >= 70: resultado = "notable"
+    case nota >= 50: resultado = "aprobado"
+    default: resultado = "suspenso"
+    }
+    if resultado != "notable" {
+        t.Errorf("esperado notable, got %s", resultado)
+    }
 }
 
-func dividir(a, b float64) (float64, error) {
-    if b == 0 {
-        return 0, fmt.Errorf("división por cero")
+func TestDeferEjecutaAlFinal(t *testing.T) {
+    resultado := ""
+    func() {
+        defer func() { resultado += "mundo" }()
+        resultado += "hola "
+    }()
+    if resultado != "hola mundo" {
+        t.Errorf("esperado 'hola mundo', got %s", resultado)
     }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `defer` tiene overhead mínimo (~50ns) — usa el patrón de cleanup siempre
+- `for range` sobre slices es tan rápido como indexación manual
+- `switch` compila a jump table cuando los casos son constantes
+- `panic`/`recover` no deben usarse para flujo normal — son costosos
+
+#### ✅ Buenas prácticas
+- ✅ Usa `defer` para todo cleanup (cerrar archivos, unlock mutex, cerrar BD)
+- ✅ Usa `for range` para iterar slices, maps, canales y strings
+- ⚠️ No uses `panic` para errores ordinarios — usa `error`
+- ❌ No abuses de `recover` — solo en servidores HTTP para evitar caídas
+
+#### 🏗️ Metodología
+- **Errores predecibles**: `if err != nil` idiom
+- **Errores irrecuperables**: `log.Fatal` en main, `panic` en init
+- **Cleanup**: siempre `defer` inmediatamente después de abrir recurso
+- **Múltiples condiciones**: `switch` sin expresión (más legible que if/else if)
+
+#### 🔗 Para saber más
+- [Go dev — Effective Go: defer](https://go.dev/doc/effective_go#defer)
+
+### Funciones
+
+#### ¿Qué es?
+Las funciones en Go soportan múltiples retornos, valores nombrados, parámetros variádicos y closures. No hay sobrecarga ni parámetros con nombre.
+
+🔗 [Go dev — Spec functions](https://go.dev/ref/spec#Function_declarations)
+
+#### Sintaxis básica
+```go
+// Múltiples retornos
+func dividir(a, b float64) (float64, error) {
+    if b == 0 { return 0, fmt.Errorf("división por cero") }
     return a / b, nil
 }
 
 // Retorno nombrado
 func dividir(a, b float64) (result float64, err error) {
-    if b == 0 {
-        err = fmt.Errorf("división por cero")
-        return
-    }
+    if b == 0 { err = fmt.Errorf("división por cero"); return }
     result = a / b
     return
 }
@@ -617,80 +658,84 @@ func dividir(a, b float64) (result float64, err error) {
 // Variádica
 func sumar(nums ...int) int {
     total := 0
-    for _, n := range nums {
-        total += n
-    }
+    for _, n := range nums { total += n }
     return total
 }
 ```
 
+#### 🧪 Cómo probarlo
+```go
+func TestMultiplesRetornos(t *testing.T) {
+    _, err := dividir(10, 0)
+    if err == nil { t.Error("esperaba error") }
+}
+
+func TestFuncionVariadica(t *testing.T) {
+    if sumar(1, 2, 3) != 6 { t.Error("1+2+3 should be 6") }
+}
+```
+
+#### ✅ Buenas prácticas
+- ✅ Usa retornos nombrados para documentar el propósito de cada valor
+- ✅ Devuelve `error` como último valor de retorno
+- ⚠️ No hagas sobrecarga de funciones — Go no lo soporta
+- ❌ No ignores errores con `_` sin pensar
+
 ### Módulos y paquetes
 
-**Package:** todo archivo `.go` pertenece a un paquete (primera línea).
+#### ¿Qué es?
+Go organiza el código en **paquetes** (directorios). Cada archivo `.go` pertenece a un paquete. Un **módulo** es la unidad de versionado definida en `go.mod`. La exportación se controla por mayúscula/minúscula.
 
-**Exportación:** mayúscula = pública, minúscula = privada al paquete.
+🔗 [Go dev — Modules](https://go.dev/doc/modules/managing-dependencies)
 
+#### Sintaxis básica
 ```go
 package usuario
 
-type Usuario struct {  // exportado
-    Nombre string      // exportado
-    email  string      // privado
+type Usuario struct {   // exportado (mayúscula)
+    Nombre string        // exportado
+    email  string        // privado (minúscula)
 }
 
 func NuevoUsuario(nombre, email string) *Usuario {  // exportado
     return &Usuario{Nombre: nombre, email: email}
 }
-
-func validarEmail(e string) bool {  // privado
-    return strings.Contains(e, "@")
-}
 ```
-
-**go.mod y go.sum:** definen el módulo, sus dependencias y checksums de seguridad.
-
 ```bash
 go mod init github.com/usuario/proyecto
 go get github.com/gin-gonic/gin
 go mod tidy
 ```
 
-**Internal packages:** el directorio `internal/` restringe la importación solo al árbol padre del módulo.
+Internal packages (`internal/`) restringen importación al árbol padre del módulo. `init()` se ejecuta automáticamente al cargar el paquete.
 
-**init() functions:** se ejecutan automáticamente al cargar el paquete, antes de `main()`:
-
+#### 🧪 Cómo probarlo
 ```go
-var db *sql.DB
-
-func init() {
-    var err error
-    db, err = sql.Open("postgres", os.Getenv("DATABASE_URL"))
-    if err != nil {
-        panic(err)
-    }
+func TestExportacion(t *testing.T) {
+    u := NuevoUsuario("Ana", "ana@test.com")
+    if u.Nombre != "Ana" { t.Error("Nombre debería ser exportado") }
 }
 ```
 
-**Blank identifier `_`:** descarta valores que no necesitas:
+#### ✅ Buenas prácticas
+- ✅ Nombra paquetes en singular y cortos (`user`, no `users` o `user_utils`)
+- ✅ Usa `internal/` para código que no debe exponerse al exterior del módulo
+- ⚠️ No uses `init()` para lógica que podría hacerse explícita
+- ❌ No crees paquetes con nombres genéricos como `utils` o `common`
 
-```go
-resultado, _ := dividir(10, 3)
-_, err := fmt.Println("hola")
-for _, v := range slice {
-    fmt.Println(v)
-}
-```
-
-Fuente: [Go dev — Control flow](https://go.dev/ref/spec#If_statements), [Go dev — Modules](https://go.dev/doc/modules/managing-dependencies), [Go dev — Internal packages](https://go.dev/doc/go1.4#internalpackages)
-
----
+#### 🔗 Para saber más
+- [Go dev — Package names](https://go.dev/blog/package-names)
 
 ## Conceptos clave explicados a fondo
 
 ### Paquetes y exportación
 
-Go organiza el código en **paquetes**. Todo archivo `.go` pertenece a un paquete (primera línea del archivo).
+#### ¿Qué es?
+Un paquete en Go es la unidad básica de organización del código. Todo archivo `.go` pertenece a un paquete. La visibilidad se controla por mayúscula (exportado) o minúscula (privado). Es como un archivador: cada cajón (paquete) tiene documentos, y solo los que tienen el nombre en mayúscula pueden verse desde fuera.
 
+🔗 [Go dev — Package reference](https://go.dev/ref/spec#Packages)
+
+#### Sintaxis básica
 ```go
 package models   // El directorio se llama models/, el paquete se llama models
 
@@ -731,12 +776,49 @@ import "project/internal/crypto"
 
 `internal` es el mecanismo de Go para crear APIs privadas dentro de un módulo. No hay `private` como en otros lenguajes: `internal` es la barrera de visibilidad entre módulos.
 
-Fuente: [Go dev — Package reference](https://go.dev/ref/spec#Packages), [Go dev — Internal packages](https://go.dev/doc/go1.4#internalpackages)
+#### 🧪 Cómo probarlo
+```go
+func TestExportacion(t *testing.T) {
+    // Probar acceso a símbolos exportados
+    u := NuevoUsuario("Ana", "ana@test.com")
+    if u.Nombre != "Ana" {
+        t.Errorf("Nombre debería ser 'Ana', got %s", u.Nombre)
+    }
+    // email es privado — no se puede acceder desde otro paquete
+}
+```
+
+#### 💡 Memoria y rendimiento
+- Los paquetes se cargan una sola vez en `go.mod` y se cachean
+- `internal` no tiene overhead en runtime — solo es una restricción de compilación
+- Los import cíclicos se detectan en compilación — no pueden ocurrir en runtime
+- El paquete `main` no es importable por otros paquetes
+
+#### ✅ Buenas prácticas
+- ✅ Nombra paquetes en singular y cortos (`user`, no `users` o `user_utils`)
+- ✅ Usa `internal/` para código que no debe exponerse al exterior del módulo
+- ⚠️ No uses `init()` para lógica que podría hacerse explícita
+- ❌ No crees paquetes con nombres genéricos como `utils` o `common`
+
+#### 🏗️ Metodología
+- **APIs públicas**: solo exporta lo que el usuario necesita, todo lo demás privado
+- **Módulos grandes**: divide en subpaquetes, usa `internal/` para implementación
+- **Librerías**: paquete raíz con API pública, subpaquetes con implementación
+- **Ejecutables**: `package main` mínimo que delega en otros paquetes
+
+#### 🔗 Para saber más
+- [Go dev — Package names](https://go.dev/blog/package-names)
+- [Go dev — Internal packages](https://go.dev/doc/go1.4#internalpackages)
+- [Go dev — Modules](https://go.dev/doc/modules/managing-dependencies)
 
 ### Variables, tipos y zero values
 
-Go es de **tipado estático** con inferencia de tipos mediante `:=`.
+#### ¿Qué es?
+Go es de **tipado estático** con inferencia de tipos mediante `:=`. Toda variable tiene un tipo conocido en compilación y un **zero value** automático (no hay `null` o `undefined`). Es como una taquilla numerada: sabes exactamente qué tamaño tiene cada compartimento y siempre está limpio aunque no metas nada.
 
+🔗 [Go dev — Variables](https://go.dev/ref/spec#Variables)
+
+#### Sintaxis básica
 ```go
 // Declaración explícita
 var nombre string = "Ana"
@@ -807,12 +889,69 @@ const (
 )
 ```
 
-Fuente: [Go dev — Variables](https://go.dev/ref/spec#Variables), [Go dev — iota](https://go.dev/ref/spec#Iota)
+#### 🧪 Cómo probarlo
+```go
+func TestZeroValues(t *testing.T) {
+    var s string
+    var i int
+    var b bool
+    var p *int
+    if s != "" { t.Error("string zero value debe ser vacío") }
+    if i != 0 { t.Error("int zero value debe ser 0") }
+    if b != false { t.Error("bool zero value debe ser false") }
+    if p != nil { t.Error("pointer zero value debe ser nil") }
+}
+
+func TestIota(t *testing.T) {
+    const (
+        A = iota
+        B
+        C
+    )
+    if A != 0 || B != 1 || C != 2 {
+        t.Errorf("iota esperado 0,1,2, got %d,%d,%d", A, B, C)
+    }
+}
+
+func TestConversionExplicita(t *testing.T) {
+    var a int = 42
+    var b float64 = float64(a)
+    if b != 42.0 { t.Errorf("esperado 42.0, got %f", b) }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `int` es tamaño de palabra nativa (64 bits en x86-64) — óptimo para la CPU
+- `byte` y `rune` ocupan 1 y 4 bytes respectivamente
+- `string` es un descriptor de 16 bytes (puntero + longitud) — contenido en heap
+- `nil` en slices/maps/channels evita alocar hasta que se usan
+- `iota` se evalúa en compilación — zero overhead en runtime
+
+#### ✅ Buenas prácticas
+- ✅ Usa `:=` dentro de funciones para código conciso
+- ✅ Usa `var` para valores zero explícitos (`var i int`)
+- ⚠️ No confundas `byte` (uint8) con `rune` (int32)
+- ❌ No declares variables que no usas — error de compilación
+
+#### 🏗️ Metodología
+- **Valores por defecto**: Go inicializa a cero — no necesitas constructor
+- **Conversión**: siempre explícita — Go prioriza seguridad sobre conveniencia
+- **Enumeraciones**: `iota` para secuencias, bitsets con `1 << iota`
+- **APIs**: usa `int` y `float64` para valores numéricos genéricos
+
+#### 🔗 Para saber más
+- [Go dev — iota](https://go.dev/ref/spec#Iota)
+- [Go dev — The zero value](https://go.dev/ref/spec#The_zero_value)
+- [Go dev — Short declaration](https://go.dev/ref/spec#Short_variable_declarations)
 
 ### Structs, métodos y embedding
 
-**Structs** son la forma de Go de definir tipos compuestos. No hay clases.
+#### ¿Qué es?
+Los **structs** son la forma de Go de definir tipos compuestos. No hay clases. Los **métodos** son funciones con un receptor explícito (value o pointer). El **embedding** permite componer structs dentro de otros, promocionando sus campos y métodos. Es como una mochila modular: en vez de heredar una mochila entera, acoplas los compartimentos que necesitas.
 
+🔗 [Go dev — Structs](https://go.dev/ref/spec#Struct_types)
+
+#### Sintaxis básica
 ```go
 type Direccion struct {
     Calle   string
@@ -892,12 +1031,56 @@ type Usuario struct {
 
 Las tags son strings que las librerías interpretan via `reflect`. `encoding/json`, `database/sql`, `validator` las usan.
 
-Fuente: [Go dev — Structs](https://go.dev/ref/spec#Struct_types), [Go dev — Methods](https://go.dev/ref/spec#Method_declarations), [Effective Go — Embedding](https://go.dev/doc/effective_go#embedding)
+#### 🧪 Cómo probarlo
+```go
+func TestMetodoValorVsPuntero(t *testing.T) {
+    u := Usuario{Nombre: "Ana"}
+    if u.Saludar() != "Hola, soy Ana" {
+        t.Errorf("saludo incorrecto: %s", u.Saludar())
+    }
+    u.Activar()
+    // activo es privado — no podemos acceder directamente
+}
+
+func TestEmbedding(t *testing.T) {
+    p := Perro{Animal: Animal{Nombre: "Max"}, Raza: "Labrador"}
+    if p.Nombre != "Max" { t.Errorf("esperado Max, got %s", p.Nombre) }
+    if p.Sonido() != "Guau" { t.Errorf("esperado Guau, got %s", p.Sonido()) }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- Structs son value types — se copian al asignar o pasar por parámetro
+- Métodos con value receiver reciben una copia — seguros pero más caros para structs grandes
+- Métodos con pointer receiver reciben el original — eficientes pero permiten mutación
+- Embedding no añade overhead — es solo promoción de campos en compilación
+- Tags son strings guardadas como metadata en tiempo de compilación
+
+#### ✅ Buenas prácticas
+- ✅ Usa pointer receiver si el método modifica el struct
+- ✅ Usa value receiver si el método no modifica y el struct es pequeño (`&lt;64` bytes)
+- ⚠️ Embedding no es herencia — no esperes polimorfismo de subtipos
+- ❌ No abuses de tags para lógica de negocio — son metadata, no validadores
+
+#### 🏗️ Metodología
+- **DTOs**: structs con tags `json:"..."` para serialización
+- **Entidades**: structs con métodos de negocio (pointer receiver)
+- **Composición**: embedding para reutilizar comportamiento
+- **Configuración**: structs con tags `yaml`/`env` para configuración
+
+#### 🔗 Para saber más
+- [Go dev — Methods](https://go.dev/ref/spec#Method_declarations)
+- [Go dev — Effective Go: Embedding](https://go.dev/doc/effective_go#embedding)
+- [Go dev — Struct tags](https://go.dev/ref/spec#Struct_types)
 
 ### Interfaces (duck typing estructural)
 
-Las interfaces en Go son **implícitas** y **estructurales**. No necesitas declarar que implementas una interfaz: si tienes los métodos, la implementas.
+#### ¿Qué es?
+Las interfaces en Go son **implícitas** y **estructurales**: no necesitas declarar que implementas una — si tienes los métodos, la implementas. Es como un enchufe universal: cualquier cable que tenga la clavija adecuada funciona, sin importar la marca.
 
+🔗 [Go dev — Interfaces](https://go.dev/ref/spec#Interface_types)
+
+#### Sintaxis básica
 ```go
 // Definición de interfaz
 type Saludador interface {
@@ -981,12 +1164,69 @@ func describir(v any) string {
 
 La filosofía Go es: "cuanto más pequeña la interfaz, mejor". Una interfaz de un solo método es idiomática.
 
-Fuente: [Go dev — Interfaces](https://go.dev/ref/spec#Interface_types), [Effective Go — Interfaces](https://go.dev/doc/effective_go#interfaces)
+#### 🧪 Cómo probarlo
+```go
+func TestInterfazImplicita(t *testing.T) {
+    p := Perro{Nombre: "Max"}
+    g := Gato{Nombre: "Luna"}
+
+    var s Saludador
+    s = p
+    if s.Saludar() != "Guau, soy Max" {
+        t.Errorf("esperado Guau, got %s", s.Saludar())
+    }
+    s = g
+    if s.Saludar() != "Miau, soy Luna" {
+        t.Errorf("esperado Miau, got %s", s.Saludar())
+    }
+}
+
+func TestTypeAssertion(t *testing.T) {
+    var val any = "texto"
+    s, ok := val.(string)
+    if !ok || s != "texto" {
+        t.Errorf("type assertion falló")
+    }
+    _, ok = val.(int)
+    if ok {
+        t.Errorf("no debería ser int")
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- Las interfaces se representan como un **itable** (tabla de métodos) + puntero al valor — 16 bytes
+- El type assertion hace una comparación de itable en tiempo constante
+- `interface{}` / `any` tiene el mismo costo que cualquier otra interfaz
+- Las type assertions con `ok` evitan panics — no hay overhead extra
+
+#### ✅ Buenas prácticas
+- ✅ Define interfaces pequeñas (1-3 métodos) — es idiomático en Go
+- ✅ Acepta interfaces, devuelve structs (conocido como "Go proverb")
+- ✅ Usa `any` para valores genéricos no tipados (JSON, logging)
+- ⚠️ No declares interfaces en el paquete que las consume — decláralas donde se usan
+- ⚠️ Type assertion sin `ok` puede panic — siempre usa la forma segura
+- ❌ No crees interfaces antes de necesitarlas (YAGNI)
+
+#### 🏗️ Metodología
+- **Contratos**: las interfaces definen comportamiento, no datos
+- **Mocking**: interfaces pequeñas son fáciles de mockear en tests
+- **Composición**: `io.ReadWriter` combina `io.Reader` + `io.Writer`
+- **Dependency injection**: las funciones aceptan interfaces, no implementaciones concretas
+
+#### 🔗 Para saber más
+- [Effective Go — Interfaces](https://go.dev/doc/effective_go#interfaces)
+- [Go dev — Type assertions](https://go.dev/ref/spec#Type_assertions)
+- [Go dev — Type switches](https://go.dev/ref/spec#Type_switches)
 
 ### Genéricos (Go 1.18+)
 
-Los genéricos llegaron en Go 1.18 (marzo 2022). Permiten escribir funciones y tipos parametrizados por tipos.
+#### ¿Qué es?
+Los genéricos permiten escribir funciones y tipos parametrizados por tipos. Llegaron en Go 1.18 (marzo 2022). Son como una máquina de hacer moldes: en vez de fabricar una función para cada tipo, creas un molde ajustable.
 
+🔗 [Go dev — Generics tutorial](https://go.dev/doc/tutorial/generics)
+
+#### Sintaxis básica
 ```go
 // Función genérica
 func Min[T constraints.Ordered](a, b T) T {
@@ -998,7 +1238,7 @@ func Min[T constraints.Ordered](a, b T) T {
 
 // Uso
 fmt.Println(Min[int](5, 3))     // 3 (explícito)
-fmt.Println(Min(5.5, 3.2))      // 3.2 (inferencia)
+fmt.Println(Min(5, 3))          // 3 (inferido)
 fmt.Println(Min("a", "b"))      // "a" (también funciona)
 ```
 
@@ -1086,12 +1326,66 @@ val, ok := s.Pop()  // val="mundo", ok=true
 3. Type inference no siempre funciona con tipos complejos
 4. El rendimiento es bueno, pero no igual que monomorfización manual
 
-Fuente: [Go dev — Generics](https://go.dev/doc/tutorial/generics), [Proposal — Type Parameters](https://go.googlesource.com/proposal/+/master/design/43651-type-parameters.md)
+#### 🧪 Cómo probarlo
+```go
+func TestGenericoMin(t *testing.T) {
+    if Min(5, 3) != 3 { t.Error("Min(5,3) debería ser 3") }
+    if Min("a", "b") != "a" { t.Error(`Min("a","b") debería ser "a"`) }
+}
+
+func TestStack(t *testing.T) {
+    s := Stack[int]{}
+    s.Push(1)
+    s.Push(2)
+    val, ok := s.Pop()
+    if !ok || val != 2 { t.Errorf("Pop esperado 2, got %d", val) }
+    val, ok = s.Pop()
+    if !ok || val != 1 { t.Errorf("Pop esperado 1, got %d", val) }
+    _, ok = s.Pop()
+    if ok { t.Error("Pop de stack vacío debería dar false") }
+}
+
+func TestContains(t *testing.T) {
+    nums := []int{1, 2, 3, 4, 5}
+    if !Contains(nums, 3) { t.Error("debería contener 3") }
+    if Contains(nums, 99) { t.Error("no debería contener 99") }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- Go compila una copia especializada por cada conjunto único de tipos (monomorfización)
+- Las funciones genéricas pueden ser más lentas en compilación, pero en runtime son casi idénticas a versiones manuales
+- `any` en genéricos evita boxing (a diferencia de `interface{}`)
+- Las constraints se verifican en compilación, zero overhead en runtime
+- El tamaño del binario crece con cada especialización única
+
+#### ✅ Buenas prácticas
+- ✅ Usa `comparable` para funciones que necesitan `==` / `!=`
+- ✅ Usa `any` como el tipo más permisivo
+- ✅ Prefiere interfaces específicas a genéricos en APIs públicas simples
+- ⚠️ No uses genéricos donde interfaces + type switch son más claros
+- ⚠️ Los genéricos no son para todo — YAGNI también aplica aquí
+- ❌ No abuses de genéricos anidados — el código se vuelve ilegible
+
+#### 🏗️ Metodología
+- **Estructuras de datos**: `Stack[T]`, `Queue[T]`, `Tree[T]` con genéricos
+- **Algoritmos**: funciones de ordenación/búsqueda genéricas
+- **Helpers**: `Contains`, `Map`, `Filter`, `Reduce` (cuando no uses `slices` / `maps`)
+- **APIs**: genéricos para mantener tipado fuerte sin duplicar código
+
+#### 🔗 Para saber más
+- [Go dev — Generics](https://go.dev/doc/tutorial/generics)
+- [Proposal — Type Parameters](https://go.googlesource.com/proposal/+/master/design/43651-type-parameters.md)
+- [Go dev — Constraints](https://go.dev/ref/spec#Type_constraints)
 
 ### Punteros
 
-Go tiene punteros, pero no aritmética de punteros (a diferencia de C).
+#### ¿Qué es?
+Un puntero almacena la dirección de memoria de un valor. Go tiene punteros pero **no aritmética de punteros** (a diferencia de C). Es como una nota adhesiva que te dice dónde está el objeto, no el objeto en sí.
 
+🔗 [Go dev — Pointer types](https://go.dev/ref/spec#Pointer_types)
+
+#### Sintaxis básica
 ```go
 var x int = 42
 var p *int = &x  // p es un puntero a int, &x obtiene la dirección
@@ -1136,12 +1430,56 @@ go build -gcflags='-m' ./...
 
 Si el compilador ve que una variable debe sobrevivir a la función que la crea, la asigna al heap. Si no, la asigna al stack — mucho más rápido.
 
-Fuente: [Go dev — Pointers](https://go.dev/ref/spec#Pointer_types), [Escape Analysis in Go](https://medium.com/@blanchon.vincent/go-escape-analysis-101-d687b3f139d3)
+#### 🧪 Cómo probarlo
+```go
+func TestPunteros(t *testing.T) {
+    x := 42
+    p := &x
+    if *p != 42 { t.Errorf("esperado 42, got %d", *p) }
+    *p = 100
+    if x != 100 { t.Errorf("esperado 100, got %d", x) }
+}
+
+func TestEscapeAnalysis(t *testing.T) {
+    u := crearUsuario()
+    if u.Nombre != "Ana" { t.Errorf("esperado Ana, got %s", u.Nombre) }
+    // crearUsuario aloca en heap porque devuelve puntero
+}
+```
+
+#### 💡 Memoria y rendimiento
+- Los punteros ocupan 8 bytes en x86-64 (una dirección de memoria)
+- Stack es rápido (asignación barata); heap requiere GC
+- Escape analysis decide automáticamente stack vs heap
+- `go build -gcflags='-m'` para inspeccionar decisiones
+- Pasar structs grandes por puntero es más barato que copiarlos
+- Enteros pequeños por valor suelen ser más rápidos que por puntero
+
+#### ✅ Buenas prácticas
+- ✅ Usa punteros para structs grandes y receptores mutables
+- ✅ Usa valores para enteros, booleanos, strings, y structs pequeños
+- ⚠️ No uses punteros para evitar copias prematuras — el compilador optimiza
+- ❌ No hay null pointer safety — siempre checkea `nil` antes de dereferenciar
+- ❌ No compartas punteros entre goroutines sin sincronización
+
+#### 🏗️ Metodología
+- **Receptores**: pointer receiver si mutas, value receiver si no
+- **Campos opcionales**: puntero indica nil = ausencia
+- **Constructores**: devuelven `*T` para indicar ownership
+- **Caches y pools**: punteros evitando copias innecesarias
+
+#### 🔗 Para saber más
+- [Go dev — Escape analysis](https://medium.com/@blanchon.vincent/go-escape-analysis-101-d687b3f139d3)
+- [Go dev — Stack vs heap](https://go.dev/talks/2015/go-gc.pdf)
 
 ### Errores
 
-Go trata los errores como **valores**, no como excepciones. No hay `try/catch`.
+#### ¿Qué es?
+Go trata los errores como **valores**, no como excepciones. No hay `try/catch`. Es como un semáforo: en vez de lanzar una sirena cuando algo falla, simplemente devuelves una señal (error) que quien te llama debe revisar.
 
+🔗 [Go dev — Errors (blog)](https://go.dev/blog/go1.13-errors)
+
+#### Sintaxis básica
 ```go
 // error es una interfaz predefinida
 type error interface {
@@ -1226,10 +1564,69 @@ return nil, &ErrorValidacion{Campo: "email", Valor: "", Motivo: "no puede estar 
 | Custom type | `type ErrorValidacion struct` | Lleva datos adicionales |
 | Opaque error | Solo `err != nil` | Al llamante no le importa el detalle |
 
-Fuente: [Go dev — Errors](https://go.dev/blog/go1.13-errors), [Dave Cheney — Don't just check errors](https://dave.cheney.net/2016/04/27/dont-just-check-errors-handle-them-gracefully)
+#### 🧪 Cómo probarlo
+```go
+func TestErrorBasico(t *testing.T) {
+    _, err := Dividir(10, 0)
+    if err == nil { t.Fatal("debería haber error") }
+    if err.Error() != "división por cero" {
+        t.Errorf("mensaje incorrecto: %s", err.Error())
+    }
+    res, err := Dividir(10, 2)
+    if err != nil { t.Fatal("no debería haber error") }
+    if res != 5 { t.Errorf("esperado 5, got %f", res) }
+}
+
+func TestErrorWrapping(t *testing.T) {
+    base := errors.New("error base")
+    envuelto := fmt.Errorf("contexto: %w", base)
+    if !errors.Is(envuelto, base) {
+        t.Error("errors.Is debería encontrar el error envuelto")
+    }
+}
+
+func TestErrorJoin(t *testing.T) {
+    e1 := errors.New("error 1")
+    e2 := errors.New("error 2")
+    joined := errors.Join(e1, e2)
+    if !errors.Is(joined, e1) || !errors.Is(joined, e2) {
+        t.Error("errors.Join debería contener ambos errores")
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `error` es una interfaz de 16 bytes (itable + puntero)
+- `errors.New` aloca una vez — reutiliza la misma string
+- `fmt.Errorf("%w")` aloca un nuevo wrapping error cada vez
+- `errors.Is` y `errors.As` recorren la cadena — O(n) en número de wraps
+- `errors.Join` evita anidar múltiples niveles — eficiente para batches
+
+#### ✅ Buenas prácticas
+- ✅ Siempre checkea `err != nil` — es idiomático en Go
+- ✅ Usa `%w` para wrapping con intención de desenvolver después
+- ✅ Usa `errors.Is` para sentinel errors, `errors.As` para custom types
+- ⚠️ No uses `_ = err` para ignorar errores — al menos loguea
+- ❌ No uses panic como sustituto de errores — panics son para bugs, no para validación
+
+#### 🏗️ Metodología
+- **APIs**: devuelve `(resultado, error)` como último valor de retorno
+- **Validación**: errores personalizados con datos estructurados
+- **Fallos de sistema**: `errors.New` para errores simples y conocidos
+- **Capas**: cada capa añade contexto con `%w` sin duplicar información
+
+#### 🔗 Para saber más
+- [Dave Cheney — Don't just check errors, handle them gracefully](https://dave.cheney.net/2016/04/27/dont-just-check-errors-handle-them-gracefully)
+- [Go dev — Working with Errors](https://go.dev/doc/effective_go#errors)
 
 ### Defer, panic y recover
 
+#### ¿Qué es?
+`defer` programa una función para ejecutarse al salir del ámbito actual (LIFO). `panic` detiene el flujo normal (error irrecuperable). `recover` captura un panic dentro de un defer. Es como una red de seguridad: el `defer` es el arnés que siempre se activa al saltar, el `panic` es la alarma, y `recover` la red que atrapa la caída.
+
+🔗 [Go dev — Defer](https://go.dev/ref/spec#Defer_statements)
+
+#### Sintaxis básica
 **`defer`** — ejecuta una función al salir del ámbito actual:
 
 ```go
@@ -1309,12 +1706,62 @@ func recoveryMiddleware(next http.Handler) http.Handler {
 }
 ```
 
-Fuente: [Go dev — Defer](https://go.dev/ref/spec#Defer_statements), [Go dev — Panic/Recover](https://go.dev/blog/defer-panic-and-recover)
+#### 🧪 Cómo probarlo
+```go
+func TestDeferLIFO(t *testing.T) {
+    var orden []string
+    func() {
+        defer func() { orden = append(orden, "segundo") }()
+        defer func() { orden = append(orden, "primero") }()
+    }()
+    if len(orden) != 2 || orden[0] != "primero" || orden[1] != "segundo" {
+        t.Errorf("orden LIFO incorrecto: %v", orden)
+    }
+}
+
+func TestRecoverPanic(t *testing.T) {
+    func() {
+        defer func() {
+            if r := recover(); r == nil {
+                t.Error("debería haber capturado el panic")
+            }
+        }()
+        panic("test panic")
+    }()
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `defer` tiene overhead pequeño (~50ns por llamada en Go 1.14+)
+- `defer` en un closure captura variables por referencia — cuidado con bucles
+- `panic`/`recover` tienen costo alto (~1µs) — no uses para control de flujo
+- Los defer se evalúan en el momento del registro (argumentos se copian), no al ejecutarse
+
+#### ✅ Buenas prácticas
+- ✅ Usa `defer` para cleanup (cerrar archivos, liberar mutexes, cerrar conexiones)
+- ✅ Usa `panic` solo para bugs o estados imposibles
+- ✅ Usa `recover` en el borde del programa (middleware HTTP, goroutines main)
+- ⚠️ No uses `panic` para errores esperables (IO, validación, red)
+- ❌ No uses `recover` para control de flujo normal
+
+#### 🏗️ Metodología
+- **Cleanup**: `defer f.Close()` justo después de `os.Open`
+- **Middleware HTTP**: `recover` en el handler más externo para evitar crashes
+- **Workers**: `recover` en cada goroutine para aislar fallos
+- **Inicialización**: `panic` si el programa no puede continuar sin configuración válida
+
+#### 🔗 Para saber más
+- [Go dev — Panic/Recover (blog)](https://go.dev/blog/defer-panic-and-recover)
+- [Go dev — Effective Go: Defer](https://go.dev/doc/effective_go#defer)
 
 ### Goroutines y canales
 
-**Goroutines** son hilos ligeros gestionados por el runtime de Go. Cuestan ~4KB de stack (frente a ~1MB de un thread del SO).
+#### ¿Qué es?
+Las **goroutines** son hilos ligeros gestionados por el runtime de Go (~4KB de stack vs ~1MB de thread SO). Los **canales** son tuberías tipadas para comunicación entre goroutines. Es como tener 1000 mensajeros (goroutines) que se pasan notas (canales) sin pisarse.
 
+🔗 [Go dev — Goroutines](https://go.dev/ref/spec#Go_statements)
+
+#### Sintaxis básica
 ```go
 func decir(texto string) {
     for i := 0; i < 5; i++ {
@@ -1463,12 +1910,84 @@ func main() {
 }
 ```
 
-Fuente: [Go dev — Goroutines](https://go.dev/ref/spec#Go_statements), [Go dev — Channels](https://go.dev/ref/spec#Channel_types), [Go by Example — Channels](https://gobyexample.com/channels)
+#### 🧪 Cómo probarlo
+```go
+func TestCanalUnbuffered(t *testing.T) {
+    ch := make(chan string)
+    go func() {
+        ch <- "hola"
+    }()
+    msg := <-ch
+    if msg != "hola" { t.Errorf("esperado hola, got %s", msg) }
+}
+
+func TestCanalBuffered(t *testing.T) {
+    ch := make(chan int, 3)
+    ch <- 1; ch <- 2; ch <- 3
+    if <-ch != 1 { t.Error("esperado 1") }
+    if <-ch != 2 { t.Error("esperado 2") }
+    if <-ch != 3 { t.Error("esperado 3") }
+}
+
+func TestCanalCerrado(t *testing.T) {
+    ch := make(chan int)
+    close(ch)
+    val, ok := <-ch
+    if ok { t.Error("canal cerrado debería dar ok=false") }
+    if val != 0 { t.Error("canal cerrado debería dar zero value") }
+}
+
+func TestSelect(t *testing.T) {
+    ch := make(chan string)
+    go func() {
+        ch <- "mensaje"
+    }()
+    select {
+    case msg := <-ch:
+        if msg != "mensaje" { t.Errorf("esperado mensaje, got %s", msg) }
+    case <-time.After(time.Second):
+        t.Error("timeout")
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- Las goroutines empiezan con ~4KB de stack, crecen y se reutilizan
+- El scheduler M:N mapea N goroutines a M OS threads (GOMAXPROCS)
+- Canales unbuffered sincronizan --- buffered desacoplan
+- `select` con `default` es no bloqueante
+- Cerrar un canal libera a los receivers bloqueados en `range`
+- Los canales tienen overhead pequeño --- pero enviar valores grandes por puntero es más rápido
+
+#### ✅ Buenas prácticas
+- ✅ Usa `go func()` en main para tareas concurrentes
+- ✅ Siempre cierra los canales desde el emisor, no desde el receptor
+- ✅ Usa `range` para consumir canales hasta que se cierren
+- ✅ Usa `select` con `time.After` para timeouts
+- ⚠️ No uses `time.Sleep` para sincronizar --- usa canales o `sync.WaitGroup`
+- ⚠️ Las goroutines filtradas (leak) no se recolectan --- asegúrate de que terminen
+- ❌ No compartas memoria entre goroutines --- usa canales para comunicar
+
+#### 🏗️ Metodología
+- **Pipeline**: `generator → worker → collector` con canales
+- **Workers**: fan-out con workers fijos, fan-in con resultados
+- **Timeouts**: `select` con `time.After` en operaciones de red
+- **Señales**: canal `chan struct{}` como señal ligera (zero bytes)
+- **Tareas programadas**: `time.Ticker` + `select`
+
+#### 🔗 Para saber más
+- [Go dev — Channels](https://go.dev/ref/spec#Channel_types)
+- [Go by Example — Channels](https://gobyexample.com/channels)
+- [Go dev — Share memory by communicating](https://go.dev/blog/codelab-share)
 
 ### Context
 
-`context.Context` lleva deadlines, cancelaciones y valores a través de la cadena de llamadas. Es el mecanismo estándar para controlar el ciclo de vida de operaciones concurrentes.
+#### ¿Qué es?
+`context.Context` lleva deadlines, cancelaciones y valores a través de la cadena de llamadas. Es el mecanismo estándar para controlar el ciclo de vida de operaciones concurrentes. Es como un walkie-talkie: desde la base (main) le dices a cada explorador (goroutine) "vuelve en 5 segundos" o "cancelado, todos a casa".
 
+🔗 [Go dev — Context (blog)](https://go.dev/blog/context)
+
+#### Sintaxis básica
 ```go
 import "context"
 
@@ -1532,10 +2051,74 @@ func Handler(ctx context.Context, req *Request) (*Response, error) {
 }
 ```
 
-Fuente: [Go dev — Context](https://go.dev/blog/context), [Go dev — pkg context](https://go.dev/pkg/context/)
+#### 🧪 Cómo probarlo
+```go
+func TestContextCancel(t *testing.T) {
+    ctx, cancel := context.WithCancel(context.Background())
+    cancel() // cancelación inmediata
+
+    select {
+    case <-ctx.Done():
+        if ctx.Err() != context.Canceled {
+            t.Errorf("esperado Canceled, got %v", ctx.Err())
+        }
+    case <-time.After(time.Second):
+        t.Error("timeout")
+    }
+}
+
+func TestContextTimeout(t *testing.T) {
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
+    defer cancel()
+
+    <-ctx.Done()
+    if ctx.Err() != context.DeadlineExceeded {
+        t.Errorf("esperado DeadlineExceeded, got %v", ctx.Err())
+    }
+}
+
+func TestContextValue(t *testing.T) {
+    ctx := context.WithValue(context.Background(), "key", "value")
+    if v := ctx.Value("key").(string); v != "value" {
+        t.Errorf("esperado value, got %s", v)
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `context.Background()` y `context.TODO()` son singletons — zero alloc
+- `WithCancel`/`WithTimeout` alocan un nuevo contexto cada vez
+- `WithValue` usa una linked list interna — O(n) en búsqueda
+- `ctx.Done()` devuelve el mismo canal cada vez — no aloca
+- Llamar `cancel()` más de una vez es seguro (no-op en la segunda)
+
+#### ✅ Buenas prácticas
+- ✅ El context es **siempre el primer parámetro** — convención del lenguaje
+- ✅ Siempre llama a `cancel()` con `defer` para evitar leaks
+- ✅ Usa `context.WithTimeout` para operaciones con límite de tiempo
+- ⚠️ No almacenes context en structs — pásalo como argumento
+- ⚠️ No uses `WithValue` como sustituto de parámetros normales
+- ❌ No pases `context.Background()` a funciones — pasa el context que recibes
+
+#### 🏗️ Metodología
+- **HTTP handlers**: `context.WithTimeout(ctx, 10s)` para cada request
+- **DB queries**: pasa context a `db.QueryContext(ctx, ...)`
+- **Goroutines**: pasa context a cada goroutine lanzada
+- **Propagación**: extiende deadlines, nunca los ignores
+- **Cleanup**: `cancel()` libera resources del contexto padre
+
+#### 🔗 Para saber más
+- [Go dev — pkg context](https://go.dev/pkg/context/)
+- [Go dev — Context patterns](https://go.dev/blog/context)
 
 ### Sincronización (sync)
 
+#### ¿Qué es?
+El paquete `sync` proporciona primitivas de sincronización básicas: `WaitGroup` para esperar goroutines, `Mutex`/`RWMutex` para exclusión mutua, `Once` para inicialización única, y `Map` para maps concurrentes. Es como un semáforo en una intersección: coordina quién pasa y quién espera.
+
+🔗 [Go dev — sync](https://go.dev/pkg/sync/)
+
+#### Sintaxis básica
 **`sync.WaitGroup`** — esperar a que un grupo de goroutines termine:
 
 ```go
@@ -1636,12 +2219,80 @@ m.Range(func(key, value any) bool {
 
 ⚠️ `sync.Map` está optimizado para patrones específicos (escritura una vez, lectura frecuente). Para la mayoría de casos, un `map` con `sync.RWMutex` es mejor opción.
 
-Fuente: [Go dev — sync](https://go.dev/pkg/sync/)
+#### 🧪 Cómo probarlo
+```go
+func TestWaitGroup(t *testing.T) {
+    var wg sync.WaitGroup
+    for i := 0; i < 10; i++ {
+        wg.Add(1)
+        go func() {
+            defer wg.Done()
+        }()
+    }
+    wg.Wait()
+    // si llegamos aquí sin deadlock, el test pasa
+}
+
+func TestMutex(t *testing.T) {
+    c := Contador{}
+    var wg sync.WaitGroup
+    for i := 0; i < 100; i++ {
+        wg.Add(1)
+        go func() {
+            defer wg.Done()
+            c.Incrementar()
+        }()
+    }
+    wg.Wait()
+    if c.Valor() != 100 { t.Errorf("esperado 100, got %d", c.Valor()) }
+}
+
+func TestOnce(t *testing.T) {
+    var count int
+    var o sync.Once
+    for i := 0; i < 10; i++ {
+        o.Do(func() { count++ })
+    }
+    if count != 1 { t.Errorf("Once debería ejecutarse 1 vez, count=%d", count) }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `sync.Mutex` es ligero (~8 bytes), `sync.RWMutex` un poco más
+- `Mutex.Lock()` con contención hace system calls — caro pero necesario
+- `sync.Once` usa atomic operations internamente — overhead mínimo
+- `sync.WaitGroup` usa atomics + futex — eficiente para cientos de goroutines
+- `sync.Map` tiene overhead interno pero brilla en lecturas sin contención
+- Siempre usa `defer` para unlock — previene deadlocks si hay panic
+
+#### ✅ Buenas prácticas
+- ✅ Usa `defer c.mu.Unlock()` justo después de `Lock()`
+- ✅ Prefiere `sync.RWMutex` cuando hay más lecturas que escrituras
+- ✅ Usa `sync.Once` para inicialización perezosa
+- ⚠️ No copies un `sync.Mutex` — pasa siempre por puntero
+- ⚠️ No uses `sync.Map` para casos generales — `map + RWMutex` suele ser mejor
+- ❌ No mezcles canales y mutexes en la misma goroutine — difícil de razonar
+
+#### 🏗️ Metodología
+- **WaitGroup**: esperar que N goroutines terminen
+- **Mutex**: proteger estado compartido con acceso concurrente
+- **RWMutex**: caches, configs (más lecturas que escrituras)
+- **Once**: singletons, inicialización perezosa
+- **Pool**: `sync.Pool` para reutilizar objetos alocados frecuentemente
+
+#### 🔗 Para saber más
+- [Go dev — sync.Pool](https://go.dev/pkg/sync/#Pool)
+- [Go dev — Atomic](https://go.dev/pkg/sync/atomic/)
+- [Go dev — The Go Memory Model](https://go.dev/ref/mem)
 
 ### io.Reader y io.Writer
 
-`io.Reader` y `io.Writer` son las interfaces más ubicuas de Go después de `error`.
+#### ¿Qué es?
+`io.Reader` y `io.Writer` son las interfaces más ubicuas de Go después de `error`. Representan fuentes y destinos de datos en streaming. Es como una manguera: por un lado entra agua (Reader), por el otro sale (Writer), y puedes conectar mangueras entre sí.
 
+🔗 [Go dev — io](https://go.dev/pkg/io/)
+
+#### Sintaxis básica
 ```go
 type Reader interface {
     Read(p []byte) (n int, err error)
@@ -1698,10 +2349,73 @@ func serveFile(w http.ResponseWriter, path string) {
 }
 ```
 
-Fuente: [Go dev — io](https://go.dev/pkg/io/)
+#### 🧪 Cómo probarlo
+```go
+func TestReaderWriter(t *testing.T) {
+    var buf bytes.Buffer
+    writer := &buf
+    n, err := writer.Write([]byte("hola"))
+    if err != nil { t.Fatal(err) }
+    if n != 4 { t.Errorf("esperado 4 bytes escritos, got %d", n) }
+
+    reader := &buf
+    data, err := io.ReadAll(reader)
+    if err != nil { t.Fatal(err) }
+    if string(data) != "hola" { t.Errorf("esperado hola, got %s", string(data)) }
+}
+
+func TestCopy(t *testing.T) {
+    var src bytes.Buffer
+    var dst bytes.Buffer
+    src.WriteString("test data")
+    n, err := io.Copy(&dst, &src)
+    if err != nil { t.Fatal(err) }
+    if n != 9 { t.Errorf("esperado 9 bytes copiados, got %d", n) }
+    if dst.String() != "test data" { t.Errorf("esperado 'test data', got '%s'", dst.String()) }
+}
+
+func TestLimitedReader(t *testing.T) {
+    src := strings.NewReader("contenido largo")
+    limited := io.LimitReader(src, 5)
+    data, _ := io.ReadAll(limited)
+    if string(data) != "conte" { t.Errorf("esperado 'conte', got '%s'", string(data)) }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `io.Copy` usa un buffer interno de 32KB — copia eficiente entre streams
+- `bytes.Buffer` crece dinámicamente como un slice de bytes
+- `strings.NewReader` no aloca — es un wrapper sobre un string existente
+- `io.Pipe` es síncrono — bloquea hasta que el otro lado lee/escribe
+- `bufio.Reader`/`bufio.Writer` añaden buffering para reducir system calls
+
+#### ✅ Buenas prácticas
+- ✅ Usa `io.Copy` en vez de leer todo a memoria y luego escribir
+- ✅ Usa `io.ReadAll` solo cuando necesitas todo el contenido en memoria
+- ✅ Usa `io.LimitReader` para prevenir lecturas ilimitadas de fuentes no confiables
+- ⚠️ Siempre verifica el error de `Read` (especialmente `io.EOF`)
+- ❗ Si `Read` devuelve `n > 0` con `err == io.EOF`, los `n` bytes son válidos
+
+#### 🏗️ Metodología
+- **Streaming**: `io.Copy` para transferencias grandes entre reader y writer
+- **Middleware**: `io.TeeReader` para loggear mientras se procesa
+- **Testing**: `bytes.Buffer` como writer/reader en tests
+- **HTTP**: `http.ResponseWriter` es un `io.Writer`, `r.Body` es un `io.Reader`
+- **Compresión**: `gzip.Reader`/`gzip.Writer` envuelven readers/writers existentes
+
+#### 🔗 Para saber más
+- [Go dev — io package](https://go.dev/pkg/io/)
+- [Go dev — bufio package](https://go.dev/pkg/bufio/)
+- [Go dev — Effective Go: Interfaces](https://go.dev/doc/effective_go#interfaces)
 
 ### encoding/json
 
+#### ¿Qué es?
+`encoding/json` serializa (Marshal) y deserializa (Unmarshal) datos entre Go structs y JSON. Usa struct tags para mapear campos. Es como un traductor simultáneo: conviertes structs Go ↔ JSON sin esfuerzo manual.
+
+🔗 [Go dev — encoding/json](https://go.dev/pkg/encoding/json/)
+
+#### Sintaxis básica
 ```go
 type Usuario struct {
     ID        int       `json:"id"`
@@ -1764,10 +2478,78 @@ for {
 }
 ```
 
-Fuente: [Go dev — encoding/json](https://go.dev/pkg/encoding/json/)
+#### 🧪 Cómo probarlo
+```go
+func TestMarshalUnmarshal(t *testing.T) {
+    u := Usuario{ID: 1, Nombre: "Ana"}
+    data, err := json.Marshal(u)
+    if err != nil { t.Fatal(err) }
+
+    var u2 Usuario
+    if err := json.Unmarshal(data, &u2); err != nil { t.Fatal(err) }
+    if u2.Nombre != "Ana" { t.Errorf("esperado Ana, got %s", u2.Nombre) }
+}
+
+func TestOmitEmpty(t *testing.T) {
+    u := Usuario{ID: 1, Nombre: "Ana"}
+    data, _ := json.Marshal(u)
+    if bytes.Contains(data, []byte("email")) {
+        t.Error("email vacío no debería aparecer con omitempty")
+    }
+}
+
+func TestJSONStream(t *testing.T) {
+    var buf bytes.Buffer
+    enc := json.NewEncoder(&buf)
+    for i := 0; i < 3; i++ {
+        enc.Encode(Usuario{ID: i, Nombre: "User"})
+    }
+
+    dec := json.NewDecoder(&buf)
+    count := 0
+    for {
+        var u Usuario
+        if err := dec.Decode(&u); err == io.EOF { break }
+        count++
+    }
+    if count != 3 { t.Errorf("esperado 3, got %d", count) }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `json.Marshal` usa reflection — más lento que serialización manual pero más cómodo
+- `json.Decoder` es eficiente para streams (lee en chunks, no carga todo)
+- `json.RawMessage` evita re-serializar datos que ya están en JSON
+- `json.Encoder`/`Decoder` son más eficientes que Marshal/Unmarshal para streams grandes
+- Los struct tags son strings estáticas — sin overhead en runtime
+
+#### ✅ Buenas prácticas
+- ✅ Usa `json:"campo"` tags en todos los campos exportados
+- ✅ Usa `json:"-"` para campos que no deben serializarse (passwords, secrets)
+- ✅ Usa `json:"campo,omitempty"` para omitir valores zero
+- ✅ Usa `json.NewDecoder`/`json.NewEncoder` para streams y HTTP
+- ⚠️ No serialices campos con tipos no exportados (privados) — causan error
+- ❌ No confíes en el orden de keys en un `map[string]any` — no está garantizado
+
+#### 🏗️ Metodología
+- **APIs REST**: `json.NewEncoder(w).Encode(resp)` para responses
+- **Request body**: `json.NewDecoder(r.Body).Decode(&req)`
+- **Config**: `json.MarshalIndent` para archivos de configuración legibles
+- **Flexible**: `json.RawMessage` para estructuras con campos variables
+- **Logging**: marshal estructuras para logs estructurados
+
+#### 🔗 Para saber más
+- [Go dev — JSON blog](https://go.dev/blog/json)
+- [Go dev — JSON and Go](https://go.dev/doc/articles/json/)
 
 ### database/sql
 
+#### ¿Qué es?
+`database/sql` es una interfaz genérica para bases de datos SQL. Incluye pooling de conexiones, prepared statements, y transacciones. Los drivers específicos (PostgreSQL, MySQL, SQLite) implementan la interfaz. Es como un conector universal: el estándar es el enchufe, cada base de datos es un adaptador diferente.
+
+🔗 [Go dev — database/sql](https://go.dev/pkg/database/sql/)
+
+#### Sintaxis básica
 ```go
 import (
     "database/sql"
@@ -1846,12 +2628,59 @@ if apellido.Valid {
 // También: sql.NullInt64, sql.NullFloat64, sql.NullBool, sql.NullTime
 ```
 
-Fuente: [Go dev — database/sql](https://go.dev/pkg/database/sql/)
+#### 🧪 Cómo probarlo
+```go
+// Usando un driver SQLite en memoria para tests sin infraestructura
+func TestDB(t *testing.T) {
+    db, err := sql.Open("sqlite3", ":memory:")
+    if err != nil { t.Fatal(err) }
+    defer db.Close()
+
+    db.Exec("CREATE TABLE test (id INTEGER PRIMARY KEY, name TEXT)")
+    db.Exec("INSERT INTO test (name) VALUES (?)", "Ana")
+
+    var name string
+    db.QueryRow("SELECT name FROM test WHERE id = ?", 1).Scan(&name)
+    if name != "Ana" { t.Errorf("esperado Ana, got %s", name) }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- El pool de conexiones reutiliza conexiones — evita el overhead de abrir/cerrar
+- `sql.Open` no conecta inmediatamente — `db.Ping()` fuerza la conexión
+- `SetMaxOpenConns` limita conexiones simultáneas a la BD
+- Prepared statements se cachean por conexión
+- Las transacciones ocupan una conexión del pool hasta Commit/Rollback
+
+#### ✅ Buenas prácticas
+- ✅ Siempre llama a `rows.Close()` incluso si iteras todas las filas
+- ✅ Siempre verifica `rows.Err()` después del bucle
+- ✅ Usa `db.SetMaxOpenConns` y `db.SetMaxIdleConns` apropiadamente
+- ✅ Usa `$1`, `$2` (PostgreSQL) o `?` (MySQL/SQLite) para parámetros — nunca interpolación
+- ⚠️ No olvides el `_` en el import del driver para que `init()` se ejecute
+- ⚠️ `LastInsertId()` no es soportado por todos los drivers (PostgreSQL usa `RETURNING`)
+- ❌ No compartas `*sql.DB` entre goroutines sin sincronización — el pool ya es thread-safe
+
+#### 🏗️ Metodología
+- **Queries**: `QueryContext` con context para cancelación
+- **Transacciones cortas**: mantenlas breves para no bloquear el pool
+- **Migrations**: librerías como `golang-migrate` o `pressly/goose`
+- **Testing**: SQLite en memoria o `testcontainers` para integración real
+- **ORM**: GORM o sqlx para proyectos complejos; `database/sql` para control fino
+
+#### 🔗 Para saber más
+- [Go dev — database/sql](https://go.dev/pkg/database/sql/)
+- [Go dev — SQL blog](https://go.dev/blog/sql)
+- [Go dev — database/sql tutorial](http://go-database-sql.org/)
 
 ### Testing
 
-Go incluye testing en la stdlib. No necesitas pytest ni nada externo.
+#### ¿Qué es?
+Go incluye testing en la stdlib: `go test`, subtests, table-driven tests, benchmarks, testdata, y cobertura. No necesitas librerías externas para tests unitarios. Es como tener un laboratorio portátil: pipetas, probetas y microscopio incluidos en la mochila.
 
+🔗 [Go dev — Testing](https://go.dev/pkg/testing/)
+
+#### Sintaxis básica
 ```go
 // main_test.go
 import "testing"
@@ -1989,16 +2818,63 @@ func TestHandler(t *testing.T) {
 }
 ```
 
-Fuente: [Go dev — Testing](https://go.dev/pkg/testing/), [Go dev — Testing tutorial](https://go.dev/doc/tutorial/add-a-test)
+#### 🧪 Cómo probarlo (meta)
+```go
+func TestTestingItself(t *testing.T) {
+    t.Run("table-driven", func(t *testing.T) {
+        tests := []struct{ a, b, expected int }{
+            {1, 1, 2}, {0, 0, 0}, {-1, 1, 0},
+        }
+        for _, tt := range tests {
+            if got := Suma(tt.a, tt.b); got != tt.expected {
+                t.Errorf("Suma(%d,%d) = %d", tt.a, tt.b, got)
+            }
+        }
+    })
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `go test` compila cada paquete y ejecuta los tests en binarios separados
+- `-count=1` desactiva caché de tests
+- `-race` añade overhead (~5-10x más lento) pero detecta data races
+- `-benchmem` muestra allocs por operación — útil para optimización
+- Los tests se ejecutan secuencialmente por defecto; `t.Parallel()` para concurrencia
+
+#### ✅ Buenas prácticas
+- ✅ Nombra archivos `*_test.go` — Go los reconoce automáticamente
+- ✅ Usa table-driven tests para múltiples casos de entrada
+- ✅ Usa `t.Helper()` en funciones auxiliares para mejor stack traces
+- ✅ Usa `testdata/` para archivos de fixture
+- ✅ Usa `httptest.NewServer`/`NewRecorder` para tests HTTP
+- ⚠️ No uses `testing` en código de producción
+- ⚠️ `t.Fatal`/`t.FailNow` detienen el test actual — úsalos con cuidado
+
+#### 🏗️ Metodología
+- **Unitarios**: table-driven con subtests
+- **HTTP**: `httptest.NewRecorder` + `httptest.NewRequest`
+- **BD**: SQLite en memoria o `testcontainers`
+- **Mocking**: interfaces pequeñas → mocks fáciles (gomock, mockery)
+- **Cobertura**: `go test -coverprofile=coverage.out`
+- **Tests de integración**: build tags (`//go:build integration`)
+
+#### 🔗 Para saber más
+- [Go dev — Testing tutorial](https://go.dev/doc/tutorial/add-a-test)
+- [Go dev — Testing blog](https://go.dev/blog/subtests)
+- [Go dev — Cover](https://go.dev/blog/cover)
 
 ---
 
 ## Sistema de archivos
 
-Go tiene una stdlib de sistema de archivos completa, moderna y multiplataforma.
-
 ### os — operaciones del sistema
 
+#### ¿Qué es?
+El paquete `os` proporciona una interfaz multiplataforma para operaciones del sistema operativo: archivos, directorios, permisos, variables de entorno y procesos. Es como tener un mando a distancia del sistema de archivos: puedes abrir, crear, mover y eliminar archivos sin importar el SO subyacente.
+
+🔗 [Go dev — os](https://go.dev/pkg/os/)
+
+#### Sintaxis básica
 ```go
 import "os"
 
@@ -2017,7 +2893,6 @@ entries, err := os.ReadDir(".")        // lista directorio (Go 1.16+)
 ```
 
 **os.File — operaciones avanzadas:**
-
 ```go
 f, _ := os.Open("archivo.txt")
 defer f.Close()
@@ -2029,8 +2904,64 @@ pos, err := f.Seek(0, io.SeekStart) // ir al principio
 f.Close()
 ```
 
+#### 🧪 Cómo probarlo
+```go
+func TestFileOperations(t *testing.T) {
+    // Usar t.TempDir() para directorio temporal automático
+    path := filepath.Join(t.TempDir(), "test.txt")
+    
+    err := os.WriteFile(path, []byte("hola mundo"), 0644)
+    if err != nil { t.Fatal(err) }
+    
+    data, err := os.ReadFile(path)
+    if err != nil { t.Fatal(err) }
+    if string(data) != "hola mundo" {
+        t.Errorf("esperado 'hola mundo', got %s", data)
+    }
+    
+    info, err := os.Stat(path)
+    if err != nil { t.Fatal(err) }
+    if info.Size() != 10 { t.Errorf("size debe ser 10, got %d", info.Size()) }
+}
+
+func TestTempDirRemoves(t *testing.T) {
+    dir := t.TempDir()
+    path := filepath.Join(dir, "tmp.txt")
+    os.WriteFile(path, []byte("data"), 0644)
+    // t.TempDir() se borra automáticamente al terminar el test
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `os.ReadFile` carga todo el archivo en memoria — peligroso para archivos >100 MB
+- `os.File.Read(buf)` con buffer propio permite streaming controlado
+- `os.ReadDir` es más eficiente que `ioutil.ReadDir` (obsoleto) — no lista archivos uno a uno
+- Las operaciones de archivo son llamadas al sistema (syscalls) — hay overhead por cada llamada
+
+#### ✅ Buenas prácticas
+- ✅ Usa `defer f.Close()` inmediatamente después de `os.Open`/`os.Create`
+- ✅ Usa `os.ReadFile`/`os.WriteFile` para archivos pequeños (menos de 10 MB)
+- ⚠️ No uses `ioutil` (obsoleto desde Go 1.16) — usa `os` y `io`
+- ❌ No ignores errores de `f.Close()` — al menos loguea
+
+#### 🏗️ Metodología
+- **Archivos pequeños**: `os.ReadFile`/`os.WriteFile` (una llamada, simple)
+- **Archivos grandes**: `os.Open` + `bufio.Scanner` (streaming línea por línea)
+- **Directorios**: `os.ReadDir` para listar, `filepath.Walk` para recorrer árbol
+- **Temporales**: `t.TempDir()` en tests, `os.CreateTemp` en producción
+
+#### 🔗 Para saber más
+- [Go dev — os package](https://go.dev/pkg/os/)
+- [Go dev — File I/O tutorial](https://go.dev/doc/tutorial/workspaces)
+
 ### bufio — I/O con buffer
 
+#### ¿Qué es?
+`bufio` envuelve un `io.Reader` o `io.Writer` con un buffer interno para reducir llamadas al sistema. Es como tener un depósito de agua: en lugar de ir al pozo por cada gota, llenas un cubo y bebes de él. El `Scanner` es la forma idiomática de leer línea por línea.
+
+🔗 [Go dev — bufio](https://go.dev/pkg/bufio/)
+
+#### Sintaxis básica
 ```go
 import "bufio"
 
@@ -2056,8 +2987,66 @@ w.WriteString("hola")
 w.Flush() // vaciar buffer al writer subyacente
 ```
 
+#### 🧪 Cómo probarlo
+```go
+func TestBufioScanner(t *testing.T) {
+    content := "línea 1\nlínea 2\nlínea 3\n"
+    r := strings.NewReader(content)
+    scanner := bufio.NewScanner(r)
+    
+    var lines []string
+    for scanner.Scan() {
+        lines = append(lines, scanner.Text())
+    }
+    if err := scanner.Err(); err != nil {
+        t.Fatal(err)
+    }
+    if len(lines) != 3 { t.Errorf("esperado 3 líneas, got %d", len(lines)) }
+    if lines[0] != "línea 1" { t.Errorf("esperado 'línea 1', got %s", lines[0]) }
+}
+
+func TestBufioWriter(t *testing.T) {
+    var buf bytes.Buffer
+    w := bufio.NewWriter(&buf)
+    w.WriteString("hola ")
+    w.WriteString("mundo")
+    w.Flush()
+    if buf.String() != "hola mundo" {
+        t.Errorf("esperado 'hola mundo', got %s", buf.String())
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- Buffer por defecto: 4096 bytes — óptimo para la mayoría de casos
+- `bufio.Scanner` limita línea a 64KB por defecto (ajustable con `Scanner.Buffer()`)
+- Sin buffer: cada `Read` de 1 byte es una syscall — con buffer se reduce 4096x
+- `bufio.Writer` acumula escrituras hasta `Flush()` — mejora rendimiento en archivos
+
+#### ✅ Buenas prácticas
+- ✅ Usa `bufio.Scanner` para leer archivos línea por línea (es lo más idiomático)
+- ✅ Usa `bufio.NewWriter` para escritura intensiva (reduce syscalls)
+- ⚠️ No olvides `Flush()` — el writer con buffer no vacía automáticamente
+- ❌ No uses `ReadString('\n')` mezclado con `Scanner` en el mismo archivo
+
+#### 🏗️ Metodología
+- **Archivos de texto**: `bufio.Scanner` (línea por línea)
+- **Archivos binarios**: `bufio.NewReader` con `Read` de fragmentos
+- **Logging intensivo**: `bufio.NewWriter` con `Flush` periódico
+- **Red**: `bufio.NewReader`/`NewWriter` para protocolos basados en líneas
+
+#### 🔗 Para saber más
+- [Go dev — bufio](https://go.dev/pkg/bufio/)
+- [Go dev — bufio.Scanner](https://go.dev/pkg/bufio/#Scanner)
+
 ### io — interfaces fundamentales
 
+#### ¿Qué es?
+`io.Reader` y `io.Writer` son las interfaces más ubicuas de Go. Cualquier cosa que produzca bytes implementa `Reader`; cualquier cosa que consuma bytes implementa `Writer`. Es como el USB: todo lo que se conecta habla el mismo protocolo, independientemente de lo que sea.
+
+🔗 [Go dev — io](https://go.dev/pkg/io/)
+
+#### Sintaxis básica
 ```go
 import "io"
 
@@ -2080,8 +3069,58 @@ combined := io.MultiReader(r1, r2) // concatenar readers
 writers := io.MultiWriter(w1, w2)  // escribir a múltiples writers
 ```
 
+#### 🧪 Cómo probarlo
+```go
+func TestIoCopy(t *testing.T) {
+    var buf bytes.Buffer
+    r := strings.NewReader("hola mundo")
+    n, err := io.Copy(&buf, r)
+    if err != nil { t.Fatal(err) }
+    if n != 10 { t.Errorf("esperado 10 bytes, got %d", n) }
+    if buf.String() != "hola mundo" {
+        t.Errorf("esperado 'hola mundo', got %s", buf.String())
+    }
+}
+
+func TestMultiWriter(t *testing.T) {
+    var buf1, buf2 bytes.Buffer
+    mw := io.MultiWriter(&buf1, &buf2)
+    mw.Write([]byte("test"))
+    if buf1.String() != "test" { t.Error("buf1 falló") }
+    if buf2.String() != "test" { t.Error("buf2 falló") }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `io.Copy` usa un buffer interno de 32KB — eficiente para copias grandes
+- `io.ReadAll` carga todo en memoria — O(n) en RAM
+- `io.MultiWriter` escribe secuencialmente — el más lento determina la velocidad
+- Las interfaces `Reader`/`Writer` no tienen overhead de reflection — son tipos concretos
+
+#### ✅ Buenas prácticas
+- ✅ Escribe funciones que acepten `io.Reader`/`io.Writer` en lugar de `*os.File`
+- ✅ Usa `io.Copy` en lugar de leer todo y luego escribir
+- ⚠️ No uses `io.ReadAll` para archivos grandes
+- ❌ No implementes `Read`/`Write` manualmente sin manejar `io.EOF`
+
+#### 🏗️ Metodología
+- **Funciones reutilizables**: acepta `io.Reader`/`io.Writer`, no tipos concretos
+- **Tests**: usa `strings.NewReader` o `bytes.Buffer` como mock de archivos
+- **Streaming**: `io.Copy` para tuberías de datos
+- **Logging**: `io.MultiWriter` para escribir a archivo y stdout simultáneamente
+
+#### 🔗 Para saber más
+- [Go dev — io package](https://go.dev/pkg/io/)
+- [Go dev — Effective Go: Interfaces](https://go.dev/doc/effective_go#interfaces)
+
 ### io/fs — sistema de archivos virtual (Go 1.16+)
 
+#### ¿Qué es?
+`io/fs` define la interfaz `fs.FS`, un sistema de archivos virtual que puede ser implementado por cualquier tipo: directorios reales, archivos embebidos, sistemas remotos, ZIP. Es como un adaptador universal para sistemas de archivos: da igual si es disco duro, memoria o red, la API es la misma.
+
+🔗 [Go dev — io/fs](https://go.dev/pkg/io/fs/)
+
+#### Sintaxis básica
 ```go
 import "io/fs"
 
@@ -2100,8 +3139,58 @@ fs.WalkDir(os.DirFS("."), ".", func(path string, d fs.DirEntry, err error) error
 data, _ := fs.ReadFile(os.DirFS("."), "archivo.txt")
 ```
 
+#### 🧪 Cómo probarlo
+```go
+func TestFSInterface(t *testing.T) {
+    // Crear un FS virtual en memoria
+    mfs := fstest.MapFS{
+        "hola.txt":   &fstest.MapFile{Data: []byte("mundo")},
+        "dir/a.txt":  &fstest.MapFile{Data: []byte("a")},
+    }
+    
+    data, err := fs.ReadFile(mfs, "hola.txt")
+    if err != nil { t.Fatal(err) }
+    if string(data) != "mundo" { t.Error("contenido incorrecto") }
+    
+    err = fs.WalkDir(mfs, ".", func(path string, d fs.DirEntry, err error) error {
+        if d.IsDir() && path != "." {
+            t.Logf("dir: %s", path)
+        }
+        return nil
+    })
+    if err != nil { t.Fatal(err) }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `fs.FS` es una interfaz ligera — implementarla es barato
+- `os.DirFS` añade overhead mínimo sobre operaciones directas de disco
+- `fstest.MapFS` opera en RAM — ideal para tests rápidos
+- `fs.WalkDir` es más eficiente que `filepath.Walk` (evita stat innecesarios)
+
+#### ✅ Buenas prácticas
+- ✅ Usa `fs.FS` como tipo de parámetro para aceptar cualquier origen de archivos
+- ✅ Usa `fstest.MapFS` para tests — evita archivos temporales
+- ⚠️ No implementes `fs.FS` manualmente si solo lees archivos reales
+- ❌ No asumas que todos los FS tienen directorios — algunos son planos (embed)
+
+#### 🏗️ Metodología
+- **Tests**: `fstest.MapFS` para simular cualquier estructura
+- **Producción**: `os.DirFS` para archivos reales, `embed.FS` para estáticos
+- **Librerías**: acepta `fs.FS` en lugar de rutas de archivo para máxima flexibilidad
+
+#### 🔗 Para saber más
+- [Go dev — io/fs](https://go.dev/pkg/io/fs/)
+- [Go dev — fstest](https://go.dev/pkg/testing/fstest/)
+
 ### filepath — manipulación de rutas
 
+#### ¿Qué es?
+`filepath` proporciona funciones para manipular rutas de archivo de forma multiplataforma. Linux usa `/`, Windows usa `\` — `filepath` normaliza automáticamente. Es como un GPS para rutas: siempre sabes dónde estás y cómo llegar, sin importar el mapa (SO).
+
+🔗 [Go dev — filepath](https://go.dev/pkg/path/filepath/)
+
+#### Sintaxis básica
 ```go
 import "path/filepath"
 
@@ -2118,8 +3207,66 @@ filepath.Walk("dir", func(path string, info os.FileInfo, err error) error {
 matches, _ := filepath.Glob("*.txt")  // todos los .txt del directorio
 ```
 
+#### 🧪 Cómo probarlo
+```go
+func TestFilepath(t *testing.T) {
+    p := filepath.Join("a", "b", "c.txt")
+    if filepath.Dir(p) != filepath.FromSlash("a/b") {
+        t.Errorf("dir incorrecto: %s", filepath.Dir(p))
+    }
+    if filepath.Base(p) != "c.txt" { t.Error("base incorrecta") }
+    if filepath.Ext(p) != ".txt" { t.Error("extensión incorrecta") }
+    
+    matches, err := filepath.Glob("*.go")
+    if err != nil { t.Fatal(err) }
+    if len(matches) == 0 { t.Log("no hay archivos .go en el directorio") }
+}
+
+func TestWalk(t *testing.T) {
+    dir := t.TempDir()
+    os.WriteFile(filepath.Join(dir, "a.txt"), []byte("a"), 0644)
+    os.Mkdir(filepath.Join(dir, "sub"), 0755)
+    os.WriteFile(filepath.Join(dir, "sub", "b.txt"), []byte("b"), 0644)
+    
+    var files []string
+    filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+        if !info.IsDir() { files = append(files, info.Name()) }
+        return nil
+    })
+    if len(files) != 2 { t.Errorf("esperado 2 archivos, got %d", len(files)) }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `filepath.Join` es O(n) — construye la ruta sin allocations extra
+- `filepath.Walk` usa callbacks — no carga el árbol completo en memoria
+- `filepath.Glob` usa el mismo matching que la shell — O(n) en el directorio
+- Clean paths: `filepath.Clean` normaliza `../` y `//` sin tocar el disco
+
+#### ✅ Buenas prácticas
+- ✅ Siempre usa `filepath.Join` en lugar de concatenar strings con `/`
+- ✅ Usa `filepath.Walk` en lugar de `os.ReadDir` recursivo manual
+- ⚠️ No uses `filepath.Walk` si el árbol es muy profundo (>1000 niveles)
+- ❌ No asumas `/` como separador — `filepath.Join` es multiplataforma
+
+#### 🏗️ Metodología
+- **Rutas simples**: `filepath.Join` + `filepath.Dir`/`Base`/`Ext`
+- **Recorrer árbol**: `filepath.Walk` para procesar todos los archivos
+- **Búsqueda por patrón**: `filepath.Glob` para encontrar archivos por extensión
+- **Rutas relativas/absolutas**: `filepath.Abs` + `filepath.Rel`
+
+#### 🔗 Para saber más
+- [Go dev — path/filepath](https://go.dev/pkg/path/filepath/)
+- [Go dev — filepath.Walk](https://go.dev/pkg/path/filepath/#Walk)
+
 ### embed — incrustar archivos en binario (Go 1.16+)
 
+#### ¿Qué es?
+`embed` permite incrustar archivos estáticos (HTML, CSS, imágenes) dentro del binario Go en tiempo de compilación. El resultado es un solo binario sin dependencias externas. Es como si el archivo se imprimiera en el ADN del programa: viaja con él a donde vaya.
+
+🔗 [Go dev — embed](https://go.dev/embed/)
+
+#### Sintaxis básica
 ```go
 import "embed"
 
@@ -2134,8 +3281,58 @@ func main() {
 }
 ```
 
+#### 🧪 Cómo probarlo
+```go
+func TestEmbed(t *testing.T) {
+    data, err := assets.ReadFile("templates/index.html")
+    if err != nil { t.Fatal(err) }
+    if len(data) == 0 { t.Error("el archivo embebido está vacío") }
+}
+
+func TestEmbedFileServer(t *testing.T) {
+    ts := httptest.NewServer(http.FileServer(http.FS(assets)))
+    defer ts.Close()
+    
+    resp, err := http.Get(ts.URL + "/templates/index.html")
+    if err != nil { t.Fatal(err) }
+    defer resp.Body.Close()
+    
+    if resp.StatusCode != http.StatusOK {
+        t.Errorf("status %d, esperado 200", resp.StatusCode)
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- Los archivos se incrustan en el binario como `[]byte` — aumentan el tamaño del binario
+- El contenido está en memoria mapeada — acceso O(1) sin I/O de disco
+- Los patrones `//go:embed` se validan en compilación — errores tempranos
+- Sirviendo con `http.FS` no hay syscalls de disco — extremadamente rápido
+
+#### ✅ Buenas prácticas
+- ✅ Úsalo para templates, archivos estáticos, configuraciones por defecto
+- ✅ Especifica patrones precisos en `//go:embed` para no incluir archivos grandes
+- ⚠️ No incrustes archivos grandes (>10 MB) — el binario se hace muy pesado
+- ❌ No uses `embed` para archivos que cambian frecuentemente — requieren recompilación
+
+#### 🏗️ Metodología
+- **CLI tools**: incrusta templates, ayuda, defaults en el binario
+- **Servidores web**: incrusta archivos estáticos para despliegue con un solo binario
+- **Migraciones SQL**: incrusta archivos `.sql` para migraciones sin path externo
+- **Tests**: usa `embed.FS` como implementación de `fs.FS` en tests de integración
+
+#### 🔗 Para saber más
+- [Go dev — embed](https://go.dev/embed/)
+- [Go dev — embed FS](https://go.dev/pkg/embed/)
+
 ### encoding/csv
 
+#### ¿Qué es?
+El paquete `encoding/csv` lee y escribe archivos CSV (Comma-Separated Values). Soporta comillas, escapes y diferentes delimitadores. Es el formato estándar para intercambio de datos tabulares.
+
+🔗 [Go dev — csv](https://go.dev/pkg/encoding/csv/)
+
+#### Sintaxis básica
 ```go
 import "encoding/csv"
 
@@ -2150,8 +3347,64 @@ r := csv.NewReader(f)
 records, _ := r.ReadAll() // [][]string
 ```
 
+#### 🧪 Cómo probarlo
+```go
+func TestCSVReadWrite(t *testing.T) {
+    var buf bytes.Buffer
+    w := csv.NewWriter(&buf)
+    w.Write([]string{"nombre", "edad"})
+    w.Write([]string{"Ana", "30"})
+    w.Write([]string{"Luis", "25"})
+    w.Flush()
+    if err := w.Error(); err != nil { t.Fatal(err) }
+    
+    r := csv.NewReader(&buf)
+    records, err := r.ReadAll()
+    if err != nil { t.Fatal(err) }
+    if len(records) != 3 { t.Errorf("esperado 3 filas, got %d", len(records)) }
+    if records[1][0] != "Ana" { t.Errorf("esperado Ana, got %s", records[1][0]) }
+}
+
+func TestCSVReaderOptions(t *testing.T) {
+    // CSV con punto y coma
+    data := "a;1\nb;2\n"
+    r := csv.NewReader(strings.NewReader(data))
+    r.Comma = ';'
+    records, _ := r.ReadAll()
+    if records[0][0] != "a" { t.Error("coma personalizada falló") }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `ReadAll()` carga todo el archivo en memoria — O(n) en RAM
+- `Read()` fila por fila para streaming — O(1) memoria por iteración
+- `csv.NewReader` con `FieldsPerRecord = -1` permite número variable de columnas
+- El parser maneja RFC 4180 — comillas, escapes, saltos de línea en campos
+
+#### ✅ Buenas prácticas
+- ✅ Siempre verifica `w.Error()` después de `Flush()` — los errores de escritura son diferidos
+- ✅ Usa `Read()` en bucle para archivos grandes (>100 MB)
+- ⚠️ No asumas que todas las filas tienen el mismo número de columnas
+- ❌ No uses CSV para datos anidados o complejos — usa JSON
+
+#### 🏗️ Metodología
+- **Exportación de datos**: CSV para hojas de cálculo y Excel
+- **ETL simple**: CSV para intercambio entre sistemas legacy
+- **Grandes volúmenes**: streaming con `Read()` fila por fila
+- **Validación**: parsea con `csv.NewReader`, valida campo por campo
+
+#### 🔗 Para saber más
+- [Go dev — csv](https://go.dev/pkg/encoding/csv/)
+- [RFC 4180](https://tools.ietf.org/html/rfc4180)
+
 ### encoding/json
 
+#### ¿Qué es?
+`encoding/json` serializa (marshal) y deserializa (unmarshal) datos Go a/desde JSON. Usa struct tags para mapear campos. Es la forma estándar de intercambiar datos en APIs REST.
+
+🔗 [Go dev — json](https://go.dev/pkg/encoding/json/)
+
+#### Sintaxis básica
 ```go
 import "encoding/json"
 
@@ -2169,8 +3422,72 @@ json.NewEncoder(w).Encode(u)
 json.NewDecoder(r).Decode(&u)
 ```
 
+#### 🧪 Cómo probarlo
+```go
+func TestJSONMarshalUnmarshal(t *testing.T) {
+    type Item struct {
+        ID    int    `json:"id"`
+        Name  string `json:"name"`
+    }
+    original := Item{ID: 1, Name: "test"}
+    
+    data, err := json.Marshal(original)
+    if err != nil { t.Fatal(err) }
+    if !strings.Contains(string(data), `"id":1`) {
+        t.Error("JSON malformado")
+    }
+    
+    var decoded Item
+    err = json.Unmarshal(data, &decoded)
+    if err != nil { t.Fatal(err) }
+    if decoded != original {
+        t.Errorf("decoded %+v != original %+v", decoded, original)
+    }
+}
+
+func TestJSONOmitEmpty(t *testing.T) {
+    type User struct {
+        Name  string `json:"name"`
+        Email string `json:"email,omitempty"`
+    }
+    u := User{Name: "Ana"}
+    data, _ := json.Marshal(u)
+    if strings.Contains(string(data), "email") {
+        t.Error("omitempty debería omitir email vacío")
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `json.Marshal`/`Unmarshal` usa reflection — más lento que serialización manual
+- Los decoders/encoders con streaming son más eficientes en memoria
+- `json.RawMessage` permite decodificación perezosa (lazy)
+- La reutilización de buffers con `json.NewEncoder` reduce allocs
+
+#### ✅ Buenas prácticas
+- ✅ Usa struct tags `json:"campo"` para controlar la serialización
+- ✅ Usa `json:",omitempty"` para omitir campos cero/vacíos
+- ⚠️ No serialices campos con valores zero si no deben aparecer — usa `omitempty`
+- ❌ No uses `json.Marshal`/`Unmarshal` con `any` sin type assertion
+
+#### 🏗️ Metodología
+- **APIs REST**: `json.NewEncoder`/`json.NewDecoder` para streaming HTTP
+- **Archivos**: `json.Marshal`/`Unmarshal` para archivos completos
+- **Config**: `json.Decoder` con `os.Open` para leer config desde archivo
+- **NDJSON**: `json.NewDecoder` en bucle para múltiples objetos por archivo
+
+#### 🔗 Para saber más
+- [Go dev — encoding/json](https://go.dev/pkg/encoding/json/)
+- [Go dev — JSON blog](https://go.dev/blog/json)
+
 ### archive/zip y compress/gzip
 
+#### ¿Qué es?
+`archive/zip` lee y escribe archivos ZIP. `compress/gzip` comprime/descomprime en formato gzip. ZIP agrupa múltiples archivos, gzip comprime un solo flujo de datos. Son como mochilas (ZIP guarda varias cosas organizadas) vs bolsas de vacío (gzip comprime una cosa al máximo).
+
+🔗 [Go dev — archive/zip](https://go.dev/pkg/archive/zip/), [Go dev — compress/gzip](https://go.dev/pkg/compress/gzip/)
+
+#### Sintaxis básica
 ```go
 import "archive/zip"
 import "compress/gzip"
@@ -2191,7 +3508,60 @@ data, _ := io.ReadAll(gr)
 gr.Close()
 ```
 
-Fuente: [Go dev — os](https://go.dev/pkg/os/), [Go dev — io](https://go.dev/pkg/io/), [Go dev — bufio](https://go.dev/pkg/bufio/), [Go dev — embed](https://go.dev/embed/), [Go dev — csv](https://go.dev/pkg/encoding/csv/), [Go dev — zip](https://go.dev/pkg/archive/zip/)
+#### 🧪 Cómo probarlo
+```go
+func TestZipRoundtrip(t *testing.T) {
+    var buf bytes.Buffer
+    zw := zip.NewWriter(&buf)
+    f, _ := zw.Create("test.txt")
+    f.Write([]byte("contenido"))
+    zw.Close()
+    
+    zr, err := zip.NewReader(bytes.NewReader(buf.Bytes()), int64(buf.Len()))
+    if err != nil { t.Fatal(err) }
+    if len(zr.File) != 1 { t.Errorf("esperado 1 archivo, got %d", len(zr.File)) }
+    
+    rc, _ := zr.File[0].Open()
+    data, _ := io.ReadAll(rc)
+    rc.Close()
+    if string(data) != "contenido" { t.Error("contenido del zip incorrecto") }
+}
+
+func TestGzipRoundtrip(t *testing.T) {
+    var buf bytes.Buffer
+    gw := gzip.NewWriter(&buf)
+    gw.Write([]byte("hola mundo"))
+    gw.Close()
+    
+    gr, _ := gzip.NewReader(&buf)
+    data, _ := io.ReadAll(gr)
+    gr.Close()
+    if string(data) != "hola mundo" { t.Error("contenido gzip incorrecto") }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- ZIP usa compresión DEFLATE por defecto — ratio ~3:1 en texto
+- GZIP es más rápido que ZIP para un solo archivo (menos overhead de cabeceras)
+- `compress/gzip` tiene niveles 1-9 (velocidad vs compresión)
+- `archive/zip` lista el índice al abrir — O(n) para archivos con muchos archivos
+
+#### ✅ Buenas prácticas
+- ✅ Usa ZIP para empaquetar múltiples archivos con estructura
+- ✅ Usa GZIP para comprimir streams individuales (logs, respuestas HTTP)
+- ⚠️ Siempre cierra el writer para finalizar el archivo ZIP/GZIP
+- ❌ No comprimas archivos ya comprimidos (JPEG, MP4) — no ganas espacio
+
+#### 🏗️ Metodología
+- **Backups**: ZIP para agrupar múltiples archivos
+- **Logs**: GZIP para comprimir archivos de log rotados
+- **HTTP**: `gzip.NewWriter` como middleware de compresión
+- **Distribución**: ZIP para distribuir múltiples archivos empaquetados
+
+#### 🔗 Para saber más
+- [Go dev — archive/zip](https://go.dev/pkg/archive/zip/)
+- [Go dev — compress/gzip](https://go.dev/pkg/compress/gzip/)
+- [Go dev — compress/flate](https://go.dev/pkg/compress/flate/)
 
 ---
 
@@ -2199,6 +3569,12 @@ Fuente: [Go dev — os](https://go.dev/pkg/os/), [Go dev — io](https://go.dev/
 
 ### sort — ordenación y búsqueda
 
+#### ¿Qué es?
+El paquete `sort` implementa ordenación primitiva para tipos built-in y genérica con `sort.Slice`. También incluye búsqueda binaria con `sort.Search`. Es como tener un asistente de ordenación: dile cómo comparar elementos y él los organiza.
+
+🔗 [Go dev — sort](https://go.dev/pkg/sort/)
+
+#### Sintaxis básica
 ```go
 import "sort"
 
@@ -2217,8 +3593,67 @@ idx := sort.Search(len(nums), func(i int) bool {
 }) // devuelve el primer índice donde nums[i] >= 4
 ```
 
+#### 🧪 Cómo probarlo
+```go
+func TestSort(t *testing.T) {
+    nums := []int{3, 1, 4, 1, 5}
+    sort.Ints(nums)
+    if !sort.IntsAreSorted(nums) {
+        t.Errorf("esperado ordenado, got %v", nums)
+    }
+    if nums[0] != 1 || nums[4] != 5 {
+        t.Errorf("orden incorrecto: %v", nums)
+    }
+}
+
+func TestSortSlice(t *testing.T) {
+    items := []struct { Name string; Age int }{
+        {"Ana", 30}, {"Luis", 25}, {"Carlos", 35},
+    }
+    sort.Slice(items, func(i, j int) bool {
+        return items[i].Age < items[j].Age
+    })
+    if items[0].Name != "Luis" {
+        t.Errorf("el más joven debería ser Luis, got %s", items[0].Name)
+    }
+}
+
+func TestSearch(t *testing.T) {
+    nums := []int{1, 3, 5, 7, 9}
+    idx := sort.Search(len(nums), func(i int) bool { return nums[i] >= 5 })
+    if idx != 2 { t.Errorf("esperado índice 2, got %d", idx) }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `sort.Ints` usa QuickSort (variante) — O(n log n) promedio, O(n²) peor caso
+- `sort.Slice` es O(n log n) pero más lento que `sort.Ints` (usa reflection)
+- `sort.Search` es O(log n) — búsqueda binaria clásica
+- El ordenamiento es in-place — O(1) memoria extra
+
+#### ✅ Buenas prácticas
+- ✅ Usa `sort.Ints`/`sort.Strings` para tipos nativos (más rápido que Slice)
+- ✅ Usa `sort.Slice` para structs con comparadores personalizados
+- ⚠️ No llames a `sort.Search` en un slice desordenado — resultados indefinidos
+- ❌ No implementes `sort.Interface` manualmente si `sort.Slice` te sirve
+
+#### 🏗️ Metodología
+- **Tipos nativos**: `sort.Ints`/`sort.Strings`/`sort.Float64s`
+- **Structs**: `sort.Slice` con función de comparación
+- **Múltiples criterios**: `sort.SliceStable` para ordenación estable
+- **Búsqueda**: `sort.Search` después de ordenar
+
+#### 🔗 Para saber más
+- [Go dev — sort](https://go.dev/pkg/sort/)
+
 ### slices — utilidades genéricas (Go 1.21+)
 
+#### ¿Qué es?
+El paquete `slices` proporciona funciones genéricas para manipular slices: ordenación, búsqueda, inserción, eliminación, comparación. Es la evolución moderna de `sort` para slices, disponible desde Go 1.21.
+
+🔗 [Go dev — slices](https://go.dev/pkg/slices/)
+
+#### Sintaxis básica
 ```go
 import "slices"
 
@@ -2235,8 +3670,71 @@ slices.Index(nums, 4)                      // primer índice
 slices.Equal(nums, []int{1, 2, 3})         // igualdad
 ```
 
+#### 🧪 Cómo probarlo
+```go
+func TestSlicesSort(t *testing.T) {
+    nums := []int{3, 1, 4}
+    slices.Sort(nums)
+    if !slices.IsSorted(nums) { t.Error("no ordenado") }
+}
+
+func TestSlicesBinarySearch(t *testing.T) {
+    nums := []int{1, 3, 5, 7}
+    idx, found := slices.BinarySearch(nums, 5)
+    if !found || idx != 2 {
+        t.Errorf("esperado encontrado en 2, got %d, %v", idx, found)
+    }
+    _, found = slices.BinarySearch(nums, 4)
+    if found { t.Error("4 no debería estar en el slice") }
+}
+
+func TestSlicesDelete(t *testing.T) {
+    s := []int{1, 2, 3, 4, 5}
+    s = slices.Delete(s, 1, 3)
+    if !slices.Equal(s, []int{1, 4, 5}) {
+        t.Errorf("esperado [1,4,5], got %v", s)
+    }
+}
+
+func TestSlicesCompact(t *testing.T) {
+    s := []int{1, 1, 2, 2, 3}
+    s = slices.Compact(s)
+    if !slices.Equal(s, []int{1, 2, 3}) {
+        t.Errorf("esperado [1,2,3], got %v", s)
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `slices.Sort` es un algoritmo híbrido (pdqsort) — O(n log n) promedio
+- `slices.BinarySearch` es O(log n)
+- `slices.Delete`/`slices.Insert` son O(n) — mueven elementos
+- `slices.Compact` es O(n) — elimina duplicados adyacentes en una pasada
+- `slices.Equal` es O(n) pero sale rápido en la primera diferencia
+
+#### ✅ Buenas prácticas
+- ✅ Prefiere `slices` sobre `sort` para código moderno (Go 1.21+)
+- ✅ Usa `slices.Contains` en lugar de búsqueda manual con `for`
+- ⚠️ `slices.Compact` solo elimina duplicados adyacentes — ordena primero
+- ❌ No uses `slices.Equal` con slices de tipos no comparables
+
+#### 🏗️ Metodología
+- **Ordenar**: `slices.Sort` / `slices.SortFunc` (con comparador personalizado)
+- **Buscar**: `slices.BinarySearch` (datos ordenados) / `slices.Index` (lineal)
+- **Modificar**: `slices.Delete`, `slices.Insert`, `slices.Replace`
+- **Comparar**: `slices.Equal` / `slices.Compare`
+
+#### 🔗 Para saber más
+- [Go dev — slices](https://go.dev/pkg/slices/)
+
 ### maps — utilidades genéricas (Go 1.21+)
 
+#### ¿Qué es?
+El paquete `maps` proporciona funciones genéricas para manipular maps: clonar, copiar, obtener claves/valores, eliminar por condición. Es el complemento moderno para trabajar con maps de forma funcional.
+
+🔗 [Go dev — maps](https://go.dev/pkg/maps/)
+
+#### Sintaxis básica
 ```go
 import "maps"
 
@@ -2250,8 +3748,68 @@ maps.DeleteFunc(m1, func(k string, v int) bool {
 })
 ```
 
-### container/heap (min-heap)
+#### 🧪 Cómo probarlo
+```go
+func TestMapsClone(t *testing.T) {
+    original := map[string]int{"a": 1, "b": 2}
+    clone := maps.Clone(original)
+    if !maps.Equal(original, clone) {
+        t.Error("clone debería ser igual al original")
+    }
+    clone["c"] = 3
+    if _, ok := original["c"]; ok {
+        t.Error("modificar clone no debería afectar al original")
+    }
+}
 
+func TestMapsKeysValues(t *testing.T) {
+    m := map[string]int{"a": 1, "b": 2}
+    keys := maps.Keys(m)
+    vals := maps.Values(m)
+    if len(keys) != 2 || len(vals) != 2 {
+        t.Error("debería tener 2 keys y 2 values")
+    }
+}
+
+func TestMapsDeleteFunc(t *testing.T) {
+    m := map[string]int{"a": 1, "b": 2, "c": 3}
+    maps.DeleteFunc(m, func(k string, v int) bool { return v > 1 })
+    if len(m) != 1 || m["a"] != 1 {
+        t.Errorf("esperado solo 'a', got %v", m)
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `maps.Clone` es O(n) — copia superficial, los valores no se clonan
+- `maps.Copy` es O(n) — sobrescribe claves existentes
+- `maps.Keys`/`maps.Values` son O(n) — crean un nuevo slice
+- `maps.DeleteFunc` es O(n) — itera todo el map
+- `maps.Equal` es O(n) — compara clave a clave
+
+#### ✅ Buenas prácticas
+- ✅ Usa `maps.Clone` en lugar de crear un map nuevo y copiar manualmente
+- ✅ Usa `maps.DeleteFunc` para limpieza condicional en lugar de `for...delete`
+- ⚠️ `maps.Keys` no garantiza orden — ordena el resultado si es necesario
+- ❌ No uses `maps.Copy` esperando merge profundo — solo es shallow
+
+#### 🏗️ Metodología
+- **Clonar**: `maps.Clone` para evitar mutación accidental
+- **Fusionar**: `maps.Copy` para combinar maps
+- **Limpiar**: `maps.DeleteFunc` para eliminar elementos por condición
+- **Serializar**: `maps.Keys`/`maps.Values` para extraer datos
+
+#### 🔗 Para saber más
+- [Go dev — maps](https://go.dev/pkg/maps/)
+
+### container/heap — cola de prioridad
+
+#### ¿Qué es?
+`container/heap` implementa una cola de prioridad (min-heap) genérica. Cualquier tipo que implemente `heap.Interface` puede usarse como heap. Es como una fila VIP: el elemento con mayor prioridad sale primero, siempre.
+
+🔗 [Go dev — heap](https://go.dev/pkg/container/heap/)
+
+#### Sintaxis básica
 ```go
 import "container/heap"
 
@@ -2281,8 +3839,65 @@ func main() {
 }
 ```
 
-### container/list (lista enlazada doble)
+#### 🧪 Cómo probarlo
+```go
+func TestMinHeap(t *testing.T) {
+    h := &MinHeap{5, 3, 7, 1}
+    heap.Init(h)
+    
+    expected := []int{1, 3, 5, 7}
+    for _, exp := range expected {
+        if val := heap.Pop(h).(int); val != exp {
+            t.Errorf("esperado %d, got %d", exp, val)
+        }
+    }
+}
 
+func TestHeapSort(t *testing.T) {
+    h := &MinHeap{}
+    for _, v := range []int{9, 3, 7, 1, 5} {
+        heap.Push(h, v)
+    }
+    var sorted []int
+    for h.Len() > 0 {
+        sorted = append(sorted, heap.Pop(h).(int))
+    }
+    if !slices.IsSorted(sorted) {
+        t.Errorf("heap debería producir elementos ordenados, got %v", sorted)
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `heap.Init` es O(n) — heapify linear
+- `heap.Push`/`heap.Pop` son O(log n)
+- `heap.Fix` es O(log n) — útil cuando cambia la prioridad de un elemento
+- `heap.Remove` es O(log n) — eliminar elemento arbitrario por índice
+
+#### ✅ Buenas prácticas
+- ✅ Implementa `heap.Interface` para cualquier tipo que necesite prioridad
+- ✅ Usa `heap.Init` en lugar de `Push` repetido (O(n) vs O(n log n))
+- ⚠️ No accedas al slice subyacente directamente — usa las funciones del heap
+- ❌ No confundas Push/Pop del heap con los métodos del slice
+
+#### 🏗️ Metodología
+- **Cola de prioridad**: tareas urgentes primero, eventos temporizados
+- **Top-K**: mantener los K elementos más grandes/pequeños
+- **Merge de streams**: combinar múltiples fuentes ordenadas
+- **Algoritmos**: Dijkstra, Huffman, A* necesitan colas de prioridad
+
+#### 🔗 Para saber más
+- [Go dev — container/heap](https://go.dev/pkg/container/heap/)
+- [Go dev — heap example](https://go.dev/pkg/container/heap/#example__intHeap)
+
+### container/list — lista enlazada doble
+
+#### ¿Qué es?
+`container/list` implementa una lista enlazada doble. Cada elemento tiene punteros al siguiente y anterior. Es útil para inserciones/eliminaciones frecuentes en posiciones arbitrarias, pero en Go los slices suelen ser más eficientes.
+
+🔗 [Go dev — list](https://go.dev/pkg/container/list/)
+
+#### Sintaxis básica
 ```go
 import "container/list"
 
@@ -2297,8 +3912,67 @@ for e := l.Front(); e != nil; e = e.Next() {
 }
 ```
 
-### container/ring (lista circular)
+#### 🧪 Cómo probarlo
+```go
+func TestList(t *testing.T) {
+    l := list.New()
+    l.PushBack(1)
+    l.PushFront(0)
+    l.PushBack(2)
+    
+    if l.Len() != 3 { t.Errorf("esperado 3, got %d", l.Len()) }
+    
+    var vals []int
+    for e := l.Front(); e != nil; e = e.Next() {
+        vals = append(vals, e.Value.(int))
+    }
+    if !slices.Equal(vals, []int{0, 1, 2}) {
+        t.Errorf("esperado [0,1,2], got %v", vals)
+    }
+}
 
+func TestListRemove(t *testing.T) {
+    l := list.New()
+    e1 := l.PushBack(1)
+    l.PushBack(2)
+    e3 := l.PushBack(3)
+    l.Remove(e1)
+    l.Remove(e3)
+    
+    if l.Len() != 1 { t.Errorf("esperado 1, got %d", l.Len()) }
+    if l.Front().Value.(int) != 2 {
+        t.Errorf("esperado 2, got %d", l.Front().Value.(int))
+    }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- Cada elemento tiene overhead de 2 punteros (anterior, siguiente) + interfaz `any`
+- Acceso: O(n) — no hay acceso por índice
+- Inserción/eliminación con referencia al elemento: O(1)
+- `list.List` no es genérico — los valores son `any` (type assertion necesaria)
+
+#### ✅ Buenas prácticas
+- ✅ Úsalo para implementar colas FIFO o LRU cache simples
+- ⚠️ En la mayoría de casos, un slice es más eficiente que una lista enlazada
+- ❌ No lo uses para acceso frecuente por índice — el slice es O(1)
+
+#### 🏗️ Metodología
+- **LRU cache**: lista enlazada + map para acceso O(1) al elemento
+- **Cola FIFO**: `PushBack` + `Remove(Front())` — pero `container/list` añade overhead
+- **Alternativa**: casi siempre prefiere slice o `ring` (menos overhead)
+
+#### 🔗 Para saber más
+- [Go dev — container/list](https://go.dev/pkg/container/list/)
+
+### container/ring — lista circular
+
+#### ¿Qué es?
+`container/ring` implementa una lista circular enlazada. El último elemento apunta al primero. Es útil para buffers circulares, turnos rotativos, ventanas deslizantes.
+
+🔗 [Go dev — ring](https://go.dev/pkg/container/ring/)
+
+#### Sintaxis básica
 ```go
 import "container/ring"
 
@@ -2313,6 +3987,50 @@ r.Do(func(v any) {
 })
 ```
 
+#### 🧪 Cómo probarlo
+```go
+func TestRing(t *testing.T) {
+    r := ring.New(3)
+    for i := 1; i <= 3; i++ {
+        r.Value = i
+        r = r.Next()
+    }
+    
+    sum := 0
+    r.Do(func(v any) { sum += v.(int) })
+    if sum != 6 { t.Errorf("esperado 6, got %d", sum) }
+}
+
+func TestRingCircular(t *testing.T) {
+    r := ring.New(5)
+    // Avanzar más que la longitud — debe volver al inicio
+    for i := 0; i < 12; i++ {
+        r = r.Next()
+    }
+    if r.Len() != 5 { t.Error("Len no debería cambiar") }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- `ring.New(n)` pre-asigna n elementos — O(n) memoria fija
+- `r.Do(f)` es O(n) — recorre todos los elementos
+- `r.Next()`/`r.Prev()` son O(1) — solo mueve punteros
+- `r.Link()`/`r.Unlink()` son O(1) — concatenación/división de anillos
+
+#### ✅ Buenas prácticas
+- ✅ Úsalo para buffers circulares de tamaño fijo
+- ⚠️ No lo uses si necesitas acceso por índice — prefiere slice
+- ❌ No modifiques el ring mientras iteras con `Do` — resultados impredecibles
+
+#### 🏗️ Metodología
+- **Buffer circular**: almacenar últimas N lecturas de un sensor
+- **Round-robin**: turnos entre N workers
+- **Ventana deslizante**: mantener los últimos N elementos para promediar
+- **Pool de recursos**: rotación entre conexiones/cachés
+
+#### 🔗 Para saber más
+- [Go dev — container/ring](https://go.dev/pkg/container/ring/)
+
 ### Big O de operaciones comunes en Go
 
 | Estructura | Acceso | Inserción | Eliminación | Búsqueda | Notas |
@@ -2322,14 +4040,24 @@ r.Do(func(v any) {
 | Slice (búsqueda) | — | — | — | O(n) | lineal; con sort+Search O(log n) |
 | Map | O(1) promedio | O(1) promedio | O(1) promedio | O(1) promedio | tabla hash, colisiones posibles |
 | Lista enlazada | O(n) | O(1) | O(1) (con elem) | O(n) | container/list |
+| Heap (Push/Pop) | — | O(log n) | O(log n) | — | container/heap |
+| Ring | O(n) | O(1) | O(1) | O(n) | container/ring |
 
-Fuente: [Go dev — sort](https://go.dev/pkg/sort/), [Go dev — slices](https://go.dev/pkg/slices/), [Go dev — maps](https://go.dev/pkg/maps/), [Go dev — container](https://go.dev/pkg/container/), [Go dev — blog slices](https://go.dev/blog/slices)
+#### 🔗 Para saber más
+- [Go dev — sort](https://go.dev/pkg/sort/)
+- [Go dev — slices](https://go.dev/pkg/slices/)
+- [Go dev — maps](https://go.dev/pkg/maps/)
+- [Go dev — container](https://go.dev/pkg/container/)
+- [Big O Cheat Sheet](https://www.bigocheatsheet.com/)
 
 ---
 
 ## POO en Go (no hay clases)
 
-Go no tiene clases ni herencia. En su lugar usa **tipos** (structs), **métodos** (receiver functions), **interfaces** y **composición** (embedding).
+### Comparativa OOP → Go
+
+#### ¿Qué es?
+Go no tiene clases ni herencia. En su lugar usa **tipos** (structs), **métodos** (receiver functions), **interfaces** y **composición** (embedding). Es como tener un juego de Lego en vez de figuras pre-moldeadas: tienes las piezas básicas y construyes lo que necesitas.
 
 | Concepto OOP | En Go |
 |---|---|
@@ -2348,6 +4076,10 @@ Go no tiene clases ni herencia. En su lugar usa **tipos** (structs), **métodos*
 
 ### Ejemplo completo: sistema de medios
 
+#### ¿Qué es?
+Un sistema de reproducción de medios que demuestra los conceptos OO de Go: interfaces (implícitas), embedding (composición), constructores, encapsulación y polimorfismo.
+
+#### Sintaxis básica
 ```go
 package media
 
@@ -2547,12 +4279,63 @@ func main() {
 | Métodos | Receiver `(a *Audio)` |
 | Interfaz vacía | No se usa — se prefieren interfaces específicas |
 
+#### 🧪 Cómo probarlo
+```go
+func TestSistemaMedios(t *testing.T) {
+    cancion := NewAudio(
+        Metadata{Titulo: "Test", DuracionSegs: 100}, 320,
+    )
+    if cancion.Info() == "" { t.Error("Info() no debería estar vacía") }
+
+    pelicula := NewVideo(
+        Metadata{Titulo: "Film", DuracionSegs: 5000}, "1080p", MP4,
+    )
+    if pelicula.Info() == "" { t.Error("Info() no debería estar vacía") }
+
+    // Polimorfismo
+    var c Contenido = cancion
+    if _, ok := c.(*Audio); !ok { t.Error("debería ser *Audio") }
+
+    // Playlist
+    lista := NewPlaylist("Test")
+    lista.Agregar(cancion)
+    lista.Agregar(pelicula)
+    if len(lista.ReproducirTodo()) != 2 { t.Error("debería tener 2 items") }
+}
+```
+
+#### 💡 Memoria y rendimiento
+- Embedding no añade overhead en memoria — es solo promoción de campos
+- Interfaces son 16 bytes (itable + puntero) — costo fijo
+- Constructores devuelven punteros para evitar copias
+- `*contenidoBase` embebido como puntero permite compartir estado
+
+#### ✅ Buenas prácticas
+- ✅ Usa interfaces para definir contratos de comportamiento
+- ✅ Usa embedding para reutilizar implementación
+- ✅ Constructores devuelven `*T` no `T` para consistency
+- ⚠️ No abuses de embedding profundo (>2 niveles)
+- ⚠️ El embedding no es herencia — no esperes polimorfismo de subtipos
+
+#### 🏗️ Metodología
+- **Modelado OO en Go**: interfaces → struct base embebido → structs concretos
+- **Polimorfismo**: las interfaces permiten tratar Audio y Video como Contenido
+- **Composición**: Playlist contiene Contenido — "tiene un" vs "es un"
+
+#### 🔗 Para saber más
+- [Go dev — Effective Go: Interfaces](https://go.dev/doc/effective_go#interfaces)
+- [Go dev — Embedding](https://go.dev/ref/spec#Struct_types)
+
 ---
 
 ## Patrones de diseño con ejemplos
 
 ### Strategy (interfaces)
 
+#### ¿Qué es?
+El patrón Strategy permite cambiar el algoritmo de un objeto en tiempo de ejecución. En Go se implementa con interfaces: cada estrategia es un tipo que implementa la interfaz.
+
+#### Sintaxis básica
 ```go
 type EstrategiaOrdenacion interface {
     Ordenar([]int) []int
@@ -2604,8 +4387,10 @@ fmt.Println(a.Analizar([]int{3, 1, 4, 1, 5, 9})) // [9, 5, 4, 3, 1, 1]
 
 ### Builder (functional options)
 
-El patrón Builder en Go se implementa idiomáticamente con **functional options**:
+#### ¿Qué es?
+El patrón Builder en Go se implementa idiomáticamente con **functional options**: cada opción es una función que modifica el struct. Es el estándar en librerías como gRPC, HTTP, etc.
 
+#### Sintaxis básica
 ```go
 type Servidor struct {
     host    string
@@ -2658,6 +4443,10 @@ Es el patrón estándar en librerías como gRPC, HTTP, etc.
 
 ### Observer (canales)
 
+#### ¿Qué es?
+El patrón Observer permite notificar a múltiples suscriptores cuando ocurre un evento. En Go se implementa con canales: los observers reciben notificaciones a través de un canal.
+
+#### Sintaxis básica
 ```go
 type Observable struct {
     observers []chan<- any
@@ -2713,6 +4502,10 @@ sensor.Notificar("lectura sensor: 23.5°C")
 
 ### Factory (constructores)
 
+#### ¿Qué es?
+El patrón Factory crea objetos sin exponer la lógica de creación al cliente. En Go se implementa con funciones constructoras que devuelven interfaces.
+
+#### Sintaxis básica
 ```go
 type Parser interface {
     Parse(data []byte) (any, error)
@@ -2770,6 +4563,10 @@ func init() {
 
 ### Singleton (sync.Once)
 
+#### ¿Qué es?
+El patrón Singleton asegura que una estructura se inicialice una sola vez. En Go se implementa con `sync.Once`.
+
+#### Sintaxis básica
 ```go
 type Config struct {
     DBUrl  string
@@ -2794,6 +4591,10 @@ func GetConfig() *Config {
 
 ### Worker pool (goroutines + canales)
 
+#### ¿Qué es?
+El patrón Worker Pool mantiene un grupo fijo de goroutines que procesan trabajos desde una cola. Controla la concurrencia máxima y reutiliza goroutines.
+
+#### Sintaxis básica
 ```go
 type Pool struct {
     jobs    chan func()
@@ -2831,6 +4632,10 @@ func (p *Pool) Shutdown() {
 
 ### Middleware (http.Handler)
 
+#### ¿Qué es?
+El patrón Middleware envuelve un `http.Handler` con funcionalidad adicional (logging, auth, rate limiting). En Go se implementa como una función que recibe y devuelve un `http.Handler`.
+
+#### Sintaxis básica
 ```go
 type Middleware func(http.Handler) http.Handler
 
@@ -2879,8 +4684,12 @@ handler := Chain(
 
 Go tiene dos formas de polimorfismo: **interfaces estructurales** (duck typing en compilación) y **genéricos** (Go 1.18+).
 
-### 1. Polimorfismo por interfaces (el estándar de Go)
+### 1. Polimorfismo por interfaces
 
+#### ¿Qué es?
+Cualquier tipo que implemente los métodos de una interfaz la satisface automáticamente. El dispatch es dinámico (vtable en runtime).
+
+#### Sintaxis básica
 ```go
 type Animal interface {
     Sonido() string
@@ -2925,6 +4734,10 @@ func Describir(a any) string {
 
 ### 2. Polimorfismo con genéricos (Go 1.18+)
 
+#### ¿Qué es?
+Los genéricos permiten escribir código polimórfico en compilación (monomorfización) — el compilador genera código especializado por tipo.
+
+#### Sintaxis básica
 ```go
 type Sumable interface {
     ~int | ~float64 | ~string
@@ -2964,6 +4777,10 @@ Go no tiene una stdlib multimedia potente como Python (Pillow) o Node (Sharp). S
 
 ### image — decodificar y codificar imágenes
 
+#### ¿Qué es?
+El paquete `image` de la stdlib permite decodificar y codificar imágenes en formatos comunes (PNG, JPEG, GIF) mediante un sistema de drivers registrados.
+
+#### Sintaxis básica
 ```go
 import "image"
 import _ "image/png"  // registro del decoder PNG
@@ -2981,6 +4798,7 @@ fmt.Printf("Dimensiones: %dx%d", bounds.Dx(), bounds.Dy())
 
 ### image/color — colores
 
+#### Sintaxis básica
 ```go
 import "image/color"
 
@@ -2990,6 +4808,10 @@ c := color.RGBA{R: 255, G: 0, B: 0, A: 255} // rojo opaco
 
 ### image/draw — dibujar sobre imágenes
 
+#### ¿Qué es?
+El paquete `image/draw` permite componer imágenes: dibujar una imagen sobre otra, rellenar regiones, aplicar máscaras.
+
+#### Sintaxis básica
 ```go
 import "image/draw"
 import "image/png"
@@ -3014,6 +4836,10 @@ out.Close()
 
 ### image/gif — crear GIFs animados
 
+#### ¿Qué es?
+El paquete `image/gif` permite codificar y decodificar GIFs, incluyendo animaciones con múltiples frames y delays.
+
+#### Sintaxis básica
 ```go
 import "image/gif"
 
@@ -3082,6 +4908,9 @@ Fuente: [Go dev — image](https://go.dev/pkg/image/), [Go dev — image/png](ht
 
 ### SQL
 
+#### ¿Qué es?
+Go tiene varias opciones para bases de datos SQL, desde la stdlib (`database/sql`) hasta ORMs completos (GORM) y drivers nativos (pgx).
+
 | Librería | Async | ORM | Para qué |
 |---|---|---|---|
 | **database/sql** (stdlib) | No | No | Driver estándar, funciona con PostgreSQL, MySQL, SQLite |
@@ -3091,6 +4920,7 @@ Fuente: [Go dev — image](https://go.dev/pkg/image/), [Go dev — image/png](ht
 | **bun** | Sí | ORM ligero | SQLite/PostgreSQL/MySQL. Query builder fluido |
 | **jet** | No | Query builder | Genera tipos desde la BD, type-safe queries |
 
+#### Sintaxis básica
 ```go
 // sqlx — el punto medio entre stdlib y ORM
 type Usuario struct {
@@ -3180,6 +5010,10 @@ db.Preload("Posts").Find(&usuarios)
 
 ### Migraciones
 
+#### ¿Qué es?
+Gestionan cambios evolutivos del esquema de BD. `golang-migrate/migrate` es el estándar de facto.
+
+#### Sintaxis básica
 ```go
 // golang-migrate/migrate — estándar de facto
 import "github.com/golang-migrate/migrate/v4"
@@ -3211,6 +5045,10 @@ Alternativas:
 
 ### NoSQL
 
+#### ¿Qué es?
+Go tiene drivers excelentes para bases de datos NoSQL: Redis y MongoDB son los más comunes.
+
+#### Sintaxis básica
 ```go
 // Redis — go-redis/redis
 import "github.com/redis/go-redis/v9"
@@ -3269,14 +5107,18 @@ Fuente: [pgx docs](https://github.com/jackc/pgx), [GORM docs](https://gorm.io/do
 
 ## WebSockets
 
+### gorilla/websocket
+
+#### ¿Qué es?
+WebSockets permiten comunicación bidireccional en tiempo real entre cliente y servidor. `gorilla/websocket` es la librería más usada, madura y bien documentada.
+
 | Librería | Para qué |
 |---|---|
 | **gorilla/websocket** | La más usada, madura y bien documentada |
 | **nhooyr.io/websocket** | Moderna, más simple, mejor soporte para context |
 | **Melody** | Framework sobre gorilla, sesiones, broadcast |
 
-### gorilla/websocket
-
+#### Sintaxis básica
 ```go
 import "github.com/gorilla/websocket"
 
@@ -3347,9 +5189,9 @@ func handleWebSocket(hub *Hub, w http.ResponseWriter, r *http.Request) {
 
 // En main()
 hub := &Hub{
-    clients:   make(map[*websocket.Conn]bool),
-    broadcast: make(chan []byte),
-    register:  make(chan *websocket.Conn),
+    clients:    make(map[*websocket.Conn]bool),
+    broadcast:  make(chan []byte),
+    register:   make(chan *websocket.Conn),
     unregister: make(chan *websocket.Conn),
 }
 go hub.Run()
@@ -3361,6 +5203,7 @@ http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 
 ### nhooyr.io/websocket (moderna)
 
+#### Sintaxis básica
 ```go
 import "nhooyr.io/websocket"
 
@@ -3394,6 +5237,9 @@ Go tiene un modelo de concurrencia único: **goroutines** (hilos ligeros del run
 
 ### Tabla de escenarios
 
+#### ¿Qué es?
+Cada problema de concurrencia tiene una solución idiomática en Go. Esta tabla mapea escenarios comunes a su implementación recomendada.
+
 | Escenario | Solución Go |
 |---|---|
 | Lanzar N tareas independientes | `go func()` + `sync.WaitGroup` |
@@ -3407,10 +5253,12 @@ Go tiene un modelo de concurrencia único: **goroutines** (hilos ligeros del run
 | Shared state protegido | `sync.Mutex` o `sync.RWMutex` |
 | Una sola inicialización | `sync.Once` |
 
-### Patrones de concurrencia
+### Pipeline (canales encadenados)
 
-**Pipeline (canales encadenados):**
+#### ¿Qué es?
+Cada etapa del pipeline es una goroutine que recibe de un canal y envía a otro. Los datos fluyen como en una cadena de montaje.
 
+#### Sintaxis básica
 ```go
 func gen(nums ...int) <-chan int {
     out := make(chan int)
@@ -3442,8 +5290,12 @@ func main() {
 }
 ```
 
-**Fan-out / Fan-in con error handling:**
+### Fan-out / Fan-in con error handling
 
+#### ¿Qué es?
+Distribuir trabajo entre múltiples workers (fan-out) y recolectar resultados (fan-in), con manejo de errores por job.
+
+#### Sintaxis básica
 ```go
 type Result struct {
     Value int
@@ -3496,8 +5348,12 @@ func main() {
 }
 ```
 
-**errgroup (cancelación al primer error):**
+### errgroup (cancelación al primer error)
 
+#### ¿Qué es?
+`errgroup` extiende `sync.WaitGroup` con propagación de errores y cancelación: si una goroutine falla, todas las demás se cancelan automáticamente.
+
+#### Sintaxis básica
 ```go
 import "golang.org/x/sync/errgroup"
 
@@ -3534,8 +5390,12 @@ if err := g.Wait(); err != nil {
 }
 ```
 
-**Ticker (rate limiting):**
+### Ticker (rate limiting)
 
+#### ¿Qué es?
+`time.Ticker` emite ticks a intervalos regulares, permitiendo limitar la tasa de operaciones.
+
+#### Sintaxis básica
 ```go
 limiter := time.NewTicker(200 * time.Millisecond)
 defer limiter.Stop()
@@ -3546,8 +5406,12 @@ for _, req := range requests {
 }
 ```
 
-**Worker pool con control de errores:**
+### Worker pool con control de errores
 
+#### ¿Qué es?
+Un pool de workers fijo que procesa jobs con cancelación temprana al primer error.
+
+#### Sintaxis básica
 ```go
 func ProcessJobs(ctx context.Context, jobs []Job, workers int) []Result {
     jobCh := make(chan Job, len(jobs))
@@ -3616,6 +5480,318 @@ func main() {
 ```
 
 Fuente: [Go dev — Concurrency](https://go.dev/doc/effective_go#concurrency), [Go Concurrency Patterns (Rob Pike)](https://go.dev/talks/2012/concurrency.slide), [errgroup docs](https://pkg.go.dev/golang.org/x/sync/errgroup)
+
+---
+
+## Testing y calidad
+
+### testing package y table-driven tests
+
+#### ¿Qué es?
+Go tiene el paquete `testing` en la stdlib. Los tests se escriben en archivos `*_test.go` con funciones `TestXxx(t *testing.T)`. Go promueve **table-driven tests** (TDT) como patrón estándar.
+
+🔗 [Go dev — testing package](https://pkg.go.dev/testing)
+
+#### Sintaxis básica
+```go
+// archivo: calculadora_test.go
+package main
+
+import "testing"
+
+func TestSuma(t *testing.T) {
+    result := suma(2, 3)
+    expected := 5
+    if result != expected {
+        t.Errorf("suma(2, 3) = %d; esperado %d", result, expected)
+    }
+}
+
+// Table-driven test
+func TestDivide(t *testing.T) {
+    tests := []struct {
+        name     string
+        a, b     float64
+        expected float64
+        wantErr  bool
+    }{
+        {"división exacta", 10, 2, 5, false},
+        {"división inexacta", 7, 2, 3.5, false},
+        {"división por cero", 10, 0, 0, true},
+    }
+
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            result, err := divide(tt.a, tt.b)
+            if (err != nil) != tt.wantErr {
+                t.Errorf("error = %v, wantErr = %v", err, tt.wantErr)
+            }
+            if result != tt.expected {
+                t.Errorf("result = %v, esperado %v", result, tt.expected)
+            }
+        })
+    }
+}
+```
+
+#### 🧪 Cómo probarlo
+```bash
+go test ./...                    # Todos los tests
+go test -v ./...                 # Verboso
+go test -run TestSuma ./...      # Filtra por nombre
+go test -bench . ./...           # Benchmarks
+go test -cover ./...             # Cobertura
+```
+
+#### 💡 Memoria y rendimiento
+- `go test` compila y ejecuta en el mismo proceso — rápido
+- `-bench` ejecuta benchmarks con `b.N` iteraciones automáticas
+- Subtests (`t.Run`) se ejecutan en paralelo si usas `t.Parallel()`
+
+#### ✅ Buenas prácticas
+- ✅ Usa table-driven tests para múltiples casos
+- ✅ Los nombres de archivos test deben terminar en `_test.go`
+- ⚠️ No uses `if` para errores de test — usa `t.Error`/`t.Fatal`
+- ❌ No dependas del orden de ejecución — cada test es independiente
+
+#### 🏗️ Metodología
+- **Unit tests**: un archivo `_test.go` por cada archivo `.go`
+- **Integration tests**: usa build tag `//go:build integration`
+- **Fuzzing**: `go test -fuzz` (Go 1.18+)
+- **Coverage**: `go test -coverprofile=coverage.out`
+
+#### 🔗 Para saber más
+- [Go dev — Testing](https://go.dev/doc/code#Testing)
+
+### Testify (assertions)
+
+#### ¿Qué es?
+**Testify** es la librería de assertions más popular para Go. Proporciona `assert` y `require` con mensajes descriptivos y `suite` para tests agrupados.
+
+🔗 [Testify GitHub](https://github.com/stretchr/testify)
+
+#### Sintaxis básica
+```go
+import "github.com/stretchr/testify/assert"
+
+func TestConTestify(t *testing.T) {
+    result := suma(2, 3)
+    assert.Equal(t, 5, result, "suma(2, 3) debe ser 5")
+    assert.NotNil(t, result)
+    assert.Greater(t, result, 0)
+}
+
+// require detiene el test si falla
+import "github.com/stretchr/testify/require"
+
+func TestConRequire(t *testing.T) {
+    result, err := divide(10, 0)
+    require.Error(t, err)  // Detiene aquí si no hay error
+    assert.Equal(t, 0.0, result)
+}
+```
+
+#### 🧪 Cómo probarlo
+```go
+func TestTestify(t *testing.T) {
+    assert.Equal(t, 4, suma(2, 2))
+    assert.NotEqual(t, 5, suma(2, 2))
+    assert.True(t, suma(2, 2) > 0)
+}
+```
+
+#### 💡 Memoria y rendimiento
+- Testify usa reflection para comparar — ligero overhead frente a `if` manual
+- `require` llama a `t.FailNow()` internamente — detiene el goroutine actual
+- Las suites (`testify/suite`) añaden estructura pero no overhead significativo
+
+#### ✅ Buenas prácticas
+- ✅ Usa `assert` para la mayoría de casos (no detiene el test)
+- ✅ Usa `require` cuando no tenga sentido continuar tras el fallo
+- ⚠️ No mezcles `t.Error` con testify — elige uno
+
+#### 🏗️ Metodología
+- **Assertions simples**: `assert.Equal`, `assert.NotNil`, `assert.Error`
+- **Colecciones**: `assert.ElementsMatch`, `assert.Subset`
+- **HTTP**: `assert.HTTPStatusCode`, `assert.HTTPBody`
+- **Suites**: `testify/suite` para agrupar tests con Setup/Teardown
+
+#### 🔗 Para saber más
+- [Testify — assert](https://pkg.go.dev/github.com/stretchr/testify/assert)
+
+### Cobertura y bench
+
+#### ¿Qué es?
+Go incluye herramientas para medir cobertura de código y rendimiento de benchmarks sin librerías externas.
+
+#### Sintaxis básica
+```bash
+# Cobertura con HTML
+go test -coverprofile=coverage.out ./...
+go tool cover -html=coverage.out
+
+# Benchmarks
+go test -bench=. -benchmem ./...
+```
+
+#### 💡 Memoria y rendimiento
+- `-cover` instrumenta el código añadiendo contadores — overhead ~5-10% en tiempo de test
+- `-benchmem` mide alocaciones por operación (allocations/op)
+- Los resultados de bench son estables con `-count=5` para promediar
+
+#### ✅ Buenas prácticas
+- ✅ Apunta a >80% de cobertura en código crítico
+- ✅ Benchmarks con `b.ResetTimer()` si hay setup costoso
+- ⚠️ La cobertura no mide calidad — solo qué código se ejecutó
+
+#### 🏗️ Metodología
+- **Cobertura**: `go test -coverprofile=coverage.out` → CI gate
+- **Benchmarks**: compara versiones con `benchstat` (golang.org/x/perf)
+- **Profiling**: `go test -cpuprofile=cpu.out -memprofile=mem.out`
+
+---
+
+## Conceptos avanzados
+
+### go:generate
+
+`go:generate` ejecuta comandos arbitrarios desde comentarios en el código. Se usa para generar código, protobuf, mocks, etc.
+
+```go
+//go:generate protoc --go_out=. ./api/proto/*.proto
+//go:generate stringer -type=Status
+//go:generate mockgen -source=repo.go -destination=mock_repo.go
+
+// Ejecutar:
+// go generate ./...
+```
+
+### Pprof (profiling)
+
+Go tiene profiling integrado con `pprof`. Ideal para diagnosticar CPU, memoria, goroutines y bloqueos.
+
+```go
+import _ "net/http/pprof"
+
+func main() {
+    go func() { log.Println(http.ListenAndServe("localhost:6060", nil)) }()
+    // Abrir: http://localhost:6060/debug/pprof/
+}
+
+// Línea de comandos:
+// go tool pprof http://localhost:6060/debug/pprof/heap
+// top, list, web
+```
+
+### Cgo
+
+`cgo` permite llamar a código C desde Go. Útil para usar librerías nativas, pero añade complejidad y penalización de rendimiento.
+
+```go
+/*
+#include <stdlib.h>
+*/
+import "C"
+import "unsafe"
+
+func main() {
+    cstr := C.CString("Hola desde C")
+    defer C.free(unsafe.Pointer(cstr))
+}
+```
+
+### WASM
+
+Go compila a WebAssembly. Ideal para aplicaciones web que necesitan lógica Go en el navegador.
+
+```bash
+GOOS=wasip1 GOARCH=wasm go build -o main.wasm main.go
+```
+
+### Govulncheck
+
+Detecta vulnerabilidades conocidas en dependencias Go.
+
+```bash
+go install golang.org/x/vuln/cmd/govulncheck@latest
+govulncheck ./...
+```
+
+---
+
+## Proyecto final integrador
+
+### CLI de gestión de tareas
+
+#### ¿Qué es?
+Una CLI que combina archivos (`os`, `encoding/json`), flags (`flag`), structs y tests. Integra todos los conceptos de la guía en un proyecto práctico.
+
+#### 🧪 Cómo probarlo
+```bash
+go mod init taskcli
+go test ./...
+```
+
+#### Sintaxis básica
+```go
+package main
+
+import (
+    "encoding/json"
+    "flag"
+    "fmt"
+    "os"
+    "time"
+)
+
+type Task struct {
+    ID        int       `json:"id"`
+    Title     string    `json:"title"`
+    Done      bool      `json:"done"`
+    CreatedAt time.Time `json:"created_at"`
+}
+
+type TaskManager struct {
+    tasks  []Task
+    nextID int
+    file   string
+}
+
+func NewTaskManager(file string) *TaskManager {
+    tm := &TaskManager{file: file, nextID: 1}
+    data, _ := os.ReadFile(file)
+    json.Unmarshal(data, &tm.tasks)
+    if len(tm.tasks) > 0 {
+        tm.nextID = tm.tasks[len(tm.tasks)-1].ID + 1
+    }
+    return tm
+}
+
+func (tm *TaskManager) Add(title string) Task {
+    t := Task{ID: tm.nextID, Title: title, CreatedAt: time.Now()}
+    tm.nextID++
+    tm.tasks = append(tm.tasks, t)
+    tm.save()
+    return t
+}
+
+func (tm *TaskManager) save() {
+    data, _ := json.MarshalIndent(tm.tasks, "", "  ")
+    os.WriteFile(tm.file, data, 0644)
+}
+
+func main() {
+    add := flag.String("add", "", "Título de la tarea")
+    flag.Parse()
+
+    tm := NewTaskManager("tasks.json")
+
+    if *add != "" {
+        task := tm.Add(*add)
+        fmt.Printf("✅ Tarea #%d creada: %s\n", task.ID, task.Title)
+    }
+}
+```
 
 ---
 
@@ -3719,246 +5895,6 @@ Cada nivel incluye lo que debes saber y un proyecto para fijar los conceptos. La
 **Proyecto:** *Sistema de notificaciones distribuidas* — microservicios con gRPC para comunicación interna. Kafka como event bus (servicio usuarios → servicio notificaciones → servicio email). OpenTelemetry para tracing. Arquitectura hexagonal: dominio (`Notificacion`, `Usuario`), puertos (interfaces), adaptadores (Kafka, gRPC, SMTP). Docker Compose con todos los servicios. Fuzzing en la validación de entrada.
 
 Fuente: [Go dev — doc](https://go.dev/doc/), [Gin docs](https://gin-gonic.com/docs/), [GORM docs](https://gorm.io/docs/), [gRPC Go docs](https://grpc.io/docs/languages/go/)
-
----
-
-## Proyectos prácticos detallados
-
-### Servidor Web con net/http (nivel 15)
-
-```go
-package main
-
-import (
-    "encoding/json"
-    "fmt"
-    "log"
-    "net/http"
-    "time"
-)
-
-type StatusResponse struct {
-    Status    string `json:"status"`
-    Timestamp string `json:"timestamp"`
-    Version   string `json:"version"`
-}
-
-func statusHandler(w http.ResponseWriter, r *http.Request) {
-    w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(StatusResponse{
-        Status:    "ok",
-        Timestamp: time.Now().Format(time.RFC3339),
-        Version:   "1.0.0",
-    })
-}
-
-func loggingMiddleware(next http.Handler) http.Handler {
-    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        start := time.Now()
-        next.ServeHTTP(w, r)
-        log.Printf("%s %s %s", r.Method, r.URL.Path, time.Since(start))
-    })
-}
-
-func main() {
-    mux := http.NewServeMux()
-    mux.HandleFunc("GET /api/status", statusHandler)
-
-    mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
-        fmt.Fprintf(w, "<h1>Bienvenido</h1><p><a href='/api/status'>Status</a></p>")
-    })
-
-    server := &http.Server{
-        Addr:         ":8080",
-        Handler:      loggingMiddleware(mux),
-        ReadTimeout:  10 * time.Second,
-        WriteTimeout: 10 * time.Second,
-    }
-
-    log.Println("Servidor iniciado en :8080")
-    log.Fatal(server.ListenAndServe())
-}
-```
-
-### Worker pool con errgroup (nivel 75)
-
-```go
-package main
-
-import (
-    "context"
-    "fmt"
-    "log"
-    "net/http"
-    "time"
-
-    "golang.org/x/sync/errgroup"
-)
-
-func fetchURL(ctx context.Context, url string) (string, error) {
-    req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
-    if err != nil {
-        return "", err
-    }
-
-    resp, err := http.DefaultClient.Do(req)
-    if err != nil {
-        return "", fmt.Errorf("fetch %s: %w", url, err)
-    }
-    defer resp.Body.Close()
-
-    return fmt.Sprintf("%s → %d", url, resp.StatusCode), nil
-}
-
-func main() {
-    ctx := context.Background()
-    g, ctx := errgroup.WithContext(ctx)
-
-    urls := []string{
-        "https://httpbin.org/delay/1",
-        "https://httpbin.org/delay/2",
-        "https://httpbin.org/delay/3",
-        "https://httpbin.org/status/404",
-    }
-
-    results := make(chan string, len(urls))
-
-    for _, url := range urls {
-        url := url
-        g.Go(func() error {
-            result, err := fetchURL(ctx, url)
-            if err != nil {
-                return err
-            }
-            select {
-            case results <- result:
-            case <-ctx.Done():
-                return ctx.Err()
-            }
-            return nil
-        })
-    }
-
-    // Cerrar results cuando todas las goroutines terminen
-    go func() {
-        g.Wait()
-        close(results)
-    }()
-
-    for result := range results {
-        fmt.Println(result)
-    }
-
-    if err := g.Wait(); err != nil {
-        log.Printf("Error en worker pool: %v", err)
-    } else {
-        fmt.Println("Todas las URLs procesadas exitosamente")
-    }
-}
-```
-
-### API CRUD con sqlx (nivel 60)
-
-```go
-package main
-
-import (
-    "encoding/json"
-    "log"
-    "net/http"
-    "strconv"
-    "time"
-
-    "github.com/go-chi/chi/v5"
-    "github.com/go-chi/chi/v5/middleware"
-    "github.com/jmoiron/sqlx"
-    _ "github.com/lib/pq"
-)
-
-type Usuario struct {
-    ID        int       `db:"id" json:"id"`
-    Nombre    string    `db:"nombre" json:"nombre"`
-    Email     string    `db:"email" json:"email"`
-    Activo    bool      `db:"activo" json:"activo"`
-    CreatedAt time.Time `db:"created_at" json:"created_at"`
-}
-
-type CrearUsuarioRequest struct {
-    Nombre string `json:"nombre"`
-    Email  string `json:"email"`
-}
-
-type Server struct {
-    db *sqlx.DB
-}
-
-func NewServer(db *sqlx.DB) *Server {
-    return &Server{db: db}
-}
-
-func (s *Server) ListarUsuarios(w http.ResponseWriter, r *http.Request) {
-    var usuarios []Usuario
-    if err := s.db.Select(&usuarios, "SELECT * FROM usuarios ORDER BY id"); err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
-        return
-    }
-    json.NewEncoder(w).Encode(usuarios)
-}
-
-func (s *Server) ObtenerUsuario(w http.ResponseWriter, r *http.Request) {
-    id, _ := strconv.Atoi(chi.URLParam(r, "id"))
-    var u Usuario
-    if err := s.db.Get(&u, "SELECT * FROM usuarios WHERE id = $1", id); err != nil {
-        http.Error(w, "Usuario no encontrado", http.StatusNotFound)
-        return
-    }
-    json.NewEncoder(w).Encode(u)
-}
-
-func (s *Server) CrearUsuario(w http.ResponseWriter, r *http.Request) {
-    var req CrearUsuarioRequest
-    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-        http.Error(w, "JSON inválido", http.StatusBadRequest)
-        return
-    }
-
-    var u Usuario
-    err := s.db.Get(&u,
-        "INSERT INTO usuarios (nombre, email) VALUES ($1, $2) RETURNING *",
-        req.Nombre, req.Email,
-    )
-    if err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
-        return
-    }
-
-    w.WriteHeader(http.StatusCreated)
-    json.NewEncoder(w).Encode(u)
-}
-
-func main() {
-    db, err := sqlx.Connect("postgres", "postgres://user:pass@localhost/db?sslmode=disable")
-    if err != nil {
-        log.Fatal(err)
-    }
-
-    s := NewServer(db)
-    r := chi.NewRouter()
-
-    r.Use(middleware.Logger)
-    r.Use(middleware.Recoverer)
-    r.Use(middleware.Timeout(10 * time.Second))
-
-    r.Route("/api/usuarios", func(r chi.Router) {
-        r.Get("/", s.ListarUsuarios)
-        r.Post("/", s.CrearUsuario)
-        r.Get("/{id}", s.ObtenerUsuario)
-    })
-
-    log.Println("API iniciada en :8080")
-    http.ListenAndServe(":8080", r)
-}
-```
 
 ---
 

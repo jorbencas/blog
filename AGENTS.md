@@ -1,5 +1,8 @@
 # Blog — Agent Guide
 
+## Language
+All communication, comments, documentation, and agents must be written in English.
+
 ## Engineering Principles
 
 - **Clean & Readable**: Write code for humans first, computers second. Deep believer in KISS and SOLID.
@@ -28,7 +31,7 @@ The rule applies to **ALL** files regardless of type: generated, cached, snapsho
 
 **Step 2 — EXPLAIN alternatives**: Mention if there is a better approach (e.g. adding to `.gitignore` instead of deleting, or keeping the folder structure and only deleting contents).
 
-**Step 3 — WAIT**: You MUST stop and wait for the user to explicitly say "yes" or "adelante" or equivalent. The user's silence is NOT consent. Do not proceed unless the user gives a clear affirmative answer.
+**Step 3 — WAIT**: You MUST stop and wait for the user to explicitly say "yes" or equivalent. The user's silence is NOT consent. Do not proceed unless the user gives a clear affirmative answer.
 
 **Step 4 — EXECUTE**: Only after receiving explicit confirmation, run the command.
 
@@ -144,9 +147,9 @@ Schemas in `src/content.config.ts` using `astro/loaders` (glob) + `astro/zod`.
 
 ### Layout
 - Post pages: 12-column grid, `lg:col-span-8` main + `lg:col-span-4` sidebar (TOC).
-- TOC: `TableOfContents` component renderiza ambas versiones (mobile + desktop). Colocar en `lg:col-span-4` con `lg:sticky lg:top-24 lg:pl-8 h-fit`.
-- Article prose: `max-w-4xl` (no `max-w-none`) para líneas de lectura cómodas.
-- Breadcrumbs: colocar dentro del `<main>`, antes del `<header>`, en la misma columna.
+- TOC: `TableOfContents` component renders both versions (mobile + desktop). Place in `lg:col-span-4` with `lg:sticky lg:top-24 lg:pl-8 h-fit`.
+- Article prose: `max-w-4xl` (not `max-w-none`) for comfortable reading lines.
+- Breadcrumbs: place inside `<main>`, before `<header>`, in the same column.
 - Max widths: `max-w-screen-xl` for post layout, `max-w-3xl` for description text.
 
 ## MDX Syntax — Critical Rules
@@ -155,68 +158,60 @@ MDX parses `<` and `{` as JSX/expression boundaries even in prose. **Never leave
 
 | Pattern | Problem | Fix |
 |---|---|---|
-| `<Fragment>` en heading | JSX tag en heading | Renombrar heading sin `<>` |
-| `<1ms` en prosa | JSX tag inválido (`1` no es nombre válido) | `` `<1ms` `` o `&lt;1ms` |
-| `Span<T>` en link text | `<T>` interpretado como JSX | `Span&lt;T&gt;` |
-| `{variable}` fuera de code block | Interpretado como expresión JS | Escapar con `{'{variable}'}` |
+| `<Fragment>` in heading | JSX tag in heading | Rename heading without `<>` |
+| `<1ms` in prose | Invalid JSX tag (`1` is not a valid name) | `` `<1ms` `` or `&lt;1ms` |
+| `Span<T>` in link text | `<T>` interpreted as JSX | `Span&lt;T&gt;` |
+| `{variable}` outside code block | Interpreted as JS expression | Escape with `{'{variable}'}` |
 
-**Regla de oro**: si ves `<` seguido de letra/número fuera de un bloque de código, escápalo. Siempre correr `npm run build` después de tocar MDX.
+**Golden rule**: if you see `<` followed by a letter/number outside a code block, escape it. The build will catch these errors before commit anyway.
 
 ## Component Patterns (from UI audit)
 
 ### Card descriptions
-- **NUNCA** usar comillas alrededor de `{description}`
-- **NUNCA** usar `italic` ni `opacity-80` en descripciones
-- Clase estándar: `text-sm sm:text-base text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed font-medium`
+- **NEVER** use quotes around `{description}`
+- **NEVER** use `italic` or `opacity-80` in descriptions
+- Standard class: `text-sm sm:text-base text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed font-medium`
 
-### Tabla de contenidos (TOC)
-- Mobile: `<details>` colapsable con gradient badge `from-sky-800 to-cyan-500`, `lg:hidden`
-- Desktop: sidebar sticky `hidden lg:block` con `IntersectionObserver` para highlight activo
-- Ambos usan la misma clase `.toc-link` para que el observer resalte ambas listas
-- El `<details>` debe tener `summary::-webkit-details-marker { display: none }` y `summary { list-style: none }`
+### Table of Contents (TOC)
+- Mobile: `<details>` collapsible with gradient badge `from-sky-800 to-cyan-500`, `lg:hidden`
+- Desktop: sticky sidebar `hidden lg:block` with `IntersectionObserver` for active highlight
+- Both use the same `.toc-link` class so the observer highlights both lists
+- `<details>` must have `summary::-webkit-details-marker { display: none }` and `summary { list-style: none }`
 
 ### Breadcrumbs
-- Colocar antes del `<header>` del post, dentro del `main` (no fuera del grid)
-- Formato: `Inicio / Sección / Título` con `text-xs font-black uppercase tracking-[0.2em]`
-- Separador: `/` en `text-slate-400 mx-2`
-- Título truncado con `truncate max-w-[200px]` si es muy largo
+- Place before the post `<header>`, inside `<main>` (not outside the grid)
+- Format: `Home / Section / Title` with `text-xs font-black uppercase tracking-[0.2em]`
+- Separator: `/` in `text-slate-400 mx-2`
+- Title truncated with `truncate max-w-[200px]` if too long
 
 ### Header / Nav
-- Buscador dentro del menú hamburguesa en mobile (`<slot />` en Navbar)
-- Buscador visible en barra solo en desktop (`hidden lg:block`)
-- ToggleButton siempre visible
-- El `slot` en Navbar debe ir dentro de `#menu-items`, después de los nav links
+- Search inside hamburger menu on mobile (`<slot />` in Navbar)
+- Search visible in header bar only on desktop (`hidden lg:block`)
+- ToggleButton always visible
+- The `slot` in Navbar must go inside `#menu-items`, after nav links
 
 ### Scroll to top
-- Sin `lg:hidden` — visible en desktop también tras 400px scroll
+- No `lg:hidden` — visible on desktop too after 400px scroll
 - `opacity-0 translate-y-4 pointer-events-none` → `opacity-100 translate-y-0 pointer-events-auto`
-
-### Archive / Listados
-- Mostrar solo últimos 2 años por defecto
-- Link "Ver archivo completo (N años)" si hay más
-- Usar `<details>` nativos para colapsar años
-- Contador `Total_Entradas: {allPosts.length}` al final
 
 ## Mobile-first Responsive Patterns
 
-| Componente | Mobile | Desktop |
+| Component | Mobile | Desktop |
 |---|---|---|
-| TOC | `<details>` colapsable encima del article | Sidebar sticky `lg:col-span-4` |
-| Buscador | Dentro del menú hamburguesa | Barra header, al lado del toggle |
-| Navbar | Overlay fullscreen con `fixed inset-0` | Horizontal, sin overlay |
-| ScrollToTop | Visible tras 400px | Visible tras 400px |
-| Archive | Plegado por defecto (2 años) | Plegado por defecto (2 años) |
+| TOC | `<details>` collapsible above article | Sticky sidebar `lg:col-span-4` |
+| Search | Inside hamburger menu | Header bar, next to toggle |
+| Navbar | Fullscreen overlay `fixed inset-0` | Horizontal, no overlay |
+| ScrollToTop | Visible after 400px | Visible after 400px |
+| Archive | Collapsed by default (2 years) | Collapsed by default (2 years) |
 
 ## Build Verification
 
-1. **Siempre** correr `npm run build` **antes de commitear**. Solo commitear si el build pasa.
-2. Errores comunes de build:
-   - `<` no escapado en MDX → buscar `<[A-Za-z0-9]` en prosa
-   - `{ }` no escapados en MDX → buscar `{[a-zA-Z]` fuera de code blocks
-   - Etiquetas JSX cerradas incorrectamente en headings (`<Fragment>`, `<Base>`)
-3. Errores preexistentes conocidos (no tocar a menos que sea necesario):
-   - `guia-0-100-csharp.mdx`: XML tags en code blocks son seguros
-   - `guia-0-100-astro.mdx`: `<Base>`, `<Markdown>` en code blocks son seguros
+1. **Always** run `npm run build` **before committing**. Only commit if the build passes.
+2. Common build errors:
+   - `<` not escaped in MDX → search for `<[A-Za-z0-9]` in prose
+   - `{ }` not escaped in MDX → search for `{[a-zA-Z]` outside code blocks
+   - Incorrectly closed JSX tags in headings (`<Fragment>`, `<Base>`)
+3. Any MDX file may contain `<` or `{` inside code blocks (fenced with ```). These are safe and should NOT be escaped — only unescaped `<`/`{` in prose need fixing.
 
 ## Git Conventions
 - Commits in Spanish (castellano).
