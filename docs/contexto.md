@@ -1,6 +1,6 @@
 # Contexto del proyecto — Blog
 
-**Última actualización**: 2026-06-30 (TOC scroll tracking fix + overflow-y-auto)
+**Última actualización**: 2026-07-01 (refactor SOLID JS + externalización config en blog post Tech Pulse)
 **Stack**: Astro 6.4 + Svelte 5 + Tailwind CSS 4.3 | Vercel static | Node >= 18
 **Idioma**: Español
 **Deploy**: `blog-jorbencas.vercel.app`
@@ -65,6 +65,13 @@
 - Eliminado plugin `remark-clean-headings` innecesario de `astro.config.mjs`
 - Eliminado TOC inline manual de `src/content/posts/n8n.mdx`
 - Añadido `max-h-[calc(100vh-8rem)] overflow-y-auto` al contenedor sticky del TOC para scroll interno cuando hay muchos headings
+- Build verificado sin errores
+
+### 6. Actualización blog post Tech Pulse Dashboard ✅
+- **src/content/myprojects/tech-pulse-dashboard.mdx**: añadidas secciones "Refactor SOLID del Frontend JavaScript" (store observable, fábrica genérica de chips, helpers puros, filtros unificados) y "Externalización de Configuración" (prompts IA, plantillas, config JS, constantes de dict keys movidos a `constants_downloadfile.py`)
+- Eliminadas todas las referencias a "Becas" (badges ahora Tech/RSS, categorías de 7 a 6)
+- Añadida sección de "Referencia Tech" en el feature set
+- Dashboard renderizado actualizado con store observable y config externalizada
 - Build verificado sin errores
 
 ### 4. Refactor cards: PreviewPost + ToolCard + ChallengeCard + ProjectCard → Card.astro ✅
