@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "Tech Pulse: Dashboard Automatizado de Noticias Tech con IA"
-description: "Scraper inteligente que recolecta 139 fuentes tech (web, YouTube, RSS), genera resúmenes con Gemini IA, filtra por categorías/badge/canal/fecha, ranking GitHub Stars, y despliega dashboard + Telegram cada 30 min + newsletter diaria."
+description: "Scraper inteligente que recolecta 139 fuentes tech (web, YouTube, RSS), genera resúmenes con Gemini IA, filtra por categoría/badge/canal/fecha, ranking GitHub Stars, sección de referencia tech, y despliega dashboard + Telegram cada 30 min + newsletter diaria. Código 100% SOLID con store observable JS y todas las configuraciones externalizadas."
 pubDate: "2026/06/25"
 tags: ['python', 'ia', 'web-scraping', 'devops', 'automation', 'github-actions', 'rss']
 image: "img/tech_pulse_dashboard/tech_pulse_dashboard_cover-1200.webp"
@@ -78,18 +78,38 @@ def normalizar_url(url: str) -> str:
     return url.replace("http://", "https://").lower()
 ```
 
+### Refactor SOLID del Frontend JavaScript
+
+El dashboard client-side se reescribió siguiendo principios SOLID:
+
+- **Store Observable:** Un `store` con `get()`/`set()`/`on()` elimina 10+ variables globales y el monolítico `onTipoFuenteChange()` que manejaba todos los eventos juntos.
+- **Fábrica genérica de chips:** `renderChips()` + `renderCanalChips()` reemplazan 8 funciones de renderizado duplicadas.
+- **Helpers puros:** `limpiarFuente()`, `tipoFuente()`, `itemEnSemana()`, `faviconSrc()` — cero efectos secundarios, fáciles de testear.
+- **Filtros unificados:** `aplicarFiltrosNoticias()` / `aplicarFiltrosVideos()` operan sobre el DOM reaccionando a cambios del store mediante suscripciones.
+- **Sin memory leaks:** `on()` devuelve una función `unsubscribe` que elimina el handler del array de listeners.
+
+### Externalización de Configuración
+
+Todo el JSON embebido, prompts de IA, plantillas HTML y valores por defecto se movieron a `constants_downloadfile.py`:
+- **Prompts de IA:** `PROMPT_RESUMIR_LOTE`, `PROMPT_RESUMIR_NOTICIA`, `PROMPT_RECAP_SEMANAL`, `PROMPT_TRADUCIR_TITULOS` como templates `.format()`.
+- **Config JS:** canales YouTube, tabs multimedia, opciones de filtro, URL del dashboard — se inyectan vía `data.json`.
+- **Plantillas:** Telegram (`TELEGRAM_MENSAJE_TEMPLATE`), email (`EMAIL_ROW_TEMPLATE`), fallbacks.
+- **Constantes de dict keys:** Todos los strings de acceso a diccionarios (`"enlace"`, `"fuente"`, `"titulo"`, `"yt"`, etc.) son constantes con nombre. Si en el futuro cambia un key del schema, se edita una sola línea.
+
 ### 20 Fuentes RSS
 
 Se añadieron fuentes RSS como alternativa ligera a scraping HTML: OpenAI Blog, Anthropic Blog, Google DeepMind, Meta AI Blog, Mistral AI News, Hacker News, Stack Overflow Blog, LangChain Blog, Google AI Blog, MIT Tech Review AI, Google Search Central, Moz Blog SEO, Search Engine Journal, Wired AI, The Verge AI, TechCrunch AI, Ars Technica AI, Dev.to, GitHub Engineering. El parser soporta RSS 2.0 y Atom, con detección automática de namespace.
 
 ### Renderizado Client-Side del Dashboard
 
-Python genera un `index.html` shell (~2KB) + `data.json` con el historial completo. JavaScript (`script.js`) construye dinámicamente:
+Python genera un `index.html` shell (~2KB) + `data.json` con el historial completo + config inyectada. JavaScript (`script.js`) construye dinámicamente usando el patrón de store observable:
 
-- **Filtros combinables:** categoría (IA, Programación, DevOps, etc.), tipo (Tech/Beca/RSS), fuente RSS específica, canal, semana
+- **Filtros combinables:** categoría (IA, Programación, DevOps, etc.), tipo (Tech/RSS), fuente RSS específica, canal, semana
 - **Chips con favicon:** cada chip de canal/fuente muestra avatar o favicon via Google S2 (`//www.google.com/s2/favicons?domain=...`)
 - **Ranking GitHub Stars:** top 20 repos ordenados por estrellas extraídos de GitHub Topics/Collections, con filtro por nombre/lenguaje
-- **Badges con clases CSS unificadas:** `.badge-tech`, `.badge-beca`, `.badge-rss`, `.badge-cat`
+- **Sección de Referencia Tech:** panel colapsable con Skills, LLMs, Lenguajes, Frameworks y Librerías ordenados por categoría — datos inyectados desde Python, sin hardcode en JS
+- **Badges con clases CSS unificadas:** `.badge-tech`, `.badge-rss`, `.badge-cat`
+- **Config externalizada:** canales, tabs, opciones de filtro se leen de `store.get("config")`, poblado desde `data.json` — cero arrays hardcodeados en JS
 
 ### Telegram con Audio por Noticia
 
@@ -112,8 +132,11 @@ Python genera un `index.html` shell (~2KB) + `data.json` con el historial comple
 ## 4. Desglose del Feature Set
 
 - **139 fuentes monitorizadas:** YouTube, blogs tech, RSS, Twitter, GitHub, Product Hunt
-- **Clasificación inteligente:** 7 categorías (IA, Programación, DevOps, Ciberseguridad, Hardware, Negocios, Becas) + badges Tech/Beca/RSS
-- **Dashboard interactivo:** filtros combinables por categoría + tipo + fuente RSS + canal + semana, ranking GitHub Stars
+- **Clasificación inteligente:** 6 categorías (IA, Programación, DevOps, Ciberseguridad, Hardware, Negocios) + badges Tech/RSS
+- **Dashboard interactivo SOLID:** store observable, helpers puros, fábrica genérica de chips, filtros unificados, cero memory leaks
+- **Config externalizada:** prompts IA, plantillas Telegram/email, canales YouTube, opciones de filtro — todo en `constants_downloadfile.py`
+- **Constantes con nombre:** todos los dict keys del schema son constantes (cambio en un solo sitio)
+- **Sección de Referencia Tech:** panel colapsable con Skills, LLMs, Lenguajes, Frameworks y Librerías
 - **Newsletter diaria:** resúmenes individuales por noticia con Gemini, estadísticas rápidas
 - **Telegram cada 30 min:** notificaciones con resumen IA + audio TTS, dedup entre envíos
 - **Ranking GitHub Stars:** top 20 repos ordenados por estrellas desde GitHub Topics/Collections
