@@ -23,6 +23,9 @@
 | 2025-06 | **Refactor cards**: PreviewPost, ToolCard, ChallengeCard, ProjectCard unificados en un solo `Card.astro` paramétrico por acento |
 | 2025-06 | **TOC scroll tracking fix**: querySelector reemplazado por getAttribute("href") para IDs con U+FE0F; observer reinicializado en cada navigation; primer heading activo por defecto; rootMargin ajustado |
 | 2025-06 | **TOC overflow-y-auto**: max-h + scroll interno cuando la lista de enlaces excede el viewport |
+| 2025-07 | **resources.mdx fix + merge free-for.dev**: restaurado .bak, fix `{name_escaped}`, merge curado (+348 recursos free-for.dev). Build timeout >6 min con >700 tarjetas — se opta por mantener ~500 tarjetas/.bak |
+| 2025-07 | **Auto-paginación resources**: `test_githubActions/manage_resources.py` creado. Cuando resources.mdx >500 cards, crea resources2.mdx automáticamente. Workflow diario `daily_resources.yml` |
+| 2025-07 | **Dashboard unificado**: filtros RSS unificados, divs separados noticias/multimedia, YouTube fix, fecha dinámica |
 
 ## Mejoras implementadas
 
@@ -116,5 +119,7 @@ Orden de secciones: Mis_Proyectos → Mini_Herramientas → Retos → Últimos_P
 - **Guías**: 15 archivos `src/content/posts/guia-0-100-*.mdx`
 - **Scripts**: `fix_images.py`, `image_cache.json`, `rewrite_challenges.py`, `solutions_db.py`, `constants_retos.py`, `hunt_challenges.py`
 - **CI/CD**: `fixing_img.yml`, `spelling.yml`, `issues_handel.yml`
+- **Resources**: `resources.mdx` (~500 cards), auto-paginación via `test_githubActions/manage_resources.py` — cuando excede 500, se crea `resources2.mdx` (workflow diario `daily_resources.yml` en test_githubActions)
+- **Scripts**: `actualizar_recursos.py`, `merge_freefordev.py`, `generate_resources.py`, `manage_resources.py` (en test_githubActions)
 - **Skills**: `.opencode/skills/expand-guia-formato/SKILL.md`
 - **Tests**: `tests/specs/search.spec.mjs`, `visual-regression.spec.mjs`, `navigation.spec.mjs`, `listing-pages.spec.mjs`, `detail-pages.spec.mjs`, `interactive.spec.mjs`, `responsive.spec.mjs`, `contrast.spec.mjs`, `visual-regression-full.spec.mjs`
