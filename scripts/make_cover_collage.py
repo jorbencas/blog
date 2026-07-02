@@ -99,10 +99,13 @@ class PlaywrightProvider(SourceProvider):
         out2 = str(tmp_dir / "collage_2.png")
         out3 = str(tmp_dir / "collage_3.png")
 
-        subprocess.run(
-            ["node", str(self.HELPER), self.url, out1, out2, out3],
-            check=True, timeout=60, cwd=ROOT,
-        )
+        try:
+            subprocess.run(
+                ["node", str(self.HELPER), self.url, out1, out2, out3],
+                check=True, timeout=60, cwd=ROOT,
+            )
+        except Exception as e:
+            raise RuntimeError(f"Error al capturar {self.url}: {e}")
 
         images = [Image.open(p).convert("RGB") for p in [out1, out2, out3]]
         return images

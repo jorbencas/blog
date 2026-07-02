@@ -7,36 +7,43 @@ if (!url || !out1) {
   process.exit(1);
 }
 
-const browser = await chromium.launch({ headless: true });
-const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
-await page.goto(url, { waitUntil: "networkidle", timeout: 30000 });
-await page.waitForTimeout(1500);
+let browser;
+try {
+  browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  await page.goto(url, { waitUntil: "networkidle", timeout: 30000 });
+  await page.waitForTimeout(1500);
 
-async function snap(path) {
-  if (!path) return null;
-  await page.screenshot({ path, fullPage: false });
-  console.error(`  → ${path}`);
-}
+  async function snap(path) {
+    if (!path) return null;
+    await page.screenshot({ path, fullPage: false });
+    console.error(`  → ${path}`);
+  }
 
-// Screenshot 1: top (general overview)
-await page.evaluate("window.scrollTo(0, 0)");
-await page.waitForTimeout(500);
-await snap(out1);
-
-// Screenshot 2: scroll to 33%
-const scrollH = await page.evaluate("document.body.scrollHeight");
-const aboveFold = await page.evaluate("window.innerHeight");
-if (out2) {
-  await page.evaluate(`window.scrollTo(0, ${Math.min(scrollH * 0.33, scrollH - aboveFold - 100)})`);
+  // Screenshot 1: top (general overview)
+  await page.evaluate("window.scrollTo(0, 0)");
   await page.waitForTimeout(500);
-  await snap(out2);
-}
+  await snap(out1);
 
-// Screenshot 3: scroll to 66%
-if (out3) {
-  await page.evaluate(`window.scrollTo(0, ${Math.min(scrollH * 0.66, scrollH - aboveFold - 100)})`);
-  await page.waitForTimeout(500);
-  await snap(out3);
-}
+  // Screenshot 2: scroll to 33%
+  const scrollH = await page.evaluate("document.body.scrollHeight");
+  const aboveFold = await page.evaluate("window.innerHeight");
+  if (out2) {
+    await page.evaluate(`window.scrollTo(0, ${Math.min(scrollH * 0.33, scrollH - aboveFold - 100)})`);
+    await page.waitForTimeout(500);
+    await snap(out2);
+  }
 
-await browser.close();
+  // Screenshot 3: scroll to 66%
+  if (out3) {
+    await page.evaluate(`window.scrollTo(0, ${Math.min(scrollH * 0.66, scrollH - aboveFold - 100)})`);
+    await page.waitForTimeout(500);
+    await snap(out3);
+  }
+
+  await browser.close();
+} catch (err) {
+  console.error(`  ✗ Error capturando ${url}: ${err.message}`);
+  if (browser) await browser.close();
+  process.exit(1);
+}
