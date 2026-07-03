@@ -5,7 +5,6 @@
 [![Svelte](https://img.shields.io/badge/svelte-5-FF3E00?logo=svelte)](https://svelte.dev)
 [![Tailwind CSS](https://img.shields.io/badge/tailwind-4.3-06B6D4?logo=tailwindcss)](https://tailwindcss.com)
 [![Playwright](https://img.shields.io/badge/test-playwright-45ba4b?logo=playwright)](https://playwright.dev)
-[![Python](https://img.shields.io/badge/python-3.11-3776AB?logo=python)](https://python.org)
 [![Pagefind](https://img.shields.io/badge/search-pagefind-8A2BE2)](https://pagefind.app)
 
 Blog personal de tecnología y desarrollo, construido con Astro 6, Svelte 5 y Tailwind CSS 4. Incluye artículos técnicos, retos de programación, proyectos personales, herramientas interactivas y un resumen semanal de noticias.
@@ -52,7 +51,6 @@ Blog personal de tecnología y desarrollo, construido con Astro 6, Svelte 5 y Ta
 | Fuentes            | Tipografía variable en `public/fonts/` |
 | Iconos             | astro-icon + SVGs en `public/icons/` |
 | E2E testing        | Playwright |
-| Image pipeline     | Python 3.11 (Pillow, aiohttp, google-genai) |
 
 ---
 
@@ -122,29 +120,8 @@ blog/
 │   ├── styles/
 │   │   └── global.css          # Config Tailwind v4
 │   └── utils.js                # Funciones auxiliares
-├── scripts/
-│   ├── actualizar_recursos.py
-│   ├── constants_retos.py
-│   ├── fix_images.py           # Pipeline de imágenes
-│   ├── generate_resources.py
-│   ├── hunt_challenges.py      # Generación IA de retos
-│   ├── make_cover_collage.py   # Collages de portada
-│   ├── restore_screenshots.py
-│   ├── rewrite_challenges.py
-│   ├── screenshot_helper.mjs
-│   ├── solutions_data.py
-│   ├── solutions_db.py
-│   └── utils_retos.py
 ├── tests/
-│   ├── helpers/
-│   │   ├── server.mjs
-│   │   └── start-server.mjs
-│   ├── python/
-│   │   ├── test_constants_retos.py
-│   │   ├── test_fix_images.py
-│   │   ├── test_generate_resources.py
-│   │   └── test_solutions_db.py
-│   └── specs/
+│   └── specs/                  # Tests E2E Playwright
 │       ├── code-enhancer.spec.mjs
 │       ├── console-errors.spec.mjs
 │       ├── content.spec.mjs
@@ -159,17 +136,14 @@ blog/
 │       ├── visual-regression-full.spec.mjs
 │       └── visual-regression.spec.mjs
 ├── .github/workflows/
-│   ├── fixing_img.yml          # Pipeline de imágenes en CI
-│   ├── hunt_challenges.yml     # Generación semanal de retos
 │   ├── issues_handel.yml       # Gestor de feedback
 │   ├── spelling.yml            # Corrector ortográfico
-│   └── test.yml                # Tests automáticos
+│   ├── test.yml                # Tests E2E
+│   └── trigger-optimize.yml    # Dispatch optimización imágenes
 ├── astro.config.mjs
 ├── pagefind.yml                # Config Pagefind
 ├── playwright.config.js        # Config Playwright
 ├── svelte.config.ts
-├── pyproject.toml              # Config Python + pytest
-├── requirements.txt            # Dependencias Python
 ├── tsconfig.json
 ├── .vercelignore
 ├── AGENTS.md                   # Guía para agentes IA
@@ -193,44 +167,9 @@ blog/
 
 ---
 
-## Pipeline de imágenes
-
-`scripts/fix_images.py` procesa automáticamente las imágenes del contenido:
-
-1. Busca imágenes en Unsplash usando el título del post como query
-2. Genera banners con Gemini (fondo oscuro + código + etiquetas)
-3. Convierte a WebP/AVIF con compresión adaptativa basada en SSIM
-4. Genera placeholders blur (LQIP) en base64
-5. Sustituye las marcas `![]()` por `<ResponsiveImage>` en el MDX
-6. Cachea resultados en `image_cache.json` (podado automáticamente a 200 entradas máx.)
-
-Otros scripts complementarios:
-
-| Script | Propósito |
-| ------ | --------- |
-| `make_cover_collage.py` | Genera collages de portada para posts |
-| `hunt_challenges.py` | Genera nuevos retos de programación vía IA (Gemini) |
-| `rewrite_challenges.py` | Reestructura retos con formato multi‑lenguaje |
-| `generate_resources.py` | Genera páginas de recursos |
-| `actualizar_recursos.py` | Actualiza recursos existentes |
-| `restore_screenshots.py` | Restaura capturas de pantalla |
-| `screenshot_helper.mjs` | Helper para capturas |
-
-### Requisitos
-
-```bash
-pip install -r requirements.txt
-export UNSPLASH_ACCESS_KEY="tu_clave"
-export GEMINI_API_KEY="tu_clave"
-```
-
----
-
 ## Tests
 
-### E2E (Playwright)
-
-14 suites que cubren navegación, páginas de listado, detalle, componentes interactivos, responsive, contraste, búsqueda y regresión visual.
+14 suites E2E (Playwright) que cubren navegación, páginas de listado, detalle, componentes interactivos, responsive, contraste, búsqueda y regresión visual.
 
 ```bash
 npm test                    # Todos los tests
@@ -239,26 +178,15 @@ npm run test:update         # Actualizar snapshots
 npm run test:ui             # Modo UI
 ```
 
-### Python (pytest)
-
-Tests unitarios para los scripts de pipeline y utilidades.
-
-```bash
-pytest tests/python/
-```
-
 ---
 
 ## CI/CD
 
-El repositorio incluye 5 GitHub Actions:
-
 | Workflow | Disparador | Propósito |
 | -------- | ---------- | --------- |
-| **fixing_img** | Push a `main` con cambios en contenido | Pipeline de imágenes + collage de portada |
-| **hunt_challenges** | Semanal (domingo) | Genera nuevos retos de programación con Gemini |
+| **trigger-optimize** | Push a `main` (imágenes o contenido) | Dispatch a test_githubActions para optimización |
 | **spelling** | PR contra `content` | LanguageTool en español |
-| **test** | Push a `main` | Ejecuta `pytest` en `tests/python/` |
+| **test** | Push a `main` | Tests E2E Playwright |
 | **issues_handel** | Issues | Gestiona el formulario de feedback |
 
 ---
