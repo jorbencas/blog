@@ -5,7 +5,7 @@ import Layout from "@layouts/Layout.astro";
 import NextPrevLinks from "@components/NextPrevLinks.astro";
 import TableOfContents from "@components/TableOfContents.astro";
 import Breadcrumbs from "@components/Breadcrumbs.astro";
-import  CodeEnhancer from "@components/CodeEnhancer.astro";
+import CodeEnhancer from "@components/CodeEnhancer.astro";
 import ReadingProgress from "@components/ReadingProgress.astro";
 import ResponsiveImage from "@components/ResponsiveImage.astro";
 import { getCollection } from "astro:content";
@@ -29,6 +29,7 @@ interface Props {
   remarkPluginFrontmatter?: Record<string, any>;
   audioSrc?: string;
   rawContent?: string;
+  section?: string;
 }
 
 const {
@@ -43,6 +44,7 @@ const {
   remarkPluginFrontmatter,
   audioSrc,
   rawContent = "",
+  section = "posts",
 } = Astro.props;
 
 const postUrl = Astro.url.href;
@@ -91,7 +93,7 @@ const tagsArray = Array.isArray(tags)
     class="max-w-screen-xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 py-10 px-4 lg:px-0 font-sans"
   >
     <main class="lg:col-span-8">
-      <Breadcrumbs title={title} />
+      <Breadcrumbs title={title} section={section} />
       <header class="mb-6 md:mb-12">
         <div
           class="relative w-full h-[120px] sm:h-[300px] md:h-[400px] overflow-hidden bg-slate-100 dark:bg-slate-900 mb-6 md:mb-10"
@@ -163,7 +165,9 @@ const tagsArray = Array.isArray(tags)
             rawContent={rawContent}
             title={title}
             description={description}
-            pubDate={pubDate instanceof Date ? pubDate.toISOString() : String(pubDate)}
+            pubDate={pubDate instanceof Date
+              ? pubDate.toISOString()
+              : String(pubDate)}
             author={author}
             url={postUrl}
             tags={Array.isArray(tags) ? tags : []}
@@ -225,5 +229,3 @@ const tagsArray = Array.isArray(tags)
 
   <CodeEnhancer />
 </Layout>
-
-
