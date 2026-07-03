@@ -11,10 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Disparar optimize en test_githubActions
+        env:
+          GH_TOKEN: ${{ secrets.DISPATCH_PAT }} 
         run: |
-          curl -f -X POST \
-            -H "Authorization: Bearer ${{ secrets.DISPATCH_PAT }}" \
-            -H "Accept: application/vnd.github+json" \
-            -H "Content-Type: application/json" \
-            https://api.github.com/repos/jorbencas/test_githubActions/dispatches \
-            -d '{"event_type":"optimize-images"}'
+          gh api repos/jorbencas/test_githubActions/dispatches \
+            -f event_type='optimize-images'
