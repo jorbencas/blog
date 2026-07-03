@@ -1,8 +1,9 @@
 ---
 draft: false
 title: "Tech Pulse: Dashboard Automatizado de Noticias Tech con IA"
-description: "Scraper inteligente que recolecta 139 fuentes tech (web, YouTube, RSS), genera resúmenes con Gemini IA, filtra por categoría/badge/canal/fecha, ranking GitHub Stars, sección de referencia tech, y despliega dashboard + Telegram cada 30 min + newsletter diaria. Código 100% SOLID con store observable JS y todas las configuraciones externalizadas."
+description: "Scraper inteligente que recolecta 139 fuentes tech (web, YouTube, RSS), genera resúmenes con Gemini IA, filtra por categoría/badge/canal/fecha, ranking GitHub Stars, sección de referencia tech, y despliega dashboard + Telegram cada 30 min + newsletter diaria. Código 100% SOLID con store observable JS, configuraciones externalizadas y estructura modular reorganizada."
 pubDate: "2026/06/25"
+updatedDate: "2026/07/03"
 tags: ['python', 'ia', 'web-scraping', 'devops', 'automation', 'github-actions', 'rss']
 image: "img/tech_pulse_dashboard/tech_pulse_dashboard_cover-1200.webp"
 repository: "https://github.com/jorbencas/test_githubActions"
@@ -51,20 +52,51 @@ Se necesitaba un sistema que:
 
 ### Pipeline de Contenido
 
-Cada script es independiente y orquestable por separado:
+Cada script es independiente y orquestable por separado. La estructura se reorganizó en subdirectorios modulares:
 
-1. `scrape_news.py` → `files/noticias_historico.json` (web + YouTube + RSS)
-2. `scrape_tools.py` → `files/herramientas.json` (GitHub Trending + Product Hunt)
-3. `scrape_trends.py` → `files/trends.json` (Google Trends + TikTok via Playwright)
-4. `generate_weekly.py` → `auto-news/` (recap MD) + `public/` (dashboard + data.json)
-5. `send_email.py` → Mailgun (diario 09:00 UTC)
-6. `send_telegram.py` → Telegram con TTS (cada 30 min)
+```
+scripts/
+├── scrapers/           # Scraping de noticias, redes sociales, tools, trends
+│   ├── scraper_base.py       # Extractores compartidos (YouTube, Web, ScraperPro)
+│   ├── scrape_news.py        # Noticias (RSS + web + YouTube)
+│   ├── scrape_social.py      # Redes sociales (Playwright)
+│   ├── scrape_tools.py       # GitHub Trending + Product Hunt
+│   └── scrape_trends.py      # Google Trends + TikTok
+├── publishers/         # Generación y distribución de contenido
+│   ├── generate_weekly.py    # Recap semanal + dashboard HTML
+│   ├── manage_resources.py   # Paginación y limpieza de resources.mdx
+│   ├── merge_freefordev.py   # Merge de free-for-dev resources
+│   ├── send_email.py         # Newsletter Mailgun
+│   └── send_telegram.py      # Notificaciones Telegram con TTS
+├── tools/              # Utilidades de mantenimiento
+│   ├── fix_images.py         # Pipeline de imágenes (Unsplash + Gemini + WebP/AVIF)
+│   ├── hunt_challenges.py    # Generación IA de retos de programación
+│   ├── make_cover_collage.py # Collages de portada
+│   ├── optimize.py           # Optimización de imágenes (dashboard)
+│   └── clean_news.py         # Verificación de enlaces
+├── utils/              # Módulos compartidos
+│   ├── common.py             # Utilidades (JSON, URLs, dedup, IA)
+│   ├── constants_downloadfile.py  # Fuentes, templates, configuración
+│   └── cache.py              # Caché pluggable (FileCache + CacheManager)
+└── solutions/          # Base de datos de soluciones de retos
+    ├── solutions_db.py       # Lookup + generación de soluciones
+    └── solutions_data.py     # 105+ soluciones curadas en 12 lenguajes
+```
+
+Todos los scripts se ejecutan con `python -m` desde la raíz del proyecto:
+
+1. `python -m scripts.scrapers.scrape_news --tier full` → `files/noticias_historico.json` (web + YouTube + RSS)
+2. `python -m scripts.scrapers.scrape_tools` → `files/herramientas.json` (GitHub Trending + Product Hunt)
+3. `python -m scripts.scrapers.scrape_trends` → `files/trends.json` (Google Trends + TikTok via Playwright)
+4. `python -m scripts.publishers.generate_weekly --blog-path blog` → `auto-news/` (recap MD) + `public/` (dashboard + data.json)
+5. `python -m scripts.publishers.send_email` → Mailgun (diario 09:00 UTC)
+6. `python -m scripts.publishers.send_telegram` → Telegram con TTS (cada 30 min)
 
 ## 3. Retos Técnicos y Decisiones de Diseño
 
 ### Arquitectura Modular vs Monolito
 
-Originalmente todo el scraping vivía en un único `downloadFile.py`. Se refactorizó a 6 scripts independientes para permitir ejecución selectiva por workflow y facilitar el mantenimiento. Cada script tiene sus propias dependencias y puede ejecutarse en solitario.
+Originalmente todo el scraping vivía en un único `downloadFile.py`. Se refactorizó a scripts independientes agrupados en subdirectorios (`scrapers/`, `publishers/`, `tools/`, `utils/`) para permitir ejecución selectiva por workflow y facilitar el mantenimiento. Cada script tiene sus propias dependencias y puede ejecutarse en solitario con `python -m scripts.subdir.script`.
 
 ### Deduplicación Inteligente
 
@@ -99,6 +131,30 @@ Todo el JSON embebido, prompts de IA, plantillas HTML y valores por defecto se m
 ### 20 Fuentes RSS
 
 Se añadieron fuentes RSS como alternativa ligera a scraping HTML: OpenAI Blog, Anthropic Blog, Google DeepMind, Meta AI Blog, Mistral AI News, Hacker News, Stack Overflow Blog, LangChain Blog, Google AI Blog, MIT Tech Review AI, Google Search Central, Moz Blog SEO, Search Engine Journal, Wired AI, The Verge AI, TechCrunch AI, Ars Technica AI, Dev.to, GitHub Engineering. El parser soporta RSS 2.0 y Atom, con detección automática de namespace.
+
+### Reorganización de Scripts (Julio 2026)
+
+Los scripts se reorganizaron de la raíz del proyecto a subdirectorios modulares:
+
+- **`utils.py` → `scripts/utils/common.py`**: Renombrado para evitar sombreado de módulos con `utils/` del sistema
+- **`solutions_db.py` y `solutions_data.py`**: Migrados desde el blog a `scripts/solutions/` (105+ soluciones curadas en 12 lenguajes)
+- **`tests/`**: Migrados desde `blog/tests/python/` (90+ tests pytest)
+- **Todos los workflows actualizados** para usar `python -m scripts.subdir.script` en lugar de `python script.py`
+- **Nuevo workflow `tests.yml`**: Ejecuta pytest en cada push/PR a master
+
+### Fix de Pipeline de Imágenes (Julio 2026)
+
+Se corrigió un bug en `fix_images.py` que eliminaba el `import ResponsiveImage` de posts del blog:
+
+- **Causa**: el script borraba el import siempre y solo lo re-agregaba si encontraba `<ResponsiveImage` en el contenido
+- **Solución**: nueva lógica condicional que preserva el import cuando el componente se usa:
+  - Si componente existe + import falta → agregar import después del frontmatter
+  - Si componente NO existe + import existe → eliminar import
+  - Si ambos existen → no hacer nada (mantener)
+
+### Node.js 22 Upgrade (Julio 2026)
+
+El workflow `test.yml` se actualizó de Node.js 20 a 22, requerido por Astro 6.4 que soporta `>=22.12.0`.
 
 ### Renderizado Client-Side del Dashboard
 
@@ -141,7 +197,9 @@ Python genera un `index.html` shell (~2KB) + `data.json` con el historial comple
 - **Telegram cada 30 min:** notificaciones con resumen IA + audio TTS, dedup entre envíos
 - **Ranking GitHub Stars:** top 20 repos ordenados por estrellas desde GitHub Topics/Collections
 - **Deduplicación:** por URL normalizada y título similar en scrape y generación de dashboard
-- **SEO:** meta tags Open Graph, Twitter Cards, JSON-LD WebSite
+- **Estructura modular reorganizada:** scripts en subdirectorios (`scrapers/`, `publishers/`, `tools/`, `utils/`, `solutions/`)
+- **90+ tests pytest:** cobertura completa de utilidades, caché, constantes, imágenes, recursos y soluciones
+- **CI/CD completo:** 11 workflows de GitHub Actions con badges en vivo en el README
 
 ## 5. Puesta en Marcha Local
 
@@ -151,20 +209,23 @@ cd test_githubActions
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
-# Scrapear noticias
-python scrape_news.py
+# Scrapear noticias (tier completo)
+python -m scripts.scrapers.scrape_news --tier full
 
 # Scrapear herramientas
-python scrape_tools.py
+python -m scripts.scrapers.scrape_tools
 
 # Generar dashboard
-python generate_weekly.py
+python -m scripts.publishers.generate_weekly --blog-path blog
 
 # Enviar Telegram (dry-run)
-python send_telegram.py --dry-run --max-items 3
+python -m scripts.publishers.send_telegram --dry-run --max-items 3
 
 # Enviar email (dry-run)
-python send_email.py --dry-run --max-items 5
+python -m scripts.publishers.send_email --dry-run --max-items 5
+
+# Ejecutar tests
+python -m pytest tests/ -v
 ```
 
 El dashboard se genera en `public/index.html` y se puede previsualizar con `python -m http.server -d public`.
