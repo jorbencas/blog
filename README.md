@@ -1,196 +1,108 @@
 # Blog — jorbencas
 
-[![Vercel](https://img.shields.io/badge/deploy-vercel-black?logo=vercel)](https://blog-jorbencas.vercel.app/)
 [![Astro](https://img.shields.io/badge/astro-6.4-BC52EE?logo=astro)](https://astro.build)
 [![Svelte](https://img.shields.io/badge/svelte-5-FF3E00?logo=svelte)](https://svelte.dev)
 [![Tailwind CSS](https://img.shields.io/badge/tailwind-4.3-06B6D4?logo=tailwindcss)](https://tailwindcss.com)
 [![Playwright](https://img.shields.io/badge/test-playwright-45ba4b?logo=playwright)](https://playwright.dev)
 [![Pagefind](https://img.shields.io/badge/search-pagefind-8A2BE2)](https://pagefind.app)
+[![Vercel](https://img.shields.io/badge/deploy-vercel-black?logo=vercel)](https://vercel.com)
 
-Blog personal de tecnología y desarrollo, construido con Astro 6, Svelte 5 y Tailwind CSS 4. Incluye artículos técnicos, retos de programación, proyectos personales, herramientas interactivas y un resumen semanal de noticias.
+Personal tech & development blog built with Astro 6, Svelte 5 and Tailwind CSS 4. Features technical articles, programming challenges, personal projects, interactive tools, and a weekly AI-generated news recap.
 
-**[→ Abrir demo](https://blog-jorbencas.vercel.app/)**
-
----
-
-## Características
-
-- **5 colecciones de contenido** — posts, retos de programación (140+), proyectos personales, herramientas y noticias semanales
-- **Búsqueda full‑text** — Pagefind indexa todo el sitio en el build; carga diferida solo en producción
-- **SEO completo** — JSON‑LD, Open Graph, Twitter Cards, sitemap, RSS
-- **OG images dinámicas** — generación con Satori + resvg
-- **Tabla de contenidos** — scroll spy con IntersectionObserver; versión colapsable en móvil y sidebar fija en escritorio
-- **Archive** — listado por años con colapso automático
-- **Paginación** — navegación entre páginas de listados
-- **Navegación entre posts** — enlaces anterior/siguiente con flechas de teclado
-- **Barra de progreso de lectura** — indicador visual en la parte superior
-- **Breadcrumbs** — miga de pan en todas las páginas de contenido
-- **Modo oscuro** — conmutación manual, persistente en localStorage
-- **Imágenes responsive** — pipeline automático con WebP/AVIF, compresión adaptativa SSIM y placeholder blur
-- **Audio lazy** — reproductor con WaveSurfer se carga solo al hacer scroll al elemento
-- **CodeTabs** — pestañas interactivas para código multi‑lenguaje (Python/JS/Java/TS) en retos
-- **VideoExtractor** — herramienta para extraer cortes de video desde el navegador (WebM/MP4)
-- **Tipado estricto** — TypeScript `strict` + `noUncheckedIndexedAccess`
-- **Rendimiento** — imágenes con `fetchpriority="high"` para LCP, lazy loading, Astro islands
-- **Pruebas E2E** — Playwright cubre navegación, páginas de listado, detalle, responsive, contraste, búsqueda y regresión visual
+**[→ blog-jorbencas.vercel.app](https://blog-jorbencas.vercel.app/)** · [RSS](/rss.xml)
 
 ---
 
-## Stack
+## Features
 
-| Categoría          | Tecnología |
-| ------------------ | ---------- |
-| Framework          | Astro 6.4 |
-| Islas interactivas | Svelte 5 |
-| Estilos            | Tailwind CSS 4.3 + `@tailwindcss/typography` + `@tailwindcss/vite` |
-| Contenido          | MDX + Zod schemas (`astro/loaders`) |
-| Despliegue         | Vercel (static output, `@astrojs/vercel`) |
-| Búsqueda           | Pagefind |
-| OG images          | Satori + resvg |
-| Analítica          | Vercel Speed Insights |
-| Fuentes            | Tipografía variable en `public/fonts/` |
-| Iconos             | astro-icon + SVGs en `public/icons/` |
-| E2E testing        | Playwright |
+- **5 content collections** — posts, challenges (140+), projects, tools, weekly news
+- **Full‑text search** — Pagefind indexes the entire site at build, lazy-loaded in production
+- **Complete SEO** — JSON‑LD, Open Graph, Twitter Cards, sitemap, RSS
+- **Dynamic OG images** — generated with Satori + resvg
+- **Table of Contents** — IntersectionObserver scroll spy, collapsible on mobile, sticky sidebar on desktop
+- **Dark mode** — manual toggle, persisted in localStorage
+- **Responsive images** — WebP/AVIF pipeline with SSIM-based adaptive compression and blur placeholder
+- **CodeTabs** — interactive multi-language code tabs (Python/JS/Java/TS) in challenges
+- **VideoExtractor** — browser-based video clip extraction (WebM/MP4)
+- **Strict TypeScript** — `strict` + `noUncheckedIndexedAccess`
+- **E2E testing** — 14 Playwright suites covering navigation, listings, detail pages, responsiveness, contrast, search, and visual regression
 
 ---
 
-## Estructura del proyecto
+## Tech Stack
+
+| Category       | Technology |
+| -------------- | ---------- |
+| Framework      | Astro 6.4 (static output) |
+| Interactive    | Svelte 5 (runes, snippets) |
+| Styles         | Tailwind CSS 4.3 + `@tailwindcss/typography` |
+| Content        | MDX + Zod schemas (`astro/loaders`) |
+| Deployment     | Vercel (`@astrojs/vercel`) |
+| Search         | Pagefind |
+| OG images      | Satori + resvg |
+| Analytics      | Vercel Speed Insights |
+| E2E testing    | Playwright (14 suites) |
+| Typography     | Self-hosted variable fonts |
+| Icons          | astro-icon + SVGs |
+
+---
+
+## Project Structure
 
 ```
 blog/
-├── public/                     # Archivos estáticos
-│   ├── audio/                  # Archivos de audio
-│   ├── fonts/                  # Fuentes tipográficas
-│   ├── icons/                  # Iconos SVG
-│   ├── img/                    # Imágenes generadas (WebP/AVIF)
-│   └── rss/                    # Feed RSS
+├── public/                     # Static assets
+│   ├── audio/  fonts/  icons/  img/  rss/
 ├── src/
-│   ├── components/             # Componentes reutilizables
-│   │   ├── Archive.astro
-│   │   ├── AudioPlayer.astro
-│   │   ├── Breadcrumbs.astro
-│   │   ├── Buscador.astro
-│   │   ├── Card.astro
-│   │   ├── Challenge.astro
-│   │   ├── CodeEnhancer.astro
-│   │   ├── CodeTabs.svelte
-│   │   ├── CopyPost.astro
-│   │   ├── Footer.astro
-│   │   ├── header.astro
-│   │   ├── Information.astro
-│   │   ├── MoreProjects.astro
-│   │   ├── Navbar.astro
-│   │   ├── NextPrevLinks.astro
-│   │   ├── PaginationLinks.astro
-│   │   ├── ReadingProgress.astro
-│   │   ├── ResponsiveImage.astro
-│   │   ├── ScrollToTop.astro
-│   │   ├── SearchOverlay.astro
-│   │   ├── SEO.astro
-│   │   ├── TableOfContents.astro
-│   │   ├── TagsPosts.astro
-│   │   ├── ToggleButton.astro
-│   │   ├── VideoExtractor.svelte
-│   │   └── Weekly.astro
-│   ├── content/                # Colecciones MDX
-│   │   ├── auto-challenges/    # Retos de programación
-│   │   ├── auto-news/          # Noticias semanales
-│   │   ├── myprojects/         # Proyectos personales
-│   │   ├── posts/              # Artículos
-│   │   └── tools/              # Herramientas interactivas
-│   ├── content.config.ts       # Schemas Zod + loaders
-│   ├── data/                   # Datos auxiliares (JSON)
-│   ├── layouts/                # Layouts de página
-│   │   ├── ChallengesLayout.astro
-│   │   ├── Layout.astro
-│   │   ├── PostLayout.astro
-│   │   ├── ProjectLayout.astro
-│   │   └── ToolLayout.astro
-│   ├── pages/                  # Rutas y páginas
-│   │   ├── 404.astro
-│   │   ├── api/og/             # Endpoint OG image
-│   │   ├── herramientas/       # Herramientas
-│   │   ├── posts/              # Artículos
-│   │   ├── proyectos/          # Proyectos
-│   │   ├── retos/              # Retos
-│   │   ├── tags/               # Páginas por etiqueta
-│   │   ├── weekly/             # Noticias semanales
-│   │   ├── index.astro
-│   │   └── rss.xml.js
-│   ├── styles/
-│   │   └── global.css          # Config Tailwind v4
-│   └── utils.js                # Funciones auxiliares
+│   ├── components/             # 25+ Astro + Svelte components
+│   ├── content/                # 5 MDX collections
+│   │   ├── auto-challenges/    # 46 programming challenges
+│   │   ├── auto-news/          # Weekly news recaps
+│   │   ├── myprojects/         # Personal projects
+│   │   ├── posts/              # Technical articles
+│   │   └── tools/              # Interactive tools
+│   ├── content.config.ts       # Zod schemas + loaders
+│   ├── data/  layouts/  pages/  styles/  utils.js
 ├── tests/
-│   └── specs/                  # Tests E2E Playwright
-│       ├── code-enhancer.spec.mjs
-│       ├── console-errors.spec.mjs
-│       ├── content.spec.mjs
-│       ├── contrast.spec.mjs
-│       ├── detail-pages.spec.mjs
-│       ├── interactive.spec.mjs
-│       ├── listing-pages.spec.mjs
-│       ├── navigation.spec.mjs
-│       ├── navbar.spec.mjs
-│       ├── responsive.spec.mjs
-│       ├── search.spec.mjs
-│       ├── visual-regression-full.spec.mjs
-│       └── visual-regression.spec.mjs
+│   └── specs/                  # 14 Playwright E2E suites
 ├── .github/workflows/
-│   ├── issues_handel.yml       # Gestor de feedback
-│   ├── spelling.yml            # Corrector ortográfico
-│   ├── test.yml                # Tests E2E
-│   └── trigger-optimize.yml    # Dispatch optimización imágenes
-├── astro.config.mjs
-├── pagefind.yml                # Config Pagefind
-├── playwright.config.js        # Config Playwright
-├── svelte.config.ts
-├── tsconfig.json
-├── .vercelignore
-├── AGENTS.md                   # Guía para agentes IA
-└── docs/contexto.md            # Contexto del proyecto
+│   ├── issues_handel.yml       # Feedback management
+│   ├── spelling.yml            # LanguageTool (Spanish)
+│   ├── test.yml                # E2E Playwright
+│   └── trigger-optimize.yml    # Dispatch image optimization
+├── astro.config.mjs / pagefind.yml / playwright.config.js
+├── svelte.config.ts / tsconfig.json
+└── AGENTS.md / docs/contexto.md
 ```
 
 ---
 
-## Comandos
+## Commands
 
-| Comando               | Acción |
-| --------------------- | ------ |
-| `npm run dev`         | Inicia servidor de desarrollo en `localhost:4321` |
-| `npm run build`       | Build estático + indexado Pagefind |
-| `npm run preview`     | Previsualiza el build localmente |
-| `npm run cleaner`     | Reinstala dependencias desde cero |
-| `npm test`            | Ejecuta tests E2E con Playwright |
-| `npm run test:build`  | Build + tests E2E |
-| `npm run test:update` | Actualiza snapshots de regresión visual |
-| `npm run test:ui`     | Playwright en modo UI interactivo |
-
----
-
-## Tests
-
-14 suites E2E (Playwright) que cubren navegación, páginas de listado, detalle, componentes interactivos, responsive, contraste, búsqueda y regresión visual.
-
-```bash
-npm test                    # Todos los tests
-npm run test:build          # Build + tests
-npm run test:update         # Actualizar snapshots
-npm run test:ui             # Modo UI
-```
+| Command                | Action |
+| ---------------------- | ------ |
+| `npm run dev`          | Dev server on `localhost:4321` |
+| `npm run build`        | Static build + Pagefind indexing |
+| `npm run preview`      | Preview production build |
+| `npm run cleaner`      | Reinstall dependencies |
+| `npm test`             | Run Playwright E2E |
+| `npm run test:build`   | Build + tests |
+| `npm run test:update`  | Update visual snapshots |
+| `npm run test:ui`      | Playwright UI mode |
 
 ---
 
 ## CI/CD
 
-| Workflow | Disparador | Propósito |
-| -------- | ---------- | --------- |
-| **trigger-optimize** | Push a `main` (imágenes o contenido) | Dispatch a test_githubActions para optimización |
-| **spelling** | PR contra `content` | LanguageTool en español |
-| **test** | Push a `main` | Tests E2E Playwright |
-| **issues_handel** | Issues | Gestiona el formulario de feedback |
+| Workflow | Trigger | Purpose |
+| -------- | ------- | ------- |
+| **trigger-optimize** | Push to `main` (images or content) | Dispatch optimization to test_githubActions |
+| **spelling** | PR against `content` | LanguageTool (Spanish) |
+| **test** | Push to `main` | Playwright E2E tests |
+| **issues_handel** | Issues | Feedback form handler |
 
 ---
 
-## Licencia
+## License
 
-Uso personal — contenido original del autor.
+Personal use — original content by the author.
