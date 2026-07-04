@@ -22,7 +22,7 @@ const SECTION_COLORS: Record<string, { from: string; to: string }> = {
   home:         { from: "#075985", to: "#06b6d4" },
   blog:         { from: "#075985", to: "#06b6d4" },
   posts:        { from: "#075985", to: "#06b6d4" },
-  retos:        { from: "#075985", to: "#06b6d4" },
+  retos:        { from: "#b45309", to: "#f59e0b" },
   proyectos:    { from: "#6b21a8", to: "#a855f7" },
   herramientas: { from: "#065f46", to: "#10b981" },
   weekly:       { from: "#075985", to: "#06b6d4" },

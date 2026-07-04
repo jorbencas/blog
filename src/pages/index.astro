@@ -33,13 +33,34 @@ const linkBase =
 
 const sectionBadge =
   "inline-flex items-center gap-2 bg-gradient-to-r from-sky-800 to-cyan-500 dark:from-sky-600 dark:to-cyan-400 px-5 py-2.5 text-xs sm:text-sm font-black uppercase tracking-[0.25em] text-white dark:text-slate-900 shadow-[4px_4px_0px_0px_rgba(6,182,212,0.3)]";
+
+const stickers = [
+  { name: "html",   pos: "top: 0%; right: 10px;",  rot: "5deg",   c: "#06b6d4", d: "0s"    },
+  { name: "python", pos: "top: 6%; left: 15px;",   rot: "-4deg",  c: "#10b981", d: "0.3s"  },
+  { name: "js",     pos: "top: 22%; right: 55px;", rot: "-6deg",  c: "#f59e0b", d: "0.6s"  },
+  { name: "git",    pos: "top: 32%; left: 30px;",  rot: "3deg",   c: "#a855f7", d: "0.9s"  },
+  { name: "ts",     pos: "top: 44%; right: 20px;", rot: "7deg",   c: "#22d3ee", d: "1.2s"  },
+  { name: "docker", pos: "top: 56%; right: 75px;", rot: "-2deg",  c: "#34d399", d: "1.5s"  },
+];
 ---
 
 <Layout title="Blog | Jorge Beneyto Castelló" section="home">
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 sm:mt-20">
     <!-- HERO -->
-    <section class="mb-20 md:mb-32">
-      <div class="flex flex-col gap-6">
+    <section class="relative mb-20 md:mb-32">
+      <!-- Desktop sticker cloud -->
+      <div class="hidden md:block absolute inset-0 pointer-events-none select-none z-0">
+        {stickers.map((s) => (
+          <div
+            class="sticker-float absolute flex items-center justify-center w-[88px] h-[88px] xl:w-[100px] xl:h-[100px] rounded-2xl bg-white dark:bg-slate-900 border-2 shadow-lg"
+            style={`${s.pos} border-color: ${s.c}; --r: ${s.rot}; --gc: ${s.c}40; animation: float 4s ease-in-out ${s.d} infinite;`}
+          >
+            <img src={`/icons/${s.name}.svg`} alt={s.name} class="w-10 h-10 xl:w-12 xl:h-12" />
+          </div>
+        ))}
+      </div>
+
+      <div class="flex flex-col gap-6 relative z-10 lg:max-w-xl xl:max-w-2xl">
         <h1
           class="text-4xl sm:text-5xl md:text-6xl font-black uppercase italic tracking-tighter leading-[1.1]"
         >
@@ -78,22 +99,22 @@ const sectionBadge =
           {
             label: "Artículos",
             count: allPosts.length,
-            accent: "text-cyan-600 dark:text-cyan-400",
+            accent: "text-cyan-600 dark:text-cyan-500",
           },
-          {
-            label: "Retos",
-            count: allChallenges.length,
-            accent: "text-cyan-600 dark:text-cyan-400",
-          },
+            {
+              label: "Retos",
+              count: allChallenges.length,
+              accent: "text-amber-600 dark:text-amber-500",
+            },
           {
             label: "Herramientas",
             count: allTools.length,
-            accent: "text-emerald-600 dark:text-emerald-400",
+            accent: "text-emerald-500",
           },
           {
             label: "Semanales",
             count: allWeeklyPosts.length,
-            accent: "text-cyan-600 dark:text-cyan-400",
+            accent: "text-cyan-600 dark:text-cyan-500",
           },
         ].map((stat) => (
           <div class="flex flex-col items-center justify-center p-6 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
@@ -180,17 +201,21 @@ const sectionBadge =
         <div
           class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0"
         >
-          <h2 class={sectionBadge}>🏆 Retos</h2>
+          <h2
+            class="inline-flex items-center gap-2 bg-gradient-to-r from-amber-800 to-amber-500 dark:from-amber-600 dark:to-amber-400 px-5 py-2.5 text-xs sm:text-sm font-black uppercase tracking-[0.25em] text-white dark:text-slate-900 shadow-[4px_4px_0px_0px_rgba(245,158,11,0.3)]"
+          >
+            🏆 Retos
+          </h2>
           <a
             href="/retos"
-            class={`${linkBase} text-slate-400 hover:text-cyan-500`}
+            class={`${linkBase} text-slate-400 hover:text-amber-500`}
           >
             Ver retos <span
               class="inline-block transition-transform group-hover:translate-x-1"
               >→</span
             >
             <span
-              class="absolute bottom-0 left-0 w-0 h-0.5 bg-cyan-500 transition-all duration-300 group-hover:w-full"
+              class="absolute bottom-0 left-0 w-0 h-0.5 bg-amber-500 transition-all duration-300 group-hover:w-full"
             ></span>
           </a>
         </div>
@@ -200,7 +225,7 @@ const sectionBadge =
               <Card
                 {...ch.data}
                 href={`/retos/${ch.id.replace(/\.[^/.]+$/, "")}`}
-                accent="cyan"
+                accent="amber"
               />
             ))
           }
@@ -283,3 +308,18 @@ const sectionBadge =
     </div>
   </div>
 </Layout>
+
+<style is:global>
+  @keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(var(--r, 0deg)); }
+    50% { transform: translateY(-12px) rotate(var(--r, 0deg)); }
+  }
+  .sticker-float {
+    transition: all 0.3s ease;
+    will-change: transform;
+  }
+  .sticker-float:hover {
+    box-shadow: 0 20px 25px -5px var(--gc, rgba(0,0,0,0.1));
+    filter: brightness(1.1);
+  }
+</style>

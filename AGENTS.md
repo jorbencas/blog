@@ -101,7 +101,8 @@ Schemas in `src/content.config.ts` using `astro/loaders` (glob) + `astro/zod`.
 ### Colors by card/section type
 - **Projects**: purple accent (`purple-500/50` border hover)
 - **Tools**: emerald accent (`emerald-500/50` border hover)
-- **Blog posts / Challenges / Retos**: cyan accent (`cyan-500/50`)
+- **Blog posts**: cyan accent (`cyan-500/50`)
+- **Retos / Challenges**: amber accent (`amber-500/50`)
 - **Weekly**: cyan gradient glow (`hover:shadow-[0_0_40px_rgba(6,182,212,0.25)]`)
 - **Image overlays**: `opacity-70 → opacity-40`, image `opacity-80 → opacity-100`
 
