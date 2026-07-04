@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "Tech Pulse: Dashboard Automatizado de Noticias Tech con IA"
-description: "Scraper inteligente que recolecta 70+ fuentes tech (web, YouTube, RSS), genera resúmenes con Gemini IA, filtra por categoría/badge/canal/fecha, ranking GitHub Stars, sección de referencia tech, y despliega dashboard SSR + Telegram cada 30 min + newsletter diaria. Código 100% SOLID con store observable JS, configuraciones externalizadas y estructura modular reorganizada."
+description: "Scraper inteligente que recolecta 70+ fuentes tech (web, YouTube, RSS), genera resúmenes con Gemini IA, filtra por categoría/badge/canal/fecha, ranking GitHub Stars, sección de referencia tech, y despliega dashboard SSR + Telegram con traducción automática + audio TTS. Código 100% SOLID con store observable JS, configuraciones externalizadas y estructura modular reorganizada."
 pubDate: "2026/06/25"
 updatedDate: "2026/07/04"
 tags: ['python', 'ia', 'web-scraping', 'devops', 'automation', 'github-actions', 'rss']
@@ -169,10 +169,11 @@ Python genera un `index.html` completo con todo el contenido pre-renderizado (no
 ### Telegram con Audio por Noticia
 
 `send_telegram.py` envía cada noticia nueva como mensaje separado con:
-- Resumen IA de 3-4 líneas generado por Gemini
-- Botón inline al dashboard
-- Audio TTS con edge-tts (voz `es-ES-AlvaroNeural`)
-- Control de duplicados vía `telegram_sent.json`
+- Resumen IA de 3-4 líneas generado por Gemini en español
+- Títulos traducidos automáticamente al español vía `traducir_titulo()` con Gemini
+- Audio TTS con edge-tts (voz `es-ES-AlvaroNeural`) — resumen de todos los titulares una vez al día
+- Control de duplicados vía `telegram_sent.json` + `telegram_voice_sent.json`
+- Texto del audio limpio de emojis para mayor claridad
 
 ### Noticias desde 70+ Fuentes
 
@@ -183,6 +184,8 @@ Python genera un `index.html` completo con todo el contenido pre-renderizado (no
 | RSS XML | 20 feeds | OpenAI, Anthropic, DeepMind, Hacker News, Stack Overflow, SEO |
 | Herramientas | 3 fuentes | GitHub Trending, GitHub Topics, Product Hunt |
 
+> **Actualizado julio 2026:** Eliminadas todas las fuentes de redes sociales (Instagram, X/Twitter, TikTok, Threads, Google Trends). El dashboard monitoriza actualmente **899 noticias** de **39 fuentes** en **7 categorías**.
+
 ## 4. Desglose del Feature Set
 
 - **70+ fuentes monitorizadas:** YouTube, blogs tech, RSS, GitHub, Product Hunt
@@ -192,7 +195,7 @@ Python genera un `index.html` completo con todo el contenido pre-renderizado (no
 - **Constantes con nombre:** todos los dict keys del schema son constantes (cambio en un solo sitio)
 - **Sección de Referencia Tech:** panel colapsable con Skills, LLMs, Lenguajes, Frameworks y Librerías
 - **Newsletter diaria:** resúmenes individuales por noticia con Gemini, estadísticas rápidas
-- **Telegram cada 30 min:** notificaciones con resumen IA + audio TTS, dedup entre envíos
+- **Telegram con IA:** traducción automática de títulos al español, resumen en español, audio TTS una vez al día
 - **Ranking GitHub Stars:** top 20 repos ordenados por estrellas desde GitHub Topics/Collections
 - **Deduplicación:** por URL normalizada y título similar en scrape y generación de dashboard
 - **Estructura modular reorganizada:** scripts en subdirectorios (`scrapers/`, `publishers/`, `tools/`, `utils/`, `solutions/`)
