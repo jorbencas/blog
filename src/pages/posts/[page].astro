@@ -3,7 +3,6 @@ import Layout from "@layouts/Layout.astro";
 import Card from "@components/Card.astro";
 import NextPrevLinks from "@components/NextPrevLinks.astro";
 import Information from "@components/Information.astro";
-import Archive from "@components/Archive.astro"; // Importamos el archivo
 import { getSortedPosts } from "src/utils";
 import { getCollection } from "astro:content";
 
@@ -25,8 +24,7 @@ const { prev, next } = url;
   description="Artículos sobre desarrollo web y programación"
   section="blog"
 >
-  <div class="max-w-6xl mx-auto mt-10 flex justify-around items-start">
-    <section class="space-y-12 py-4 md:py-8" data-pagefind-ignore>
+  <section class="max-w-6xl mx-auto space-y-12 py-8 md:py-16" data-pagefind-ignore>
       <!-- CABECERA -->
       <div class="text-center space-y-2">
         <h1
@@ -40,33 +38,23 @@ const { prev, next } = url;
         <div class="h-1.5 w-20 bg-cyan-500 mx-auto rounded-full"></div>
       </div>
 
-      <!-- GRID PRINCIPAL (Igual que el index) -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 xl:gap-12 items-start">
-        <!-- COLUMNA IZQUIERDA: LISTA DE POSTS (8/12) -->
-        <div class="lg:col-span-8 w-full order-1">
+      <!-- GRID DE POSTS -->
+      <div class="flow-root">
+        <ul role="list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {
             data.length > 0 ? (
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-                {data.map((p) => (
-                  <div class="w-full h-full">
-                    <Card href={`/posts/${p.id}`} {...p.data} accent="cyan" />
-                  </div>
-                ))}
-              </div>
+              data.map((p) => (
+                <li class="list-none h-full">
+                  <Card href={`/posts/${p.id}`} {...p.data} accent="cyan" />
+                </li>
+              ))
             ) : (
-              <div class="py-20 text-center">
+              <div class="col-span-full py-20 text-center">
                 <Information section="posts" />
               </div>
             )
           }
-        </div>
-
-        <!-- COLUMNA DERECHA: ARCHIVO (4/12) -->
-        <aside class="lg:col-span-4 mt-4 lg:mt-0 w-full order-2">
-          <div class="lg:sticky lg:top-28 space-y-8">
-            <Archive />
-          </div>
-        </aside>
+        </ul>
       </div>
 
       <!-- NAVEGACIÓN (Next/Prev) -->
@@ -78,26 +66,7 @@ const { prev, next } = url;
           textPrev="Posteriores"
         />
       </div>
-    </section>
-  </div>
+  </section>
 </Layout>
 
-<style>
-  /* Mantenemos la animación solo en escritorio */
-  @media (min-width: 1024px) {
-    aside {
-      animation: fadeInRight 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-  }
 
-  @keyframes fadeInRight {
-    from {
-      opacity: 0;
-      transform: translateX(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
-  }
-</style>

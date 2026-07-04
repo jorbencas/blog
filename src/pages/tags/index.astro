@@ -20,22 +20,21 @@ for (const tag of allTags) {
 }
 ---
 
-<Layout title="Todas las etiquetas">
-  <div class="max-w-4xl mx-auto mt-10 px-4 sm:px-6">
-    <section class="space-y-12">
-      <div class="text-center space-y-4">
-        <div class="inline-block bg-gradient-to-r from-sky-800 to-cyan-500 px-6 py-2">
-          <span class="text-xs font-black uppercase tracking-[0.4em] text-white/80">Etiquetas</span>
-        </div>
-        <h1 class="text-3xl md:text-4xl font-black uppercase tracking-tighter text-slate-900 dark:text-white">
+<Layout title="Todas las etiquetas" description={`${allTags.length} etiquetas categorizando el contenido del blog`} section="tags">
+  <section class="max-w-6xl mx-auto space-y-12 py-8 md:py-16" data-pagefind-ignore>
+      <!-- CABECERA -->
+      <div class="text-center space-y-4 pb-4">
+        <span class="text-xs text-cyan-500 uppercase tracking-[0.3em]">ETIQUETAS</span>
+        <h1 class="text-4xl md:text-5xl font-black italic uppercase tracking-tighter text-slate-900 dark:text-white">
           Todas las etiquetas
         </h1>
-        <p class="text-slate-500 dark:text-slate-400 text-sm">
+        <div class="h-1 w-24 bg-cyan-500 mx-auto rounded-full"></div>
+        <p class="max-w-2xl mx-auto text-sm sm:text-base text-slate-500 dark:text-slate-400 leading-relaxed">
           {allTags.length} etiquetas en total
         </p>
-        <div class="h-1 w-24 bg-cyan-500 mx-auto"></div>
       </div>
 
+      <!-- NUBE DE ETIQUETAS -->
       <div class="flex flex-wrap gap-4 justify-center">
         {allTags.map((tag) => {
           const total = tagCounts[tag].posts + tagCounts[tag].challenges;
@@ -52,6 +51,5 @@ for (const tag of allTags) {
           );
         })}
       </div>
-    </section>
-  </div>
+  </section>
 </Layout>

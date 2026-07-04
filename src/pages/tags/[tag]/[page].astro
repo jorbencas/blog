@@ -10,7 +10,6 @@ export async function getStaticPaths({ paginate }) {
   const allPosts = await getCollection("posts");
   const allChallenges = await getCollection("auto-challenges");
 
-  // Obtenemos todos los tags únicos de ambas colecciones
   const uniqueTags = [
     ...new Set([
       ...allPosts.flatMap((p) => p.data.tags),
@@ -21,60 +20,50 @@ export async function getStaticPaths({ paginate }) {
   const sortedPosts = await getSortedPosts(allPosts);
 
   return uniqueTags.flatMap((tag) => {
-    // Filtramos posts para la paginación
     const filteredPosts = sortedPosts.filter((post) =>
       post.data.tags.includes(tag)
     );
 
-    // Filtramos retos para pasarlos como props a todas las páginas de ese tag
     const filteredChallenges = allChallenges
       .filter((c) => c.data.tags.includes(tag))
       .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 
     return paginate(filteredPosts, {
       params: { tag },
-      props: { tag, challenges: filteredChallenges }, // Pasamos los retos aquí
-      pageSize: 12,
+      props: { tag, challenges: filteredChallenges },
+      pageSize: 24,
     });
   });
 }
 
 const { tag } = Astro.params;
-const { page, challenges } = Astro.props; // Recibimos los retos
+const { page, challenges } = Astro.props;
 const { data, url } = page;
 const { prev, next } = url;
 ---
 
-<Layout title={"Contenido sobre " + tag}>
-  <div class="max-w-6xl mx-auto mt-10 flex justify-around items-start">
-    <section class="space-y-20" data-pagefind-ignore>
-      <div class="text-center space-y-4">
-        <div
-          class="inline-block bg-gradient-to-r from-sky-800 to-cyan-500 px-6 py-2"
-        >
-          <span
-            class="text-xs font-black uppercase tracking-[0.4em] text-white/80"
-            >Protocolo_Etiqueta</span
-          >
-        </div>
-        <h1
-          class="text-3xl md:text-4xl font-black uppercase tracking-tighter text-slate-900 dark:text-white transition-colors"
-        >
-          #{tag}
+<Layout title={"Contenido sobre " + tag} description={`Artículos y retos etiquetados con #${tag}`} section="tags">
+  <section class="max-w-6xl mx-auto space-y-12 py-8 md:py-16" data-pagefind-ignore>
+      <!-- CABECERA -->
+      <div class="text-center space-y-4 pb-4">
+        <span class="text-xs text-cyan-500 uppercase tracking-[0.3em]">PROTOCOLO_ETIQUETA</span>
+        <h1 class="text-4xl md:text-5xl font-black italic uppercase tracking-tighter text-slate-900 dark:text-white">
+          #{tag} <span class="text-cyan-500 dark:text-cyan-400 text-xl md:text-2xl align-top italic">Pg.{page.currentPage}</span>
         </h1>
-        <div class="h-1 w-24 bg-cyan-500 mx-auto"></div>
+        <div class="h-1 w-24 bg-cyan-500 mx-auto rounded-full"></div>
       </div>
 
+      <!-- RETOS ASOCIADOS -->
       {
         challenges.length > 0 && (
-          <div class="space-y-8">
+          <div class="space-y-6">
             <div class="flex items-center gap-4">
-              <h2 class="text-sm font-black uppercase tracking-[0.3em] text-cyan-600 text-cyan-400">
+              <h2 class="text-sm font-black uppercase tracking-[0.3em] text-cyan-600 dark:text-cyan-400">
                 Retos_Disponibles
               </h2>
               <div class="h-[1px] flex-1 bg-cyan-500/20" />
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
               {challenges.slice(0, 3).map((ch) => (
                 <Card
                   href={`/retos/${ch.id}`}
@@ -90,24 +79,24 @@ const { prev, next } = url;
         )
       }
 
-      <div class="space-y-8">
+      <!-- ARTÍCULOS -->
+      <div class="space-y-6">
         <div class="flex items-center gap-4">
-          <h2
-            class="text-sm font-black uppercase tracking-[0.3em] text-slate-400"
-          >
+          <h2 class="text-sm font-black uppercase tracking-[0.3em] text-slate-400">
             Documentación_Artículos
           </h2>
-          <div class="h-[1px] flex-1 bg-slate-200 bg-white/5"></div>
+          <div class="h-[1px] flex-1 bg-slate-200 dark:bg-white/5" />
         </div>
 
         <div class="flow-root">
-          <ul
-            role="list"
-            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-          >
+          <ul role="list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             {
               data.length > 0 ? (
-                data.map((p) => <Card href={`/posts/${p.id}`} {...p.data} accent="cyan" />)
+                data.map((p) => (
+                  <li class="list-none h-full">
+                    <Card href={`/posts/${p.id}`} {...p.data} accent="cyan" />
+                  </li>
+                ))
               ) : (
                 <div class="col-span-full">
                   <Information section="posts" />
@@ -118,9 +107,10 @@ const { prev, next } = url;
         </div>
       </div>
 
+      <!-- NAVEGACIÓN -->
       {
         (next || prev) && (
-          <div class="pt-12 ">
+          <div class="pt-12">
             <NextPrevLinks
               nextURL={next}
               prevURL={prev}
@@ -130,6 +120,5 @@ const { prev, next } = url;
           </div>
         )
       }
-    </section>
-  </div>
+  </section>
 </Layout>

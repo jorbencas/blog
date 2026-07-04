@@ -4,9 +4,13 @@ import Card from "@components/Card.astro";
 import { getSortedPosts } from "src/utils";
 import { getCollection } from "astro:content";
 import Weekly from "@components/Weekly.astro";
+import { SOCIAL_LINKS, SITE_DESCRIPTION } from "src/consts";
+
 const allPosts = await getCollection("posts");
 const sortedPosts = await getSortedPosts(allPosts);
 const latestPosts = sortedPosts.slice(0, 6);
+const featuredPost = sortedPosts.length > 0 ? sortedPosts[0] : null;
+const remainingPosts = latestPosts.slice(1);
 
 const allChallenges = await getCollection("auto-challenges");
 const challengesPosts = await getSortedPosts(allChallenges);
@@ -24,22 +28,70 @@ const allWeeklyPosts = await getCollection("weeklyPosts");
 const listWeeklyPosts = await getSortedPosts(allWeeklyPosts);
 const latest6Weekly = listWeeklyPosts.slice(0, 6);
 
-// Clase base para los enlaces "Ver más"
 const linkBase =
-  "group relative text-xs font-black uppercase tracking-[0.2em] italic transition-colors sm:pb-1 sm:bg-transparent sm:dark:bg-transparent px-3 py-2.5 sm:px-0 sm:py-0 rounded-lg bg-slate-200 dark:bg-slate-800 w-fit sm:border-0 border border-slate-300 dark:border-slate-700 shadow-sm sm:shadow-none";
+  "group relative text-xs font-black uppercase tracking-[0.2em] italic transition-colors w-fit";
+
+const sectionBadge =
+  "inline-flex items-center gap-2 bg-gradient-to-r from-sky-800 to-cyan-500 dark:from-sky-600 dark:to-cyan-400 px-5 py-2.5 text-xs sm:text-sm font-black uppercase tracking-[0.25em] text-white dark:text-slate-900 shadow-[4px_4px_0px_0px_rgba(6,182,212,0.3)]";
 ---
 
 <Layout title="Blog | Jorge Beneyto Castelló" section="home">
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-20">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 sm:mt-20">
+    <!-- HERO -->
+    <section class="mb-20 md:mb-32">
+      <div class="flex flex-col gap-6">
+        <h1
+          class="text-4xl sm:text-5xl md:text-6xl font-black uppercase italic tracking-tighter leading-[1.1]"
+        >
+          <span
+            class="bg-clip-text text-transparent bg-gradient-to-r from-sky-800 to-cyan-500 dark:from-sky-400 dark:to-cyan-300"
+          >Problemas de un<br />desarrollador Web</span>
+        </h1>
+        <p class="text-lg sm:text-xl text-slate-500 dark:text-slate-400 max-w-2xl leading-relaxed font-medium">
+          {SITE_DESCRIPTION}
+        </p>
+        <div class="flex flex-wrap gap-3 items-center mt-2">
+          {
+            SOCIAL_LINKS.slice(0, 5).map((link) => (
+              <a
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 hover:border-cyan-400 hover:text-cyan-600 dark:hover:text-cyan-400 transition-all no-underline"
+              >
+                <img src={link.icon} alt="" class="w-4 h-4" />
+                {link.label}
+              </a>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- STATS BAR -->
+    <div
+      class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-20 md:mb-32"
+    >
+      {[
+        { label: "Artículos", count: allPosts.length, accent: "text-cyan-600 dark:text-cyan-400" },
+        { label: "Retos", count: allChallenges.length, accent: "text-cyan-600 dark:text-cyan-400" },
+        { label: "Herramientas", count: allTools.length, accent: "text-emerald-600 dark:text-emerald-400" },
+        { label: "Semanales", count: allWeeklyPosts.length, accent: "text-cyan-600 dark:text-cyan-400" },
+      ].map((stat) => (
+        <div
+          class="flex flex-col items-center justify-center p-6 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
+        >
+          <span class={`text-3xl sm:text-4xl font-black ${stat.accent}`}>{stat.count}</span>
+          <span class="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mt-1">{stat.label}</span>
+        </div>
+      ))}
+    </div>
+
     <div class="space-y-24 md:space-y-32 mb-20">
       <!-- SECCIÓN: PROYECTOS -->
       <section class="space-y-10">
-        <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0 pb-6">
-          <h2
-            class="text-3xl md:text-4xl font-black italic uppercase tracking-tighter text-slate-900 dark:text-white"
-          >
-            Mis_Proyectos
-          </h2>
+        <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0">
+          <h2 class={sectionBadge}>💻 Proyectos</h2>
           <a
             href="/proyectos/1"
             class={`${linkBase} text-slate-400 hover:text-purple-500`}
@@ -71,12 +123,8 @@ const linkBase =
       <!-- SECCIÓN: HERRAMIENTAS -->
       {latestTools.length > 0 && (
         <section class="space-y-10">
-          <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0 pb-6">
-            <h2
-              class="text-3xl md:text-4xl font-black italic uppercase tracking-tighter text-slate-900 dark:text-white"
-            >
-              Mini_Herramientas
-            </h2>
+          <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0">
+            <h2 class={sectionBadge}>🛠️ Mini Herramientas</h2>
             <a
               href="/herramientas/1"
               class={`${linkBase} text-slate-400 hover:text-emerald-500`}
@@ -108,12 +156,8 @@ const linkBase =
 
       <!-- SECCIÓN: RETOS -->
       <section class="space-y-10">
-        <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0 pb-6">
-          <h2
-            class="text-3xl md:text-4xl font-black italic uppercase tracking-tighter text-slate-900 dark:text-white"
-          >
-            Retos
-          </h2>
+        <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0">
+          <h2 class={sectionBadge}>🏆 Retos</h2>
           <a
             href="/retos/1"
             class={`${linkBase} text-slate-400 hover:text-cyan-500`}
@@ -142,12 +186,8 @@ const linkBase =
 
       <!-- SECCIÓN: BLOG -->
       <section class="space-y-10">
-        <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0 pb-6">
-          <h2
-            class="text-3xl md:text-4xl font-black italic uppercase tracking-tighter text-slate-900 dark:text-white"
-          >
-            Últimos_Posts
-          </h2>
+        <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0">
+          <h2 class={sectionBadge}>📝 Últimos Posts</h2>
           <a
             href="/posts/1"
             class={`${linkBase} text-slate-400 hover:text-slate-900 dark:hover:text-white`}
@@ -161,18 +201,33 @@ const linkBase =
             ></span>
           </a>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {latestPosts.map((p) => <Card href={`/posts/${p.id}`} {...p.data} accent="cyan" />)}
-        </div>
+
+        <!-- Featured post -->
+        {featuredPost && (
+          <div class="mb-8">
+            <Card
+              href={`/posts/${featuredPost.id}`}
+              {...featuredPost.data}
+              accent="cyan"
+            />
+          </div>
+        )}
+
+        <!-- Rest of latest posts -->
+        {remainingPosts.length > 0 && (
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {remainingPosts.map((p) => (
+              <Card href={`/posts/${p.id}`} {...p.data} accent="cyan" />
+            ))}
+          </div>
+        )}
       </section>
 
       <!--SECCIÓN WEEKLY-->
       {latest6Weekly.length > 0 && (
         <section class="space-y-10">
-          <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0 pb-6 border-b border-slate-100 dark:border-white/5">
-            <h2 class="text-3xl md:text-4xl font-black italic uppercase tracking-tighter text-slate-900 dark:text-white">
-              Resúmenes_Semanales
-            </h2>
+          <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0">
+            <h2 class={sectionBadge}>📰 Resúmenes Semanales</h2>
             <a
               href="/weekly/1"
               class={`${linkBase} text-slate-400 hover:text-cyan-500`}

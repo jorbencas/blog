@@ -131,7 +131,7 @@
     border-radius: 0;
   }
 
-  .code-panels pre:not(:first-child) {
+  .code-panels :global(pre:not(:first-child)) {
     display: none;
   }
 </style>

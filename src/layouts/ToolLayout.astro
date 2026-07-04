@@ -13,6 +13,7 @@ interface Props {
   author: string;
   image: string;
   pubDate: string | Date;
+  section?: string;
 }
 
 const {
@@ -22,6 +23,7 @@ const {
   author,
   image,
   pubDate,
+  section = "herramientas",
 } = Astro.props;
 
 const imagenLimpia = resolveImagePath(image);
@@ -37,6 +39,7 @@ const tagsArray = Array.isArray(tags)
   title={title}
   description={description}
   tags={tagsArray}
+  section={section}
   pubDate={pubDate}
   author={author}
 >

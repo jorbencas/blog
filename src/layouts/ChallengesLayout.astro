@@ -15,9 +15,10 @@ interface Props {
   pubDate: string | Date;
   difficulty?: string;
   languages?: string[];
+  section?: string;
 }
 
-const { title, description, tags, author, image, pubDate, difficulty, languages } = Astro.props;
+const { title, description, tags, author, image, pubDate, difficulty, languages, section = "retos" } = Astro.props;
 
 const imagenLimpia = resolveImagePath(image);
 
@@ -32,6 +33,7 @@ const sidebarChallenges = allChallenges
   title={title}
   description={description}
   tags={tags}
+  section={section}
   pubDate={pubDate}
   author={author}
 >

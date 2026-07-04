@@ -10,69 +10,56 @@ const sortedTools = await getSortedPosts(allTools);
 const tags = [...new Set(allTools.flatMap((t) => t.data.tags))];
 ---
 
-<Layout title="Mini Herramientas | Jorge Beneyto Castelló" section="herramientas">
-  <div class="max-w-6xl mx-auto mt-10 flex justify-around items-start">
-    <section
-      class="max-w-6xl mx-auto px-4 py-12 md:py-20 space-y-16"
-      data-pagefind-ignore
-    >
-      <header class="space-y-6 pb-10">
-        <div class="space-y-2">
-          <span class="text-xs text-emerald-500 uppercase tracking-[0.4em]">
-            Toolbox
-          </span>
-          <h1
-            class="text-4xl md:text-7xl font-black italic uppercase tracking-tighter text-slate-900 dark:text-white transition-colors"
-          >
-            Mini_ <span class="text-emerald-500"
-          >
-            Herramientas
-          </span></h1>
-        </div>
-      </header>
+<Layout title="Mini Herramientas | Jorge Beneyto Castelló" description="Utilidades ligeras 100% client-side, sin servidor ni dependencias externas. Privacidad y rendimiento." section="herramientas">
+  <section class="max-w-6xl mx-auto space-y-12 py-8 md:py-16" data-pagefind-ignore>
+      <!-- CABECERA -->
+      <div class="text-center space-y-4 pb-4">
+        <span class="text-xs text-emerald-500 uppercase tracking-[0.3em]">TOOLBOX</span>
+        <h1 class="text-4xl md:text-5xl font-black italic uppercase tracking-tighter text-slate-900 dark:text-white">
+          Mini <span class="text-emerald-500">Herramientas</span>
+        </h1>
+        <div class="h-1 w-24 bg-emerald-500 mx-auto rounded-full"></div>
+        <p class="max-w-2xl mx-auto text-sm sm:text-base text-slate-500 dark:text-slate-400 leading-relaxed">
+          Utilidades ligeras, 100% del lado del cliente, sin dependencias externas ni subida de datos a servidores. Privacidad y rendimiento ante todo.
+        </p>
+      </div>
 
-      <p
-        class="max-w-2xl text-slate-500 text-slate-400 text-sm sm:text-base leading-relaxed"
-      >
-        Utilidades ligeras, 100% del lado del cliente, sin dependencias externas
-        ni subida de datos a servidores. Privacidad y rendimiento ante todo.
-      </p>
-
-      <div class="flex flex-wrap gap-2 pt-4">
-        {
-          tags.map((tag) => (
-            <span class="text-xs px-3 py-1 bg-slate-100 bg-white/5   text-slate-600 text-slate-500  rounded-full uppercase">
+      <!-- TAGS -->
+      {tags.length > 0 && (
+        <div class="flex flex-wrap justify-center gap-2">
+          {tags.map((tag) => (
+            <span class="text-xs px-3 py-1.5 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 rounded-full uppercase tracking-wider font-medium">
               {tag}
             </span>
-          ))
+          ))}
+        </div>
+      )}
+
+      <!-- GRID DE HERRAMIENTAS -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+        {
+          sortedTools.length > 0 ? (
+            sortedTools.map((tool) => (
+              <div class="tool-entry">
+                <Card
+                  {...tool.data}
+                  href={`/herramientas/${tool.id.replace(/\.[^/.]+$/, "")}`}
+                  accent="emerald"
+                  aspectRatio="video"
+                  overlay="white"
+                />
+              </div>
+            ))
+          ) : (
+            <div class="col-span-full py-20 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl">
+              <p class="text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                No_se_encontraron_registros
+              </p>
+            </div>
+          )
         }
       </div>
-    </section>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      {
-        sortedTools.length > 0 ? (
-          sortedTools.map((tool) => (
-            <div class="tool-entry">
-              <Card
-                {...tool.data}
-                href={`/herramientas/${tool.id.replace(/\.[^/.]+$/, "")}`}
-                accent="emerald"
-                aspectRatio="video"
-                overlay="white"
-              />
-            </div>
-          ))
-        ) : (
-          <div class="col-span-full py-20 text-center border-2 border-dashed  rounded-3xl">
-            <p class="text-slate-500 uppercase tracking-widest">
-              No_se_encontraron_registros
-            </p>
-          </div>
-        )
-      }
-    </div>
-  </div>
+  </section>
 </Layout>
 
 <style>
@@ -80,33 +67,18 @@ const tags = [...new Set(allTools.flatMap((t) => t.data.tags))];
     animation: fadeInUp 0.5s ease-out both;
   }
 
-  .tool-entry:nth-child(1) {
-    animation-delay: 0.1s;
-  }
-  .tool-entry:nth-child(2) {
-    animation-delay: 0.2s;
-  }
-  .tool-entry:nth-child(3) {
-    animation-delay: 0.3s;
-  }
-  .tool-entry:nth-child(4) {
-    animation-delay: 0.4s;
-  }
-  .tool-entry:nth-child(5) {
-    animation-delay: 0.5s;
-  }
-  .tool-entry:nth-child(6) {
-    animation-delay: 0.6s;
-  }
+  .tool-entry:nth-child(1) { animation-delay: 0.1s; }
+  .tool-entry:nth-child(2) { animation-delay: 0.2s; }
+  .tool-entry:nth-child(3) { animation-delay: 0.3s; }
+  .tool-entry:nth-child(4) { animation-delay: 0.4s; }
+  .tool-entry:nth-child(5) { animation-delay: 0.5s; }
+  .tool-entry:nth-child(6) { animation-delay: 0.6s; }
+  .tool-entry:nth-child(7) { animation-delay: 0.7s; }
+  .tool-entry:nth-child(8) { animation-delay: 0.8s; }
+  .tool-entry:nth-child(9) { animation-delay: 0.9s; }
 
   @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 </style>
