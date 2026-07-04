@@ -7,7 +7,17 @@ import { SITE_NAME } from 'src/consts.js';
 
 export const prerender = false;
 
-// Función para transformar los logos a Base64
+// ── Section → header text + predefined sticker icons ──
+
+const SECTION_STICKERS: Record<string, { header: string; stickers: string[] }> = {
+  home:         { header: "Blog",              stickers: ["blog", "code", "github"] },
+  blog:         { header: "Blog",              stickers: ["js", "python", "ts"] },
+  retos:        { header: "Retos",             stickers: ["python", "js", "java", "ts"] },
+  proyectos:    { header: "Proyectos",         stickers: ["github", "docker", "ts"] },
+  herramientas: { header: "Herramientas",      stickers: ["docker", "nodejs", "python"] },
+  weekly:       { header: "Weekly",            stickers: ["rss", "github", "email"] },
+};
+
 function getSvgAsBase64(tagName: string): string | null {
   try {
     const svgPath = path.join(process.cwd(), `public/icons/${tagName}.svg`);
@@ -21,7 +31,6 @@ function getSvgAsBase64(tagName: string): string | null {
   }
 }
 
-// 🌟 SOLUCIÓN DEFINITIVA PARA EL FAVICON: Carga local instantánea sin peticiones HTTP
 function getFaviconAsBase64(): string | null {
   try {
     const faviconPath = path.join(process.cwd(), 'public/favicon-96x96.png');
@@ -38,22 +47,34 @@ function getFaviconAsBase64(): string | null {
 export const GET: APIRoute = async ({ request }) => {
   try {
     const { searchParams } = new URL(request.url);
+
+    // ── Params ──
     const rawTitle = searchParams.get("title")?.trim() || SITE_NAME;
     const title = rawTitle
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/&/g, "&amp;");
-    
-    const tagsParam = searchParams.get("tags")?.trim() ?? "";
-    let tags = tagsParam.length > 0 
-      ? tagsParam.split(",").filter(Boolean).map((t) => t.trim().toLowerCase())
-      : [];
 
-    if (tags.length === 0) {
-      tags = ["default"]; 
+    const sectionParam = searchParams.get("section")?.trim()?.toLowerCase() || "";
+    const tagsParam = searchParams.get("tags")?.trim() ?? "";
+
+    // ── Resolve section vs tags ──
+    let headerText = "jorbencas // blog-jorbencas.vercel.app";
+    let tags: string[] = [];
+
+    if (sectionParam && SECTION_STICKERS[sectionParam]) {
+      const sec = SECTION_STICKERS[sectionParam];
+      headerText = `jorbencas // ${sec.header}`;
+      tags = sec.stickers;
+    } else {
+      // Fallback: use tags param (existing behavior for detail pages)
+      tags = tagsParam.length > 0
+        ? tagsParam.split(",").filter(Boolean).map((t) => t.trim().toLowerCase())
+        : [];
+      if (tags.length === 0) tags = ["default"];
     }
 
-    // 🌟 Obtenemos el favicon en Base64 de forma local y segura
+    // ── Assets ──
     const faviconBase64 = getFaviconAsBase64() || "";
 
     let fontData: Uint8Array | null = null;
@@ -67,29 +88,25 @@ export const GET: APIRoute = async ({ request }) => {
       console.warn("⚠️ No se pudo cargar la fuente personalizada:", fontError);
     }
 
-    const stickersJSX = [];
-    
-    // Posiciones asimétricas y desenfadadas que te gustaban
+    // ── Sticker positions (asymmetric floating layout) ──
     const posiciones = [
-      { top: "60px", right: "220px", rotate: "6deg" },    
-      { top: "140px", right: "50px", rotate: "-8deg" },   
-      { top: "250px", right: "240px", rotate: "-4deg" },  
-      { top: "330px", right: "70px", rotate: "10deg" },   
-      { top: "450px", right: "200px", rotate: "-6deg" }   
+      { top: "60px",  right: "220px", rotate: "6deg" },
+      { top: "140px", right: "50px",  rotate: "-8deg" },
+      { top: "250px", right: "240px", rotate: "-4deg" },
+      { top: "330px", right: "70px",  rotate: "10deg" },
+      { top: "450px", right: "200px", rotate: "-6deg" },
     ];
 
-    let stickerContador = 0;
+    const stickersJSX: any[] = [];
+    let stickerCount = 0;
 
     for (let i = 0; i < tags.length; i++) {
-      if (stickerContador >= 5) break; 
-
-      const tag = tags[i];
-      const svgBase64 = getSvgAsBase64(tag);
-
+      if (stickerCount >= 5) break;
+      const svgBase64 = getSvgAsBase64(tags[i]);
       if (!svgBase64) continue;
 
-      const pos = posiciones[stickerContador];
-      stickerContador++; 
+      const pos = posiciones[stickerCount];
+      stickerCount++;
 
       stickersJSX.push({
         type: "div",
@@ -98,49 +115,40 @@ export const GET: APIRoute = async ({ request }) => {
             position: "absolute",
             top: pos.top,
             right: pos.right,
-            transform: `rotate(${pos.rotate})`, 
-            display: "flex"
+            transform: `rotate(${pos.rotate})`,
+            display: "flex",
           },
           children: [
             {
               type: "div",
               props: {
                 style: {
-                  width: "110px",  
+                  width: "110px",
                   height: "110px",
-                  backgroundColor: "#1E293B", 
-                  border: "1px solid #06b6d4", 
+                  backgroundColor: "#1E293B",
+                  border: "1px solid #06b6d4",
                   borderRadius: "16px",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  padding: "20px"
+                  padding: "20px",
                 },
                 children: {
                   type: "img",
                   props: {
                     src: svgBase64,
-                    style: {
-                      width: "64px",
-                      height: "64px",
-                      objectFit: "contain"
-                    }
-                  }
-                }
-              }
-            }
-          ]
-        }
+                    style: { width: "64px", height: "64px", objectFit: "contain" },
+                  },
+                },
+              },
+            },
+          ],
+        },
       });
     }
 
-    const fontSize = title.length > 50 ? "52px" : "66px";
-
-    const satoriOptions: any = {
-      width: 1200,
-      height: 630,
-    };
-
+    // ── Satori render ──
+    const satoriOptions: any = { width: 1200, height: 630 };
     if (fontData) {
       satoriOptions.fonts = [{ name: "Space Grotesk", data: fontData, weight: 700, style: "normal" }];
     }
@@ -155,11 +163,11 @@ export const GET: APIRoute = async ({ request }) => {
             position: "relative",
             display: "flex",
             flexDirection: "column",
-            fontFamily: fontData ? '"Space Grotesk", sans-serif' : 'sans-serif',
-            backgroundColor: "#131926" 
+            fontFamily: fontData ? '"Space Grotesk", sans-serif' : "sans-serif",
+            backgroundColor: "#131926",
           },
           children: [
-            // Malla de micro-líneas de fondo
+            // Background micro-grid
             {
               type: "div",
               props: {
@@ -167,13 +175,14 @@ export const GET: APIRoute = async ({ request }) => {
                   position: "absolute",
                   top: 0, left: 0, right: 0, bottom: 0,
                   display: "flex",
-                  backgroundImage: "linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px)",
-                  backgroundSize: "50px 50px"
-                }
-              }
+                  backgroundImage:
+                    "linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px)",
+                  backgroundSize: "50px 50px",
+                },
+              },
             },
 
-            // Contenedor de contenido principal (Izquierda)
+            // Left content area
             {
               type: "div",
               props: {
@@ -181,21 +190,22 @@ export const GET: APIRoute = async ({ request }) => {
                   position: "absolute",
                   top: "130px",
                   left: "80px",
-                  maxWidth: "640px", 
+                  maxWidth: "640px",
                   display: "flex",
-                  flexDirection: "column"
+                  flexDirection: "column",
                 },
                 children: [
-                  // Cabecera con Favicon
+                  // Header: favicon + section text
                   {
                     type: "div",
                     props: {
                       style: {
                         display: "flex",
                         alignItems: "center",
-                        marginBottom: "32px"
+                        marginBottom: "32px",
                       },
                       children: [
+                        // Favicon container
                         {
                           type: "div",
                           props: {
@@ -203,45 +213,42 @@ export const GET: APIRoute = async ({ request }) => {
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
-                              backgroundColor: "#1E293B", 
+                              backgroundColor: "#1E293B",
                               border: "1px solid #06b6d4",
                               borderRadius: "14px",
                               width: "54px",
                               height: "54px",
                               padding: "10px",
-                              marginRight: "20px"
+                              marginRight: "20px",
                             },
                             children: {
                               type: "img",
                               props: {
-                                src: faviconBase64, // 🌟 Usamos la imagen local mapeada en Base64
-                                style: {
-                                  width: "72px",
-                                  height: "72px",
-                                  objectFit: "contain"
-                                }
-                              }
-                            }
-                          }
+                                src: faviconBase64,
+                                style: { width: "72px", height: "72px", objectFit: "contain" },
+                              },
+                            },
+                          },
                         },
+                        // Section header text
                         {
                           type: "span",
                           props: {
                             style: {
                               fontSize: "15px",
                               fontWeight: 700,
-                              color: "#9CA3AF", 
+                              color: "#9CA3AF",
                               fontFamily: "monospace",
-                              letterSpacing: "2px"
+                              letterSpacing: "2px",
                             },
-                            children: "jorbencas // blog-jorbencas.vercel.app"
-                          }
-                        }
-                      ]
-                    }
+                            children: headerText,
+                          },
+                        },
+                      ],
+                    },
                   },
 
-                  // Línea de degradado corporativa
+                  // Gradient accent line
                   {
                     type: "div",
                     props: {
@@ -250,20 +257,20 @@ export const GET: APIRoute = async ({ request }) => {
                         height: "3px",
                         backgroundImage: "linear-gradient(to right, #075985, #06b6d4)",
                         borderRadius: "2px",
-                        marginBottom: "36px"
-                      }
-                    }
+                        marginBottom: "36px",
+                      },
+                    },
                   },
-                ]
-              }
+                ],
+              },
             },
 
-            // Renderizado de los stickers asimétricos flotantes
+            // Floating stickers
             ...stickersJSX,
-          ]
-        }
+          ],
+        },
       },
-      satoriOptions
+      satoriOptions,
     );
 
     const resvg = new Resvg(svg);
@@ -274,8 +281,8 @@ export const GET: APIRoute = async ({ request }) => {
       status: 200,
       headers: {
         "Content-Type": "image/png",
-        "Cache-Control": "public, max-age=31536000, immutable"
-      }
+        "Cache-Control": "public, max-age=31536000, immutable",
+      },
     });
   } catch (error) {
     console.error("❌ Error crítico en el generador de imágenes OG:", error);

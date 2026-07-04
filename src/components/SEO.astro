@@ -6,11 +6,12 @@ interface Props {
   title: string;
   description: string;
   tags?: string[];
+  section?: string;
   pubDate?: string | Date;
   author?: string;
 }
 
-const { title, description, tags = [], pubDate, author } = Astro.props;
+const { title, description, tags = [], section, pubDate, author } = Astro.props;
 
 const truncateAtWord = (text, maxLen) => {
   if (text.length <= maxLen) return text;
@@ -26,9 +27,10 @@ const titleEncoded = encodeURIComponent(title);
 const tagsEncoded = encodeURIComponent(
   tags.length > 0 ? tags.join(",") : "default"
 );
+const sectionEncoded = section ? encodeURIComponent(section) : "";
 
 const ogImageURLObj = new URL(
-  `/api/og/og.png?title=${titleEncoded}&tags=${tagsEncoded}`,
+  `/api/og/og.png?title=${titleEncoded}&tags=${tagsEncoded}${sectionEncoded ? `&section=${sectionEncoded}` : ""}`,
   Astro.site
 );
 const ogImageUrl = ogImageURLObj.toString();
