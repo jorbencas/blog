@@ -16,6 +16,13 @@ const allChallenges = await getCollection("auto-challenges");
 const challengesPosts = await getSortedPosts(allChallenges);
 const latestChallenges = challengesPosts.slice(0, 6);
 
+const firstPostDate = sortedPosts.length > 0
+  ? sortedPosts[sortedPosts.length - 1].data.pubDate
+  : new Date();
+const daysSinceFirstPost = Math.floor(
+  (Date.now() - new Date(firstPostDate).getTime()) / (1000 * 60 * 60 * 24)
+);
+
 const allProjects = await getCollection("myprojects");
 const listProjects = await getSortedPosts(allProjects);
 const latestProjects = listProjects.slice(0, 6);
@@ -43,6 +50,9 @@ const badgeHerramientas =
 const badgeAmber =
   "inline-flex items-center gap-2 bg-gradient-to-r from-amber-800 to-amber-500 dark:from-amber-600 dark:to-amber-400 px-5 py-2.5 text-xs sm:text-sm font-black uppercase tracking-[0.25em] text-white dark:text-slate-900 shadow-[4px_4px_0px_0px_rgba(245,158,11,0.3)]";
 
+const badgeYellow =
+  "inline-flex items-center gap-2 bg-gradient-to-r from-yellow-600 to-yellow-400 dark:from-yellow-600 dark:to-yellow-400 px-5 py-2.5 text-xs sm:text-sm font-black uppercase tracking-[0.25em] text-white dark:text-slate-900 shadow-[4px_4px_0px_0px_rgba(234,179,8,0.3)]";
+
 const stickers = [
   { name: "html",   pos: "top: 0%; right: 10px;",   rot: "5deg",   c: "#06b6d4", d: "0s"    },
   { name: "python", pos: "top: 8%; right: 120px;",  rot: "-4deg",  c: "#10b981", d: "0.3s"  },
@@ -56,7 +66,13 @@ const stickers = [
 <Layout title="Blog | Jorge Beneyto Castelló" section="home">
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 sm:mt-20">
     <!-- HERO -->
-    <section class="relative mb-20 md:mb-32">
+    <section class="relative mb-20 md:mb-32 overflow-hidden">
+      <!-- Morphing mesh background -->
+      <div class="absolute inset-0 z-[-1] pointer-events-none select-none" aria-hidden="true">
+        <div class="morph-circle morph-a absolute w-[300px] h-[300px] md:w-[500px] md:h-[500px] rounded-full bg-cyan-500/10"></div>
+        <div class="morph-circle morph-b absolute w-[250px] h-[250px] md:w-[400px] md:h-[400px] rounded-full bg-slate-500/10"></div>
+        <div class="morph-circle morph-c absolute w-[200px] h-[200px] md:w-[350px] md:h-[350px] rounded-full bg-purple-500/10"></div>
+      </div>
       <!-- Desktop sticker cloud -->
       <div class="hidden md:block absolute inset-0 pointer-events-none select-none z-0">
         {stickers.map((s) => (
@@ -83,6 +99,9 @@ const stickers = [
         >
           {SITE_DESCRIPTION}
         </p>
+        <p class="flex items-center gap-1.5 text-sm text-slate-400 dark:text-slate-500 font-medium">
+          Llevo <strong class="streak-number text-slate-600 dark:text-slate-300 tabular-nums">{daysSinceFirstPost}</strong> días escribiendo
+        </p>
         <div class="flex flex-wrap gap-3 items-center mt-2">
           {
             SOCIAL_LINKS.slice(0, 5).map((link) => (
@@ -90,7 +109,8 @@ const stickers = [
                 href={link.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                class="flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 hover:border-cyan-400 hover:text-cyan-600 dark:hover:text-cyan-400 transition-all no-underline"
+                class="flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 hover:border-[var(--brand)] hover:text-[var(--brand)] dark:hover:text-[var(--brand)] transition-all no-underline"
+                style={`--brand: ${link.color}`}
               >
                 <img src={link.icon} alt="" class="w-4 h-4" />
                 {link.label}
@@ -123,13 +143,11 @@ const stickers = [
           {
             label: "Semanales",
             count: allWeeklyPosts.length,
-            accent: "text-cyan-600 dark:text-cyan-500",
+            accent: "text-yellow-600 dark:text-yellow-500",
           },
         ].map((stat) => (
           <div class="flex flex-col items-center justify-center p-6 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-            <span class={`text-3xl sm:text-4xl font-black ${stat.accent}`}>
-              {stat.count}
-            </span>
+            <span class={`text-3xl sm:text-4xl font-black ${stat.accent}`} data-count-to={stat.count}>0</span>
             <span class="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mt-1">
               {stat.label}
             </span>
@@ -242,17 +260,17 @@ const stickers = [
         <div
           class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0"
         >
-          <h2 class={badgeAmber}>📝 Últimos Posts</h2>
+          <h2 class={sectionBadge}>📝 Últimos Posts</h2>
           <a
             href="/posts"
-            class={`${linkBase} text-slate-400 hover:text-amber-500`}
+            class={`${linkBase} text-slate-400 hover:text-cyan-500`}
           >
             Ir a la bitácora <span
               class="inline-block transition-transform group-hover:translate-x-1"
               >→</span
             >
             <span
-              class="absolute bottom-0 left-0 w-0 h-0.5 bg-amber-500 transition-all duration-300 group-hover:w-full"
+              class="absolute bottom-0 left-0 w-0 h-0.5 bg-cyan-500 transition-all duration-300 group-hover:w-full"
             ></span>
           </a>
         </div>
@@ -287,17 +305,16 @@ const stickers = [
         latest6Weekly.length > 0 && (
           <section class="space-y-10">
             <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0">
-              <h2 class={sectionBadge}>📰 Resúmenes Semanales</h2>
-              <!-- Weekly keeps cyan badge -->
+              <h2 class={badgeYellow}>📰 Resúmenes Semanales</h2>
               <a
                 href="/weekly"
-                class={`${linkBase} text-slate-400 hover:text-cyan-500`}
+                class={`${linkBase} text-slate-400 hover:text-yellow-500`}
               >
                 Ver todo el archivo{" "}
                 <span class="inline-block transition-transform group-hover:translate-x-1">
                   →
                 </span>
-                <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-cyan-500 transition-all duration-300 group-hover:w-full" />
+                <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-yellow-500 transition-all duration-300 group-hover:w-full" />
               </a>
             </div>
 
@@ -328,4 +345,83 @@ const stickers = [
     box-shadow: 0 20px 25px -5px var(--gc, rgba(0,0,0,0.1));
     filter: brightness(1.1);
   }
+  .streak-number {
+    animation: pulse-streak 3s ease-in-out infinite;
+  }
+  @keyframes pulse-streak {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+  .morph-circle {
+    filter: blur(80px);
+    will-change: transform, opacity;
+  }
+  .morph-a {
+    top: -10%;
+    left: -10%;
+    animation: morphA 18s ease-in-out infinite;
+  }
+  .morph-b {
+    bottom: -10%;
+    right: -10%;
+    animation: morphB 22s ease-in-out infinite;
+  }
+  .morph-c {
+    top: 40%;
+    left: 50%;
+    animation: morphC 16s ease-in-out infinite;
+  }
+  @keyframes morphA {
+    0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.08; }
+    25% { transform: translate(60px, -40px) scale(1.3); opacity: 0.12; }
+    50% { transform: translate(120px, 60px) scale(0.9); opacity: 0.06; }
+    75% { transform: translate(30px, 80px) scale(1.2); opacity: 0.1; }
+  }
+  @keyframes morphB {
+    0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.06; }
+    25% { transform: translate(-50px, -60px) scale(1.2); opacity: 0.1; }
+    50% { transform: translate(-100px, 20px) scale(0.8); opacity: 0.05; }
+    75% { transform: translate(-20px, 90px) scale(1.4); opacity: 0.09; }
+  }
+  @keyframes morphC {
+    0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.05; }
+    25% { transform: translate(70px, 50px) scale(1.4); opacity: 0.09; }
+    50% { transform: translate(-40px, -30px) scale(0.7); opacity: 0.04; }
+    75% { transform: translate(40px, -70px) scale(1.1); opacity: 0.08; }
+  }
 </style>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const counters = document.querySelectorAll("[data-count-to]");
+    if (!counters.length) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const el = entry.target;
+          if (entry.isIntersecting && !el.dataset.counted) {
+            el.dataset.counted = "true";
+            const target = parseInt(el.dataset.countTo, 10);
+            const duration = 1500;
+            const start = performance.now();
+
+            function update(now) {
+              const elapsed = now - start;
+              const progress = Math.min(elapsed / duration, 1);
+              const eased = 1 - Math.pow(1 - progress, 3);
+              el.textContent = Math.floor(eased * target);
+              if (progress < 1) requestAnimationFrame(update);
+            }
+
+            requestAnimationFrame(update);
+            observer.unobserve(el);
+          }
+        });
+      },
+      { threshold: 0.3 }
+    );
+
+    counters.forEach((c) => observer.observe(c));
+  });
+</script>
