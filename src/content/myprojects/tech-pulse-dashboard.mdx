@@ -1,9 +1,9 @@
 ---
 draft: false
 title: "Tech Pulse: Dashboard Automatizado de Noticias Tech con IA"
-description: "Scraper inteligente que recolecta 139 fuentes tech (web, YouTube, RSS), genera resúmenes con Gemini IA, filtra por categoría/badge/canal/fecha, ranking GitHub Stars, sección de referencia tech, y despliega dashboard + Telegram cada 30 min + newsletter diaria. Código 100% SOLID con store observable JS, configuraciones externalizadas y estructura modular reorganizada."
+description: "Scraper inteligente que recolecta 70+ fuentes tech (web, YouTube, RSS), genera resúmenes con Gemini IA, filtra por categoría/badge/canal/fecha, ranking GitHub Stars, sección de referencia tech, y despliega dashboard SSR + Telegram cada 30 min + newsletter diaria. Código 100% SOLID con store observable JS, configuraciones externalizadas y estructura modular reorganizada."
 pubDate: "2026/06/25"
-updatedDate: "2026/07/03"
+updatedDate: "2026/07/04"
 tags: ['python', 'ia', 'web-scraping', 'devops', 'automation', 'github-actions', 'rss']
 image: "img/tech_pulse_dashboard/tech_pulse_dashboard_cover-1200.webp"
 repository: "https://github.com/jorbencas/test_githubActions"
@@ -17,10 +17,10 @@ featured: false
 El ecosistema tecnológico publica decenas de noticias, vídeos y recursos cada día. Seguir el ritmo manualmente es imposible. Herramientas como Feedly o Google News son genéricas, no filtran por relevancia técnica real ni ofrecen resúmenes inteligentes.
 
 Se necesitaba un sistema que:
-- Recolectara automáticamente contenido de 139 fuentes (YouTube, blogs tech, RSS, redes sociales)
+- Recolectara automáticamente contenido de 70+ fuentes (YouTube, blogs tech, RSS)
 - Clasificara y deduplicara el contenido en tiempo real
 - Generara resúmenes por noticia y un recap semanal con IA
-- Desplegara un dashboard interactivo con filtros combinables
+- Desplegara un dashboard SSR interactivo con filtros combinables
 - Enviara notificaciones por Telegram cada 30 minutos con audio TTS
 - Enviara una newsletter diaria con resúmenes curados
 
@@ -45,7 +45,7 @@ Se necesitaba un sistema que:
 - **Capa de Persistencia:** Historial JSON con deduplicación automática por URL normalizada y título similar, truncado a 900 entradas.
 
 - **Capa de Distribución:**
-  - Dashboard HTML/JS estático desplegado en Surge.sh
+  - Dashboard HTML SSR desplegado en Surge.sh (Python genera el HTML completo)
   - Newsletter HTML con diseño responsive vía Mailgun
   - Notificaciones Telegram cada 30 min con audio edge-tts (voz española)
   - Posts en markdown para blog Astro vía PR automático
@@ -56,14 +56,12 @@ Cada script es independiente y orquestable por separado. La estructura se reorga
 
 ```
 scripts/
-├── scrapers/           # Scraping de noticias, redes sociales, tools, trends
+├── scrapers/           # Scraping de noticias y tools
 │   ├── scraper_base.py       # Extractores compartidos (YouTube, Web, ScraperPro)
 │   ├── scrape_news.py        # Noticias (RSS + web + YouTube)
-│   ├── scrape_social.py      # Redes sociales (Playwright)
-│   ├── scrape_tools.py       # GitHub Trending + Product Hunt
-│   └── scrape_trends.py      # Google Trends + TikTok
+│   └── scrape_tools.py       # GitHub Trending + Product Hunt
 ├── publishers/         # Generación y distribución de contenido
-│   ├── generate_weekly.py    # Recap semanal + dashboard HTML
+│   ├── generate_weekly.py    # Recap semanal + dashboard HTML (SSR)
 │   ├── manage_resources.py   # Paginación y limpieza de resources.mdx
 │   ├── merge_freefordev.py   # Merge de free-for-dev resources
 │   ├── send_email.py         # Newsletter Mailgun
@@ -87,10 +85,9 @@ Todos los scripts se ejecutan con `python -m` desde la raíz del proyecto:
 
 1. `python -m scripts.scrapers.scrape_news --tier full` → `files/noticias_historico.json` (web + YouTube + RSS)
 2. `python -m scripts.scrapers.scrape_tools` → `files/herramientas.json` (GitHub Trending + Product Hunt)
-3. `python -m scripts.scrapers.scrape_trends` → `files/trends.json` (Google Trends + TikTok via Playwright)
-4. `python -m scripts.publishers.generate_weekly --blog-path blog` → `auto-news/` (recap MD) + `public/` (dashboard + data.json)
-5. `python -m scripts.publishers.send_email` → Mailgun (diario 09:00 UTC)
-6. `python -m scripts.publishers.send_telegram` → Telegram con TTS (cada 30 min)
+3. `python -m scripts.publishers.generate_weekly --blog-path blog` → `auto-news/` (recap MD) + `public/` (dashboard HTML)
+4. `python -m scripts.publishers.send_email` → Mailgun (diario 09:00 UTC)
+5. `python -m scripts.publishers.send_telegram` → Telegram con TTS (cada 30 min)
 
 ## 3. Retos Técnicos y Decisiones de Diseño
 
@@ -138,9 +135,11 @@ Los scripts se reorganizaron de la raíz del proyecto a subdirectorios modulares
 
 - **`utils.py` → `scripts/utils/common.py`**: Renombrado para evitar sombreado de módulos con `utils/` del sistema
 - **`solutions_db.py` y `solutions_data.py`**: Migrados desde el blog a `scripts/solutions/` (105+ soluciones curadas en 12 lenguajes)
-- **`tests/`**: Migrados desde `blog/tests/python/` (90+ tests pytest)
+- **`tests/`**: Migrados desde `blog/tests/python/` (89 tests pytest)
 - **Todos los workflows actualizados** para usar `python -m scripts.subdir.script` en lugar de `python script.py`
 - **Nuevo workflow `tests.yml`**: Ejecuta pytest en cada push/PR a master
+- **Eliminados `scrape_social.py` y `scrape_trends.py`**: Redes sociales (Instagram, X/Twitter, Threads, TikTok) y Google Trends removidos del ecosistema
+- **Dashboard migrado a SSR**: Python genera `index.html` completo, JavaScript solo maneja interactividad (~135 líneas)
 
 ### Fix de Pipeline de Imágenes (Julio 2026)
 
@@ -156,16 +155,16 @@ Se corrigió un bug en `fix_images.py` que eliminaba el `import ResponsiveImage`
 
 El workflow `test.yml` se actualizó de Node.js 20 a 22, requerido por Astro 6.4 que soporta `>=22.12.0`.
 
-### Renderizado Client-Side del Dashboard
+### Renderizado SSR del Dashboard
 
-Python genera un `index.html` shell (~2KB) + `data.json` con el historial completo + config inyectada. JavaScript (`script.js`) construye dinámicamente usando el patrón de store observable:
+Python genera un `index.html` completo con todo el contenido pre-renderizado (noticias, vídeos YouTube, ranking GitHub). JavaScript (`script.js`) es mínimo (~135 líneas) y solo maneja:
 
 - **Filtros combinables:** categoría (IA, Programación, DevOps, etc.), tipo (Tech/RSS), fuente RSS específica, canal, semana
 - **Chips con favicon:** cada chip de canal/fuente muestra avatar o favicon via Google S2 (`//www.google.com/s2/favicons?domain=...`)
 - **Ranking GitHub Stars:** top 20 repos ordenados por estrellas extraídos de GitHub Topics/Collections, con filtro por nombre/lenguaje
 - **Sección de Referencia Tech:** panel colapsable con Skills, LLMs, Lenguajes, Frameworks y Librerías ordenados por categoría — datos inyectados desde Python, sin hardcode en JS
 - **Badges con clases CSS unificadas:** `.badge-tech`, `.badge-rss`, `.badge-cat`
-- **Config externalizada:** canales, tabs, opciones de filtro se leen de `store.get("config")`, poblado desde `data.json` — cero arrays hardcodeados en JS
+- **Config externalizada:** canales, tabs, opciones de filtro se inyectan directamente en el HTML desde Python
 
 ### Telegram con Audio por Noticia
 
@@ -175,21 +174,20 @@ Python genera un `index.html` shell (~2KB) + `data.json` con el historial comple
 - Audio TTS con edge-tts (voz `es-ES-AlvaroNeural`)
 - Control de duplicados vía `telegram_sent.json`
 
-### Noticias desde 139 Fuentes
+### Noticias desde 70+ Fuentes
 
 | Tipo | Cantidad | Ejemplos |
 |------|----------|----------|
 | YouTube | 20+ canales | MoureDev, Midudev, Pelado Nerd, Ringa Tech, Nethermind |
-| Web HTML | 60+ sitios | Xataka, TechCrunch, The Verge, Wired, Hacker News, GitHub Blog |
+| Web HTML | 40+ sitios | Xataka, TechCrunch, The Verge, Wired, Hacker News, GitHub Blog |
 | RSS XML | 20 feeds | OpenAI, Anthropic, DeepMind, Hacker News, Stack Overflow, SEO |
-| Twitter/X | 10+ cuentas | GitHub, Vercel, Astro, dotpige, Bricemoure |
 | Herramientas | 3 fuentes | GitHub Trending, GitHub Topics, Product Hunt |
 
 ## 4. Desglose del Feature Set
 
-- **139 fuentes monitorizadas:** YouTube, blogs tech, RSS, Twitter, GitHub, Product Hunt
+- **70+ fuentes monitorizadas:** YouTube, blogs tech, RSS, GitHub, Product Hunt
 - **Clasificación inteligente:** 6 categorías (IA, Programación, DevOps, Ciberseguridad, Hardware, Negocios) + badges Tech/RSS
-- **Dashboard interactivo SOLID:** store observable, helpers puros, fábrica genérica de chips, filtros unificados, cero memory leaks
+- **Dashboard SSR:** Python genera HTML completo, JS solo interactividad (~135 líneas)
 - **Config externalizada:** prompts IA, plantillas Telegram/email, canales YouTube, opciones de filtro — todo en `constants_downloadfile.py`
 - **Constantes con nombre:** todos los dict keys del schema son constantes (cambio en un solo sitio)
 - **Sección de Referencia Tech:** panel colapsable con Skills, LLMs, Lenguajes, Frameworks y Librerías
@@ -198,7 +196,7 @@ Python genera un `index.html` shell (~2KB) + `data.json` con el historial comple
 - **Ranking GitHub Stars:** top 20 repos ordenados por estrellas desde GitHub Topics/Collections
 - **Deduplicación:** por URL normalizada y título similar en scrape y generación de dashboard
 - **Estructura modular reorganizada:** scripts en subdirectorios (`scrapers/`, `publishers/`, `tools/`, `utils/`, `solutions/`)
-- **90+ tests pytest:** cobertura completa de utilidades, caché, constantes, imágenes, recursos y soluciones
+- **89 tests pytest:** cobertura completa de utilidades, caché, constantes, imágenes, recursos y soluciones
 - **CI/CD completo:** 11 workflows de GitHub Actions con badges en vivo en el README
 
 ## 5. Puesta en Marcha Local
