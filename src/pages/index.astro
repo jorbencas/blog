@@ -45,9 +45,12 @@ const sectionBadge =
         >
           <span
             class="bg-clip-text text-transparent bg-gradient-to-r from-sky-800 to-cyan-500 dark:from-sky-400 dark:to-cyan-300"
-          >Problemas de un<br />desarrollador Web</span>
+            >Problemas de un<br />desarrollador Web</span
+          >
         </h1>
-        <p class="text-lg sm:text-xl text-slate-500 dark:text-slate-400 max-w-2xl leading-relaxed font-medium">
+        <p
+          class="text-lg sm:text-xl text-slate-500 dark:text-slate-400 max-w-2xl leading-relaxed font-medium"
+        >
           {SITE_DESCRIPTION}
         </p>
         <div class="flex flex-wrap gap-3 items-center mt-2">
@@ -69,31 +72,51 @@ const sectionBadge =
     </section>
 
     <!-- STATS BAR -->
-    <div
-      class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-20 md:mb-32"
-    >
-      {[
-        { label: "Artículos", count: allPosts.length, accent: "text-cyan-600 dark:text-cyan-400" },
-        { label: "Retos", count: allChallenges.length, accent: "text-cyan-600 dark:text-cyan-400" },
-        { label: "Herramientas", count: allTools.length, accent: "text-emerald-600 dark:text-emerald-400" },
-        { label: "Semanales", count: allWeeklyPosts.length, accent: "text-cyan-600 dark:text-cyan-400" },
-      ].map((stat) => (
-        <div
-          class="flex flex-col items-center justify-center p-6 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
-        >
-          <span class={`text-3xl sm:text-4xl font-black ${stat.accent}`}>{stat.count}</span>
-          <span class="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mt-1">{stat.label}</span>
-        </div>
-      ))}
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-20 md:mb-32">
+      {
+        [
+          {
+            label: "Artículos",
+            count: allPosts.length,
+            accent: "text-cyan-600 dark:text-cyan-400",
+          },
+          {
+            label: "Retos",
+            count: allChallenges.length,
+            accent: "text-cyan-600 dark:text-cyan-400",
+          },
+          {
+            label: "Herramientas",
+            count: allTools.length,
+            accent: "text-emerald-600 dark:text-emerald-400",
+          },
+          {
+            label: "Semanales",
+            count: allWeeklyPosts.length,
+            accent: "text-cyan-600 dark:text-cyan-400",
+          },
+        ].map((stat) => (
+          <div class="flex flex-col items-center justify-center p-6 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+            <span class={`text-3xl sm:text-4xl font-black ${stat.accent}`}>
+              {stat.count}
+            </span>
+            <span class="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mt-1">
+              {stat.label}
+            </span>
+          </div>
+        ))
+      }
     </div>
 
     <div class="space-y-24 md:space-y-32 mb-20">
       <!-- SECCIÓN: PROYECTOS -->
       <section class="space-y-10">
-        <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0">
+        <div
+          class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0"
+        >
           <h2 class={sectionBadge}>💻 Proyectos</h2>
           <a
-            href="/proyectos/1"
+            href="/proyectos"
             class={`${linkBase} text-slate-400 hover:text-purple-500`}
           >
             Ver portafolio <span
@@ -121,26 +144,24 @@ const sectionBadge =
       </section>
 
       <!-- SECCIÓN: HERRAMIENTAS -->
-      {latestTools.length > 0 && (
-        <section class="space-y-10">
-          <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0">
-            <h2 class={sectionBadge}>🛠️ Mini Herramientas</h2>
-            <a
-              href="/herramientas/1"
-              class={`${linkBase} text-slate-400 hover:text-emerald-500`}
-            >
-              Ver herramientas <span
-                class="inline-block transition-transform group-hover:translate-x-1"
-                >→</span
+      {
+        latestTools.length > 0 && (
+          <section class="space-y-10">
+            <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0">
+              <h2 class={sectionBadge}>🛠️ Mini Herramientas</h2>
+              <a
+                href="/herramientas"
+                class={`${linkBase} text-slate-400 hover:text-emerald-500`}
               >
-              <span
-                class="absolute bottom-0 left-0 w-0 h-0.5 bg-emerald-500 transition-all duration-300 group-hover:w-full"
-              ></span>
-            </a>
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {
-              latestTools.map((tool) => (
+                Ver herramientas{" "}
+                <span class="inline-block transition-transform group-hover:translate-x-1">
+                  →
+                </span>
+                <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-emerald-500 transition-all duration-300 group-hover:w-full" />
+              </a>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {latestTools.map((tool) => (
                 <Card
                   {...tool.data}
                   href={`/herramientas/${tool.id.replace(/\.[^/.]+$/, "")}`}
@@ -148,18 +169,20 @@ const sectionBadge =
                   aspectRatio="video"
                   overlay="white"
                 />
-              ))
-            }
-          </div>
-        </section>
-      )}
+              ))}
+            </div>
+          </section>
+        )
+      }
 
       <!-- SECCIÓN: RETOS -->
       <section class="space-y-10">
-        <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0">
+        <div
+          class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0"
+        >
           <h2 class={sectionBadge}>🏆 Retos</h2>
           <a
-            href="/retos/1"
+            href="/retos"
             class={`${linkBase} text-slate-400 hover:text-cyan-500`}
           >
             Ver retos <span
@@ -186,10 +209,12 @@ const sectionBadge =
 
       <!-- SECCIÓN: BLOG -->
       <section class="space-y-10">
-        <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0">
+        <div
+          class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0"
+        >
           <h2 class={sectionBadge}>📝 Últimos Posts</h2>
           <a
-            href="/posts/1"
+            href="/posts"
             class={`${linkBase} text-slate-400 hover:text-slate-900 dark:hover:text-white`}
           >
             Ir a la bitácora <span
@@ -203,54 +228,58 @@ const sectionBadge =
         </div>
 
         <!-- Featured post -->
-        {featuredPost && (
-          <div class="mb-8">
-            <Card
-              href={`/posts/${featuredPost.id}`}
-              {...featuredPost.data}
-              accent="cyan"
-            />
-          </div>
-        )}
+        {
+          featuredPost && (
+            <div class="mb-8">
+              <Card
+                href={`/posts/${featuredPost.id}`}
+                {...featuredPost.data}
+                accent="cyan"
+              />
+            </div>
+          )
+        }
 
         <!-- Rest of latest posts -->
-        {remainingPosts.length > 0 && (
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {remainingPosts.map((p) => (
-              <Card href={`/posts/${p.id}`} {...p.data} accent="cyan" />
-            ))}
-          </div>
-        )}
+        {
+          remainingPosts.length > 0 && (
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {remainingPosts.map((p) => (
+                <Card href={`/posts/${p.id}`} {...p.data} accent="cyan" />
+              ))}
+            </div>
+          )
+        }
       </section>
 
       <!--SECCIÓN WEEKLY-->
-      {latest6Weekly.length > 0 && (
-        <section class="space-y-10">
-          <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0">
-            <h2 class={sectionBadge}>📰 Resúmenes Semanales</h2>
-            <a
-              href="/weekly/1"
-              class={`${linkBase} text-slate-400 hover:text-cyan-500`}
-            >
-              Ver todo el archivo <span
-                class="inline-block transition-transform group-hover:translate-x-1"
-                >→</span
+      {
+        latest6Weekly.length > 0 && (
+          <section class="space-y-10">
+            <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0">
+              <h2 class={sectionBadge}>📰 Resúmenes Semanales</h2>
+              <a
+                href="/weekly"
+                class={`${linkBase} text-slate-400 hover:text-cyan-500`}
               >
-              <span
-                class="absolute bottom-0 left-0 w-0 h-0.5 bg-cyan-500 transition-all duration-300 group-hover:w-full"
-              ></span>
-            </a>
-          </div>
+                Ver todo el archivo{" "}
+                <span class="inline-block transition-transform group-hover:translate-x-1">
+                  →
+                </span>
+                <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-cyan-500 transition-all duration-300 group-hover:w-full" />
+              </a>
+            </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {latest6Weekly.map((weekly, index) => (
-              <div class={index === 0 ? "md:col-span-2 lg:col-span-2" : ""}>
-                <Weekly post={weekly} />
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {latest6Weekly.map((weekly, index) => (
+                <div class={index === 0 ? "md:col-span-2 lg:col-span-2" : ""}>
+                  <Weekly post={weekly} />
+                </div>
+              ))}
+            </div>
+          </section>
+        )
+      }
     </div>
   </div>
 </Layout>
