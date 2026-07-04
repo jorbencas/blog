@@ -3,7 +3,6 @@
 [![Astro](https://img.shields.io/badge/astro-6.4-BC52EE?logo=astro)](https://astro.build)
 [![Svelte](https://img.shields.io/badge/svelte-5-FF3E00?logo=svelte)](https://svelte.dev)
 [![Tailwind CSS](https://img.shields.io/badge/tailwind-4.3-06B6D4?logo=tailwindcss)](https://tailwindcss.com)
-[![Playwright](https://img.shields.io/badge/test-playwright-45ba4b?logo=playwright)](https://playwright.dev)
 [![Pagefind](https://img.shields.io/badge/search-pagefind-8A2BE2)](https://pagefind.app)
 [![Vercel](https://img.shields.io/badge/deploy-vercel-black?logo=vercel)](https://vercel.com)
 
@@ -25,7 +24,6 @@ Personal tech & development blog built with Astro 6, Svelte 5 and Tailwind CSS 4
 - **CodeTabs** — interactive multi-language code tabs (Python/JS/Java/TS) in challenges
 - **VideoExtractor** — browser-based video clip extraction (WebM/MP4)
 - **Strict TypeScript** — `strict` + `noUncheckedIndexedAccess`
-- **E2E testing** — 14 Playwright suites covering navigation, listings, detail pages, responsiveness, contrast, search, and visual regression
 
 ---
 
@@ -41,7 +39,6 @@ Personal tech & development blog built with Astro 6, Svelte 5 and Tailwind CSS 4
 | Search         | Pagefind |
 | OG images      | Satori + resvg |
 | Analytics      | Vercel Speed Insights |
-| E2E testing    | Playwright (14 suites) |
 | Typography     | Self-hosted variable fonts |
 | Icons          | astro-icon + SVGs |
 
@@ -63,14 +60,11 @@ blog/
 │   │   └── tools/              # Interactive tools
 │   ├── content.config.ts       # Zod schemas + loaders
 │   ├── data/  layouts/  pages/  styles/  utils.js
-├── tests/
-│   └── specs/                  # 14 Playwright E2E suites
 ├── .github/workflows/
 │   ├── issues_handel.yml       # Feedback management
 │   ├── spelling.yml            # LanguageTool (Spanish)
-│   ├── test.yml                # E2E Playwright
 │   └── trigger-optimize.yml    # Dispatch image optimization
-├── astro.config.mjs / pagefind.yml / playwright.config.js
+├── astro.config.mjs / pagefind.yml
 ├── svelte.config.ts / tsconfig.json
 └── AGENTS.md / docs/contexto.md
 ```
@@ -85,10 +79,6 @@ blog/
 | `npm run build`        | Static build + Pagefind indexing |
 | `npm run preview`      | Preview production build |
 | `npm run cleaner`      | Reinstall dependencies |
-| `npm test`             | Run Playwright E2E |
-| `npm run test:build`   | Build + tests |
-| `npm run test:update`  | Update visual snapshots |
-| `npm run test:ui`      | Playwright UI mode |
 
 ---
 
@@ -98,7 +88,6 @@ blog/
 | -------- | ------- | ------- |
 | **trigger-optimize** | Push to `main` (images or content) | Dispatch optimization to test_githubActions |
 | **spelling** | PR against `content` | LanguageTool (Spanish) |
-| **test** | Push to `main` | Playwright E2E tests |
 | **issues_handel** | Issues | Feedback form handler |
 
 ---

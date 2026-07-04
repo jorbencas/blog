@@ -220,14 +220,3 @@ MDX parses `<` and `{` as JSX/expression boundaries even in prose. **Never leave
 
 ## PR Instructions
 - Title: `[<project_name>] <Title>`
-- Always run `npm lint` and `npm test` before committing.
-
-## Testing Rules (reference)
-Before writing a test, evaluate:
-
-1. **Execution context**: does it have side effects? depends on env/files? client or server?
-2. **Test type**: pure → unit, DOM → E2E (Playwright), UI → visual regression, multiple modules → integration
-3. **Functional coverage**: edge cases, output assertions, async, should fail if implementation changes
-4. **Code design**: does it do too many things? invisible side effects? refactorable?
-5. **Ask the user**: expected behavior, whether it replaces or complements existing tests
-6. **Location**: Python → `tests/python/`, Playwright → `tests/specs/`

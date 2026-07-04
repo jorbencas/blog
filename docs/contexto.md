@@ -1,6 +1,6 @@
 # Contexto del proyecto — Blog
 
-**Última actualización**: 2026-07-03 (fix fix_images.py import, Node.js 22 upgrade)
+**Última actualización**: 2026-07-04 (tests eliminados, blog simplificado)
 **Stack**: Astro 6.4 + Svelte 5 + Tailwind CSS 4.3 | Vercel static | Node >= 22
 **Idioma**: Español
 **Deploy**: `blog-jorbencas.vercel.app`
@@ -29,6 +29,7 @@
 | 2026-07 | **fix_images.py fix**: Corregido bug que eliminaba `import ResponsiveImage` de posts. Nueva lógica preserva import cuando componente se usa |
 | 2026-07 | **Node.js 22**: Actualizado `test.yml` workflow de Node 20 a 22 (requerido por Astro 6.4) |
 | 2026-07 | **Migración scripts**: Soluciones y tests migrados a test_githubActions. Blog sin scripts Python. README actualizado |
+| 2026-07 | **Tests eliminados**: Playwright E2E y workflow test.yml eliminados. Blog simplificado |
 
 ## Mejoras implementadas
 
@@ -121,8 +122,7 @@ Orden de secciones: Mis_Proyectos → Mini_Herramientas → Retos → Últimos_P
 - **Cards**: `Card.astro` (unificado, paramétrico por acento: cyan/emerald/purple, aspectRatio, overlay, difficulty badge, repository icon)
 - **Guías**: 15 archivos `src/content/posts/guia-0-100-*.mdx`
 - **Scripts**: `fix_images.py`, `image_cache.json`, `rewrite_challenges.py`, `solutions_db.py`, `constants_retos.py`, `hunt_challenges.py`
-- **CI/CD**: `test.yml` (Node 22, Playwright E2E), `spelling.yml`, `issues_handel.yml`, `trigger-optimize.yml`
+- **CI/CD**: `spelling.yml`, `issues_handel.yml`, `trigger-optimize.yml`
 - **Resources**: `resources.mdx` (~500 cards), auto-paginación via `test_githubActions/manage_resources.py` — cuando excede 500, se crea `resources2.mdx` (workflow diario `daily_resources.yml` en test_githubActions)
 - **Scripts**: `actualizar_recursos.py`, `merge_freefordev.py`, `generate_resources.py`, `manage_resources.py` (en test_githubActions)
 - **Skills**: `.opencode/skills/expand-guia-formato/SKILL.md`
-- **Tests**: `tests/specs/search.spec.mjs`, `visual-regression.spec.mjs`, `navigation.spec.mjs`, `listing-pages.spec.mjs`, `detail-pages.spec.mjs`, `interactive.spec.mjs`, `responsive.spec.mjs`, `contrast.spec.mjs`, `visual-regression-full.spec.mjs`
