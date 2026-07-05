@@ -12,6 +12,10 @@ All communication, comments, documentation, and agents must be written in Englis
 
 Apply these principles when writing code. First make it work correctly, then improve the design.
 
+## AI Hooks (hard rules — never skip)
+- **NO destructive commands**: Never run `rm`, `shutil.rmtree`, `os.remove`, `os.unlink`, `Path.unlink`, `Path.rmdir`, `shutil.rmdir` or any other command that deletes files/directories. Use `/tmp/` for temporary files.
+- **NO git push/fetch/merge/rebase**: These must be done manually by the user. Allowed: `git pull`, `git add`, `git rm`, `git commit` only.
+
 ## 🔴 CRITICAL RULES — Zero Tolerance (Priority Order)
 
 ### 🚫 ABSOLUTELY NEVER DELETE FILES WITHOUT EXPLICIT CONFIRMATION
