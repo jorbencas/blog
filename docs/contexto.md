@@ -1,6 +1,6 @@
 # Contexto del proyecto — Blog
 
-**Última actualización**: 2026-07-05 (cross-references retos + posts)
+**Última actualización**: 2026-07-05 (cross-references + post comandos CLI, 3 commits sin push)
 **Stack**: Astro 6.4 + Svelte 5 + Tailwind CSS 4.3 | Vercel static | Node >= 22
 **Idioma**: Español
 **Deploy**: `blog-jorbencas.vercel.app`
