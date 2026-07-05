@@ -1,11 +1,36 @@
 ---
-const { headings = [] } = Astro.props;
+const { headings = [], section = "blog" } = Astro.props;
 const hasServerHeadings = headings?.length > 1;
+
+const tocColors = {
+  blog: {
+    hover: "group-hover:text-cyan-500 dark:group-hover:text-cyan-400",
+    underline: "bg-cyan-500/30",
+    active: "!text-cyan-500",
+  },
+  weekly: {
+    hover: "group-hover:text-yellow-500 dark:group-hover:text-yellow-400",
+    underline: "bg-yellow-500/30",
+    active: "!text-yellow-500",
+  },
+};
+const tc = tocColors[section] || tocColors.blog;
+
+const tocConfig = {
+  linkClass: `toc-link group block text-sm font-bold text-slate-700 dark:text-slate-300 ${tc.hover} transition-colors line-clamp-2 italic uppercase tracking-tighter`,
+  underlineClass: `h-[1px] w-0 group-hover:w-full ${tc.underline} transition-all duration-500 mt-2`,
+  activeClasses: [tc.active, "!font-black"],
+};
+const tocConfigJSON = JSON.stringify(tocConfig);
 ---
 
 {
   hasServerHeadings && (
-    <details id="toc-mobile" class="lg:hidden group mb-6 bg-slate-100 dark:bg-slate-900/50 rounded-lg">
+    <details
+      id="toc-mobile"
+      class="lg:hidden group mb-6 bg-slate-100 dark:bg-slate-900/50 rounded-lg"
+      data-toc-config={tocConfigJSON}
+    >
       <summary class="flex items-center gap-2 cursor-pointer list-none p-6 pb-0">
         <h2 class="text-xs font-black uppercase tracking-[0.3em] text-slate-600 dark:text-slate-500">
           📋 Contenido
@@ -19,12 +44,12 @@ const hasServerHeadings = headings?.length > 1;
           {headings.map((h) => (
             <a
               href={`#${h.slug}`}
-              class="toc-link group block"
+              class={tocConfig.linkClass}
             >
-              <p class="text-sm font-bold text-slate-700 dark:text-slate-300 group-hover:text-cyan-500 dark:group-hover:text-cyan-400 transition-colors line-clamp-2 italic uppercase tracking-tighter">
+              <p class={`text-sm font-bold text-slate-700 dark:text-slate-300 ${tc.hover} transition-colors line-clamp-2 italic uppercase tracking-tighter`}>
                 {h.text}
               </p>
-              <div class="h-[1px] w-0 group-hover:w-full bg-cyan-500/30 transition-all duration-500 mt-2" />
+              <div class={`h-[1px] w-0 group-hover:w-full ${tc.underline} transition-all duration-500 mt-2`} />
             </a>
           ))}
         </nav>
@@ -33,7 +58,11 @@ const hasServerHeadings = headings?.length > 1;
   )
 }
 
-<aside id="toc-desktop" class="lg:col-span-4 space-y-8 hidden lg:block">
+<aside
+  id="toc-desktop"
+  class="lg:col-span-4 space-y-8 hidden lg:block"
+  data-toc-config={tocConfigJSON}
+>
   <div class="sticky top-24 p-6 bg-slate-100 dark:bg-slate-900/50 rounded-lg overflow-y-auto max-h-[calc(100vh-8rem)]">
     <h2 class="text-xs font-black uppercase tracking-[0.3em] text-slate-600 dark:text-slate-500 mb-6 pb-2">
       Contenido
@@ -42,12 +71,12 @@ const hasServerHeadings = headings?.length > 1;
       {hasServerHeadings && headings.map((h) => (
         <a
           href={`#${h.slug}`}
-          class="toc-link group block"
+          class={tocConfig.linkClass}
         >
-          <p class="text-sm font-bold text-slate-700 dark:text-slate-300 group-hover:text-cyan-500 dark:group-hover:text-cyan-400 transition-colors line-clamp-2 italic uppercase tracking-tighter">
+          <p class={`text-sm font-bold text-slate-700 dark:text-slate-300 ${tc.hover} transition-colors line-clamp-2 italic uppercase tracking-tighter`}>
             {h.text}
           </p>
-          <div class="h-[1px] w-0 group-hover:w-full bg-cyan-500/30 transition-all duration-500 mt-2" />
+          <div class={`h-[1px] w-0 group-hover:w-full ${tc.underline} transition-all duration-500 mt-2`} />
         </a>
       ))}
     </nav>
@@ -78,6 +107,18 @@ const hasServerHeadings = headings?.length > 1;
   (function() {
     let observer = null;
 
+    function getTOCConfig(el) {
+      const json = el?.closest("[data-toc-config]")?.getAttribute("data-toc-config");
+      if (json) {
+        try { return JSON.parse(json); } catch(e) {}
+      }
+      return {
+        linkClass: "toc-link group block text-sm font-bold text-slate-700 dark:text-slate-300 group-hover:text-cyan-500 dark:group-hover:text-cyan-400 transition-colors line-clamp-2 italic uppercase tracking-tighter",
+        underlineClass: "h-[1px] w-0 group-hover:w-full bg-cyan-500/30 transition-all duration-500 mt-2",
+        activeClasses: ["!text-cyan-500", "!font-black"],
+      };
+    }
+
     function buildTOCFromDOM() {
       const list = document.getElementById("toc-list");
       const mobileList = document.querySelector("#toc-mobile nav");
@@ -90,17 +131,17 @@ const hasServerHeadings = headings?.length > 1;
         if (mobile) mobile.style.display = "none";
         return;
       }
-      const linkClass =
-        "toc-link group block text-sm font-bold text-slate-700 dark:text-slate-300 group-hover:text-cyan-500 dark:group-hover:text-cyan-400 transition-colors line-clamp-2 italic uppercase tracking-tighter";
-      const underlineClass = "h-[1px] w-0 group-hover:w-full bg-cyan-500/30 transition-all duration-500 mt-2";
+
+      const config = getTOCConfig(list || mobileList);
+
       const renderLinks = (parent) => {
         headingElements.forEach((h) => {
           const a = document.createElement("a");
           a.href = `#${h.id}`;
-          a.className = linkClass;
+          a.className = config.linkClass;
           a.textContent = h.textContent;
           const div = document.createElement("div");
-          div.className = underlineClass;
+          div.className = config.underlineClass;
           const wrapper = document.createElement("div");
           wrapper.className = "toc-link-wrapper";
           wrapper.appendChild(a);
@@ -128,16 +169,15 @@ const hasServerHeadings = headings?.length > 1;
 
       if (headingElements.length === 0) return;
 
-      // Build TOC from DOM if no server-rendered links exist
       if (links.length === 0) {
         buildTOCFromDOM();
         links = document.querySelectorAll(".toc-link");
         if (links.length === 0) return;
       }
 
-      const activeClasses = [
-        "!text-cyan-500", "!font-black",
-      ];
+      const firstLink = links[0];
+      const config = getTOCConfig(firstLink);
+      const activeClasses = config.activeClasses;
 
       const removeAllActive = () => {
         links.forEach((link) => link.classList.remove(...activeClasses));
@@ -168,7 +208,6 @@ const hasServerHeadings = headings?.length > 1;
 
       headingElements.forEach((h) => observer.observe(h));
 
-      // Activar primer heading por defecto
       if (links.length > 0) {
         removeAllActive();
         links[0].classList.add(...activeClasses);

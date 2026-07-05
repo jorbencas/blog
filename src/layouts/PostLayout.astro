@@ -79,6 +79,18 @@ const tagsArray = Array.isArray(tags)
   : typeof tags === "string"
   ? tags.split(",").map((t) => t.trim())
   : [];
+
+const sectionColors = {
+  weekly: {
+    badge: "from-yellow-800 to-yellow-500 dark:from-yellow-700 dark:to-yellow-400",
+    tag: "from-yellow-800 to-yellow-600 hover:shadow-[0_0_20px_rgba(234,179,8,0.4)]",
+  },
+  blog: {
+    badge: "from-sky-900 to-cyan-500 dark:from-sky-800 dark:to-cyan-600",
+    tag: "from-sky-800 to-cyan-600 hover:shadow-[0_0_20px_rgba(6,182,212,0.4)]",
+  },
+};
+const sc = sectionColors[section] || sectionColors.blog;
 ---
 
 <Layout
@@ -126,7 +138,7 @@ const tagsArray = Array.isArray(tags)
           </h1>
 
           <p
-            class="text-base sm:text-xl leading-relaxed max-w-3xl px-5 sm:px-6 py-3 sm:py-4 from-sky-900 to-cyan-500 bg-gradient-to-r text-white dark:from-sky-800 dark:to-cyan-600"
+            class={`text-base sm:text-xl leading-relaxed max-w-3xl px-5 sm:px-6 py-3 sm:py-4 bg-gradient-to-r text-white ${sc.badge}`}
           >
             {description}
           </p>
@@ -202,7 +214,7 @@ const tagsArray = Array.isArray(tags)
                 {tagsArray.map((tag) => (
                   <a
                     href={`/tags/${tag}/1`}
-                    class="bg-gradient-to-r from-sky-800 to-cyan-600 px-5 py-2 text-xs font-black uppercase tracking-widest text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:-translate-y-1 hover:scale-105 active:scale-95 transition-all block no-underline"
+                    class={`bg-gradient-to-r ${sc.tag} px-5 py-2 text-xs font-black uppercase tracking-widest text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] hover:-translate-y-1 hover:scale-105 active:scale-95 transition-all block no-underline`}
                   >
                     {tag}
                   </a>
@@ -224,7 +236,7 @@ const tagsArray = Array.isArray(tags)
     <!-- TableOfContents: lg:hidden mobile details + hidden lg:block sidebar -->
     <div class="lg:col-span-4">
       <div class="lg:sticky lg:top-24 lg:pl-8 h-fit">
-        <TableOfContents headings={headings} />
+        <TableOfContents headings={headings} section={section} />
       </div>
     </div>
   </div>
