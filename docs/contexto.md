@@ -1,6 +1,6 @@
 # Contexto del proyecto — Blog
 
-**Última actualización**: 2026-07-04 (tests eliminados, blog simplificado)
+**Última actualización**: 2026-07-05 (cross-references retos + posts)
 **Stack**: Astro 6.4 + Svelte 5 + Tailwind CSS 4.3 | Vercel static | Node >= 22
 **Idioma**: Español
 **Deploy**: `blog-jorbencas.vercel.app`
@@ -30,6 +30,7 @@
 | 2026-07 | **Node.js 22**: Actualizado `test.yml` workflow de Node 20 a 22 (requerido por Astro 6.4) |
 | 2026-07 | **Migración scripts**: Soluciones y tests migrados a test_githubActions. Blog sin scripts Python. README actualizado |
 | 2026-07 | **Tests eliminados**: Playwright E2E y workflow test.yml eliminados. Blog simplificado |
+| 2026-07 | **Cross-references retos + posts**: 58 retos y 45 posts con secciones "Retos relacionados" / "Posts relacionados" al final de cada contenido, agrupados por temática (números, strings, lógica, cifrado, estructuras, algoritmos, APIs, patrones, concurrencia, compresión, optimización). Scripts Python en /tmp/. URLs desde frontmatter slug. Build verificado sin errores |
 
 ## Mejoras implementadas
 
