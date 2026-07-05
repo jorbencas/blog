@@ -31,6 +31,7 @@
 | 2026-07 | **Migración scripts**: Soluciones y tests migrados a test_githubActions. Blog sin scripts Python. README actualizado |
 | 2026-07 | **Tests eliminados**: Playwright E2E y workflow test.yml eliminados. Blog simplificado |
 | 2026-07 | **Cross-references retos + posts**: 58 retos y 45 posts con secciones "Retos relacionados" / "Posts relacionados" al final de cada contenido, agrupados por temática (números, strings, lógica, cifrado, estructuras, algoritmos, APIs, patrones, concurrencia, compresión, optimización). Scripts Python en /tmp/. URLs desde frontmatter slug. Build verificado sin errores |
+| 2026-07 | **Post comandos CLI**: Nuevo post recopilatorio de comandos de terminal poco comunes (xxd, nl, fold, comm, join, sponge, pee, etc.) con ejemplos prácticos |
 
 ## Mejoras implementadas
 

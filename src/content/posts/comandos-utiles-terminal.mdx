@@ -1,0 +1,523 @@
+---
+draft: false
+title: "Comandos de Terminal que Uso (y Casi Nadie Conoce)"
+description: "Recopilación de comandos de terminal prácticos y poco conocidos que uso a diario: desde xxd y nl hasta sponge, pee y process substitution. Cada uno con ejemplos reales."
+pubDate: "2026-07-05"
+tags: ["terminal", "linux", "bash", "productividad"]
+author: "Jorge Beneyto Castelló"
+---
+
+Hay comandos que todo el mundo conoce — `ls`, `cd`, `grep`, `cat`. Pero la terminal esconde joyas que resuelven problemas específicos de forma elegantísima. Esta es mi colección personal de los que más uso y casi nadie conoce.
+
+---
+
+## `xxd` — Hex dump inverso
+
+`xxd` hace dos cosas: convertir binario a hex y **convertir hex a binario**. El modo inverso es un salvavidas.
+
+```bash
+# De hex (texto) a binario
+echo '00000000: 486f 6c61 0a' | xxd -r
+# → "Hola"
+
+# Hacer un hex dump limpio de un binario
+xxd archivo.bin | head -20
+
+# Modo plain (sin offsets)
+xxd -p archivo.bin
+```
+
+Lo uso constantemente para inspeccionar binarios, parchear bytes sueltos, o entender formatos de archivo.
+
+---
+
+## `nl` — Number lines (mejor que `cat -n`)
+
+`nl` numera líneas pero con esteroides: puedes elegir el formato, el padding, y cómo se numeran las líneas vacías.
+
+```bash
+# Numerar con ceros a la izquierda
+nl -w3 -rz archivo.txt
+
+# Solo numerar líneas no vacías
+nl -bt archivo.txt
+
+# Numerar desde 1000
+nl -v1000 archivo.txt
+```
+
+---
+
+## `fold` — Partir líneas largas
+
+Cuando tienes una línea kilométrica (un JSON sin formato, un log) y quieres verla sin scroll horizontal:
+
+```bash
+# Partir cada 80 caracteres
+fold -w 80 archivo.txt
+
+# Partir en bytes (no caracteres) — útil para binarios
+fold -b -w 16 archivo.bin
+```
+
+---
+
+## `expand` / `unexpand` — Tabs ↔ espacios
+
+Tu compañero cuando alguien te manda código mezclando tabs y espacios.
+
+```bash
+# Tabs → 4 espacios
+expand -t 4 codigo.py
+
+# Espacios → tabs (donde haya 4+ espacios seguidos)
+unexpand -t 4 codigo.py
+
+# Solo convertir tabs al inicio de línea
+expand -i archivo.txt
+```
+
+---
+
+## `comm` — Comparar líneas de dos archivos ordenados
+
+Compara dos archivos ordenados y te muestra tres columnas: líneas solo en A, solo en B, y en ambos.
+
+```bash
+# Líneas que están en archivo1 pero NO en archivo2
+comm -23 archivo1.txt archivo2.txt
+
+# Líneas comunes a ambos
+comm -12 archivo1.txt archivo2.txt
+
+# Líneas que están en archivo2 pero NO en archivo1
+comm -13 archivo1.txt archivo2.txt
+```
+
+Requiere archivos ordenados (`sort` antes de comparar).
+
+---
+
+## `join` — Join tipo SQL entre archivos
+
+Como `comm` pero uniendo líneas por un campo común. Esencial cuando trabajas con CSVs o tabulaciones.
+
+```bash
+# Unir dos archivos por el primer campo
+join -t, archivo1.csv archivo2.csv
+
+# Mostrar solo ciertos campos
+join -o 1.1,2.2 -t, clientes.csv pedidos.csv
+```
+
+---
+
+## `column` — Formatear columnas
+
+Formatea texto en columnas alineadas automáticamente. Perfecto para outputs irregulares.
+
+```bash
+# Por defecto: separa por espacios y alinea
+column archivo.txt
+
+# Con delimitador personalizado
+column -t -s: /etc/passwd
+
+# Especificar ancho de fila en la salida (muy útil para tabular)
+mount | column -t
+```
+
+---
+
+## `shuf` — Barajar líneas
+
+```
+# Barajar líneas de un archivo
+shuf lista.txt
+
+# Elegir 5 líneas al azar
+shuf -n 5 lista.txt
+
+# Generar números aleatorios del 1 al 100
+shuf -i 1-100 -n 10
+```
+
+---
+
+## `sort` con flags avanzados
+
+`sort` básico lo conoce todo el mundo, pero estos flags marcan la diferencia:
+
+```bash
+# Ordenar numéricamente (no lexicográfico)
+sort -n numeros.txt
+
+# Ordenar por columna 2, numérico
+sort -k2,2n datos.txt
+
+# Ordenar versiones (1.2.10 después de 1.2.9)
+sort -V versiones.txt
+
+# Ordenar humano (2K, 3M, 1G)
+sort -h tamanos.txt
+
+# Ordenar aleatorio (como shuf)
+sort -R archivo.txt
+
+# Unir duplicados contando ocurrencias
+sort archivo.txt | uniq -c | sort -rn
+```
+
+---
+
+## `tee` con append
+
+`tee` redirige la salida a archivo Y al terminal. El modo append es poco usado:
+
+```bash
+# Añadir (no sobrescribir) a un log
+echo "error" | tee -a error.log
+
+# Escribir a varios archivos a la vez
+comando | tee archivo1.txt archivo2.txt archivo3.txt
+
+# Descartar salida estándar pero guardar en archivo
+comando | tee output.log > /dev/null
+```
+
+---
+
+## `stdbuf` — Controlar buffer de pipes
+
+Cuando quieres ver la salida de un comando en tiempo real en lugar de esperar a que llene el buffer:
+
+```bash
+# Sin buffer (línea a línea)
+stdbuf -oL comando_lento
+
+# Sin buffer de entrada
+stdbuf -i0 comando
+```
+
+---
+
+## `sponge` (moreutils) — Absorber stdin
+
+`sponge` lee todo stdin y luego escribe al archivo. Esto soluciona el problema clásico de leer y escribir al mismo archivo (evita que el pipe trunque el archivo antes de leerlo).
+
+```bash
+# PELIGRO: Esto trunca archivo.txt antes de leerlo
+sort archivo.txt > archivo.txt   # ← NO HAGAS ESTO
+
+# BIEN: sponge lee todo primero, luego escribe
+sort archivo.txt | sponge archivo.txt
+
+# Buscar y reemplazar en el mismo archivo
+sed 's/foo/bar/g' archivo.txt | sponge archivo.txt
+```
+
+Instalar: `apt install moreutils` / `brew install moreutils`.
+
+---
+
+## `pee` (moreutils) — tee para pipes
+
+`tee` duplica stdout a archivos. `pee` duplica stdin a comandos:
+
+```bash
+# Pasar la misma entrada a varios comandos
+echo "hola mundo" | pee "cat" "wc -w" "sha256sum"
+# → hola mundo
+# → 2
+# → digesto sha256...
+```
+
+---
+
+## `vipe` (moreutils) — Pipe editor
+
+Abre un editor interactivo (el que tenga `$EDITOR`) con el contenido del pipe, lo editas, y lo que guardes sigue por el pipe:
+
+```bash
+# Filtrar interactivamente
+cat archivo.txt | vipe | grep algo
+
+# Editar un comando antes de ejecutarlo
+find . -name "*.py" | vipe | xargs wc -l
+```
+
+---
+
+## `ifne` (moreutils) — Ejecutar si stdin no vacío
+
+Ejecuta un comando solo si la entrada tiene contenido:
+
+```bash
+# Solo mostrar si hay resultados
+find . -name "*.tmp" | ifne xargs rm
+
+# Ejecutar comando alternativo si está vacío
+find . -name "error.log" | ifne cat error.log || echo "No hay errores"
+```
+
+---
+
+## `ts` (moreutils) — Timestamp prefix
+
+Añade timestamp a cada línea de stdin:
+
+```bash
+# Añadir timestamp ISO
+tail -f log.txt | ts
+
+# Formato personalizado
+comando | ts '%Y-%m-%d %H:%M:%.S'
+```
+
+---
+
+## Process substitution `<()` y `>()`
+
+Bash permite usar la salida de un comando como si fuera un archivo, sin crear temporales:
+
+```bash
+# Comparar dos salidas sin archivos intermedios
+diff <(ls dir1) <(ls dir2)
+
+# Alimentar un while-read con output formateado
+while IFS= read -r line; do
+  echo "Línea: $line"
+done < <(comando | grep algo)
+
+# Redirigir stdout a un proceso
+comando > >(tee log.txt)
+```
+
+---
+
+## Here docs y here strings
+
+Útil para scripting sin archivos externos:
+
+```bash
+# Here doc
+cat <<EOF
+  Esto es un bloque
+  de texto multilínea
+EOF
+
+# Here string (evita el echo + pipe)
+grep algo <<< "texto de prueba"
+
+# Pasar múltiples líneas a un comando
+bc <<< "2 + 3"
+```
+
+---
+
+## `!!`, `!$`, `!*` — Bash shortcuts
+
+```bash
+# Repetir último comando
+sudo !!
+
+# Último argumento del comando anterior
+mkdir -p /ruta/muy/larga
+cd !$
+
+# Todos los argumentos del comando anterior
+cp archivo1 archivo2 archivo3
+rm !*
+
+# El comando n del history
+!42
+
+# El último comando que empezaba con "ssh"
+!ssh
+```
+
+---
+
+## `mktemp` — Archivos temporales seguros
+
+```bash
+# Crear archivo temporal
+tmp=$(mktemp)
+echo "datos" > "$tmp"
+rm "$tmp"
+
+# Crear directorio temporal
+tmpdir=$(mktemp -d)
+cd "$tmpdir"
+# ... trabajar ...
+rm -rf "$tmpdir"
+```
+
+---
+
+## `readlink` y `realpath` — Resolver rutas
+
+```bash
+# Resolver todos los symlinks de un binario
+readlink -f $(which python)
+
+# Obtener la ruta absoluta del script actual
+script_dir=$(dirname "$(realpath "$0")")
+
+# Versión más reciente (GNU coreutils)
+realpath -m /ruta/que/no/existe/archivo.txt
+# → /ruta/que/no/existe/archivo.txt (no falla)
+```
+
+---
+
+## `flock` — Evitar ejecuciones paralelas
+
+Para scripts que no deben ejecutarse dos veces a la vez (crons, deploys):
+
+```bash
+flock -n /tmp/mi-script.lock -c "/ruta/al/script.sh"
+# Si el lock ya existe, falla inmediatamente
+
+# Sin -n: espera a que se libere el lock
+flock /tmp/mi-script.lock -c "/ruta/al/script.sh"
+
+# En un script: bloqueo automático al inicio
+(
+  flock -n 200 || exit 1
+  # ... código crítico ...
+) 200>/tmp/mi-script.lock
+```
+
+---
+
+## `mkfifo` — Named pipes
+
+Creas un archivo especial que actúa como tubería entre procesos:
+
+```bash
+# Terminal 1: crear pipe y esperar
+mkfifo /tmp/mi-pipe
+cat > /tmp/mi-pipe
+
+# Terminal 2: escribir al pipe
+echo "hola" > /tmp/mi-pipe
+# Terminal 1 recibe "hola"
+```
+
+---
+
+## `script` — Grabar sesión terminal
+
+Graba todo lo que haces en la terminal (stdin + stdout + stderr) en un archivo:
+
+```bash
+# Empezar grabación
+script sesion.log
+# ... ejecutar comandos ...
+exit
+
+# Reproducir con timings
+script -t=timing.log sesion.log
+scriptreplay timing.log sesion.log
+```
+
+---
+
+## `stat` vs `file`
+
+```bash
+# Info detallada de un archivo (permisos, timestamps, bloques)
+stat archivo.txt
+
+# Identificar tipo real de archivo (no confiar en extensión)
+file imagen.jpg
+file documento.pdf
+```
+
+---
+
+## `lsof` — Qué procesos usan qué archivos
+
+```bash
+# Qué procesos usan un archivo específico
+lsof /var/log/syslog
+
+# Qué sockets tiene abiertos un proceso
+lsof -p 1234
+
+# Qué proceso está usando el puerto 8080
+lsof -i :8080
+
+# Mostrar solo PIDs (para scripting)
+lsof -t -i :8080
+```
+
+---
+
+## `strace` / `ltrace` — Depuración de llamadas
+
+Cuando un programa no funciona y no sabes por qué:
+
+```bash
+# Rastrear llamadas al sistema
+strace -f -e open,read,write ./programa
+
+# Rastrear llamadas a librerías
+ltrace ./programa
+
+# Adjuntarse a un proceso en ejecución
+strace -p 1234
+```
+
+---
+
+## `dig` +short — Consultas DNS rápidas
+
+```bash
+# Resolver dominio (solo IP)
+dig +short ejemplo.com
+
+# Obtener el servidor de correo
+dig +short MX ejemplo.com
+
+# Todos los registros
+dig ANY ejemplo.com
+
+# Resolución inversa
+dig +short -x 8.8.8.8
+```
+
+---
+
+## `column` + `sort` + `comm` en pipeline
+
+Un ejemplo real que combina varios:
+
+```bash
+# Comparar paquetes instalados entre dos servidores remotos
+(
+  ssh servidor1 'dpkg -l | awk "{print \$2}"' | sort > /tmp/srv1.txt
+  ssh servidor2 'dpkg -l | awk "{print \$2}"' | sort > /tmp/srv2.txt
+  echo "=== Solo en servidor1 ==="
+  comm -23 /tmp/srv1.txt /tmp/srv2.txt
+  echo "=== Solo en servidor2 ==="
+  comm -13 /tmp/srv1.txt /tmp/srv2.txt
+)
+```
+
+---
+
+## Para instalar todo lo útil de una vez
+
+```bash
+# Debian/Ubuntu
+sudo apt install moreutils jq tree netcat-openbsd strace ltrace
+
+# macOS
+brew install moreutils jq tree
+```
+
+---
+
+Y hasta aquí mi arsenal de comandos poco conocidos. La mayoría son herramientas GNU estándar o paquetes ligeros; aprendértelos de memoria no hace falta — lo importante es **saber que existen** para cuando el problema aparezca.
