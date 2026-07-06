@@ -116,6 +116,125 @@ alias pint='vendor/bin/pint'
 <sup>Fuente: [phpbrew GitHub](https://github.com/phpbrew/phpbrew), [Docker Official Images — PHP](https://hub.docker.com/_/php/), [Laragon](https://laragon.org/)</sup>
 
 ---
+## Escala de aprendizaje: de 0 a 100
+
+Cada nivel incluye lo que debes saber y un proyecto para fijar los conceptos.
+
+### Nivel 0–15: Fundamentos absolutos
+
+**Qué aprender:**
+- Sintaxis básica: etiquetas `<?php ?>`, `echo`, `print`, variables con `$`, tipos (`int`, `float`, `string`, `bool`, `null`)
+- Tipos de datos escalares y compuestos (ver sección de tipos)
+- Condicionales: `if`/`elseif`/`else`, operadores de comparación (`==`, `===`, `!=`, `!==`)
+- Bucles: `for`, `foreach`, `while`
+- Arrays básicos: indexados `$arr = [1, 2, 3]`, asociativos `$user = ['nombre' => 'Ana']`, `count()`, `isset()`, `unset()`
+- Funciones: `function`, `return`, parámetros con tipo
+- **Conceptos clave**: PHP es de tipado débil — `"1" + 1` da `2` (coerción automática). Usa `===` para comparación estricta (compara valor Y tipo). Los arrays son tablas hash: `isset()` es O(1), `in_array()` es O(n). `var_dump()` y `print_r()` para debugging.
+
+**Proyecto:** *Calculadora CLI* — el programa pide dos números y una operación (+, -, *, /). Maneja división entre cero y entrada no numérica. Muestra resultado. Reflexión: ¿por qué `0 == "0"` da true pero `0 === "0"` da false?
+
+### Nivel 15–30: Arrays, strings, paradigmas y sistema de archivos
+
+**Qué aprender:**
+- Paradigmas de PHP: imperativo/procedural, POO básico, funcional parcial con closures y arrow functions
+- Sistema de archivos: `file_get_contents`, `file_put_contents`, `fopen`/`fread`/`fwrite`, `fgets`, `is_file`, `file_exists`, `mkdir`, `scandir`, `glob`
+- JSON: `json_encode`, `json_decode`
+- Array functions: `array_map`, `array_filter`, `array_reduce`, `array_merge`, `array_search`, `sort`/`asort`/`ksort`
+- Strings: `strlen`, `strpos`, `substr`, `str_replace`, `explode`, `implode`, `trim`, `strtoupper`, `strtolower`
+- Funciones variables, funciones anónimas (closures), `fn()` arrow functions (PHP 7.4+)
+- `...` spread operator en arrays (PHP 7.4+)
+- `compact()`, `extract()`, `list()` / `[$a, $b] = $array`
+- Include/require: `require_once`, `include_once`, diferencia y cuándo usar cada uno
+- Superglobals: `$_GET`, `$_POST`, `$_SERVER`, `$_SESSION`, `$_COOKIE`
+- **Conceptos clave**: `isset()` vs `empty()` — `empty()` devuelve true para `""`, `0`, `null`, `false`, `[]`. `??` (null coalescing) vs `@` (suppressor) — nunca uses `@`. Los closures capturan variables con `use (&$var)`. `compact()` crea array a partir de variables del scope actual.
+
+**Proyecto:** *Gestor de tareas CLI* — añadir (`php tareas.php add "Comprar leche"`), listar (`list`), completar (`done 3`), eliminar (`rm 3`). Persistencia en JSON con `file_get_contents`/`file_put_contents`. Usa `$_SERVER['argv']` para argumentos.
+
+### Nivel 30–45: POO, namespaces, algoritmos y SPL
+
+**Qué aprender:**
+- Clases: `class`, `__construct()`, `$this`, propiedades y métodos
+- Visibilidad: `public`, `protected`, `private`
+- Constructor promotion (PHP 8.0): `function __construct(public string $nombre) {}`
+- Herencia: `extends`, `parent::`, `final`
+- Interfaces: `interface`, `implements`
+- Traits (PHP 5.4+): `trait`, `use`
+- Clases abstractas: `abstract class`, `abstract function`
+- Namespaces: `namespace`, `use`, `use ... as`
+- Autoloading PSR-4 con Composer: `composer dump-autoload`
+- Excepciones: `try`/`catch`/`finally`, `throw`, crear excepciones personalizadas
+- Sistema de archivos avanzado: CSV, ZIP, GZ, Fileinfo para MIME, SplFileInfo, SplFileObject
+- Algoritmos con SPL: `SplStack`, `SplQueue`, `SplHeap`, `SplFixedArray`, `SplObjectStorage`
+- Array functions avanzadas: `array_intersect`, `array_diff`, `array_column`, `array_walk`, `array_chunk`, `array_count_values`
+- Complejidad Big O de arrays: lookup O(1), búsqueda O(n), sort O(n log n)
+- Ordenación personalizada con `usort`, `uasort`, `uksort`
+- **Conceptos clave**: PHP no tiene sobrecarga de métodos (como Java/C++). Los traits resuelven el problema de herencia múltiple sin los problemas del diamante. PSR-4 mapea namespace → directorio: `App\Models\User` → `src/Models/User.php`. `parent::` llama al método de la clase padre. `final` impide herencia/override. Las estructuras SPL son más eficientes que arrays nativos para casos concretos.
+
+**Proyecto:** *Sistema de inventario* — clases `Producto`, `Inventario` con namespaces. Métodos: `agregar()`, `retirar()`, `buscar()`, `valor_total()`. Persistencia con JSON. Excepciones personalizadas (`StockInsuficiente`, `ProductoNoExiste`). Autoloading PSR-4 con Composer.
+
+### Nivel 45–60: Testing, análisis estático y empaquetado
+
+**Qué aprender:**
+- PHPUnit: `assertSame()`, `assertInstanceOf()`, data providers, setUp, pruebas de excepciones
+- Pest PHP: alternativa moderna a PHPUnit con sintaxis más expresiva
+- PHPStan: niveles 0–10, PHPDoc con `@param`, `@return`, `@var`
+- Psalm: alternativa a PHPStan con detección de código muerto
+- Laravel Pint / PHP CS Fixer: formateo automático de código (PSR-12)
+- Xdebug: depuración paso a paso, profiling
+- Composer scripts: `composer run test`, `composer run phpstan`
+- **Conceptos clave**: PHPStan nivel max detecta problemas que no imaginabas. Los type hints PHPDoc son más expresivos que los de PHP nativo (`@template`, `@param class-string`, `@return Collection<User>`). `declare(strict_types=1)` obligatorio en todos los archivos nuevos.
+
+**Proyecto:** *Calculadora empaquetada* — paquete instalable con Composer. Tests con PHPUnit (parametrized, excepciones). PHPStan nivel max. Pint para estilo. GitHub Actions ejecutando `composer check`.
+
+### Nivel 60–75: Web APIs, frameworks y multimedia
+
+**Qué aprender:**
+- Laravel: rutas, controladores, Blade, Eloquent, migraciones, validación, auth
+- Symfony: bundles, Doctrine, Twig, Messenger, EventDispatcher
+- API Platform: REST/GraphQL automático desde entidades Doctrine
+- Laravel API Resources: transformación de respuestas JSON
+- JWT / Sanctum: autenticación para APIs
+- Logging: Monolog (estándar PSR-3), canales, niveles
+- Procesamiento de imágenes con GD y Imagick: redimensionar, recortar, filtros, texto, conversión de formatos
+- Video con FFmpeg desde PHP
+- Metadatos EXIF de fotos con `exif_read_data`
+- Generación de PDF con TCPDF / FPDF
+- **Conceptos clave**: Service Container (Laravel) / DI Container (Symfony) — no instancies clases manualmente. El patrón Repository desacopla lógica de BD del negocio. Eloquent es Active Record, Doctrine es Data Mapper — elegir según proyecto. GD es nativo pero limitado; Imagick es más potente pero requiere instalación.
+
+**Proyecto:** *API de recetas* — Laravel + Eloquent + PostgreSQL o SQLite. CRUD de recetas e ingredientes. Búsqueda por ingrediente. Autenticación con Sanctum. Tests con PHPUnit. Migraciones con schema builder. Validación con Form Request.
+
+### Nivel 75–90: Producción, colas y tiempo real
+
+**Qué aprender:**
+- Docker multi-etapa para PHP: `php:8.3-fpm-alpine` + Nginx, `composer install --no-dev`
+- Docker Compose: app + nginx + mysql + redis + mailpit
+- Colas: Laravel Horizon (Redis), Symfony Messenger, RabbitMQ
+- Tareas programadas: Laravel Scheduler, cron
+- WebSockets: Laravel Echo + Reverb, Soketi, Pusher
+- Caché: Redis, Laravel Cache, Symfony Cache
+- Monitoreo: Laravel Telescope, Symfony Profiler, clockwork
+- **Conceptos clave**: PHP-FPM tiene un pool de workers — configura `pm.max_children` según RAM disponible. OpCache es crítico en producción: `opcache.enable=1`, `opcache.revalidate_freq=0`. Las colas escalan horizontalmente añadiendo workers.
+
+**Proyecto:** *Dashboard de monitorización* — Laravel que recolecta métricas del sistema (CPU, RAM, disco). Redis como cola (Horizon). WebSockets con Laravel Reverb para actualizaciones en vivo. Docker Compose (app + nginx + redis + mysql). Tests de integración.
+
+### Nivel 90–100: Arquitectura, alto rendimiento y sistemas distribuidos
+
+**Qué aprender:**
+- CQRS / Event Sourcing con Laravel + Event Sourcing (Spatie) o Ecotone
+- Event Driven: RabbitMQ / Kafka, publicación de eventos
+- Arquitectura hexagonal / clean architecture en PHP: separación de Domain, Application, Infrastructure
+- API Platform: GraphQL, subscripciones, paginación, filtros avanzados
+- Swoole / RoadRunner: reemplazar PHP-FPM por servidor persistente (10-50x más requests/segundo)
+- Performance: OpCache JIT (PHP 8.0+), preloading, FrankenPHP
+- Observabilidad: OpenTelemetry (tracing + metrics + logs), Prometheus + Grafana
+- **Conceptos clave**: PHP-FPM muere después de cada request — Swoole/RoadRunner mantiene el estado en memoria (conexiones BD, caché). El JIT de PHP 8.0+ puede acelerar código CPU-bound hasta 3x. FrankenPHP (escrito en Go) sirve PHP directamente como servidor HTTP/HTTPS.
+
+**Proyecto:** *Sistema de notificaciones distribuidas* — microservicios con Laravel + RoadRunner. Event bus con RabbitMQ (usuarios, notificaciones). API Platform para GraphQL BFF. FrankenPHP como servidor. OpenTelemetry para tracing distribuido. Docker Compose + Prometheus + Grafana.
+
+<sup>Fuente: [Laravel docs](https://laravel.com/docs), [Symfony docs](https://symfony.com/doc/current/index.html), [API Platform docs](https://api-platform.com/docs/), [Swoole docs](https://www.swoole.co.uk/), [RoadRunner docs](https://roadrunner.dev/), [FrankenPHP](https://frankenphp.dev/)</sup>
+
+---
+
 
 ## Primeros pasos y configuración del entorno
 
@@ -4434,124 +4553,6 @@ while ($reader->read()) {
 
 ---
 
-## Escala de aprendizaje: de 0 a 100
-
-Cada nivel incluye lo que debes saber y un proyecto para fijar los conceptos.
-
-### Nivel 0–15: Fundamentos absolutos
-
-**Qué aprender:**
-- Sintaxis básica: etiquetas `<?php ?>`, `echo`, `print`, variables con `$`, tipos (`int`, `float`, `string`, `bool`, `null`)
-- Tipos de datos escalares y compuestos (ver sección de tipos)
-- Condicionales: `if`/`elseif`/`else`, operadores de comparación (`==`, `===`, `!=`, `!==`)
-- Bucles: `for`, `foreach`, `while`
-- Arrays básicos: indexados `$arr = [1, 2, 3]`, asociativos `$user = ['nombre' => 'Ana']`, `count()`, `isset()`, `unset()`
-- Funciones: `function`, `return`, parámetros con tipo
-- **Conceptos clave**: PHP es de tipado débil — `"1" + 1` da `2` (coerción automática). Usa `===` para comparación estricta (compara valor Y tipo). Los arrays son tablas hash: `isset()` es O(1), `in_array()` es O(n). `var_dump()` y `print_r()` para debugging.
-
-**Proyecto:** *Calculadora CLI* — el programa pide dos números y una operación (+, -, *, /). Maneja división entre cero y entrada no numérica. Muestra resultado. Reflexión: ¿por qué `0 == "0"` da true pero `0 === "0"` da false?
-
-### Nivel 15–30: Arrays, strings, paradigmas y sistema de archivos
-
-**Qué aprender:**
-- Paradigmas de PHP: imperativo/procedural, POO básico, funcional parcial con closures y arrow functions
-- Sistema de archivos: `file_get_contents`, `file_put_contents`, `fopen`/`fread`/`fwrite`, `fgets`, `is_file`, `file_exists`, `mkdir`, `scandir`, `glob`
-- JSON: `json_encode`, `json_decode`
-- Array functions: `array_map`, `array_filter`, `array_reduce`, `array_merge`, `array_search`, `sort`/`asort`/`ksort`
-- Strings: `strlen`, `strpos`, `substr`, `str_replace`, `explode`, `implode`, `trim`, `strtoupper`, `strtolower`
-- Funciones variables, funciones anónimas (closures), `fn()` arrow functions (PHP 7.4+)
-- `...` spread operator en arrays (PHP 7.4+)
-- `compact()`, `extract()`, `list()` / `[$a, $b] = $array`
-- Include/require: `require_once`, `include_once`, diferencia y cuándo usar cada uno
-- Superglobals: `$_GET`, `$_POST`, `$_SERVER`, `$_SESSION`, `$_COOKIE`
-- **Conceptos clave**: `isset()` vs `empty()` — `empty()` devuelve true para `""`, `0`, `null`, `false`, `[]`. `??` (null coalescing) vs `@` (suppressor) — nunca uses `@`. Los closures capturan variables con `use (&$var)`. `compact()` crea array a partir de variables del scope actual.
-
-**Proyecto:** *Gestor de tareas CLI* — añadir (`php tareas.php add "Comprar leche"`), listar (`list`), completar (`done 3`), eliminar (`rm 3`). Persistencia en JSON con `file_get_contents`/`file_put_contents`. Usa `$_SERVER['argv']` para argumentos.
-
-### Nivel 30–45: POO, namespaces, algoritmos y SPL
-
-**Qué aprender:**
-- Clases: `class`, `__construct()`, `$this`, propiedades y métodos
-- Visibilidad: `public`, `protected`, `private`
-- Constructor promotion (PHP 8.0): `function __construct(public string $nombre) {}`
-- Herencia: `extends`, `parent::`, `final`
-- Interfaces: `interface`, `implements`
-- Traits (PHP 5.4+): `trait`, `use`
-- Clases abstractas: `abstract class`, `abstract function`
-- Namespaces: `namespace`, `use`, `use ... as`
-- Autoloading PSR-4 con Composer: `composer dump-autoload`
-- Excepciones: `try`/`catch`/`finally`, `throw`, crear excepciones personalizadas
-- Sistema de archivos avanzado: CSV, ZIP, GZ, Fileinfo para MIME, SplFileInfo, SplFileObject
-- Algoritmos con SPL: `SplStack`, `SplQueue`, `SplHeap`, `SplFixedArray`, `SplObjectStorage`
-- Array functions avanzadas: `array_intersect`, `array_diff`, `array_column`, `array_walk`, `array_chunk`, `array_count_values`
-- Complejidad Big O de arrays: lookup O(1), búsqueda O(n), sort O(n log n)
-- Ordenación personalizada con `usort`, `uasort`, `uksort`
-- **Conceptos clave**: PHP no tiene sobrecarga de métodos (como Java/C++). Los traits resuelven el problema de herencia múltiple sin los problemas del diamante. PSR-4 mapea namespace → directorio: `App\Models\User` → `src/Models/User.php`. `parent::` llama al método de la clase padre. `final` impide herencia/override. Las estructuras SPL son más eficientes que arrays nativos para casos concretos.
-
-**Proyecto:** *Sistema de inventario* — clases `Producto`, `Inventario` con namespaces. Métodos: `agregar()`, `retirar()`, `buscar()`, `valor_total()`. Persistencia con JSON. Excepciones personalizadas (`StockInsuficiente`, `ProductoNoExiste`). Autoloading PSR-4 con Composer.
-
-### Nivel 45–60: Testing, análisis estático y empaquetado
-
-**Qué aprender:**
-- PHPUnit: `assertSame()`, `assertInstanceOf()`, data providers, setUp, pruebas de excepciones
-- Pest PHP: alternativa moderna a PHPUnit con sintaxis más expresiva
-- PHPStan: niveles 0–10, PHPDoc con `@param`, `@return`, `@var`
-- Psalm: alternativa a PHPStan con detección de código muerto
-- Laravel Pint / PHP CS Fixer: formateo automático de código (PSR-12)
-- Xdebug: depuración paso a paso, profiling
-- Composer scripts: `composer run test`, `composer run phpstan`
-- **Conceptos clave**: PHPStan nivel max detecta problemas que no imaginabas. Los type hints PHPDoc son más expresivos que los de PHP nativo (`@template`, `@param class-string`, `@return Collection<User>`). `declare(strict_types=1)` obligatorio en todos los archivos nuevos.
-
-**Proyecto:** *Calculadora empaquetada* — paquete instalable con Composer. Tests con PHPUnit (parametrized, excepciones). PHPStan nivel max. Pint para estilo. GitHub Actions ejecutando `composer check`.
-
-### Nivel 60–75: Web APIs, frameworks y multimedia
-
-**Qué aprender:**
-- Laravel: rutas, controladores, Blade, Eloquent, migraciones, validación, auth
-- Symfony: bundles, Doctrine, Twig, Messenger, EventDispatcher
-- API Platform: REST/GraphQL automático desde entidades Doctrine
-- Laravel API Resources: transformación de respuestas JSON
-- JWT / Sanctum: autenticación para APIs
-- Logging: Monolog (estándar PSR-3), canales, niveles
-- Procesamiento de imágenes con GD y Imagick: redimensionar, recortar, filtros, texto, conversión de formatos
-- Video con FFmpeg desde PHP
-- Metadatos EXIF de fotos con `exif_read_data`
-- Generación de PDF con TCPDF / FPDF
-- **Conceptos clave**: Service Container (Laravel) / DI Container (Symfony) — no instancies clases manualmente. El patrón Repository desacopla lógica de BD del negocio. Eloquent es Active Record, Doctrine es Data Mapper — elegir según proyecto. GD es nativo pero limitado; Imagick es más potente pero requiere instalación.
-
-**Proyecto:** *API de recetas* — Laravel + Eloquent + PostgreSQL o SQLite. CRUD de recetas e ingredientes. Búsqueda por ingrediente. Autenticación con Sanctum. Tests con PHPUnit. Migraciones con schema builder. Validación con Form Request.
-
-### Nivel 75–90: Producción, colas y tiempo real
-
-**Qué aprender:**
-- Docker multi-etapa para PHP: `php:8.3-fpm-alpine` + Nginx, `composer install --no-dev`
-- Docker Compose: app + nginx + mysql + redis + mailpit
-- Colas: Laravel Horizon (Redis), Symfony Messenger, RabbitMQ
-- Tareas programadas: Laravel Scheduler, cron
-- WebSockets: Laravel Echo + Reverb, Soketi, Pusher
-- Caché: Redis, Laravel Cache, Symfony Cache
-- Monitoreo: Laravel Telescope, Symfony Profiler, clockwork
-- **Conceptos clave**: PHP-FPM tiene un pool de workers — configura `pm.max_children` según RAM disponible. OpCache es crítico en producción: `opcache.enable=1`, `opcache.revalidate_freq=0`. Las colas escalan horizontalmente añadiendo workers.
-
-**Proyecto:** *Dashboard de monitorización* — Laravel que recolecta métricas del sistema (CPU, RAM, disco). Redis como cola (Horizon). WebSockets con Laravel Reverb para actualizaciones en vivo. Docker Compose (app + nginx + redis + mysql). Tests de integración.
-
-### Nivel 90–100: Arquitectura, alto rendimiento y sistemas distribuidos
-
-**Qué aprender:**
-- CQRS / Event Sourcing con Laravel + Event Sourcing (Spatie) o Ecotone
-- Event Driven: RabbitMQ / Kafka, publicación de eventos
-- Arquitectura hexagonal / clean architecture en PHP: separación de Domain, Application, Infrastructure
-- API Platform: GraphQL, subscripciones, paginación, filtros avanzados
-- Swoole / RoadRunner: reemplazar PHP-FPM por servidor persistente (10-50x más requests/segundo)
-- Performance: OpCache JIT (PHP 8.0+), preloading, FrankenPHP
-- Observabilidad: OpenTelemetry (tracing + metrics + logs), Prometheus + Grafana
-- **Conceptos clave**: PHP-FPM muere después de cada request — Swoole/RoadRunner mantiene el estado en memoria (conexiones BD, caché). El JIT de PHP 8.0+ puede acelerar código CPU-bound hasta 3x. FrankenPHP (escrito en Go) sirve PHP directamente como servidor HTTP/HTTPS.
-
-**Proyecto:** *Sistema de notificaciones distribuidas* — microservicios con Laravel + RoadRunner. Event bus con RabbitMQ (usuarios, notificaciones). API Platform para GraphQL BFF. FrankenPHP como servidor. OpenTelemetry para tracing distribuido. Docker Compose + Prometheus + Grafana.
-
-<sup>Fuente: [Laravel docs](https://laravel.com/docs), [Symfony docs](https://symfony.com/doc/current/index.html), [API Platform docs](https://api-platform.com/docs/), [Swoole docs](https://www.swoole.co.uk/), [RoadRunner docs](https://roadrunner.dev/), [FrankenPHP](https://frankenphp.dev/)</sup>
-
----
 
 ## Proyectos prácticos detallados
 
@@ -4893,6 +4894,63 @@ php artisan route:cache
 #     location / { try_files $uri $uri/ /index.php?$query_string; }
 #     location ~ \.php$ { fastcgi_pass unix:/var/run/php/php8.3-fpm.sock; }
 # }
+```
+
+---
+
+## Despliegue a producción
+
+### Build para producción
+```bash
+composer install --no-dev --optimize-autoloader
+php artisan config:cache
+php artisan route:cache
+```
+
+### Docker multi-stage
+```dockerfile
+# Stage 1: Dependencias
+FROM php:8.3-cli AS build
+WORKDIR /app
+COPY composer.json composer.lock ./
+RUN apt-get update && apt-get install -y libpq-dev zip unzip && docker-php-ext-install pdo_pgsql
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+RUN composer install --no-dev --optimize-autoloader
+
+# Stage 2: Runtime con FPM + Nginx
+FROM php:8.3-fpm
+RUN apt-get update && apt-get install -y nginx libpq-dev && docker-php-ext-install pdo_pgsql
+COPY --from=build /app /var/www/app
+COPY . /var/www/app
+COPY nginx.conf /etc/nginx/sites-enabled/default
+EXPOSE 80
+CMD ["sh", "-c", "php-fpm & nginx -g 'daemon off;'"]
+```
+
+### Hosting
+- [Fly.io](https://fly.io/)
+- [Railway](https://railway.app/)
+- [Laravel Forge](https://forge.laravel.com/)
+
+### CI/CD (GitHub Actions)
+```yaml
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+      - run: composer install --no-dev --optimize-autoloader
+      - run: php artisan config:cache
+      - run: php artisan route:cache
 ```
 
 ---

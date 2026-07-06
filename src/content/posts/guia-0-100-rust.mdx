@@ -122,6 +122,76 @@ Fuente: [rustup.rs](https://rustup.rs/), [Docker Rust](https://hub.docker.com/_/
 
 ---
 
+## Escala de aprendizaje 0–100 (7 niveles)
+
+### Nivel 0–15: Fundamentos
+**Conceptos**: sintaxis básica, variables, tipos escalares, if/else, loops, funciones, `cargo new`, `cargo run`.
+
+**Proyecto**: calculadora CLI — suma, resta, multiplica, divide con manejo de errores.
+
+```rust
+use std::io;
+
+fn main() -> Result<(), String> {
+    let mut input = String::new();
+    println!("Primer número:");
+    io::stdin().read_line(&mut input).unwrap();
+    let a: f64 = input.trim().parse().map_err(|_| "número inválido")?;
+
+    input.clear();
+    println!("Operación (+, -, *, /):");
+    io::stdin().read_line(&mut input).unwrap();
+    let op = input.trim().to_string();
+
+    input.clear();
+    println!("Segundo número:");
+    io::stdin().read_line(&mut input).unwrap();
+    let b: f64 = input.trim().parse().map_err(|_| "número inválido")?;
+
+    let result = match op.as_str() {
+        "+" => a + b,
+        "-" => a - b,
+        "*" => a * b,
+        "/" => if b != 0.0 { a / b } else { return Err("división por cero".into()) },
+        _ => return Err("operación inválida".into()),
+    };
+    println!("Resultado: {result}");
+    Ok(())
+}
+```
+
+### Nivel 15–30: Structs, enums, traits
+**Conceptos**: structs, enums, pattern matching, traits, Option/Result, Vec, String.
+
+**Proyecto**: gestor de tareas (TODO list) en memoria con persistencia JSON.
+
+### Nivel 30–45: Smart pointers e iterators
+**Conceptos**: Box, Rc, Arc, closures, iterators (map, filter, fold), colecciones (HashMap, HashSet).
+
+**Proyecto**: procesador de logs — lee archivo, parsea líneas, cuenta ocurrencias por nivel (INFO, WARN, ERROR), genera reporte.
+
+### Nivel 45–60: Testing, documentación y módulos
+**Conceptos**: tests unitarios/de integración, doc tests, módulos, visibilidad, clippy, rustfmt.
+
+**Proyecto**: librería de validación — funciones validadoras con tests exhaustivos, documentación, CI configurado.
+
+### Nivel 60–75: Web APIs asíncronas
+**Conceptos**: async/await, Tokio, Axum/Actix, serialización JSON, SQLx/Diesel, WebSockets.
+
+**Proyecto**: API REST de URLs acortadas — endpoints CRUD, BD PostgreSQL, tests de integración, Docker.
+
+### Nivel 75–90: Producción
+**Conceptos**: release profiles (LTO, codegen-units), Docker multi-stage, CI/CD (GitHub Actions), logging (tracing), benchmarks (criterion), profiling (perf, flamegraph).
+
+**Proyecto**: el proyecto del nivel anterior con CI/CD, Docker, benchmarks, profiling y monitoreo.
+
+### Nivel 90–100: Sistemas y arquitectura
+**Conceptos**: unsafe, FFI, no_std, WASM, Pin, async traits, arquitectura hexagonal, patrones avanzados, sistemas distribuidos.
+
+**Proyecto**: intérprete de un lenguaje pequeño (AST, lexer, parser, evaluador) — compila a WASM.
+
+---
+
 ## Primeros pasos y configuración del entorno
 
 Si prefieres ver directamente el "Hola Mundo" en Rust, consulta [El Atlas del Hola Mundo](/posts/hola/#rust).
@@ -3494,76 +3564,6 @@ mod tests {
 
 ---
 
-## Escala de aprendizaje 0–100 (7 niveles)
-
-### Nivel 0–15: Fundamentos
-**Conceptos**: sintaxis básica, variables, tipos escalares, if/else, loops, funciones, `cargo new`, `cargo run`.
-
-**Proyecto**: calculadora CLI — suma, resta, multiplica, divide con manejo de errores.
-
-```rust
-use std::io;
-
-fn main() -> Result<(), String> {
-    let mut input = String::new();
-    println!("Primer número:");
-    io::stdin().read_line(&mut input).unwrap();
-    let a: f64 = input.trim().parse().map_err(|_| "número inválido")?;
-
-    input.clear();
-    println!("Operación (+, -, *, /):");
-    io::stdin().read_line(&mut input).unwrap();
-    let op = input.trim().to_string();
-
-    input.clear();
-    println!("Segundo número:");
-    io::stdin().read_line(&mut input).unwrap();
-    let b: f64 = input.trim().parse().map_err(|_| "número inválido")?;
-
-    let result = match op.as_str() {
-        "+" => a + b,
-        "-" => a - b,
-        "*" => a * b,
-        "/" => if b != 0.0 { a / b } else { return Err("división por cero".into()) },
-        _ => return Err("operación inválida".into()),
-    };
-    println!("Resultado: {result}");
-    Ok(())
-}
-```
-
-### Nivel 15–30: Structs, enums, traits
-**Conceptos**: structs, enums, pattern matching, traits, Option/Result, Vec, String.
-
-**Proyecto**: gestor de tareas (TODO list) en memoria con persistencia JSON.
-
-### Nivel 30–45: Smart pointers e iterators
-**Conceptos**: Box, Rc, Arc, closures, iterators (map, filter, fold), colecciones (HashMap, HashSet).
-
-**Proyecto**: procesador de logs — lee archivo, parsea líneas, cuenta ocurrencias por nivel (INFO, WARN, ERROR), genera reporte.
-
-### Nivel 45–60: Testing, documentación y módulos
-**Conceptos**: tests unitarios/de integración, doc tests, módulos, visibilidad, clippy, rustfmt.
-
-**Proyecto**: librería de validación — funciones validadoras con tests exhaustivos, documentación, CI configurado.
-
-### Nivel 60–75: Web APIs asíncronas
-**Conceptos**: async/await, Tokio, Axum/Actix, serialización JSON, SQLx/Diesel, WebSockets.
-
-**Proyecto**: API REST de URLs acortadas — endpoints CRUD, BD PostgreSQL, tests de integración, Docker.
-
-### Nivel 75–90: Producción
-**Conceptos**: release profiles (LTO, codegen-units), Docker multi-stage, CI/CD (GitHub Actions), logging (tracing), benchmarks (criterion), profiling (perf, flamegraph).
-
-**Proyecto**: el proyecto del nivel anterior con CI/CD, Docker, benchmarks, profiling y monitoreo.
-
-### Nivel 90–100: Sistemas y arquitectura
-**Conceptos**: unsafe, FFI, no_std, WASM, Pin, async traits, arquitectura hexagonal, patrones avanzados, sistemas distribuidos.
-
-**Proyecto**: intérprete de un lenguaje pequeño (AST, lexer, parser, evaluador) — compila a WASM.
-
----
-
 ## Proyecto final integrador: Procesador de logs
 
 Un procesador de logs que combina file system, algoritmos, módulos, testing y red.
@@ -3673,6 +3673,52 @@ mod tests {
         assert_eq!(*stats.get("ERROR").unwrap(), 1);
     }
 }
+```
+
+---
+
+## Despliegue a producción
+
+### Build para producción
+```bash
+cargo build --release
+```
+
+El binario optimizado estará en `target/release/`.
+
+### Docker multi-stage
+```dockerfile
+FROM rust:1.85-slim AS builder
+WORKDIR /app
+COPY . .
+RUN cargo build --release
+
+FROM scratch
+COPY --from=builder /app/target/release/mi-app .
+CMD ["./mi-app"]
+```
+
+### Hosting
+- [Fly.io](https://fly.io/) — despliegue con `flyctl launch`
+- [Railway](https://railway.app/) — conecta tu repo y despliega automáticamente
+- [Shuttle](https://www.shuttle.rs/) — plataforma serverless para Rust
+
+### CI/CD (GitHub Actions)
+```yaml
+name: Deploy
+on:
+  push:
+    branches: [main]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: cargo build --release
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 ```
 
 ---

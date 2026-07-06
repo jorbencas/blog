@@ -147,6 +147,94 @@ Fuente: [SDKMAN docs](https://sdkman.io/), [Kotlin Compiler manual](https://kotl
 
 ---
 
+## Escala de aprendizaje: de 0 a 100
+
+### Nivel 0–15: Fundamentos absolutos
+**Qué aprender:**
+- Sintaxis básica: `fun`, `val`/`var`, tipos (`Int`, `Double`, `String`, `Boolean`)
+- `println()`, templates strings `"Hola $nombre"`
+- Condicionales: `if`/`else` como expresión, `when`
+- Bucles: `for` en rangos, `while`, `forEach`
+- Colecciones básicas: `listOf()`, `mapOf()`, `mutableListOf()`
+- Funciones: `fun`, parámetros con default, expresión body
+- Null safety: `String?`, `?.`, `?:`, `!!`
+- **Conceptos clave**: `val` vs `var`, null safety, `Int` es objeto pero optimiza a primitivo
+
+**Proyecto:** *Adivina el número* — programa que elige un número aleatorio entre 1 y 100, `readln()` para entrada, pistas "mayor/menor", contador de intentos.
+
+### Nivel 15–30: Funciones, colecciones y POO básica
+**Qué aprender:**
+- Lambdas: `{ x: Int -> x * 2 }`, `it` implícito
+- Funciones de orden superior: `map`, `filter`, `reduce`, `fold`
+- `Sequence` vs `List`: lazy vs eager
+- Clases: constructores, `init`, `this`
+- Data classes: `copy()`, destructuring
+- Propiedades con getters/setters, `field`
+- Extension functions, `companion object`, `object`
+- **Algoritmos**: `sorted`, `sortedBy`, `groupingBy`, `fold`/`reduce`, `partition`
+- **Big O**: tabla de colecciones
+
+**Proyecto:** *Gestor de tareas CLI* — añadir, listar, completar, eliminar con `data class Tarea`, `object GestorTareas`, persistencia JSON con `kotlinx.serialization`.
+
+### Nivel 30–45: POO avanzada, genéricos y selladas
+**Qué aprender:**
+- Interfaces con implementación por defecto
+- Sealed classes e interfaces, `when` exhaustivo
+- Genéricos: `<T>`, `out`/`in`, `reified`, `where`
+- Delegados: `by lazy`, `by Delegates.observable`, personalizados
+- Scope functions: `let`, `run`, `with`, `apply`, `also`
+- Operator overloading, `inline`/`noinline`/`crossinline`
+
+**Proyecto:** *Sistema de inventario* — `data class Producto`, `sealed class OperacionInventario`, `class Inventario<T>`. Delegado `vetoable` para evitar stock negativo.
+
+### Nivel 45–60: Testing, corrutinas básicas y serialización
+**Qué aprender:**
+- Testing: `kotlin.test` (JUnit 5)
+- Corrutinas: `runBlocking`, `launch`, `async`/`await`, `delay()`
+- `suspend` functions, `Dispatchers.Default` vs `IO`
+- `kotlinx.serialization`: `@Serializable`, JSON
+- `kotlinx.coroutines.test`: `runTest`, `TestScope`
+- Manejo de archivos: `java.io.File`, `Path`, `kotlinx.serialization`
+
+**Proyecto:** *Gestor de contraseñas* — persistencia cifrada con `kotlinx.serialization`, corrutinas para cifrado/descifrado, tests parametrizados.
+
+### Nivel 60–75: Ktor, Exposed y aplicaciones web
+**Qué aprender:**
+- Ktor: routing, content negotiation, serialization, plugins
+- Exposed: DSL de tablas, queries, transactions
+- Inyección de dependencias: Koin
+- Autenticación: JWT, sesiones
+- Testing de endpoints: `testApplication` de Ktor
+
+**Proyecto:** *API de recetas* — Ktor + Exposed + H2/PostgreSQL, CRUD con autenticación JWT, tests con `testApplication` + BD en memoria.
+
+### Nivel 75–90: Multiplataforma (KMP), Compose y producción
+**Qué aprender:**
+- KMP: estructura de módulos `common`, `android`, `ios`
+- `expect`/`actual` declarations
+- Jetpack Compose: `@Composable`, `State`, `remember`, `LaunchedEffect`
+- Compose Multiplatform: UI compartida
+- CI/CD: GitHub Actions con Gradle caching
+- Docker: Dockerfile multi-etapa para Ktor
+
+**Proyecto:** *App de notas multiplataforma* — módulo `shared` con modelos y lógica (KMP), UI con Compose Multiplatform para Android y Desktop.
+
+### Nivel 90–100: Arquitectura, rendimiento y sistemas distribuidos
+**Qué aprender:**
+- Arquitectura limpia: capas domain, data, presentation
+- Event-driven: Kafka con corrutinas, RabbitMQ
+- GraphQL con `graphql-kotlin`, gRPC con `grpc-kotlin`
+- Observabilidad: OpenTelemetry, Prometheus
+- Rendimiento: profiling, JMH benchmarking
+- GraalVM Native Image: binario nativo (`&lt;100ms` startup)
+- Arrow.kt: Either, Option, IO funcional
+
+**Proyecto:** *Sistema de notificaciones distribuidas* — microservicios con Ktor y gRPC, Kafka como event bus, GraalVM Native Image, Docker Compose + Prometheus + Grafana.
+
+Fuente: [Ktor docs](https://ktor.io/docs/), [Exposed docs](https://github.com/JetBrains/Exposed), [Kotlin Multiplatform docs](https://kotlinlang.org/docs/multiplatform.html)
+
+---
+
 ## Primeros pasos y configuración del entorno
 
 Si prefieres ver directamente el "Hola Mundo" en Kotlin, consulta [El Atlas del Hola Mundo](/posts/hola/#kotlin).
@@ -2583,93 +2671,6 @@ fun main() = application {
 
 ---
 
-## Escala de aprendizaje: de 0 a 100
-
-### Nivel 0–15: Fundamentos absolutos
-**Qué aprender:**
-- Sintaxis básica: `fun`, `val`/`var`, tipos (`Int`, `Double`, `String`, `Boolean`)
-- `println()`, templates strings `"Hola $nombre"`
-- Condicionales: `if`/`else` como expresión, `when`
-- Bucles: `for` en rangos, `while`, `forEach`
-- Colecciones básicas: `listOf()`, `mapOf()`, `mutableListOf()`
-- Funciones: `fun`, parámetros con default, expresión body
-- Null safety: `String?`, `?.`, `?:`, `!!`
-- **Conceptos clave**: `val` vs `var`, null safety, `Int` es objeto pero optimiza a primitivo
-
-**Proyecto:** *Adivina el número* — programa que elige un número aleatorio entre 1 y 100, `readln()` para entrada, pistas "mayor/menor", contador de intentos.
-
-### Nivel 15–30: Funciones, colecciones y POO básica
-**Qué aprender:**
-- Lambdas: `{ x: Int -> x * 2 }`, `it` implícito
-- Funciones de orden superior: `map`, `filter`, `reduce`, `fold`
-- `Sequence` vs `List`: lazy vs eager
-- Clases: constructores, `init`, `this`
-- Data classes: `copy()`, destructuring
-- Propiedades con getters/setters, `field`
-- Extension functions, `companion object`, `object`
-- **Algoritmos**: `sorted`, `sortedBy`, `groupingBy`, `fold`/`reduce`, `partition`
-- **Big O**: tabla de colecciones
-
-**Proyecto:** *Gestor de tareas CLI* — añadir, listar, completar, eliminar con `data class Tarea`, `object GestorTareas`, persistencia JSON con `kotlinx.serialization`.
-
-### Nivel 30–45: POO avanzada, genéricos y selladas
-**Qué aprender:**
-- Interfaces con implementación por defecto
-- Sealed classes e interfaces, `when` exhaustivo
-- Genéricos: `<T>`, `out`/`in`, `reified`, `where`
-- Delegados: `by lazy`, `by Delegates.observable`, personalizados
-- Scope functions: `let`, `run`, `with`, `apply`, `also`
-- Operator overloading, `inline`/`noinline`/`crossinline`
-
-**Proyecto:** *Sistema de inventario* — `data class Producto`, `sealed class OperacionInventario`, `class Inventario<T>`. Delegado `vetoable` para evitar stock negativo.
-
-### Nivel 45–60: Testing, corrutinas básicas y serialización
-**Qué aprender:**
-- Testing: `kotlin.test` (JUnit 5)
-- Corrutinas: `runBlocking`, `launch`, `async`/`await`, `delay()`
-- `suspend` functions, `Dispatchers.Default` vs `IO`
-- `kotlinx.serialization`: `@Serializable`, JSON
-- `kotlinx.coroutines.test`: `runTest`, `TestScope`
-- Manejo de archivos: `java.io.File`, `Path`, `kotlinx.serialization`
-
-**Proyecto:** *Gestor de contraseñas* — persistencia cifrada con `kotlinx.serialization`, corrutinas para cifrado/descifrado, tests parametrizados.
-
-### Nivel 60–75: Ktor, Exposed y aplicaciones web
-**Qué aprender:**
-- Ktor: routing, content negotiation, serialization, plugins
-- Exposed: DSL de tablas, queries, transactions
-- Inyección de dependencias: Koin
-- Autenticación: JWT, sesiones
-- Testing de endpoints: `testApplication` de Ktor
-
-**Proyecto:** *API de recetas* — Ktor + Exposed + H2/PostgreSQL, CRUD con autenticación JWT, tests con `testApplication` + BD en memoria.
-
-### Nivel 75–90: Multiplataforma (KMP), Compose y producción
-**Qué aprender:**
-- KMP: estructura de módulos `common`, `android`, `ios`
-- `expect`/`actual` declarations
-- Jetpack Compose: `@Composable`, `State`, `remember`, `LaunchedEffect`
-- Compose Multiplatform: UI compartida
-- CI/CD: GitHub Actions con Gradle caching
-- Docker: Dockerfile multi-etapa para Ktor
-
-**Proyecto:** *App de notas multiplataforma* — módulo `shared` con modelos y lógica (KMP), UI con Compose Multiplatform para Android y Desktop.
-
-### Nivel 90–100: Arquitectura, rendimiento y sistemas distribuidos
-**Qué aprender:**
-- Arquitectura limpia: capas domain, data, presentation
-- Event-driven: Kafka con corrutinas, RabbitMQ
-- GraphQL con `graphql-kotlin`, gRPC con `grpc-kotlin`
-- Observabilidad: OpenTelemetry, Prometheus
-- Rendimiento: profiling, JMH benchmarking
-- GraalVM Native Image: binario nativo (`&lt;100ms` startup)
-- Arrow.kt: Either, Option, IO funcional
-
-**Proyecto:** *Sistema de notificaciones distribuidas* — microservicios con Ktor y gRPC, Kafka como event bus, GraalVM Native Image, Docker Compose + Prometheus + Grafana.
-
-Fuente: [Ktor docs](https://ktor.io/docs/), [Exposed docs](https://github.com/JetBrains/Exposed), [Kotlin Multiplatform docs](https://kotlinlang.org/docs/multiplatform.html)
-
----
 
 ## Proyecto final integrador: API de recetas con Ktor
 
@@ -2794,6 +2795,59 @@ class RecetasTest {
         assertEquals(HttpStatusCode.OK, response.status)
     }
 }
+```
+
+---
+
+## Despliegue a producción
+
+### Build para producción
+```bash
+./gradlew build -x test
+```
+
+El JAR se genera en `build/libs/`.
+
+### Docker multi-stage
+```dockerfile
+FROM gradle:8-jdk21 AS builder
+WORKDIR /app
+COPY build.gradle.kts settings.gradle.kts ./
+RUN gradle dependencies --no-daemon
+COPY src ./src
+RUN gradle build -x test --no-daemon
+
+FROM eclipse-temurin:21-jre
+WORKDIR /app
+COPY --from=builder /app/build/libs/*.jar app.jar
+CMD ["java", "-jar", "app.jar"]
+```
+
+### Hosting
+- [Fly.io](https://fly.io/) — despliegue con `flyctl launch`
+- [Railway](https://railway.app/) — conecta tu repo y despliega automáticamente
+- [Heroku](https://www.heroku.com/) — despliegue con Git o Container Registry
+
+### CI/CD (GitHub Actions)
+```yaml
+name: Deploy
+on:
+  push:
+    branches: [main]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+      - run: ./gradlew build -x test
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 ```
 
 ---

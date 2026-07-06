@@ -121,6 +121,91 @@ alias dkrun='docker run -it --rm'
 🔗 [Docker Engine installation docs](https://docs.docker.com/engine/install/), [Docker Desktop docs](https://docs.docker.com/desktop/), [Rootless mode docs](https://docs.docker.com/engine/security/rootless/)
 
 ---
+## Escala de aprendizaje 0–100
+
+### Nivel 0–15: Fundamentos absolutos
+
+**Qué aprender:**
+- Qué es un contenedor: proceso aislado con su propio sistema de archivos
+- `docker run`, `docker ps`, `docker stop`, `docker rm`
+- `docker pull`, `docker images`, `docker rmi`
+- Diferencia entre imagen (plantilla) y contenedor (instancia)
+- `docker run hello-world` y entender qué pasa
+- `docker run -it ubuntu bash` — explorar un contenedor interactivo
+- Conceptos clave: los contenedores comparten el kernel del host. NO son máquinas virtuales.
+
+**Proyecto:** *Servidor web estático* — contenedor nginx que sirva un `index.html`. `docker run -d -p 8080:80 -v $(pwd):/usr/share/nginx/html nginx:alpine`.
+
+### Nivel 15–30: Dockerfile y builds
+
+**Qué aprender:**
+- Dockerfile básico: `FROM`, `WORKDIR`, `COPY`, `RUN`, `CMD`
+- Orden de instrucciones y layer caching
+- `.dockerignore`
+- `EXPOSE`, `ENV`, `ARG`
+- Diferencia entre `RUN`, `CMD` y `ENTRYPOINT`
+
+**Proyecto:** *App Node.js dockerizada* — Dockerfile con layer caching. Copia `package.json` primero, instala, luego copia el resto.
+
+### Nivel 30–45: Docker Compose y multi-servicio
+
+**Qué aprender:**
+- `compose.yml`: services, build, image, ports, volumes, environment
+- `docker compose up`, `down`, `logs`, `exec`
+- Dependencias con `depends_on` y condiciones
+- Variables de entorno y archivos `.env`
+- Profiles: entornos dev/staging/prod
+
+**Proyecto:** *App web + BD + caché* — compose con web (Node.js/Python), PostgreSQL y Redis.
+
+### Nivel 45–60: Multi-stage, volúmenes y redes
+
+**Qué aprender:**
+- Multi-stage builds
+- Volúmenes: bind mount, volume, tmpfs
+- Redes avanzadas: bridge, host, overlay
+- HEALTHCHECK, logging drivers
+- Sidecar y Ambassador patterns
+
+**Proyecto:** *App Go con multi-stage* — Dockerfile multi-stage (~10 MB final). Bind mount para desarrollo, volume para logs. Red separada para BD.
+
+### Nivel 60–75: Seguridad, registros y CI/CD
+
+**Qué aprender:**
+- No ejecutar como root: `USER appuser`
+- `--cap-drop=ALL --cap-add=NET_BIND_SERVICE`
+- Secrets: `--secret` en build, monturas en runtime
+- `docker scout` / Trivy para vulnerabilidades
+- GitHub Actions: build + push con caché
+- Tags semánticos: `v1.2.3`, SHA
+
+**Proyecto:** *CI/CD pipeline* — GitHub Action que construye, escanea, etiqueta y publica en GHCR.
+
+### Nivel 75–90: Swarm y orquestación
+
+**Qué aprender:**
+- `docker swarm init`, `docker service create`, `docker stack deploy`
+- Redes overlay multi-host
+- Rolling updates
+- Secrets y configs en Swarm
+
+**Proyecto:** *Cluster Swarm local* — 3 nodos, stack con app (3 réplicas), BD, Redis. Rolling update y escalado.
+
+### Nivel 90–100: Kubernetes, service mesh y producción
+
+**Qué aprender:**
+- Minikube, Deployments, Services, ConfigMaps, Secrets, PVCs
+- Ingress controller, HPA
+- Service Mesh: Istio/Linkerd para mTLS
+- Observabilidad: Prometheus + Grafana
+- GitOps: ArgoCD
+
+**Proyecto:** *Microservicios en K8s* — tres servicios en Minikube. Deployments con HPA, Ingress, Prometheus, Istio.
+
+🔗 [Docker Swarm docs](https://docs.docker.com/engine/swarm/), [Kubernetes docs](https://kubernetes.io/docs/)
+
+---
+
 
 ## Primeros pasos y configuración del entorno
 
@@ -1028,90 +1113,6 @@ docker swarm leave --force 2>/dev/null
 
 ---
 
-## Escala de aprendizaje 0–100
-
-### Nivel 0–15: Fundamentos absolutos
-
-**Qué aprender:**
-- Qué es un contenedor: proceso aislado con su propio sistema de archivos
-- `docker run`, `docker ps`, `docker stop`, `docker rm`
-- `docker pull`, `docker images`, `docker rmi`
-- Diferencia entre imagen (plantilla) y contenedor (instancia)
-- `docker run hello-world` y entender qué pasa
-- `docker run -it ubuntu bash` — explorar un contenedor interactivo
-- Conceptos clave: los contenedores comparten el kernel del host. NO son máquinas virtuales.
-
-**Proyecto:** *Servidor web estático* — contenedor nginx que sirva un `index.html`. `docker run -d -p 8080:80 -v $(pwd):/usr/share/nginx/html nginx:alpine`.
-
-### Nivel 15–30: Dockerfile y builds
-
-**Qué aprender:**
-- Dockerfile básico: `FROM`, `WORKDIR`, `COPY`, `RUN`, `CMD`
-- Orden de instrucciones y layer caching
-- `.dockerignore`
-- `EXPOSE`, `ENV`, `ARG`
-- Diferencia entre `RUN`, `CMD` y `ENTRYPOINT`
-
-**Proyecto:** *App Node.js dockerizada* — Dockerfile con layer caching. Copia `package.json` primero, instala, luego copia el resto.
-
-### Nivel 30–45: Docker Compose y multi-servicio
-
-**Qué aprender:**
-- `compose.yml`: services, build, image, ports, volumes, environment
-- `docker compose up`, `down`, `logs`, `exec`
-- Dependencias con `depends_on` y condiciones
-- Variables de entorno y archivos `.env`
-- Profiles: entornos dev/staging/prod
-
-**Proyecto:** *App web + BD + caché* — compose con web (Node.js/Python), PostgreSQL y Redis.
-
-### Nivel 45–60: Multi-stage, volúmenes y redes
-
-**Qué aprender:**
-- Multi-stage builds
-- Volúmenes: bind mount, volume, tmpfs
-- Redes avanzadas: bridge, host, overlay
-- HEALTHCHECK, logging drivers
-- Sidecar y Ambassador patterns
-
-**Proyecto:** *App Go con multi-stage* — Dockerfile multi-stage (~10 MB final). Bind mount para desarrollo, volume para logs. Red separada para BD.
-
-### Nivel 60–75: Seguridad, registros y CI/CD
-
-**Qué aprender:**
-- No ejecutar como root: `USER appuser`
-- `--cap-drop=ALL --cap-add=NET_BIND_SERVICE`
-- Secrets: `--secret` en build, monturas en runtime
-- `docker scout` / Trivy para vulnerabilidades
-- GitHub Actions: build + push con caché
-- Tags semánticos: `v1.2.3`, SHA
-
-**Proyecto:** *CI/CD pipeline* — GitHub Action que construye, escanea, etiqueta y publica en GHCR.
-
-### Nivel 75–90: Swarm y orquestación
-
-**Qué aprender:**
-- `docker swarm init`, `docker service create`, `docker stack deploy`
-- Redes overlay multi-host
-- Rolling updates
-- Secrets y configs en Swarm
-
-**Proyecto:** *Cluster Swarm local* — 3 nodos, stack con app (3 réplicas), BD, Redis. Rolling update y escalado.
-
-### Nivel 90–100: Kubernetes, service mesh y producción
-
-**Qué aprender:**
-- Minikube, Deployments, Services, ConfigMaps, Secrets, PVCs
-- Ingress controller, HPA
-- Service Mesh: Istio/Linkerd para mTLS
-- Observabilidad: Prometheus + Grafana
-- GitOps: ArgoCD
-
-**Proyecto:** *Microservicios en K8s* — tres servicios en Minikube. Deployments con HPA, Ingress, Prometheus, Istio.
-
-🔗 [Docker Swarm docs](https://docs.docker.com/engine/swarm/), [Kubernetes docs](https://kubernetes.io/docs/)
-
----
 
 ## Proyecto final integrador
 

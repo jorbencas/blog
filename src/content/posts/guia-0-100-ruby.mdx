@@ -122,6 +122,108 @@ Fuente: [rbenv GitHub](https://github.com/rbenv/rbenv), [RVM](https://rvm.io/), 
 
 
 ---
+## Escala 0-100
+
+Cada nivel incluye lo que debes saber y un proyecto para fijar los conceptos.
+
+### Nivel 0–15: Fundamentos absolutos
+**Qué aprender:**
+- Sintaxis básica: variables, tipos (`Integer`, `String`, `Float`, `Symbol`, `Array`, `Hash`), `puts`, `gets`
+- Condicionales: `if`/`elsif`/`else`/`unless`, operadores de comparación
+- Bucles: `each`, `times`, `while`, `until`, `loop`
+- Métodos: `def`, `return`, parámetros, `puts` vs `p` vs `pp`
+- Strings: interpolación `"#{var}"`, métodos `upcase`, `downcase`, `reverse`, `split`, `strip`
+- Arrays: `[]`, `push`, `pop`, `shift`, `unshift`, `include?`, `join`
+- Símbolos: qué son y por qué se usan como keys
+- **Conceptos clave**: todo es objeto — `42.class`, `"hola".methods`. Solo `nil` y `false` son falsy. `||=` para memoización. `puts` imprime con salto de línea, `p` imprime con `inspect`.
+
+**Proyecto:** *Adivina el número* — el programa elige un número aleatorio entre 1 y 100, el usuario intenta adivinarlo. Pistas de "mayor/menor". Contador de intentos. Manejo de entrada con `gets.chomp.to_i`. Reflexión: ¿por qué `:nombre.object_id == :nombre.object_id` da True pero `"nombre".object_id == "nombre".object_id` da False?
+
+### Nivel 15–30: Bloques, Enumerable y Hash
+**Qué aprender:**
+- Bloques: `do..end` vs `{}`, `yield`, `block_given?`
+- Enumerable: `map`, `select`, `reject`, `reduce`, `group_by`, `partition`, `sort_by`
+- Rangos: `(1..10)`, `("a".."z")`, rango como array
+- Hash: creación, acceso, `symbol keys`, `fetch`, `merge`, `transform_keys`, `transform_values`
+- Símbolos en profundidad: inmutabilidad, memoria única, conversión `to_sym`/`to_s`
+- Argumentos de método: valores por defecto, `*args` (splat), `**kwargs` (doble splat)
+- `each` vs `map` — ¿cuándo usar cada uno?
+- **Conceptos clave**: los bloques son closures — capturan variables del ámbito donde se definen. `each` itera pero no transforma, `map` transforma. `reduce(:+)` es suma total. `group_by` crea un hash agrupado. Los símbolos hacen que los hashes sean eficientes porque la comparación es por ID, no por valor.
+
+**Proyecto:** *Analizador de texto CLI* — lee un archivo de texto, cuenta palabras, líneas, caracteres. Frecuencia de palabras con `group_by` + `map` + `sort_by`. Filtra palabras vacías. Muestra top 10 palabras más frecuentes. Usa `--help` con `OptionParser` para argumentos. Usa `File.read` para leer el archivo.
+
+### Nivel 30–45: POO, módulos y excepciones
+**Qué aprender:**
+- Clases: `class`, `initialize`, `attr_reader/writer/accessor`
+- Variables de instancia (`@`), clase (`@@`), métodos de clase (`self.metodo`)
+- Módulos como mixins: `include`, `extend`, `prepend`
+- `Comparable` (implementar `<=>`), `Enumerable` (implementar `each`)
+- Excepciones: `begin/rescue/ensure/raise`, excepciones personalizadas, `retry`
+- Herencia: `<`, `super`, redefinición de métodos
+- Métodos de acceso: `public`, `protected`, `private`
+- `self`: qué es y cuándo es necesario
+- **Conceptos clave**: `include` añade métodos de instancia, `extend` añade métodos de clase. `Comparable` da `<`, `>`, `<=`, `>=`, `==`, `between?` solo con implementar `<=>`. `private` en Ruby significa "solo se puede llamar sin receptor explícito". `retry` reintenta todo el bloque `begin` — cuidado con bucles infinitos.
+
+**Proyecto:** *Sistema de inventario* — clases `Producto`, `Inventario`. Métodos: `agregar`, `retirar`, `buscar`, `valor_total`. Persistencia con JSON. Excepciones personalizadas (`StockInsuficiente`, `ProductoNoExiste`). `Comparable` en Producto para ordenar por precio. Módulo `Loggable` para registrar operaciones. `Enumerable` en Inventario para poder iterar productos.
+
+### Nivel 45–60: Testing, gemas y metaprogramación básica
+**Qué aprender:**
+- RSpec: `describe`, `context`, `it`, `expect`, `let`, `subject`, `before`
+- RSpec matchers: `eq`, `be`, `include`, `match`, `raise_error`, `change`, `respond_to`
+- `FactoryBot` para datos de prueba
+- `SimpleCov` para cobertura
+- Crear una gema: `bundle gem mi_gema`, estructura, gemspec
+- Metaprogramación básica: `define_method`, `send`, `respond_to?`
+- `method_missing` + `respond_to_missing?` para delegación
+- **Conceptos clave**: `&&=` para condicionales. `send` permite llamar métodos dinámicamente. `respond_to_missing?` debe siempre acompañar a `method_missing` para que `respond_to?` funcione correctamente. Las gems tienen nomenclatura: `gem_name` (snake_case). RSpec usa `expect { ... }.to change { ... }` para mutaciones.
+
+**Proyecto:** *Gema de validación* — gema Ruby instalable con validaciones tipo ActiveRecord pero standalone. `Validator` con `validate`, `valid?`, errores. Metaprogramación con `define_method` para declarar validaciones: `validates_presence_of :nombre`. Tests con RSpec. Cobertura con SimpleCov. Gemfile + gemspec para distribución.
+
+### Nivel 60–75: Rails, APIs y bases de datos
+**Qué aprender:**
+- Ruby on Rails: `rails new`, MVC, rutas, controladores, vistas
+- ActiveRecord: modelos, migraciones, validaciones, asociaciones (`belongs_to`, `has_many`)
+- Rails API mode: `rails new --api`
+- Serialización: `jbuilder`, `active_model_serializers`, `blueprinter`
+- Autenticación: `devise`, `jwt` (gem `jwt`)
+- Background jobs: `sidekiq` + Redis, `good_job` (PostgreSQL)
+- Mailers: `ActionMailer`
+- **Conceptos clave**: Convention over Configuration — Rails asume nombres y estructuras. `belongs_to :usuario` espera `usuario_id`. Migraciones son versiones de esquema, no datos. `includes(:usuario)` para eager loading y evitar N+1. Sidekiq usa Redis como cola, procesa jobs en threads.
+
+**Proyecto:** *API de recetas* — Rails API + PostgreSQL. Endpoints CRUD para recetas e ingredientes. Autenticación JWT con `devise-jwt`. Búsqueda por ingrediente con scopes. Background job que genera PDF de receta con `prawn`. Tests de request con RSpec + FactoryBot. Docker Compose (api + postgres + redis).
+
+### Nivel 75–90: Arquitectura Rails, WebSockets y producción
+**Qué aprender:**
+- Rails avanzado: concerns, service objects, form objects, query objects
+- ActionCable: WebSockets en Rails, canales, broadcasting
+- ActiveStorage: subida de archivos a S3/GCS/local
+- Caching: `Russian Doll Caching`, `Rails.cache`, `Redis`, `etag`, `stale?`
+- Rendimiento: N+1 queries, eager loading, bullet gem, rack-mini-profiler
+- Despliegue: Capistrano, Docker, Kamal (antes MRSK)
+- Monitorización: Sentry, New Relic, Scout, logs estructurados
+- **Conceptos clave**: `includes` vs `preload` vs `eager_load` — controla cómo se cargan las asociaciones. Service Objects encapsulan lógica de negocio. `ActiveRecord::Base.transaction` para operaciones atómicas. `lock!` para optimistic/pessimistic locking. ActionCable requiere Redis como adapter de pub/sub en producción.
+
+**Proyecto:** *Dashboard de monitorización en Rails* — API Rails que recolecta métricas del sistema. Sidekiq para workers de recolección. ActionCable para WebSockets en tiempo real. Caché con Redis para datos agregados. ActiveStorage para screenshots. Tests de integración con sistema. Docker Compose + Kamal para deploy.
+
+### Nivel 90–100: Microservicios, sistemas distribuidos y performance
+**Qué aprender:**
+- Microservicios con Rails/Sinatra + RabbitMQ/Kafka
+- GraphQL: `graphql-ruby`, subscriptions
+- Event Sourcing: `rails_event_store`, `sequent`
+- Performance: profiling con `ruby-prof`, `stackprof`, `rack-mini-profiler`
+- Optimización: evitar object allocations, frozen string literals, `GC` tuning
+- JRuby / TruffleRuby: para proyectos que necesitan paralelismo real
+- Ractor avanzado: canales de comunicación, shareable objects
+- Ruby 3.x: refinements, pattern matching (`case...in`), Ractor, Fiber Scheduler
+- **Conceptos clave**: el GIL en CRuby no es problema si usas Ractor o procesos separados. JRuby no tiene GIL y puede usar threads de Java. Pattern matching en Ruby 3.0+ (`case obj in [a, *] then a end`). Fiber Scheduler permite async I/O nativo sin gems externas. `frozen_string_literal: true` reduce allocations de strings.
+
+**Proyecto:** *Sistema de notificaciones distribuidas* — microservicios con Rails API (usuarios) + Sinatra (notificaciones) + RabbitMQ como event bus. GraphQL como BFF con subscriptions para tiempo real. Workers en Sidekiq para procesar colas. Ractor para procesamiento paralelo de notificaciones. Stackprof para profiling. Docker Compose multi-servicio + Kamal para deploy.
+
+Fuente: [Rails Guides](https://guides.rubyonrails.org/), [Ruby API docs](https://ruby-doc.org/), [Ruby 3.0 — Ractor](https://docs.ruby-lang.org/en/3.0/ractor_md.html)
+
+
+---
+
 
 ## Primeros pasos
 
@@ -3379,107 +3481,6 @@ Fuente: [Ruby Toolbox](https://www.ruby-toolbox.com/), [Awesome Ruby](https://gi
 
 ---
 
-## Escala 0-100
-
-Cada nivel incluye lo que debes saber y un proyecto para fijar los conceptos.
-
-### Nivel 0–15: Fundamentos absolutos
-**Qué aprender:**
-- Sintaxis básica: variables, tipos (`Integer`, `String`, `Float`, `Symbol`, `Array`, `Hash`), `puts`, `gets`
-- Condicionales: `if`/`elsif`/`else`/`unless`, operadores de comparación
-- Bucles: `each`, `times`, `while`, `until`, `loop`
-- Métodos: `def`, `return`, parámetros, `puts` vs `p` vs `pp`
-- Strings: interpolación `"#{var}"`, métodos `upcase`, `downcase`, `reverse`, `split`, `strip`
-- Arrays: `[]`, `push`, `pop`, `shift`, `unshift`, `include?`, `join`
-- Símbolos: qué son y por qué se usan como keys
-- **Conceptos clave**: todo es objeto — `42.class`, `"hola".methods`. Solo `nil` y `false` son falsy. `||=` para memoización. `puts` imprime con salto de línea, `p` imprime con `inspect`.
-
-**Proyecto:** *Adivina el número* — el programa elige un número aleatorio entre 1 y 100, el usuario intenta adivinarlo. Pistas de "mayor/menor". Contador de intentos. Manejo de entrada con `gets.chomp.to_i`. Reflexión: ¿por qué `:nombre.object_id == :nombre.object_id` da True pero `"nombre".object_id == "nombre".object_id` da False?
-
-### Nivel 15–30: Bloques, Enumerable y Hash
-**Qué aprender:**
-- Bloques: `do..end` vs `{}`, `yield`, `block_given?`
-- Enumerable: `map`, `select`, `reject`, `reduce`, `group_by`, `partition`, `sort_by`
-- Rangos: `(1..10)`, `("a".."z")`, rango como array
-- Hash: creación, acceso, `symbol keys`, `fetch`, `merge`, `transform_keys`, `transform_values`
-- Símbolos en profundidad: inmutabilidad, memoria única, conversión `to_sym`/`to_s`
-- Argumentos de método: valores por defecto, `*args` (splat), `**kwargs` (doble splat)
-- `each` vs `map` — ¿cuándo usar cada uno?
-- **Conceptos clave**: los bloques son closures — capturan variables del ámbito donde se definen. `each` itera pero no transforma, `map` transforma. `reduce(:+)` es suma total. `group_by` crea un hash agrupado. Los símbolos hacen que los hashes sean eficientes porque la comparación es por ID, no por valor.
-
-**Proyecto:** *Analizador de texto CLI* — lee un archivo de texto, cuenta palabras, líneas, caracteres. Frecuencia de palabras con `group_by` + `map` + `sort_by`. Filtra palabras vacías. Muestra top 10 palabras más frecuentes. Usa `--help` con `OptionParser` para argumentos. Usa `File.read` para leer el archivo.
-
-### Nivel 30–45: POO, módulos y excepciones
-**Qué aprender:**
-- Clases: `class`, `initialize`, `attr_reader/writer/accessor`
-- Variables de instancia (`@`), clase (`@@`), métodos de clase (`self.metodo`)
-- Módulos como mixins: `include`, `extend`, `prepend`
-- `Comparable` (implementar `<=>`), `Enumerable` (implementar `each`)
-- Excepciones: `begin/rescue/ensure/raise`, excepciones personalizadas, `retry`
-- Herencia: `<`, `super`, redefinición de métodos
-- Métodos de acceso: `public`, `protected`, `private`
-- `self`: qué es y cuándo es necesario
-- **Conceptos clave**: `include` añade métodos de instancia, `extend` añade métodos de clase. `Comparable` da `<`, `>`, `<=`, `>=`, `==`, `between?` solo con implementar `<=>`. `private` en Ruby significa "solo se puede llamar sin receptor explícito". `retry` reintenta todo el bloque `begin` — cuidado con bucles infinitos.
-
-**Proyecto:** *Sistema de inventario* — clases `Producto`, `Inventario`. Métodos: `agregar`, `retirar`, `buscar`, `valor_total`. Persistencia con JSON. Excepciones personalizadas (`StockInsuficiente`, `ProductoNoExiste`). `Comparable` en Producto para ordenar por precio. Módulo `Loggable` para registrar operaciones. `Enumerable` en Inventario para poder iterar productos.
-
-### Nivel 45–60: Testing, gemas y metaprogramación básica
-**Qué aprender:**
-- RSpec: `describe`, `context`, `it`, `expect`, `let`, `subject`, `before`
-- RSpec matchers: `eq`, `be`, `include`, `match`, `raise_error`, `change`, `respond_to`
-- `FactoryBot` para datos de prueba
-- `SimpleCov` para cobertura
-- Crear una gema: `bundle gem mi_gema`, estructura, gemspec
-- Metaprogramación básica: `define_method`, `send`, `respond_to?`
-- `method_missing` + `respond_to_missing?` para delegación
-- **Conceptos clave**: `&&=` para condicionales. `send` permite llamar métodos dinámicamente. `respond_to_missing?` debe siempre acompañar a `method_missing` para que `respond_to?` funcione correctamente. Las gems tienen nomenclatura: `gem_name` (snake_case). RSpec usa `expect { ... }.to change { ... }` para mutaciones.
-
-**Proyecto:** *Gema de validación* — gema Ruby instalable con validaciones tipo ActiveRecord pero standalone. `Validator` con `validate`, `valid?`, errores. Metaprogramación con `define_method` para declarar validaciones: `validates_presence_of :nombre`. Tests con RSpec. Cobertura con SimpleCov. Gemfile + gemspec para distribución.
-
-### Nivel 60–75: Rails, APIs y bases de datos
-**Qué aprender:**
-- Ruby on Rails: `rails new`, MVC, rutas, controladores, vistas
-- ActiveRecord: modelos, migraciones, validaciones, asociaciones (`belongs_to`, `has_many`)
-- Rails API mode: `rails new --api`
-- Serialización: `jbuilder`, `active_model_serializers`, `blueprinter`
-- Autenticación: `devise`, `jwt` (gem `jwt`)
-- Background jobs: `sidekiq` + Redis, `good_job` (PostgreSQL)
-- Mailers: `ActionMailer`
-- **Conceptos clave**: Convention over Configuration — Rails asume nombres y estructuras. `belongs_to :usuario` espera `usuario_id`. Migraciones son versiones de esquema, no datos. `includes(:usuario)` para eager loading y evitar N+1. Sidekiq usa Redis como cola, procesa jobs en threads.
-
-**Proyecto:** *API de recetas* — Rails API + PostgreSQL. Endpoints CRUD para recetas e ingredientes. Autenticación JWT con `devise-jwt`. Búsqueda por ingrediente con scopes. Background job que genera PDF de receta con `prawn`. Tests de request con RSpec + FactoryBot. Docker Compose (api + postgres + redis).
-
-### Nivel 75–90: Arquitectura Rails, WebSockets y producción
-**Qué aprender:**
-- Rails avanzado: concerns, service objects, form objects, query objects
-- ActionCable: WebSockets en Rails, canales, broadcasting
-- ActiveStorage: subida de archivos a S3/GCS/local
-- Caching: `Russian Doll Caching`, `Rails.cache`, `Redis`, `etag`, `stale?`
-- Rendimiento: N+1 queries, eager loading, bullet gem, rack-mini-profiler
-- Despliegue: Capistrano, Docker, Kamal (antes MRSK)
-- Monitorización: Sentry, New Relic, Scout, logs estructurados
-- **Conceptos clave**: `includes` vs `preload` vs `eager_load` — controla cómo se cargan las asociaciones. Service Objects encapsulan lógica de negocio. `ActiveRecord::Base.transaction` para operaciones atómicas. `lock!` para optimistic/pessimistic locking. ActionCable requiere Redis como adapter de pub/sub en producción.
-
-**Proyecto:** *Dashboard de monitorización en Rails* — API Rails que recolecta métricas del sistema. Sidekiq para workers de recolección. ActionCable para WebSockets en tiempo real. Caché con Redis para datos agregados. ActiveStorage para screenshots. Tests de integración con sistema. Docker Compose + Kamal para deploy.
-
-### Nivel 90–100: Microservicios, sistemas distribuidos y performance
-**Qué aprender:**
-- Microservicios con Rails/Sinatra + RabbitMQ/Kafka
-- GraphQL: `graphql-ruby`, subscriptions
-- Event Sourcing: `rails_event_store`, `sequent`
-- Performance: profiling con `ruby-prof`, `stackprof`, `rack-mini-profiler`
-- Optimización: evitar object allocations, frozen string literals, `GC` tuning
-- JRuby / TruffleRuby: para proyectos que necesitan paralelismo real
-- Ractor avanzado: canales de comunicación, shareable objects
-- Ruby 3.x: refinements, pattern matching (`case...in`), Ractor, Fiber Scheduler
-- **Conceptos clave**: el GIL en CRuby no es problema si usas Ractor o procesos separados. JRuby no tiene GIL y puede usar threads de Java. Pattern matching en Ruby 3.0+ (`case obj in [a, *] then a end`). Fiber Scheduler permite async I/O nativo sin gems externas. `frozen_string_literal: true` reduce allocations de strings.
-
-**Proyecto:** *Sistema de notificaciones distribuidas* — microservicios con Rails API (usuarios) + Sinatra (notificaciones) + RabbitMQ como event bus. GraphQL como BFF con subscriptions para tiempo real. Workers en Sidekiq para procesar colas. Ractor para procesamiento paralelo de notificaciones. Stackprof para profiling. Docker Compose multi-servicio + Kamal para deploy.
-
-Fuente: [Rails Guides](https://guides.rubyonrails.org/), [Ruby API docs](https://ruby-doc.org/), [Ruby 3.0 — Ractor](https://docs.ruby-lang.org/en/3.0/ractor_md.html)
-
-
----
 
 ## Proyecto final integrador: API REST con Rails API
 
@@ -3615,6 +3616,70 @@ RAILS_ENV=production bundle exec rails db:migrate
 
 # Kamal para deploy (antes MRSK)
 # kamal deploy
+```
+
+---
+
+## Despliegue a producción
+
+### Build para producción
+```bash
+RAILS_ENV=production bundle exec rails assets:precompile
+RAILS_ENV=production bundle exec rails db:migrate
+```
+
+### Docker multi-stage
+```dockerfile
+# Stage 1: Build
+FROM ruby:3.3-slim AS build
+WORKDIR /app
+RUN apt-get update -qq && apt-get install -y build-essential libpq-dev nodejs
+COPY Gemfile Gemfile.lock ./
+RUN bundle install --jobs 4 --retry 3
+COPY . .
+RUN RAILS_ENV=production bundle exec rails assets:precompile
+
+# Stage 2: Runtime
+FROM ruby:3.3-slim
+RUN apt-get update -qq && apt-get install -y libpq-dev nodejs && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY --from=build /app /app
+EXPOSE 3000
+CMD ["bundle", "exec", "puma", "-C", "config/puma.rb"]
+```
+
+### Hosting
+- [Fly.io](https://fly.io/)
+- [Railway](https://railway.app/)
+- [Heroku](https://www.heroku.com/)
+- [Hatchbox](https://hatchbox.io/)
+
+### CI/CD (GitHub Actions)
+```yaml
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: rails
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: test
+        ports:
+          - 5432:5432
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+      - run: RAILS_ENV=production bundle exec rails assets:precompile
 ```
 
 ---

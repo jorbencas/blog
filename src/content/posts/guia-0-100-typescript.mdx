@@ -12,7 +12,7 @@ author: "Jorge Beneyto Castelló"
 
 ---
 
-## 1. ¿Qué es TypeScript?
+## ¿Qué es TypeScript?
 
 TypeScript es un lenguaje de programación de tipado estático opcional que compila a JavaScript. Fue creado por **Anders Hejlsberg** (arquitecto de Turbo Pascal y C#) en Microsoft y lanzado públicamente en octubre de 2012. Es un **superset de JavaScript**: todo JS válido es TS válido, y el compilador añade análisis de tipos en tiempo de desarrollo sin modificar el comportamiento runtime.
 
@@ -45,7 +45,7 @@ Antes de empezar, necesitas:
 
 Si no cumples algún requisito, no te preocupes: cada sección te guiará paso a paso.
 
-## 2. ¿Cómo empezar? Instalación en todos los entornos
+## ¿Cómo empezar? Instalación en todos los entornos
 
 ### npm (Node.js — necesario para compilar)
 ```bash
@@ -128,7 +128,84 @@ Fuente: [TypeScript Download](https://www.typescriptlang.org/download/), [Bun do
 
 ---
 
-## 3. Primeros pasos y configuración del entorno
+## Escala de aprendizaje: de 0 a 100
+
+### Nivel 0–15: Fundamentos absolutos
+**Qué aprender:**
+- Sintaxis básica: `let`, `const`, tipos primitivos, inferencia
+- Funciones: parámetros tipados, retorno tipado
+- Arrays, objetos e interfaces básicas
+- `tsc` básico: compilar `.ts` a `.js`
+- **Conceptos clave**: los tipos se borran al compilar. Tipado estructural. `const` impide reasignación, no inmutabilidad.
+
+**Proyecto:** *Conversor de temperaturas* — función que convierte Celsius a Fahrenheit. Interfaz para parámetros. Tipos literales para unidades. CLI simple.
+
+### Nivel 15–30: Union types, narrowing y arrays
+**Qué aprender:**
+- Union types: `string | number`
+- Type narrowing: `typeof`, `in`, `instanceof`, truthy/falsy
+- Tuplas, `readonly` arrays, `as const`
+- Enums, `unknown` vs `any`
+- **Conceptos clave**: narrowing automático en switch. `any` desactiva el checker. `as const` para tipos literales profundos.
+
+**Proyecto:** *Validador de formularios* — función que valida campos (email, teléfono, url). Union type para tipos de campo. Type guards personalizados.
+
+### Nivel 30–45: Interfaces, types, genéricos y POO
+**Qué aprender:**
+- `interface` vs `type`, extensión, declaration merging
+- Genéricos: básicos, constraints, keyof
+- Clases: `public`/`private`/`protected`, `readonly`, `abstract`
+- `implements`, composición sobre herencia
+- **Conceptos clave**: las interfaces soportan declaration merging. Los genéricos se borran en compilación.
+
+**Proyecto:** *Gestor de tareas* — clases `TareaBase`, `TareaSimple`, `TareaConFecha`. Interfaz `Exportable`. Genéricos en `Repositorio<T>`. Enum `EstadoTarea`.
+
+### Nivel 45–60: Tipos avanzados y utility types
+**Qué aprender:**
+- Utility types: `Partial`, `Required`, `Pick`, `Omit`, `Record`
+- Mapped types, Conditional types, Template literal types
+- `keyof`, `typeof`, `satisfies`, `infer`
+- Branded types, DeepPartial
+- **Conceptos clave**: los utility types son mapped/conditional types de la stdlib. `satisfies` verifica sin ensanchar.
+
+**Proyecto:** *API client tipado* — función genérica `createApiClient<T>()`. Template literal types para rutas. Conditional types para respuesta según método HTTP.
+
+### Nivel 60–75: Backend, BD y async
+**Qué aprender:**
+- Express/Fastify con TypeScript
+- Prisma o Drizzle: schema, queries, migrations
+- Zod para validación, async/await, Promise.all
+- **Conceptos clave**: el event loop no tiene GIL. Zod infiere tipos automáticamente.
+
+**Proyecto:** *API de recetas* — Fastify + Prisma + PostgreSQL. Zod para validación. CRUD tipado. Tests con vitest.
+
+### Nivel 75–90: Tiempo real, workers y producción
+**Qué aprender:**
+- WebSockets con Socket.IO
+- worker_threads en Node.js, Web Workers
+- Docker multi-etapa, CI/CD, ESLint, vitest
+- **Conceptos clave**: Workers tienen su propio V8 isolate. `--strict` desde el día 1.
+
+**Proyecto:** *Dashboard de monitorización* — Fastify + Socket.IO + worker_threads. Métricas del sistema. Redis. Tests.
+
+### Nivel 90–100: Arquitectura y edge
+**Qué aprender:**
+- tRPC, arquitectura hexagonal
+- BullMQ para colas, GraphQL con Pothos
+- Edge computing (Cloudflare Workers, Deno Deploy)
+- Monorepos con Turborepo + Project References
+- **Conceptos clave**: edge tiene limitaciones (sin Node APIs). tRPC elimina REST/GraphQL. Monorepos necesitan `composite: true`.
+
+**Proyecto:** *Sistema de notificaciones* — tRPC, BullMQ, Edge Functions, Turborepo, OpenTelemetry.
+
+#### 🔗 Para saber más
+- [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/)
+- [Prisma docs](https://www.prisma.io/docs)
+- [Fastify docs](https://fastify.dev/)
+
+---
+
+## Primeros pasos y configuración del entorno
 
 Si prefieres ver directamente el "Hola Mundo" en TypeScript, consulta [El Atlas del Hola Mundo](/posts/hola/#typescript).
 
@@ -233,7 +310,7 @@ Fuente: [TypeScript tsconfig docs](https://www.typescriptlang.org/tsconfig/), [t
 
 ---
 
-## 4. Paradigmas de programación
+## Paradigmas de programación
 
 TypeScript hereda los paradigmas de JavaScript y añade tipado estático, lo que lo hace único en su combinación.
 
@@ -253,7 +330,7 @@ Fuente: [MDN — JavaScript Paradigms](https://developer.mozilla.org/en-US/docs/
 
 ---
 
-## 5. Tipos de datos y variables
+## Tipos de datos y variables
 
 ### Sistema de tipos estructural
 
@@ -541,7 +618,7 @@ console.log(f('a'));
 
 ---
 
-## 6. Control de flujo y modularidad
+## Control de flujo y modularidad
 
 ### Condicionales con narrowing
 
@@ -719,7 +796,7 @@ export function hola(n: string): string { return 'Hola ' + n; }
 
 ---
 
-## 7. Sistema de archivos
+## Sistema de archivos
 
 TypeScript usa las mismas APIs de Node.js que JavaScript, con tipos para `fs`, `path`, `streams`.
 
@@ -775,7 +852,7 @@ File system síncrono: scripts y CLIs. Async: servidores y APIs. Streams: archiv
 
 ---
 
-## 8. Algoritmos y estructuras de datos
+## Algoritmos y estructuras de datos
 
 #### ¿Qué es?
 TypeScript hereda las estructuras de datos de JavaScript con tipos genéricos para colecciones.
@@ -843,7 +920,7 @@ Los genéricos no tienen overhead runtime (se borran). `Map` y `Set` tienen rend
 
 ---
 
-## 9. Conceptos clave de TypeScript
+## Conceptos clave de TypeScript
 
 ### Interfaces vs Types
 
@@ -1260,7 +1337,7 @@ declare module "mi-lib-sin-tipos" {
 
 ---
 
-## 10. POO y patrones de diseño
+## POO y patrones de diseño
 
 #### ¿Qué es?
 TypeScript aporta clases ES6+ con tipos, modificadores de acceso, abstract, y decoradores. Los patrones de diseño se expresan de forma natural con el sistema de tipos.
@@ -1419,7 +1496,7 @@ Clases tienen overhead similar a JS. Los genéricos y tipos no afectan runtime. 
 
 ---
 
-## 11. Polimorfismo en detalle
+## Polimorfismo en detalle
 
 TypeScript tiene tres formas de polimorfismo que coexisten en el mismo código.
 
@@ -1484,7 +1561,7 @@ Polimorfismo paramétrico y estructural: cero costo runtime (tipos se borran). S
 
 ---
 
-## 12. Interacción con contenido multimedia
+## Interacción con contenido multimedia
 
 #### ¿Qué es?
 TypeScript usa las mismas librerías JS para multimedia, con tipos incluidos o de `@types/`.
@@ -1529,7 +1606,7 @@ sharp({ create: { width: 100, height: 100, channels: 3, background: { r: 255, g:
 
 ---
 
-## 13. Bases de datos
+## Bases de datos
 
 ### ORMs y query builders tipados
 
@@ -1612,7 +1689,7 @@ npx drizzle-kit migrate
 
 ---
 
-## 14. WebSockets
+## WebSockets
 
 #### ws (raw WebSocket)
 ```typescript
@@ -1662,7 +1739,7 @@ const wss = new WebSocketServer({ port: 0 }, () => { console.log('WS OK'); wss.c
 
 ---
 
-## 15. Concurrencia
+## Concurrencia
 
 TypeScript/JavaScript tiene un solo hilo con event loop asíncrono. La concurrencia real viene de `worker_threads` (Node) y Web Workers (navegador).
 
@@ -1743,7 +1820,7 @@ El event loop no tiene GIL — no bloquea con I/O bien hecho. Workers tienen su 
 
 ---
 
-## 16. Testing y calidad
+## Testing y calidad
 
 🔗 [Testing — Frameworks y herramientas](/posts/resources2/#testing)
 
@@ -1866,7 +1943,7 @@ npx vitest run --coverage
 
 ---
 
-## 17. Conceptos avanzados
+## Conceptos avanzados
 
 ### Template Literal Types avanzados
 
@@ -1977,84 +2054,7 @@ type DeepReadonly<T> = {
 
 ---
 
-## 18. Escala de aprendizaje: de 0 a 100
-
-### Nivel 0–15: Fundamentos absolutos
-**Qué aprender:**
-- Sintaxis básica: `let`, `const`, tipos primitivos, inferencia
-- Funciones: parámetros tipados, retorno tipado
-- Arrays, objetos e interfaces básicas
-- `tsc` básico: compilar `.ts` a `.js`
-- **Conceptos clave**: los tipos se borran al compilar. Tipado estructural. `const` impide reasignación, no inmutabilidad.
-
-**Proyecto:** *Conversor de temperaturas* — función que convierte Celsius a Fahrenheit. Interfaz para parámetros. Tipos literales para unidades. CLI simple.
-
-### Nivel 15–30: Union types, narrowing y arrays
-**Qué aprender:**
-- Union types: `string | number`
-- Type narrowing: `typeof`, `in`, `instanceof`, truthy/falsy
-- Tuplas, `readonly` arrays, `as const`
-- Enums, `unknown` vs `any`
-- **Conceptos clave**: narrowing automático en switch. `any` desactiva el checker. `as const` para tipos literales profundos.
-
-**Proyecto:** *Validador de formularios* — función que valida campos (email, teléfono, url). Union type para tipos de campo. Type guards personalizados.
-
-### Nivel 30–45: Interfaces, types, genéricos y POO
-**Qué aprender:**
-- `interface` vs `type`, extensión, declaration merging
-- Genéricos: básicos, constraints, keyof
-- Clases: `public`/`private`/`protected`, `readonly`, `abstract`
-- `implements`, composición sobre herencia
-- **Conceptos clave**: las interfaces soportan declaration merging. Los genéricos se borran en compilación.
-
-**Proyecto:** *Gestor de tareas* — clases `TareaBase`, `TareaSimple`, `TareaConFecha`. Interfaz `Exportable`. Genéricos en `Repositorio<T>`. Enum `EstadoTarea`.
-
-### Nivel 45–60: Tipos avanzados y utility types
-**Qué aprender:**
-- Utility types: `Partial`, `Required`, `Pick`, `Omit`, `Record`
-- Mapped types, Conditional types, Template literal types
-- `keyof`, `typeof`, `satisfies`, `infer`
-- Branded types, DeepPartial
-- **Conceptos clave**: los utility types son mapped/conditional types de la stdlib. `satisfies` verifica sin ensanchar.
-
-**Proyecto:** *API client tipado* — función genérica `createApiClient<T>()`. Template literal types para rutas. Conditional types para respuesta según método HTTP.
-
-### Nivel 60–75: Backend, BD y async
-**Qué aprender:**
-- Express/Fastify con TypeScript
-- Prisma o Drizzle: schema, queries, migrations
-- Zod para validación, async/await, Promise.all
-- **Conceptos clave**: el event loop no tiene GIL. Zod infiere tipos automáticamente.
-
-**Proyecto:** *API de recetas* — Fastify + Prisma + PostgreSQL. Zod para validación. CRUD tipado. Tests con vitest.
-
-### Nivel 75–90: Tiempo real, workers y producción
-**Qué aprender:**
-- WebSockets con Socket.IO
-- worker_threads en Node.js, Web Workers
-- Docker multi-etapa, CI/CD, ESLint, vitest
-- **Conceptos clave**: Workers tienen su propio V8 isolate. `--strict` desde el día 1.
-
-**Proyecto:** *Dashboard de monitorización* — Fastify + Socket.IO + worker_threads. Métricas del sistema. Redis. Tests.
-
-### Nivel 90–100: Arquitectura y edge
-**Qué aprender:**
-- tRPC, arquitectura hexagonal
-- BullMQ para colas, GraphQL con Pothos
-- Edge computing (Cloudflare Workers, Deno Deploy)
-- Monorepos con Turborepo + Project References
-- **Conceptos clave**: edge tiene limitaciones (sin Node APIs). tRPC elimina REST/GraphQL. Monorepos necesitan `composite: true`.
-
-**Proyecto:** *Sistema de notificaciones* — tRPC, BullMQ, Edge Functions, Turborepo, OpenTelemetry.
-
-#### 🔗 Para saber más
-- [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/)
-- [Prisma docs](https://www.prisma.io/docs)
-- [Fastify docs](https://fastify.dev/)
-
----
-
-## 19. Proyecto final integrador
+## Proyecto final integrador
 
 ### CLI de notas cifradas
 
@@ -2157,7 +2157,65 @@ describe("Vault", () => {
 
 ---
 
-## 20. Canales y recursos en español
+## Despliegue a producción
+
+### Build para producción
+```bash
+tsc
+```
+
+### Docker multi-stage
+```dockerfile
+FROM node:22-alpine AS builder
+WORKDIR /app
+COPY package*.json tsconfig.json .
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM node:22-alpine
+WORKDIR /app
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+COPY package.json .
+CMD ["node", "dist/index.js"]
+```
+
+### Hosting
+- [Vercel](https://vercel.com/) — soporte nativo para TypeScript
+- [Netlify](https://www.netlify.com/) — build con `tsc` integrado
+- [Railway](https://railway.app/) — despliegue automático desde GitHub
+- [Fly.io](https://fly.io/) — `fly launch` con Dockerfile
+
+### CI/CD (GitHub Actions)
+```yaml
+name: Deploy
+on:
+  push:
+    branches: [main]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm ci
+      - run: npm test
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions@1.5
+        with:
+          args: "deploy"
+```
+
+---
+
+## Canales y recursos en español
 
 ### YouTube
 - **Midulive** — JavaScript, TypeScript, desarrollo web práctico
@@ -2191,7 +2249,7 @@ describe("Vault", () => {
 
 ---
 
-## 21. Hacks y tips de productividad
+## Hacks y tips de productividad
 
 **1. `satisfies` — verifica sin ensanchar**
 ```typescript
@@ -2265,7 +2323,7 @@ type DeepPartial<T> = { [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]>
 
 ---
 
-## 22. Referencias y documentación oficial
+## Referencias y documentación oficial
 
 - **TypeScript oficial**: [typescriptlang.org](https://www.typescriptlang.org/)
 - **TS Handbook**: [typescriptlang.org/docs/handbook](https://www.typescriptlang.org/docs/handbook/)

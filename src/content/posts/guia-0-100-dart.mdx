@@ -123,6 +123,119 @@ Fuente: [dart.dev — Get Dart](https://dart.dev/get-dart), [SDKMAN — Dart](ht
 
 ---
 
+## Escala de aprendizaje: de 0 a 100
+
+Cada nivel incluye lo que debes saber y un proyecto para fijar los conceptos.
+
+### Nivel 0–15: Fundamentos absolutos
+
+**Qué aprender:**
+- Sintaxis básica: `main()`, `print()`, variables con `var`, `final`, `const`
+- Tipos básicos: `int`, `double`, `String`, `bool`
+- Condicionales: `if`/`else`, operadores de comparación, `switch`
+- Bucles: `for`, `while`, `for-in`, `for (;;)`
+- Listas y Maps: `add()`, `[]`, `length`, `contains()`
+- Funciones: `void`, `return`, `=>` (flecha), parámetros posicionales
+- Interpolación de strings: `'Hola, $nombre'`, `'${x + y}'`
+- File system básico: `dart:io` — `File(path).readAsString()`, `writeAsString()`, `exists()`
+- **Conceptos clave**: `final` vs `const` — final se asigna una vez en runtime, const se evalúa en compile-time. Tipado fuerte pero con inferencia: si escribes `var x = 42`, el compilador sabe que es `int`. Null safety ya está activo desde el día 1.
+
+**Proyecto:** *Calculadora CLI* — programa que pide dos números y una operación (+, -, *, /). Maneja división por cero y entrada no numérica con `try/on`. Usa funciones separadas para cada operación. Bucle hasta que el usuario escriba "salir".
+
+### Nivel 15–30: Null safety, colecciones y funciones
+
+**Qué aprender:**
+- Null safety: `T?`, `!`, `??`, `?.`, `late`, `required`
+- Type promotion: el compilador promociona tipos tras `is` o `!= null`
+- Listas avanzadas: `map()`, `where()`, `reduce()`, `fold()`, `any()`, `every()`
+- Sets y Maps: `Set`, `HashSet`, `Map`, operaciones funcionales
+- Collection if/for/spread: `[...list]`, `if (cond) x`, `for (var i in items) i`
+- Funciones como objetos: funciones flecha, `typedef`, closures
+- Parámetros nombrados `{}`, posicionales opcionales `[]`, `required`
+- Algoritmos básicos: `List.sort()` (Timsort), `where()`/`firstWhere()`/`any()`/`every()`, `groupBy()` de `package:collection`
+- **Conceptos clave**: las colecciones en Dart son covariant: `List<Perro>` es subtipo de `List<Animal>`. Los closures capturan variables por referencia. El operador `??` se encadena: `a ?? b ?? c`. Timsort es O(n log n) y estable.
+
+**Proyecto:** *Gestor de tareas CLI* — añadir (`add "Comprar leche"`), listar (`list`), completar (`done 3`), eliminar (`rm 3`). Persistencia en JSON con archivo local. Usa `dart:io` para leer/escribir archivos y `dart:convert` para JSON. Implementa al menos una función que devuelva un record.
+
+### Nivel 30–45: POO, constructores y mixins
+
+**Qué aprender:**
+- Clases: campos, métodos, `this`, `new` (opcional), constructores con `Clase(this.campo)`
+- Named constructors, factory constructors, initializer list
+- `const` constructor: objetos inmutables en compile-time, canonicalización
+- Herencia: `extends`, `super`, `@override`, clases abstractas
+- Mixins: `mixin`, `with`, `on` (restricción)
+- Enumeraciones mejoradas: campos, métodos, constructores, `switch` exhaustivo
+- `toString()`, `operator ==`, `hashCode`, `noSuchMethod`, `call()`
+- **Conceptos clave**: factory constructors pueden devolver instancias ya existentes (singleton, caché). `const` constructor permite que el compilador canonalice instancias iguales. Los mixins son una forma de composición sin herencia múltiple. Los initializer lists se ejecutan antes del constructor body (útiles para asserts y validaciones).
+
+**Proyecto:** *Sistema de inventario* — clases `Producto`, `Inventario`. Métodos: `agregar()`, `retirar()`, `buscar()`, `valorTotal()`. Persistencia con `dart:io` + JSON. Named constructors: `Producto.nuevo(nombre, precio)` vs `Producto.desdeJson(map)`. Mixin `Exportable` para exportar a JSON. Enum `Categoria` con propiedades (`nombre`, `impuesto`). Tests con `dart test`.
+
+### Nivel 45–60: Extension methods, streams y genéricos
+
+**Qué aprender:**
+- Extension methods: añadir métodos a tipos existentes
+- Genéricos: `class Caja<T>`, `T extends SomeType`, `covariant`
+- `typedef` con genéricos, tipos parametrizados
+- Streams: `Stream`, `StreamController`, `broadcast()`, `listen()`, `await for`
+- Futures: `Future`, `async`/`await`, `Future.wait()`, `Future.error()`
+- Dart 3: Records (`(int, String)`), patterns (`var (a, b) = ...`), `sealed` class
+- Análisis estático: `dart analyze`, strict mode, linter rules
+- `extension type` (Dart 3): envoltura sin overhead en runtime
+- **Conceptos clave**: sealed classes habilitan switch exhaustivo (el compilador verifica que cubres todos los casos). Records son tipos valor (comparables por igualdad estructural). Extension types son como `typedef` pero con verificación real de tipos (no confundir con extension methods).
+
+**Proyecto:** *Procesador de logs* — lee archivos de log y emite eventos via Stream. Usa `StreamController` para transformar líneas en objetos `LogEntry` (sealed class con `Info`, `Warning`, `Error`). Extension method en `String` para parsear timestamps. Records para devolver estadísticas: `(int total, int errores, double tasa)`. Tests con streams falsos.
+
+### Nivel 60–75: HTTP, JSON y backend con Shelf
+
+**Qué aprender:**
+- `package:http`: peticiones HTTP, `get()`, `post()`, manejo de errores
+- `dart:convert`: `jsonDecode()`, `jsonEncode()`, `utf8`
+- `package:shelf`: servidor HTTP, rutas, middleware, `Router`
+- `package:shelf_io`: `serve()`
+- Operaciones asíncronas: encadenar Futures, manejar errores con `.catchError()`
+- Modelos con `fromJson`/`toJson`, serialización manual vs `json_serializable`
+- `package:test`: `test()`, `group()`, `expect()`, `setUp()`, `tearDown()`
+- **Conceptos clave**: Shelf usa `Handler` (función que recibe `Request` y devuelve `Response`). Los handlers se componen con middleware (como decoradores en Python). Dart no tiene reflection en el target AOT — usa `json_serializable` con generación de código en lugar de runtime introspection.
+
+**Proyecto:** *API de recetas* — servidor Shelf con rutas CRUD para recetas e ingredientes. Almacenamiento en memoria con `Map<String, Receta>`. Usa records para respuestas: `(int statusCode, Map body)`. Tests de integración con `package:test` y `HttpClient`. Middleware para logging y CORS. Extension method en `Request` para parsear JSON body.
+
+### Nivel 75–90: Flutter, Isolates, bases de datos y multimedia
+
+**Qué aprender:**
+- Flutter: `StatelessWidget`, `StatefulWidget`, `build()`, `setState()`
+- Arquitectura de Flutter: Widgets, Elementos, RenderObjects
+- Gestión de estado: `ChangeNotifier` + `Provider`, `Riverpod`, `Bloc`
+- Isolates: `Isolate.spawn()`, `ReceivePort`, `SendPort`, `compute()`
+- sqflite/drift: base de datos local en Flutter, CRUD, migrations
+- Hive/Isar: almacenamiento NoSQL local, objetos directamente
+- `build_runner`: generación de código con `json_serializable`, `freezed`, `drift`
+- `freezed`: data classes inmutables con `copyWith`, `union`, `sealed`
+- Multimedia: `image_picker` (cámara/galería), `video_player`, `audioplayers`, `dart:ui` (Canvas, Paint, ImageCodec), `package:image` (procesamiento Dart puro)
+- **Conceptos clave**: `compute()` es un atajo para Flutter que envuelve `Isolate.spawn` + `ReceivePort`. `freezed` genera `copyWith`, `==`, `hashCode`, `toString`, y patrones de unions selladas. La UI de Flutter se reconstruye con cada `setState()` — los `const` constructors evitan reconstrucciones innecesarias. `package:image` permite procesar imágenes sin Flutter ni GPU.
+
+**Proyecto:** *App de notas con Flutter* — CRUD de notas con sqflite o Isar. Stream para actualizar la UI en tiempo real. Un Isolate para exportación a PDF/ZIP en background. Riverpod como gestor de estado. freezed para modelos inmutables. Tests de widget y unitarios.
+
+### Nivel 90–100: Arquitectura y producción
+
+**Qué aprender:**
+- Clean Architecture en Flutter: dominio, datos, presentación
+- Serverpod: framework backend completo con Dart, ORM, WebSockets, auth
+- gRPC: `package:grpc`, protobuf, servicios streaming
+- Firebase: Auth, Firestore, Cloud Functions, Cloud Messaging
+- CI/CD: GitHub Actions para Flutter, `flutter test`, `flutter build`
+- Performance: `const` constructors, profiling con DevTools, `RepaintBoundary`
+- Observabilidad: logging estructurado, error reporting (Sentry), analytics
+- Deploy: App Store, Google Play, web (Firebase Hosting), desktop (MSIX, DMG)
+- Melos: monorepo management para proyectos multi-paquete
+- **Conceptos clave**: Serverpod genera cliente Dart automáticamente desde el servidor. Clean Architecture con Dart usa casos de uso como clases (no funciones sueltas). gRPC con Dart es first-class (Google usa Dart para gRPC internamente). El `const` constructor no es solo buena práctica — en Flutter evita reconstruir todo el widget tree.
+
+**Proyecto:** *App de chat en tiempo real* — Flutter + Serverpod o Firebase. Autenticación con Firebase Auth. Mensajería con Streams y WebSockets. Isolate para procesar imágenes antes de subirlas. Notificaciones push. CI/CD con GitHub Actions que corre tests, lint, y build para iOS/Android. Monitoreo con Sentry.
+
+Fuente: [Flutter docs](https://docs.flutter.dev/), [Serverpod docs](https://docs.serverpod.dev/), [Riverpod docs](https://riverpod.dev/), [freezed pub.dev](https://pub.dev/packages/freezed)
+
+---
+
 ## Primeros pasos y configuración del entorno
 
 Si prefieres ver directamente el "Hola Mundo" en Dart, consulta [El Atlas del Hola Mundo](/posts/hola/#dart).
@@ -2982,118 +3095,6 @@ void procesar(Result<int> r) => switch (r) {
 
 ---
 
-## Escala de aprendizaje: de 0 a 100
-
-Cada nivel incluye lo que debes saber y un proyecto para fijar los conceptos.
-
-### Nivel 0–15: Fundamentos absolutos
-
-**Qué aprender:**
-- Sintaxis básica: `main()`, `print()`, variables con `var`, `final`, `const`
-- Tipos básicos: `int`, `double`, `String`, `bool`
-- Condicionales: `if`/`else`, operadores de comparación, `switch`
-- Bucles: `for`, `while`, `for-in`, `for (;;)`
-- Listas y Maps: `add()`, `[]`, `length`, `contains()`
-- Funciones: `void`, `return`, `=>` (flecha), parámetros posicionales
-- Interpolación de strings: `'Hola, $nombre'`, `'${x + y}'`
-- File system básico: `dart:io` — `File(path).readAsString()`, `writeAsString()`, `exists()`
-- **Conceptos clave**: `final` vs `const` — final se asigna una vez en runtime, const se evalúa en compile-time. Tipado fuerte pero con inferencia: si escribes `var x = 42`, el compilador sabe que es `int`. Null safety ya está activo desde el día 1.
-
-**Proyecto:** *Calculadora CLI* — programa que pide dos números y una operación (+, -, *, /). Maneja división por cero y entrada no numérica con `try/on`. Usa funciones separadas para cada operación. Bucle hasta que el usuario escriba "salir".
-
-### Nivel 15–30: Null safety, colecciones y funciones
-
-**Qué aprender:**
-- Null safety: `T?`, `!`, `??`, `?.`, `late`, `required`
-- Type promotion: el compilador promociona tipos tras `is` o `!= null`
-- Listas avanzadas: `map()`, `where()`, `reduce()`, `fold()`, `any()`, `every()`
-- Sets y Maps: `Set`, `HashSet`, `Map`, operaciones funcionales
-- Collection if/for/spread: `[...list]`, `if (cond) x`, `for (var i in items) i`
-- Funciones como objetos: funciones flecha, `typedef`, closures
-- Parámetros nombrados `{}`, posicionales opcionales `[]`, `required`
-- Algoritmos básicos: `List.sort()` (Timsort), `where()`/`firstWhere()`/`any()`/`every()`, `groupBy()` de `package:collection`
-- **Conceptos clave**: las colecciones en Dart son covariant: `List<Perro>` es subtipo de `List<Animal>`. Los closures capturan variables por referencia. El operador `??` se encadena: `a ?? b ?? c`. Timsort es O(n log n) y estable.
-
-**Proyecto:** *Gestor de tareas CLI* — añadir (`add "Comprar leche"`), listar (`list`), completar (`done 3`), eliminar (`rm 3`). Persistencia en JSON con archivo local. Usa `dart:io` para leer/escribir archivos y `dart:convert` para JSON. Implementa al menos una función que devuelva un record.
-
-### Nivel 30–45: POO, constructores y mixins
-
-**Qué aprender:**
-- Clases: campos, métodos, `this`, `new` (opcional), constructores con `Clase(this.campo)`
-- Named constructors, factory constructors, initializer list
-- `const` constructor: objetos inmutables en compile-time, canonicalización
-- Herencia: `extends`, `super`, `@override`, clases abstractas
-- Mixins: `mixin`, `with`, `on` (restricción)
-- Enumeraciones mejoradas: campos, métodos, constructores, `switch` exhaustivo
-- `toString()`, `operator ==`, `hashCode`, `noSuchMethod`, `call()`
-- **Conceptos clave**: factory constructors pueden devolver instancias ya existentes (singleton, caché). `const` constructor permite que el compilador canonalice instancias iguales. Los mixins son una forma de composición sin herencia múltiple. Los initializer lists se ejecutan antes del constructor body (útiles para asserts y validaciones).
-
-**Proyecto:** *Sistema de inventario* — clases `Producto`, `Inventario`. Métodos: `agregar()`, `retirar()`, `buscar()`, `valorTotal()`. Persistencia con `dart:io` + JSON. Named constructors: `Producto.nuevo(nombre, precio)` vs `Producto.desdeJson(map)`. Mixin `Exportable` para exportar a JSON. Enum `Categoria` con propiedades (`nombre`, `impuesto`). Tests con `dart test`.
-
-### Nivel 45–60: Extension methods, streams y genéricos
-
-**Qué aprender:**
-- Extension methods: añadir métodos a tipos existentes
-- Genéricos: `class Caja<T>`, `T extends SomeType`, `covariant`
-- `typedef` con genéricos, tipos parametrizados
-- Streams: `Stream`, `StreamController`, `broadcast()`, `listen()`, `await for`
-- Futures: `Future`, `async`/`await`, `Future.wait()`, `Future.error()`
-- Dart 3: Records (`(int, String)`), patterns (`var (a, b) = ...`), `sealed` class
-- Análisis estático: `dart analyze`, strict mode, linter rules
-- `extension type` (Dart 3): envoltura sin overhead en runtime
-- **Conceptos clave**: sealed classes habilitan switch exhaustivo (el compilador verifica que cubres todos los casos). Records son tipos valor (comparables por igualdad estructural). Extension types son como `typedef` pero con verificación real de tipos (no confundir con extension methods).
-
-**Proyecto:** *Procesador de logs* — lee archivos de log y emite eventos via Stream. Usa `StreamController` para transformar líneas en objetos `LogEntry` (sealed class con `Info`, `Warning`, `Error`). Extension method en `String` para parsear timestamps. Records para devolver estadísticas: `(int total, int errores, double tasa)`. Tests con streams falsos.
-
-### Nivel 60–75: HTTP, JSON y backend con Shelf
-
-**Qué aprender:**
-- `package:http`: peticiones HTTP, `get()`, `post()`, manejo de errores
-- `dart:convert`: `jsonDecode()`, `jsonEncode()`, `utf8`
-- `package:shelf`: servidor HTTP, rutas, middleware, `Router`
-- `package:shelf_io`: `serve()`
-- Operaciones asíncronas: encadenar Futures, manejar errores con `.catchError()`
-- Modelos con `fromJson`/`toJson`, serialización manual vs `json_serializable`
-- `package:test`: `test()`, `group()`, `expect()`, `setUp()`, `tearDown()`
-- **Conceptos clave**: Shelf usa `Handler` (función que recibe `Request` y devuelve `Response`). Los handlers se componen con middleware (como decoradores en Python). Dart no tiene reflection en el target AOT — usa `json_serializable` con generación de código en lugar de runtime introspection.
-
-**Proyecto:** *API de recetas* — servidor Shelf con rutas CRUD para recetas e ingredientes. Almacenamiento en memoria con `Map<String, Receta>`. Usa records para respuestas: `(int statusCode, Map body)`. Tests de integración con `package:test` y `HttpClient`. Middleware para logging y CORS. Extension method en `Request` para parsear JSON body.
-
-### Nivel 75–90: Flutter, Isolates, bases de datos y multimedia
-
-**Qué aprender:**
-- Flutter: `StatelessWidget`, `StatefulWidget`, `build()`, `setState()`
-- Arquitectura de Flutter: Widgets, Elementos, RenderObjects
-- Gestión de estado: `ChangeNotifier` + `Provider`, `Riverpod`, `Bloc`
-- Isolates: `Isolate.spawn()`, `ReceivePort`, `SendPort`, `compute()`
-- sqflite/drift: base de datos local en Flutter, CRUD, migrations
-- Hive/Isar: almacenamiento NoSQL local, objetos directamente
-- `build_runner`: generación de código con `json_serializable`, `freezed`, `drift`
-- `freezed`: data classes inmutables con `copyWith`, `union`, `sealed`
-- Multimedia: `image_picker` (cámara/galería), `video_player`, `audioplayers`, `dart:ui` (Canvas, Paint, ImageCodec), `package:image` (procesamiento Dart puro)
-- **Conceptos clave**: `compute()` es un atajo para Flutter que envuelve `Isolate.spawn` + `ReceivePort`. `freezed` genera `copyWith`, `==`, `hashCode`, `toString`, y patrones de unions selladas. La UI de Flutter se reconstruye con cada `setState()` — los `const` constructors evitan reconstrucciones innecesarias. `package:image` permite procesar imágenes sin Flutter ni GPU.
-
-**Proyecto:** *App de notas con Flutter* — CRUD de notas con sqflite o Isar. Stream para actualizar la UI en tiempo real. Un Isolate para exportación a PDF/ZIP en background. Riverpod como gestor de estado. freezed para modelos inmutables. Tests de widget y unitarios.
-
-### Nivel 90–100: Arquitectura y producción
-
-**Qué aprender:**
-- Clean Architecture en Flutter: dominio, datos, presentación
-- Serverpod: framework backend completo con Dart, ORM, WebSockets, auth
-- gRPC: `package:grpc`, protobuf, servicios streaming
-- Firebase: Auth, Firestore, Cloud Functions, Cloud Messaging
-- CI/CD: GitHub Actions para Flutter, `flutter test`, `flutter build`
-- Performance: `const` constructors, profiling con DevTools, `RepaintBoundary`
-- Observabilidad: logging estructurado, error reporting (Sentry), analytics
-- Deploy: App Store, Google Play, web (Firebase Hosting), desktop (MSIX, DMG)
-- Melos: monorepo management para proyectos multi-paquete
-- **Conceptos clave**: Serverpod genera cliente Dart automáticamente desde el servidor. Clean Architecture con Dart usa casos de uso como clases (no funciones sueltas). gRPC con Dart es first-class (Google usa Dart para gRPC internamente). El `const` constructor no es solo buena práctica — en Flutter evita reconstruir todo el widget tree.
-
-**Proyecto:** *App de chat en tiempo real* — Flutter + Serverpod o Firebase. Autenticación con Firebase Auth. Mensajería con Streams y WebSockets. Isolate para procesar imágenes antes de subirlas. Notificaciones push. CI/CD con GitHub Actions que corre tests, lint, y build para iOS/Android. Monitoreo con Sentry.
-
-Fuente: [Flutter docs](https://docs.flutter.dev/), [Serverpod docs](https://docs.serverpod.dev/), [Riverpod docs](https://riverpod.dev/), [freezed pub.dev](https://pub.dev/packages/freezed)
-
----
 
 ## Proyecto final integrador: App de notas con Flutter
 
@@ -3236,6 +3237,64 @@ flutter build web
 flutter build linux
 flutter build windows
 flutter build macos
+```
+
+---
+
+## Despliegue a producción
+
+### Build para producción
+```bash
+# Web
+flutter build web --release
+
+# Android
+flutter build apk --release
+flutter build appbundle --release
+
+# iOS
+flutter build ios --release
+```
+
+### Docker multi-stage
+```dockerfile
+# Stage 1: Build
+FROM dart:stable AS build
+WORKDIR /app
+COPY pubspec.* ./
+RUN dart pub get
+COPY . .
+RUN dart compile exe bin/main.dart -o /app/server
+
+# Stage 2: Runtime
+FROM dart:stable AS runtime
+WORKDIR /app
+COPY --from=build /app/server .
+EXPOSE 8080
+CMD ["./server"]
+```
+
+### Hosting
+- [Firebase](https://firebase.google.com/)
+- [Fly.io](https://fly.io/)
+- [Railway](https://railway.app/)
+
+### CI/CD (GitHub Actions)
+```yaml
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+      - run: dart pub get
+      - run: dart compile exe bin/main.dart
 ```
 
 ---
