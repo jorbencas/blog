@@ -1,5 +1,6 @@
 ---
 import { formatDatePost, getSortedPosts, resolveImagePath } from "src/utils.js";
+import getReadingTime from "reading-time";
 import "@styles/solution.css";
 import Layout from "@layouts/Layout.astro";
 import NextPrevLinks from "@components/NextPrevLinks.astro";
@@ -73,7 +74,15 @@ if (currentIndex > -1) {
   }
 }
 
-const minutesRead = remarkPluginFrontmatter?.minutesRead;
+const minutesRead =
+  remarkPluginFrontmatter?.minutesRead ||
+  (rawContent
+    ? (() => {
+        const { minutes } = getReadingTime(rawContent);
+        const mins = Math.ceil(minutes);
+        return `${mins} minuto${mins === 1 ? "" : "s"} de lectura`;
+      })()
+    : undefined);
 const tagsArray = Array.isArray(tags)
   ? tags
   : typeof tags === "string"
