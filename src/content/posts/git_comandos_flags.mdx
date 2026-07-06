@@ -41,6 +41,39 @@ author: "Jorge Beneyto Castelló"
 
 ## 2. Gestión de Cambios (El día a día)
 
+### Estado del repositorio
+* **`git status`**:
+    * `-s` (`--short`): Formato compacto de dos columnas. `XY` donde `X` es el stage y `Y` el working tree (`M` modificado, `A` añadido, `D` eliminado, `?` no rastreado, `!` ignorado, `R` renombrado).
+    * `-b` (`--branch`): Muestra la rama actual y su relación con el remoto (ahead/behind) incluso en modo `--short`.
+    * `--porcelain[=<v1|v2>]`: Salida estable y parseable por máquinas. `v2` es más detallada que `v1`. Ideal para scripts.
+    * `-u [<modo>]` (`--untracked-files`): Controla cómo se muestran los archivos no rastreados. Modos: `no` (ocultarlos), `normal` (solo nombres), `all` (nombres + subdirectorios individuales).
+    * `--ignored`: Muestra los archivos ignorados (los que están en `.gitignore`). Por defecto no se muestran.
+    * `-v` (`--verbose`): Muestra el diff completo de los cambios sin staging además del estado.
+    * `--column[=<opciones>]`: Muestra los archivos en columnas en lugar de una lista vertical.
+    * `--ahead-behind` / `--no-ahead-behind`: Muestra u oculta el número de commits ahead/behind del remoto.
+    * `--renames`: Detecta renombrados aunque no se haya usado `git mv` (experimental).
+    * `--find-renames=<n>`: Umbral de similitud para detectar renombrados (de 0 a 100).
+    * `--porcelain`: no muestra el `?` para archivos no rastreados si se combina con `--untracked-files=no`.
+    * `-z`: Termina las entradas con NUL en lugar de newline (seguro para nombres con espacios).
+
+    **Ejemplos de uso:**
+    ```bash
+    # Resumen compacto de una línea por archivo
+    git status -s
+
+    # Solo archivos modificados (ocultar untracked e ignorados)
+    git status -s -uno
+
+    # Salida para scripts (fácil de parsear con awk/cut)
+    git status --porcelain
+
+    # Mostrar archivos ignorados (qué excluye .gitignore)
+    git status --ignored -s
+
+    # Estado completo con la rama ahead/behind
+    git status -sb
+    ```
+
 ### Preparar y gestionar archivos
 * **`git add`**:
     * `-A` (`--all`): Añade **todos** los cambios (nuevos, modificados y eliminados) de todo el repo.
