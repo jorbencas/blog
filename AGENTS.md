@@ -63,7 +63,6 @@ When adding or changing a dependency:
 0. **Read `docs/contexto.md` first** — always start by reading the full context.
 1. **Run `npm run build` before every commit** to verify no errors. Only commit if the build passes.
 2. **Save context** to `docs/contexto.md` — load the `update-context` skill for the exact format.
-3. **Update timeline** after significant changes — load the `update-timeline` skill.
 
 ## Commands
 - `npm run dev` — dev server (localhost:4321)
