@@ -252,6 +252,19 @@ These rules apply when writing or editing tutorial/guide posts (e.g. `guia-0-100
 - Written in **Spanish** (like all blog content).
 - Explanations should be **practical and concise**: focus on what the reader needs to know to use it, not encyclopedia-level theory.
 
+### Blog post style (inspired by the best posts)
+- **Hook with a real problem** — start with the pain point or frustration the reader recognizes, not with a definition.
+- **Code first, explanation second** — show the command or script immediately, then explain what it does. Readers scan for code.
+- **Personal voice** — use "yo", "uso", "me he encontrado". The blog is a personal dev blog, not a textbook.
+- **"Por qué" sections** — after showing code, explain why it works that way, not just what it does.
+- **Tables for comparisons** — when contrasting options (before vs after, tool A vs tool B), use a table.
+- **Emojis in headings** — each section starts with an emoji that hints at the topic (🛠️ mejoras, 🔴 problemas, ✅ checklist).
+- **Link to blog resources** — when mentioning a tool or concept covered in `resources*.mdx`, link to the relevant `#anchor` section.
+- **Link to external sources** — every external tool/library must link to its official docs or a reputable reference.
+- **Actionable improvements** — "cosas a mejorar" must be concrete, copy-pasteable snippets, not vague suggestions.
+- **Keep it tight** — no filler paragraphs. If a sentence doesn't add information, cut it.
+- **The reader is a developer** — assume they know programming basics but not the specific tool. Define acronyms and concepts the first time they appear.
+
 ## Git Conventions
 - Commits in Spanish (castellano).
 - Scope prefix: `[blog]`, `[retos]`, `[herramientas]`, `[estilos]`, `[infra]`, etc.

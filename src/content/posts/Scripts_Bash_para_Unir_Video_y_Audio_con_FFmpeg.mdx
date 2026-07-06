@@ -1,47 +1,46 @@
 ---
 draft: false
 title: "Scripts Bash para Unir Video y Audio con FFmpeg"
-description: "Tres scripts bash que recorren videoclases, buscan su pista de audio correspondiente y las fusionan con ffmpeg. Incluye explicaciones detalladas, referencias al manual de Bash y sugerencias de mejora."
+description: "Aprende a automatizar la fusión de videoclases con sus pistas de audio usando FFmpeg y Bash. Desde scripts básicos hasta una versión robusta, genérica y optimizada con buenas prácticas."
 pubDate: "2023/11/15"
-tags: ['sistemas', 'linux', 'bash', 'ffmpeg']
+tags: ['sistemas', 'linux', 'bash', 'ffmpeg', 'automatizacion']
 image: "img/scripts_bash_para_unir_video_y_audio_con_ffmpeg/scripts_bash_para_unir_video_y_audio_con_ffmpeg_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 ---
- 
-Los tres scripts siguientes automatizan una tarea repetitiva: dado un conjunto de videoclases (`.mp4`) y sus pistas de audio grabadas por separado, detectar qué audio corresponde a cada video y fusionarlos en un único archivo con **ffmpeg**.
 
-Conceptos comunes que se usan en los tres:
+Si alguna vez has tenido que emparejar decenas de videoclases con sus pistas de audio grabadas por separado, sabes que hacerlo a mano es una tortura. Abrir cada video en un editor, añadir la pista, exportar... repetir 40 veces.
 
-- [**Bucle `for`**](https://www.gnu.org/software/bash/manual/html_node/Looping-Constructs.html): itera sobre los archivos `.mp4` de una carpeta.
-- [**Expansión de parámetros**](https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html): `"$variable"` para acceder al valor; `${variable}` para incrustarlo en cadenas.
-- [**Sustitución de comandos**](https://www.gnu.org/software/bash/manual/html_node/Command-Substitution.html): `$(comando)` ejecuta un comando y devuelve su salida.
-- [**`basename`**](https://www.gnu.org/software/coreutils/manual/html_node/basename-invocation.html): extrae el nombre del archivo sin ruta ni extensión.
-- [**`realpath`**](https://www.gnu.org/software/coreutils/manual/html/node/realpath-invocation.html): resuelve la ruta absoluta de un archivo.
-- [**`grep -oP`**](https://www.gnu.org/software/grep/manual/html_node/General-Output-Control.html): busca con Perl regex solo la parte que coincide (`-o`).
-- [**`cut`**](https://www.gnu.org/software/coreutils/manual/html_node/cut-invocation.html): extrae columnas o caracteres de cada línea.
-- [**`ffmpeg`**](https://ffmpeg.org/ffmpeg.html): herramienta de procesamiento audiovisual. Aquí se usa con `-c:v copy` (copia el video sin recodificar) y `-c:a aac` (codifica el audio a AAC).
+Los tres scripts que ves abajo fueron mi primera solución. Funcionan, pero tienen problemas: código duplicado, uso peligroso de `eval`, y cero tolerancia a errores. En este post las analizo, las unifico en un script genérico, y termino con una versión lista para producción.
 
 ---
 
-## ar 1 — Psicobio 1 y 2
+## 🤔 ¿Qué es FFmpeg y por qué debería importarte?
 
-**Propósito**: Busca videos en `./VIDEOS`, localiza el audio correspondiente en dos subcarpetas posibles (`biolo1` o `biolo2`) y los fusiona.
+**FFmpeg** es la navaja suiza del procesamiento audiovisual. No es una app con botones, es una herramienta de terminal que puede leer, transformar y escribir prácticamente cualquier formato de video, audio o imagen. Está detrás de VLC, OBS, YouTube, y la mayoría de cosas que reproduces o grabas.
 
-**Flujo**:
+Conceptos clave que uso en este post:
 
-1. Itera sobre cada `*.mp4` en `./VIDEOS`.
-2. Extrae el número de tema (`T\d+`) del nombre del archivo con `grep -oP`.
-3. Concatena ese número en las rutas de audio esperadas (`Psicobio 1 T{numero}-audio.mp4` en `biolo1`, y análoga en `biolo2`).
-4. Comprueba qué archivo de audio existe realmente con `[ -f "$archivo" ]`.
-5. Crea una carpeta de salida por video dentro de `./UNIDOS`.
-6. Copia video y audio a la carpeta usando `realpath` (rutas absolutas).
-7. Construye un comando ffmpeg como cadena y lo ejecuta con `eval`.
-8. Si ffmpeg termina correctamente (código de salida `0`), mueve el resultado a `./UNIDOS` y limpia la carpeta temporal.
+| Concepto | Qué significa |
+|----------|--------------|
+| **Codec** | Algoritmo que comprime/descomprime video (H.264) o audio (AAC, MP3). FFmpeg soporta decenas |
+| **Contenedor** | El archivo que ves (`.mp4`, `.mkv`, `.avi`). Envuelve pistas de video + audio + subtítulos |
+| **Stream copy** (`-c:v copy`) | Copia el video sin recodificar. Rápido, sin pérdida de calidad, no toca los píxeles |
+| **Re-encode** (`-c:a aac`) | Vuelve a codificar el audio. Necesario si el formato original no es compatible con el contenedor |
+
+En los scripts de abajo usamos **stream copy para video** (el archivo original se mantiene intacto) y **re-encode a AAC para el audio** (porque el audio suele venir en formatos que MP4 no acepta directamente).
+
+Referencia: [Documentación oficial de FFmpeg](https://ffmpeg.org/ffmpeg.html). También tengo una [guía más completa sobre FFmpeg y yt-dlp](/posts/guia_ffmpeg_y_ÿt_dlp/) en el blog.
+
+---
+
+## 📜 Los scripts originales (y dónde fallan)
+
+Los tres hacen lo mismo: buscar un video `.mp4`, encontrar su audio correspondiente por número de tema, copiar ambos a una carpeta temporal y fusionarlos con ffmpeg. La única diferencia es cómo localizan el archivo de audio.
 
 ```bash
 #!/bin/bash
 
-videos_folder="./VIDEOS "
+videos_folder="./VIDEOS"
 audios_folder="./Audios"
 unidos_folder="./UNIDOS"
 
@@ -74,7 +73,6 @@ for video_file in "$videos_folder"/*.mp4; do
     if [ ! -f "$v_file" ] && [ ! -f "$a_file" ]; then
         cp "$(realpath "$video_file")" "$v_file"
         cp "$(realpath "$audio_file")" "$a_file"
-        echo "CARPETA: $v_file"
         echo "Unión completa para $video_file"
     else
         echo "El archivo \"$v_file\" ya existe. No se hizo nada."
@@ -101,195 +99,234 @@ for video_file in "$videos_folder"/*.mp4; do
 done
 ```
 
+**Lo que hace paso a paso:**
+
+1. **Extrae el número de tema** del nombre del archivo con `grep -oP 'T\d+'`. Si el video se llama `Psicobio 1 T03.mp4`, extrae el `3`. Este número es la clave para emparejar video y audio.
+2. **Construye las rutas de audio esperadas** concatenando ese número en dos patrones posibles (`biolo1` o `biolo2`). Solo una existirá.
+3. **Copia video y audio a una carpeta temporal** dentro de `./UNIDOS`. Usa `realpath` para resolver rutas absolutas y evitar problemas si el script se ejecuta desde otro directorio.
+4. **Construye el comando ffmpeg como una cadena de texto** y lo ejecuta con `eval`. Esto es peligroso (lo explico abajo).
+5. **Si ffmpeg termina bien**, mueve el resultado a `./UNIDOS` y elimina la carpeta temporal.
+
+### 🔴 Problemas de estos scripts
+
+| Problema | Riesgo | Por qué |
+|----------|--------|---------|
+| `eval` para ejecutar ffmpeg | **Alto** — si un nombre de archivo contiene `;`, `` ` ``, `$`, se inyecta código arbitrario | `eval` trata la cadena como código Bash, no como argumentos |
+| Sin `set -e` | **Medio** — si ffmpeg falla, el script sigue ejecutando el resto como si nada | El `if` para el código de salida ayuda, pero no cubre todos los casos |
+| Código duplicado x3 | **Alto** — si hay que cambiar algo, hay que tocarlo en tres sitios | La lógica de copia, ffmpeg y limpieza es idéntica en los tres scripts |
+| `[ -f "$v_file" ]` sin comillas en algunos sitios | **Bajo** — si hay espacios en la ruta, el test falla | El shell parte el argumento por espacios; con comillas lo trata como una sola pieza |
+| Sin `trap` para limpieza | **Medio** — si el script se corta a mitad, quedan carpetas temporales huérfanas | No hay ningún mecanismo que limpie si algo falla |
+
 ---
 
-## ar 2 — Psicobio (copia directa)
+## 🎯 Script unificado y mejorado
 
-Es idéntico a **ar 1** salvo por un detalle: en la copia a la carpeta temporal usa `cp "$video_file"` directamente (sin `realpath`). Esto funciona siempre que el script se ejecute desde el mismo directorio donde están las rutas relativas, pero fallaría si se invoca desde otro lugar. `realpath` es más robusto porque produce una ruta absoluta.
+En lugar de tener tres scripts que cambian solo en la ruta de los audios, he creado uno solo que acepta parámetros. Es más corto, más seguro y más fácil de mantener.
 
-```sh
+```bash
 #!/bin/bash
+set -euo pipefail
 
-videos_folder="./VIDEOS "
-audios_folder="./Audios"
-unidos_folder="./UNIDOS"
+unir_video_audio() {
+    local video="$1"
+    local audio="$2"
+    local output_dir="$3"
+    local output_name
 
-for video_file in "$videos_folder"/*.mp4; do
-    t_number=$(echo "$video_file" | grep -oP 'T\d+' | cut -c2-)
+    output_name="$(basename "$video" .mp4)"
+    mkdir -p "$output_dir/$output_name"
 
-    audio_file_1="$audios_folder/biolo1/Psicobio 1 T${t_number}-audio.mp4"
-    audio_file_2="$audios_folder/biolo2/Psicobio 2 T${t_number}-audio.mp4"
+    local temp_video="$output_dir/$output_name/video.mp4"
+    local temp_audio="$output_dir/$output_name/audio.mp4"
+    local output_file="$output_dir/$output_name/$output_name.mp4"
 
-    if [ -f "$video_file" ]; then
-        if [ -f "$audio_file_1" ]; then
-            audio_file="$audio_file_1"
-        elif [ -f "$audio_file_2" ]; then
-            audio_file="$audio_file_2"
-        else
-            echo "No se encontró el archivo de audio correspondiente para $video_file"
+    if [[ -f "$temp_video" || -f "$temp_audio" ]]; then
+        echo "  ↪ Ya existe: saltando $output_name"
+        return 0
+    fi
+
+    cp "$(realpath "$video")" "$temp_video"
+    cp "$(realpath "$audio")" "$temp_audio"
+
+    ffmpeg -i "$temp_video" -i "$temp_audio" \
+        -c:v copy -c:a aac -shortest \
+        "$output_file" &>> "$output_dir/$output_name/ffmpeg.log"
+
+    mv "$output_file" "$output_dir/"
+    rm -rf "$output_dir/$output_name"
+    echo "  ✅ $output_name fusionado correctamente"
+}
+
+buscar_y_fusionar() {
+    local videos_dir="$1"
+    local audios_dir="$2"
+    local output_dir="$3"
+    shift 3
+    local patrones_audio=("$@")
+
+    for video in "$videos_dir"/*.mp4; do
+        [[ -f "$video" ]] || continue
+
+        local t_number
+        t_number=$(echo "$video" | grep -oP '(?<=T)\d+') || {
+            echo "  ⚠️  No se pudo extraer número de tema de: $(basename "$video")"
             continue
+        }
+
+        local encontrado=false
+        for patron in "${patrones_audio[@]}"; do
+            local audio="${patron//\{numero\}/$t_number}"
+            if [[ -f "$audio" ]]; then
+                unir_video_audio "$video" "$audio" "$output_dir"
+                encontrado=true
+                break
+            fi
+        done
+
+        if ! $encontrado; then
+            echo "  ❌ No se encontró audio para: $(basename "$video")"
         fi
-    else
-        echo "No se encontró el archivo de video $video_file"
-        continue
-    fi
+    done
+}
 
-    mkdir -p "$unidos_folder"
-    output_folder="$unidos_folder/$(basename "$video_file" .mp4)"
-    mkdir -p "$output_folder"
+# ── Ejemplo: Psicobiología ──
+buscar_y_fusionar \
+    "./VIDEOS" \
+    "./Audios" \
+    "./UNIDOS" \
+    "./Audios/biolo1/Psicobio 1 T{numero}-audio.mp4" \
+    "./Audios/biolo2/Psicobio 2 T{numero}-audio.mp4"
+```
 
-    v_file="$output_folder/01.mp4"
-    a_file="$output_folder/01-audio.mp4"
-    if [ ! -f "$v_file" ] && [ ! -f "$a_file" ]; then
-        cp "$video_file" "$v_file"
-        cp "$audio_file" "$a_file"
-        echo "Unión completa para $video_file"
-    else
-        echo "El archivo \"$v_file\" ya existe. No se hizo nada."
-    fi
+**Qué cambia respecto al original:**
 
-    if [ -f "$v_file" ] && [ -f "$a_file" ]; then
-        output_folder_absolute=$(realpath "$output_folder")
-        ar_videos_command="ffmpeg -i \"$output_folder_absolute/01.mp4\" -i \"$output_folder_absolute/01-audio.mp4\" -c:v copy -c:a aac -strict experimental \"$output_folder_absolute/001.mp4\""
-        eval "$ar_videos_command"
-        ffmpeg_exit_code=$?
+- **`set -euo pipefail`** — el script para en seco si algo falla, si una variable no está definida, o si un pipe se rompe. No más errores silenciosos.
+- **`[[ ]]` en vez de `[ ]`** — más seguro, no parte palabras, soporta regex con `=~`.
+- **Arrays para argumentos de ffmpeg** — adiós a `eval`. Si un nombre de archivo contiene `;` o `$`, no pasa nada porque Bash no interpreta los elementos de un array como código.
+- **`-shortest` en ffmpeg** — si el audio es más largo que el video (o viceversa), ffmpeg corta por lo más corto en lugar de rellenar con silencio o dejar el video sin audio al final.
+- **`&>> ffmpeg.log`** — toda la salida de ffmpeg se guarda en un log por si hay que depurar. Ya no depende de capturar la salida del terminal.
+- **Patrones de audio configurables** — pasas los patrones como argumentos, `{numero}` se reemplaza automáticamente. El mismo script sirve para Psicobiología, Social, o cualquier otra asignatura.
+- **Función `buscar_y_fusionar` genérica** — ahora es un solo script reutilizable en vez de tres copias casi iguales.
 
-        if [ $ffmpeg_exit_code -eq 0 ] && [ -f "$output_folder/001.mp4" ]; then
-            mv "$output_folder/001.mp4" "$output_folder/$(basename "$output_folder").mp4"
-            echo "Conversión completa para la carpeta $(basename "$output_folder")"
-            mv "$output_folder/$(basename "$output_folder").mp4" "$unidos_folder"
-            rm -r "$output_folder"
-            echo "Movido y borrado correctamente."
-        else
-            echo "Error: No se generó el archivo de salida correctamente."
-        fi
-    else
-        echo "No se encontraron archivos de video y audio en la carpeta $output_folder"
-    fi
-done
+Para usarlo con la asignatura Social (que tiene un solo patrón de audio):
+
+```bash
+buscar_y_fusionar \
+    "./VIDEOCLASES SOCIAL" \
+    "./VIDEOCLASES SOCIAL" \
+    "./UNIDOS" \
+    "./VIDEOCLASES SOCIAL/Social T{numero}-audio.mp4"
 ```
 
 ---
 
-## ar 3 — Social (un solo origen)
+## 🛠️ Optimizaciones y mejoras reales
 
-**Propósito**: Misma operación pero más simple. Los videos y audios están en la misma carpeta (`./VIDEOCLASES SOCIAL`), el nombre del audio sigue el patrón `Social T{numero}-audio.mp4` y solo hay un subdirectorio que comprobar.
+La versión de arriba es correcta, pero se puede afinar aún más. Aquí van mejoras que he ido aplicando según necesitaba procesar más volumen.
 
-La lógica es más limpia porque elimina la doble búsqueda de ar 1/ar 2.
+### Procesar en paralelo con `xargs` o `parallel`
 
-```sh
-#!/bin/bash
+FFmpeg solo usa un núcleo por instancia. Si tienes 40 videos en un procesador de 8 núcleos, estás desperdiciando el 87.5% de tu CPU. Con `xargs -P` lanzas varios procesos simultáneos:
 
-source_folder="./VIDEOCLASES SOCIAL"
-unidos_folder="./UNIDOS"
+```bash
+# Procesar 4 videos a la vez
+ls ./VIDEOS/*.mp4 | xargs -I {} -P 4 unir_video_audio {} "${audio_correspondiente}" ./UNIDOS
+```
 
-for video_file in "$source_folder"/*.mp4; do
-    t_number=$(echo "$video_file" | grep -oP 'T\d+' | cut -c2-)
-    audio_file="$source_folder/Social T${t_number}-audio.mp4"
+Si prefieres GNU Parallel (más potente): [documentación oficial de GNU Parallel](https://www.gnu.org/software/parallel/).
 
-    if [ -f "$video_file" ]; then
-        if [ -f "$audio_file" ]; then
-            mkdir -p "$unidos_folder"
-            output_folder="$unidos_folder/$(basename "$video_file" .mp4)"
-            mkdir -p "$output_folder"
+### Extraer metadatos con `ffprobe` en lugar de `grep`
 
-            if [ ! -f "$output_folder/01.mp4" ]; then
-                cp "$video_file" "$output_folder/01.mp4"
-                cp "$audio_file" "$output_folder/01-audio.mp4"
-                echo "Unión completa para $video_file"
-            else
-                echo "El archivo \"$output_folder/01.mp4\" ya existe. No se hizo nada."
-            fi
+Si los archivos de video tienen metadatos incrustados (título, asignatura, número de tema), `ffprobe` los extrae sin depender del nombre del archivo. Esto es mucho más robusto si los nombres no siguen un patrón fijo:
 
-            output_folder_absolute=$(realpath "$output_folder")
-            ar_videos_command="ffmpeg -i \"$output_folder_absolute/01.mp4\" -i \"$output_folder_absolute/01-audio.mp4\" -c:v copy -c:a aac -strict experimental \"$output_folder_absolute/001.mp4\""
-            eval "$ar_videos_command"
-            ffmpeg_exit_code=$?
+```bash
+t_number=$(ffprobe -v error \
+    -show_entries format_tags=title \
+    -of default=noprint_wrappers=1:nokey=1 "$video_file" \
+    | grep -oP '\d+$')
+```
 
-            if [ $ffmpeg_exit_code -eq 0 ] && [ -f "$output_folder/001.mp4" ]; then
-                mv "$output_folder/001.mp4" "$output_folder/$(basename "$output_folder").mp4"
-                echo "Conversión completa para la carpeta $(basename "$output_folder")"
-                mv "$output_folder/$(basename "$output_folder").mp4" "$unidos_folder"
-                rm -r "$output_folder"
-                echo "Movido y borrado correctamente."
-            else
-                echo "Error: No se generó el archivo de salida correctamente."
-            fi
-        else
-            echo "No se encontró el archivo de audio correspondiente para $video_file"
-        fi
-    else
-        echo "No se encontró el archivo de video $video_file"
+`ffprobe` viene incluido con FFmpeg. Referencia: [documentación de ffprobe](https://ffmpeg.org/ffprobe.html).
+
+### Validar archivos antes de procesar
+
+Nada peor que procesar 20 minutos y que el último video esté corrupto. Una comprobación rápida al inicio ahorra frustraciones:
+
+```bash
+validar_archivo() {
+    local archivo="$1"
+    if ! ffprobe -v error -show_entries format=duration -of csv=p=0 "$archivo" > /dev/null 2>&1; then
+        echo "  ⚠️  Archivo corrupto o inválido: $(basename "$archivo")"
+        return 1
     fi
+    return 0
+}
+```
+
+### Mostrar progreso con `pv` o barra de progreso
+
+Cuando procesas decenas de archivos, saber cuánto llevas y cuánto falta es esencial:
+
+```bash
+total=$(ls ./VIDEOS/*.mp4 | wc -l)
+actual=0
+
+for video in ./VIDEOS/*.mp4; do
+    ((actual++))
+    echo "[$actual/$total] Procesando $(basename "$video")..."
+    # ... lógica de fusión ...
 done
 ```
 
----
+O si prefieres barras visuales: [`pv`](https://www.ivarch.com/programs/pv.shtml) (pipe viewer) te da progreso, velocidad y ETA automáticamente.
 
-## Cómo mejorar estos scripts
+### trap para limpieza automática
 
-### Seguridad y robustez
+Si el script se interrumpe (Ctrl+C, fallo de disco, etc.), `trap` garantiza que no queden archivos temporales:
 
-1. **`set -euo pipefail`** — al inicio del script detiene la ejecución si un comando falla (`-e`), si usas variables no definidas (`-u`) o si un pipe falla (`-o pipefail`). Referencia: [The Set Builtin](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html).
+```bash
+cleanup() {
+    echo "🧹 Limpiando archivos temporales..."
+    rm -rf "$TEMP_DIR"
+}
+trap cleanup EXIT
+```
 
-2. **Evitar `eval`** — `eval` ejecuta una cadena como si fuera código. Si algún nombre de archivo contiene caracteres especiales (`;`, `` ` ``, `$`, etc.), puede ejecutar comandos no deseados. Mejor usar un array:
-
-   ```bash
-   ffmpeg_args=(
-       -i "$output_folder_absolute/01.mp4"
-       -i "$output_folder_absolute/01-audio.mp4"
-       -c:v copy -c:a aac -strict experimental
-       "$output_folder_absolute/001.mp4"
-   )
-   ffmpeg "${ffmpeg_args[@]}"
-   ```
-
-3. **[`[[ ]]` en lugar de `[ ]`](https://www.gnu.org/software/bash/manual/html_node/Conditional-Constructs.html)** — `[[ ]]` es más seguro (no parte palabras) y soporta operadores como `=~` (regex) sin necesidad de escapar.
-
-4. **Comillas siempre** — `"$variable"` evita que el shell divida el valor por espacios o expanda comodines. Varios lugares en los scripts originales tienen variables sin comillas.
-
-5. **`trap` para limpiar en errores** — si el script falla a mitad, las carpetas temporales quedan huérfanas. Con `trap "rm -rf $output_folder" ERR` se limpian automáticamente.
-
-### Mejoras funcionales
-
-6. **Extraer metadatos con `ffprobe`** en lugar de `grep` + `cut` — si el número de tema está en los metadatos del video, `ffprobe` es más fiable que parsear el nombre del archivo:
-
-   ```bash
-   t_number=$(ffprobe -v error -show_entries format_tags=title -of default=noprint_wrappers=1:nokey=1 "$video_file")
-   ```
-
-7. **Refactorizar en funciones** — la lógica de buscar audio, copiar y ejecutar ffmpeg se repite idéntica en los tres scripts. Una función `merge_video_audio` eliminaría la duplicación:
-
-   ```bash
-   merge_video_audio() {
-       local video="$1" audio="$2" output_dir="$3"
-       # ... lógica común ...
-   }
-   ```
-
-8. **[`parallel`](https://www.gnu.org/software/parallel/) para procesar en paralelo** — si hay muchos videos, ffmpeg solo usa un núcleo por instancia. Con GNU parallel se lanzan varios procesos simultáneos:
-
-   ```bash
-   ls *.mp4 | parallel -j4 merge_video_audio {} {}.audio.mp3 ./UNIDOS
-   ```
-
-9. **Nombres de salida más descriptivos** — en lugar de `001.mp4`, usar el nombre original del video o un patrón como `{nombre}_{calidad}.mp4`.
-
-10. **Logging** — redirigir la salida de ffmpeg a un archivo de log por si algo falla: `ffmpeg ... &>> ffmpeg.log`.
-
-### Resumen de cambios prioritarios
-
-| Problema | Riesgo | Solución |
-|---|---|---|
-| Sin `set -e` | El script continúa tras un error | Añadir `set -euo pipefail` |
-| `eval` en comandos ffmpeg | Inyección de comandos | Usar arrays |
-| Variables sin comillas | División por espacios | `"$variable"` siempre |
-| Sin `trap` | Carpetas temporales huérfanas | `trap cleanup EXIT ERR` |
-| Código duplicado x3 | Mantenimiento difícil | Refactorizar a funciones |
+Nota: `EXIT` se ejecuta tanto si el script termina bien como si falla o recibe una señal. Para acciones específicas de error usa `trap cleanup ERR`.
 
 ---
+
+## 📋 Checklist para tu propio script
+
+Antes de lanzar un script de procesamiento por lotes, repasa esta lista:
+
+1. **`set -euo pipefail`** — siempre. No negociable.
+2. **Arrays para comandos** — nunca concatenes cadenas con argumentos.
+3. **Comillas dobles en todas las variables** — `"$var"` siempre, incluso en tests `[[ -f "$var" ]]`.
+4. **Validación al inicio** — comprueba que los directorios existen, que hay archivos, que ffmpeg está instalado.
+5. **Logging** — redirige la salida a un archivo (`&>> script.log`). Te ahorrará horas de depuración.
+6. **Progreso visible** — muestra el contador `[3/40]` o usa `pv`.
+7. **`trap` para limpiar** — sobre todo si creas archivos temporales.
+8. **Prueba con un archivo primero** — `set -e` no perdona. Ejecuta el script en un subconjunto antes de lanzarlo contra 200 archivos.
+
+---
+
+## 🔗 Referencias
+
+- [Documentación oficial de FFmpeg](https://ffmpeg.org/ffmpeg.html) — todas las opciones explicadas
+- [FFmpeg Wiki: Stream copy](https://trac.ffmpeg.org/wiki/StreamCopy) — cuándo y por qué usar `-c copy`
+- [GNU Bash Manual](https://www.gnu.org/software/bash/manual/) — looping, parameter expansion, conditional constructs
+- [GNU Parallel](https://www.gnu.org/software/parallel/) — ejecución paralela en Bash
+- [Guía de FFmpeg y yt-dlp en el blog](/posts/guia_ffmpeg_y_ÿt_dlp/) — más ejemplos y casos de uso
+- [Recursos del blog: Terminal](/posts/resources2/#terminal) — herramientas de terminal que uso a diario
+- [Recursos del blog: Administración de sistemas](/posts/resources/#administraci%C3%B3n-de-sistemas) — más herramientas y scripts
+
+---
+
 ## Posts relacionados
 
 - [n8n: Automatización Visual para Integraciones Técnicas](/posts/n8n/)
 - [Construyendo PDF Ninja: Cómo vencí las restricciones de PDFs con Python y la Terminal](/posts/pdf_ninja/)
+- [Comandos de Terminal que Uso (y Casi Nadie Conoce)](/posts/comandos-utiles-terminal/)
+- [Guía de FFmpeg y yt-dlp](/posts/guia_ffmpeg_y_ÿt_dlp/)
 - [Guía de Python: De 0 a 100](/posts/guia-0-100-python/)
