@@ -82,49 +82,36 @@ blog/
 
 ---
 
-## Resource Management
+## Resource Management API
 
-Resources (`resources.mdx`, `resources2.mdx`) use **ResourceCard** and **ResourceCategory** components instead of inline HTML. A Python script manages conversion and maintenance.
+Resources (`resources.mdx`, `resources2.mdx`) use **ResourceCard** and **ResourceCategory** components. They are auto-maintained by the [test_githubActions](https://github.com/jorbencas/test_githubActions) pipeline via `manage_resources.py`, which runs daily at 06:00 UTC.
 
-### `scripts/convert_resources_to_components.py`
+### Pipeline (`daily_resources.yml`)
 
-Converts legacy HTML resource files to the Astro component format (`<ResourceCategory>` / `<ResourceCard>`).
+1. **Scrape** — GitHub Trending + Product Hunt → `herramientas.json`
+2. **Add new tools** — inserts new resources into the `#nuevas-herramientas` section
+3. **Deduplicate** (`--dedup`) — merges sections with the same ID, removes duplicate cards by URL
+4. **Paginate** — splits into `resources2.mdx` if a file exceeds 500 cards
+5. **Push** — commits changes directly to the blog
 
-```bash
-# Convert all resources files (default: resources.mdx, resources2.mdx, resources3.mdx)
-python scripts/convert_resources_to_components.py
-
-# Convert specific files
-python scripts/convert_resources_to_components.py resources.mdx resources2.mdx
-```
-
-**What it does:**
-- Adds required imports (`ResourceCard`, `ResourceCategory`) after frontmatter
-- Parses legacy `<h2>` section headers → `<ResourceCategory>` components
-- Converts inline `<a>` cards → `<ResourceCard>` components
-- Preserves frontmatter and any non-resource content
-
-### External Management (test_githubActions)
-
-Resources are auto-generated and maintained by the [test_githubActions](https://github.com/jorbencas/test_githubActions) pipeline. The script `manage_resources.py` runs daily via GitHub Actions:
+### CLI flags (`manage_resources.py` on test_githubActions)
 
 | Flag | Purpose |
 | ---- | ------- |
-| `--dedup` | Merge duplicate sections (same ID) and remove duplicate cards (same URL) |
-| `--translate` | Translate English card descriptions to Spanish via Gemini |
+| `--dedup` | Merge duplicate sections + remove duplicate cards by URL |
+| `--translate` | Translate English descriptions → Spanish via Gemini |
 | `--reorder` | Sort all sections alphabetically across files |
 | `--fix-spacing` | Fix missing blank lines between sections |
 | `--clean` | Check resource URLs and remove dead links |
-| `--max-cards N` | Maximum cards per file before pagination (default: 500) |
+| `--convert` | Convert legacy inline HTML to ResourceCard components |
+| `--max-cards N` | Max cards per file before pagination (default: 500) |
 
-The workflow `daily_resources.yml` runs daily at 06:00 UTC: scrapes GitHub Trending + Product Hunt, adds new tools to the "Nuevas Herramientas" section, deduplicates, paginates if needed, and pushes changes directly to the blog.
+### Components
 
-### Resource Components
-
-- `ResourceCard.astro` — individual resource card with favicon, title, and description
+- `ResourceCard.astro` — individual card with favicon, title, description
 - `ResourceCategory.astro` — section wrapper with ID anchor and title
 
-Both live in `src/components/` and follow the blog's design system (rounded-xl cards, cyan hover effects, favicon via Google S2).
+Both live in `src/components/` and follow the blog's design system.
 
 ---
 

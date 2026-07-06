@@ -1,6 +1,6 @@
 # Contexto del proyecto — Blog
 
-**Última actualización**: 2026-07-05 (cross-references + post comandos CLI, 3 commits sin push)
+**Última actualización**: 2026-07-06 (resources dedup + readme + hover fix)
 **Stack**: Astro 6.4 + Svelte 5 + Tailwind CSS 4.3 | Vercel static | Node >= 22
 **Idioma**: Español
 **Deploy**: `blog-jorbencas.vercel.app`
@@ -32,6 +32,9 @@
 | 2026-07 | **Tests eliminados**: Playwright E2E y workflow test.yml eliminados. Blog simplificado |
 | 2026-07 | **Cross-references retos + posts**: 58 retos y 45 posts con secciones "Retos relacionados" / "Posts relacionados" al final de cada contenido, agrupados por temática (números, strings, lógica, cifrado, estructuras, algoritmos, APIs, patrones, concurrencia, compresión, optimización). Scripts Python en /tmp/. URLs desde frontmatter slug. Build verificado sin errores |
 | 2026-07 | **Post comandos CLI**: Nuevo post recopilatorio de comandos de terminal poco comunes (xxd, nl, fold, comm, join, sponge, pee, etc.) con ejemplos prácticos |
+| 2026-07 | **Resources dedup + translate**: `manage_resources.py` añade flags `--dedup` (fusiona secciones duplicadas, elimina cards repetidas por URL) y `--translate` (traduce descripciones inglés→español vía Gemini). `daily_resources.yml` ejecuta `--dedup` diariamente |
+| 2026-07 | **Related posts hover fix**: `hover:prose-a:underline` → `a:hover` en PostLayout.astro (Tailwind `hover:prose-a:` aplicaba a todos los links al hoverear cualquier parte del contenedor) |
+| 2026-07 | **README actualizado**: sección Resource Management reescrita como API pipeline, eliminados detalles de script Python interno |
 
 ## Mejoras implementadas
 
@@ -125,6 +128,5 @@ Orden de secciones: Mis_Proyectos → Mini_Herramientas → Retos → Últimos_P
 - **Guías**: 15 archivos `src/content/posts/guia-0-100-*.mdx`
 - **Scripts**: `fix_images.py`, `image_cache.json`, `rewrite_challenges.py`, `solutions_db.py`, `constants_retos.py`, `hunt_challenges.py`
 - **CI/CD**: `spelling.yml`, `issues_handel.yml`, `trigger-optimize.yml`
-- **Resources**: `resources.mdx` (~500 cards), auto-paginación via `test_githubActions/manage_resources.py` — cuando excede 500, se crea `resources2.mdx` (workflow diario `daily_resources.yml` en test_githubActions)
-- **Scripts**: `actualizar_recursos.py`, `merge_freefordev.py`, `generate_resources.py`, `manage_resources.py` (en test_githubActions)
+- **Resources**: `resources.mdx` (~500 cards), `resources2.mdx` (~392 cards), auto-gestionados desde test_githubActions via `manage_resources.py` (flags: `--dedup`, `--translate`, `--reorder`, `--fix-spacing`, `--clean`, `--convert`). Pipeline diario `daily_resources.yml` a las 06:00 UTC
 - **Skills**: `.opencode/skills/expand-guia-formato/SKILL.md`
