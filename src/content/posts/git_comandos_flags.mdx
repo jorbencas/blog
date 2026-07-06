@@ -10,6 +10,8 @@ author: "Jorge Beneyto Castelló"
 ---
 
 ## 1. Clonado y Configuración (Obtener proyectos)
+
+### Clonar e iniciar repos
 * **`git clone`**:
     * `--depth <N>`: **Shallow clone**. Solo descarga los últimos N commits (ideal para ahorrar espacio y tiempo).
     * `--branch <nombre>` (`-b`): Clona una rama específica.
@@ -18,9 +20,61 @@ author: "Jorge Beneyto Castelló"
     * `--recurse-submodules`: Clona el repo y todos sus submódulos automáticamente.
     * `--sparse`: Habilita el checkout parcial (para ver solo ciertas carpetas en monorepos).
 
+* **`git init`**:
+    * `--bare`: Crea un repositorio sin working directory (para servidores centrales).
+    * `--template=<ruta>`: Usa una plantilla de archivos iniciales (hooks, config).
+    * `--separate-git-dir=<ruta>`: Guarda la carpeta `.git` en una ubicación externa.
+    * `-b <nombre>`: Define el nombre de la rama inicial (ej. `main` en lugar de `master`).
+
+### Configuración global y local
+* **`git config`**:
+    * `--global`: Configura para todo el usuario (nombre, email, editor).
+    * `--local` (default): Configura solo para el proyecto actual.
+    * `--list` (`-l`): Muestra toda la configuración activa (combina global + local).
+    * `--get <clave>`: Consulta el valor de una clave concreta.
+    * `--unset <clave>`: Elimina una clave de la configuración.
+    * `--edit` (`-e`): Abre el archivo de configuración en el editor por defecto.
+    * `--add <clave> <valor>`: Añade un valor adicional a una clave multivalor.
+    * `--show-origin`: Muestra de qué archivo viene cada valor de configuración.
+
 ---
 
 ## 2. Gestión de Cambios (El día a día)
+
+### Preparar y gestionar archivos
+* **`git add`**:
+    * `-A` (`--all`): Añade **todos** los cambios (nuevos, modificados y eliminados) de todo el repo.
+    * `-u` (`--update`): Añade solo archivos **ya rastreados** que hayan sido modificados o eliminados (no incluye archivos nuevos).
+    * `-p` (`--patch`): Revisa interactivamente cada cambio del archivo y te deja elegir qué partes incluir (imprescindible para commits limpios).
+    * `-n` (`--dry-run`): Simula qué se añadiría sin hacer nada realmente.
+    * `-i` (`--interactive`): Modo interactivo con subcomandos (status, update, revert, add untracked, patch, diff).
+    * `--intent-to-add` (`-N`): Registra el archivo como rastreado pero vacío, útil para ver diffs de archivos nuevos.
+    * `--refresh`: Actualiza el índice sin añadir nada nuevo; útil tras cambiar permisos.
+    * `--ignore-removal`: Ignora archivos eliminados del working tree (no los saca del index).
+    * `--renormalize`: Reaplica el tratamiento de finales de línea (`core.autocrlf`) a todos los archivos.
+    * `--chmod=(+|-)(x|r)`: Cambia los permisos de ejecución directamente en el stage.
+    * `--verbose` (`-v`): Muestra el diff completo de lo que se añade al stage.
+
+* **`git rm`**:
+    * `--cached`: Elimina el archivo del control de versiones **pero lo deja en el disco** (deja de rastrearlo). Útil para archivos que deberían estar en `.gitignore`.
+    * `-r`: Elimina carpetas recursivamente.
+    * `-n` (`--dry-run`): Simula la eliminación.
+    * `--ignore-unmatch`: No da error si el archivo no existe.
+    * `--sparse`: Permite eliminar archivos dentro de áreas sparse-checkout.
+
+* **`git mv`**:
+    * `-f` (`--force`): Fuerza el movimiento aunque exista un archivo en el destino.
+    * `-k`: Salta archivos fuente que no existen (sin error).
+    * `-n` (`--dry-run`): Simula el movimiento.
+
+* **`git restore`**:
+    * `--staged` (`-S`): Saca archivos del stage (deshace un `git add`).
+    * `--worktree` (`-W`): Restaura archivos en el working directory (descarta cambios locales).
+    * `--source=<árbol>` (`-s`): Restaura desde un commit, rama o tag específico.
+    * `-p` (`--patch`): Elige interactivamente qué partes restaurar.
+    * `--ours` / `--theirs`: En conflictos de merge, elige nuestra versión o la de ellos.
+
+### Commits y diferencias
 * **`git commit`**:
     * `-m "mensaje"`: Añade el mensaje sin abrir el editor de texto.
     * `-a` (`--all`): Stage automático de archivos modificados/borrados (no incluye nuevos).
@@ -34,6 +88,12 @@ author: "Jorge Beneyto Castelló"
     * `--stat`: Resumen numérico de líneas cambiadas por archivo.
     * `--name-only`: Muestra únicamente los nombres de los archivos afectados.
     * `-w`: Ignora cambios de espacios en blanco al comparar.
+    * `--check`: Busca conflictos de espacios en blanco (tabs/espacios, trailing whitespace).
+    * `--submodule`: Compara el estado de los submódulos.
+    * `--color-words`: Compara palabra por palabra en lugar de línea por línea.
+    * `--cached`: alias de `--staged`.
+    * `<rama>..<otra>`: Compara dos ramas entre sí.
+    * `<commit>...<commit>`: Compara los cambios desde el ancestro común (merge base).
 
 * **`git stash` (Guardado temporal)**:
     * `push -m "nombre"`: Guarda cambios actuales en una pila temporal.
@@ -41,23 +101,81 @@ author: "Jorge Beneyto Castelló"
     * `apply`: Aplica los cambios pero los mantiene en la pila.
     * `list`: Muestra todo lo guardado en el "limbo".
     * `-u` (`--include-untracked`): Guarda también los archivos nuevos no rastreados.
+    * `-a` (`--all`): Guarda **todos** los archivos, incluidos los ignorados por `.gitignore`.
+    * `drop [<stash>]`: Elimina un stash específico de la pila.
+    * `clear`: Vacía toda la pila de stashes.
+    * `branch <rama> [<stash>]`: Crea una rama desde el commit del stash y aplica los cambios ahí.
+    * `show [-p] [<stash>]`: Muestra los cambios del stash (con `-p` muestra el diff completo).
 
 ---
 
 ## 3. Sincronización y Remotos
+
+### Subir, bajar y fusionar
 * **`git push` / `git pull`**:
     * `-u` (`--set-upstream`): Vincula tu rama local con la remota.
     * `-f` (`--force`): Sobrescribe el historial remoto (peligroso).
     * `--force-with-lease`: Versión segura de force; no sobrescribe si hay cambios ajenos.
     * `--rebase` (en pull): Aplica tus cambios encima de los remotos (evita commits de merge).
+    * `--all` (push): Sube **todas** las ramas locales al remoto.
+    * `--prune` (push): Elimina del remoto las ramas que ya no existen en local.
+    * `--tags` (push): Sube también todas las etiquetas.
+    * `--delete <rama>` (push): Elimina una rama del remoto directamente.
+    * `--mirror` (push): Refleja exactamente el estado local en el remoto (borra lo que sobre).
+    * `--dry-run` (push): Muestra qué se subiría sin hacerlo realmente.
+    * `--no-verify` (push): Salta los hooks de pre-push.
+    * `--negotiation-tip=<commit>` (pull): Especifica qué commit usar como base de negociación.
+    * `--ff-only` (pull): Solo avance rápido; aborta si requiere merge.
+    * `--squash` (pull): Fusiona los cambios remotos como un único commit local.
+    * `--autostash` (pull): Stash automático antes del pull y pop después.
 
 * **`git remote`**:
     * `-v` (`--verbose`): Muestra las URLs de conexión.
     * `prune <nombre>`: Limpia ramas locales "fantasma" que ya no existen en el servidor.
+    * `rename <viejo> <nuevo>`: Renombra un remote.
+    * `add <nombre> <url>`: Añade un nuevo remote.
+    * `remove <nombre>` (`rm`): Elimina un remote.
+    * `set-url <nombre> <url>`: Cambia la URL de un remote existente.
+    * `show <nombre>`: Muestra información detallada del remote.
+
+* **`git fetch`**:
+    * `--all`: Obtiene datos de **todos** los remotos configurados.
+    * `--prune`: Elimina las referencias remotas locales que ya no existen en el servidor.
+    * `--tags`: Descarga también todas las etiquetas.
+    * `--prune-tags`: Elimina tags locales que ya no existen en el remoto.
+    * `--depth <N>`: Fetch limitado a N commits (shallow).
+    * `--unshallow`: Convierte un clon superficial a completo.
+    * `--dry-run`: Muestra qué se traería sin descargarlo.
+    * `-p` / `--prune`: Sinónimo de `--prune`.
+
+* **`git merge`**:
+    * `--no-ff`: Fuerza un commit de merge aunque el avance sea rápido (Fast-Forward). Crea un nodo visible en el historial.
+    * `--ff-only`: Solo hace merge si puede ser Fast-Forward; si no, aborta.
+    * `--squash`: Fusiona los cambios de la rama entrante como un **único commit** en la rama actual (sin historial).
+    * `--abort`: Cancela el merge en curso y vuelve al estado anterior.
+    * `--continue`: Continúa el merge tras resolver conflictos.
+    * `-m "<mensaje>"`: Mensaje personalizado para el commit de merge.
+    * `--strategy=<estrategia>`: Algoritmo de merge (`recursive`, `ours`, `octopus`, `ort` — el nuevo default).
+    * `--strategy-option=<opción>`: Opciones de la estrategia (`ours`, `theirs`, `patience`, `diff-algorithm=histogram`).
+    * `--no-commit`: Realiza el merge pero no crea el commit automático (para inspeccionar antes).
+
+* **`git submodule`**:
+    * `add <url> [<ruta>]`: Añade un submódulo al proyecto (clona y registra en `.gitmodules`).
+    * `init`: Inicializa los submódulos registrados (descarga la config de `.gitmodules`).
+    * `update --init --recursive`: Descarga/clona todos los submódulos (y sus submódulos anidados).
+    * `status`: Muestra el estado de cada submódulo (commit actual, cambios pendientes).
+    * `foreach "<comando>"`: Ejecuta un comando en **cada** submódulo (útil para `git pull` masivo).
+    * `deinit [-f] <ruta>`: Desregistra un submódulo (opcional: borra su working tree).
+    * `sync`: Sincroniza las URLs del submódulo con los cambios en `.gitmodules`.
+    * `absorbgitdirs`: Mueve los `.git` de submódulos al superproyecto.
+    * `set-branch -b <rama> <ruta>`: Cambia la rama de seguimiento de un submódulo.
+    * `set-url <ruta> <url>`: Cambia la URL de un submódulo existente.
 
 ---
 
 ## 4. Navegación e Historial
+
+### Explorar el historial
 * **`git log`**:
     * `--oneline`: Resumen de un commit por línea.
     * `--graph`: Dibuja el árbol visual de ramas.
@@ -67,6 +185,15 @@ author: "Jorge Beneyto Castelló"
     * `-L :<función>:<archivo>`: Rastrea la evolución de una función específica.
     * `--author="<nombre>"`: Filtra por autor.
     * `--no-merges`: Oculta los commits de fusión.
+    * `--since=<fecha>` / `--after=<fecha>`: Commits desde una fecha (ej. `"2024-01-01"`, `"2 weeks ago"`).
+    * `--until=<fecha>` / `--before=<fecha>`: Commits hasta una fecha.
+    * `--grep=<patrón>`: Filtra commits cuyo mensaje coincida con el patrón.
+    * `--all-match`: Todas las expresiones `--grep` deben coincidir (AND lógico).
+    * `--invert-grep`: Muestra commits que **no** coinciden con `--grep`.
+    * `--diff-filter=<ACDMRTUXB>`: Filtra por tipo de cambio (A=Added, C=Copy, D=Deleted, M=Modified, R=Renamed).
+    * `--follow`: Sigue renombrados de un archivo a través del historial.
+    * `--format="%h %s"`: Formato personalizado (`%h` hash corto, `%an` autor, `%ai` fecha ISO, `%d` refs).
+    * `--simplify-by-decoration`: Solo commits con tags/ramas (ideal para ver hitos).
 
 * **`git checkout` / `git switch`**:
     * `-b` / `-c`: Crea una rama nueva y salta a ella.
@@ -74,22 +201,130 @@ author: "Jorge Beneyto Castelló"
     * `-`: Vuelve a la rama anterior.
     * `-d` / `--detach`: Salta a un commit específico sin estar en ninguna rama.
     * `--discard-changes`: Cambia de rama borrando cambios locales sucios.
+    * `--orphan <rama>`: Crea una rama huérfana sin historial (útil para reiniciar documentación, gh-pages, etc.).
+    * `--guess`: Si el nombre no es una rama local, busca una rama remota con el mismo nombre y la checkout automáticamente.
+
+* **`git branch`**:
+    * `-d <rama>`: Elimina la rama (solo si está fusionada).
+    * `-D <rama>`: Fuerza la eliminación aunque no esté fusionada.
+    * `-m <viejo> <nuevo>`: Renombra la rama.
+    * `-M <viejo> <nuevo>`: Fuerza el renombrado aunque exista el nuevo nombre.
+    * `-a` (`--all`): Lista todas las ramas (locales + remotas).
+    * `-r` (`--remotes`): Lista solo las ramas remotas.
+    * `--merged` / `--no-merged`: Filtra ramas fusionadas o no fusionadas contra la actual.
+    * `--sort=<clave>`: Ordena el listado por `-committerdate`, `authorname`, etc.
+    * `-v` (`--verbose`): Muestra el último commit de cada rama.
+    * `--show-current`: Muestra el nombre de la rama actual.
+    * `--set-upstream-to=<remote>/<rama>`: Vincula la rama local al upstream.
+    * `--edit-description`: Edita la descripción de la rama (visible en interfaces web).
+
+* **`git tag`**:
+    * `-a <nombre>` (`--annotated`): Crea una etiqueta con metadatos (autor, fecha, mensaje).
+    * `-m "<mensaje>"`: Mensaje para la etiqueta anotada.
+    * `-s <nombre>` (`--sign`): Firma la etiqueta con GPG.
+    * `-d <nombre>` (`--delete`): Elimina una etiqueta local.
+    * `-l` / `--list`: Lista etiquetas (acepta patrones como `v1.*`).
+    * `--sort=<clave>`: Ordena el listado (`-v:refname` para orden semántico de versiones).
+    * `--contains <commit>`: Muestra etiquetas que contienen un commit específico.
+    * `--merged` / `--no-merged`: Filtra etiquetas fusionadas o no.
+    * `--points-at <objeto>`: Lista etiquetas que apuntan a un commit específico.
+    * `--format="%(refname) %(subject)"`: Formato personalizado de salida.
+
+* **`git show`**:
+    * `--stat`: Resumen de archivos cambiados y líneas añadidas/eliminadas.
+    * `--name-only`: Solo nombres de archivos afectados.
+    * `--name-status`: Nombres de archivos con estado (A/M/D).
+    * `-s` (`--no-patch`): Omite el diff, solo muestra metadatos del commit.
+    * `--pretty=<formato>`: Formato de salida (`oneline`, `short`, `full`, `fuller`, `format:...`).
+    * `-q` (`--quiet`): Suprime el mensaje del diff.
+    * `--no-notes`: No muestra notas asociadas al commit.
+    * `--show-notes`: Muestra las notas (por defecto si existen).
+    * Sin argumentos: muestra el último commit (`HEAD`).
+
+* **`git shortlog`**:
+    * `-s` (`--summary`): Solo el número de commits por autor, sin listar los mensajes.
+    * `-n` (`--numbered`): Ordena por número de commits (descendente) en lugar de alfabéticamente.
+    * `--since=<fecha>` / `--after=<fecha>`: Commits desde una fecha.
+    * `--until=<fecha>` / `--before=<fecha>`: Commits hasta una fecha.
+    * `--all`: Cuenta commits de todas las ramas.
+    * `--no-merges`: Excluye commits de merge del recuento.
+    * `-e` (`--email`): Muestra el email junto al nombre del autor.
+    * `--format`: Formato personalizado (útil para changelogs).
+
+* **`git describe`**:
+    * `--tags`: Usa cualquier etiqueta (no solo las anotadas).
+    * `--all`: Usa cualquier referencia (ramas, tags, HEAD).
+    * `--abbrev=<N>`: Número de dígitos del hash abreviado (por defecto 7).
+    * `--dirty[=<marca>]`: Añade `-dirty` (o la marca que elijas) si el working tree está sucio.
+    * `--match=<patrón>`: Solo considera etiquetas que coincidan con el patrón glob.
+    * `--always`: Muestra el hash abreviado si no hay etiquetas disponibles.
+
+### Búsqueda en el historial
+* **`git grep`**:
+    * `-n` (`--line-number`): Muestra el número de línea de cada coincidencia.
+    * `-i` (`--ignore-case`): Búsqueda insensible a mayúsculas/minúsculas.
+    * `-w` (`--word-regexp`): Coincidencia solo de palabras completas.
+    * `-c` (`--count`): Muestra el número de coincidencias por archivo.
+    * `-l` (`--files-with-matches`): Solo los nombres de archivo que contienen el patrón.
+    * `-L` (`--files-without-match`): Archivos que **no** contienen el patrón.
+    * `-p` (`--show-function`): Muestra el nombre de la función que contiene la coincidencia.
+    * `--and` / `--or` / `--not`: Operadores lógicos entre patrones.
+    * `--cached`: Busca en el stage (índice).
+    * `--no-index`: Busca fuera de un repositorio Git (como grep normal pero con sintaxis Git).
 
 ---
 
 ## 5. Reescritura y Recuperación (Avanzado)
-* **`git rebase`**:
-    * `-i` (`--interactive`): Interfaz para unir, renombrar o borrar commits.
-    * `--continue` / `--abort`: Maneja el proceso en caso de conflictos.
 
+### Reorganizar commits
+* **`git rebase`**:
+    * `-i` (`--interactive`): Interfaz para unir, renombrar, reordenar o borrar commits.
+    * `--continue` / `--skip`: Continúa tras resolver conflictos o salta un commit problemático.
+    * `--abort`: Cancela el rebase y vuelve al estado anterior.
+    * `--onto <base> <desde> <hasta>`: Rebase avanzado que cambia la base de un rango de commits a otra rama.
+    * `--rebase-merges`: Preserva los merges creados manualmente durante el rebase.
+    * `--autosquash`: Busca commits con `fixup!`/`squash!` en el mensaje y los empareja automáticamente.
+    * `--committer-date-is-author-date`: Conserva la fecha original del autor.
+    * `-X theirs` / `-X ours`: En conflictos, prefiere siempre la versión de la rama que rebasas o la tuya.
+    * `--update-refs`: Actualiza las ramas que apuntan a commits rebasados.
+
+* **`git range-diff`**:
+    * `--creation-factor=<N>`: Ajusta la sensibilidad para detectar commits nuevos (default 60).
+    * `--no-dual-color`: Desactiva el coloreado dual (solo rojo/verde normal).
+    * `--notes`: Incluye notas en la comparación.
+    * Uso: `git range-diff <rama1>...<rama2>` o `git range-diff <a1>..<a2> <b1>..<b2>`.
+
+* **`git format-patch`**:
+    * `-1`, `-2`...: Número de commits a exportar (desde HEAD hacia atrás).
+    * `--stdout`: Imprime en stdout en lugar de archivos.
+    * `--output-directory=<dir>`: Carpeta de destino para los parches.
+    * `--signoff`: Añade `Signed-off-by` al final del mensaje.
+    * `--cover-letter`: Genera un parche `0000-cover-letter.patch` con resumen.
+    * `--thread`: Añade headers de threading para hilos de email.
+
+* **`git am`**:
+    * `--continue`: Continúa tras resolver conflictos.
+    * `--skip`: Salta el parche actual y continúa con el siguiente.
+    * `--abort`: Cancela la aplicación de parches.
+    * `--signoff`: Añade `Signed-off-by` (como `git format-patch --signoff`).
+    * `-3` (`--3way`): Intenta fusión a 3 bandas si el parche falla.
+    * `--reject`: Guarda las partes fallidas como `.rej` en lugar de abortar.
+
+### Deshacer y navegar en el tiempo
 * **`git reset`**:
     * `--soft`: Mueve HEAD pero mantiene cambios en el **Stage**.
     * `--mixed` (Default): Mueve HEAD y saca archivos del Stage al **Directorio**.
     * `--hard`: Borra todo. Vuelve al estado exacto del commit indicado.
     * `-p`: Reset interactivo para elegir partes específicas del archivo.
+    * `--keep`: Mantiene los archivos con cambios sin seguimiento; aborta si hay conflicto.
 
+### Recuperación
 * **`git reflog`**: El historial de movimientos local para recuperar ramas o commits borrados.
-* **`git cherry-pick <hash>`**: Copia un commit específico a tu rama actual.
+* **`git cherry-pick <hash>`**:
+    * `-n` (`--no-commit`): Aplica los cambios al stage sin crear commit (útil para cherry-pick múltiple).
+    * `-x`: Añade una línea al mensaje indicando de dónde se cherry-pickeó.
+    * `--signoff`: Añade `Signed-off-by`.
+    * `-e` (`--edit`): Edita el mensaje del commit antes de confirmar.
 
 ---
 
@@ -105,16 +340,74 @@ author: "Jorge Beneyto Castelló"
     * `-w`: Ignora espacios en blanco.
     * `-M` / `-C`: Detecta si el código fue movido o copiado de otros archivos.
 
-* **`git bisect`**: `start`, `bad`, `good`. Búsqueda binaria de commits con errores.
-* **`git revert`**: `-n` (no commit), `-m 1` (para merges). Deshace cambios de forma segura.
+* **`git bisect`**:
+    * `start`: Inicia la búsqueda binaria.
+    * `bad` / `good`: Marca el commit actual como malo o bueno (`git bisect bad` o `git bisect good <commit>`).
+    * `skip`: Salta un commit que no se puede probar.
+    * `reset`: Sale del modo bisect y vuelve al commit original.
+    * `run <script>`: Automatiza la búsqueda ejecutando un script que devuelva 0 (good) o 1 (bad).
+    * `log`: Muestra el progreso del bisect (se puede reanudar después).
+    * `replay <archivo>`: Reanuda un bisect desde un log guardado.
+    * `--no-checkout`: No hace checkout de los commits (útil para probar archivos sin tocar el working tree).
+    * `--term-old=<término>` / `--term-new=<término>`: Personaliza los términos (ej. `old`/`new` en lugar de `bad`/`good`).
+
+* **`git revert`**:
+    * `-n` (`--no-commit`): Revierte los cambios pero no crea commit (los deja en stage para revisar).
+    * `-m 1` (`--mainline`): Para revertear un merge: indica qué padre conservar (1 = la rama actual).
+    * `--no-edit`: No abre el editor; usa el mensaje por defecto.
+    * `--signoff`: Añade `Signed-off-by`.
+    * `--strategy=<estrategia>`: Estrategia de merge para la reversión.
+    * `--cleanup=<modo>`: Limpieza del mensaje (`strip`, `whitespace`, `verbatim`).
 
 ---
 
 ## 7. Mantenimiento y Exportación
-* **`git archive`**: `--format=zip -o salida.zip HEAD`. Exporta el código sin la carpeta `.git`.
-* **`git worktree`**: `add <ruta> <rama>`. Permite tener varias ramas abiertas en carpetas distintas simultáneamente.
-* **`git gc`**: `--prune=now --aggressive`. Comprime la DB y optimiza el repositorio.
-* **`git bundle`**: Empaqueta el historial en un solo archivo para transferencias offline.
+* **`git archive`**:
+    * `--format=<formato>`: `zip`, `tar`, `tgz`, `tar.gz`.
+    * `-o <archivo>` (`--output`): Archivo de salida.
+    * `--prefix=<prefijo>/`: Añade una carpeta raíz al contenido exportado.
+    * `HEAD`, `<tag>`, `<rama>`: Lo que se exporta.
+    * `--remote=<url>`: Exporta desde un repositorio remoto.
+    * `--worktree-attributes`: Respeta atributos exportados por `.gitattributes` (como `export-ignore`).
+
+* **`git worktree`**:
+    * `add <ruta> [<rama>]`: Crea un nuevo working tree con una rama.
+    * `list`: Lista todos los working trees activos.
+    * `remove <ruta>`: Elimina un working tree (solo si está limpio).
+    * `lock` / `unlock <ruta>`: Bloquea/desbloquea un working tree para evitar que lo borren.
+    * `prune`: Limpia referencias a working trees eliminados.
+    * `--detach`: Crea el worktree en modo detached HEAD.
+
+* **`git gc`**:
+    * `--prune=<fecha>`: Elimina objetos sueltos más antiguos que la fecha (ej. `now`, `2.weeks.ago`).
+    * `--aggressive`: Optimización intensiva (más lenta, mejor compresión).
+    * `--auto`: Ejecuta GC solo si es necesario (por umbral de objetos sueltos/packs).
+    * `--quiet`: Modo silencioso (sin salida).
+
+* **`git fsck`**:
+    * `--full`: Escanea todos los objetos del repositorio.
+    * `--strict`: Comprobación más exhaustiva (modo estricto).
+    * `--lost-found`: Restaura objetos huérfanos a `.git/lost-found/`.
+    * `--unreachable`: Muestra objetos sin referencia.
+    * `--dangling`: Muestra commits/árboles huérfanos (normalmente inofensivos).
+
+* **`git repack`**:
+    * `-a` (`--all`): Reempaqueta **todos** los objetos en un solo pack.
+    * `-d`: Elimina los packs viejos tras crear el nuevo.
+    * `--window=<N>`: Ventana de deduplicación (más alto = mejor compresión, más lento).
+    * `--depth=<N>`: Profundidad máxima de delta (default 50).
+    * `-F` (`--no-reuse-delta`): Recalcula deltas desde cero (más lento pero comprime mejor).
+
+* **`git bundle`**:
+    * `create <archivo> <revisiones>`: Crea un bundle con un rango de commits.
+    * `verify <archivo>`: Verifica que el bundle sea válido.
+    * `list-heads <archivo>`: Lista las referencias disponibles en el bundle.
+    * `unbundle <archivo>`: Restaura el bundle en el repositorio.
+    * `--version=<version>`: Versión del formato del bundle (v2 o v3).
+
+* **`git count-objects`**:
+    * `-v` (`--verbose`): Estadísticas detalladas: número de objetos, packs, espacio usado, etc.
+    * `--human-readable`: Muestra tamaños en formato legible (KB, MB).
 
 ---
 
@@ -139,7 +432,59 @@ git config --global core.excludesfile ~/.gitignore_global
 ```
 
 ---
-## Posts relacionados
+## 🔗 Recursos
 
-- [WSL: Instalación, configuración symlink y Docker Desktop](/posts/guia-wsl-instalacion-configuracion-docker/)
-- [Cómo construí un porfolio ultra rápido con HTML semántico y optimización avanzada](/posts/creacion-porfolio-optimizado/)
+### Del blog (recopilación de recursos)
+
+- [📦 Source Code — Plataformas de hosting Git](/posts/resources/#source-code) — Recopilación de servicios de alojamiento Git: GitHub, GitLab, Bitbucket, Codeberg, GitGud y más.
+- [🔄 CI/CD — Integración continua y despliegue](/posts/resources/#cicd) — Herramientas CI/CD compatibles con GitHub Actions, GitLab CI y otras plataformas Git.
+- [⭐ Repositorios Destacados GitHub](/posts/resources2/#repositorios-destacados) — Proyectos open-source destacados en GitHub: freeCodeCamp, Awesome, Developer Roadmap, System Design Primer y más.
+- [💻 Terminal](/posts/resources2/#terminal) — Herramientas CLI y terminal: emuladores, multiplexores (tmux), editores (neovim), buscadores (fzf, ripgrep) y utilidades dev.
+
+### Posts relacionados
+
+- [Guía interactiva de Git (hola.mdx)](/posts/hola/#git) — Cheatsheet visual con ejemplos de `git commit`, `git add` y comandos básicos.
+- [Configurar Git en WSL](/posts/guia-wsl-instalacion-configuracion-docker/#configurar-git-si-no-lo-tienes-ya) — Cómo instalar y configurar Git por primera vez en un entorno WSL con Windows.
+- [GitOps con ArgoCD (guía Docker)](/posts/guia-0-100-docker/#gitops-con-argocd) — Flujo GitOps aplicado a Kubernetes con ArgoCD, integración continua y despliegue automatizado.
+- [CI/CD con GitHub Actions (guía Markdown)](/posts/guia-0-100-markdown/#ci-con-github-actions) — Automatización de builds, tests y despliegues usando GitHub Actions.
+- [Workflows con n8n y GitHub](/posts/n8n/#con-devops-y-terminal-docker-npm-github-tmux-ngrok) — Cómo integrar GitHub con n8n para automatizar flujos de trabajo.
+- [Línea temporal del blog: hitos Git y workflows](/posts/linea_temporal_blog/) — Evolución de las herramientas Git y workflows de CI/CD en este proyecto.
+
+### Documentación oficial
+- [Pro Git Book — Scott Chacon & Ben Straub](https://git-scm.com/book/es/v2) — Libro completo y gratuito en español, cubre desde lo básico hasta Git internals.
+- [Git Reference — git-scm.com](https://git-scm.com/docs) — Documentación oficial de cada comando, flags y ejemplos.
+- [Git Cheat Sheet (PDF)](https://education.github.com/git-cheat-sheet-education.pdf) — Chuleta descargable de GitHub Education.
+
+### Tutoriales interactivos
+- [Learn Git Branching](https://learngitbranching.js.org/?locale=es) — Simulador visual interactivo de ramas, merge, rebase y conflictos. Imprescindible.
+- [Git How To](https://githowto.com/) — Taller guiado paso a paso desde cero.
+- [Oh My Git!](https://ohmygit.org/) — Juego open-source para aprender Git jugando.
+
+### Resolución de problemas
+- [Oh Shit, Git!?! (es)](https://ohshitgit.com/es) — Qué hacer cuando la cagas con Git, explicado simple y directo.
+- [Dangit, Git!?!](https://dangitgit.com/es) — Versión alternativa con más comandos de emergencia.
+- [Git Flight Rules](https://github.com/k88hudson/git-flight-rules) — Guía exhaustiva de «qué hacer cuando algo sale mal», mantenida por la comunidad.
+
+### Referencias visuales
+- [Visual Git Reference (es)](https://marklodato.github.io/visual-git-guide/index-es.html) — Cada comando explicado con diagramas de cómo se mueven los datos.
+- [Git Visualization Tool](https://git-school.github.io/visualizing-git/) — Visualizador en tiempo real de comandos Git.
+- [Atlassian Git Tutorials](https://www.atlassian.com/git/tutorials) — Tutoriales visuales con casos reales de uso en equipo.
+
+### Workflows y trucos
+- [A successful Git branching model — Vincent Driessen](https://nvie.com/posts/a-successful-git-branching-model/) — El artículo original de Git Flow.
+- [Conventional Commits](https://www.conventionalcommits.org/es/v1.0.0/) — Especificación para mensajes de commit semánticos.
+- [GitHub Flow](https://docs.github.com/es/get-started/using-github/github-flow) — Flujo ligero de GitHub (alternativa a Git Flow).
+- [git-tips](https://github.com/git-tips/tips) — Colección de tips avanzados y casos de uso reales.
+
+### Herramientas visuales
+- [Sourcetree](https://www.sourcetreeapp.com/) — GUI gratuita de Git con visualización de ramas.
+- [GitKraken](https://www.gitkraken.com/) — Cliente Git con interfaz gráfica y editor de grafos.
+- [Lazygit](https://github.com/jesseduffield/lazygit) — TUI (terminal UI) para Git en la terminal, super ágil.
+- [tig](https://github.com/jonas/tig) — Navegador de repositorio Git para terminal (modo NCurses).
+
+### Hooks y automatización
+- [Git Hooks — guía de ejemplos](https://githooks.com/) — Catálogo de hooks útiles para automatizar tu flujo.
+- [Husky](https://typicode.github.io/husky/) — Herramienta moderna para gestionar hooks Git en proyectos Node.
+- [Lefthook](https://github.com/evilmartians/lefthook) — Alternativa rápida a Husky, escrita en Go, multi-idioma.
+
+

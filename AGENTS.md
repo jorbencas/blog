@@ -218,6 +218,40 @@ MDX parses `<` and `{` as JSX/expression boundaries even in prose. **Never leave
    - Incorrectly closed JSX tags in headings (`<Fragment>`, `<Base>`)
 3. Any MDX file may contain `<` or `{` inside code blocks (fenced with ```). These are safe and should NOT be escaped — only unescaped `<`/`{` in prose need fixing.
 
+## 📝 Guide Writing Rules (guías 0-100)
+
+These rules apply when writing or editing tutorial/guide posts (e.g. `guia-0-100-*.mdx`).
+
+### External references
+- **Every external resource must specify the website name** in the link text or nearby. Bad: `[link](https://example.com)` — Good: `[React docs — useEffect](https://react.dev/reference/react/useEffect)`.
+- **If referencing a company or product**, link to its official site (e.g. `Vercel` → `[Vercel](https://vercel.com/)`).
+
+### Version awareness
+- **Before stating a feature exists**, verify it hasn't changed in the current version of the tool. If it differs between versions, **specify which version** the statement refers to (e.g. `Astro 5+`, `Node 20+`, `Tailwind v4`).
+- If a feature was added/deprecated in a specific version, mention it: `Desde Astro 5`, `Deprecated en v6`.
+
+### Completeness & linking
+- **When introducing a new concept**, either explain it inline **or** link to a resource that explains it (prefer blog's own `resources*.mdx` sections with `#anchor`).
+- **Link to `resources*.mdx` sections** using `#` anchors when those pages already have curated external resources on the topic (e.g. `/posts/resources/#source-code`, `/posts/resources2/#terminal`). This avoids duplicating links and enriches the post with the blog's own curated content.
+- If the concept is complex (e.g. SSR, ISR, edge functions), add a brief explanation plus links for deeper reading.
+
+### Examples & accuracy
+- All code examples must be **tested against the version stated** in the post. If you haven't verified, add a disclaimer or skip the example.
+- When showing configuration, use the **exact syntax for the stated version** (e.g. Astro 5 uses `type: 'content'`, Astro 6 uses `loader: glob()`).
+- Use real, runnable examples — not pseudo-code.
+
+### Learning progression (no jumping between concepts)
+- Guides must follow a **natural learning progression**: what someone starting from zero would encounter when building a real project. Do not jump between advanced and basic concepts without order.
+- **Each concept must build on the previous one**: do not introduce an idea without first explaining its prerequisites. If you mention SSR, you must have already explained what SSG is and why SSR exists.
+- The structure must reflect the **real development flow**: installation → first project → fundamental concepts → advanced features → deployment → testing. Exactly as someone would learn if they were building a functional project step by step.
+- **Do not assume prior knowledge**: every new term (islands, loaders, edge functions, etc.) must be defined the first time it appears, even if briefly. If too long, link to the blog's resources section.
+- Examples must be **cumulative**: the example from section 3 should be extendable in section 5, not replaced by a completely different one.
+- The ultimate goal is that **a reader with no experience** can follow the guide from start to finish and end up with a **fully functional, deployed project**.
+
+### Language & tone
+- Written in **Spanish** (like all blog content).
+- Explanations should be **practical and concise**: focus on what the reader needs to know to use it, not encyclopedia-level theory.
+
 ## Git Conventions
 - Commits in Spanish (castellano).
 - Scope prefix: `[blog]`, `[retos]`, `[herramientas]`, `[estilos]`, `[infra]`, etc.

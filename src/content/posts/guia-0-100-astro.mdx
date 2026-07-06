@@ -36,7 +36,7 @@ Astro es un framework web moderno para construir sitios web rápidos, lanzado co
 ## 2. ¿Cómo empezar? Instalación en todos los entornos
 
 ### Requisitos
-- **Node.js 18+** (recomendado 20 LTS o 22 LTS)
+- **Node.js 18+** (recomendado [**Node.js 22 LTS**](https://nodejs.org/en/download/) o [20 LTS](https://nodejs.org/en/download/releases/))
 - Editor: [VSCode](/posts/resources/#ides-y-editores-de-codigo) con extensión oficial **Astro**
 
 ### Crear proyecto
@@ -75,19 +75,26 @@ alias acheck='npx astro check'
 
 ## 3. Primeros pasos y configuración del entorno
 
-### Estructura del proyecto
+### Estructura del proyecto (Astro 6)
+
 ```
 mi-proyecto/
 ├── src/
-│   ├── pages/         # Rutas basadas en archivos
-│   ├── components/    # Componentes .astro, .svelte, .jsx
-│   ├── layouts/       # Layouts compartidos
-│   ├── content/       # Colecciones de contenido
-│   └── styles/        # CSS global
-├── public/            # Archivos estáticos
-├── astro.config.mjs   # Configuración
+│   ├── pages/              # Rutas basadas en archivos
+│   ├── components/         # Componentes .astro, .svelte, .jsx
+│   ├── layouts/            # Layouts compartidos
+│   ├── content/            # Colecciones de contenido (MDX, JSON, etc.)
+│   │   ├── posts/          #   Contenido plano (sin config.ts aquí)
+│   │   └── config.ts       #   ⚠️ Astro 5: defineCollection con type+loader
+│   ├── content.config.ts   #   ✅ Astro 6: config en raíz de src/ (loader API nativa)
+│   ├── styles/             # CSS global
+│   └── assets/             # Imágenes que pasan por Vite (hash, optimización)
+├── public/                 # Archivos estáticos (se sirven tal cual, sin procesar)
+├── astro.config.mjs        # Configuración principal
 └── package.json
 ```
+
+> **Nota sobre versiones:** En Astro 5 la config de colecciones iba en `src/content/config.ts`. Desde **Astro 6** se migró a `src/content.config.ts` usando la API de `loaders` (como `glob()`) directamente, sin `type: 'content'`. El resto de la estructura (pages, components, layouts) se mantiene igual entre versiones.
 
 ### Servidor de desarrollo
 ```bash
@@ -441,30 +448,138 @@ export default defineConfig({
 });
 ```
 
-### SSR vs SSG
+### Output: static, server, hybrid
 
-**SSG (Static Site Generation):** Todo se genera en build time. Máximo rendimiento.
+Astro ofrece 3 modos de renderizado que determinan **cuándo y dónde** se genera el HTML. La elección depende del tipo de contenido, la necesidad de datos dinámicos y el adaptador de despliegue.
+
+#### `output: 'static'` — HTML en build time
+
+**Cómo funciona:** Todo el HTML se genera durante `astro build`. No hay servidor. Los archivos son estáticos y se sirven desde CDN.
+
+**Cuándo usarlo:**
+- Blogs, documentación, portfolios, landing pages
+- Sitios sin contenido dinámico por usuario
+- Máximo rendimiento (cero latency en el servidor)
+
+**Ejemplo:**
 ```js
+// astro.config.mjs
+import { defineConfig } from 'astro/config';
 export default defineConfig({ output: 'static' });
-```
-
-**SSR (Server-Side Rendering):** Las páginas se renderizan en cada petición.
-```js
-export default defineConfig({ output: 'server', adapter: vercel() });
-```
-
-**Hybrid / prerender:**
-```js
-export default defineConfig({ output: 'hybrid' });
 ```
 ```astro
 ---
+// src/pages/index.astro — esto se evalúa UNA VEZ en build
+const posts = await getCollection('posts');
+---
+<h1>Blog ({posts.length} artículos)</h1>
+```
+
+**Ventajas:** Velocidad máxima, se puede servir desde CDN (Netlify, Vercel Static, S3, GitHub Pages), cero coste de servidor.
+
+#### `output: 'server'` — SSR (Server-Side Rendering)
+
+**Cómo funciona:** Las páginas se renderizan en **cada petición** HTTP. Necesita un servidor Node.js (o edge function). El usuario ve contenido actualizado siempre.
+
+**Cuándo usarlo:**
+- Paneles de administración, dashboards
+- E-commerce con precios/stock dinámicos
+- Aplicaciones con autenticación y sesiones
+- APIs y endpoints con datos de BD
+
+**Ejemplo:**
+```js
+// astro.config.mjs
+import vercel from '@astrojs/vercel';
+export default defineConfig({
+  output: 'server',
+  adapter: vercel(),
+});
+```
+```astro
+---
+// src/pages/perfil/[id].astro — esto se evalúa en CADA petición
+const { id } = Astro.params;
+const usuario = await db.getUser(id); // Consulta a BD en cada request
+if (!usuario) return Astro.redirect('/404');
+const { nombre, email, avatar } = usuario;
+---
+<h1>{nombre}</h1>
+<p>{email}</p>
+<img src={avatar} alt={nombre} />
+```
+
+**Ventajas:** Contenido siempre actualizado, autenticación real, acceso a BD/APIs.
+
+**Desventajas:** Mayor latencia (cada request ejecuta el servidor), coste de cómputo, necesita adaptador (Vercel, Netlify, Node, Deno, Cloudflare).
+
+**Adaptadores disponibles:**
+```bash
+npx astro add vercel     # Vercel Serverless/Edge Functions
+npx astro add netlify    # Netlify Functions
+npx astro add node       # Servidor Node.js propio
+npx astro add deno       # Deno Deploy
+npx astro add cloudflare # Cloudflare Pages/Workers
+```
+
+#### `output: 'hybrid'` — SSG + SSR combinados
+
+**Cómo funciona:** Por defecto, **todas las páginas son estáticas** (SSG), pero puedes marcar páginas individuales como SSR con `export const prerender = false`. Es lo mejor de ambos mundos.
+
+**Cuándo usarlo:**
+- Blog con páginas estáticas + carrito SSR
+- Sitio informativo + panel de admin dinámico
+- La mayoría de proyectos reales: contenido estático + funcionalidades dinámicas
+
+**Ejemplo:**
+```js
+// astro.config.mjs
+import vercel from '@astrojs/vercel';
+export default defineConfig({
+  output: 'hybrid',
+  adapter: vercel(),
+});
+```
+```astro
+---
+// src/pages/productos/[id].astro — página SSR (se renderiza en cada petición)
 export const prerender = false;
 const { id } = Astro.params;
 const producto = await db.getProducto(id);
 ---
 <h1>{producto.nombre}</h1>
+<p>Precio: {producto.precio}€</p>
 ```
+
+```astro
+---
+// src/pages/index.astro — página SSG (se genera en build)
+const posts = await getCollection('posts');
+---
+<h1>Blog</h1>
+<!-- Estático, se sirve desde CDN -->
+```
+
+**Export `prerender` — control página por página:**
+| Valor | Efecto |
+|---|---|
+| `export const prerender = true;` | Fuerza SSG aunque output sea `server` |
+| `export const prerender = false;` | Fuerza SSR aunque output sea `hybrid` o `static` |
+| Sin export | Sigue el modo global (`static`, `server`, `hybrid`) |
+
+#### Comparativa rápida
+
+| Aspecto | `static` | `server` | `hybrid` |
+|---|---|---|---|
+| HTML generado | Build time | Cada petición | Mixto |
+| Velocidad | Máxima | Variable | Según página |
+| Contenido dinámico | ❌ No | ✅ Sí | ✅ Según página |
+| BD / APIs | ❌ Sin servidor | ✅ Sí | ✅ Según página |
+| Autenticación | ❌ No | ✅ Sí | ✅ Según página |
+| Coste servidor | Ninguno | Sí | Parcial |
+| CDN | ✅ Total | Parcial | ✅ Mayoría |
+| Adaptador necesario | ❌ No | ✅ Sí | ✅ Sí |
+| Ideal para | Blogs, docs | Dashboards, APIs | Sitios mixtos |
 
 ### ViewTransitions (navegación SPA-like)
 
