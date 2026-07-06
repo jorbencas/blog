@@ -34,6 +34,15 @@ Fuente: [Swift.org — About](https://www.swift.org/about/), [Wikipedia — Swif
 
 ---
 
+## Prerrequisitos
+
+Antes de empezar, necesitas:
+- **Conocimientos básicos de terminal**: navegar directorios, ejecutar comandos, usar un editor de texto
+- **Un editor o IDE** (revisa [Editores recomendados → Recursos](/posts/resources/#ides-y-editores-de-codigo))
+- **El lenguaje/herramienta instalado** en tu sistema (sigue la sección de Instalación si aún no lo tienes)
+
+Si no cumples algún requisito, no te preocupes: cada sección te guiará paso a paso.
+
 ## ¿Cómo empezar? Instalación en todos los entornos
 
 ### macOS (el entorno nativo)
@@ -49,9 +58,9 @@ Fuente: [Swift.org — About](https://www.swift.org/about/), [Wikipedia — Swif
 ### Linux (Ubuntu/Debian)
 ```bash
 # Descarga el toolchain de swift.org
-wget https://download.swift.org/swift-5.10-release/ubuntu2204/swift-5.10-RELEASE/swift-5.10-RELEASE-ubuntu22.04.tar.gz
-tar xzf swift-5.10-RELEASE-ubuntu22.04.tar.gz
-sudo mv swift-5.10-RELEASE-ubuntu22.04 /usr/share/swift
+wget https://download.swift.org/swift-6.0-release/ubuntu2404/swift-6.0-RELEASE/swift-6.0-RELEASE-ubuntu24.04.tar.gz
+tar xzf swift-6.0-RELEASE-ubuntu24.04.tar.gz
+sudo mv swift-6.0-RELEASE-ubuntu24.04 /usr/share/swift
 echo 'export PATH=/usr/share/swift/usr/bin:$PATH' >> ~/.bashrc
 source ~/.bashrc
 ```
@@ -69,7 +78,7 @@ curl -sL https://swift.org/install.sh | bash
 
 ### Docker
 ```dockerfile
-FROM swift:5.10
+FROM swift:6.0
 WORKDIR /app
 COPY Package.swift ./
 COPY Sources ./Sources
@@ -77,7 +86,7 @@ RUN swift build -c release
 CMD [".build/release/mi-app"]
 ```
 
-Usa `swift:5.10` como imagen base. Para producción, usa multi-stage build con `swift:5.10-slim` como imagen final.
+Usa `swift:6.0` como imagen base. Para producción, usa multi-stage build con `swift:6.0-slim` como imagen final.
 
 ### Windows
 - Swift está disponible para Windows desde Swift 5.3+ (toolchain oficial)
@@ -153,7 +162,7 @@ swift run
 
 ### Estructura Package.swift
 ```swift
-// swift-tools-version: 5.10
+// swift-tools-version: 6.0
 import PackageDescription
 
 let package = Package(
@@ -616,7 +625,7 @@ El Swift Package Manager (SPM) es el sistema de compilación y gestión de depen
 #### Sintaxis básica
 ```swift
 // Package.swift
-// swift-tools-version: 5.10
+// swift-tools-version: 6.0
 import PackageDescription
 
 let package = Package(

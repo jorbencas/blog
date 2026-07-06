@@ -28,6 +28,15 @@ Fuente: [Python.org — About](https://www.python.org/about/), [Real Python — 
 
 ---
 
+## Prerrequisitos
+
+Antes de empezar, necesitas:
+- **Conocimientos básicos de terminal**: navegar directorios, ejecutar comandos, usar un editor de texto
+- **Un editor o IDE** (revisa [Editores recomendados → Recursos](/posts/resources/#ides-y-editores-de-codigo))
+- **El lenguaje/herramienta instalado** en tu sistema (sigue la sección de Instalación si aún no lo tienes)
+
+Si no cumples algún requisito, no te preocupes: cada sección te guiará paso a paso.
+
 ## ¿Cómo empezar? Instalación en todos los entornos
 
 ### Windows
@@ -35,10 +44,10 @@ Fuente: [Python.org — About](https://www.python.org/about/), [Real Python — 
 2. **Marca "Add Python to PATH"** en la primera pantalla — esto es crítico
 3. Opcional pero recomendado: elige "Disable path length limit" al final
 4. Verifica: abre `cmd` o PowerShell y ejecuta `python --version`
-5. Alternativa vía **winget**: `winget install Python.Python.3.12`
+5. Alternativa vía **winget**: `winget install Python.Python.3.13`
 
 ### macOS
-- **Homebrew** (recomendado): `brew install python@3.12`
+- **Homebrew** (recomendado): `brew install python@3.13`
 - **Xcode Command Line Tools**: `xcode-select --install` (necesario para compilar algunos paquetes)
 - Verifica: `python3 --version`
 
@@ -57,20 +66,20 @@ echo 'command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.
 echo 'eval "$(pyenv init -)"' >> ~/.bashrc
 exec $SHELL
 
-pyenv install 3.12 3.11 3.10
-pyenv global 3.12
+pyenv install 3.13 3.12 3.11
+pyenv global 3.13
 ```
 
 ### Docker
 ```dockerfile
-FROM python:3.12-slim
+FROM python:3.13-slim
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 CMD ["python", "main.py"]
 ```
-Usa `python:3.12-slim` como base (menos de 130 MB). Evita `python:latest` para builds reproducibles.
+Usa `python:3.13-slim` como base (menos de 130 MB). Evita `python:latest` para builds reproducibles.
 
 ### Alias útiles para el día a día
 Añade a tu `~/.bashrc` o `~/.zshrc`:
@@ -147,10 +156,10 @@ build-backend = "setuptools.backends._legacy:_Backend"
 
 [tool.ruff]
 line-length = 100
-target-version = "py312"
+target-version = "py313"
 
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.13"
 strict = true
 ```
 

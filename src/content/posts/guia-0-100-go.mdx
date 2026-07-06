@@ -38,13 +38,22 @@ Fuente: [Go dev — About](https://go.dev/about/), [Wikipedia — Go](https://en
 
 ---
 
+## Prerrequisitos
+
+Antes de empezar, necesitas:
+- **Conocimientos básicos de terminal**: navegar directorios, ejecutar comandos, usar un editor de texto
+- **Un editor o IDE** (revisa [Editores recomendados → Recursos](/posts/resources/#ides-y-editores-de-codigo))
+- **El lenguaje/herramienta instalado** en tu sistema (sigue la sección de Instalación si aún no lo tienes)
+
+Si no cumples algún requisito, no te preocupes: cada sección te guiará paso a paso.
+
 ## ¿Cómo empezar? Instalación en todos los entornos
 
 ### Linux (Debian/Ubuntu)
 ```bash
 # Opción 1: paquete oficial
-wget https://go.dev/dl/go1.22.5.linux-amd64.tar.gz
-sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.22.5.linux-amd64.tar.gz
+wget https://go.dev/dl/go1.24.2.linux-amd64.tar.gz
+sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.24.2.linux-amd64.tar.gz
 echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
 source ~/.bashrc
 go version
@@ -59,11 +68,11 @@ sudo snap install go --classic
 ### macOS
 ```bash
 # Homebrew (recomendado)
-brew install go@1.22
+brew install go@1.24
 
 # Binario oficial
-wget https://go.dev/dl/go1.22.5.darwin-amd64.tar.gz
-sudo tar -C /usr/local -xzf go1.22.5.darwin-amd64.tar.gz
+wget https://go.dev/dl/go1.24.2.darwin-amd64.tar.gz
+sudo tar -C /usr/local -xzf go1.24.2.darwin-amd64.tar.gz
 ```
 
 ### Windows
@@ -77,15 +86,15 @@ sudo tar -C /usr/local -xzf go1.22.5.darwin-amd64.tar.gz
 bash < <(curl -sSL https://raw.githubusercontent.com/moovweb/gvm/master/binscripts/gvm-installer)
 source ~/.gvm/scripts/gvm
 
-gvm install go1.22.5
-gvm install go1.21.12
-gvm use go1.22.5 --default
+gvm install go1.24.2
+gvm install go1.23.6
+gvm use go1.24.2 --default
 ```
 
 ### Docker multi-stage (producción)
 ```dockerfile
 # Build stage
-FROM golang:1.22-alpine AS builder
+FROM golang:1.24-alpine AS builder
 WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
@@ -98,7 +107,7 @@ COPY --from=builder /app/server /server
 EXPOSE 8080
 CMD ["/server"]
 ```
-Usa `golang:1.22-alpine` para build (~350 MB) y `scratch` o `distroless` para runtime (~5 MB). `CGO_ENABLED=0` produce binarios estáticos que funcionan en cualquier Linux sin dependencias.
+Usa `golang:1.24-alpine` para build (~350 MB) y `scratch` o `distroless` para runtime (~5 MB). `CGO_ENABLED=0` produce binarios estáticos que funcionan en cualquier Linux sin dependencias.
 
 ### Alias útiles para el día a día
 Añade a tu `~/.bashrc` o `~/.zshrc`:
