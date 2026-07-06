@@ -10,7 +10,7 @@ author: "Jorge Beneyto Castelló"
 
 # Guía de Docker: De 0 a 100
 
-## 1. ¿Qué es Docker?
+## ¿Qué es Docker?
 
 Docker es una plataforma de contenerización que permite empaquetar aplicaciones con todas sus dependencias en **contenedores** ligeros y portables. Fue lanzado por Docker Inc. (entonces dotCloud) en 2013, obra de Solomon Hykes, y revolucionó la forma en que desplegamos software.
 
@@ -40,7 +40,7 @@ Los contenedores usan **namespaces** (pid, net, mnt, uts, ipc, user) para aislar
 
 ---
 
-## 2. ¿Cómo empezar? Instalación en todos los entornos
+## ¿Cómo empezar? Instalación en todos los entornos
 
 ### Windows
 1. Activa **WSL2**: `wsl --install` en PowerShell como administrador
@@ -113,7 +113,7 @@ alias dkrun='docker run -it --rm'
 
 ---
 
-## 3. Primeros pasos y configuración del entorno
+## Primeros pasos y configuración del entorno
 
 ### El primer contenedor
 ```bash
@@ -205,7 +205,7 @@ echo "=== Fin ==="
 
 ---
 
-## 7. Sistema de archivos: volúmenes, monturas y almacenamiento
+## Sistema de archivos: volúmenes, monturas y almacenamiento
 
 ### ¿Qué es?
 Docker tiene su propio sistema de archivos en capas (overlay2) que permite compartir datos entre el host y los contenedores, entre contenedores, y gestionar el almacenamiento eficientemente.
@@ -336,7 +336,7 @@ docker images "$IMAGE" --format "{{.Size}}"
 
 ---
 
-## 8. Algoritmos y optimización de builds
+## Algoritmos y optimización de builds
 
 ### ¿Qué es?
 Docker no es un lenguaje de programación y no tiene algoritmos en el sentido tradicional. Sin embargo, sus mecanismos internos tienen comportamientos analizables en términos de complejidad.
@@ -418,7 +418,7 @@ time docker build -t test-cache . 2>&1 | tail -3
 
 ---
 
-## 9. Conceptos clave explicados a fondo
+## Conceptos clave explicados a fondo
 
 ### Imágenes vs Contenedores
 
@@ -659,7 +659,9 @@ docker history "$IMAGE" --format "{{.Size}}\t{{.CreatedBy}}" | head -10
 
 ---
 
-## 16. Testing y calidad
+## Testing y calidad
+
+🔗 [Testing — Frameworks y herramientas](/posts/resources2/#testing)
 
 ### Frameworks y herramientas
 
@@ -798,7 +800,7 @@ fi
 
 ---
 
-## 17. Conceptos avanzados: Swarm, Kubernetes y producción
+## Conceptos avanzados: Swarm, Kubernetes y producción
 
 ### Docker Swarm
 
@@ -1017,7 +1019,7 @@ docker swarm leave --force 2>/dev/null
 
 ---
 
-## 18. Escala de aprendizaje 0–100
+## Escala de aprendizaje 0–100
 
 ### Nivel 0–15: Fundamentos absolutos
 
@@ -1102,7 +1104,7 @@ docker swarm leave --force 2>/dev/null
 
 ---
 
-## 19. Proyecto final integrador
+## Proyecto final integrador
 
 ### Gestor de tareas API dockerizado
 
@@ -1149,7 +1151,7 @@ services:
         max-file: "3"
 
   db:
-    image: "img/guia_0_100_docker/guia_0_100_docker_cover-1200.webp"
+    image: postgres:16-alpine
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -1164,7 +1166,7 @@ services:
       retries: 5
 
   redis:
-    image: "img/guia_0_100_docker/guia_0_100_docker_cover-1200.webp"
+    image: redis:7-alpine
     volumes:
       - redis-data:/data
     healthcheck:
@@ -1254,7 +1256,7 @@ echo "=== Todos los tests pasaron ==="
 
 ---
 
-## 20. Canales y recursos en español
+## Canales y recursos en español
 
 ### YouTube
 - **Midulive** — Docker, Kubernetes, CI/CD y DevOps con ejemplos prácticos
@@ -1276,6 +1278,9 @@ echo "=== Todos los tests pasaron ==="
 - [veggiemonk/awesome-docker](https://github.com/veggiemonk/awesome-docker) — Lista curada
 - [jessfraz/dockerfiles](https://github.com/jessfraz/dockerfiles) — Colección de Dockerfiles
 
+### Recursos del blog
+- [Docker — Herramientas, tutoriales y referencias](/posts/resources/#docker)
+
 ### Blogs y newsletters
 - [Docker Blog](https://www.docker.com/blog/) — Blog oficial
 - [Play with Docker](https://labs.play-with-docker.com/) — Laboratorio interactivo
@@ -1283,7 +1288,7 @@ echo "=== Todos los tests pasaron ==="
 
 ---
 
-## 21. Hacks y tips de productividad
+## Hacks y tips de productividad
 
 **1. `docker system prune --volumes` — limpia todo lo no usado**
 ```bash
@@ -1336,7 +1341,7 @@ PORT=3000
 ```yaml
 services:
   docker-socket-proxy:
-    image: "img/guia_0_100_docker/guia_0_100_docker_cover-1200.webp"
+    image: tecnativa/docker-socket-proxy
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
@@ -1365,7 +1370,7 @@ docker logs contenedor --timestamps 2>&1 | jq -R '{timestamp: ., line: input_lin
 
 ---
 
-## 22. Referencias y documentación oficial
+## Referencias y documentación oficial
 
 - **Docs oficiales**: [docs.docker.com](https://docs.docker.com/)
 - **Docker Hub**: [hub.docker.com](https://hub.docker.com/)

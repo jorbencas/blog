@@ -12,7 +12,7 @@ import ResponsiveImage from "@components/ResponsiveImage.astro";
 
 # Guía de Markdown y MDX: De 0 a 100
 
-## 1. ¿Qué es Markdown?
+## ¿Qué es Markdown?
 
 Markdown es un lenguaje de marcado ligero creado por **John Gruber** (Daring Fireball) con contribuciones de **Aaron Swartz** en 2004. Su objetivo fue diseñar un formato que fuera tan legible en texto plano como en su versión renderizada. La filosofía central: **la legibilidad es lo primero**. Un archivo Markdown debe entenderse incluso antes de ser procesado.
 
@@ -44,7 +44,7 @@ Markdown es un lenguaje de marcado ligero creado por **John Gruber** (Daring Fir
 
 ---
 
-## 2. ¿Cómo empezar? Instalación en todos los entornos
+## ¿Cómo empezar? Instalación en todos los entornos
 
 ### Markdown no necesita instalación
 
@@ -107,7 +107,7 @@ markdownlint-cli2 --version
 
 ---
 
-## 3. Primeros pasos y configuración del entorno
+## Primeros pasos y configuración del entorno
 
 ### El archivo `.md`
 
@@ -182,7 +182,7 @@ fi
 
 ---
 
-## 7. Sistema de archivos
+## Sistema de archivos
 
 ### ¿Qué es?
 
@@ -313,7 +313,7 @@ grep -rn "\[\[" docs/
 
 ---
 
-## 9. Conceptos clave de Markdown y MDX
+## Conceptos clave de Markdown y MDX
 
 Esta es la sección más pesada de la guía. Cubre cada concepto con explicación, código ejecutable, testing, buenas prácticas y enlaces externos.
 
@@ -1150,7 +1150,9 @@ console.log(String(html));
 
 ---
 
-## 16. Testing y calidad
+## Testing y calidad
+
+🔗 [Testing — Frameworks y herramientas](/posts/resources2/#testing)
 
 ### Frameworks y herramientas
 
@@ -1232,7 +1234,7 @@ exit $errores
 
 ---
 
-## 17. Conceptos avanzados
+## Conceptos avanzados
 
 ### Remark plugins personalizados
 
@@ -1434,7 +1436,7 @@ const docsEs = defineCollection({
 
 ---
 
-## 18. Escala de aprendizaje 0–100
+## Escala de aprendizaje 0–100
 
 Cada nivel incluye qué aprender y un proyecto para fijar los conceptos.
 
@@ -1530,7 +1532,7 @@ Cada nivel incluye qué aprender y un proyecto para fijar los conceptos.
 
 ---
 
-## 19. Proyecto final integrador: Sistema de blog con Astro + MDX
+## Proyecto final integrador: Sistema de blog con Astro + MDX
 
 ### Descripción
 
@@ -1599,16 +1601,17 @@ export default defineConfig({
 ```js
 // src/content/config.ts
 import { defineCollection, z } from 'astro:content';
+import { glob } from 'astro/loaders';
 
 const posts = defineCollection({
-  type: 'content',
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/posts' }),
   schema: z.object({
     title: z.string(),
     pubDate: z.date(),
     description: z.string().optional(),
     tags: z.array(z.string()).default([]),
     draft: z.boolean().default(false),
-    image: "img/guia_0_100_markdown/guia_0_100_markdown_cover-1200.webp"
+    image: z.string().optional(),
   }),
 });
 
@@ -1724,7 +1727,7 @@ npx markdown-link-check "src/content/**/*.md"
 
 ---
 
-## 20. Canales y recursos en español
+## Canales y recursos en español
 
 ### YouTube
 
@@ -1768,7 +1771,7 @@ npx markdown-link-check "src/content/**/*.md"
 
 ---
 
-## 21. Hacks y tips de productividad
+## Hacks y tips de productividad
 
 ### 1. Hard wrapping para diffs limpios
 
@@ -1910,7 +1913,7 @@ docker run --rm -v ${PWD}:/docs md-lint
 
 ---
 
-## 22. Referencias y documentación oficial
+## Referencias y documentación oficial
 
 - **CommonMark spec**: [spec.commonmark.org](https://spec.commonmark.org/)
 - **GFM spec**: [github.github.com/gfm](https://github.github.com/gfm/)
