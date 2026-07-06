@@ -14,11 +14,19 @@ author: "Jorge Beneyto Castelló"
 ### Clonar e iniciar repos
 * **`git clone`**:
     * `--depth <N>`: **Shallow clone**. Solo descarga los últimos N commits (ideal para ahorrar espacio y tiempo).
+    * `--shallow-since=<fecha>`: Shallow clone con commits desde una fecha específica.
     * `--branch <nombre>` (`-b`): Clona una rama específica.
     * `--single-branch`: Descarga solo la rama indicada y no el resto de ramas del servidor.
     * `--filter=blob:none`: **Blobless clone**. Baja el historial pero no el contenido de archivos viejos hasta que los pidas.
     * `--recurse-submodules`: Clona el repo y todos sus submódulos automáticamente.
     * `--sparse`: Habilita el checkout parcial (para ver solo ciertas carpetas en monorepos).
+    * `--origin <nombre>` (`-o`): Nombre del remote principal (por defecto `origin`).
+    * `--no-tags`: No descarga ningún tag asociado.
+    * `--reference=<repo>` (`--reference-if-able`): Usa un repo local como referencia para ahorrar ancho de banda. `--reference-if-able` no falla si falta el repo de referencia.
+    * `--server-option=<opción>`: Envía opciones al servidor (si lo soporta).
+    * `--verbose` (`-v`): Salida detallada.
+    * `--progress`: Muestra el progreso (forzado incluso si stdout no es terminal).
+    * `--jobs=<N>` (`-j`): Número de subprocesos para fetch paralelo.
 
 * **`git init`**:
     * `--bare`: Crea un repositorio sin working directory (para servidores centrales).
@@ -146,9 +154,25 @@ author: "Jorge Beneyto Castelló"
     * `<rama>..<otra>`: Compara dos ramas entre sí.
     * `<commit>...<commit>`: Compara los cambios desde el ancestro común (merge base).
     * `--no-index`: Compara dos archivos fuera de un repositorio Git (como diff normal pero con sintaxis Git).
+    * `--ignore-cr-at-eol`: Ignora retornos de carro (`\r`) al final de línea.
+    * `--inter-hunk-context=<N>`: Número de líneas de contexto extra entre hunks separados.
+    * `--output=<archivo>`: Guarda el diff en un archivo en lugar de stdout.
+
+* **`git difftool` / `git mergetool`**: Abren herramientas visuales para comparar y fusionar archivos.
+    * `difftool`: Abre un diff visual (ej. vimdiff, meld, Beyond Compare) en lugar del diff textual. Configurable con `git config diff.tool <herramienta>`.
+    * `difftool --tool-help`: Lista las herramientas de diff disponibles.
+    * `mergetool`: Abre una herramienta visual para resolver conflictos de merge.
+    * `mergetool --tool-help`: Lista las herramientas de merge disponibles.
+    * `--tool=<herramienta>`: Fuerza una herramienta específica (`vimdiff`, `meld`, `kdiff3`, ` Beyond Compare`, `p4merge`).
+    * `--prompt`: Pide confirmación antes de abrir cada herramienta.
+    * `-y` (`--no-prompt`): Abre directamente sin preguntar.
+    * `--gui`: Usa la herramienta configurada en `diff.guitool` / `merge.guitool`.
 
 * **`git stash` (Guardado temporal)**:
     * `push -m "nombre"`: Guarda cambios actuales en una pila temporal.
+    * `push --keep-index`: Guarda solo los cambios del working tree que no están en el stage (deja el stage intacto). Ideal para commits parciales.
+    * `push --staged`: Guarda solo los cambios que están en el stage. Útil para mover trabajo entre ramas sin arrastrar cambios sin staging.
+    * `push -p` (`--patch`): Elige interactivamente qué partes guardar.
     * `pop`: Recupera los cambios y los elimina de la pila.
     * `apply`: Aplica los cambios pero los mantiene en la pila.
     * `list`: Muestra todo lo guardado en el "limbo".
@@ -158,6 +182,8 @@ author: "Jorge Beneyto Castelló"
     * `clear`: Vacía toda la pila de stashes.
     * `branch <rama> [<stash>]`: Crea una rama desde el commit del stash y aplica los cambios ahí.
     * `show [-p] [<stash>]`: Muestra los cambios del stash (con `-p` muestra el diff completo).
+    * `create`: Crea un stash como objeto (sin tocarlo). Devuelve el nombre del commit objeto. Para scripting.
+    * `store`: Guarda un stash creado con `create` en la pila de stashes.
 
 ---
 
@@ -184,6 +210,9 @@ author: "Jorge Beneyto Castelló"
     * `--ff-only` (pull): Solo avance rápido; aborta si requiere merge.
     * `--squash` (pull): Fusiona los cambios remotos como un único commit local.
     * `--autostash` (pull): Stash automático antes del pull y pop después.
+    * `--rebase=interactive` (pull): Rebase interactivo al hacer pull (permite reordenar/squash antes de aplicar).
+    * `--no-rebase` (pull): Usa merge en lugar de rebase (sobrescribe `pull.rebase`).
+    * `--no-verify` (pull): Salta los hooks de pre-merge/pre-rebase.
 
 * **`git remote`**:
     * `-v` (`--verbose`): Muestra las URLs de conexión.
@@ -193,6 +222,9 @@ author: "Jorge Beneyto Castelló"
     * `remove <nombre>` (`rm`): Elimina un remote.
     * `set-url <nombre> <url>`: Cambia la URL de un remote existente.
     * `show <nombre>`: Muestra información detallada del remote.
+    * `get-url <nombre>`: Muestra la URL de un remote (resuelve `insteadOf`).
+    * `set-head <nombre> <rama>`: Establece la rama por defecto del remote.
+    * `set-branches <nombre> <rama>...`: Restringe las ramas que fetch obtiene del remote.
 
 * **`git fetch`**:
     * `--all`: Obtiene datos de **todos** los remotos configurados.
@@ -219,18 +251,27 @@ author: "Jorge Beneyto Castelló"
     * `--strategy=<estrategia>`: Algoritmo de merge (`recursive`, `ours`, `octopus`, `ort` — el nuevo default).
     * `--strategy-option=<opción>`: Opciones de la estrategia (`ours`, `theirs`, `patience`, `diff-algorithm=histogram`).
     * `--no-commit`: Realiza el merge pero no crea el commit automático (para inspeccionar antes).
+    * `--verify` / `--no-verify`: Controla si se ejecutan los hooks pre-merge.
+    * `--rerere-autoupdate`: Si rerere está activado, reaplica resoluciones conocidas.
+    * `--overwrite-ignore`: Sobrescribe cambios locales en archivos ignorados (por defecto los preserva).
 
 * **`git submodule`**:
     * `add <url> [<ruta>]`: Añade un submódulo al proyecto (clona y registra en `.gitmodules`).
     * `init`: Inicializa los submódulos registrados (descarga la config de `.gitmodules`).
     * `update --init --recursive`: Descarga/clona todos los submódulos (y sus submódulos anidados).
     * `status`: Muestra el estado de cada submódulo (commit actual, cambios pendientes).
+    * `summary`: Muestra un resumen de los cambios en submódulos (parecido a `git diff` pero para submódulos).
     * `foreach "<comando>"`: Ejecuta un comando en **cada** submódulo (útil para `git pull` masivo).
     * `deinit [-f] <ruta>`: Desregistra un submódulo (opcional: borra su working tree).
     * `sync`: Sincroniza las URLs del submódulo con los cambios en `.gitmodules`.
     * `absorbgitdirs`: Mueve los `.git` de submódulos al superproyecto.
     * `set-branch -b <rama> <ruta>`: Cambia la rama de seguimiento de un submódulo.
     * `set-url <ruta> <url>`: Cambia la URL de un submódulo existente.
+    * `--remote`: Actualiza submódulos al último commit de su rama remota (en lugar del commit registrado).
+    * `--force` (`-f`): Fuerza la actualización incluso si hay cambios locales.
+    * `--merge`: Fusión con 3-bandas en lugar de checkout directo.
+    * `--checkout`: Checkout del commit registrado en el superproyecto (por defecto).
+    * `--rebase`: Rebase en lugar de merge al incorporar cambios.
 
 ---
 
@@ -243,18 +284,42 @@ author: "Jorge Beneyto Castelló"
     * `--all`: Muestra el historial de todas las ramas.
     * `-p` (`--patch`): Muestra el código exacto que cambió.
     * `-S "<texto>"`: Busca texto específico dentro del código histórico.
+    * `-G "<regex>"`: Busca por expresión regular en el código (más potente que `-S`).
     * `-L :<función>:<archivo>`: Rastrea la evolución de una función específica.
     * `--author="<nombre>"`: Filtra por autor.
+    * `--committer="<nombre>"`: Filtra por committer (quien aplicó el commit).
     * `--no-merges`: Oculta los commits de fusión.
+    * `--first-parent`: Solo sigue el primer padre en merges (ignora ramas secundarias). Útil para ver la línea principal limpia.
     * `--since=<fecha>` / `--after=<fecha>`: Commits desde una fecha (ej. `"2024-01-01"`, `"2 weeks ago"`).
     * `--until=<fecha>` / `--before=<fecha>`: Commits hasta una fecha.
+    * `--max-count=<N>` (`-<N>`): Limita a N commits. `git log -5` muestra los últimos 5.
+    * `--skip=<N>`: Salta los primeros N commits (para paginación).
     * `--grep=<patrón>`: Filtra commits cuyo mensaje coincida con el patrón.
     * `--all-match`: Todas las expresiones `--grep` deben coincidir (AND lógico).
     * `--invert-grep`: Muestra commits que **no** coinciden con `--grep`.
     * `--diff-filter=<ACDMRTUXB>`: Filtra por tipo de cambio (A=Added, C=Copy, D=Deleted, M=Modified, R=Renamed).
     * `--follow`: Sigue renombrados de un archivo a través del historial.
-    * `--format="%h %s"`: Formato personalizado (`%h` hash corto, `%an` autor, `%ai` fecha ISO, `%d` refs).
+    * `--format="<formato>"`: Formato personalizado con placeholders (`--pretty=format:` y `--format` son equivalentes). Placeholders más útiles:
+        * **Hash**: `%H` (completo), `%h` (abreviado).
+        * **Árbol**: `%T` (tree completo), `%t` (abreviado).
+        * **Autor**: `%an` (nombre), `%ae` (email), `%aL` (email local), `%aN` (nombre respetando .mailmap).
+        * **Committer**: `%cn`, `%ce`, `%cN`, `%cE` (análogos a autor).
+        * **Fechas autor**: `%aI` (ISO 8601 estricta), `%aD` (RFC2822), `%ar` (relativa: "2 weeks ago"), `%at` (timestamp UNIX), `%ai` (ISO 8601 estándar).
+        * **Fechas committer**: `%cI`, `%cD`, `%cr`, `%ct`, `%ci` (análogas).
+        * **Referencias**: `%d` (refs decoradas: ` (HEAD -> main, tag: v1.0)`), `%D` (sin paréntesis), `%S` (nombre corto de la ref), `%(describe)` (descripción legible).
+        * **Mensaje**: `%s` (subject), `%b` (body), `%B` (subject + body), `%f` (subject sanitizado para filename).
+        * **Metadata**: `%N` (notas Git), `%G?` (estado GPG: G=bueno, B=malo, U=sin firmar, X=expirado), `%GS` (emisor GPG), `%GK` (clave GPG), `%GF` (fingerprint), `%GP` (policy).
+        * **Colores**: `%C(<color>)` (ej. `%C(red)`) y `%C(auto)` para colores automáticos por tipo de ref.
+        * **Padding**: `%<(100)` (alinear a izquierda 100 chars), `%>(10)` (derecha), `%><(20)` (centro), `%<|(50)` (alinear a columna 50).
+        * **Separadores**: `%n` (newline), `%x00` (byte hex), `%%` (literal `%`).
+        * **Trailers**: `%(trailers:key=<clave>)` (extrae un trailer específico del mensaje).
+    * `--pretty=<formato>`: Atajo para `--format`. Valores predefinidos: `oneline`, `short`, `medium`, `full`, `fuller`, `reference`, `email`, `raw`, `format:<string>`, `tformat:<string>`.
     * `--simplify-by-decoration`: Solo commits con tags/ramas (ideal para ver hitos).
+    * `--branches[=<patrón>]`: Muestra commits de ramas específicas (ej. `--branches=feature/*`).
+    * `--tags[=<patrón>]`: Muestra commits de tags específicos.
+    * `--remotes[=<patrón>]`: Muestra commits de remotos específicos.
+    * `--ignore-missing`: En combinación con `--since`/`--until`, no da error si no hay commits en el rango.
+    * `--use-mailmap`: Respeta `.mailmap` para normalizar nombres y emails.
 
 * **`git checkout` / `git switch`**:
     * `-b` / `-c`: Crea una rama nueva y salta a ella.
@@ -264,6 +329,11 @@ author: "Jorge Beneyto Castelló"
     * `--discard-changes`: Cambia de rama borrando cambios locales sucios.
     * `--orphan <rama>`: Crea una rama huérfana sin historial (útil para reiniciar documentación, gh-pages, etc.).
     * `--guess`: Si el nombre no es una rama local, busca una rama remota con el mismo nombre y la checkout automáticamente.
+    * `--overlay`: Modo overlay — no elimina archivos del working tree que no están en la rama destino.
+    * `--conflict=<estilo>`: Estilo de marcadores de conflicto: `merge` (por defecto) o `diff3` (muestra la base común además de ours/theirs).
+    * `--ignore-other-worktrees`: Ignora que otra instancia de Git tenga el checkout de la rama.
+    * `--recurse-submodules`: Actualiza submódulos al hacer checkout.
+    * `--progress`: Muestra el progreso (forzado).
 
 * **`git branch`**:
     * `-d <rama>`: Elimina la rama (solo si está fusionada).
@@ -302,6 +372,20 @@ author: "Jorge Beneyto Castelló"
     * `--show-notes`: Muestra las notas (por defecto si existen).
     * Sin argumentos: muestra el último commit (`HEAD`).
 
+* **`git show-branch`**: Muestra la relación entre ramas visualmente. Ideal para ver cómo divergen las ramas sin un grafo completo.
+    * Sin argumentos: compara las ramas locales entre sí.
+    * `--all`: Incluye ramas remotas y tags.
+    * `--more=<N>`: Muestra N commits adicionales por rama.
+    * `--list`: Lista las ramas sin mostrar commits.
+    * `--current`: Muestra la rama actual resaltada con `!`.
+    * `--reflog`: Muestra las entradas del reflog en lugar de ramas.
+    * `--merge-base`: Muestra el commit base común entre las ramas.
+    * `--topics`: Muestra solo las ramas que no están fusionadas.
+    * `--no-name`: Omite los nombres en los commits.
+    * `--sha1-name`: Muestra nombres de commits como hashes abreviados.
+    * `--date=<formato>`: Formato de fecha.
+    * `<rama> <otra>...`: Muestra la comparación entre ramas específicas.
+
 * **`git shortlog`**:
     * `-s` (`--summary`): Solo el número de commits por autor, sin listar los mensajes.
     * `-n` (`--numbered`): Ordena por número de commits (descendente) en lugar de alfabéticamente.
@@ -333,6 +417,22 @@ author: "Jorge Beneyto Castelló"
     * `--separator=<carácter>`: Separador entre múltiples notas.
 
     **Para qué sirve:** `git notes` añade metadatos a un commit sin cambiar su hash. Útil para auditorías, revisiones, añadir contexto póstumo, o enlazar issues sin modificar el commit original.
+
+* **`git rev-list`**: Lista objetos commit en orden cronológico inverso. El motor interno de `git log`, útil para scripting.
+    * `--max-count=<N>`: Limita a N commits.
+    * `--skip=<N>`: Salta N commits.
+    * `--all`: Todas las refs.
+    * `--branches[=<patrón>]`, `--tags[=<patrón>]`, `--remotes[=<patrón>]`: Filtra por tipo de ref.
+    * `--author=<patrón>`, `--committer=<patrón>`: Filtra por autor/committer.
+    * `--grep=<patrón>`: Filtra por mensaje.
+    * `--since=<fecha>`, `--until=<fecha>`: Rango de fechas.
+    * `--first-parent`: Solo el primer padre en merges.
+    * `--merges` / `--no-merges`: Filtra commits de merge.
+    * `--count`: Devuelve el número de commits en lugar de los hashes.
+    * `--pretty=<formato>`: Formato de salida (igual que `git log`).
+    * `--left-right`: Marca commits como `<` o `>` según qué lado del rango `...` pertenecen.
+    * `--graph`: Dibuja el grafo (igual que `git log --graph`).
+    * `--objects`: Lista también los objetos (árboles, blobs) asociados a cada commit.
 
 * **`git rev-parse`**: El comodín del parsing Git. Resuelve cualquier referencia a su hash SHA-1 subyacente.
     * `--verify <ref>`: Verifica que una referencia es válida y devuelve su hash (sin mostrarlo si es inválido).
@@ -386,6 +486,48 @@ author: "Jorge Beneyto Castelló"
     git ls-files '*.py'                         # Todos los Python del repo
     ```
 
+* **`git cat-file`**: Muestra el contenido de un objeto Git (blob, tree, commit, tag) dado su hash. El comando más básico para inspeccionar el almacenamiento interno.
+    * `-p` (`--pretty`): Muestra el contenido del objeto formateado según su tipo (el más usado).
+    * `-t` (`--type`): Muestra el tipo del objeto (`blob`, `tree`, `commit`, `tag`).
+    * `-s` (`--size`): Muestra el tamaño del objeto en bytes.
+    * `--batch[=<formato>]`: Lee hashes desde stdin y muestra su info. Ideal para procesar muchos objetos.
+    * `--batch-check[=<formato>]`: Como `--batch` pero solo muestra metadatos, no el contenido.
+    * `--follow-symlinks`: Sigue enlaces simbólicos dentro de trees.
+
+    **Ejemplos:**
+    ```bash
+    git cat-file -p HEAD                          # Contenido del commit apuntado por HEAD
+    git cat-file -t a1b2c3d                       # Tipo del objeto
+    git cat-file --batch < objetos.txt            # Info de múltiples objetos
+    ```
+
+* **`git hash-object`**: Calcula el hash SHA-1 de un archivo y opcionalmente lo guarda en el almacén de objetos. Base de `git add`.
+    * `-w`: Escribe el objeto en el almacén de objetos (`.git/objects/`).
+    * `--stdin`: Lee el contenido desde stdin en lugar de un archivo.
+    * `--path=<ruta>`: Usa la ruta para determinar el tipo de objeto (normalmente blob).
+    * `--no-filters`: No aplica filtros (`core.autocrlf`, smudge) al contenido.
+    * Devuelve el hash SHA-1 del objeto.
+
+    **Ejemplos:**
+    ```bash
+    git hash-object archivo.txt                   # Hash de archivo.txt
+    echo "contenido" | git hash-object --stdin -w # Guarda y muestra hash
+    ```
+
+* **`git ls-tree`**: Lista el contenido de un tree object (directorio). Como `ls` pero para el árbol de Git.
+    * `-r` (`--recursive`): Lista recursivamente subdirectorios.
+    * `-t`: Muestra también los objetos tree intermedios (no solo blobs).
+    * `-l` (`--long`): Muestra el tamaño del objeto.
+    * `--name-only`: Solo nombres de archivo, sin modo ni hash.
+    * `--full-name`: Rutas completas desde la raíz del tree.
+    * `--abbrev[=<N>]`: Hash abreviado.
+    * `<tree-ish>`: El tree a listar (commit, tag, tree). Por defecto HEAD.
+
+    **Ejemplo:**
+    ```bash
+    git ls-tree -r HEAD --name-only              # Todos los archivos del repo
+    ```
+
 * **`git for-each-ref`**: Itera sobre referencias (ramas, tags, stashes) con formato de salida totalmente personalizable. El comando definitivo para scripting avanzado.
     * `--format=<formato>`: Salida personalizada. Placeholders: `%(refname)`, `%(objectname)`, `%(objecttype)`, `%(tree)`, `%(parent)`, `%(numparent)`, `%(objectsize)`, `%(deltabase)`, `%(authorname)`, `%(authoremail)`, `%(authordate)`, `%(committerdate)`, `%(committeremail)`, `%(subject)`, `%(body)`, `%(contents)`, `%(upstream)`, `%(HEAD)`, `%(color:<color>)`, `%(align:<ancho>)...%(end)`.
     * `--sort=<clave>`: Ordena por campo (`-creatordate` para descendente, `refname` para alfabético, `version:refname` para semver).
@@ -410,6 +552,23 @@ author: "Jorge Beneyto Castelló"
     git for-each-ref --sort=-creatordate --count=1 --format='%(refname:short)' refs/tags/
     ```
 
+* **`git show-ref`**: Lista referencias (ramas, tags, etc.) con sus hashes. Comando de referencia para scripting.
+    * `--head`: Incluye HEAD en la salida.
+    * `--heads`: Solo ramas (`refs/heads/`).
+    * `--tags`: Solo tags (`refs/tags/`).
+    * `-d` (`--dereference`): Muestra también el objeto apuntado por tags anotados (con `^{}`).
+    * `--verify <ref>`: Verifica que una referencia existe y muestra su hash. Código de salida 0 si existe.
+    * `--abbrev[=<N>]`: Hash abreviado.
+    * `--quiet`: No muestra salida; solo código de salida.
+    * `--exclude-existing[=<patrón>]`: Lee refs desde stdin y excluye las que existen.
+
+* **`git symbolic-ref`**: Lee y modifica referencias simbólicas (como HEAD que apunta a `refs/heads/main`).
+    * `<nombre>`: Lee el valor de la referencia simbólica.
+    * `--delete <nombre>`: Elimina la referencia simbólica.
+    * `--short`: Muestra el nombre corto (ej. `main` en lugar de `refs/heads/main`).
+    * `-q` (`--quiet`): Suprime mensajes de error.
+    * `--recurse`: Si la referencia apunta a otra symref, la sigue hasta el destino final.
+
 ### Búsqueda en el historial
 * **`git grep`**:
     * `-n` (`--line-number`): Muestra el número de línea de cada coincidencia.
@@ -422,6 +581,10 @@ author: "Jorge Beneyto Castelló"
     * `--and` / `--or` / `--not`: Operadores lógicos entre patrones.
     * `--cached`: Busca en el stage (índice).
     * `--no-index`: Busca fuera de un repositorio Git (como grep normal pero con sintaxis Git).
+    * `--break` (`-B`): Muestra una línea separadora entre resultados de distintos archivos.
+    * `--heading`: Muestra el nombre del archivo como cabecera antes de cada grupo de resultados.
+    * `--color[=<when>]`: Colorea las coincidencias (`always`, `never`, `auto`).
+    * `--column`: Muestra el número de columna de la coincidencia (no solo la línea).
 
 ---
 
@@ -472,6 +635,8 @@ author: "Jorge Beneyto Castelló"
     * `--hard`: Borra todo. Vuelve al estado exacto del commit indicado.
     * `-p`: Reset interactivo para elegir partes específicas del archivo.
     * `--keep`: Mantiene los archivos con cambios sin seguimiento; aborta si hay conflicto.
+    * `--merge`: Resetea solo archivos con conflictos o cambios en stage; aborta si hay cambios en working tree sin stage.
+    * `--recurse-submodules`: Resetea también los submódulos al estado del commit destino.
 
 ### Recuperación
 * **`git reflog`**: El historial de movimientos local para recuperar ramas o commits borrados.
@@ -481,6 +646,30 @@ author: "Jorge Beneyto Castelló"
     * `--signoff`: Añade `Signed-off-by`.
     * `-e` (`--edit`): Edita el mensaje del commit antes de confirmar.
 
+* **`git cherry`**: Encuentra commits que están en una rama pero no en otra. Útil para saber qué falta por integrar.
+    * `-v` (`--verbose`): Muestra también el mensaje del commit.
+    * `--abbrev=<N>`: Hash abreviado.
+    * `--left-only` / `--right-only`: Muestra solo commits del lado izquierdo/derecho del rango.
+    * `<rama> <upstream>`: Compara `<rama>` contra `<upstream>`.
+    * Sin argumentos: compara la rama actual contra `HEAD` de upstream.
+
+* **`git rerere`**: Reuse Recorded Resolution — recuerda cómo resolviste conflictos anteriores y los reaplica automáticamente.
+    * `status`: Muestra el estado actual de las resoluciones grabadas.
+    * `remaining`: Muestra los conflictos que rerere no pudo resolver automáticamente.
+    * `diff`: Muestra el diff de las resoluciones grabadas.
+    * `clear`: Borra las resoluciones grabadas.
+    * `gc`: Limpia resoluciones antiguas.
+    * Se activa con `git config --global rerere.enabled true`.
+
+* **`git replace`**: Reemplaza un objeto Git por otro sin modificar el historial. Útil para arreglar commits antiguos sin rebase.
+    * `<objeto> <reemplazo>`: Reemplaza `<objeto>` por `<reemplazo>` en el grafo.
+    * `--delete <objeto>`: Elimina un reemplazo existente.
+    * `--list [<patrón>]`: Lista los reemplazos activos.
+    * `--graft <commit> [<padre>...]`: Reemplaza los padres de un commit (útil para unir historiales disjuntos).
+    * `--convert-graft-file`: Convierte el archivo `.git/info/grafts` al formato `refs/replace/`.
+    * `--edit <objeto>`: Edita el contenido del objeto reemplazado.
+    * `--raw`: Muestra los reemplazos en bruto.
+
 ---
 
 ## 6. Limpieza y Especialista
@@ -488,6 +677,7 @@ author: "Jorge Beneyto Castelló"
     * `-n`: Dry-run. Simulación de borrado.
     * `-f`: Fuerza la eliminación de archivos no rastreados.
     * `-fdx`: Borra archivos, directorios e ignorados por `.gitignore`.
+    * `-x`: Borra archivos no rastreados **e ignorados** (sin `-d` de directorios). Combinable: `-xdf` = `-fdx`.
     * `-X`: Borra **solo** los archivos ignorados por `.gitignore`.
     * `-d`: Elimina también directorios no rastreados.
     * `-i` (`--interactive`): Modo interactivo para elegir qué borrar.
@@ -552,10 +742,35 @@ author: "Jorge Beneyto Castelló"
     git commit -m "fix: arreglo crítico" --trailer "Co-authored-by: Ana <ana@example.com>"
     ```
 
+* **`git check-attr`**: Comprueba los atributos Git (`gitattributes`) de uno o más archivos.
+    * `--all`: Muestra **todos** los atributos definidos para los archivos.
+    * `--cached`: Comprueba solo en el índice, no en el working tree.
+    * `--stdin`: Lee rutas desde stdin.
+    * `<atributo> <archivo>`: Comprueba un atributo específico para un archivo.
+    * Sin flags con archivo: comprueba atributos comunes como `text`, `diff`, `merge`.
+
+* **`git check-mailmap`**: Normaliza nombres y emails según `.mailmap`. Útil para scripts que procesan contribuciones.
+    * `<persona>`: Muestra el nombre/email normalizado para una persona.
+    * `--stdin`: Lee personas desde stdin.
+    * `--mailmap-file=<archivo>`: Usa un archivo mailmap específico.
+
+* **`git column`**: Formatea líneas de entrada en columnas. Un formateador de salida para scripting.
+    * `--mode=<modo>`: `column` (llenar por columnas), `row` (llenar por filas), `dense` (sin separación).
+    * `--width=<N>`: Ancho total de la salida (por defecto el terminal).
+    * `--indent=<N>`: Sangría izquierda.
+    * `--padding=<N>`: Espaciado entre columnas.
+    * `--nl` / `--newline`: Separador de nuevas líneas.
+    * `--keep-empty`: Conserva líneas vacías (por defecto las omite).
+    * Lee de stdin, escribe a stdout.
+
 * **`git blame`**:
     * `-L 10,20`: Analiza solo esas líneas.
     * `-w`: Ignora espacios en blanco.
     * `-M` / `-C`: Detecta si el código fue movido o copiado de otros archivos.
+    * `--since=<fecha>`: Solo líneas modificadas desde una fecha específica.
+    * `--date=<formato>`: Formato de las fechas mostradas (`relative`, `local`, `iso`, `rfc2822`, `short`, `raw`).
+    * `--show-email`: Muestra el email del autor en lugar del nombre.
+    * `--line-porcelain`: Formato detallado por línea, ideal para scripting.
 
 * **`git bisect`**:
     * `start`: Inicia la búsqueda binaria.
@@ -572,9 +787,13 @@ author: "Jorge Beneyto Castelló"
     * `-n` (`--no-commit`): Revierte los cambios pero no crea commit (los deja en stage para revisar).
     * `-m 1` (`--mainline`): Para revertear un merge: indica qué padre conservar (1 = la rama actual).
     * `--no-edit`: No abre el editor; usa el mensaje por defecto.
+    * `--edit` (`-e`): Abre el editor para modificar el mensaje por defecto.
     * `--signoff`: Añade `Signed-off-by`.
     * `--strategy=<estrategia>`: Estrategia de merge para la reversión.
+    * `--strategy-option=<opción>`: Opciones de estrategia (como en merge).
     * `--cleanup=<modo>`: Limpieza del mensaje (`strip`, `whitespace`, `verbatim`).
+    * `--rerere-autoupdate`: Si rerere está activado, reaplica resoluciones conocidas.
+    * `--no-rerere-autoupdate`: No reaplica resoluciones conocidas.
 
 ---
 
@@ -586,20 +805,32 @@ author: "Jorge Beneyto Castelló"
     * `HEAD`, `<tag>`, `<rama>`: Lo que se exporta.
     * `--remote=<url>`: Exporta desde un repositorio remoto.
     * `--worktree-attributes`: Respeta atributos exportados por `.gitattributes` (como `export-ignore`).
+    * `--add-file=<ruta>`: Añade un archivo extra al archive (no incluido en el repo).
 
 * **`git worktree`**:
     * `add <ruta> [<rama>]`: Crea un nuevo working tree con una rama.
     * `list`: Lista todos los working trees activos.
     * `remove <ruta>`: Elimina un working tree (solo si está limpio).
     * `lock` / `unlock <ruta>`: Bloquea/desbloquea un working tree para evitar que lo borren.
+    * `move <ruta> <nueva-ruta>`: Mueve un working tree a otra ubicación.
     * `prune`: Limpia referencias a working trees eliminados.
     * `--detach`: Crea el worktree en modo detached HEAD.
+    * `--force`: Fuerza la operación aunque haya cambios sin commitear.
 
 * **`git gc`**:
     * `--prune=<fecha>`: Elimina objetos sueltos más antiguos que la fecha (ej. `now`, `2.weeks.ago`).
     * `--aggressive`: Optimización intensiva (más lenta, mejor compresión).
     * `--auto`: Ejecuta GC solo si es necesario (por umbral de objetos sueltos/packs).
     * `--quiet`: Modo silencioso (sin salida).
+    * `--force`: Fuerza la ejecución incluso si `gc.auto` está desactivado.
+    * `--keep-largest-pack`: Omite el pack más grande al reempaquetar (ahorra tiempo en repos grandes).
+
+* **`git prune`**: Elimina objetos sueltos no reachables (que no están en ningún commit, tag o ref).
+    * `-n` (`--dry-run`): Simula la poda sin borrar nada.
+    * `-v` (`--verbose`): Muestra los objetos eliminados.
+    * `--progress`: Muestra el progreso de la operación.
+    * `--expire=<fecha>`: Solo poda objetos más antiguos que la fecha (por defecto 2 semanas).
+    * Normalmente no necesitas ejecutarlo manualmente; `git gc --prune` lo hace automáticamente.
 
 * **`git fsck`**:
     * `--full`: Escanea todos los objetos del repositorio.
@@ -699,9 +930,8 @@ git config --global core.excludesfile ~/.gitignore_global
 
 ### Del blog (recopilación de recursos)
 
-- [📦 Source Code — Plataformas de hosting Git](/posts/resources/#source-code) — Recopilación de servicios de alojamiento Git: GitHub, GitLab, Bitbucket, Codeberg, GitGud y más.
-- [🔄 CI/CD — Integración continua y despliegue](/posts/resources/#cicd) — Herramientas CI/CD compatibles con GitHub Actions, GitLab CI y otras plataformas Git.
-- [⭐ Repositorios Destacados GitHub](/posts/resources2/#repositorios-destacados) — Proyectos open-source destacados en GitHub: freeCodeCamp, Awesome, Developer Roadmap, System Design Primer y más.
+- [🐙 Git / Control de Versiones](/posts/resources2/#git%20/%20control%20de%20versiones) — Recursos visuales interactivos: Learn Git Branching, Visual Git Reference, Oh My Git! y más.
+- [⭐ Repositorios Destacados GitHub](/posts/resources2/#repositorios%20destacados%20github) — Proyectos open-source destacados en GitHub: freeCodeCamp, Awesome, Developer Roadmap, System Design Primer y más.
 - [💻 Terminal](/posts/resources2/#terminal) — Herramientas CLI y terminal: emuladores, multiplexores (tmux), editores (neovim), buscadores (fzf, ripgrep) y utilidades dev.
 
 ### Posts relacionados
