@@ -1,17 +1,8 @@
-import { existsSync } from "node:fs";
-import { join } from "node:path";
-
 export const resolveImagePath = (image) => {
   if (!image) return null;
   if (image.startsWith("http")) return image;
-  if (image.startsWith("/")) {
-    return existsSync(join(process.cwd(), "public", image.slice(1)))
-      ? image
-      : null;
-  }
-  return existsSync(join(process.cwd(), "public", image))
-    ? `/${image}`
-    : null;
+  if (image.startsWith("/")) return image;
+  return `/${image}`;
 };
 
 export const formatDatePost = (date) => {
