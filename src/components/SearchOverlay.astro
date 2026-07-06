@@ -204,7 +204,8 @@ Buscando...
   (async () => {
     try {
       if (import.meta.env.PROD) {
-        pagefind = await import("/pagefind/pagefind.js");
+        const mod = "/pagefind/pagefind.js";
+        pagefind = await import(/* @vite-ignore */ mod);
         await pagefind.options({ highlightParam: "highlight" });
       }
     } catch (e) {

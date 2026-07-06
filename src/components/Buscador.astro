@@ -76,8 +76,11 @@ Buscando...
   };
 
   try {
-    pagefind = await import("/pagefind/pagefind.js");
-    await pagefind.options({ highlightParam: "highlight" });
+    if (import.meta.env.PROD) {
+      const mod = "/pagefind/pagefind.js";
+      pagefind = await import(/* @vite-ignore */ mod);
+      await pagefind.options({ highlightParam: "highlight" });
+    }
   } catch (e) {
     container.innerHTML = `
 <div class="p-6 text-center">
