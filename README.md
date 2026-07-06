@@ -82,6 +82,52 @@ blog/
 
 ---
 
+## Resource Management
+
+Resources (`resources.mdx`, `resources2.mdx`) use **ResourceCard** and **ResourceCategory** components instead of inline HTML. A Python script manages conversion and maintenance.
+
+### `scripts/convert_resources_to_components.py`
+
+Converts legacy HTML resource files to the Astro component format (`<ResourceCategory>` / `<ResourceCard>`).
+
+```bash
+# Convert all resources files (default: resources.mdx, resources2.mdx, resources3.mdx)
+python scripts/convert_resources_to_components.py
+
+# Convert specific files
+python scripts/convert_resources_to_components.py resources.mdx resources2.mdx
+```
+
+**What it does:**
+- Adds required imports (`ResourceCard`, `ResourceCategory`) after frontmatter
+- Parses legacy `<h2>` section headers → `<ResourceCategory>` components
+- Converts inline `<a>` cards → `<ResourceCard>` components
+- Preserves frontmatter and any non-resource content
+
+### External Management (test_githubActions)
+
+Resources are auto-generated and maintained by the [test_githubActions](https://github.com/jorbencas/test_githubActions) pipeline. The script `manage_resources.py` runs daily via GitHub Actions:
+
+| Flag | Purpose |
+| ---- | ------- |
+| `--dedup` | Merge duplicate sections (same ID) and remove duplicate cards (same URL) |
+| `--translate` | Translate English card descriptions to Spanish via Gemini |
+| `--reorder` | Sort all sections alphabetically across files |
+| `--fix-spacing` | Fix missing blank lines between sections |
+| `--clean` | Check resource URLs and remove dead links |
+| `--max-cards N` | Maximum cards per file before pagination (default: 500) |
+
+The workflow `daily_resources.yml` runs daily at 06:00 UTC: scrapes GitHub Trending + Product Hunt, adds new tools to the "Nuevas Herramientas" section, deduplicates, paginates if needed, and pushes changes directly to the blog.
+
+### Resource Components
+
+- `ResourceCard.astro` — individual resource card with favicon, title, and description
+- `ResourceCategory.astro` — section wrapper with ID anchor and title
+
+Both live in `src/components/` and follow the blog's design system (rounded-xl cards, cyan hover effects, favicon via Google S2).
+
+---
+
 ## CI/CD
 
 | Workflow | Trigger | Purpose |
