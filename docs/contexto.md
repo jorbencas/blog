@@ -1,6 +1,6 @@
 # Contexto del proyecto — Blog
 
-**Última actualización**: 2026-07-06 (resources dedup + readme + hover fix)
+**Última actualización**: 2026-07-07 (post Docker instalación + containerización blog)
 **Stack**: Astro 6.4 + Svelte 5 + Tailwind CSS 4.3 | Vercel static | Node >= 22
 **Idioma**: Español
 **Deploy**: `blog-jorbencas.vercel.app`
@@ -35,6 +35,7 @@
 | 2026-07 | **Resources dedup + translate**: `manage_resources.py` añade flags `--dedup` (fusiona secciones duplicadas, elimina cards repetidas por URL) y `--translate` (traduce descripciones inglés→español vía Gemini). `daily_resources.yml` ejecuta `--dedup` diariamente |
 | 2026-07 | **Related posts hover fix**: `hover:prose-a:underline` → `a:hover` en PostLayout.astro (Tailwind `hover:prose-a:` aplicaba a todos los links al hoverear cualquier parte del contenedor) |
 | 2026-07 | **README actualizado**: sección Resource Management reescrita como API pipeline, eliminados detalles de script Python interno |
+| 2026-07 | **Post Docker**: Nuevo post `docker-instalacion-primeros-pasos.mdx` — instalación Linux/Windows, primer contenedor, Dockerfile, containerizar el blog paso a paso (9 pasos), Docker Desktop, complementos (Compose multi-servicio, volúmenes, redes, .env, comandos día a día, buenas prácticas). Dockerfile + docker-compose.yml + .dockerignore creados en raíz del blog |
 
 ## Mejoras implementadas
 
@@ -97,7 +98,7 @@
 ## Contenido
 
 5 colecciones MDX en `src/content/`:
-- `posts/` — incluye `resources.mdx` (482+ recursos), `n8n.mdx`, 15 guías 0-100, etc.
+- `posts/` — incluye `resources.mdx` (482+ recursos), `n8n.mdx`, 15 guías 0-100, `docker-instalacion-primeros-pasos.mdx`, etc.
 - `auto-news/` — noticias automáticas
 - `auto-challenges/` — 58 retos multi-lenguaje (Python, JS, Java, TS)
 - `myprojects/` — proyectos personales
@@ -126,6 +127,7 @@ Orden de secciones: Mis_Proyectos → Mini_Herramientas → Retos → Últimos_P
 - **Componentes clave**: `TableOfContents.astro` (mobile details + desktop sidebar), `Breadcrumbs.astro`, `Navbar.astro` (slot para buscador mobile, botón X dedicado para cerrar menú, sin cierre por backdrop/Escape/resize), `Header.astro`, `Buscador.astro`, `CopyPost.astro` (3 botones), `ScrollToTop.astro`, `Archive.astro` (todos los años visibles, sin toggle), `CodeTabs.svelte` (4-lang tabs interactivos)
 - **Cards**: `Card.astro` (unificado, paramétrico por acento: cyan/emerald/purple, aspectRatio, overlay, difficulty badge, repository icon)
 - **Guías**: 15 archivos `src/content/posts/guia-0-100-*.mdx`
+- **Docker**: `Dockerfile` (multi-stage build: node:22-alpine builder → serve estático), `docker-compose.yml` (servicio blog con healthcheck), `.dockerignore`
 - **Scripts**: `fix_images.py`, `image_cache.json`, `rewrite_challenges.py`, `solutions_db.py`, `constants_retos.py`, `hunt_challenges.py`
 - **CI/CD**: `spelling.yml`, `issues_handel.yml`, `trigger-optimize.yml`
 - **Resources**: `resources.mdx` (~500 cards), `resources2.mdx` (~392 cards), auto-gestionados desde test_githubActions via `manage_resources.py` (flags: `--dedup`, `--translate`, `--reorder`, `--fix-spacing`, `--clean`, `--convert`). Pipeline diario `daily_resources.yml` a las 06:00 UTC

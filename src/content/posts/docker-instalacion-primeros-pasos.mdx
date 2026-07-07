@@ -1,0 +1,1204 @@
+---
+draft: false
+title: "Docker: Instalación, primeros pasos y containerizar tu proyecto"
+description: "Guía práctica de Docker: instala Docker Engine y Docker Desktop en Linux y Windows, crea tu primer contenedor y aprende a ejecutar un proyecto real dentro de un contenedor."
+pubDate: "2026-07-07"
+tags: ["docker", "devops", "contenedores", "linux", "windows"]
+image: "img/docker_instalacion_primeros_pasos/docker_instalacion_primeros_pasos_cover-1200.webp"
+author: "Jorge Beneyto Castelló"
+---
+
+# Docker: Instalación, primeros pasos y containerizar tu proyecto
+
+## ¿Por qué Docker?
+
+Si alguna vez te has encontrado con el clásico *"en mi máquina funciona"* — tu app corre perfectamente en tu portátil, pero estalla en el servidor de producción — Docker es la solución. Yo me lo encontré mil veces: desarrollo en macOS, despliegue en Linux, y siempre surgía algún problema con las dependencias. Docker empaqueta mi aplicación con **todas** sus dependencias (librerías, runtime, sistema de archivos) en un **contenedor**: una unidad ligera, portable y reproducible que corre igual en mi máquina, en un servidor remoto o en la nube.
+
+**¿Contenedor vs máquina virtual?**
+
+| Aspecto | Contenedor Docker | Máquina Virtual |
+|---|---|---|
+| Kernel | Comparte el kernel del host | Kernel propio |
+| Arranque | Milisegundos | Minutos |
+| Tamaño | MB | GB |
+| Overhead | ~0% CPU/RAM | 5–15% CPU/RAM |
+
+Docker usa **namespaces** para aislar procesos y **cgroups** para limitar recursos. Todo sobre la misma máquina comparte el kernel del host, lo que lo hace extremadamente eficiente.
+
+---
+
+## Instalación
+
+### Linux (Debian/Ubuntu)
+
+Yo uso Ubuntu, así que esta es la forma más limpia que he encontrado para instalar Docker. Lo primero es verificar si ya lo tengo instalado.
+
+#### ¿Ya tengo Docker instalado?
+
+Antes de instalar nada, verifico si ya tengo Docker en mi sistema:
+
+```bash
+docker --version
+```
+
+Si veo algo como `Docker version 24.0.x, build xxxxx`, **ya tengo Docker instalado**. En ese caso:
+
+- **¿Qué versión tengo?** — Si la versión es reciente (24.x o 25.x), no necesito reinstalar. Solo ejecuto el **Paso 5** (hello-world) para verificar que funciona.
+- **¿Quiero actualizar?** — Ejecuto `sudo apt update && sudo apt upgrade docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin`
+- **¿Quiero Docker Desktop en Linux?** — Ve a la sección [Instalo Docker Desktop en Linux](#instalo-docker-desktop-en-linux) más abajo
+- **¿No me sale versión o me da "command not found"?** — Sigue todos los pasos de abajo
+
+También puedo verificar el estado del servicio:
+
+```bash
+# ¿Está corriendo Docker?
+sudo systemctl status docker
+
+# ¿Tengo Docker Compose?
+docker compose version
+```
+
+**Si Docker ya funciona correctamente, puedes saltarte los pasos 1–4 e ir directo al Paso 5 (hello-world).**
+
+#### Requisitos previos
+
+Antes de instalar Docker, me aseguro de que mi sistema cumple los requisitos:
+
+- **Ubuntu 22.04** (Jammy LTS), **24.04** (Noble LTS) o superior
+- **Arquitectura**: x86_64 (amd64), arm64, armhf, s390x o ppc64le
+- **Conexión a internet** para descargar paquetes
+
+**Aviso de firewall:** Si uso `ufw` o `firewalld`, Docker expone los puertos de los contenedores **fuera** del firewall. Para más información, revisa [Docker and ufw](https://docs.docker.com/engine/network/packet-filtering-firewalls/#docker-and-ufw).
+
+#### Paso 1: Elimino versiones anteriores
+
+Si tengo Docker instalado de forma no oficial (con `apt install docker.io`), debo desinstalarlo primero para evitar conflictos:
+
+```bash
+sudo apt remove docker.io docker-compose docker-compose-v2 docker-doc podman-docker containerd runc
+```
+
+También puedo usar este comando para eliminar todos los paquetes conflictivos de golpe:
+
+```bash
+sudo apt remove $(dpkg --get-selections docker.io docker-compose docker-compose-v2 docker-doc podman-docker containerd runc 2>/dev/null | cut -f1)
+```
+
+**Nota:** Las imágenes, contenedores, volúmenes y redes en `/var/lib/docker/` no se eliminan automáticamente. Si quiero empezar desde cero:
+
+```bash
+sudo rm -rf /var/lib/docker
+sudo rm -rf /var/lib/containerd
+```
+
+**¿No tenías nada instalado?** Puedes saltarte este paso.
+
+#### Paso 2: Configuro el repositorio apt de Docker
+
+Primero instalo las dependencias y añado la clave GPG oficial:
+
+```bash
+# Actualizo e instalo dependencias
+sudo apt update
+sudo apt install ca-certificates curl
+
+# Creo el directorio de keyrings
+sudo install -m 0755 -d /etc/apt/keyrings
+
+# Descargo la clave GPG oficial de Docker
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+
+# Doy permisos de lectura
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+```
+
+Ahora añado el repositorio de Docker a las fuentes de apt:
+
+```bash
+sudo tee /etc/apt/sources.list.d/docker.sources <<EOF
+Types: deb
+URIs: https://download.docker.com/linux/ubuntu
+Suites: $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
+Components: stable
+Architectures: $(dpkg --print-architecture)
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+
+sudo apt update
+```
+
+**¿Por qué este método y no el antiguo `echo "deb..."`?** Docker cambió el formato del repositorio en 2024. El nuevo formato usa archivos `.sources` en vez de una línea en `sources.list`. Es más limpio y compatible con las nuevas versiones de apt.
+
+#### Paso 3: Instalo Docker Engine
+
+```bash
+sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+```
+
+**¿Qué se instala?**
+
+| Paquete | Qué es |
+|---|---|
+| `docker-ce` | Docker Community Edition — el motor de contenedores |
+| `docker-ce-cli` | La línea de comandos de Docker |
+| `containerd.io` | El runtime de contenedores |
+| `docker-buildx-plugin` | Herramienta de build extendida (multi-platform, caché) |
+| `docker-compose-plugin` | Docker Compose V2 integrado como plugin de Docker |
+
+**Si quiero una versión específica:**
+
+```bash
+# Veo las versiones disponibles
+apt list --all-versions docker-ce
+
+# Instalo una versión concreta
+VERSION_STRING=5:29.6.1-1~ubuntu.24.04~noble
+sudo apt install docker-ce=$VERSION_STRING docker-ce-cli=$VERSION_STRING containerd.io docker-buildx-plugin docker-compose-plugin
+```
+
+#### Paso 4: Verifico que Docker está corriendo
+
+```bash
+# Verifico el estado del servicio
+sudo systemctl status docker
+```
+
+Si Docker no está corriendo, lo arranco manualmente:
+
+```bash
+sudo systemctl start docker
+sudo systemctl enable docker  # Para que arranque con el sistema
+```
+
+#### Paso 5: Ejecuto hello-world
+
+```bash
+sudo docker run hello-world
+```
+
+Si ves el mensaje de hello-world, Docker está instalado correctamente.
+
+#### Paso 6: Configuro para no usar sudo
+
+Por defecto, Docker requiere permisos de root. Para ejecutar Docker sin `sudo`, añado mi usuario al grupo `docker`:
+
+```bash
+sudo usermod -aG docker $USER
+```
+
+**IMPORTANTE:** Debo **cerrar sesión y volver a abrirla** para que el cambio surta efecto. Puedo verificarlo con:
+
+```bash
+groups $USER
+```
+
+Debería ver `docker` en la lista.
+
+Ahora puedo ejecutar Docker sin sudo:
+
+```bash
+docker run hello-world
+```
+
+#### Paso 7: Verifico la instalación completa
+
+```bash
+# Versión de Docker
+docker --version
+
+# Versión de Docker Compose
+docker compose version
+
+# Estado del daemon
+docker info
+
+# Ver las imágenes
+docker images
+
+# Ver contenedores (debería estar vacío)
+docker ps -a
+```
+
+#### Docker Engine vs Docker Desktop
+
+| Aspecto | Docker Engine | Docker Desktop |
+|---|---|---|
+| Componentes | Engine + CLI + BuildKit | Engine + CLI + UI + Compose |
+| Plataforma | Linux nativo | Linux (vía VM), Windows/macOS (vía VM) |
+| Consumo RAM | ~50–100 MB | ~1–2 GB |
+| Licencia | Apache 2.0 (gratis) | Gratis para uso personal (`<250` empleados) |
+| Interfaz | Solo CLI | CLI + GUI (Dashboard) |
+| Instalación | `apt install docker-ce` | Installer `.deb` |
+
+**¿Cuál uso yo?** En Linux, Docker Engine es suficiente y es más ligero. Docker Desktop aporta la interfaz gráfica (Dashboard) que en Linux no es estrictamente necesaria. En Windows, Docker Desktop es obligatorio porque necesita WSL2.
+
+🔗 [Docker Engine Ubuntu install docs](https://docs.docker.com/engine/install/ubuntu/), [Linux postinstall](https://docs.docker.com/engine/install/linux-postinstall/)
+
+#### Instalo Docker Desktop en Linux *(opcional)*
+
+Si prefieres tener una interfaz gráfica para gestionar contenedores, puedes instalar Docker Desktop. **Esto es opcional** — Docker Engine ya funciona perfecto por CLI.
+
+> **IMPORTANTE:** Docker Desktop en Linux ejecuta una VM (QEMU/KVM). Las imágenes y contenedores del Docker Engine **no se comparten** con Docker Desktop. Tienen contextos separados.
+
+**Requisitos adicionales** para Docker Desktop en Linux:
+
+- Soporte KVM en el kernel (`kvm`, `kvm_intel` o `kvm_amd`)
+- QEMU versión 5.2 o posterior
+- Al menos 4 GB de RAM dedicados a la VM
+- Entorno de escritorio GNOME, KDE o MATE
+
+**Verifico si tengo KVM:**
+
+```bash
+# ¿Tengo soporte de virtualización?
+lsmod | grep kvm
+
+# Si no sale nada, cargo el módulo
+sudo modprobe kvm
+sudo modprobe kvm_intel   # Intel
+# o
+sudo modprobe kvm_amd     # AMD
+
+# Verifico que funciona
+ls -al /dev/kvm
+```
+
+**Instalo Docker Desktop:**
+
+```bash
+# 1. Me aseguro de tener el repositorio de Docker configurado (Paso 2)
+# 2. Descargo el paquete .deb
+wget https://desktop.docker.com/linux/main/amd64/docker-desktop-amd64.deb
+
+# 3. Instalo
+sudo apt update
+sudo apt install ./docker-desktop-amd64.deb
+
+# 4. Añado mi usuario al grupo kvm (para acceder a /dev/kvm)
+sudo usermod -aG kvm $USER
+
+# 5. Cierro y abro sesión para que surtan efecto los cambios de grupo
+```
+
+**Inicio Docker Desktop:**
+
+```bash
+# Opción 1: desde el escritorio (menú de aplicaciones)
+# Opción 2: por terminal
+systemctl --user start docker-desktop
+
+# Para que arranque automáticamente al iniciar sesión:
+systemctl --user enable docker-desktop
+```
+
+Al iniciar, Docker Desktop crea un contexto dedicado (`desktop-linux`). Para ver los contextos disponibles:
+
+```bash
+docker context ls
+# NAME              DESCRIPTION
+# default *         Current DOCKER_HOST based configuration
+# desktop-linux     Docker Desktop
+
+# Cambiar entre contextos
+docker context use desktop-linux   # → Docker Desktop
+docker context use default          # → Docker Engine
+```
+
+**¿Ya tengo Docker Engine instalado y quiero Docker Desktop también?** Pueden coexistir. Pero si ambos intentan usar el mismo puerto, habrá conflictos. La solución:
+
+```bash
+# Paro Docker Engine mientras uso Docker Desktop
+sudo systemctl stop docker docker.socket containerd
+sudo systemctl disable docker docker.socket containerd  # para que no arranque solo
+
+# Ahora Docker Desktop funciona sin conflictos
+systemctl --user start docker-desktop
+```
+
+**Paro Docker Desktop y vuelvo a Docker Engine:**
+
+```bash
+systemctl --user stop docker-desktop
+sudo systemctl start docker
+sudo systemctl enable docker
+docker context use default
+```
+
+**Actualizo Docker Desktop:**
+
+```bash
+# Descargo la nueva versión desde https://docs.docker.com/desktop/release-notes/
+wget https://desktop.docker.com/linux/main/amd64/docker-desktop-amd64.deb
+sudo apt install ./docker-desktop-amd64.deb
+```
+
+🔗 [Docker Desktop Linux install docs](https://docs.docker.com/desktop/install/linux-install/), [Docker Desktop Ubuntu install docs](https://docs.docker.com/desktop/install/linux/ubuntu/)
+
+### Windows
+
+En Windows, yo uso Docker Desktop con WSL2. Es lo más cómodo. Sigue estos pasos **sin saltarte ninguno**:
+
+#### Requisitos previos
+
+Antes de instalar Docker Desktop, me aseguro de que mi sistema cumple los requisitos:
+
+- **Windows 10** (64-bit): Enterprise, Pro o Education versión 22H2 (build 19045) o superior
+- **Windows 11** (64-bit): Enterprise, Pro o Education versión 23H2 (build 22631) o superior
+- **8 GB de RAM** mínimo
+- **Procesador 64-bit** con SLAT (Second Level Address Translation)
+- **Virtualización hardware habilitada** en la BIOS/UEFI
+
+#### Paso 1: Instalo y verifico WSL2
+
+Abro **PowerShell como administrador** y ejecuto:
+
+```powershell
+wsl --install
+```
+
+Esto instala WSL2 y Ubuntu por defecto. Si ya lo tienes instalado, verifica la versión:
+
+```powershell
+wsl --version
+```
+
+La versión mínima requerida es **WSL 2.1.5**. Si necesitas actualizar:
+
+```powershell
+wsl --update
+```
+
+**Importante:** después de instalar o actualizar WSL, **reinicia el equipo** antes de continuar.
+
+#### Paso 2: Descargo Docker Desktop
+
+Descargo el instalador desde la [página oficial de Docker Desktop](https://www.docker.com/products/docker-desktop/) o desde los [release notes](https://docs.docker.com/desktop/release-notes/).
+
+Hay tres opciones:
+- **x86_64**: para la mayoría de ordenadores Windows
+- **x86_64 en Microsoft Store**: alternativa desde la tienda de Microsoft
+- **Arm (Early Access)**: para dispositivos con procesador ARM (Surface Pro X, etc.)
+
+#### Paso 3: Ejecuto el instalador
+
+1. Hago doble clic en `Docker Desktop Installer.exe`
+2. El instalador me pregunta qué modo de instalación prefiero:
+   - **Per-user (recomendado)**: se instala en `%LOCALAPPDATA%\Programs\DockerDesktop`. No requiere permisos de administrador. Solo soporta WSL2
+   - **All users**: se instala en `C:\Program Files\Docker\Docker`. Requiere permisos de administrador. Soporta WSL2 y Hyper-V
+
+Yo elijo **per-user** porque no necesito permisos de admin y es más seguro.
+
+3. En la página de configuración, me aseguro de que **"Use WSL 2 instead of Hyper-V"** esté marcado
+4. Sigo las instrucciones del asistente de instalación
+5. Cuando termine, hago clic en **"Close"**
+
+#### Paso 4: Arranco Docker Desktop
+
+Docker Desktop **no se arranca automáticamente** después de la instalación:
+
+1. Busco "Docker" en el menú de Windows
+2. Selecciono **Docker Desktop** en los resultados
+3. Se muestra el **Docker Subscription Service Agreement** — acepto los términos haciendo clic en **"Accept"**
+4. Docker Desktop arranca y aparece el icono de la ballena 🐋 en la bandeja del sistema
+
+**Nota:** Docker Desktop no funcionará si no acepto los términos. Puedo aceptarlos más tarde abriendo Docker Desktop.
+
+#### Paso 5: Verifico la instalación
+
+Abro PowerShell o CMD y ejecuto:
+
+```powershell
+docker --version
+docker compose version
+docker run hello-world
+```
+
+Si ves el mensaje de hello-world, todo funciona correctamente.
+
+**Docker Engine vs Docker Desktop:**
+
+| Aspecto | Docker Engine | Docker Desktop |
+|---|---|---|
+| Componentes | Engine + CLI + BuildKit | Engine + CLI + UI + Compose |
+| Plataforma | Linux nativo | Windows/macOS (vía VM) |
+| Consumo RAM | ~50–100 MB | ~1–2 GB |
+| Licencia | Apache 2.0 (gratis) | Gratis para uso personal (`<250` empleados) |
+| Instalación | `apt install docker-ce` | Installer gráfico |
+
+Yo uso Docker Desktop en Windows porque tiene interfaz gráfica y es más fácil de gestionar. En Linux, Docker Engine es suficiente.
+
+🔗 [Docker Desktop Windows install docs](https://docs.docker.com/desktop/install/windows-install/), [WSL 2 setup](https://docs.docker.com/desktop/wsl/)
+
+🔗 [Docker Engine install docs](https://docs.docker.com/engine/install/), [Docker Desktop docs](https://docs.docker.com/desktop/), [WSL Docker integration](https://docs.docker.com/desktop/wsl/)
+
+---
+
+## Tu primer contenedor
+
+### hello-world
+
+El clásico para verificar que todo funciona:
+
+```bash
+docker run hello-world
+```
+
+¿Qué hace este comando?
+1. Docker busca la imagen `hello-world` en mi máquina local
+2. No la encuentra → la descarga de Docker Hub
+3. Crea un contenedor a partir de esa imagen
+4. Ejecuta el comando del contenedor
+5. El contenedor se destruye (no necesito limpiarlo)
+
+### Un contenedor interactivo
+
+Yo me gusta explorar Ubuntu dentro de un contenedor para probar cosas sin ensuciar mi sistema:
+
+```bash
+docker run -it --rm ubuntu bash
+```
+
+- `-it`: modo interactivo (puedo escribir comandos)
+- `--rm`: elimina el contenedor al salir
+
+Dentro del contenedor puedo instalar paquetes, crear archivos, etc. Al salir, todo desaparece. Eso es un contenedor: **efímero y aislado**.
+
+### Servidor web estático
+
+Yo suelo probar mis páginas HTML así antes de desplegarlas:
+
+```bash
+# Crea un index.html
+echo "<h1>Mi primera web en Docker</h1>" > index.html
+
+# Ejecuta nginx y monta mi archivo
+docker run -d -p 8080:80 -v $(pwd):/usr/share/nginx/html nginx:alpine
+```
+
+- `-d`: modo detached (en segundo plano)
+- `-p 8080:80`: mapea el puerto 8080 de mi máquina al puerto 80 del contenedor
+- `-v $(pwd):/usr/share/nginx/html`: monta mi directorio actual dentro del contenedor
+
+Abro `http://localhost:8080` en el navegador. Veo mi página.
+
+### Comandos esenciales
+
+Estos son los comandos que uso a diario:
+
+```bash
+# Ver contenedores en ejecución
+docker ps
+
+# Ver todos los contenedores (incluyendo detenidos)
+docker ps -a
+
+# Detener un contenedor
+docker stop <nombre_o_id>
+
+# Ver logs de un contenedor
+docker logs <nombre_o_id>
+
+# Ejecutar un comando dentro de un contenedor
+docker exec -it <nombre_o_id> bash
+
+# Eliminar un contenedor
+docker rm <nombre_o_id>
+
+# Eliminar una imagen
+docker rmi <nombre_imagen>
+```
+
+---
+
+## Dockerfile: empaqueta tu aplicación
+
+Un Dockerfile es un archivo de texto que le dice a Docker **cómo construir mi aplicación** paso a paso. Es como una receta de cocina: cada línea es una instrucción. Ejemplo mínimo para un proyecto Node.js:
+
+```dockerfile
+FROM node:22-alpine
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+CMD ["npm", "run", "preview"]
+```
+
+**Instrucciones clave:**
+
+| Instrucción | Qué hace |
+|---|---|
+| `FROM` | Imagen base (siempre empiezo por aquí) |
+| `WORKDIR` | Directorio de trabajo dentro del contenedor |
+| `COPY` | Copia archivos de mi máquina al contenedor |
+| `RUN` | Ejecuta un comando durante la construcción |
+| `CMD` | Comando que se ejecuta al arrancar el contenedor |
+| `EXPOSE` | Documenta puertos (no los abre realmente) |
+| `ENV` | Variables de entorno |
+
+**Construyo y ejecuto:**
+
+```bash
+docker build -t mi-app .
+docker run -d -p 3000:3000 mi-app
+```
+
+### .dockerignore
+
+Evito copiar archivos innecesarios al contenedor (similar a `.gitignore`):
+
+```
+node_modules
+.git
+.github
+*.log
+.env
+dist
+.vercel
+```
+
+---
+
+## Ejecutar este blog en Docker
+
+Vamos a containerizar este proyecto paso a paso. No necesitas entender Astro ni Node.js en profundidad — solo seguir los pasos que yo hice.
+
+### Paso 1: Clono el repositorio
+
+```bash
+git clone https://github.com/jorbencas/blog.git
+cd blog
+```
+
+Veo una estructura como esta:
+
+```
+blog/
+├── src/
+│   ├── content/
+│   │   └── posts/          ← mis artículos MDX
+│   ├── components/         ← componentes Astro y Svelte
+│   └── pages/              ← rutas del blog
+├── public/
+│   └── img/                ← imágenes optimizadas
+├── package.json            ← dependencias y scripts
+├── package-lock.json       ← versiones exactas
+├── astro.config.mjs        ← configuración de Astro
+└── .env                    ← variables de entorno (no subir a git)
+```
+
+### Paso 2: Creo el archivo Dockerfile
+
+Un Dockerfile es un archivo de texto que le dice a Docker **cómo construir mi aplicación** paso a paso. Es como una receta de cocina: cada línea es una instrucción.
+
+Creo un archivo llamado `Dockerfile` (sin extensión) en la raíz del proyecto:
+
+```bash
+touch Dockerfile
+```
+
+Abro el archivo y pego el siguiente contenido:
+
+```dockerfile
+# ── Build stage ──
+FROM node:22-alpine AS builder
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY . .
+RUN npm run build
+
+# ── Production stage ──
+FROM node:22-alpine AS runner
+WORKDIR /app
+
+RUN npm install -g serve
+
+COPY --from=builder /app/.vercel/output/static ./dist
+COPY --from=builder /app/public ./public
+
+EXPOSE 4321
+
+CMD ["serve", "dist", "-l", "4321", "--single"]
+```
+
+**Explicación línea a línea:**
+
+**Build stage (construcción):**
+
+| Línea | Qué hace |
+|---|---|
+| `FROM node:22-alpine AS builder` | Uso la imagen oficial de Node.js 22 (variante Alpine, que es ligera ~50 MB). La nombro "builder" para referirme a ella después |
+| `WORKDIR /app` | Creo y uso la carpeta `/app` dentro del contenedor como directorio de trabajo |
+| `COPY package.json package-lock.json ./` | Copio los archivos de dependencias a `/app/` — primero estos para aprovechar la caché de Docker |
+| `RUN npm ci` | Instalo todas las dependencias exactas definidas en el lockfile (más rápido y seguro que `npm install`) |
+| `COPY . .` | Copio TODO el código del proyecto a `/app/` |
+| `RUN npm run build` | Ejecuto el script de build de Astro: `astro build && npx pagefind --site .vercel/output/static` — genera archivos HTML/CSS/JS estáticos |
+
+**Production stage (producción):**
+
+| Línea | Qué hace |
+|---|---|
+| `FROM node:22-alpine AS runner` | Imagen nueva y limpia (sin las dependencias de desarrollo) |
+| `WORKDIR /app` | Directorio de trabajo |
+| `COPY --from=builder /app/.vercel/output/static ./dist` | Copio SOLO los archivos estáticos generados por el build (desde la etapa "builder") — esta es la salida del adapter Vercel de Astro |
+| `COPY --from=builder /app/public ./public` | Copio los archivos estáticos de la carpeta `public/` (favicon, imágenes, etc.) |
+| `RUN npm install -g serve` | Instalo `serve`, un servidor HTTP estático ligero |
+| `EXPOSE 4321` | Documento que el contenedor usa el puerto 4321 |
+| `CMD ["serve", "dist", "-l", "4321", "--single"]` | Comando que se ejecuta al arrancar: sirve la carpeta `dist` en el puerto 4321 |
+
+**¿Por qué dos etapas?** Porque la imagen final solo contiene los archivos estáticos y el servidor. Sin las dependencias de desarrollo, sin el código fuente, sin las herramientas de build. Resultado: una imagen de ~50 MB en vez de ~500 MB.
+
+**¿Por qué `.vercel/output/static`?** El blog usa Astro con el adapter de Vercel. Cuando ejecuto `npm run build`, Astro genera los archivos estáticos en `.vercel/output/static/`. Es el directorio que Vercel usa para desplegar, pero también sirve para servir los archivos con cualquier servidor estático.
+
+### Paso 3: Creo el archivo .dockerignore
+
+Este archivo le dice a Docker **qué archivos NO copiar** al contenedor. Sin él, Docker copiaría `node_modules/` (puede pesar cientos de MB), `.git/`, logs, etc.
+
+Creo un archivo llamado `.dockerignore` en la raíz:
+
+```bash
+touch .dockerignore
+```
+
+Pego este contenido:
+
+```
+node_modules
+.git
+.github
+*.log
+.env
+.env.*
+dist
+.vercel
+pagefind
+public/pagefind
+tests
+playwright.config.ts
+```
+
+**Explicación:**
+
+| Línea | Por qué se excluye |
+|---|---|
+| `node_modules` | Se instalan dentro del contenedor con `npm ci`, no necesito copiarlos |
+| `.git` | Historial de git — innecesario en el contenedor |
+| `.github` | Workflows de GitHub Actions — no se usan dentro del contenedor |
+| `*.log` | Archivos de log — no aportan nada |
+| `.env` / `.env.*` | Variables de entorno secretas (GEMINI_API_KEY, TELEGRAM_BOT_TOKEN) — nunca deben ir en una imagen Docker |
+| `dist` | Se genera con `npm run build` dentro del contenedor |
+| `.vercel` | Se genera durante el build |
+| `pagefind` / `public/pagefind` | Se genera con `npx pagefind` durante el build |
+| `tests` | Tests de Playwright — no se ejecutan en producción |
+| `playwright.config.ts` | Configuración de tests — innecesaria en el contenedor |
+
+### Paso 4: Creo el archivo docker-compose.yml
+
+Docker Compose me permite definir y ejecutar múltiples contenedores con un solo comando. En mi caso solo necesito uno, pero Compose hace todo más fácil.
+
+Creo un archivo llamado `docker-compose.yml` en la raíz:
+
+```bash
+touch docker-compose.yml
+```
+
+Pego este contenido:
+
+```yaml
+services:
+  blog:
+    build: .
+    ports:
+      - "4321:4321"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:4321"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+```
+
+**Explicación línea a línea:**
+
+| Línea | Qué hace |
+|---|---|
+| `services:` | Defino los contenedores que voy a ejecutar |
+| `blog:` | Nombre del servicio (puedo llamarlo como quiera) |
+| `build: .` | Le digo a Docker que construya la imagen usando el Dockerfile de la carpeta actual (`.`) |
+| `ports: - "4321:4321"` | Mapea el puerto 4321 de mi máquina al puerto 4321 del contenedor. Formato: `host:container` |
+| `environment: - NODE_ENV=production` | Variable de entorno que indica que es producción |
+| `restart: unless-stopped` | Si el contenedor falla, se reinicia automáticamente. A menos que lo detenga manualmente |
+| `healthcheck:` | Define una prueba de salud para saber si el contenedor funciona correctamente |
+| `test: ["CMD", "wget", "--spider", "-q", "http://localhost:4321"]` | Comando que verifica que el servidor responde |
+| `interval: 30s` | Ejecuta la prueba cada 30 segundos |
+| `timeout: 5s` | Si la prueba tarda más de 5 segundos, se considera fallida |
+| `retries: 3` | Si falla 3 veces seguidas, marca el contenedor como "unhealthy" |
+
+### Paso 5: Construyo la imagen Docker
+
+Ahora le digo a Docker que construya la imagen siguiendo las instrucciones del Dockerfile:
+
+```bash
+docker compose build
+```
+
+Veo algo como:
+
+```
+[+] Building 45.2s (10/10) FINISHED
+ => [builder 1/5] FROM node:22-alpine
+ => [builder 2/5] WORKDIR /app
+ => [builder 3/5] COPY package.json package-lock.json ./
+ => [builder 4/5] RUN npm ci
+ => [builder 5/5] COPY . .
+ => [runner 1/4] FROM node:22-alpine
+ => [runner 2/4] COPY --from=builder /app/.vercel/output/static ./dist
+ => [runner 3/4] RUN npm install -g serve
+ => exporting to image
+```
+
+La primera vez tarda varios minutos (descarga imágenes, instala dependencias). Las siguientes veces será mucho más rápido gracias a la **caché de capas** de Docker.
+
+### Paso 6: Ejecuto el contenedor
+
+```bash
+docker compose up -d
+```
+
+- `docker compose up`: arranca el contenedor definido en `docker-compose.yml`
+- `-d`: modo detached — el contenedor corre en segundo plano (no bloquea mi terminal)
+
+Veo:
+
+```
+[+] Running 2/2
+ ✔ Network blog_default  Created
+ ✔ Container blog-blog-1  Started
+```
+
+### Paso 7: Verifico que funciona
+
+1. Abro mi navegador y voy a `http://localhost:4321`
+2. Debería ver el blog funcionando exactamente como en producción
+
+También puedo verificar desde la terminal:
+
+```bash
+# Ver el estado del contenedor
+docker compose ps
+
+# Ver los logs
+docker compose logs
+
+# Ver los logs en tiempo real
+docker compose logs -f
+```
+
+El estado debería ser `Up` y el healthcheck debería mostrar `healthy` después de unos segundos.
+
+### Paso 8: Veo mi contenedor en Docker Desktop
+
+Si usas Docker Desktop (Windows o macOS), puedes ver y gestionar tu contenedor desde la interfaz gráfica:
+
+1. **Abre Docker Desktop** — verás el icono en la bandeja del sistema o en el dock
+2. **Haz clic en "Containers"** en el menú lateral izquierdo
+3. **Busca el contenedor `blog-blog-1`** — debería aparecer con estado "Running" en verde
+4. **Haz clic en el nombre** para ver los detalles:
+   - **Logs**: ves toda la salida del contenedor en tiempo real
+   - **Inspect**: información detallada (redes, volúmenes, variables de entorno)
+   - **Stats**: uso de CPU, memoria, red en tiempo real
+   - **Terminal**: puedes abrir una terminal dentro del contenedor
+5. **Desde la pestaña "Images"** puedes ver la imagen que construiste (`blog-blog`) y su tamaño (~50 MB)
+6. **Para detenerlo**: haz clic en el botón de pausa o en "Stop"
+7. **Para eliminarlo**: selecciona el contenedor y haz clic en "Delete"
+
+**Docker Desktop también te muestra:**
+- Las imágenes descargadas (node, nginx, etc.)
+- Los volúmenes creados
+- Las redes configuradas
+- El historial de logs
+
+Es una forma visual de gestionar todo lo que hacemos por terminal.
+
+### Paso 9: Detengo y elimino el contenedor
+
+Cuando termino de usar el contenedor:
+
+```bash
+# Detener el contenedor
+docker compose down
+
+# Detener y eliminar también la imagen
+docker compose down --rmi all
+
+# Detener, eliminar imagen y volúmenes
+docker compose down --rmi all -v
+```
+
+### Solución de problemas
+
+**El contenedor no arranca:**
+
+```bash
+# Ver qué error produce
+docker compose logs blog
+
+# Ver el estado
+docker compose ps
+```
+
+**Puerto 4321 ya en uso:**
+
+```bash
+# ¿Qué está usando el puerto?
+lsof -i :4321
+
+# O uso otro puerto en docker-compose.yml
+ports:
+  - "8080:4321"
+```
+
+**Error de permisos en Linux:**
+
+Si veo `permission denied`, mi usuario no está en el grupo `docker`:
+
+```bash
+sudo usermod -aG docker $USER
+# Cierro sesión y vuelvo a abrirla
+```
+
+**El build falla en npm ci:**
+
+Me aseguro de que `package-lock.json` existe. Si no:
+
+```bash
+rm package-lock.json
+npm install
+```
+
+Esto regenera el lockfile.
+
+---
+
+## Complementos: lo que viene después de tu primer contenedor
+
+Una vez que controlas lo básico, hay conceptos que te van a hacer la vida mucho más fácil. Yo los uso a diario.
+
+### Docker Compose con múltiples servicios
+
+El blog es un contenedor sencillo, pero la mayoría de proyectos reales necesitan varios servicios. Por ejemplo, una app web + una base de datos + Redis para caché:
+
+```yaml
+services:
+  web:
+    build: .
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://postgres:secret@db:5432/miapp
+      - REDIS_URL=redis://cache:6379
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+  db:
+    image: postgres:16-alpine
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: miapp
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  cache:
+    image: redis:7-alpine
+    volumes:
+      - redisdata:/data
+
+volumes:
+  pgdata:
+  redisdata:
+```
+
+**¿Por qué `depends_on` con `condition: service_healthy`?** Sin esto, mi app intentaría conectarse a la BD antes de que esté lista. El healthcheck espera a que PostgreSQL esté aceptando conexiones antes de arrancar el servicio web.
+
+**¿Por qué `- /app/node_modules` como volumen anónimo?** La línea `.:/app` monta todo mi código fuente en el contenedor. Pero si no añado `- /app/node_modules`, el bind mount sobreescribiría la carpeta `node_modules` que se instaló con `npm ci` durante el build, y mi app no arrancaría. El volumen anónimo protege esa carpeta: Docker la crea vacía la primera vez, y los `node_modules` instalados dentro del contenedor se quedan ahí sin ser afectados por el bind mount.
+
+```bash
+# Arranco todo
+docker compose up -d
+
+# Veo el estado
+docker compose ps
+
+# Logs de todos los servicios
+docker compose logs -f
+
+# Logs solo del servicio web
+docker compose logs -f web
+
+# Entro a la consola de PostgreSQL
+docker compose exec db psql -U postgres
+```
+
+### Volúmenes: mis datos sobreviven al contenedor
+
+Por defecto, si elimino un contenedor, pierdo todos los datos que tenía dentro. Los **volúmenes** solucionan esto: guardan datos fuera del contenedor, en el host.
+
+```bash
+# Creo un volumen
+docker volume create mis-datos
+
+# Lo uso en un contenedor
+docker run -v mis-datos:/data ubuntu
+
+# Veo todos los volúmenes
+docker volume ls
+
+# Inspecciono uno
+docker volume inspect mis-datos
+```
+
+**Tipos de volúmenes:**
+
+| Tipo | Comando | Persistencia | Uso |
+|---|---|---|---|
+| Named volume | `-v mis-datos:/data` | Sí (Docker gestiona la ruta) | BD, datos de producción |
+| Bind mount | `-v $(pwd)/data:/app/data` | Sí (ruta explícita) | Desarrollo, hot reload |
+| tmpfs | `--tmpfs /app/temp` | No (solo RAM) | Caché, archivos temporales |
+
+**Bind mount en desarrollo:** Yo uso bind mounts para que los cambios en mi código se reflejen al instante en el contenedor:
+
+```bash
+docker run -v $(pwd)/src:/app/src -p 3000:3000 mi-app
+```
+
+Cada vez que edito un archivo en `src/`, el contenedor lo ve inmediatamente.
+
+### Redes Docker: cómo se comunican mis contenedores
+
+Docker crea una **red** por defecto cuando uso `docker compose`. Todos los servicios en la misma red pueden comunicarse usando el nombre del servicio como hostname:
+
+```bash
+# Mi app se conecta a PostgreSQL usando "db" como host
+# PostgreSQL se conecta en el puerto 5432
+# La URL completa es: postgresql://postgres:secret@db:5432/miapp
+```
+
+Si necesito redes separadas (por seguridad o aislamiento):
+
+```yaml
+services:
+  web:
+    networks:
+      - frontend
+  db:
+    networks:
+      - frontend
+      - backend
+
+networks:
+  frontend:
+  backend:
+```
+
+El servicio `web` solo ve a `db`, pero `db` está también en la red `backend` donde podría haber otros servicios internos.
+
+```bash
+# Veo las redes
+docker network ls
+
+# Inspecciono una red
+docker network inspect blog_default
+```
+
+### Variables de entorno y archivos .env
+
+Nunca meteré contraseñas ni tokens directamente en el `docker-compose.yml`. Uso un archivo `.env`:
+
+```bash
+# Creo el archivo .env
+cat > .env << EOF
+POSTGRES_PASSWORD=mi_contraseña_segura
+GEMINI_API_KEY=AIzaSy...
+TELEGRAM_BOT_TOKEN=123456:ABC...
+EOF
+```
+
+Y en `docker-compose.yml` las referencio:
+
+```yaml
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    # O directamente usando env_file
+    env_file:
+      - .env
+```
+
+**Nunca subir `.env` a git.** Lo añado al `.gitignore`:
+
+```
+echo ".env" >> .gitignore
+echo ".env.*" >> .gitignore
+```
+
+### Comandos del día a día
+
+Estos son los comandos que yo uso constantemente:
+
+```bash
+# ── Gestión de contenedores ──
+docker compose up -d            # Arrancar todo en background
+docker compose down             # Detener todo
+docker compose restart web      # Reiniciar solo un servicio
+docker compose ps               # Ver estado
+docker compose logs -f          # Logs en tiempo real
+docker compose exec web sh      # Entrar a un contenedor
+
+# ── Gestión de imágenes ──
+docker images                   # Ver imágenes descargadas
+docker image prune              # Eliminar imágenes sin usar
+docker system prune -af         # Limpiar TODO (cuidado)
+
+# ── Limpieza ──
+docker volume prune             # Eliminar volúmenes sin usar
+docker network prune            # Eliminar redes sin usar
+docker system df                # Ver espacio que usa Docker
+
+# ── Inspección ──
+docker inspect <contenedor>     # Info detallada de un contenedor
+docker stats                    # Uso de CPU/RAM en tiempo real
+docker top <contenedor>         # Procesos dentro del contenedor
+```
+
+### Buenas prácticas que yo aplico
+
+1. **Siempre multi-stage builds**: la imagen final no debería tener herramientas de build ni dependencias de desarrollo. Esto reduce el tamaño de 500 MB a 50 MB.
+
+2. **Ordena el Dockerfile por caché**: copia primero los archivos que cambian poco (`package.json`), luego instala dependencias, y al final copia el código:
+
+```dockerfile
+# ✅ Bueno: caché eficiente
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+
+# ❌ Malo: invalida la caché en cada cambio
+COPY . .
+RUN npm ci
+```
+
+3. **No ejecutes como root** en producción:
+
+```dockerfile
+RUN addgroup --system app && adduser --system --ingroup app app
+USER app
+```
+
+4. **Usa `.dockerignore`** siempre. Sin él, envías `node_modules/` (puede pesar 500 MB+) al daemon de Docker.
+
+5. **Etiqueta tus imágenes** con versiones:
+
+```bash
+docker build -t blog:v1.0 .
+docker build -t blog:latest .
+```
+
+6. **Healthchecks** en compose para que Docker sepa si un servicio está vivo:
+
+```yaml
+healthcheck:
+  test: ["CMD", "wget", "--spider", "-q", "http://localhost:4321"]
+  interval: 30s
+  timeout: 5s
+  retries: 3
+```
+
+### Imagen: ¿cuánto pesa mi contenedor?
+
+```bash
+# Veo el tamaño de mis imágenes
+docker images
+
+# Veo las capas de una imagen
+docker history blog-blog
+
+# Veo el espacio total que usa Docker
+docker system df
+```
+
+Si mi imagen pesa mucho, puedo optimizar:
+- Usar imágenes base más ligeras (`node:22-alpine` en vez de `node:22`)
+- Multi-stage builds
+- `.dockerignore` efectivo
+- Combinar comandos `RUN` para reducir capas
+
+```bash
+# Ejemplo: una imagen node:22 completa pesa ~1 GB
+# node:22-alpine pesa ~50 MB
+# Alpine es una distribución Linux minimalista
+```
+
+---
+
+## Recursos del blog
+
+Estas guías del blog complementan lo visto aquí:
+
+- [Guía de Docker: De 0 a 100](/posts/guia-0-100-docker/) — guía completa con patrones, seguridad, Swarm y Kubernetes
+- [WSL: Instalación, configuración y Docker Desktop](/posts/guia-wsl-instalacion-configuracion-docker/) — configura WSL2 + Docker en Windows
+- [Guía de Node.js: De 0 a 100](/posts/guia-0-100-javascript/) — incluye sección Docker para Node.js
+- [Guía de Python: De 0 a 100](/posts/guia-0-100-python/) — incluye Dockerfile para Python
+- [Guía de Astro: De 0 a 100](/posts/guia-0-100-astro/) — despliegue de Astro con Docker
+- [Recursos](/posts/resources/#docker) — herramientas Docker: Portainer, Diun, LinuxServer images, Docker Hub, Play with Docker
+
+---
+
+## Recursos externos
+
+### Documentación oficial
+- [Docker docs](https://docs.docker.com/) — documentación oficial completa
+- [Docker Hub](https://hub.docker.com/) — repositorio de imágenes oficiales y comunitarias
+- [Docker Compose docs](https://docs.docker.com/compose/) — referencia de Compose
+- [Dockerfile reference](https://docs.docker.com/reference/dockerfile/) — todas las instrucciones del Dockerfile
+
+### Para aprender
+- [Play with Docker](https://labs.play-with-docker.com/) — playground interactivo online
+- [Docker Curriculum](https://docker-curriculum.com/) — tutorial desde cero
+- [Awesome Docker](https://github.com/veggiemonk/awesome-docker) — lista curada de recursos
+
+### Herramientas útiles
+- [Portainer](https://www.portainer.io/) — UI web para gestionar contenedores
+- [Diun](https://github.com/crazy-max/diun) — monitoriza actualizaciones de imágenes Docker
+- [Dive](https://github.com/wagoodman/dive) — explora capas de una imagen Docker
+- [Trivy](https://github.com/aquasecurity/trivy) — escaneo de vulnerabilidades en imágenes
+
+### Comunidad
+- [Stack Overflow — tag docker](https://stackoverflow.com/questions/tagged/docker)
+- [r/docker en Reddit](https://reddit.com/r/docker)
+- [Docker Slack](https://dockercommunity.slack.com/)
+
+---
+
+## Posts relacionados
+
+- [Guía de Docker: De 0 a 100](/posts/guia-0-100-docker/)
+- [WSL: Instalación, configuración symlink y Docker Desktop](/posts/guia-wsl-instalacion-configuracion-docker/)
+- [Guía de Node.js: De 0 a 100](/posts/guia-0-100-javascript/)
+- [Guía de Python: De 0 a 100](/posts/guia-0-100-python/)
+- [Guía de Astro: De 0 a 100](/posts/guia-0-100-astro/)
