@@ -7,7 +7,7 @@ export const PAGINATION_SIZE = 12;
 
 export const SOCIAL_LINKS = [
   {
-    href: "https://twitter.com/jorgevenkas",
+    href: "https://twitter.com/jorbencas",
     icon: "/icons/twitter.svg",
     label: "twitter",
     color: "rgba(29,161,242,0.9)",

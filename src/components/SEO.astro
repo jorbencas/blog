@@ -1,6 +1,6 @@
 ---
 // seo.astro
-import { SITE_NAME } from "src/consts.js";
+import { SITE_NAME, AUTHOR_NAME } from "src/consts.js";
 
 interface Props {
   title: string;
@@ -61,7 +61,7 @@ const jsonLD = {
   }),
   publisher: {
     "@type": "Person",
-    name: "Jorge Beneyto Castelló",
+    name: AUTHOR_NAME,
   },
 };
 ---
@@ -78,12 +78,6 @@ const jsonLD = {
     />
   )
 }
-{pubDate && (
-  <meta
-    property="article:modified_time"
-    content={new Date(pubDate).toISOString()}
-  />
-)}
 {author && <meta property="article:author" content={author} />}
 
 <!-- [TIP] Metas de personalización móvil y branding añadidos -->
