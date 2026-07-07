@@ -266,8 +266,16 @@ These rules apply when writing or editing tutorial/guide posts (e.g. `guia-0-100
 
 ## Git Conventions
 - Commits in Spanish (castellano).
-- Scope prefix: `[blog]`, `[retos]`, `[herramientas]`, `[estilos]`, `[infra]`, etc.
-- Format: `[scope] Short description in Spanish`
+- Scope prefix: `[blog]`, `[retos]`, `[herramientas]`, `[estilos]`, `[infra]`, `[recursos]`, `[config]`, `[ui]`, `[seo]`, `[scripts]`, `[cleanup]`
+- Format: `[scope] Short description (max 72 chars)`
+- One logical change per commit. Split large changes into multiple commits.
+- Never commit "work in progress" messages like "end of day", "fixes", "updates".
+- Explain the WHY in the commit body when non-obvious (use `git commit -m "title" -m "body"`).
+- Examples of good commits:
+  - `[seo] add robots.txt with sitemap reference`
+  - `[ui] add aria-label to theme toggle button`
+  - `[cleanup] remove duplicate fonts and static font files`
+  - `[config] change output from hybrid to static (Astro 6.4)`
 
 ## PR Instructions
 - Title: `[<project_name>] <Title>`
