@@ -8,7 +8,7 @@ import vercel from "@astrojs/vercel";
 import svelte from "@astrojs/svelte";
 import remarkGfm from "remark-gfm";
 export default defineConfig({
-  output: "static",
+  output: "hybrid",
   adapter: vercel(),
   integrations: [mdx({ remarkPlugins: [remarkGfm] }), sitemap(), svelte()],
   vite: {
