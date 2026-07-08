@@ -15,15 +15,16 @@ const { url, identifier, title } = Astro.props;
 </div>
 
 <script is:inline define:vars={{ url, identifier, title }}>
-  var disqus_config = function () {
-    this.page.url = url;
-    this.page.identifier = identifier;
-    this.page.title = title;
-    var isDark = document.documentElement.classList.contains('dark');
-    this.page.theme = isDark ? 1 : 2;
-  };
-
   (function () {
+    var isDark = document.documentElement.classList.contains('dark');
+    document.documentElement.style.backgroundColor = isDark ? 'rgb(15, 23, 42)' : 'rgb(255, 255, 255)';
+
+    var disqus_config = function () {
+      this.page.url = url;
+      this.page.identifier = identifier;
+      this.page.title = title;
+    };
+
     var d = document, s = d.createElement('script');
     s.src = 'https://jorbencas.disqus.com/embed.js';
     s.setAttribute('data-timestamp', +new Date());
