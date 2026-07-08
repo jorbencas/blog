@@ -15,13 +15,23 @@ const { url, identifier, title } = Astro.props;
 </div>
 
 <script is:inline define:vars={{ url, identifier, title }}>
-  window.disqus_config = function () {
-    this.page.url = url;
-    this.page.identifier = identifier;
-    this.page.title = title;
-  };
-
   (function () {
+    var isDark = document.documentElement.classList.contains('dark');
+    var safeBg = isDark ? '#0f172a' : '#ffffff';
+
+    var el = document.getElementById('disqus_thread');
+    while (el) {
+      el.style.backgroundColor = safeBg;
+      el = el.parentElement;
+    }
+    document.body.style.backgroundColor = safeBg;
+
+    window.disqus_config = function () {
+      this.page.url = url;
+      this.page.identifier = identifier;
+      this.page.title = title;
+    };
+
     var d = document, s = d.createElement('script');
     s.src = 'https://jorbencas.disqus.com/embed.js';
     s.setAttribute('data-timestamp', +new Date());
