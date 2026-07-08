@@ -1,0 +1,42 @@
+---
+// MinimalMode.astro — Toggle button for reader mode
+---
+
+<button
+  id="minimal-toggle"
+  type="button"
+  aria-label="Modo minimal"
+  class="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200 border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
+  title="Modo minimal — solo blog"
+>
+  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 6h16M4 12h16M4 18h7" />
+  </svg>
+  <span class="minimal-label">Minimal</span>
+</button>
+
+<script is:inline>
+  (() => {
+    const KEY = "minimal-mode";
+    const btn = document.getElementById("minimal-toggle");
+    if (!btn) return;
+
+    const label = btn.querySelector(".minimal-label");
+
+    function apply() {
+      const isMinimal = localStorage.getItem(KEY) === "true";
+      document.documentElement.classList.toggle("minimal-mode", isMinimal);
+      if (label) label.textContent = isMinimal ? "Full" : "Minimal";
+    }
+
+    apply();
+
+    btn.addEventListener("click", () => {
+      const current = localStorage.getItem(KEY) === "true";
+      localStorage.setItem(KEY, String(!current));
+      apply();
+    });
+
+    document.addEventListener("astro:page-load", apply);
+  })();
+</script>

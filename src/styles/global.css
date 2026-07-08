@@ -185,6 +185,42 @@ article.prose pre {
   border-radius: 10px;
 }
 
+/* Minimal mode — hide non-blog sections on homepage */
+.minimal-mode .section-non-blog {
+  display: none !important;
+}
+.minimal-mode .minimal-only {
+  display: block !important;
+}
+.minimal-mode .minimal-hidden {
+  display: none !important;
+}
+
+/* Ticker marquee */
+@keyframes ticker-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.ticker-track {
+  animation: ticker-scroll 40s linear infinite;
+}
+.ticker-track:hover {
+  animation-play-state: paused;
+}
+
+/* Carousel scroll-snap */
+.carousel-scroll {
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.carousel-scroll::-webkit-scrollbar {
+  display: none;
+}
+.carousel-scroll > * {
+  scroll-snap-align: start;
+}
+
 @media (max-width: 640px) {
   article.prose {
     font-size: 0.9rem;
