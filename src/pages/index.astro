@@ -8,7 +8,7 @@ import { SOCIAL_LINKS, SITE_DESCRIPTION } from "src/consts";
 
 const allPosts = await getCollection("posts");
 const sortedPosts = await getSortedPosts(allPosts);
-const latestPosts = sortedPosts.slice(0, 6);
+const latestPosts = sortedPosts.slice(0, 7);
 const featuredPost = sortedPosts.length > 0 ? sortedPosts[0] : null;
 const remainingPosts = latestPosts.slice(1);
 
@@ -16,9 +16,10 @@ const allChallenges = await getCollection("auto-challenges");
 const challengesPosts = await getSortedPosts(allChallenges);
 const latestChallenges = challengesPosts.slice(0, 6);
 
-const firstPostDate = sortedPosts.length > 0
-  ? sortedPosts[sortedPosts.length - 1].data.pubDate
-  : new Date();
+const firstPostDate =
+  sortedPosts.length > 0
+    ? sortedPosts[sortedPosts.length - 1].data.pubDate
+    : new Date();
 const daysSinceFirstPost = Math.floor(
   (Date.now() - new Date(firstPostDate).getTime()) / (1000 * 60 * 60 * 24)
 );
@@ -54,12 +55,48 @@ const badgeYellow =
   "inline-flex items-center gap-2 bg-gradient-to-r from-yellow-600 to-yellow-400 dark:from-yellow-600 dark:to-yellow-400 px-5 py-2.5 text-xs sm:text-sm font-black uppercase tracking-[0.25em] text-white dark:text-slate-900 shadow-[4px_4px_0px_0px_rgba(234,179,8,0.3)]";
 
 const stickers = [
-  { name: "html",   pos: "top: 0%; right: 10px;",   rot: "5deg",   c: "#06b6d4", d: "0s"    },
-  { name: "python", pos: "top: 8%; right: 120px;",  rot: "-4deg",  c: "#10b981", d: "0.3s"  },
-  { name: "js",     pos: "top: 22%; right: 55px;",  rot: "-6deg",  c: "#f59e0b", d: "0.6s"  },
-  { name: "git",    pos: "top: 34%; right: 150px;", rot: "3deg",   c: "#a855f7", d: "0.9s"  },
-  { name: "ts",     pos: "top: 44%; right: 20px;",  rot: "7deg",   c: "#22d3ee", d: "1.2s"  },
-  { name: "docker", pos: "top: 56%; right: 75px;",  rot: "-2deg",  c: "#34d399", d: "1.5s"  },
+  {
+    name: "html",
+    pos: "top: 0%; right: 10px;",
+    rot: "5deg",
+    c: "#06b6d4",
+    d: "0s",
+  },
+  {
+    name: "python",
+    pos: "top: 8%; right: 120px;",
+    rot: "-4deg",
+    c: "#10b981",
+    d: "0.3s",
+  },
+  {
+    name: "js",
+    pos: "top: 22%; right: 55px;",
+    rot: "-6deg",
+    c: "#f59e0b",
+    d: "0.6s",
+  },
+  {
+    name: "git",
+    pos: "top: 34%; right: 150px;",
+    rot: "3deg",
+    c: "#a855f7",
+    d: "0.9s",
+  },
+  {
+    name: "ts",
+    pos: "top: 44%; right: 20px;",
+    rot: "7deg",
+    c: "#22d3ee",
+    d: "1.2s",
+  },
+  {
+    name: "docker",
+    pos: "top: 56%; right: 75px;",
+    rot: "-2deg",
+    c: "#34d399",
+    d: "1.5s",
+  },
 ];
 ---
 
@@ -68,19 +105,34 @@ const stickers = [
     <!-- HERO -->
     <section class="relative mb-20 md:mb-32">
       <!-- Circuit board background -->
-      <div class="absolute inset-0 z-0 pointer-events-none select-none circuit-bg" aria-hidden="true">
-        <div class="absolute inset-0" style="background: radial-gradient(ellipse at 20% 30%, rgba(6,182,212,0.18) 0%, transparent 50%), radial-gradient(ellipse at 75% 25%, rgba(168,85,247,0.12) 0%, transparent 45%), radial-gradient(ellipse at 55% 80%, rgba(245,158,11,0.08) 0%, transparent 40%);"></div>
+      <div
+        class="absolute inset-0 z-0 pointer-events-none select-none circuit-bg"
+        aria-hidden="true"
+      >
+        <div
+          class="absolute inset-0"
+          style="background: radial-gradient(ellipse at 20% 30%, rgba(6,182,212,0.18) 0%, transparent 50%), radial-gradient(ellipse at 75% 25%, rgba(168,85,247,0.12) 0%, transparent 45%), radial-gradient(ellipse at 55% 80%, rgba(245,158,11,0.08) 0%, transparent 40%);"
+        >
+        </div>
       </div>
       <!-- Desktop sticker cloud -->
-      <div class="hidden md:block absolute inset-0 pointer-events-none select-none z-10">
-        {stickers.map((s) => (
-          <div
-            class="sticker-float absolute flex items-center justify-center w-[88px] h-[88px] xl:w-[100px] xl:h-[100px] rounded-2xl bg-white dark:bg-slate-900 border-2 shadow-lg"
-            style={`${s.pos} border-color: ${s.c}; --r: ${s.rot}; --gc: ${s.c}40; animation: float 4s ease-in-out ${s.d} infinite;`}
-          >
-            <img src={`/icons/${s.name}.svg`} alt={s.name} class="w-10 h-10 xl:w-12 xl:h-12" />
-          </div>
-        ))}
+      <div
+        class="hidden md:block absolute inset-0 pointer-events-none select-none z-10"
+      >
+        {
+          stickers.map((s) => (
+            <div
+              class="sticker-float absolute flex items-center justify-center w-[88px] h-[88px] xl:w-[100px] xl:h-[100px] rounded-2xl bg-white dark:bg-slate-900 border-2 shadow-lg"
+              style={`${s.pos} border-color: ${s.c}; --r: ${s.rot}; --gc: ${s.c}40; animation: float 4s ease-in-out ${s.d} infinite;`}
+            >
+              <img
+                src={`/icons/${s.name}.svg`}
+                alt={s.name}
+                class="w-10 h-10 xl:w-12 xl:h-12"
+              />
+            </div>
+          ))
+        }
       </div>
 
       <div class="flex flex-col gap-6 relative z-10 lg:max-w-xl xl:max-w-2xl">
@@ -97,8 +149,13 @@ const stickers = [
         >
           {SITE_DESCRIPTION}
         </p>
-        <p class="flex items-center gap-1.5 text-sm text-slate-400 dark:text-slate-500 font-medium">
-          Llevo <strong class="streak-number text-slate-600 dark:text-slate-300 tabular-nums">{daysSinceFirstPost}</strong> días escribiendo
+        <p
+          class="flex items-center gap-1.5 text-sm text-slate-400 dark:text-slate-500 font-medium"
+        >
+          Llevo <strong
+            class="streak-number text-slate-600 dark:text-slate-300 tabular-nums"
+            >{daysSinceFirstPost}</strong
+          > días escribiendo
         </p>
         <div class="flex flex-wrap gap-3 items-center mt-2">
           {
@@ -120,7 +177,9 @@ const stickers = [
     </section>
 
     <!-- STATS BAR -->
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-20 md:mb-32">
+    <div
+      class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-20 md:mb-32"
+    >
       {
         [
           {
@@ -150,7 +209,11 @@ const stickers = [
           },
         ].map((stat) => (
           <div class="flex flex-col items-center justify-center p-6 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-            <span class={`text-3xl sm:text-4xl font-black ${stat.accent}`} data-count-to={stat.count}>0</span>
+            <span
+              class={`text-3xl sm:text-4xl font-black ${stat.accent}`}
+            >
+              {stat.count}
+            </span>
             <span class="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mt-1">
               {stat.label}
             </span>
@@ -337,64 +400,38 @@ const stickers = [
 
 <style is:global>
   @keyframes float {
-    0%, 100% { transform: translateY(0px) rotate(var(--r, 0deg)); }
-    50% { transform: translateY(-12px) rotate(var(--r, 0deg)); }
+    0%,
+    100% {
+      transform: translateY(0px) rotate(var(--r, 0deg));
+    }
+    50% {
+      transform: translateY(-12px) rotate(var(--r, 0deg));
+    }
   }
   .sticker-float {
     transition: all 0.3s ease;
     will-change: transform;
   }
   .sticker-float:hover {
-    box-shadow: 0 20px 25px -5px var(--gc, rgba(0,0,0,0.1));
+    box-shadow: 0 20px 25px -5px var(--gc, rgba(0, 0, 0, 0.1));
     filter: brightness(1.1);
   }
   .streak-number {
     animation: pulse-streak 3s ease-in-out infinite;
   }
   @keyframes pulse-streak {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.08); }
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.08);
+    }
   }
   .circuit-bg {
-    background-image: url('/img/circuit-bg.svg');
+    background-image: url("/img/circuit-bg.svg");
     background-size: 304px 304px;
     background-repeat: repeat;
     background-position: 0 0;
   }
-
 </style>
-
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const counters = document.querySelectorAll("[data-count-to]");
-    if (!counters.length) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          const el = entry.target;
-          if (entry.isIntersecting && !el.dataset.counted) {
-            el.dataset.counted = "true";
-            const target = parseInt(el.dataset.countTo, 10);
-            const duration = 3000;
-            const start = performance.now();
-
-            function update(now) {
-              const elapsed = now - start;
-              const progress = Math.min(elapsed / duration, 1);
-              const eased = 1 - Math.pow(1 - progress, 3);
-              el.textContent = Math.floor(eased * target);
-              if (progress < 1) requestAnimationFrame(update);
-            }
-
-            requestAnimationFrame(update);
-            observer.unobserve(el);
-          }
-        });
-      },
-      { threshold: 0.3 }
-    );
-
-    counters.forEach((c) => observer.observe(c));
-  });
-</script>
