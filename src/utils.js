@@ -31,3 +31,20 @@ export const getSortedPosts = (allPosts) => {
         new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime()
     );
 };
+
+export const getRelatedPosts = (currentPost, allPosts, limit = 3) => {
+  const currentTags = new Set(currentPost.data.tags || []);
+  if (currentTags.size === 0) return [];
+
+  return allPosts
+    .filter((p) => p.id !== currentPost.id && !p.data.draft)
+    .map((p) => {
+      const postTags = p.data.tags || [];
+      const shared = postTags.filter((t) => currentTags.has(t)).length;
+      return { post: p, score: shared };
+    })
+    .filter((item) => item.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit)
+    .map((item) => item.post);
+};

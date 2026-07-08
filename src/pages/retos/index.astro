@@ -11,7 +11,11 @@ const manualChallenges = allChallenges.filter(
 const sortedChallenges = manualChallenges.sort(
   (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
 );
-const latestChallenges = sortedChallenges.slice(0, 6);
+
+// Extract unique difficulties and languages
+const difficulties = [...new Set(sortedChallenges.map((c) => c.data.difficulty).filter(Boolean))];
+const allLanguages = sortedChallenges.flatMap((c) => c.data.languages || []);
+const languages = [...new Set(allLanguages)].sort();
 ---
 
 <Layout
@@ -32,13 +36,48 @@ const latestChallenges = sortedChallenges.slice(0, 6);
         </p>
       </div>
 
+      <!-- FILTROS -->
+      <div class="space-y-4">
+        <!-- Difficulty filters -->
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-xs font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 mr-2">Dificultad:</span>
+          <button data-filter="all" class="filter-diff px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider border-2 border-amber-500 bg-amber-500 text-white transition-all">
+            Todos
+          </button>
+          {difficulties.map((diff) => (
+            <button data-filter={diff} class="filter-diff px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:border-amber-500 hover:text-amber-500 transition-all">
+              {diff}
+            </button>
+          ))}
+        </div>
+
+        <!-- Language filters -->
+        {languages.length > 0 && (
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-xs font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 mr-2">Lenguaje:</span>
+            <button data-lang="all" class="filter-lang px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider border-2 border-cyan-500 bg-cyan-500 text-white transition-all">
+              Todos
+            </button>
+            {languages.map((lang) => (
+              <button data-lang={lang} class="filter-lang px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:border-cyan-500 hover:text-cyan-500 transition-all">
+                {lang}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
       <!-- GRID DE RETOS -->
       <div class="flow-root">
         <ul role="list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {
-            latestChallenges.length > 0 ? (
-              latestChallenges.map((ch) => (
-                <li class="list-none">
+            sortedChallenges.length > 0 ? (
+              sortedChallenges.map((ch) => (
+                <li
+                  class="list-none retos-item"
+                  data-difficulty={ch.data.difficulty || ""}
+                  data-languages={(ch.data.languages || []).join(",")}
+                >
                   <Card
                     {...ch.data}
                     href={`/retos/${ch.id.replace(/\.[^/.]+$/, "")}`}
@@ -71,3 +110,46 @@ const latestChallenges = sortedChallenges.slice(0, 6);
       )}
   </section>
 </Layout>
+
+<script is:inline>
+  (() => {
+    let activeDiff = "all";
+    let activeLang = "all";
+
+    function applyFilters() {
+      document.querySelectorAll(".retos-item").forEach((li) => {
+        const diff = li.dataset.difficulty;
+        const langs = (li.dataset.languages || "").split(",").filter(Boolean);
+        const matchDiff = activeDiff === "all" || diff === activeDiff;
+        const matchLang = activeLang === "all" || langs.includes(activeLang);
+        li.style.display = matchDiff && matchLang ? "" : "none";
+      });
+    }
+
+    document.querySelectorAll(".filter-diff").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        activeDiff = btn.dataset.filter;
+        document.querySelectorAll(".filter-diff").forEach((b) => {
+          b.classList.remove("border-amber-500", "bg-amber-500", "text-white");
+          b.classList.add("border-slate-200", "dark:border-slate-800", "bg-white", "dark:bg-slate-900", "text-slate-600", "dark:text-slate-400");
+        });
+        btn.classList.remove("border-slate-200", "dark:border-slate-800", "bg-white", "dark:bg-slate-900", "text-slate-600", "dark:text-slate-400");
+        btn.classList.add("border-amber-500", "bg-amber-500", "text-white");
+        applyFilters();
+      });
+    });
+
+    document.querySelectorAll(".filter-lang").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        activeLang = btn.dataset.lang;
+        document.querySelectorAll(".filter-lang").forEach((b) => {
+          b.classList.remove("border-cyan-500", "bg-cyan-500", "text-white");
+          b.classList.add("border-slate-200", "dark:border-slate-800", "bg-white", "dark:bg-slate-900", "text-slate-600", "dark:text-slate-400");
+        });
+        btn.classList.remove("border-slate-200", "dark:border-slate-800", "bg-white", "dark:bg-slate-900", "text-slate-600", "dark:text-slate-400");
+        btn.classList.add("border-cyan-500", "bg-cyan-500", "text-white");
+        applyFilters();
+      });
+    });
+  })();
+</script>

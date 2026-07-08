@@ -1,5 +1,5 @@
 ---
-import { formatDatePost, getSortedPosts, resolveImagePath } from "src/utils.js";
+import { formatDatePost, getSortedPosts, getRelatedPosts, resolveImagePath } from "src/utils.js";
 import getReadingTime from "reading-time";
 import "@styles/solution.css";
 import Layout from "@layouts/Layout.astro";
@@ -89,6 +89,9 @@ const tagsArray = Array.isArray(tags)
   : typeof tags === "string"
   ? tags.split(",").map((t) => t.trim())
   : [];
+
+const currentPost = allPosts.find((p) => p.id === id);
+const relatedPosts = currentPost ? getRelatedPosts(currentPost, allPosts, 3) : [];
 
 const sectionColors = {
   weekly: {
@@ -339,6 +342,31 @@ const sc = sectionColors[section] || sectionColors.blog;
                     class={`bg-gradient-to-r ${sc.tag} px-5 py-2 text-xs font-black uppercase tracking-widest text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] hover:-translate-y-1 hover:scale-105 active:scale-95 transition-all block no-underline`}
                   >
                     {tag}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )
+        }
+
+        {
+          relatedPosts.length > 0 && (
+            <div class="space-y-6">
+              <span class="text-base font-bold uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400 block pb-2 w-fit">
+                ARTÍCULOS RELACIONADOS:
+              </span>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {relatedPosts.map((rp) => (
+                  <a
+                    href={`/posts/${rp.id}`}
+                    class="block p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-cyan-500/50 transition-colors no-underline group"
+                  >
+                    <p class="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors line-clamp-2 leading-tight">
+                      {rp.data.title}
+                    </p>
+                    <p class="text-xs text-slate-400 dark:text-slate-500 mt-2 line-clamp-2">
+                      {rp.data.description}
+                    </p>
                   </a>
                 ))}
               </div>

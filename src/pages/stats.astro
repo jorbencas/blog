@@ -1,0 +1,153 @@
+---
+import Layout from "@layouts/Layout.astro";
+import { getCollection } from "astro:content";
+import { getSortedPosts } from "src/utils";
+
+const allPosts = await getCollection("posts");
+const sortedPosts = await getSortedPosts(allPosts);
+
+const allChallenges = await getCollection("auto-challenges");
+const sortedChallenges = await getSortedPosts(allChallenges);
+
+const allTools = await getCollection("tools");
+const sortedTools = await getSortedPosts(allTools);
+
+const allWeekly = await getCollection("weeklyPosts");
+const sortedWeekly = await getSortedPosts(allWeekly);
+
+// Posts by tag
+const tagCounts: Record<string, number> = {};
+sortedPosts.forEach((p) => {
+  (p.data.tags || []).forEach((tag) => {
+    tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+  });
+});
+const sortedTags = Object.entries(tagCounts)
+  .sort(([, a], [, b]) => b - a)
+  .slice(0, 15);
+const maxTagCount = sortedTags.length > 0 ? sortedTags[0][1] : 1;
+
+// Posts by month
+const monthCounts: Record<string, number> = {};
+sortedPosts.forEach((p) => {
+  const d = new Date(p.data.pubDate);
+  const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  monthCounts[key] = (monthCounts[key] || 0) + 1;
+});
+const sortedMonths = Object.entries(monthCounts).sort(([a], [b]) => a.localeCompare(b));
+const maxMonthCount = sortedMonths.length > 0 ? Math.max(...sortedMonths.map(([, c]) => c)) : 1;
+
+// Challenges by difficulty
+const difficultyCounts: Record<string, number> = {};
+sortedChallenges.forEach((c) => {
+  const d = c.data.difficulty || "Sin dificultad";
+  difficultyCounts[d] = (difficultyCounts[d] || 0) + 1;
+});
+
+const totalContent = sortedPosts.length + sortedChallenges.length + sortedTools.length + sortedWeekly.length;
+---
+
+<Layout title="Estadísticas | Jorge Beneyto Castelló" description="Estadísticas del blog: posts por tag, posts por mes, retos por dificultad." section="stats">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-20 space-y-16">
+
+    <!-- HEADER -->
+    <div class="text-center space-y-4">
+      <span class="text-xs text-cyan-500 uppercase tracking-[0.3em]">ESTADÍSTICAS</span>
+      <h1 class="text-4xl md:text-5xl font-black italic uppercase tracking-tighter text-slate-900 dark:text-white">
+        Números del blog
+      </h1>
+      <div class="h-1 w-24 bg-cyan-500 dark:bg-cyan-400 mx-auto rounded-full"></div>
+    </div>
+
+    <!-- STATS GENERALES -->
+    <section class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      {[
+        { label: "Artículos", count: sortedPosts.length, color: "text-cyan-600 dark:text-cyan-400" },
+        { label: "Retos", count: sortedChallenges.length, color: "text-amber-600 dark:text-amber-400" },
+        { label: "Herramientas", count: sortedTools.length, color: "text-emerald-600 dark:text-emerald-400" },
+        { label: "Semanales", count: sortedWeekly.length, color: "text-yellow-600 dark:text-yellow-400" },
+      ].map((stat) => (
+        <div class="flex flex-col items-center justify-center p-6 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+          <span class={`text-3xl sm:text-4xl font-black ${stat.color}`}>{stat.count}</span>
+          <span class="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mt-1">{stat.label}</span>
+        </div>
+      ))}
+    </section>
+
+    <!-- POSTS POR TAG (barras) -->
+    <section class="space-y-6">
+      <h2 class="inline-flex items-center gap-2 bg-gradient-to-r from-sky-800 to-cyan-500 dark:from-sky-600 dark:to-cyan-400 px-5 py-2.5 text-xs sm:text-sm font-black uppercase tracking-[0.25em] text-white dark:text-slate-900 shadow-[4px_4px_0px_0px_rgba(6,182,212,0.3)]">
+        🏷️ Posts por tag
+      </h2>
+      <div class="space-y-3">
+        {sortedTags.map(([tag, count]) => (
+          <div class="flex items-center gap-4">
+            <a href={`/tags/${tag}/1`} class="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 w-28 truncate text-right no-underline hover:text-cyan-500 transition-colors">{tag}</a>
+            <div class="flex-1 h-8 bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden">
+              <div
+                class="h-full bg-gradient-to-r from-sky-800 to-cyan-500 dark:from-sky-600 dark:to-cyan-400 rounded-lg flex items-center justify-end pr-3 transition-all duration-500"
+                style={`width: ${(count / maxTagCount) * 100}%`}
+              >
+                <span class="text-xs font-black text-white">{count}</span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- POSTS POR MES (línea) -->
+    <section class="space-y-6">
+      <h2 class="inline-flex items-center gap-2 bg-gradient-to-r from-purple-800 to-purple-500 dark:from-purple-600 dark:to-purple-400 px-5 py-2.5 text-xs sm:text-sm font-black uppercase tracking-[0.25em] text-white dark:text-slate-900 shadow-[4px_4px_0px_0px_rgba(168,85,247,0.3)]">
+        📅 Posts por mes
+      </h2>
+      <div class="flex items-end gap-1 h-48 overflow-x-auto pb-2">
+        {sortedMonths.map(([month, count]) => {
+          const [y, m] = month.split("-");
+          const label = new Date(parseInt(y), parseInt(m) - 1).toLocaleDateString("es-ES", { month: "short" });
+          const height = (count / maxMonthCount) * 100;
+          return (
+            <div class="flex flex-col items-center gap-1 min-w-[40px]">
+              <span class="text-xs font-black text-slate-500 dark:text-slate-400">{count}</span>
+              <div
+                class="w-full bg-gradient-to-t from-purple-800 to-purple-500 dark:from-purple-600 dark:to-purple-400 rounded-t-lg transition-all duration-500"
+                style={`height: ${height}%`}
+              ></div>
+              <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">{label}</span>
+              <span class="text-[10px] text-slate-300 dark:text-slate-600">{y.slice(2)}</span>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+
+    <!-- RETOS POR DIFICULTAD -->
+    <section class="space-y-6">
+      <h2 class="inline-flex items-center gap-2 bg-gradient-to-r from-amber-800 to-amber-500 dark:from-amber-600 dark:to-amber-400 px-5 py-2.5 text-xs sm:text-sm font-black uppercase tracking-[0.25em] text-white dark:text-slate-900 shadow-[4px_4px_0px_0px_rgba(245,158,11,0.3)]">
+        🏆 Retos por dificultad
+      </h2>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {[
+          { label: "Iniciación", count: difficultyCounts["Iniciación"] || 0, color: "emerald" },
+          { label: "Intermedio", count: difficultyCounts["Intermedio"] || 0, color: "amber" },
+          { label: "Avanzado", count: difficultyCounts["Avanzado"] || 0, color: "rose" },
+        ].map((d) => (
+          <div class="flex flex-col items-center justify-center p-6 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+            <span class={`text-3xl font-black text-${d.color}-600 dark:text-${d.color}-400`}>{d.count}</span>
+            <span class="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mt-1">{d.label}</span>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- RESUMEN -->
+    <section class="relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-gradient-to-br from-sky-900 via-cyan-800 to-sky-900 p-8 sm:p-12 text-center">
+      <div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: url('/img/circuit-bg.svg'); background-size: 200px;"></div>
+      <div class="relative z-10">
+        <p class="text-5xl sm:text-6xl font-black text-white mb-2">{totalContent}</p>
+        <p class="text-cyan-100/80 text-sm font-black uppercase tracking-widest">piezas de contenido publicadas</p>
+      </div>
+    </section>
+
+  </div>
+</Layout>

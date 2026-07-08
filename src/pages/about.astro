@@ -1,0 +1,200 @@
+---
+import Layout from "@layouts/Layout.astro";
+import Card from "@components/Card.astro";
+import { getCollection } from "astro:content";
+import { getSortedPosts } from "src/utils";
+import { SOCIAL_LINKS } from "src/consts";
+
+const allProjects = await getCollection("myprojects");
+const sortedProjects = await getSortedPosts(allProjects);
+
+const techStack = [
+  { name: "HTML5", icon: "html", color: "#e34c26" },
+  { name: "CSS3", icon: "css", color: "#264de4" },
+  { name: "JavaScript", icon: "js", color: "#f7df1e" },
+  { name: "TypeScript", icon: "ts", color: "#3178c6" },
+  { name: "PHP", icon: "php", color: "#777bb4" },
+  { name: "Python", icon: "python", color: "#3776ab" },
+  { name: "Bash", icon: "bash", color: "#4eaa25" },
+  { name: "Astro", icon: "html", color: "#ff5d01" },
+  { name: "Next.js", icon: "next", color: "#000000" },
+  { name: "Node.js", icon: "nodejs", color: "#339933" },
+  { name: "Spring", icon: "spring", color: "#6db33f" },
+  { name: "Ionic", icon: "ionic", color: "#3880ff" },
+  { name: "Bootstrap", icon: "bootstrap", color: "#7952b3" },
+  { name: "jQuery", icon: "jquery", color: "#0769ad" },
+  { name: "Svelte", icon: "js", color: "#ff3e00" },
+  { name: "Tailwind", icon: "css", color: "#06b6d4" },
+  { name: "GraphQL", icon: "graphql", color: "#e10098" },
+  { name: "Git", icon: "git", color: "#f05032" },
+  { name: "Docker", icon: "docker", color: "#2496ed" },
+  { name: "Firebase", icon: "firebase", color: "#ffca28" },
+  { name: "PostgreSQL", icon: "postgresql", color: "#4169e1" },
+  { name: "MySQL", icon: "mysql", color: "#4479a1" },
+  { name: "MongoDB", icon: "mongodb", color: "#47a248" },
+];
+
+const experience = [
+  { period: "2021 — 2025", role: "Full Stack Developer", company: "Discom Technology S.L", description: "Desarrollo y mantenimiento de aplicaciones robustas ERP utilizando Visual Basic, C# y tecnologías de entorno corporativo. Implementación de soluciones integrales tanto en backend como en frontend para optimizar procesos de negocio, además del uso del protocolo MQTT para la comunicación en tiempo real en diversos proyectos industriales e IoT." },
+  { period: "2020 — 2021", role: "Backend Developer", company: "Ontinet ESET S.L", description: "Diseño e implementación de lógica en el lado del servidor, gestión de bases de datos y consumo de APIs en el ecosistema de ciberseguridad de ESET. Especializado en el desarrollo del BackOffice corporativo y otros proyectos internos utilizando PHP para la optimización de procesos administrativos." },
+  { period: "2019 — 2020", role: "Desarrollador Web", company: "Gestiweb S.L", description: "Desarrollo de páginas para clientes utilizando un framework propio basado en PHP e implementación de estrategias de SEO on-page. Responsable de la administración de sistemas y soporte de infraestructura crítica (racks, backups, servidores). Implementé optimizaciones masivas de imágenes mediante Shell Scripts (Bash), mejorando significativamente el rendimiento y el posicionamiento web." },
+  { period: "2018", role: "Programador Junior", company: "INASE S.L", description: "Primeros pasos profesionales colaborando en tareas de programación, testing de aplicaciones web, maquetación adaptativa y asimilación de buenas prácticas de desarrollo." },
+  { period: "2015", role: "Soporte y Formación inicial", company: "Aula Píxel", description: "Apoyo docente y asistencia en el aula para impartir clases y talleres tecnológicos. Resolución de dudas técnicas y preparación de entornos de desarrollo. Colaboré en la programación de robots educativos utilizando el IDE de Arduino para los alumnos de la academia." },
+];
+
+const githubProjects = [
+  { name: "porfolio", url: "https://github.com/jorbencas/porfolio", description: "Portfolio profesional con HTML semántico, CSS GPU-accelerated y JavaScript vanilla" },
+  { name: "Netflix_Anime_Api", url: "https://github.com/jorbencas/Netflix_Anime_Api", description: "API de catálogo de anime inspirada en Netflix" },
+  { name: "blog", url: "https://github.com/jorbencas/blog", description: "Blog personal desarrollado con Astro y desplegado en Vercel" },
+];
+---
+
+<Layout title="Sobre Mí | Jorge Beneyto Castelló" description="Conoce al desarrollador detrás de este blog. Tech stack, experiencia y proyectos." section="about">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-20 space-y-20">
+
+    <!-- HERO -->
+    <section class="flex flex-col sm:flex-row items-center gap-8">
+      <div class="w-32 h-32 sm:w-40 sm:h-40 rounded-2xl bg-gradient-to-br from-sky-800 to-cyan-500 flex items-center justify-center shrink-0 shadow-[4px_4px_0px_0px_rgba(6,182,212,0.3)]">
+        <span class="text-5xl sm:text-6xl font-black text-white">JB</span>
+      </div>
+      <div class="text-center sm:text-left">
+        <h1 class="text-3xl sm:text-4xl font-black uppercase italic tracking-tighter text-slate-900 dark:text-white mb-2">
+          Jorge Beneyto Castelló
+        </h1>
+        <p class="text-lg text-cyan-600 dark:text-cyan-400 font-bold uppercase tracking-wider mb-4">
+          Full Stack Developer
+        </p>
+        <p class="text-sm sm:text-base text-slate-500 dark:text-slate-400 leading-relaxed max-w-lg">
+          Me considero una persona con una fuerte motivación y ganas de aprender. Considero favorecedor el trabajo en equipo, soy responsable con mis proyectos y poseo un gran nivel de empatía y compañerismo.
+        </p>
+      </div>
+    </section>
+
+    <!-- BIO -->
+    <section class="space-y-6">
+      <h2 class="inline-flex items-center gap-2 bg-gradient-to-r from-sky-800 to-cyan-500 dark:from-sky-600 dark:to-cyan-400 px-5 py-2.5 text-xs sm:text-sm font-black uppercase tracking-[0.25em] text-white dark:text-slate-900 shadow-[4px_4px_0px_0px_rgba(6,182,212,0.3)]">
+        💬 Sobre mí
+      </h2>
+      <div class="prose sm:prose-lg dark:prose-invert max-w-none">
+        <p>
+          Soy un desarrollador web que disfruta resolviendo problemas con código. Mi enfoque está en crear herramientas útiles, automatizar tareas repetitivas y escribir artículos que ayuden a otros desarrolladores a aprender.
+        </p>
+        <p>
+          Apasionado por la automatización, el código limpio y las herramientas que hacen la vida del desarrollador más fácil. Creo blogs, dashboards y herramientas que resuelven problemas reales.
+        </p>
+        <p>
+          Cuando no estoy programando, estoy explorando nuevas tecnologías, contribuyendo a proyectos open source o escribiendo los próximos artículos del blog.
+        </p>
+      </div>
+    </section>
+
+    <!-- TECH STACK -->
+    <section class="space-y-6">
+      <h2 class="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-800 to-emerald-500 dark:from-emerald-600 dark:to-emerald-400 px-5 py-2.5 text-xs sm:text-sm font-black uppercase tracking-[0.25em] text-white dark:text-slate-900 shadow-[4px_4px_0px_0px_rgba(16,185,129,0.3)]">
+        ⚡ Conocimientos
+      </h2>
+      <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+        {techStack.map((tech) => (
+          <div
+            class="group flex flex-col items-center gap-2 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-default"
+            style={`--tech-color: ${tech.color};`}
+          >
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-slate-100 dark:bg-slate-800 group-hover:shadow-[0_0_20px_var(--tech-color)] transition-shadow duration-300">
+              <img src={`/icons/${tech.icon}.svg`} alt={tech.name} class="w-6 h-6" />
+            </div>
+            <span class="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-white transition-colors text-center leading-tight">{tech.name}</span>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- EXPERIENCIA -->
+    <section class="space-y-6">
+      <h2 class="inline-flex items-center gap-2 bg-gradient-to-r from-purple-800 to-purple-500 dark:from-purple-600 dark:to-purple-400 px-5 py-2.5 text-xs sm:text-sm font-black uppercase tracking-[0.25em] text-white dark:text-slate-900 shadow-[4px_4px_0px_0px_rgba(168,85,247,0.3)]">
+        📋 Trayectoria Profesional
+      </h2>
+      <p class="text-sm text-slate-500 dark:text-slate-400 -mt-2">
+        Aportando soluciones de software estables, optimización de infraestructura y adaptabilidad tecnológica.
+      </p>
+      <div class="space-y-4">
+        {experience.map((exp) => (
+          <div class="flex flex-col sm:flex-row gap-4 p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+            <div class="sm:w-40 shrink-0">
+              <span class="text-xs font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">{exp.period}</span>
+            </div>
+            <div>
+              <h3 class="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white">{exp.role}</h3>
+              <p class="text-xs text-cyan-600 dark:text-cyan-400 font-bold mt-1">{exp.company}</p>
+              <p class="text-sm text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">{exp.description}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- PROYECTOS DESTACADOS -->
+    {sortedProjects.length > 0 && (
+      <section class="space-y-6">
+        <h2 class="inline-flex items-center gap-2 bg-gradient-to-r from-amber-800 to-amber-500 dark:from-amber-600 dark:to-amber-400 px-5 py-2.5 text-xs sm:text-sm font-black uppercase tracking-[0.25em] text-white dark:text-slate-900 shadow-[4px_4px_0px_0px_rgba(245,158,11,0.3)]">
+          🏆 Proyectos destacados
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {sortedProjects.map((project) => (
+            <Card
+              {...project.data}
+              href={`/proyectos/${project.id.replace(/\.[^/.]+$/, "")}`}
+              accent="purple"
+              aspectRatio="video"
+              overlay="white"
+            />
+          ))}
+        </div>
+      </section>
+    )}
+
+    <!-- REPOS GITHUB -->
+    <section class="space-y-6">
+      <h2 class="inline-flex items-center gap-2 bg-gradient-to-r from-slate-800 to-slate-500 dark:from-slate-600 dark:to-slate-400 px-5 py-2.5 text-xs sm:text-sm font-black uppercase tracking-[0.25em] text-white dark:text-slate-900 shadow-[4px_4px_0px_0px_rgba(100,116,139,0.3)]">
+        🐙 Repositorios
+      </h2>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {githubProjects.map((proj) => (
+          <a
+            href={proj.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="block p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-400 dark:hover:border-slate-600 transition-colors no-underline group"
+          >
+            <div class="flex items-center gap-2 mb-2">
+              <img src="/icons/github.svg" alt="" class="w-4 h-4 opacity-60 group-hover:opacity-100 transition-opacity" />
+              <span class="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white">{proj.name}</span>
+            </div>
+            <p class="text-xs text-slate-400 dark:text-slate-500 leading-relaxed">{proj.description}</p>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <!-- REDES SOCIALES -->
+    <section class="space-y-6">
+      <h2 class="inline-flex items-center gap-2 bg-gradient-to-r from-sky-800 to-cyan-500 dark:from-sky-600 dark:to-cyan-400 px-5 py-2.5 text-xs sm:text-sm font-black uppercase tracking-[0.25em] text-white dark:text-slate-900 shadow-[4px_4px_0px_0px_rgba(6,182,212,0.3)]">
+        🔗 Conecta
+      </h2>
+      <div class="flex flex-wrap gap-4">
+        {SOCIAL_LINKS.map((link) => (
+          <a
+            href={link.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex items-center gap-3 px-5 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 hover:border-[var(--brand)] hover:text-[var(--brand)] transition-all no-underline"
+            style={`--brand: ${link.color}`}
+          >
+            <img src={link.icon} alt="" class="w-5 h-5" />
+            {link.label}
+          </a>
+        ))}
+      </div>
+    </section>
+
+  </div>
+</Layout>

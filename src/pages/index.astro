@@ -44,16 +44,6 @@ const tickerItems = [
   ...latestChallenges.slice(0, 2).map((c) => ({ type: "challenge" as const, title: c.data.title, href: `/retos/${c.id.replace(/\.[^/.]+$/, "")}`, icon: "🏆", color: "amber" })),
 ].sort((a, b) => 0).slice(0, 12);
 
-// --- Timeline milestones ---
-const milestones = [
-  { date: sortedPosts[sortedPosts.length - 1]?.data.pubDate || new Date(), label: "Primer artículo publicado", icon: "🚀", color: "cyan" },
-  { date: sortedPosts[Math.floor(sortedPosts.length / 2)]?.data.pubDate || new Date(), label: "100 artículos", icon: "📝", color: "cyan" },
-  { date: allChallenges[0]?.data.pubDate || new Date(), label: "Primer reto de código", icon: "🏆", color: "amber" },
-  { date: allTools[0]?.data.pubDate || new Date(), label: "Primera mini herramienta", icon: "🛠️", color: "emerald" },
-  { date: allWeeklyPosts[0]?.data.pubDate || new Date(), label: "Primer resumen semanal", icon: "📰", color: "yellow" },
-  { date: new Date(), label: "Dashboard SSR con Python", icon: "🐍", color: "purple" },
-].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
 const linkBase =
   "group relative text-xs font-black uppercase tracking-[0.2em] italic transition-colors w-fit";
 
@@ -71,9 +61,6 @@ const badgeAmber =
 
 const badgeYellow =
   "inline-flex items-center gap-2 bg-gradient-to-r from-yellow-600 to-yellow-400 dark:from-yellow-600 dark:to-yellow-400 px-5 py-2.5 text-xs sm:text-sm font-black uppercase tracking-[0.25em] text-white dark:text-slate-900 shadow-[4px_4px_0px_0px_rgba(234,179,8,0.3)]";
-
-const badgePurple =
-  "inline-flex items-center gap-2 bg-gradient-to-r from-purple-800 to-purple-500 dark:from-purple-600 dark:to-purple-400 px-5 py-2.5 text-xs sm:text-sm font-black uppercase tracking-[0.25em] text-white dark:text-slate-900 shadow-[4px_4px_0px_0px_rgba(168,85,247,0.3)]";
 
 const stickers = [
   { name: "html", pos: "top: 0%; right: 10px;", rot: "5deg", c: "#06b6d4", d: "0s" },
@@ -299,42 +286,6 @@ const stickers = [
         </section>
       )}
 
-      <!-- TIMELINE VISUAL -->
-      <section class="section-non-blog">
-        <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0 mb-10">
-          <h2 class={badgePurple}>📅 Timeline</h2>
-        </div>
-        <div class="relative">
-          <div class="absolute left-4 sm:left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-purple-500 via-cyan-500 to-emerald-500"></div>
-          <div class="space-y-12">
-            {milestones.map((m, i) => (
-              <div class={`relative flex items-center gap-6 ${i % 2 === 0 ? "sm:flex-row" : "sm:flex-row-reverse"}`}>
-                <div class={`hidden sm:block flex-1 ${i % 2 === 0 ? "text-right" : "text-left"}`}>
-                  <div class="inline-block px-5 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-                    <span class="text-xs font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                      {new Date(m.date).toLocaleDateString("es-ES", { month: "short", year: "numeric" })}
-                    </span>
-                    <p class="text-sm font-bold text-slate-700 dark:text-slate-200 mt-1">{m.label}</p>
-                  </div>
-                </div>
-                <div class="relative z-10 flex items-center justify-center w-10 h-10 rounded-full bg-white dark:bg-slate-900 border-2 shrink-0" style={`border-color: ${m.color === "cyan" ? "#06b6d4" : m.color === "amber" ? "#f59e0b" : m.color === "emerald" ? "#10b981" : m.color === "yellow" ? "#eab308" : "#a855f7"};`}>
-                  <span class="text-lg">{m.icon}</span>
-                </div>
-                <div class="sm:hidden flex-1">
-                  <div class="px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-                    <span class="text-xs font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                      {new Date(m.date).toLocaleDateString("es-ES", { month: "short", year: "numeric" })}
-                    </span>
-                    <p class="text-sm font-bold text-slate-700 dark:text-slate-200 mt-1">{m.label}</p>
-                  </div>
-                </div>
-                <div class="hidden sm:block flex-1"></div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       <!-- NEWSLETTER CTA -->
       <section class="section-non-blog">
         <div class="relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-gradient-to-br from-sky-900 via-cyan-800 to-sky-900 p-8 sm:p-12">
@@ -449,11 +400,4 @@ const stickers = [
     background-repeat: repeat;
     background-position: 0 0;
   }
-
-  /* Timeline colors */
-  .timeline-cyan { --tl-color: #06b6d4; }
-  .timeline-amber { --tl-color: #f59e0b; }
-  .timeline-emerald { --tl-color: #10b981; }
-  .timeline-yellow { --tl-color: #eab308; }
-  .timeline-purple { --tl-color: #a855f7; }
 </style>

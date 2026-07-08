@@ -1,0 +1,119 @@
+---
+import Layout from "@layouts/Layout.astro";
+
+const categories = [
+  {
+    title: "Editor & Terminal",
+    icon: "💻",
+    color: "cyan",
+    items: [
+      { name: "VS Code", description: "Editor principal con Vim keybindings" },
+      { name: "Windows Terminal", description: "Terminal moderna con tabs" },
+      { name: "WSL2", description: "Windows Subsystem for Linux con Ubuntu" },
+    ],
+  },
+  {
+    title: "Sistema Operativo",
+    icon: "🖥️",
+    color: "purple",
+    items: [
+      { name: "Windows 11", description: "SO principal con WSL2" },
+      { name: "Ubuntu 22.04", description: "Dentro de WSL2 para desarrollo" },
+    ],
+  },
+  {
+    title: "Lenguajes",
+    icon: "📝",
+    color: "emerald",
+    items: [
+      { name: "JavaScript / TypeScript", description: "Lenguaje principal para frontend y backend" },
+      { name: "Python", description: "Scripts, automatización y web scraping" },
+      { name: "HTML / CSS", description: "HTML semántico y CSS moderno con Tailwind" },
+      { name: "Bash", description: "Scripts de shell y automatización" },
+    ],
+  },
+  {
+    title: "Frameworks & Librerías",
+    icon: "⚡",
+    color: "amber",
+    items: [
+      { name: "Astro", description: "Framework estático para blogs y portfolios" },
+      { name: "React", description: "UI para proyectos interactivos" },
+      { name: "Svelte", description: "Componentes interactivos en Astro" },
+      { name: "Tailwind CSS", description: "Utility-first CSS framework" },
+      { name: "Express", description: "Backend Node.js" },
+    ],
+  },
+  {
+    title: "Herramientas",
+    icon: "🛠️",
+    color: "yellow",
+    items: [
+      { name: "Git & GitHub", description: "Control de versiones y CI/CD" },
+      { name: "Docker", description: "Contenedores y despliegues" },
+      { name: "Vercel", description: "Deploy de blogs y apps frontend" },
+      { name: "Surge.sh", description: "Deploy estático rápido" },
+      { name: "Pagefind", description: "Búsqueda estática en el blog" },
+    ],
+  },
+  {
+    title: "Productividad",
+    icon: "📊",
+    color: "purple",
+    items: [
+      { name: "Notion", description: "Documentación y planificación" },
+      { name: "GitHub Projects", description: "Gestión de tareas y roadmap" },
+      { name: "Vercel Analytics", description: "Métricas de rendimiento" },
+    ],
+  },
+];
+
+const colorMap: Record<string, { badge: string; dot: string }> = {
+  cyan: { badge: "from-sky-800 to-cyan-500 dark:from-sky-600 dark:to-cyan-400", dot: "bg-cyan-500" },
+  purple: { badge: "from-purple-800 to-purple-500 dark:from-purple-600 dark:to-purple-400", dot: "bg-purple-500" },
+  emerald: { badge: "from-emerald-800 to-emerald-500 dark:from-emerald-600 dark:to-emerald-400", dot: "bg-emerald-500" },
+  amber: { badge: "from-amber-800 to-amber-500 dark:from-amber-600 dark:to-amber-400", dot: "bg-amber-500" },
+  yellow: { badge: "from-yellow-600 to-yellow-400 dark:from-yellow-600 dark:to-yellow-400", dot: "bg-yellow-500" },
+};
+---
+
+<Layout title="Lo que uso | Jorge Beneyto Castelló" description="Herramientas, hardware, software y configuración que uso para desarrollar." section="uses">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-20 space-y-12">
+
+    <!-- HEADER -->
+    <div class="text-center space-y-4">
+      <span class="text-xs text-emerald-500 uppercase tracking-[0.3em]">CONFIGURACIÓN</span>
+      <h1 class="text-4xl md:text-5xl font-black italic uppercase tracking-tighter text-slate-900 dark:text-white">
+        Lo que uso
+      </h1>
+      <div class="h-1 w-24 bg-emerald-500 dark:bg-emerald-400 mx-auto rounded-full"></div>
+      <p class="max-w-2xl mx-auto text-sm sm:text-base text-slate-500 dark:text-slate-400 leading-relaxed">
+        Herramientas, software y configuración que forman parte de mi día a día como desarrollador.
+      </p>
+    </div>
+
+    <!-- CATEGORIES -->
+    {categories.map((cat) => {
+      const c = colorMap[cat.color] || colorMap.cyan;
+      return (
+        <section class="space-y-6">
+          <h2 class={`inline-flex items-center gap-2 bg-gradient-to-r ${c.badge} px-5 py-2.5 text-xs sm:text-sm font-black uppercase tracking-[0.25em] text-white dark:text-slate-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)]`}>
+            {cat.icon} {cat.title}
+          </h2>
+          <div class="space-y-3">
+            {cat.items.map((item) => (
+              <div class="flex items-start gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
+                <div class={`w-2 h-2 rounded-full ${c.dot} mt-2 shrink-0`}></div>
+                <div>
+                  <h3 class="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white">{item.name}</h3>
+                  <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">{item.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      );
+    })}
+
+  </div>
+</Layout>
