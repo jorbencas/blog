@@ -5,6 +5,7 @@ import Breadcrumbs from "@components/Breadcrumbs.astro";
 import CodeEnhancer from "@components/CodeEnhancer.astro";
 import ResponsiveImage from "@components/ResponsiveImage.astro";
 import MoreProjects from "@components/MoreProjects.astro";
+import Disqus from "@components/Disqus.astro";
 import "@styles/solution.css";
 
 interface Props {
@@ -154,6 +155,12 @@ const tagsArray = Array.isArray(tags)
         >
           <slot />
         </article>
+
+        <Disqus
+          url={url || `https://blog-jorbencas.vercel.app${Astro.url.pathname}`}
+          identifier={currentSlug || title}
+          title={title}
+        />
       </main>
 
       <MoreProjects currentSlug={currentSlug} />
