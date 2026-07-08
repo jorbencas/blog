@@ -13,6 +13,7 @@ import { getCollection } from "astro:content";
 import type { MarkdownHeading } from "astro";
 import AudioPlayer from "@components/AudioPlayer.astro";
 import CopyPost from "@components/CopyPost.astro";
+import Disqus from "@components/Disqus.astro";
 const bar = {
   prevElement: { url: undefined, title: undefined, image: "prev.svg" },
   nextElement: { url: undefined, title: undefined, image: "next.svg" },
@@ -211,6 +212,12 @@ const sc = sectionColors[section] || sectionColors.blog;
       >
         <slot />
       </article>
+
+      <Disqus
+        url={postUrl}
+        identifier={id?.toString() || title}
+        title={title}
+      />
 
       <div class="mt-20 pt-12 space-y-16">
         <div class="space-y-6">

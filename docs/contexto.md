@@ -1,6 +1,6 @@
 # Contexto del proyecto — Blog
 
-**Última actualización**: 2026-07-07 (post Docker instalación + containerización blog)
+**Última actualización**: 2026-07-07 (Disqus comments + post Docker)
 **Stack**: Astro 6.4 + Svelte 5 + Tailwind CSS 4.3 | Vercel static | Node >= 22
 **Idioma**: Español
 **Deploy**: `blog-jorbencas.vercel.app`
@@ -36,6 +36,7 @@
 | 2026-07 | **Related posts hover fix**: `hover:prose-a:underline` → `a:hover` en PostLayout.astro (Tailwind `hover:prose-a:` aplicaba a todos los links al hoverear cualquier parte del contenedor) |
 | 2026-07 | **README actualizado**: sección Resource Management reescrita como API pipeline, eliminados detalles de script Python interno |
 | 2026-07 | **Post Docker**: Nuevo post `docker-instalacion-primeros-pasos.mdx` — instalación Linux/Windows, primer contenedor, Dockerfile, containerizar el blog paso a paso (9 pasos), Docker Desktop, complementos (Compose multi-servicio, volúmenes, redes, .env, comandos día a día, buenas prácticas). Dockerfile + docker-compose.yml + .dockerignore creados en raíz del blog |
+| 2026-07 | **Disqus comments**: Componente `Disqus.astro` añadido a `PostLayout.astro` — comentarios en todos los posts. Shortname: `jorbencas` |
 
 ## Mejoras implementadas
 
@@ -124,7 +125,7 @@ Orden de secciones: Mis_Proyectos → Mini_Herramientas → Retos → Últimos_P
 ## Archivos relevantes
 
 - **Layouts**: `PostLayout.astro` (TOC en grid), `Layout.astro` (tema, anti-flash), `ProjectLayout.astro`
-- **Componentes clave**: `TableOfContents.astro` (mobile details + desktop sidebar), `Breadcrumbs.astro`, `Navbar.astro` (slot para buscador mobile, botón X dedicado para cerrar menú, sin cierre por backdrop/Escape/resize), `Header.astro`, `Buscador.astro`, `CopyPost.astro` (3 botones), `ScrollToTop.astro`, `Archive.astro` (todos los años visibles, sin toggle), `CodeTabs.svelte` (4-lang tabs interactivos)
+- **Componentes clave**: `TableOfContents.astro` (mobile details + desktop sidebar), `Breadcrumbs.astro`, `Navbar.astro` (slot para buscador mobile, botón X dedicado para cerrar menú, sin cierre por backdrop/Escape/resize), `Header.astro`, `Buscador.astro`, `CopyPost.astro` (3 botones), `ScrollToTop.astro`, `Archive.astro` (todos los años visibles, sin toggle), `CodeTabs.svelte` (4-lang tabs interactivos), `Disqus.astro` (comentarios)
 - **Cards**: `Card.astro` (unificado, paramétrico por acento: cyan/emerald/purple, aspectRatio, overlay, difficulty badge, repository icon)
 - **Guías**: 15 archivos `src/content/posts/guia-0-100-*.mdx`
 - **Docker**: `Dockerfile` (multi-stage build: node:22-alpine builder → serve estático), `docker-compose.yml` (servicio blog con healthcheck), `.dockerignore`
