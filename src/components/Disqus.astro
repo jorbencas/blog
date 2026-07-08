@@ -19,46 +19,16 @@ const { url, identifier, title } = Astro.props;
     this.page.url = url;
     this.page.identifier = identifier;
     this.page.title = title;
-    this.page.remote_auth_s3 = undefined;
-    this.page.api_key = undefined;
+    var isDark = document.documentElement.classList.contains('dark');
+    this.page.theme = isDark ? 1 : 2;
   };
 
-  function getDisqusTheme() {
-    return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
-  }
-
-  function loadDisqus() {
+  (function () {
     var d = document, s = d.createElement('script');
     s.src = 'https://jorbencas.disqus.com/embed.js';
     s.setAttribute('data-timestamp', +new Date());
-    s.setAttribute('data-disqus-embed', getDisqusTheme());
     (d.head || d.body).appendChild(s);
-  }
-
-  loadDisqus();
-
-  var observer = new MutationObserver(function () {
-    var frame = document.querySelector('#disqus_thread iframe');
-    if (frame && frame.contentDocument) {
-      var html = frame.contentDocument.documentElement;
-      if (html) {
-        var isDark = document.documentElement.classList.contains('dark');
-        if (isDark) {
-          html.classList.add('dark');
-          html.classList.remove('light');
-        } else {
-          html.classList.add('light');
-          html.classList.remove('dark');
-        }
-      }
-    }
-  });
-
-  observer.observe(document.documentElement, {
-    attributes: true,
-    attributeFilter: ['class'],
-    subtree: false
-  });
+  })();
 </script>
 
 <noscript>
