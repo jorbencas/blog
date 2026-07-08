@@ -3,7 +3,7 @@ title: "Weekly Tech Recap W28"
 description: "Esta semana hemos seguido de cerca las principales tendencias en tecnología y desarrollo."
 pubDate: "2026-07-08"
 author: "Jorge Beneyto Castelló"
-image: "public/img/arquitectura_web.webp"
+image: "img/2026_w28_tech_recap/2026_w28_tech_recap_cover-1200.webp"
 tags: ["tech", "semanal"]
 slug: "2026-w28-tech-recap"
 draft: false
