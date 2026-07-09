@@ -7,7 +7,7 @@ author: "Jorge Beneyto Castelló"
 image: "img/2026_w25_tech_recap/2026_w25_tech_recap_cover-1200.webp"
 tags: ["IA", "\u00c9ticaTecnol\u00f3gica", "Innovaci\u00f3n"]
 slug: "2026-w25-tech-recap"
-draft: false
+draft: true
 ---
 
 ## 🚀 Lo más destacado de la semana

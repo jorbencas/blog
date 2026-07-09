@@ -1,6 +1,7 @@
 ---
 import Layout from "@layouts/Layout.astro";
 import Card from "@components/Card.astro";
+import Information from "@components/Information.astro";
 import { getSortedPosts } from "src/utils";
 import { getCollection } from "astro:content";
 import Weekly from "@components/Weekly.astro";
@@ -186,17 +187,21 @@ const stickers = [
             <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-purple-500 transition-all duration-300 group-hover:w-full"></span>
           </a>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {latestProjects.map((project) => (
-            <Card
-              {...project.data}
-              href={`/proyectos/${project.id.replace(/\.[^/.]+$/, "")}`}
-              accent="purple"
-              aspectRatio="video"
-              overlay="white"
-            />
-          ))}
-        </div>
+        {latestProjects.length > 0 ? (
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {latestProjects.map((project) => (
+              <Card
+                {...project.data}
+                href={`/proyectos/${project.id.replace(/\.[^/.]+$/, "")}`}
+                accent="purple"
+                aspectRatio="video"
+                overlay="white"
+              />
+            ))}
+          </div>
+        ) : (
+          <Information section="proyectos" />
+        )}
       </section>
 
       <!-- SECCIÓN: HERRAMIENTAS -->
@@ -232,15 +237,19 @@ const stickers = [
             <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-amber-500 transition-all duration-300 group-hover:w-full"></span>
           </a>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {latestChallenges.map((ch) => (
-            <Card
-              {...ch.data}
-              href={`/retos/${ch.id.replace(/\.[^/.]+$/, "")}`}
-              accent="amber"
-            />
-          ))}
-        </div>
+        {latestChallenges.length > 0 ? (
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {latestChallenges.map((ch) => (
+              <Card
+                {...ch.data}
+                href={`/retos/${ch.id.replace(/\.[^/.]+$/, "")}`}
+                accent="amber"
+              />
+            ))}
+          </div>
+        ) : (
+          <Information section="retos" />
+        )}
       </section>
 
       <!-- SECCIÓN: BLOG -->
@@ -267,7 +276,7 @@ const stickers = [
       </section>
 
       <!--SECCIÓN WEEKLY-->
-      {latest6Weekly.length > 0 && (
+      {latest6Weekly.length > 0 ? (
         <section class="space-y-10">
           <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0">
             <h2 class={badgeYellow}>📰 Resúmenes Semanales</h2>
@@ -284,6 +293,8 @@ const stickers = [
             ))}
           </div>
         </section>
+      ) : (
+        <Information section="weekly" />
       )}
 
       <!-- NEWSLETTER CTA -->

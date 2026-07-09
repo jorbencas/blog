@@ -7,7 +7,7 @@ author: "Jorge Beneyto Castelló"
 image: "img/2026_w23_tech_recap/2026_w23_tech_recap_cover-1200.webp"
 tags: ["tech", "semanal"]
 slug: "2026-w23-tech-recap"
-draft: false
+draft: true
 ---
 
 ## 🚀 Lo más destacado de la semana
