@@ -200,20 +200,20 @@ const stickers = [
             ))}
           </div>
         ) : (
-          <Information section="proyectos" />
+          <Information section="proyectos" hideButtons />
         )}
       </section>
 
       <!-- SECCIÓN: HERRAMIENTAS -->
-      {latestTools.length > 0 && (
-        <section class="space-y-10">
-          <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0">
-            <h2 class={badgeHerramientas}>🛠️ Mini Herramientas</h2>
-            <a href="/herramientas" class={`${linkBase} text-slate-400 hover:text-emerald-500`}>
-              Ver herramientas <span class="inline-block transition-transform group-hover:translate-x-1">→</span>
-              <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-emerald-500 transition-all duration-300 group-hover:w-full"></span>
-            </a>
-          </div>
+      <section class="space-y-10">
+        <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0">
+          <h2 class={badgeHerramientas}>🛠️ Mini Herramientas</h2>
+          <a href="/herramientas" class={`${linkBase} text-slate-400 hover:text-emerald-500`}>
+            Ver herramientas <span class="inline-block transition-transform group-hover:translate-x-1">→</span>
+            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-emerald-500 transition-all duration-300 group-hover:w-full"></span>
+          </a>
+        </div>
+        {latestTools.length > 0 ? (
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {latestTools.map((tool) => (
               <Card
@@ -225,8 +225,10 @@ const stickers = [
               />
             ))}
           </div>
-        </section>
-      )}
+        ) : (
+          <Information section="herramientas" hideButtons />
+        )}
+      </section>
 
       <!-- SECCIÓN: RETOS -->
       <section class="space-y-10">
@@ -248,7 +250,7 @@ const stickers = [
             ))}
           </div>
         ) : (
-          <Information section="retos" />
+          <Information section="retos" hideButtons />
         )}
       </section>
 
@@ -261,17 +263,21 @@ const stickers = [
             <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-cyan-500 transition-all duration-300 group-hover:w-full"></span>
           </a>
         </div>
-        {featuredPost && (
-          <div class="mb-8">
-            <Card href={`/posts/${featuredPost.id}`} {...featuredPost.data} accent="cyan" />
-          </div>
-        )}
-        {remainingPosts.length > 0 && (
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {remainingPosts.map((p) => (
-              <Card href={`/posts/${p.id}`} {...p.data} accent="cyan" />
-            ))}
-          </div>
+        {featuredPost ? (
+          <>
+            <div class="mb-8">
+              <Card href={`/posts/${featuredPost.id}`} {...featuredPost.data} accent="cyan" />
+            </div>
+            {remainingPosts.length > 0 && (
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {remainingPosts.map((p) => (
+                  <Card href={`/posts/${p.id}`} {...p.data} accent="cyan" />
+                ))}
+              </div>
+            )}
+          </>
+        ) : (
+          <Information section="posts" hideButtons />
         )}
       </section>
 
@@ -294,7 +300,7 @@ const stickers = [
           </div>
         </section>
       ) : (
-        <Information section="weekly" />
+        <Information section="weekly" hideButtons />
       )}
 
       <!-- NEWSLETTER CTA -->

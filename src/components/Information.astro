@@ -3,7 +3,7 @@ import { getCollection } from "astro:content";
 
 type Section = "posts" | "retos" | "herramientas" | "proyectos" | "weekly";
 
-const { section = "posts" as Section } = Astro.props;
+const { section = "posts" as Section, hideButtons = false } = Astro.props;
 
 const config: Record<Section, { icon: string; title: string; subtitle: string }> = {
   posts: { icon: "📡", title: "Señal perdida", subtitle: "No hay más artículos en esta frecuencia" },
@@ -70,20 +70,22 @@ const randomSlug = randomItem
       </p>
     </div>
 
-    <div class="flex flex-wrap justify-center gap-3 pt-4">
-      <a
-        href="/"
-        class="px-5 py-2.5 text-xs font-black uppercase tracking-[0.2em] bg-gradient-to-r from-sky-800 to-cyan-600 dark:from-sky-600 dark:to-cyan-500 text-white dark:text-slate-900 rounded-lg hover:shadow-lg hover:-translate-y-0.5 active:scale-95 transition-all"
-      >
-        ← Volver al inicio
-      </a>
-      <a
-        href={`/${sectionPath}/1`}
-        class="px-5 py-2.5 text-xs font-black uppercase tracking-[0.2em] border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg hover:border-cyan-500 hover:text-cyan-600 dark:hover:text-cyan-400 hover:-translate-y-0.5 active:scale-95 transition-all"
-      >
-        Primera página →
-      </a>
-    </div>
+    {!hideButtons && (
+      <div class="flex flex-wrap justify-center gap-3 pt-4">
+        <a
+          href="/"
+          class="px-5 py-2.5 text-xs font-black uppercase tracking-[0.2em] bg-gradient-to-r from-sky-800 to-cyan-600 dark:from-sky-600 dark:to-cyan-500 text-white dark:text-slate-900 rounded-lg hover:shadow-lg hover:-translate-y-0.5 active:scale-95 transition-all"
+        >
+          ← Volver al inicio
+        </a>
+        <a
+          href={`/${sectionPath}/1`}
+          class="px-5 py-2.5 text-xs font-black uppercase tracking-[0.2em] border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg hover:border-cyan-500 hover:text-cyan-600 dark:hover:text-cyan-400 hover:-translate-y-0.5 active:scale-95 transition-all"
+        >
+          Primera página →
+        </a>
+      </div>
+    )}
 
     {
       randomItem && (
