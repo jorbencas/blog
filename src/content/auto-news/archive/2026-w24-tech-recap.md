@@ -8,7 +8,7 @@ author: "Jorge Beneyto Castelló"
 image: "img/2026_w24_tech_recap/2026_w24_tech_recap_cover-1200.webp"
 tags: ["InteligenciaArtificial", "Vivienda", "CosteDeVida", "ExperienciaUsuario", "Innovacion"]
 slug: "2026-w24-tech-recap"
-draft: false
+draft: true
 ---
 
 ## 🚀 Lo más destacado de la semana
