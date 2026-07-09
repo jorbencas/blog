@@ -7,8 +7,6 @@ image: "img/2026_w26_tech_recap/2026_w26_tech_recap_cover-1200.webp"
 tags: ["tech", "gaming", "inteligencia_artificial", "big_tech", "hardware"]
 slug: "2026-w26-tech-recap"
 draft: true
-readingTime: 156
-categories: ["tech", "weekly-recap"]
 ---
 
 ## 🚀 Lo más destacado de la semana

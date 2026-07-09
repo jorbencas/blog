@@ -9,9 +9,7 @@ export const resolveImagePath = (image) => {
       ? image
       : null;
   }
-  return existsSync(join(process.cwd(), "public", image))
-    ? `/${image}`
-    : null;
+  return existsSync(join(process.cwd(), "public", image)) ? `/${image}` : null;
 };
 
 export const formatDatePost = (date) => {
@@ -25,7 +23,7 @@ export const formatDatePost = (date) => {
 
 export const getSortedPosts = (allPosts) => {
   return allPosts
-    .filter((post) => !post.data.draft)
+    .filter((post) => !post.data.draft && post.data.draft === false)
     .sort(
       (a, b) =>
         new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime()
