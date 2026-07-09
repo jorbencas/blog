@@ -1,6 +1,7 @@
 ---
 import Layout from "@layouts/Layout.astro";
 import Weekly from "@components/Weekly.astro";
+import Information from "@components/Information.astro";
 import { getCollection } from "astro:content";
 
 const allWeekly = await getCollection("weeklyPosts");
@@ -63,11 +64,7 @@ const historyWeekly = sortedWeekly.slice(1);
       <!-- ESTADO VACÍO -->
       {
         sortedWeekly.length === 0 && (
-          <div class="py-20 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
-            <p class="text-slate-500 dark:text-slate-400 uppercase tracking-widest">
-              No hay reportes disponibles todavía...
-            </p>
-          </div>
+          <Information section="weekly" />
         )
       }
 
