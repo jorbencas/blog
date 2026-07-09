@@ -1,5 +1,10 @@
 ---
-import { formatDatePost, getSortedPosts, getRelatedPosts, resolveImagePath } from "src/utils.js";
+import {
+  formatDatePost,
+  getSortedPosts,
+  getRelatedPosts,
+  resolveImagePath,
+} from "src/utils.js";
 import getReadingTime from "reading-time";
 import "@styles/solution.css";
 import Layout from "@layouts/Layout.astro";
@@ -91,7 +96,9 @@ const tagsArray = Array.isArray(tags)
   : [];
 
 const currentPost = allPosts.find((p) => p.id === id);
-const relatedPosts = currentPost ? getRelatedPosts(currentPost, allPosts, 3) : [];
+const relatedPosts = currentPost
+  ? getRelatedPosts(currentPost, allPosts, 3)
+  : [];
 
 const sectionColors = {
   weekly: {
@@ -380,12 +387,6 @@ const sc = sectionColors[section] || sectionColors.blog;
           textNext={bar.nextElement?.title}
           textPrev={bar.prevElement?.title}
         />
-
-        <Disqus
-          url={postUrl}
-          identifier={id?.toString() || title}
-          title={title}
-        />
       </div>
     </main>
 
@@ -396,7 +397,7 @@ const sc = sectionColors[section] || sectionColors.blog;
       </div>
     </div>
   </div>
-
+  <Disqus url={postUrl} identifier={id?.toString() || title} title={title} />
   <CodeEnhancer />
 </Layout>
 
