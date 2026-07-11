@@ -1,6 +1,6 @@
 ---
 draft: false
-title: "Docker: Instalación, de ffmpeg y  yt-dlp en windows usando wwsl "
+title: "Docker: Instalación, de ffmpeg y  yt-dlp en windows usando wsl "
 description: "Guía práctica para instalar ffmpeg y yt-dlp en Windows usando WSL."
 pubDate: "2026-07-11"
 tags: ["docker", "devops", "contenedores", "linux", "windows"]
@@ -34,14 +34,14 @@ services:
 Ojo al detalle: Recuerda cambiar TuUsuario por el nombre real de tu usuario en Windows (lo puedes ver en la terminal de WSL escribiendo <code>ls /mnt/c/Users/</code>).
 
 2. Pasos para ejecutarlo en WSLAbre tu terminal de WSL (Ubuntu) y sigue estos pasos:
-    1.Asegurar Docker Desktop:En Windows.Asegúrate de que Docker Desktop está abierto en Windows y que en sus ajustes (<code>Settings -> Resources -> WSL Integration</code>) tienes activada la casilla de tu distribución de WSL.
+    1. Asegurar Docker Desktop:En Windows.Asegúrate de que Docker Desktop está abierto en Windows y que en sus ajustes (<code>Settings -> Resources -> WSL Integration</code>) tienes activada la casilla de tu distribución de WSL.
     
-    2.Lanzar el contenedor:En WSL.Ve a la carpeta donde guardaste el docker-compose.yml y arráncalo en modo interactivo:
+    2. Lanzar el contenedor:En WSL.Ve a la carpeta donde guardaste el docker-compose.yml y arráncalo en modo interactivo:
     ```Bash
         docker compose run --rm downloader
     ```
 
-    3.Descargar el vídeo:Dentro de Alpine.Una vez veas el prompt / #, pega el comando de descarga. Gracias a ffmpeg, bajará la máxima calidad disponible y unirá el audio y vídeo automáticamente:
+    3. Descargar el vídeo:Dentro de Alpine.Una vez veas el prompt / #, pega el comando de descarga. Gracias a ffmpeg, bajará la máxima calidad disponible y unirá el audio y vídeo automáticamente:
     
     ```Bash
     yt-dlp -f "bv+ba/b" --merge-output-format mp4 -P /downloads "AQUÍ_TU_URL"
