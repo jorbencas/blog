@@ -1,0 +1,50 @@
+---
+draft: false
+title: "Docker: Instalación, de ffmpeg y  yt-dlp en windows usando wwsl "
+description: "Guía práctica para instalar ffmpeg y yt-dlp en Windows usando WSL."
+pubDate: "2026-07-"11
+tags: ["docker", "devops", "contenedores", "linux", "windows"]
+image: "img/docker-to-yt-ffmpeg_in-wls.webp"
+author: "Jorge Beneyto Castelló"
+---
+
+1. El docker-compose.yml adaptadoLo ideal es que guardes los vídeos directamente en tu disco de Windows <code>(C:)</code> para que puedas abrirlos con el reproductor de Windows sin tener que buscarlos dentro de la máquina virtual de WSL.En WSL, tu disco C: está montado en la ruta <code>/mnt/c/<code>. Crea este archivo docker-compose.yml dentro de tu terminal de WSL:YAMLversion: '3.8'
+
+```docker
+services:
+  downloader:
+    image: alpine:latest
+    container_name: yt_ffmpeg_downloader
+    volumes:
+      # Mapea tu carpeta de Descargas de Windows con el contenedor
+      # Cambia "TuUsuario" por el nombre de tu carpeta de usuario en Windows
+      - /mnt/c/Users/TuUsuario/Downloads:/downloads
+    tty: true
+    stdin_open: true
+    command: >
+      sh -c "
+      apk update && 
+      apk add --no-cache ffmpeg python3 curl &&
+      curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp &&
+      chmod a+rx /usr/local/bin/yt-dlp &&
+      sh
+      "
+```
+
+Ojo al detalle: Recuerda cambiar TuUsuario por el nombre real de tu usuario en Windows (lo puedes ver en la terminal de WSL escribiendo ls /mnt/c/Users/).
+
+2. Pasos para ejecutarlo en WSLAbre tu terminal de WSL (Ubuntu) y sigue estos pasos:
+    1.Asegurar Docker Desktop:En Windows.Asegúrate de que Docker Desktop está abierto en Windows y que en sus ajustes (Settings -> Resources -> WSL Integration) tienes activada la casilla de tu distribución de WSL.
+    
+    2.Lanzar el contenedor:En WSL.Ve a la carpeta donde guardaste el docker-compose.yml y arráncalo en modo interactivo:
+    ```Bash
+        docker compose run --rm downloader
+    ```
+
+    3.Descargar el vídeo:Dentro de Alpine.Una vez veas el prompt / #, pega el comando de descarga. Gracias a ffmpeg, bajará la máxima calidad disponible y unirá el audio y vídeo automáticamente:
+    
+    ```Bash
+    yt-dlp -f "bv+ba/b" --merge-output-format mp4 -P /downloads "AQUÍ_TU_URL"
+    ```
+
+Al terminar, el archivo aparecerá directamente en la carpeta Descargas de tu explorador de archivos de Windows listo para reproducir. Cuando acabes, simplemente escribe exit en la terminal del contenedor.
