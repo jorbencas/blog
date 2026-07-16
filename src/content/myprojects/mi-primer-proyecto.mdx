@@ -44,10 +44,452 @@ Garantizar cero defectos en la rama default (`main`) forzó diseñar flujos estr
 
 ## 4. Desglose del Feature Set
 
-El valor principal funcional de la herramienta reside en la segmentación de su oferta formativa:
-*   **Práctica Focalizada y Entornos Custom:** Incluye librerías operativas para modos restrictivos contra errores (Modo Precisión), rutinas de sprint (Modo Velocidad), y simuladores directos de digitalización léxica en bloques (Modo Código / Símbolos). Dispone además de una factoría de "Textos Mágicos / Custom Levels".
-*   **Módulo Iterativo de Dictado:** Feature innovadora apoyada firmemente en tecnologías nativas de *Speech Recognition*, que empuja a transcribir al vuelo lo que dicta la plataforma en un proceso a tiempo real.
-*   **Sistema de Progresión Analítica:** Tracking en backend para generar dashboards analíticos renderizados mediante librerías de visualización de datos (**Recharts**). La competitividad inter-usuario se promueve con listados jerárquicos asíncronos (Leaderboards).
+Mecano no es solo un editor de texto: es un ecosistema completo de entrenamiento de mecanografía con más de 50 componentes organizados en módulos independientes. Cada pieza fue diseñada para un propósito específico y reutilizable.
+
+### Características Principales
+
+La plataforma se estructura en torno a tres pilares fundamentales. El primero es el **currículo educativo de 100 niveles**: 10 módulos temáticos que van desde la fila base hasta símbolos avanzados y código, con dificultad progresiva y objetivos de WPM dinámicos (15-115 WPM). Cada 10 niveles hay un examen con máxima exigencia (0 errores admitidos) que valida el progreso antes de avanzar al siguiente módulo.
+
+El segundo pilar son los **modos de práctica especializados**: práctica guiada con niveles progresivos, práctica libre con textos propios, modo velocidad con cronómetro, modo precisión con penalización por errores, modo zen sin presión, modos especializados para números/símbolos/código, modo dictado con reconocimiento de voz, y el arcade de lluvia de letras.
+
+El tercer pilar es el **sistema de navegación rediseñado**: un Home Hub con acceso rápido a todos los modos, páginas de presentación (landing) para cada categoría con descripción y beneficios, y un menú horizontal con secciones desplegables (Practice, Games, Custom, Progress, Community).
+
+### 🏆 Sistema Social y Gamificación
+
+La gamificación mantiene al usuario comprometido. El sistema de logros tiene 30+ insignias desbloqueables por hitos específicos (WPM, precisión, racha, niveles). Los retos diarios y estacionales ofrecen objetivos personalizados según el rendimiento del usuario. El leaderboard muestra rankings globales por WPM y precisión. El foro comunitario permite discusiones entre usuarios. El sistema de amigos permite seguir y comparar progreso. El sistema de XP y niveles ofrece una progresión constante más allá de los niveles del currículo.
+
+### 🌐 Internacionalización (i18n)
+
+Mecano soporta 4 idiomas: Español, Inglés, Catalán y Valencià. El sistema de traducciones es completamente custom (sin i18next): un Zustand store gestiona el idioma activo, y un hook `useDynamicTranslations()` carga las traducciones vía imports dinámicos de archivos JSON. Soporta interpolación y dot-notation. Hay más de 55 namespaces traducidos cubriendo menús, modos, estadísticas, admin y social. El cambio de idioma ocurre en tiempo real sin recargar la aplicación.
+
+### 🏗️ Arquitectura del Proyecto
+
+La arquitectura es fullstack unificada con separación clara de responsabilidades. El frontend usa React 18 + TypeScript + Tailwind CSS + Zustand para estado + Framer Motion para animaciones + Recharts para gráficos. El backend corre sobre Express 5 con Passport.js para autenticación (JWT + Google OAuth) y Socket.IO para comunicación en tiempo real. La persistencia es PostgreSQL serverless en Neon. Todo se despliega con Docker (3 servicios: nginx, node, postgres) y se monitorea con Sentry.
+
+### Flujo de Renderizado
+
+La aplicación sigue un árbol de componentes bien definido: `App.tsx` envuelve todo en `<Router>` → `<AuthProvider>` → `<ErrorBoundary>` → `<Routes>`. Las rutas principales se renderizan dentro de `<AppContent>` que contiene el `<HorizontalMenu>` (siempre visible), el contenido principal dentro de `<Suspense>` con lazy loading, modales condicionales (Settings, Registration, DailyChallenge), notificaciones toast y el footer. Las vistas se alternan según el estado `currentView` sin recargar la página.
+
+### Flujo de Juego (Ejemplo: Levels)
+
+Cuando un usuario juega un nivel de Practice, el flujo es: `Levels.tsx` → `GameModeLayout` que renderiza el sidebar (`MenuLevels` con la lista de niveles) y el contenido principal (título, info card con métricas, área de escritura `TypingArea`, teclado virtual `Keyboard` y guía de manos `Hands`). Al completar el nivel, aparece el modal `Stats` con WPM, precisión, errores y botones para repetir o avanzar. El progreso se guarda en la base de datos si el usuario está logueado.
+
+### Flujo de Autenticación
+
+El flujo es simple pero robusto: si el usuario tiene token válido, carga el perfil y muestra todo el contenido. Si no tiene token, muestra el contenido pero con features bloqueadas (Leaderboard, Challenges, Profile). Al hacer clic en una feature bloqueada aparece el `RegistrationModal`. Tras login exitoso, el JWT se guarda en localStorage, el perfil se carga en `userStore` y las features se desbloquean. El logout limpia todo y redirige a home.
+
+### 🎮 Modos de Juego (`src/components/modes/`)
+
+El corazón de la plataforma. Cada modo tiene su propia lógica de validación, teclado adaptado y feedback en tiempo real. Todos comparten el mismo layout base (`GameModeLayout`) pero difieren en cómo penalizan errores y qué métricas priorizan.
+
+**SpeedMode** es un cronómetro puro: el usuario elige un límite de tiempo (30s, 60s, 120s) y debe alcanzar el mayor WPM posible antes de que se agote. El sidebar de niveles muestra el progreso y las estrellas desbloqueadas. Es ideal para sesiones cortas de sprint.
+
+**PrecisionMode** penaliza cada error con terminación anticipada del nivel. No hay segundas oportunas: si superas el límite de errores, el juego se detiene inmediatamente y el modal de stats muestra la razón del fracaso. Esto obliga a escribir con cuidado antes que con velocidad.
+
+**ZenMode** elimina toda presión. Sin cronómetro, sin límite de errores, sin penalización. El usuario escribe a su ritmo y el modal de stats aparece solo cuando decide parar. Es el modo recomendado para principiantes que quieren construir memoria muscular sin estrés.
+
+**NumbersMode** restringe el teclado virtual a caracteres numéricos (0-9). El texto de práctica contiene secuencias de números que simulan datos financieros, IPs o coordenadas. Obliga a dominar la fila numérica sin depender del mouse.
+
+**SymbolsMode** enfoca los caracteres especiales que más aparecen en código: `!@#$%^&*()`. El layout del teclado se adapta para mostrar solo símbolos, y los textos de práctica incluyen expresiones matemáticas y fragmentos de configuración.
+
+**CodeMode** va más allá de símbolos aislados: presenta fragmentos de código reales en Python, JavaScript, TypeScript y otros lenguajes. Incluye indentación, sangría, comentarios y sintaxis completa. Es el modo más desafiante porque combina velocidad con precisión sintáctica.
+
+**DictationMode** usa la API nativa de Text-to-Speech del navegador para leer el texto en voz alta. El usuario escribe lo que escucha, entrenando la conexión oído-teclado. Incluye control de velocidad de voz y pausas entre palabras.
+
+### 🕹️ Juegos (`src/components/games/`)
+
+14 minijuegos arcade que convierten la práctica de mecanografía en algo adictivo. Cada juego tiene su propio motor de física, sistema de niveles y condiciones de victoria/derrota. Todos comparten el `GameContext` para gestionar estado y el `GameLayout` para el sidebar de niveles.
+
+**FallingWords** es el juego estrella: letras caen desde arriba y el usuario debe escribirlas antes de que toquen el fondo. Cada nivel增加 más letras, más velocidad y menos margen de error. Cuando una letra llega al fondo, se incrementa el contador de errores; si supera el máximo, el juego termina.
+
+**TypingInvaders** combina mecanografía con un shooter vertical. Invasores con palabras aparecen en la parte superior y descienden progresamente. El usuario debe escribir cada palabra para destruir al invasor antes de que llegue al fondo. El jugador se mueve con las flechas izquierda/derecha.
+
+**WordInvader** es similar a TypingInvaders pero con un estilo visual diferente: naves enemigas en lugar de bloques. La mecánica es la misma pero la estética espacial lo hace más inmersivo.
+
+**ZombieSurvival** presenta zombis que avanzan hacia el jugador. Cada zombi tiene una palabra asociada; al escribirla correctamente, el zombi muere. Si un zombi llega al jugador, pierde una vida. El juego termina cuando las vidas llegan a cero.
+
+**LetterScramble** muestra palabras mezcladas que el usuario debe descifrar y escribir correctamente. Cada nivel tiene un límite de tiempo por palabra y un número máximo de errores. Entrena la velocidad de procesamiento visual y la precisión de escritura.
+
+**TypingRace** enfrenta al usuario contra una IA que escribe al mismo tiempo. El usuario debe terminar el texto antes que la IA. Si la IA llega al final primero, el juego termina en derrota. Los niveles aumentan la velocidad de la IA progresivamente.
+
+**WordBuilder** presenta palabras que el usuario debe construir letra por letra. Cada palabra correcta incrementa el combo y el puntaje. Los niveles más difíciles tienen menos tiempo por palabra y más errores permitidos.
+
+**CodeBreaker** muestra código cifrado que el usuario debe descifrar escribiendo cada línea. Las líneas correctas se descifran y revelan el código original. El juego termina cuando todas las líneas están descifradas o se supera el límite de errores.
+
+**WordChain** presenta una cadena de palabras donde cada nueva palabra debe comenzar con la última letra de la anterior. El usuario tiene un tiempo limitado por palabra y una longitud máxima de cadena. Entrena la velocidad de procesamiento léxico.
+
+**NumberTyping** muestra secuencias numéricas que el usuario debe escribir rápidamente. Los niveles aumentan la longitud de la secuencia y reducen el tiempo disponible. Ideal para practicar la fila numérica.
+
+**SpaceBarChallenge** es un juego de velocidad que enfoca la barra espaciadora. El usuario debe escribir palabras completas usando la barra espaciadora como separador. Los niveles aumentan la velocidad de aparición de palabras.
+
+**QuickClick** combina escritura con reflejos: objetivos aparecen en pantalla y el usuario debe hacer clic en ellos mientras escribe. Los niveles aumentan la velocidad y cantidad de objetivos.
+
+**ReactionTime** mide el tiempo de reacción del usuario al estímulo visual. Objetivos aparecen aleatoriamente y el usuario debe hacer clic lo más rápido posible. Los niveles reducen el tiempo de reacción requerido.
+
+**MemorySequence** presenta secuencias de letras que el usuario debe memorizar y escribir sin ver. Primero muestra la secuencia, luego la oculta y el usuario debe reproducirla. Los niveles aumentan la longitud de la secuencia.
+
+### 📊 Estadísticas (`src/components/stats/`)
+
+El sistema de estadísticas es el cerebro analítico de Mecano. No solo muestra números: interpreta patrones, predice progreso y sugiere mejoras.
+
+**Stats** es el modal que aparece al completar o fallar un nivel. Muestra WPM, precisión, errores, tiempo y nivel completado. Los botones de "Repetir" y "Siguiente Nivel" permiten avanzar o mejorar. El modal detecta automáticamente si el nivel fue completado o fallado y muestra feedback contextual.
+
+**ProgressDashboard** es un panel completo con tres pestañas: Overview (resumen de progreso), Analytics (gráficos de rendimiento con Recharts) y Export (descarga de datos en CSV/JSON). Muestra tendencias de WPM, precisión por sesión y evolución temporal.
+
+**HeatMap** muestra un mapa de calor estilo GitHub con los días de práctica del usuario. Los días con más actividad aparecen en verde oscuro, los sin actividad en gris. Permite identificar patrones de consistencia.
+
+**PatternAnalysis** analiza los errores del usuario y muestra qué teclas falla con más frecuencia. El mapa de calor del teclado muestra en rojo las teclas problemáticas y sugiere ejercicios específicos.
+
+**ActivityChart** muestra un gráfico de actividad reciente con WPM y precisión por sesión. Permite filtrar por rango de fechas y comparar sesiones.
+
+**RecommendationEngine** analiza el rendimiento del usuario y sugiere modos, niveles o ejercicios específicos. Se basa en patrones de error, tendencias de mejora y objetivos del usuario.
+
+**ProgressPredictor** estima el WPM futuro del usuario basándose en su historial de práctica. Usa regresión lineal para proyectar cuándo alcanzará objetivos específicos.
+
+**DataExport** permite descargar todos los datos de progreso del usuario en formato CSV o JSON. Incluye estadísticas detalladas, historial de sesiones y patrones de error.
+
+**StatsHistory** muestra un historial completo de sesiones con filtros por fecha, modo y resultado. Cada entrada incluye WPM, precisión, errores y duración.
+
+### 🏆 Retos y Desafíos (`src/components/challenges/`)
+
+El sistema de retos mantiene al usuario comprometido con objetivos diarios y estacionales.
+
+**DailyChallenges** muestra una vista completa de retos diarios y estacionales. Cada reto tiene objetivos específicos (WPM mínimo, precisión, modo de juego) y recompensas de XP. La barra de progreso muestra el avance diario.
+
+**DailyChallengesModal** aparece al iniciar sesión y presenta los retos disponibles para el día. Muestra múltiples opciones y permite seleccionar cuáles completar.
+
+**DailyChallengePopup** es un popup no invasivo que notifica retos pendientes al iniciar sesión. Desaparece después de unos segundos pero permanece accesible desde el menú.
+
+**ChallengePlay** es la vista de juego para un reto específico. Similar a Levels pero con la configuración del reto (objetivos, tiempo límite, modo de juego).
+
+**ChallengeItem** es una card individual que muestra icono, título, dificultad y estado del reto. Se usa en grids y listas.
+
+**FreePractice** permite al usuario escribir su propio texto o seleccionar teclas específicas para practicar. No tiene niveles ni objetivos: es práctica pura y libre.
+
+### 🗂️ Niveles (`src/components/levels/`)
+
+El sistema de niveles es la columna vertebral de la progresión.
+
+**Levels** es la vista principal con 100 niveles organizados en 10 módulos. Cada nivel tiene un texto específico, un objetivo de WPM y un límite de errores. Usa `GameModeLayout` con sidebar para navegar entre niveles.
+
+**MenuLevels** es el sidebar que muestra la lista de niveles con estrellas, progreso y nivel actual. En móvil se reordena automáticamente (`order-2 lg:order-1`) para que el contenido del juego aparezca primero.
+
+**LevelCreator** permite crear niveles personalizados: el usuario define el texto, el WPM objetivo y el límite de errores. Los niveles se guardan tanto en localStorage como en la base de datos.
+
+**CustomLevelsManager** gestiona los niveles creados por el usuario: editar, eliminar, jugar y exportar. Incluye una tabla con metadatos de cada nivel.
+
+**CustomLevelsViewer** muestra una vista previa de niveles personalizados antes de jugarlos.
+
+### 👤 Perfil de Usuario (`src/components/UserProfile/`)
+
+El perfil es un dashboard personal con toda la información del usuario.
+
+**UserProfile** es el contenedor principal con tres pestañas: Profile (información personal), Stats (estadísticas detalladas) y Settings (configuraciones).
+
+**ProfileHeader** muestra avatar, nombre, nivel XP y badges desbloqueados.
+
+**QuickStats** presenta estadísticas rápidas: mejor WPM, precisión promedio y número de sesiones.
+
+**RecentActivity** muestra la actividad reciente del usuario con timestamps y métricas.
+
+**ActivityHeatmap** es un mapa de calor de actividad del usuario, similar al HeatMap pero enfocado en el perfil.
+
+**LevelXPProgress** muestra una barra de progreso de XP con el nivel actual y el siguiente objetivo.
+
+**Achievements** lista los logros del usuario con filtros por estado (desbloqueados/bloqueados).
+
+**UserPreferences** permite configurar tema, idioma y opciones de accesibilidad.
+
+**SecuritySettings** gestiona cambio de contraseña, email y eliminación de cuenta.
+
+**AdminSettings** es un panel de administración dentro del perfil, visible solo para usuarios con rol admin.
+
+### 👥 Social (`src/components/social/`)
+
+La dimensión social convierte la práctica individual en una experiencia comunitaria.
+
+**Achievements** muestra una vista completa de logros globales con filtros: todos, desbloqueados, bloqueados. Los iconos se renderizan con tamaños adaptables (`text-4xl` en móvil, `text-6xl` en desktop).
+
+**Leaderboard** presenta rankings globales por WPM y precisión. La tabla es scrollable en móvil y completa en desktop.
+
+**CommunityForum** es un foro de discusión entre usuarios con hilos, comentarios y likes. Los usuarios pueden crear publicaciones, responder y compartir experiencias.
+
+**PublicProfile** muestra el perfil público de otro usuario con estadísticas, logros y actividad.
+
+**FriendsSystem** gestiona el sistema de amigos: buscar, agregar, seguir y gestionar solicitudes.
+
+**FollowButton** es un botón de seguir/dejar de seguir que aparece en perfiles públicos.
+
+### 🔧 Administración (`src/components/admin/`)
+
+El panel de administración está completamente funcional con datos reales de la base de datos.
+
+**AdminDashboard** es el shell principal (~120 líneas) que renderiza 7 pestañas via el enum `AdminTab`. Cada pestaña se carga bajo demanda.
+
+**UsersTab** gestiona usuarios: editar roles, permisos, buscar y filtrar. Conectado con la API de usuarios del backend.
+
+**ActivityTab** muestra estadísticas globales: usuarios activos, sesiones totales, WPM promedio. Incluye gráficos Recharts con datos reales de la base de datos.
+
+**AchievementsTab** muestra logros por usuario con la opción de desbloquear manualmente logros específicos.
+
+**ChallengesTab** gestiona niveles, XP y retos completados por los usuarios.
+
+**TrackingTab** es un placeholder en desarrollo para tracking detallado de actividad.
+
+**HistoryTab** es un placeholder para historial de auditoría del sistema.
+
+**SettingsTab** permite configurar parámetros globales del sistema.
+
+### 🔐 Autenticación (`src/components/auth/`)
+
+El sistema de autenticación soporta múltiples métodos con seguridad robusta.
+
+**Login** es un formulario completo con email/password y botón de Google OAuth. El layout usa grid de 2 columnas en desktop para mostrar información lateral.
+
+**RegistrationModal** es un modal de registro rápido que aparece cuando se intenta acceder a una feature bloqueada sin estar logueado.
+
+**AuthCallback** maneja el redirect después del login social de Google. Procesa el código de autorización y crea la sesión.
+
+### ⚙️ Configuración (`src/components/settings/`)
+
+**Settings** es el modal de configuración global con tema (claro/oscuro), idioma (es/en/ca/va) y opciones de accesibilidad.
+
+**SettingsConfiguration** permite configuraciones detalladas: dificultad, modo de práctica predeterminado y atajos de teclado.
+
+**GeneralSettings** gestiona las configuraciones generales: tema claro/oscuro, idioma y alto contraste.
+
+### 📐 Layout (`src/components/layout/`)
+
+Los layouts son la estructura ósea que sostiene toda la interfaz.
+
+**HorizontalMenu** es el navbar principal. En desktop usa dropdowns con hover; en móvil se transforma en un hamburger con accordion. La versión móvil usa una lista compacta que reduce el scroll en un 50% comparado con las NavigationCards originales.
+
+**GameModeLayout** es el layout compartido para todos los modos de juego. Incluye sidebar con MenuLevels, header con métricas en tiempo real, área de juego y teclado virtual. El sidebar se reordena automáticamente en móvil para que el contenido aparezca primero.
+
+**Footer** es el pie de página con links, copyright y redes sociales.
+
+### 🧩 Comunes (`src/components/common/`)
+
+Componentes reutilizables que aparecen en múltiples partes de la aplicación.
+
+**BaseModal** es el modal base con overlay, escape para cerrar y focus trap para accesibilidad.
+
+**Modal** es una variante con animaciones Framer Motion para transiciones suaves.
+
+**ToastNotification** muestra notificaciones toast en la esquina inferior derecha. Usa `max-w-[calc(100vw-3rem)]` para no desbordar en móvil.
+
+**UnifiedSpinner** es el spinner de carga unificado que se usa en el fallback de Suspense.
+
+**SkeletonLoader** muestra placeholders de carga con animación de shimmer.
+
+**ErrorBoundary** captura errores de React y muestra una UI de fallback en lugar de crashear toda la aplicación.
+
+**NavigationCard** es una card de navegación con icono, título y descripción. En desktop usa gradiente hover; en móvil se reemplaza por una lista compacta.
+
+**EnhancedDropdown** es un dropdown mejorado con búsqueda y grupos.
+
+**ViewToggle** permite alternar entre vista grid y lista.
+
+**BenefitsList** muestra una lista de beneficios o ventajas con iconos.
+
+### 🔤 Otros Componentes
+
+**CreateText** es un editor de textos personalizados donde el usuario escribe su propio contenido para practicar. El layout coloca el contenido primero y la sidebar después en móvil.
+
+**Instrucciones** es un botón expandible que muestra las instrucciones del modo actual con ejemplos visuales.
+
+---
+
+## 🪝 Hooks Custom (`src/hooks/`)
+
+Los hooks son la lógica reutilizable que alimenta los componentes. Cada hook encapsula una responsabilidad específica.
+
+**useTypingGame** es el motor principal de escritura. Calcula WPM, precisión, timing y estado del juego. Originalmente estaba disperso en 6 `useEffect` independientes; fue consolidado en un solo efecto para mejorar el rendimiento y reducir bugs de concurrencia.
+
+**useKeyboardHandler** es el listener de teclado global. Filtra `event.repeat` para que mantener una tecla presionada no cuente como múltiples pulsaciones. Usa `useRef` para mantener una referencia estable al callback sin causar re-registros.
+
+**useDynamicTranslations** es el sistema i18n dinámico. Carga traducciones según el idioma activo (es/en/ca/va) usando imports dinámicos de archivos JSON. No depende de librerías externas como i18next.
+
+**useTheme** proporciona `isDarkMode` y el toggle de tema. Lee la preferencia del `uiStore` y la persiste en localStorage.
+
+**useLanguage** gestiona el idioma activo y la carga de traducciones.
+
+**useAccessibility** maneja configuraciones de alto contraste y reducción de movimiento.
+
+**useActivityTracker** registra tiempo de sesión, teclas pulsadas y patrones de uso. Envía datos al backend al finalizar la sesión.
+
+**useChallengeChecker** verifica automáticamente si se completaron retos diarios después de cada sesión de práctica.
+
+**useErrorHandler** es un handler centralizado de errores que captura excepciones y las reporta a Sentry.
+
+**useFetchWithTimeout** es una variante de fetch con timeout configurable que evita requests colgados.
+
+**useSpeech** implementa Text-to-Speech para el modo Dictation usando la API nativa del navegador.
+
+**extractKeysFromText** extrae las teclas únicas necesarias para un texto dado, optimizando el renderizado del teclado virtual.
+
+---
+
+## 🗃️ Stores (Zustand) (`src/store/`)
+
+El estado global se gestiona con Zustand, que ofrece una alternativa más ligera y performante a Redux.
+
+**uiStore** controla el tema (dark/light), idioma y configuraciones de accesibilidad. Persiste automáticamente en localStorage para mantener las preferencias entre sesiones.
+
+**userStore** almacena los datos del usuario: perfil, progreso, configuración y nivel de XP. La carga de datos incluye manejo de errores con try/catch para evitar crashes si la API falla.
+
+**errorStore** gestiona el estado de errores global con mensaje, tipo y una acción de retry. Permite mostrar errores consistentes en toda la aplicación.
+
+---
+
+## 📡 API Client (`src/api/`)
+
+La capa de comunicación con el backend está encapsulada en módulos especializados.
+
+**auth** gestiona login, registro, Google OAuth y refresh de tokens. Incluye manejo de sesiones y persistencia de tokens.
+
+**stats** maneja las estadísticas de usuario: WPM, precisión, historial y errores detallados por carácter.
+
+**progress** controla el progreso de niveles: completados, estrellas, desbloqueo y modos jugados.
+
+**users** es la API de gestión de usuarios para administradores.
+
+**challenges** gestiona retos diarios y estacionales con sus recompensas.
+
+**social** maneja amigos, seguir, leaderboard y interacciones sociales.
+
+**settings** controla la configuración del sistema para administradores.
+
+---
+
+## 🛠️ Utilidades (`src/utils/`)
+
+Módulos puros de lógica que no dependen de React.
+
+**apiClient** es el HTTP client principal con retry automático, timeout configurable y soporte para el header `Retry-After` del backend.
+
+**achievements** implementa el sistema de logros con 30+ insignias. Cada insignia tiene condiciones específicas de desbloqueo (WPM, precisión, racha, niveles completados).
+
+**activityTracker** registra y audita el tiempo de práctica por sesión.
+
+**challengeTracker** gestiona el tracking de retos completados en localStorage.
+
+**dailyChallengeUtils** contiene la lógica de retos diarios en el frontend: generación, validación y recompensas.
+
+**getStatsData** formatea los datos para el componente Stats, calculando métricas derivadas como totalWords y avgTimePerWord.
+
+**formatStats** proporciona utilidades de formato para WPM, precisión y tiempo.
+
+**saveStats** gestiona el guardado de estadísticas tanto en localStorage como en la API del backend.
+
+**userLevelSystem** implementa el sistema de niveles XP con cálculo del nivel actual basado en puntos acumulados.
+
+**keymapping** mapea códigos de tecla a caracteres, soportando layouts internacionales.
+
+**statsHistory** gestiona el historial de estadísticas con filtros por fecha y modo.
+
+---
+
+## 📝 Enums (`src/types/enums.ts`)
+
+Los enums centralizan los valores constantes de la aplicación.
+
+**AppView** define todas las rutas de navegación SPA: `HOME_HUB`, `MODE_LANDING`, `PRACTICE`, `GAME`, `SPEED_MODE`, `ZEN_MODE`, etc.
+
+**MenuDropdown** enumera las secciones del menú: `PRACTICE`, `GAMES`, `CUSTOM`, `PROGRESS`, etc.
+
+**ThemeVariant** define los temas: `LIGHT` y `DARK`.
+
+**ToastType** categoriza las notificaciones: `SUCCESS`, `ERROR`, `WARNING`, `INFO`.
+
+**AdminTab** lista las pestañas del panel de administración: `USERS`, `ACTIVITY`, `ACHIEVEMENTS`, etc.
+
+**ProgressTab** define las pestañas del dashboard de progreso: `OVERVIEW`, `ANALYTICS`, `EXPORT`.
+
+**ChallengeCategory** categoriza los retos: `SPEED`, `ACCURACY`, `STREAK`, etc.
+
+**GameSource** identifica el origen del juego: `LEVELS`, `PLAY_GAME`, `CREATE_TEXT`, etc. Es crucial para el sistema de progresión porque determina en qué modo se guarda el progreso.
+
+**LevelType** distingue entre niveles normales y exámenes: `LEVEL` y `EXAM`.
+
+**FriendStatus** gestiona el estado de amistad: `PENDING`, `ACCEPTED`, `BLOCKED`.
+
+**AchievementFilter** filtra logros: `ALL`, `UNLOCKED`, `LOCKED`.
+
+**Language** enumera los idiomas disponibles: `ES`, `EN`, `CA`, `VA`.
+
+**ViewMode** alterna entre vistas: `GRID` y `LIST`.
+
+**DifficultyLevel** categoriza la dificultad: `BEGINNER`, `INTERMEDIATE`, `ADVANCED`.
+
+**SortMetric** define las métricas de ordenación: `WPM`, `ACCURACY`, `SESSIONS`.
+
+**SettingsMode** organiza las secciones de ajustes: `GENERAL`, `ACCOUNT`, `PRIVACY`.
+
+**ProfileTab** define las pestañas del perfil: `PROFILE`, `STATS`, `SETTINGS`.
+
+**ChallengeTheme** categoriza los temas de retos: `SPEED`, `ACCURACY`, `ENDURANCE`.
+
+---
+
+## 📱 Responsive Design
+
+### Layout Mobile-First
+
+Mecano fue diseñado con mobile-first. Cada componente fue auditado para funcionar correctamente en pantallas pequeñas antes de adaptarse a desktop.
+
+**HorizontalMenu** usa hamburger con accordion en móvil y dropdowns con NavigationCards en desktop. La versión móvil usa una lista compacta que reduce el scroll en un 50%.
+
+**GameModeLayout** reordena el sidebar automáticamente: en móvil el contenido del juego aparece primero (`order-1`) y el sidebar después (`order-2`). En desktop el sidebar queda a la izquierda.
+
+**PlayGame** sigue la misma reordenación: juego arriba, MenuLevels abajo en móvil; sidebar izquierda, juego derecha en desktop.
+
+**CreateText** coloca el editor arriba y la sidebar abajo en móvil; sidebar izquierda, editor derecha en desktop.
+
+**ToastNotification** usa `max-w-[calc(100vw-3rem)]` para no desbordar en móvil y `max-w-md` en desktop.
+
+**Leaderboard** usa `overflow-x-auto` en la tabla para móvil y tabla completa en desktop.
+
+**Achievements** usa iconos `text-4xl` en móvil y `text-6xl` en desktop, con filtros `flex-wrap` para adaptarse a diferentes anchos.
+
+### Breakpoints Utilizados
+
+- `sm:` (640px) — Padding, tamaños de fuente
+- `md:` (768px) — Layout sidebar vs contenido
+- `lg:` (1024px) — Grid columns, sidebar visibility
+- `xl:` (1280px) — Max widths, spacing
+
+---
+
+## 🔒 Cambios Recientes (Auditoría Completa)
+
+### Seguridad
+
+El backend fue endurecido con medidas de seguridad enterprise. **Helmet** inyecta headers HTTP seguros (CSP, HSTS, X-Frame-Options). **express-rate-limit** limita a 100 requests por 15 minutos en la API general y 20 requests por 15 minutos en endpoints de autenticación. Las variables de entorno `DATABASE_URL` y `JWT_SECRET` se validan al iniciar el servidor para evitar configuraciones incompletas. La verificación de sesión consulta la tabla `user_sessions` y cachea el usuario durante 60 segundos para reducir queries a la base de datos. El `apiClient` del frontend implementa retry automático con soporte para el header `Retry-After` del backend.
+
+### Performance
+
+Se realizaron optimizaciones críticas de rendimiento. El `AuthContext` se memoizó con `useMemo` y `useCallback` para evitar re-renders innecesarios en toda la cadena de componentes hijos. El hook `useTypingGame` consolidó 6 `useEffect` independientes en un solo efecto, eliminando carreras de condiciones y mejorando la mantenibilidad. El componente `Hands` pasó de objetos a `string[]` para que `React.memo` funcione correctamente (los objetos se recrean en cada render, anulando la memoización). El `Keyboard` mejoró las transiciones CSS para ser más rápidas y agregó `aria-label` para accesibilidad. El `useKeyboardHandler` usa `useRef` para mantener una referencia estable al callback sin re-registrar el listener en cada render. `PlayGame` implementó animación de escala con nivel (60→200 px/s) y `React.memo` en las letras para optimizar el renderizado de alta frecuencia.
+
+### SEO
+
+Se agregaron meta tags completos: canonical URL, JSON-LD structured data para rich snippets, Open Graph images y Twitter meta tags. Un `<meta name="robots">` controla la indexación.
+
+### Bug Fixes
+
+Se corrigió el filtrado de `event.repeat` para que mantener una tecla presionada no cuente como múltiples pulsaciones. El `userStore.loadUserData` se envolvió en try/catch para evitar crashes si la API falla. Los checks de achievements se completaron para incluir `acc_95`, `acc_98`, `streak_7/30` y `levels_all`.
+
+### CSS / Responsive
+
+El `AdminDashboard` se refactorizó de ~1,565 líneas a ~120 líneas + 7 tabs independientes. El `designTokens.css` se redujo de 75 a 17 líneas eliminando tokens no usados. El `index.css` se optimizó de 181 a 97 líneas. Se auditaron 27 componentes para responsive. El menú móvil migró de NavigationCards a lista compacta (50% menos scroll). Todos los modos implementan reordenación mobile-first: juego/contenido primero, sidebar/después.
+
+### Backend
+
+Se implementó logging estructurado con **Pino** en `app.js`, `index.js`, `db.js` y `websocket.js`. Se agregó graceful shutdown para `SIGTERM`/`SIGINT` que cierra conexiones de base de datos y WebSocket limpiamente. Los archivos estáticos se sirven con `maxAge: '1y'` para cache agresivo.
+
+### Docker / CI
+
+Node 20 como runtime base, `npm ci` para instalación reproducible, usuario no-root (`appuser`) por seguridad, y `HEALTHCHECK` para monitoreo. GitHub Actions v4 ejecuta Playwright E2E tests. Docker usa arquitectura multi-servicio: frontend (nginx:alpine), backend (node:20-alpine) y base de datos (PostgreSQL 16). El `.env` es externo: los secretos no se copian al image y se inyectan por docker-compose en runtime. Los Dockerfiles usan `COPY` explícitos (sin `COPY . .`) para mejor cache de capas y prevención de fugas de secretos.
 
 ## 5. Puesta en Marcha Local (Running the App)
 
@@ -72,8 +514,92 @@ npm start
 
 El servidor SPA quedará automáticamente expuesto vía HMR en `http://localhost:3000`, observando activamente el API transaccional.
 
+## 🐳 Despliegue con Docker
+
+La arquitectura Docker usa 3 servicios aislados. El frontend corre sobre nginx:alpine en el puerto 80, sirviendo el build estático de React y haciendo proxy de `/api` y `/ws` al backend. El backend corre sobre node:20-alpine en el puerto 3001 (interno, no expuesto directamente). La base de datos es PostgreSQL 16 con un volumen persistente `pgdata` para no perder datos entre reinicios.
+
+Las variables de entorno se configuran en un archivo `.env` en la raíz (no se copia al image Docker por seguridad). El `DATABASE_URL` se genera automáticamente a partir de las credenciales de PostgreSQL. Los secretos se inyectan por docker-compose en runtime, nunca en tiempo de build.
+
+```bash
+# Levantar todo (frontend + backend + PostgreSQL)
+docker-compose up --build
+
+# Detener
+docker-compose down
+
+# Detener y eliminar volumen de datos
+docker-compose down -v
+
+# Ver logs
+docker-compose logs -f backend
+docker-compose logs -f db
+```
+
+La aplicación estará disponible en `http://localhost`. El entrypoint del contenedor de base de datos busca `/data/latest.sql` al iniciar; si existe, restaura automáticamente el último dump.
+
+### Backup y Restore de Base de Datos
+
+Los dumps se guardan en `docker/data/` y se persisten entre reinicios. Hay scripts predefinidos para dump y restore:
+
+```bash
+# Crear dump de la base de datos
+docker-compose exec db /scripts/db-dump.sh
+
+# Restaurar desde el último dump
+docker-compose exec db /scripts/db-restore.sh
+
+# Restaurar desde un dump específico
+docker-compose exec db /scripts/db-restore.sh /data/mi_backup.sql
+```
+
+### Comandos Docker Útiles
+
+| Acción | Comando |
+| :--- | :--- |
+| Levantar y compilar | `docker-compose up --build` |
+| Detener aplicación | `docker-compose down` |
+| Detener + eliminar datos | `docker-compose down -v` |
+| Ver logs de un servicio | `docker-compose logs -f [servicio]` |
+| Reconstruir un servicio | `docker-compose up -d --build [servicio]` |
+| Entrar al contenedor del backend | `docker-compose exec backend sh` |
+| Entrar al contenedor de la DB | `docker-compose exec db psql -U mecano` |
+
+## 🛠️ Desarrollo Tradicional
+
+Si prefieres no usar Docker para el desarrollo diario:
+
+```bash
+# Instalación
+npm install && cd server && npm install && cd ..
+
+# Desarrollo (Frontend + Backend)
+npm run dev          # Frontend en :3000
+npm run server       # Backend en :3001
+
+# Producción
+npx craco build      # Build optimizado
+
+# Testing
+npm test             # Jest unit tests
+npm run test:coverage # Con coverage
+npx playwright test  # E2E tests
+
+# Linting
+npm run lint         # ESLint (max 10 warnings)
+```
+
+## 🌐 Servicios Gratuitos Sugeridos
+
+Para desplegar el proyecto sin costes, se pueden usar: **Hugging Face** como hosting (Spaces Docker gratis), **Neon** como base de datos PostgreSQL serverless (capa gratuita generosa) y **GitHub** para el repositorio y CI/CD con Actions.
+
 ## 6. Live Demo
 
 Para dimensionar la madurez de despliegue del proyecto recomendamos la incursión en la instancia Productiva montada. El aprovisionamiento ya está levantado.
 
 👉 **[Poner a prueba el código o acceder a la Demo Live de Mecano](https://proyecto-demo.com)**
+
+---
+
+## 📄 Licencia
+
+Este proyecto es educativo. Úsalo como quieras.
