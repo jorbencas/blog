@@ -23,7 +23,7 @@ El entorno de ejecución abarca:
 *   **Capa de Presentación (Frontend):** Construida con **React 18** y fuertemente tipada con **TypeScript**, empleando **Tailwind CSS** para un sistema de diseño modular.
 *   **Manejo de Estado Global:** Se delegó el árbol del estado a **Zustand** para minimizar renderizados innecesarios, asegurando que las métricas de rendimiento del usuario operen de manera aislada sin detonar cascadas de re-renders.
 *   **Servicio de Backend y WebSockets:** La API Core está montada sobre **Express 5**. Se integra un canal bidireccional de baja latencia con **Socket.io** responsable de persistir analíticas en vivo y manejar iteraciones de sincronización entre clientes.
-*   **Capa de Persistencia y Gobernanza:** Los esquemas relacionales se ejecutan sobre una instancia Serverless de **PostgreSQL (Neon Engine)**. La autenticación es regulada mediante abstracciones OAuth 2.0 (**Passport.js**), emisiones de tokens **JWT** y cifrado persistente en base de datos con **Bcrypt**.
+*   **Capa de Persistencia y Gobernanza:** Los esquemas relacionales se ejecutan sobre una instancia de **PostgreSQL 16** contenedorizada con Docker, con volumen persistente para no perder datos entre reinicios. La autenticación es regulada mediante **JWT** con sesiones persistidas en base de datos, autenticación OAuth 2.0 (**Passport.js**) y cifrado con **Bcrypt**. El canal WebSocket (**Socket.IO**) gestiona en tiempo real el foro comunitario (posts, comentarios, likes), el estado online de amigos y la sincronización entre clientes en salas multijugador.
 
 ## 3. Retos Técnicos y Cultura DevOps
 
@@ -56,7 +56,7 @@ El tercer pilar es el **sistema de navegación rediseñado**: un Home Hub con ac
 
 ### 🏆 Sistema Social y Gamificación
 
-La gamificación mantiene al usuario comprometido. El sistema de logros tiene 30+ insignias desbloqueables por hitos específicos (WPM, precisión, racha, niveles). Los retos diarios y estacionales ofrecen objetivos personalizados según el rendimiento del usuario. El leaderboard muestra rankings globales por WPM y precisión. El foro comunitario permite discusiones entre usuarios. El sistema de amigos permite seguir y comparar progreso. El sistema de XP y niveles ofrece una progresión constante más allá de los niveles del currículo.
+La gamificación mantiene al usuario comprometido. El sistema de logros tiene 10 insignias desbloqueables por hitos específicos (WPM, precisión, racha, niveles), persistidas en PostgreSQL. Los retos diarios y estacionales ofrecen objetivos personalizados según el rendimiento del usuario. El leaderboard muestra rankings globales por WPM y precisión. El foro comunitario permite discusiones entre usuarios con posts, comentarios y likes en tiempo real vía Socket.IO. El sistema de amigos permite buscar por email, enviar solicitudes y ver estado online. El sistema de XP y niveles ofrece una progresión constante más allá de los niveles del currículo.
 
 ### 🌐 Internacionalización (i18n)
 
@@ -64,7 +64,7 @@ Mecano soporta 4 idiomas: Español, Inglés, Catalán y Valencià. El sistema de
 
 ### 🏗️ Arquitectura del Proyecto
 
-La arquitectura es fullstack unificada con separación clara de responsabilidades. El frontend usa React 18 + TypeScript + Tailwind CSS + Zustand para estado + Framer Motion para animaciones + Recharts para gráficos. El backend corre sobre Express 5 con Passport.js para autenticación (JWT + Google OAuth) y Socket.IO para comunicación en tiempo real. La persistencia es PostgreSQL serverless en Neon. Todo se despliega con Docker (3 servicios: nginx, node, postgres) y se monitorea con Sentry.
+La arquitectura es fullstack unificada con separación clara de responsabilidades. El frontend usa React 18 + TypeScript + Tailwind CSS + Zustand para estado + Framer Motion para animaciones + Recharts para gráficos. El backend corre sobre Express 5 con Passport.js para autenticación (JWT + Google OAuth) y Socket.IO para comunicación en tiempo real (foro, amigos, multijugador). La persistencia es PostgreSQL 16 en Docker con volumen persistente. Todo se despliega con Docker Compose (3 servicios: nginx:alpine, node:20-alpine, postgres:16-alpine) y se monitorea con Sentry.
 
 ### Flujo de Renderizado
 
@@ -76,7 +76,7 @@ Cuando un usuario juega un nivel de Practice, el flujo es: `Levels.tsx` → `Gam
 
 ### Flujo de Autenticación
 
-El flujo es simple pero robusto: si el usuario tiene token válido, carga el perfil y muestra todo el contenido. Si no tiene token, muestra el contenido pero con features bloqueadas (Leaderboard, Challenges, Profile). Al hacer clic en una feature bloqueada aparece el `RegistrationModal`. Tras login exitoso, el JWT se guarda en localStorage, el perfil se carga en `userStore` y las features se desbloquean. El logout limpia todo y redirige a home.
+El flujo es simple pero robusto: si el usuario tiene token válido y la sesión está activa en la base de datos, carga el perfil y muestra todo el contenido. Si no tiene token, muestra el contenido pero con features bloqueadas (Leaderboard, Challenges, Profile). Al hacer clic en una feature bloqueada aparece el `RegistrationModal`. Tras login exitoso, el JWT se guarda en localStorage, la sesión se persiste en `user_sessions` y el perfil se carga en `userStore`. El logout invalida la sesión en la base de datos y redirige a home.
 
 ### 🎮 Modos de Juego (`src/components/modes/`)
 
@@ -98,7 +98,7 @@ El corazón de la plataforma. Cada modo tiene su propia lógica de validación, 
 
 ### 🕹️ Juegos (`src/components/games/`)
 
-14 minijuegos arcade que convierten la práctica de mecanografía en algo adictivo. Cada juego tiene su propio motor de física, sistema de niveles y condiciones de victoria/derrota. Todos comparten el `GameContext` para gestionar estado y el `GameLayout` para el sidebar de niveles.
+15 minijuegos arcade que convierten la práctica de mecanografía en algo adictivo. Cada juego tiene su propio motor de física, sistema de niveles y condiciones de victoria/derrota. Todos comparten el `GameContext` para gestionar estado y el `GameLayout` para el sidebar de niveles.
 
 **FallingWords** es el juego estrella: letras caen desde arriba y el usuario debe escribirlas antes de que toquen el fondo. Cada nivel增加 más letras, más velocidad y menos margen de error. Cuando una letra llega al fondo, se incrementa el contador de errores; si supera el máximo, el juego termina.
 
@@ -127,6 +127,8 @@ El corazón de la plataforma. Cada modo tiene su propia lógica de validación, 
 **ReactionTime** mide el tiempo de reacción del usuario al estímulo visual. Objetivos aparecen aleatoriamente y el usuario debe hacer clic lo más rápido posible. Los niveles reducen el tiempo de reacción requerido.
 
 **MemorySequence** presenta secuencias de letras que el usuario debe memorizar y escribir sin ver. Primero muestra la secuencia, luego la oculta y el usuario debe reproducirla. Los niveles aumentan la longitud de la secuencia.
+
+**GhostTyper** compite contra un fantasma que escribe a velocidad constante. El usuario debe superar al fantasma escribiendo más rápido. Los niveles aumentan la velocidad del fantasma progresivamente, obligando al usuario a mantener un ritmo alto.
 
 ### 📊 Estadísticas (`src/components/stats/`)
 
@@ -212,11 +214,11 @@ La dimensión social convierte la práctica individual en una experiencia comuni
 
 **Leaderboard** presenta rankings globales por WPM y precisión. La tabla es scrollable en móvil y completa en desktop.
 
-**CommunityForum** es un foro de discusión entre usuarios con hilos, comentarios y likes. Los usuarios pueden crear publicaciones, responder y compartir experiencias.
+**CommunityForum** es un foro de discusión entre usuarios con hilos, comentarios y likes en tiempo real (Socket.IO). Los usuarios pueden crear publicaciones, responder y compartir experiencias. Los nuevos posts y comentarios aparecen instantáneamente para todos los usuarios conectados.
 
 **PublicProfile** muestra el perfil público de otro usuario con estadísticas, logros y actividad.
 
-**FriendsSystem** gestiona el sistema de amigos: buscar, agregar, seguir y gestionar solicitudes.
+**FriendsSystem** gestiona el sistema de amigos: buscar por email en tiempo real, enviar solicitudes, aceptar/rechazar y ver estado online con Socket.IO.
 
 **FollowButton** es un botón de seguir/dejar de seguir que aparece en perfiles públicos.
 
@@ -368,7 +370,7 @@ Módulos puros de lógica que no dependen de React.
 
 **apiClient** es el HTTP client principal con retry automático, timeout configurable y soporte para el header `Retry-After` del backend.
 
-**achievements** implementa el sistema de logros con 30+ insignias. Cada insignia tiene condiciones específicas de desbloqueo (WPM, precisión, racha, niveles completados).
+**achievements** implementa el sistema de logros con 10 insignias persistidas en PostgreSQL. Cada insignia tiene condiciones específicas de desbloqueo (WPM, precisión, racha, niveles completados). El frontend consulta la API del backend para obtener y desbloquear logros.
 
 **activityTracker** registra y audita el tiempo de práctica por sesión.
 
@@ -493,26 +495,32 @@ Node 20 como runtime base, `npm ci` para instalación reproducible, usuario no-r
 
 ## 5. Puesta en Marcha Local (Running the App)
 
-Para desplegar localmente el workspace de la plataforma el repositorio expone una operabilidad simplificada.
+Para desplegar localmente el workspace de la plataforma el repositorio expone una operabilidad simplificada con Docker como opción principal.
+
+### Con Docker (recomendado)
 
 ```bash
 # Extraer el repositorio más actualizado
 git clone https://github.com/jorbencas/mecano_prueba_web.git
 cd mecano_prueba_web
 
-# Ejecutar resolución de paquetería base garantizando Node 18+
-npm install
-
 # Provisionar variables de entorno requeridas
-cp .env.example .env 
-# Configurar los secretos obligatorios en el .env (Neon PostgreSQL y config de Google OAuth)
+cp .env.example .env
+# Configurar los secretos obligatorios en el .env (PostgreSQL y config de Google OAuth)
 
-# Levantar concurrentemente el API Backend y Web Server
-node server/index.js &
-npm start
+# Levantar los 3 servicios (frontend + backend + PostgreSQL)
+docker-compose up --build
 ```
 
-El servidor SPA quedará automáticamente expuesto vía HMR en `http://localhost:3000`, observando activamente el API transaccional.
+La aplicación estará disponible en `http://localhost`. El volumen `pgdata` persiste los datos entre reinicios — `docker-compose down` NO borra la base de datos, solo `docker-compose down -v`.
+
+### Desarrollo Local (sin Docker)
+
+```bash
+npm install && cd server && npm install && cd ..
+npm run dev          # Frontend en :3000
+npm run server       # Backend en :3001
+```
 
 ## 🐳 Despliegue con Docker
 
@@ -535,15 +543,23 @@ docker-compose logs -f backend
 docker-compose logs -f db
 ```
 
-La aplicación estará disponible en `http://localhost`. El entrypoint del contenedor de base de datos busca `/data/latest.sql` al iniciar; si existe, restaura automáticamente el último dump.
+La aplicación estará disponible en `http://localhost`.
+
+> **Importante**: `docker-compose down` **NO borra los datos**. El volumen `pgdata` persiste entre paradas y arranques. Solo `docker-compose down -v` elimina la base de datos. Tus usuarios, partidas, logros, etc. se mantienen mientras no uses `-v`.
 
 ### Backup y Restore de Base de Datos
 
-Los dumps se guardan en `docker/data/` y se persisten entre reinicios. Hay scripts predefinidos para dump y restore:
+Los dumps se guardan en `docker/data/` y se persisten entre reinicios. Hay scripts predefinidos para dump y restore (operación manual):
 
 ```bash
 # Crear dump de la base de datos
 docker-compose exec db /scripts/db-dump.sh
+
+# Crear dump con nombre personalizado
+docker-compose exec db /scripts/db-dump.sh /data/mi_backup.sql
+
+# Listar dumps disponibles
+ls docker/data/*.sql
 
 # Restaurar desde el último dump
 docker-compose exec db /scripts/db-restore.sh
