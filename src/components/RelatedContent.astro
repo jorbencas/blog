@@ -1,0 +1,85 @@
+---
+interface Props {
+  title: string;
+  items: Array<{
+    id: string;
+    data: {
+      title: string;
+      description?: string;
+      tags?: string[];
+    };
+  }>;
+  currentSlug?: string;
+  accentColor?: "purple" | "cyan";
+  layout?: "grid" | "list";
+  hrefPrefix: string;
+  limit?: number;
+}
+
+const {
+  title,
+  items,
+  currentSlug,
+  accentColor = "cyan",
+  layout = "grid",
+  hrefPrefix,
+  limit = layout === "grid" ? 3 : 5,
+} = Astro.props;
+
+const filtered = currentSlug
+  ? items
+      .filter((p) => p.id.replace(/\.[^/.]+$/, "") !== currentSlug)
+      .slice(0, limit)
+  : items.slice(0, limit);
+
+const colors = {
+  purple: {
+    hover: "hover:border-purple-500/50",
+    text: "group-hover:text-purple-600 dark:group-hover:text-purple-400",
+  },
+  cyan: {
+    hover: "hover:border-cyan-500/50",
+    text: "group-hover:text-cyan-600 dark:group-hover:text-cyan-400",
+  },
+};
+const c = colors[accentColor];
+---
+
+{
+  filtered.length > 0 && (
+    <div class={layout === "grid" ? "space-y-6" : "space-y-3 mt-4"}>
+      <span class="text-base font-bold uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400 block pb-2 w-fit">
+        {title}
+      </span>
+      <div
+        class={
+          layout === "grid"
+            ? "grid grid-cols-1 sm:grid-cols-3 gap-4"
+            : "space-y-3"
+        }
+      >
+        {filtered.map((p) => (
+          <a
+            href={`${hrefPrefix}${p.id.replace(/\.[^/.]+$/, "")}`}
+            class:list={[
+              "block p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 transition-colors no-underline group",
+              c.hover,
+            ]}
+          >
+            <p
+              class:list={[
+                "text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white transition-colors line-clamp-2 leading-tight",
+                c.text,
+              ]}
+            >
+              {p.data.title}
+            </p>
+            <p class="text-xs text-slate-400 dark:text-slate-500 mt-2 line-clamp-2">
+              {p.data.description}
+            </p>
+          </a>
+        ))}
+      </div>
+    </div>
+  )
+}
