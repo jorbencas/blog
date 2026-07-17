@@ -1,48 +1,252 @@
 ---
 draft: false
-title: "Docker: Instalación, de ffmpeg y  yt-dlp en windows usando wsl "
-description: "Guía práctica para instalar ffmpeg y yt-dlp en Windows usando WSL."
+title: "Docker: ffmpeg y yt-dlp en Windows (WSL) y Ubuntu"
+description: "Guía práctica para usar ffmpeg y yt-dlp con Docker en WSL y Ubuntu."
 pubDate: "2026-07-11"
-tags: ["docker", "devops", "contenedores", "linux", "windows"]
+tags: ["docker", "devops", "linux", "windows", "ffmpeg", "yt-dlp"]
 image: "img/docker_to_yt_ffmpeg_in_wls/docker_to_yt_ffmpeg_in_wls_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 ---
 
-1. El docker-compose.yml adaptado Lo ideal es que guardes los vídeos directamente en tu disco de Windows <code>(C:)</code> para que puedas abrirlos con el reproductor de Windows sin tener que buscarlos dentro de la máquina virtual de WSL.En WSL, tu disco <code>C:</code> está montado en la ruta <code>/mnt/c/</code>. Crea este archivo docker-compose.yml dentro de tu terminal de WSL:YAMLversion: '3.8'
+## 1. El docker-compose.yml adaptado
 
-```docker
+Lo ideal es que guardes los vídeos directamente en tu disco de Windows <code>(C:)</code> para que puedas abrirlos con el reproductor de Windows sin tener que buscarlos dentro de la máquina virtual de WSL. En WSL, tu disco <code>C:</code> está montado en la ruta <code>/mnt/c/</code>. Crea este archivo docker-compose.yml dentro de tu terminal de WSL:
+
+```yaml
 services:
   downloader:
     image: alpine:latest
     container_name: yt_ffmpeg_downloader
     volumes:
-      # Mapea tu carpeta de Descargas de Windows con el contenedor
-      # Cambia "TuUsuario" por el nombre de tu carpeta de usuario en Windows
-      - /mnt/c/Users/TuUsuario/Downloads:/downloads
+      - /mnt/c/Users/TuUsuario/Videos/test_videos:/test_videos
+    working_dir: /test_videos
     tty: true
     stdin_open: true
-    command: >
-      sh -c "
-      apk update && 
-      apk add --no-cache ffmpeg python3 curl &&
-      curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp &&
-      chmod a+rx /usr/local/bin/yt-dlp &&
-      sh
-      "
+    command: sh -c "apk update && apk add --no-cache ffmpeg python3 curl bash && curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp && chmod a+rx /usr/local/bin/yt-dlp && bash /test_videos/midu.sh && sh"
 ```
 
-> Ojo al detalle: Recuerda cambiar TuUsuario por el nombre real de tu usuario en Windows (lo puedes ver en la terminal de WSL escribiendo <code>ls /mnt/c/Users/</code>).
+> **Ojo al detalle:** Recuerda cambiar `TuUsuario` por el nombre real de tu usuario en Windows (lo puedes ver en la terminal de WSL escribiendo `ls /mnt/c/Users/`).
 
-2. Pasos para ejecutarlo en WSL abre tu terminal de WSL (Ubuntu) y sigue estos pasos:
-    1. Asegurar Docker Desktop: En Windows. Asegúrate de que Docker Desktop está abierto en Windows y que en sus ajustes (<code>Settings -> Resources -> WSL Integration</code>) tienes activada la casilla de tu distribución de WSL.
-    
-    2. Lanzar el contenedor:En WSL.Ve a la carpeta donde guardaste el docker-compose.yml y arráncalo en modo interactivo:
+## 2. El script de conversión (midu.sh)
+
+Crea un archivo `midu.sh` en la misma carpeta que el docker-compose.yml. Este script convierte todos los vídeos de una carpeta a mp4 (H.264 + AAC) ejecutando hasta 4 conversiones en paralelo:
+
+```bash
+# Definir el directorio de entrada y salida
+input_dir="/test_videos/test"
+output_dir="/test_videos/optimizados"
+max_threads=4
+
+if [[ ! -d $output_dir ]]; then
+    mkdir -p "$output_dir"
+fi
+
+extensiones=("avi" "webm" "mkv" "mp4" "flv")
+
+convertir_archivo() {
+    local file="$1"
+    local output_dir="$2"
+    local filename=$(basename "$file")
+    filename="${filename%.*}"
+
+    echo "Procesando: $file"
+    ffmpeg -i "$file" -c:v libx264 -crf 23 -preset medium -c:a aac -b:a 128k "$output_dir/$filename.mp4"
+
+    if [[ -f $file ]]; then
+        rm "$file"
+        echo "Eliminado archivo original: $file"
+    fi
+}
+
+active_threads=()
+
+for ext in "${extensiones[@]}"; do
+    for file in "$input_dir"/*."$ext"; do
+        [[ -e "$file" ]] || continue
+        convertir_archivo "$file" "$output_dir" &
+        active_threads+=($!)
+
+        while [ "${#active_threads[@]}" -ge "$max_threads" ]; do
+            for i in "${!active_threads[@]}"; do
+                if ! kill -0 "${active_threads[i]}" 2>/dev/null; then
+                    unset 'active_threads[i]'
+                fi
+            done
+            active_threads=("${active_threads[@]}")
+            sleep 1
+        done
+    done
+done
+
+wait
+
+echo "Todos los archivos han sido procesados."
+```
+
+## 3. Estructura de carpetas
+
+```
+test_videos/
+├── docker-compose.yml
+├── midu.sh
+├── test/              ← meter aquí los vídeos a convertir
+└── optimizados/       ← se crea automáticamente con los mp4
+```
+
+## 4. Pasos para ejecutarlo en WSL
+
+Abre tu terminal de WSL (Ubuntu) y sigue estos pasos:
+
+1. **Asegurar Docker Desktop:** En Windows. Asegúrate de que Docker Desktop está abierto y que en sus ajustes (`Settings -> Resources -> WSL Integration`) tienes activada la casilla de tu distribución de WSL.
+
+2. **Lanzar el contenedor:** En WSL, ve a la carpeta donde guardaste los archivos y arráncalo en modo interactivo:
+
     ```sh
-        docker compose run --rm downloader
-    ```
-    3. Descargar el vídeo: Dentro de Alpine.Una vez veas el prompt / #, pega el comando de descarga. Gracias a ffmpeg, bajará la máxima calidad disponible y unirá el audio y vídeo automáticamente:
-    ```sh
-    yt-dlp -f "bv+ba/b" --merge-output-format mp4 -P /downloads "AQUÍ_TU_URL"
+    docker compose run --rm downloader
     ```
 
-Al terminar, el archivo aparecerá directamente en la carpeta Descargas de tu explorador de archivos de Windows listo para reproducir. Cuando acabes, simplemente escribe exit en la terminal del contenedor.
+3. **Descargar vídeo:** Dentro de Alpine, una vez veas el prompt `/ #`, pega el comando de descarga. Gracias a ffmpeg, bajará la máxima calidad disponible y unirá el audio y vídeo automáticamente:
+
+    ```sh
+    yt-dlp -f "bv+ba/b" --merge-output-format mp4 -P /test_videos/test "AQUÍ_TU_URL"
+    ```
+
+Al terminar, el archivo aparecerá en la carpeta `test/`.
+
+**Importante:** El script `midu.sh` se ejecuta automáticamente al iniciar el contenedor. Esto significa que la primera vez no encontrará vídeos para convertir (porque aún no has descargado nada). Después de descargar vídeos con `yt-dlp`, ejecuta la conversión manualmente dentro del contenedor:
+
+```sh
+bash /test_videos/midu.sh
+```
+
+O reinicia el contenedor para que se ejecute de nuevo automáticamente.
+
+Cuando acabes, simplemente escribe `exit` en la terminal del contenedor.
+
+> **Nota:** Si usas una versión antigua de Docker, puede que necesites `docker-compose` (con guion) en vez de `docker compose` (con espacio).
+
+## 5. Ejecutar directamente en Ubuntu (sin Docker)
+
+Si no quieres Docker, puedes ejecutar el script directamente en Ubuntu. Solo necesitas instalar las dependencias:
+
+```sh
+sudo apt update && sudo apt install ffmpeg
+```
+
+Para instalar yt-dlp:
+
+```sh
+sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp && sudo chmod a+rx /usr/local/bin/yt-dlp
+```
+
+Ajusta las rutas en `midu.sh` para que apunten a carpetas locales en vez de `/test_videos/`:
+
+```bash
+input_dir="$HOME/Videos/test"
+output_dir="$HOME/Videos/optimizados"
+```
+
+Añade el shebang al inicio del script (sin Docker es necesario para ejecución directa):
+
+```bash
+#!/bin/bash
+```
+
+Hazlo ejecutable y ejecútalo:
+
+```sh
+chmod +x midu.sh
+./midu.sh
+```
+
+## 6. Ejecutar con Docker en Ubuntu (sin WSL)
+
+Si usas Ubuntu directamente (sin WSL ni Windows), el proceso es similar pero las rutas cambian. Primero instala Docker:
+
+```sh
+sudo apt update && sudo apt install docker.io docker-compose-v2
+sudo usermod -aG docker $USER
+```
+
+Cierra y vuelve a abrir la terminal para que el cambio de grupo surta efecto. Ajusta las rutas en `docker-compose.yml` para que apunten a carpetas de tu home de Linux:
+
+```yaml
+services:
+  downloader:
+    image: alpine:latest
+    container_name: yt_ffmpeg_downloader
+    volumes:
+      - /home/TuUsuario/Videos/test_videos:/test_videos
+    working_dir: /test_videos
+    tty: true
+    stdin_open: true
+    command: sh -c "apk update && apk add --no-cache ffmpeg python3 curl bash && curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp && chmod a+rx /usr/local/bin/yt-dlp && bash /test_videos/midu.sh && sh"
+```
+
+Lanza el contenedor:
+
+```sh
+docker compose run --rm downloader
+```
+
+> **Nota:** Si `docker compose` no funciona, prueba con `docker-compose` (con guion).
+
+## 7. Desinstalar ffmpeg y yt-dlp locales
+
+Si instalaste ffmpeg y yt-dlp en tu sistema y ahora prefieres usarlos solo desde Docker:
+
+```sh
+sudo apt remove --purge ffmpeg
+sudo rm /usr/local/bin/yt-dlp
+```
+
+Para limpiar las dependencias que ya no se usan:
+
+```sh
+sudo apt autoremove
+```
+
+Esto no afecta al contenedor Docker, ya que Alpine instala sus propias copias de ffmpeg y yt-dlp al arrancar.
+
+## 8. Problemas que encontré y cómo los resolví
+
+### Saltos de línea CRLF de Windows
+
+**Errores:**
+
+```
+bash: line 7: mkdi: command not found
+bash: line 29: syntax error near unexpected token `do'
+bash: line 29: `fo ext in "${extensiones[@]}"; do'
+```
+
+`mkdir` aparecía como `mkdi` y `for` como `fo`.
+
+**Causa:** El `docker-compose.yml` tenía saltos de línea Windows (CRLF = `\r\n`). El `\r` se incluía en el contenido del script que bash recibía, y el carriage return movía el cursor al inicio de la línea, haciendo que bash viera nombres de comando truncados.
+
+**Solución:** Reescribir el docker-compose.yml con saltos de línea LF (Unix). Si usas VS Code, haz clic en "CRLF" en la barra de estado inferior y cambia a "LF".
+
+### Shebang innecesario (solo en Docker)
+
+**Error:** `bash: line 1: #!/bin/bash: No such file or directory`
+
+El script tenía `#!/bin/bash` pero Docker ejecutaba el contenido con `bash -c`. El shebang solo sirve cuando ejecutas el script directamente (`./midu.sh`).
+
+**Solución en Docker:** Eliminar la línea `#!/bin/bash` del script, ya que bash se invoca explícitamente.
+
+**En Ubuntu sin Docker:** El shebang es necesario. Si ejecutas `./midu.sh`, bash necesita saber qué intérprete usar.
+
+### Regex innecesaria con sed
+
+El script original usaba `sed` para quitar la extensión del archivo:
+
+```bash
+local filename=$(basename "$file" | sed 's/\.[^.]*$//')
+```
+
+**Solución:** Reemplazar con parameter expansion de bash, más limpio y sin dependencia de `sed`:
+
+```bash
+local filename=$(basename "$file")
+filename="${filename%.*}"
+```
