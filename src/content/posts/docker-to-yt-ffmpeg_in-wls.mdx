@@ -20,10 +20,12 @@ services:
     volumes:
       - /mnt/c/Users/TuUsuario/Videos/test_videos:/test_videos
     working_dir: /test_videos
-    tty: true
-    stdin_open: true
+    tty: true          # Equivalente a -t en docker run
+    stdin_open: true   # Equivalente a -i en docker run
     command: sh -c "apk update && apk add --no-cache ffmpeg python3 curl bash && curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp && chmod a+rx /usr/local/bin/yt-dlp && bash /test_videos/midu.sh && sh"
 ```
+
+> **Sobre `tty` e `stdin_open`:** Estas dos opciones equivalen a pasar `-it` al `docker run`. Sin ellas, el contenedor no mantendría la terminal interactiva y no podrías escribir comandos dentro.
 
 > **Ojo al detalle:** Recuerda cambiar `TuUsuario` por el nombre real de tu usuario en Windows (lo puedes ver en la terminal de WSL escribiendo `ls /mnt/c/Users/`).
 
@@ -178,8 +180,8 @@ services:
     volumes:
       - /home/TuUsuario/Videos/test_videos:/test_videos
     working_dir: /test_videos
-    tty: true
-    stdin_open: true
+    tty: true          # Equivalente a -t en docker run
+    stdin_open: true   # Equivalente a -i en docker run
     command: sh -c "apk update && apk add --no-cache ffmpeg python3 curl bash && curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp && chmod a+rx /usr/local/bin/yt-dlp && bash /test_videos/midu.sh && sh"
 ```
 
