@@ -6,6 +6,8 @@ import CodeEnhancer from "@components/CodeEnhancer.astro";
 import ResponsiveImage from "@components/ResponsiveImage.astro";
 import MoreProjects from "@components/MoreProjects.astro";
 import Disqus from "@components/Disqus.astro";
+import TableOfContents from "@components/TableOfContents.astro";
+import type { MarkdownHeading } from "astro";
 import "@styles/solution.css";
 
 interface Props {
@@ -18,6 +20,7 @@ interface Props {
   repository?: string;
   url?: string;
   section?: string;
+  headings?: MarkdownHeading[];
 }
 
 const {
@@ -30,10 +33,11 @@ const {
   repository,
   url,
   section = "proyectos",
+  headings = [],
 } = Astro.props;
 
 const imagenLimpia = resolveImagePath(image);
-const currentSlug = Astro.url.pathname.split("/").pop() ?? "";
+const currentSlug = Astro.url.pathname.replace(/\/$/, "").split("/").pop() ?? "";
 
 const tagsArray = Array.isArray(tags)
   ? tags
@@ -163,6 +167,7 @@ const tagsArray = Array.isArray(tags)
         />
       </main>
 
+      <TableOfContents headings={headings} section={section} />
       <MoreProjects currentSlug={currentSlug} />
     </div>
   </div>
