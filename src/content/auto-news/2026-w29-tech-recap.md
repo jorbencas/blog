@@ -3,7 +3,7 @@ title: "Weekly Tech Recap W29"
 description: "Esta semana, la ciberseguridad acapara titulares con vulnerabilidades críticas en Linux que ponen en jaque años de código estable. En paralelo, la IA "
 pubDate: "2026-07-18"
 author: "Jorge Beneyto Castelló"
-image: "public/img/arquitectura_web.webp"
+image: "img/2026_w29_tech_recap/2026_w29_tech_recap_cover-1200.webp"
 tags: ["tech", "ciberseguridad", "inteligencia-artificial", "rust", "devops"]
 slug: "2026-w29-tech-recap"
 draft: false
