@@ -1,0 +1,644 @@
+---
+draft: false
+title: "TwitchRecorder: Grabador Automático de Twitch con Docker"
+description: "Cómo crear un grabador automático de directos de Twitch usando Python, Streamlink y Docker. Detecta cuándo un canal entra en directo, graba y guarda los vídeos organizados por fecha."
+pubDate: "2026-07-25"
+tags: ["python", "docker", "twitch", "streamlink", "automatización"]
+image: "img/twitchrecorder/twitchrecorder_cover-1200.webp"
+author: "Jorge Beneyto Castelló"
+---
+
+Grabar directos de Twitch manualmente es un fastidio. Siempre te pierdes el principio, o se te olvida darle a grabar, o tienes que tener OBS abierto todo el rato. La solución: un Docker que lo haga todo solo.
+
+---
+
+## Qué hace
+
+TwitchRecorder detecta cuándo un canal entra en directo, graba el stream con calidad original (sin recompresión), y guarda el vídeo organizado por fecha. Si se pierde la conexión, reconecta automáticamente.
+
+En resumen: arrancas el Docker y te olvidas. Cuando tu streamer favorito empiece, se graba solo.
+
+---
+
+## Tecnologías
+
+- **Python** — orquestador del sistema. Controla horarios, comprobaciones, inicio/fin de grabación y organización de archivos.
+- **Streamlink** — obtiene el stream directamente de Twitch. Sin navegador, sin Selenium, sin calidad reducida. Es lo que usa `vlc` por debajo.
+- **Docker** — contenedor portátil. Una vez construido, funciona igual en cualquier máquina con Docker instalado.
+- **FFmpeg** — dentro del contenedor, Streamlink lo usa internamente para manejar el stream.
+
+---
+
+## Por qué no usar OBS
+
+OBS es fantástico para grabar tu pantalla, pero para este caso de uso tiene problemas:
+
+- Necesita tener la ventana abierta
+- Consume más CPU (decodifica y vuelve a codificar)
+- Si se cierra, se para la grabación
+- No puedes programarlo fácilmente
+
+Streamlink descarga el stream tal cual sale de Twitch. Sin recompresión, sin pérdida de calidad, sin CPU de más.
+
+---
+
+## Estructura del proyecto
+
+```
+TwitchRecorder/
+├── Dockerfile            # Define la imagen Docker
+├── docker-compose.yml    # Define cómo ejecutar el contenedor
+├── .dockerignore         # Archivos que Docker ignora al copiar
+├── config.json           # Configuración del grabador
+├── requirements.txt      # Dependencias de Python
+├── main.py               # Punto de entrada
+├── utils/
+│   ├── __init__.py
+│   ├── config.py         # Carga y valida config.json
+│   ├── twitch.py         # Comprueba si un canal está en directo
+│   ├── recorder.py       # Graba el stream con Streamlink
+│   ├── scheduler.py      # Controla horarios y comprobaciones
+│   └── files.py          # Organiza archivos por fecha
+└── tests/
+```
+
+---
+
+## Archivos principales
+
+### `config.json`
+
+Todo se controla desde un único archivo. No hay variables de entorno complicadas ni archivos escondidos.
+
+```json
+{
+    "channels": ["sendosama"],
+    "record_path": "/recordings",
+    "days": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
+    "start_time": "21:00",
+    "check_every": 30,
+    "max_duration": "24:00:00",
+    "retry_interval": 60,
+    "copy_to_test": true
+}
+```
+
+**Explicación de cada campo:**
+
+- **`channels`** — Array con los canales de Twitch a grabar. Puedes poner varios: `["sendosama", "ibai", "auronplay"]`. Se graban todos los que estén en directo.
+
+- **`record_path`** — Ruta dentro del contenedor donde se guardan los vídeos. No la cambies a menos que sepas lo que haces. El valor `/recordings` se mapea a una carpeta de tu máquina mediante `docker-compose.yml`.
+
+- **`days`** — Días de la semana en los que se comprueba si hay directo. Si solo quieres grabar fines de semana, elimina los días entre semana.
+
+- **`start_time`** — Hora mínima para empezar a comprobar. Si tu streamer favorito empieza a las 21:30, pon `21:00`. El Docker puede arrancar a las 17:00, pero no empezará a comprobar hasta las 21:00. Así no desperdicias recursos.
+
+- **`check_every`** — Cada cuántos segundos se comprueba si el canal está en directo. `30` es un buen equilibrio. Si pones menos, detectas antes pero consumes más CPU.
+
+- **`max_duration`** — Duración máxima de grabación en formato HH:MM:SS. `"24:00:00"` significa que grabará todo el directo sin límite. Si quieres limitar a 6 horas, pon `"06:00:00"`.
+
+- **`retry_interval`** — Si se pierde la conexión pero el directo sigue activo, espera estos segundos antes de reconectar. Si el directo ya terminó (canal offline), no reintenta y para directamente.
+
+- **`copy_to_test`** — Si es `true`, después de cada grabación copia el vídeo a una carpeta `test/` para fácil acceso. Útil en producción. Pon `false` en modo test para no llenar de copias.
+
+### `Dockerfile`
+
+El Dockerfile define qué hay dentro del contenedor:
+
+```dockerfile
+FROM python:3.12-slim
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ffmpeg && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+RUN mkdir -p /recordings
+
+CMD ["python", "-u", "main.py"]
+```
+
+**Línea a línea:**
+
+- `FROM python:3.12-slim` — Imagen base. Python 3.12 optimizado (sin extras innecesarios).
+- `apt-get install ffmpeg` — Instala FFmpeg, que Streamlink usa internamente.
+- `COPY requirements.txt .` — Copia el archivo de dependencias.
+- `pip install -r requirements.txt` — Instala streamlink, requests, rich, etc.
+- `COPY . .` — Copia todo el código al contenedor.
+- `CMD ["python", "-u", "main.py"]` — Comando que se ejecuta al arrancar. El `-u` es importante: desactiva el buffer de Python para ver los prints en tiempo real.
+
+### `docker-compose.yml`
+
+El docker-compose.yml define cómo ejecutar el contenedor:
+
+```yaml
+services:
+  twitchrecorder:
+    build: .
+    container_name: twitchrecorder
+    restart: unless-stopped
+    volumes:
+      - ./config.json:/app/config.json:ro
+      - /home/jorge/test_videos:/recordings
+    environment:
+      - TZ=Europe/Madrid
+
+  run:
+    build: .
+    volumes:
+      - ./config.json:/app/config.json:ro
+      - /home/jorge/test_videos:/recordings
+    environment:
+      - TZ=Europe/Madrid
+```
+
+**Hay dos servicios:**
+
+1. **`twitchrecorder`** — Modo background. Siempre corriendo, se reinicia solo si se para. Ideal para dejarlo en un servidor.
+
+2. **`run`** — Modo una vez. Ejecuta, graba y muere. Ideal para probar o para ejecutar manualmente.
+
+**Explicación de cada opción:**
+
+- **`build: .`** — Construye la imagen desde el Dockerfile que está en el mismo directorio.
+- **`restart: unless-stopped`** — Si el contenedor se para (por error, por reinicio del PC), se arranca solo. Excepto si lo paras manualmente con `docker compose down`.
+- **`volumes`** — La parte más importante:
+  - `./config.json:/app/config.json:ro` — Monta tu `config.json` local dentro del contenedor. El `:ro` significa read-only: el contenedor no puede modificarlo.
+  - `/home/jorge/test_videos:/recordings` — Monta una carpeta de tu máquina en `/recordings` dentro del contenedor. Los vídeos se guardan aquí.
+- **`TZ=Europe/Madrid`** — Zona horaria. Importante para que los nombres de archivo tengan la hora correcta.
+
+### `.dockerignore`
+
+Evita que archivos innecesarios se copien al contenedor:
+
+```
+venv/
+__pycache__/
+.git/
+recordings/
+```
+
+Esto hace que la imagen sea más ligera y que el `docker build` sea más rápido.
+
+---
+
+## Cómo funciona
+
+```
+Docker arranca
+    │
+    ▼
+¿Hoy es día programado?
+    │
+    NO → Espera al siguiente día
+    │
+    SÍ
+    ▼
+¿Ya es hora de start_time?
+    │
+    NO → Espera (sin consumir CPU)
+    │
+    SÍ
+    ▼
+¿El canal está en directo?
+    │
+    NO → Espera check_every segundos
+    │
+    SÍ
+    ▼
+Inicia grabación con Streamlink
+    │
+    ▼
+Monitor comprueba cada 5 segundos:
+    │
+    ├── ¿Sigue online? → Sigue grabando
+    ├── ¿Se cayó pero sigue en directo? → Reconecta en retry_interval segundos
+    ├── ¿El directo terminó? → Para y guarda
+    └── ¿Pasó max_duration? → Para y guarda
+    │
+    ▼
+Espera al siguiente directo
+```
+
+---
+
+## Organización de archivos
+
+Los vídeos se guardan automáticamente organizados por año y mes. Si `copy_to_test` está activado, también se copian a `test/`:
+
+```
+recordings/
+├── 2026/
+│   └── 07/
+│       ├── sendosama_2026-07-25_21-30-00.mp4
+│       ├── sendosama_2026-07-26_21-15-00.mp4
+│       └── sendosama_2026-07-27_22-00-00.mp4
+└── test/
+    └── sendosama_2026-07-27_22-00-00.mp4
+```
+
+**Nombre del archivo:** `canal_YYYY-MM-DD_HH-MM-SS.mp4`
+
+---
+
+## Uso
+
+### Ejecutar una vez (recomendado para probar)
+
+```bash
+docker compose run --rm run
+```
+
+- `docker compose run` — Ejecuta un servicio
+- `--rm` — Elimina el contenedor al terminar (no deja basura)
+- `run` — El nombre del servicio
+
+### Ejecutar en background (para producción)
+
+```bash
+docker compose up -d
+```
+
+- `-d` — Detached mode. El contenedor corre en background.
+
+### Ver los logs en tiempo real
+
+```bash
+docker compose logs -f
+```
+
+### Parar todo
+
+```bash
+docker compose down
+```
+
+### Ejecutar con config temporal (sin modificar la config original)
+
+A veces quieres probar con otro canal sin cambiar tu config de sendosama. Crea un archivo temporal y ejecuta directamente con `docker run`:
+
+```bash
+# Crear config temporal
+cat > /tmp/test_config.json << 'EOF'
+{
+    "channels": ["shinchan_oficial"],
+    "record_path": "/recordings",
+    "days": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
+    "start_time": "00:00",
+    "check_every": 10,
+    "max_duration": "00:01:00"
+}
+EOF
+
+# Ejecutar con esa config
+docker run --rm \
+  -v /tmp/test_config.json:/app/config.json:ro \
+  -v /home/jorge/test_videos:/recordings \
+  -e TZ=Europe/Madrid \
+  twitchrecorder-run
+```
+
+Esto no toca tu `config.json` original.
+
+---
+
+## Cambiar la ruta de grabación
+
+En `docker-compose.yml`, modifica la línea de volumes:
+
+```yaml
+volumes:
+  - ./config.json:/app/config.json:ro
+  - /ruta/que/quieras/en/tu/maquina:/recordings
+```
+
+Por ejemplo, si quieres guardar en `D:\Grabaciones` en Windows:
+
+```yaml
+volumes:
+  - ./config.json:/app/config.json:ro
+  - D:\Grabaciones:/recordings
+```
+
+---
+
+## Bugs encontrados durante el desarrollo
+
+### 1. URL saltada al usar binario streamlink
+
+En Linux, el binario `streamlink` se instala en `/usr/local/bin/streamlink`. Al usarlo directamente (en lugar de `python -m streamlink`), el código construía mal el comando y se saltaba la URL del canal:
+
+```python
+# Mal — cmd[1:] se salta la URL
+cmd = ["https://www.twitch.tv/canal", "best", "-o", "archivo.mp4", "--force"]
+self.process = subprocess.Popen([sl_exe] + cmd[1:], ...)
+
+# Bien
+self.process = subprocess.Popen([sl_exe] + cmd, ...)
+```
+
+### 2. Buffer de stdout lleno
+
+Streamlink escribe mucha información a stderr (progreso, calidad, etc.). Si usas `stdout=subprocess.PIPE`, el buffer se llena y el proceso se bloquea:
+
+```python
+# Mal — el buffer se llena y el proceso muere
+stdout=subprocess.PIPE, stderr=subprocess.PIPE
+
+# Bien — redirige a /dev/null
+stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+```
+
+---
+
+## El camino recorrido: de la idea al Docker
+
+Todo empezó con una necesidad simple: grabar directos de Twitch sin tener que estar pendiente. La idea original usaba Selenium, ChromeDriver, y automatización del navegador. Pero cuanto más lo pensábamos, más frágil parecía. Si Twitch cambiaba algo, todo se rompía.
+
+Así que decidimos ir por otro camino: **Streamlink**. Una herramienta que hace exactamente lo que necesitamos, sin navegador, sin interfaces, sin complicaciones.
+
+---
+
+### Fase 1: Estructura y configuración
+
+Lo primero fue definir la estructura del proyecto. Nada de un script gigante: queríamos algo limpio, separado, mantenible.
+
+Creamos la carpeta `utils/` con módulos separados: `config.py`, `twitch.py`, `recorder.py`, `scheduler.py`, `files.py`. Cada uno con una responsabilidad clara.
+
+El `config.py` fue el primero. La idea era tener un único `config.json` que controlara todo. Pero rápidamente nos dimos cuenta de que necesitábamos valores por defecto: si el usuario borraba un campo, el programa no podía romper. Así que `load_config()` no solo carga el JSON, también rellena lo que falte.
+
+```python
+def load_config(path: Path = CONFIG_PATH) -> dict:
+    if not path.exists():
+        save_config(DEFAULT_CONFIG, path)
+        return DEFAULT_CONFIG.copy()
+
+    with open(path, "r", encoding="utf-8") as f:
+        config = json.load(f)
+
+    for key, value in DEFAULT_CONFIG.items():
+        if key not in config:
+            config[key] = value
+
+    return config
+```
+
+Otro detalle: detectar el sistema operativo. En Windows la ruta por defecto era `D:\Grabaciones`. En Linux no tiene sentido, así que usamos una carpeta dentro del proyecto.
+
+```python
+def _default_record_path() -> str:
+    if platform.system() == "Windows":
+        return "D:\\Grabaciones"
+    return str(_PROJECT_DIR / "recordings")
+```
+
+---
+
+### Fase 2: Detección de directos con Streamlink
+
+Streamlink tiene una API de Python que devuelve las calidades disponibles de un canal. Lo probamos y funcionó perfecto:
+
+```python
+from streamlink import Streamlink
+
+session = Streamlink()
+streams = session.streams("https://www.twitch.tv/shinchan_oficial")
+# {'160p': ..., '360p': ..., '720p': ..., 'best': ...}
+```
+
+Pero necesitábamos algo más: saber qué calidad elegir. Creamos `get_best_quality()` que busca "best" primero, y si no está, recorre una lista de calidades en orden descendente:
+
+```python
+quality_order = ["1080p60", "1080p", "720p60", "720p", "480p", "360p", "160p"]
+for quality in quality_order:
+    if quality in streams:
+        return quality
+```
+
+Así siempre grabas a la máxima calidad posible sin complicarte.
+
+---
+
+### Fase 3: La grabación — el momento de la verdad
+
+Llegamos al `recorder.py`, y aquí empezaron los problemas.
+
+La idea era simple: ejecutar `streamlink URL best -o archivo.mp4` como un proceso externo. Pero había un detalle: en Windows necesitas ocultar la ventana de la consola, y en Linux no.
+
+```python
+IS_WINDOWS = platform.system() == "Windows"
+
+popen_kwargs = dict(stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+if IS_WINDOWS:
+    popen_kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
+```
+
+Pero el verdadero drama vino con el `monitor()`. Necesitábamos un hilo que comprobara cada 5 segundos si el proceso seguía vivo. Si se moría, reconectar. Si el stream terminaba, parar.
+
+El primer intento usaba `stdout=subprocess.PIPE` para leer la salida de Streamlink. El problema: el buffer se llenaba y el proceso se bloqueaba. Streamlink escribe mucha información a stderr, y si nadie la lee, el proceso se para.
+
+La solución fue simple pero no obvia: redirigir a `/dev/null`.
+
+```python
+# Antes — el buffer se llenaba y el proceso moría
+stdout=subprocess.PIPE, stderr=subprocess.PIPE
+
+# Después — sin buffer, sin problemas
+stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+```
+
+Luego vino el bug de la URL. Cuando ejecutamos el contenedor en Linux, el binario `streamlink` se instalaba en `/usr/local/bin/streamlink`. El código lo encontraba bien, pero al construir el comando, se saltaba la URL:
+
+```python
+# Bug — cmd[1:] se salta la URL
+cmd = ["https://www.twitch.tv/canal", "best", "-o", "archivo.mp4", "--force"]
+self.process = subprocess.Popen([sl_exe] + cmd[1:], ...)  # ← URL perdida
+
+# Corregido
+self.process = subprocess.Popen([sl_exe] + cmd, ...)
+```
+
+Un simple `[1:]` que costó un buen rato de debugging.
+
+---
+
+### Fase 4: El scheduler — cuándo grabar
+
+El `scheduler.py` es el cerebro del sistema. Decide cuándo empezar a comprobar, cuándo parar, y cómo manejar múltiples canales.
+
+La parte más sencilla fue la comprobación de días y horas:
+
+```python
+def is_scheduled_day(config: dict) -> bool:
+    today = datetime.now().strftime("%A")
+    return today in config.get("days", [])
+
+def is_after_start_time(config: dict) -> bool:
+    now = datetime.now().strftime("%H:%M")
+    return now >= config.get("start_time", "19:55")
+```
+
+Lo interesante es el bucle principal. Para cada canal, crea un `Recorder`. Cuando detecta un directo, lanza el recorder y un hilo de monitorización. El monitor corre en background, sin bloquear el bucle principal.
+
+```python
+if is_live(channel):
+    if recorder.start():
+        monitor_thread = threading.Thread(
+            target=recorder.monitor,
+            daemon=True
+        )
+        monitor_thread.start()
+```
+
+El `daemon=True` es importante: si el programa principal muere, los hilos mueren con él. No queremos hilos huérfanos corriendo en segundo plano.
+
+---
+
+### Fase 5: Organización de archivos
+
+`files.py` es el módulo más simple, pero tiene un detalle que importa: el nombre del archivo.
+
+```python
+filename = f"{channel}_{now.strftime('%Y-%m-%d_%H-%M-%S')}.mp4"
+```
+
+Usamos el formato `canal_YYYY-MM-DD_HH-MM-SS.mp4` por una razón: al ordenar los archivos por nombre, se ordenan cronológicamente. No necesitas leer fechas ni metadatos. Miras la carpeta y ves el orden directamente.
+
+Y los archivos se guardan en `grabaciones/2026/07/`. Año y mes separados. Si grabas durante años, nunca tienes una carpeta gigante con miles de archivos.
+
+---
+
+### Fase 6: Docker — la encapsulación
+
+Cuando todo funcionaba local, llegó el momento de Docker. La idea: un contenedor que funcionara igual en cualquier máquina.
+
+El Dockerfile es mínimo:
+
+```dockerfile
+FROM python:3.12-slim
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+RUN mkdir -p /recordings
+CMD ["python", "-u", "main.py"]
+```
+
+**`python:3.12-slim`** en lugar de `python:3.12` completa. La versión normal pesa ~900MB. La slim pesa ~150MB. No necesitamos herramientas de compilación ni documentación.
+
+**`-u` en el CMD** es vital. Sin eso, Python bufferiza los prints. Si algo falla en el contenedor, no ves nada en `docker compose logs` hasta que muere. Con `-u`, cada print aparece inmediatamente.
+
+El `docker-compose.yml` define dos servicios:
+
+```yaml
+services:
+  twitchrecorder:
+    build: .
+    container_name: twitchrecorder
+    restart: unless-stopped
+    volumes:
+      - ./config.json:/app/config.json:ro
+      - /home/jorge/test_videos:/recordings
+    environment:
+      - TZ=Europe/Madrid
+
+  run:
+    build: .
+    volumes:
+      - ./config.json:/app/config.json:ro
+      - /home/jorge/test_videos:/recordings
+    environment:
+      - TZ=Europe/Madrid
+```
+
+**`twitchrecorder`** es para producción: siempre corriendo, se reinicia solo. **`run`** es para probar: ejecuta una vez y muere.
+
+Los volumes son lo más importante:
+
+- `./config.json:/app/config.json:ro` — Tu config se monta como solo lectura. El Docker no puede tocarlo.
+- `/home/jorge/test_videos:/recordings` — Una carpeta de tu máquina se monta como `/recordings` dentro del contenedor. Los vídeos aparecen en tu PC.
+
+---
+
+### Fase 7: Las mejoras finales
+
+El último paso fue pulir detalles que aparecieron con el uso:
+
+- **Config dinámico**: El scheduler recarga `config.json` en cada ciclo. Si añades un canal mientras corre, se detecta automáticamente.
+- **Nuevo día, nuevo reset**: Cuando cambia el día, los grabadores se reinician. Si un streamer estuvo offline ayer, hoy vuelve a comprobarse.
+- **`retry_interval` configurable**: Si se pierde la conexión pero el directo sigue activo, espera estos segundos antes de reconectar. Si el directo terminó, para directamente.
+- **`copy_to_test`**: En producción, copia cada vídeo a una carpeta `test/` para fácil acceso. En modo test, se desactiva para no llenar de copias.
+- **`is_after_start_time` arreglado**: Comparaba strings (`"9:00" >= "19:55"` fallaba). Ahora parsea horas y minutos correctamente.
+- **Validación del config**: Si ponen un `max_duration` con formato incorrecto, muestra un error claro en vez de crashear.
+
+---
+
+### Lo que aprendimos
+
+1. **Streamlink es fantástico** para esto. Sin navegador, sin dependencias, sin complicaciones.
+2. **Los buffers de subprocess** son una fuente infinita de bugs. Siempre usar `DEVNULL` a menos que necesites leer la salida.
+3. **Docker facilita todo**. Una vez que funciona local, encapsularlo es trivial.
+4. **Los hilos (`threading`)** son necesarios para monitorear sin bloquear. Pero hay que acordarse del `daemon=True`.
+5. **Un config.json bien pensado** ahorra mucho trabajo. Los valores por defecto y la validación son esenciales.
+
+---
+
+## Recuperación automática
+
+El recorder maneja varios escenarios de error:
+
+| Escenario | Qué hace |
+|-----------|----------|
+| Twitch pierde conexión | Espera y reconecta |
+| Streamlink devuelve error | Reintenta en 60 segundos |
+| PC pierde Internet | Espera y continúa |
+| Directo termina | Guarda el archivo y espera al siguiente |
+
+---
+
+## Requisitos
+
+- Docker instalado ([docker.com](https://www.docker.com))
+- Un canal de Twitch que quieras grabar
+- Un PC o servidor que pueda estar encendido cuando empiece el directo
+
+---
+
+## Para instalar desde cero
+
+```bash
+# Clonar el repositorio
+git clone <repo>
+cd TwitchRecorder
+
+# Arrancar en background
+docker compose up -d
+
+# Ver si funciona
+docker compose logs -f
+```
+
+---
+
+## Resumen de comandos
+
+| Comando | Qué hace |
+|---------|----------|
+| `docker compose up -d` | Arranca en background |
+| `docker compose down` | Para todo |
+| `docker compose run --rm run` | Ejecuta una vez |
+| `docker compose logs -f` | Muestra logs en tiempo real |
+| `docker compose build` | Reconstruye la imagen |
+
+---
+
+Y eso es todo. Un Docker que graba tus directos favoritos sin que tengas que hacer nada. Lo dejas corriendo y a disfrutar del ocio.
+
+El código completo está en [GitHub](https://github.com/jorbencas/devjobs/TwitchRecorder).
