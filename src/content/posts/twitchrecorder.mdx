@@ -43,6 +43,78 @@ Streamlink descarga el stream tal cual sale de Twitch. Sin recompresión, sin p�
 
 ---
 
+## Qué es Streamlink
+
+Streamlink es una herramienta de línea de comandos que extrae streams de más de 100 plataformas de streaming y los reproduce directamente en un reproductor local (VLC, MPV, etc.) o los guarda en un archivo. Nació en 2016 como fork de Livestreamer.
+
+**¿Por qué usar Streamlink en vez de un navegador?**
+
+| | Navegador | Streamlink |
+|---|-----------|------------|
+| RAM | 2-4 GB | < 100 MB |
+| CPU | 30-50% | Mínimo |
+| Calidad | Recompresión | Directa (sin pérdida) |
+| Dependencias | Flash, JS, cookies | Solo Python |
+
+**Plataformas soportadas (algunas):**
+
+| Plataforma | Tipo | Notas |
+|------------|------|-------|
+| Twitch | Live + VOD | Soporte completo, baja latencia |
+| YouTube | Live + VOD | Calidades múltiples |
+| Dailymotion | Live + VOD | — |
+| Vimeo | Live + VOD | — |
+| NicoNico | Live + VOD | Requiere cuenta |
+| Picarto | Live + VOD | Comunidad creativa |
+| NASA+ | Live + VOD | Contenido espacial |
+| WWE Network | Live + VOD | Requiere suscripción |
+
+**Otros usos de Streamlink:**
+
+- **Reproducir en VLC:** `streamlink twitch.tv/canal best` — abre el stream directamente en VLC
+- **Grabar a archivo:** `streamlink twitch.tv/canal best -o grabacion.mp4`
+- **Seleccionar calidad:** `best`, `worst`, `720p`, `1080p60`, `audio_only`
+- **Autenticación:** Usar tokens OAuth para canales subscriptores
+- **Baja latencia:** `--twitch-low-latency` para menos delay
+
+Streamlink es ideal para automatización porque es ligero, no necesita navegador, y funciona como un proceso externo que puedes controlar con Python.
+
+---
+
+## Qué es yt-dlp
+
+yt-dlp es un fork de youtube-dl, la herramienta más popular para descargar vídeos de YouTube. Soporta más de 1000 sitios web y es la herramienta estándar para descargar contenido multimedia de internet.
+
+**¿Por qué yt-dlp para YouTube y Kick?**
+
+Streamlink no tiene plugins para YouTube ni Kick. yt-dlp sí. Además, yt-dlp es más maduro para YouTube: maneja autenticación, calidades, formatos, y actualizaciones frecuentes cuando YouTube cambia su API.
+
+**Plataformas soportadas (algunas):**
+
+| Plataforma | Tipo | Notas |
+|------------|------|-------|
+| YouTube | Live + VOD | La más completa |
+| Kick | Live + VOD | Soporte nativo |
+| Twitch | Live + VOD | También funciona |
+| TikTok | Live + VOD | — |
+| Instagram | Live + VOD | Requiere login |
+| Twitter/X | Live + VOD | — |
+| Facebook | Live + VOD | — |
+| Vimeo | Live + VOD | — |
+| Twitch | Live + VOD | Alternativa a Streamlink |
+
+**Otros usos de yt-dlp:**
+
+- **Descargar vídeos:** `yt-dlp URL` — descarga el mejor formato
+- **Solo audio:** `yt-dlp -f bestaudio URL` — extrae solo el audio
+- **Listas de reproducción:** `yt-dlp URL.playlist` — descarga toda la lista
+- **Subtítulos:** `yt-dlp --write-subs URL` — descarga subtítulos
+- **Miniaturas:** `yt-dlp --write-thumbnail URL` — descarga la miniatura
+
+yt-dlp se actualiza frecuentemente (varias veces al mes) para adaptarse a los cambios de las plataformas. Es la herramienta más fiable para contenido que Streamlink no soporta.
+
+---
+
 ## Multi-plataforma: Twitch, YouTube y Kick
 
 Al principio solo soportábamos Twitch con Streamlink. Pero rápidamente nos dimos cuenta de que otros streamers usaban YouTube y Kick. La solución fue usar **yt-dlp** para esas plataformas.
@@ -487,7 +559,14 @@ Así siempre grabas a la máxima calidad posible sin complicarte.
 
 Llegamos al `recorder.py`, y aquí empezaron los problemas.
 
-La idea era simple: ejecutar `streamlink URL best -o archivo.mp4` como un proceso externo. Pero había un detalle: en Windows necesitas ocultar la ventana de la consola, y en Linux no.
+La idea era simple: ejecutar `streamlink URL best -o archivo.mp4 --force` como un proceso externo. El comando significa:
+
+- `URL` — Canal de Twitch (ej: `https://www.twitch.tv/canal`)
+- `best` — Calidad a grabar. `best` = la máxima disponible (1080p60, 720p, etc.)
+- `-o archivo.mp4` — Archivo de salida
+- `--force` — Sobrescribe si el archivo ya existe
+
+Pero había un detalle: en Windows necesitas ocultar la ventana de la consola, y en Linux no.
 
 ```python
 IS_WINDOWS = platform.system() == "Windows"
@@ -657,11 +736,24 @@ Luego vino la grabación. yt-dlp tiene un comando similar a streamlink:
 
 ```bash
 # Streamlink (Twitch)
-streamlink https://www.twitch.tv/canal best -o archivo.mp4
+streamlink https://www.twitch.tv/canal best -o archivo.mp4 --force
 
 # yt-dlp (YouTube/Kick)
-yt-dlp https://youtube.com/@canal/live -f best -o archivo.mp4
+yt-dlp https://youtube.com/@canal/live -f best -o archivo.mp4 --no-part --no-overwrites --write-thumbnail --convert-thumbnails jpg
 ```
+
+**Streamlink flags:**
+- `best` — Calidad del stream. `best` = la máxima disponible.
+- `-o archivo.mp4` — Archivo de salida.
+- `--force` — Sobrescribe si el archivo ya existe.
+
+**yt-dlp flags:**
+- `-f best` — Formato. `best` = el mejor vídeo+audio disponible.
+- `-o archivo.mp4` — Archivo de salida.
+- `--no-part` — No usar archivos `.part` temporales. Graba directamente al `.mp4`.
+- `--no-overwrites` — No sobrescribe si el archivo ya existe.
+- `--write-thumbnail` — Descarga la miniatura del stream.
+- `--convert-thumbnails jpg` — Convierte la miniatura a JPG (ahorra espacio).
 
 El `recorder.py` se adaptó para detectar la plataforma y ejecutar el comando correcto:
 
