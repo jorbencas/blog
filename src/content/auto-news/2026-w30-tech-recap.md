@@ -3,7 +3,7 @@ title: "Weekly Tech Recap W30"
 description: "Esta semana, la carrera por la inteligencia artificial se intensifica en dos frentes clave: la sofisticación de los modelos y la infraestructura que l"
 pubDate: "2026-07-25"
 author: "Jorge Beneyto Castelló"
-image: "public/img/arquitectura_web.webp"
+image: "img/2026_w30_tech_recap/2026_w30_tech_recap_cover-1200.webp"
 tags: ["tech", "ia", "hardware_ai", "typescript", "ciberseguridad"]
 slug: "2026-w30-tech-recap"
 draft: false
