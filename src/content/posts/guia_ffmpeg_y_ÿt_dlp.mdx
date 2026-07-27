@@ -35,156 +35,168 @@ para unir 2  videos en uno :
 ```bash
 ffmpeg -i video1.mp4 -i video2.mp4 -filter_complex "[0:v][0:a][1:v][1:a]concat=n=2:v=1:a=1" output.mp4
 ```
-Acontinuación un script que convirte de formato a mp4 (sin logs):
+Acontinuación un script que convierte de formato a mp4 (sin logs):
 ```bash
 #!/bin/bash
 
-# Definir el directorio de entrada y salida
 input_dir="./"
 output_dir="./optimizados"
-max_threads=6
-
-# LIMPIEZA DEL LOG: Se machaca al iniciar
-echo "--- Inicio de sesión: $(date) ---"
-
-if [[ ! -d $output_dir ]]; then 
-    mkdir -p "$output_dir"
-fi
-
-# Extensiones de video compatibles
+max_threads=$(nproc)
 extensiones=("avi" "webm" "mkv" "mp4" "flv")
 
-# Función para convertir un archivo
-convertir_archivo() {
-    local file="$1"
-    local output_dir="$2"
-    local filename=$(basename "$file" | sed 's/\.[^.]*$//') # Nombre sin extensión
+mkdir -p "$output_dir"
 
-    echo "Procesando: $file"
-    
-    # EXPLICACIÓN DEL CAMBIO:
-    # -map 0:v:0 -> Toma el video
-    # -map 0:a:0 -> Toma SOLO la primera pista de audio disponible
-    # Si quieres la segunda pista, cambia 0:a:0 por 0:a:1
-    ffmpeg -i "$file" \
-    -map 0:v:0 -map 0:a:0 \
-    -c:v libx264 -crf 23 -preset medium -threads 0 \
-    -c:a aac -b:a 128k \
-    "$output_dir/$filename.mp4" -y -loglevel error
-
-    # Opcional: eliminar el archivo original después de la conversión
-    if [[ $? -eq 0 ]]; then
-        if [[ -f "$file" ]]; then
-            rm "$file"
-            echo "[$filename] OK - Original eliminado"
-        fi
-    else
-        echo "[$filename] ERROR - Falló la conversión"
-    fi
-}
-
-# Array para controlar los hilos activos
-active_threads=()
-
-# Buscar archivos en el directorio de entrada con las extensiones especificadas
+archivos=()
 for ext in "${extensiones[@]}"; do
-    for file in "$input_dir"/*."$ext"; do
-        # Saltar si no hay archivos coincidentes
-        [[ -e "$file" ]] || continue
-
-        # Llamar a la función en segundo plano
-        convertir_archivo "$file" "$output_dir" &
-        
-        # Agregar el PID del proceso a la lista
-        active_threads+=($!)
-
-        # Si el número de hilos activos alcanza el límite, esperar a que terminen
-        while [ "${#active_threads[@]}" -ge "$max_threads" ]; do
-            for i in "${!active_threads[@]}"; do
-                # Comprobar si el proceso sigue activo
-                if ! kill -0 "${active_threads[i]}" 2>/dev/null; then
-                    unset 'active_threads[i]' # Eliminar el proceso terminado de la lista
-                fi
-            done
-            active_threads=("${active_threads[@]}") # Reindexar el array
-            sleep 1 # Esperar un momento antes de verificar nuevamente
-        done
-    done
+    while IFS= read -r -d '' file; do
+        archivos+=("$file")
+    done < <(find "$input_dir" -maxdepth 2 -type f -iname "*.$ext" -print0)
 done
 
-# Esperar a que todos los procesos en segundo plano terminen
-wait
+total=${#archivos[@]}
 
-echo "Proceso finalizado."
-```
-Un script parecido pero con logs:
-```bash
-#!/bin/bash
-
-# Definir el directorio de entrada y salida
-input_dir="./"
-output_dir="./optimizados"
-max_threads=4 # Número máximo de hilos en paralelo
-
-if [[ ! -d $output_dir ]]; then 
-    # Asegurarse de que el directorio de salida exista
-    mkdir -p "$output_dir"
+if [[ $total -eq 0 ]]; then
+    echo "No se encontraron vídeos para convertir en $input_dir"
+    exit 0
 fi
 
-# Extensiones de video compatibles (puedes agregar más si es necesario)
-extensiones=("avi" "webm" "mkv" "mp4" "flv")
+echo "Encontrados $total archivos a convertir (hilos: $max_threads)"
 
-# Función para convertir un archivo
+procesados=0
+fallidos=0
+active_threads=()
+
 convertir_archivo() {
     local file="$1"
     local output_dir="$2"
-    local filename=$(basename "$file" | sed 's/\.[^.]*$//') # Nombre sin extensión
+    local filename
+    filename=$(basename "$file")
+    filename="${filename%.*}"
 
-    echo "Procesando: $file"
-    ffmpeg -i "$file" -c:v libx264 -crf 23 -preset medium -c:a aac -b:a 128k "$output_dir/$filename.mp4"
-
-    # Opcional: eliminar el archivo original después de la conversión
-    if [[ -f $file ]]; then
+    echo "[$procesados/$total] Procesando: $file"
+    if ffmpeg -i "$file" \
+        -map 0:v:0 -map 0:a:0 \
+        -c:v libx264 -crf 23 -preset medium -threads 0 \
+        -c:a aac -b:a 128k \
+        "$output_dir/$filename.mp4" -y -loglevel error 2>/dev/null; then
         rm "$file"
-        echo "Eliminado archivo original: $file"
+        echo "[$procesados/$total] Eliminado: $file"
+        return 0
+    else
+        echo "[$procesados/$total] ERROR al convertir: $file"
+        return 1
     fi
 }
 
-# Array para controlar los hilos activos
-active_threads=()
+for file in "${archivos[@]}"; do
+    convertir_archivo "$file" "$output_dir" &
+    active_threads+=($!)
 
-# Buscar archivos en el directorio de entrada con las extensiones especificadas
-for ext in "${extensiones[@]}"; do
-    for file in "$input_dir"/*."$ext"; do
-        # Saltar si no hay archivos coincidentes
-        [[ -e "$file" ]] || continue
-
-        # Llamar a la función en segundo plano
-        convertir_archivo "$file" "$output_dir" &
-        
-        # Agregar el PID del proceso a la lista
-        active_threads+=($!)
-
-        # Si el número de hilos activos alcanza el límite, esperar a que terminen
-        while [ "${#active_threads[@]}" -ge "$max_threads" ]; do
-            for i in "${!active_threads[@]}"; do
-                # Comprobar si el proceso sigue activo
-                if ! kill -0 "${active_threads[i]}" 2>/dev/null; then
-                    unset 'active_threads[i]' # Eliminar el proceso terminado de la lista
-                fi
-            done
-            active_threads=("${active_threads[@]}") # Reindexar el array
-            sleep 1 # Esperar un momento antes de verificar nuevamente
+    while [ "${#active_threads[@]}" -ge "$max_threads" ]; do
+        for i in "${!active_threads[@]}"; do
+            if ! kill -0 "${active_threads[i]}" 2>/dev/null; then
+                wait "${active_threads[i]}" 2>/dev/null && ((procesados++)) || ((fallidos++))
+                unset 'active_threads[i]'
+            fi
         done
+        active_threads=("${active_threads[@]}")
+        sleep 0.5
     done
 done
 
-# Esperar a que todos los procesos en segundo plano terminen
-wait
+for pid in "${active_threads[@]}"; do
+    wait "$pid" 2>/dev/null && ((procesados++)) || ((fallidos++))
+done
 
-echo "Todos los archivos han sido procesados."
-
+echo ""
+echo "Completado: $procesados OK, $fallidos fallos de $total archivos."
 ```
+Un script parecido pero con logs (verbose):
+```bash
+#!/bin/bash
+
+input_dir="./"
+output_dir="./optimizados"
+max_threads=$(nproc)
+extensiones=("avi" "webm" "mkv" "mp4" "flv")
+
+mkdir -p "$output_dir"
+
+archivos=()
+for ext in "${extensiones[@]}"; do
+    while IFS= read -r -d '' file; do
+        archivos+=("$file")
+    done < <(find "$input_dir" -maxdepth 2 -type f -iname "*.$ext" -print0)
+done
+
+total=${#archivos[@]}
+
+if [[ $total -eq 0 ]]; then
+    echo "No se encontraron vídeos para convertir en $input_dir"
+    exit 0
+fi
+
+echo "Encontrados $total archivos a convertir (hilos: $max_threads)"
+
+procesados=0
+fallidos=0
+active_threads=()
+
+convertir_archivo() {
+    local file="$1"
+    local output_dir="$2"
+    local filename
+    filename=$(basename "$file")
+    filename="${filename%.*}"
+
+    echo "[$procesados/$total] Procesando: $file"
+    if ffmpeg -i "$file" -c:v libx264 -crf 23 -preset medium -c:a aac -b:a 128k "$output_dir/$filename.mp4" 2>/dev/null; then
+        rm "$file"
+        echo "[$procesados/$total] Eliminado: $file"
+        return 0
+    else
+        echo "[$procesados/$total] ERROR al convertir: $file"
+        return 1
+    fi
+}
+
+for file in "${archivos[@]}"; do
+    convertir_archivo "$file" "$output_dir" &
+    active_threads+=($!)
+
+    while [ "${#active_threads[@]}" -ge "$max_threads" ]; do
+        for i in "${!active_threads[@]}"; do
+            if ! kill -0 "${active_threads[i]}" 2>/dev/null; then
+                wait "${active_threads[i]}" 2>/dev/null && ((procesados++)) || ((fallidos++))
+                unset 'active_threads[i]'
+            fi
+        done
+        active_threads=("${active_threads[@]}")
+        sleep 0.5
+    done
+done
+
+for pid in "${active_threads[@]}"; do
+    wait "$pid" 2>/dev/null && ((procesados++)) || ((fallidos++))
+done
+
+echo ""
+echo "Completado: $procesados OK, $fallidos fallos de $total archivos."
+```
+
+### Mejoras aplicadas a los scripts
+
+| Mejora | Antes | Después |
+|--------|-------|---------|
+| **Hilos** | `max_threads=4` o `6` hardcodeado | `$(nproc)` — detecta CPUs automáticamente |
+| **Errores ffmpeg** | Borra el archivo aunque falle | Verifica exit code con `if ffmpeg ... ; then`, solo borra si OK |
+| **Progreso** | Sin indicador | `[$procesados/$total]` en cada línea |
+| **Subcarpetas** | Solo carpeta raíz (`*.$ext`) | `find -maxdepth 2` — busca en subcarpetas |
+| **Sin vídeos** | Ejecutaba ffmpeg igual | Mensaje y sale con `exit 0` |
+| **Resumen final** | "Proceso finalizado" genérico | `OK: X, fallos: Y de Z archivos` |
+| **Sleep** | `sleep 1` entre checks | `sleep 0.5` — más reactivo |
+| **sed para extensión** | `sed 's/\.[^.]*$//'` | Parameter expansion: `${filename%.*}` — sin dependencia de `sed` |
+
 Pequeño script para crear x archivo en blanco:
 ```bash
 #!/bin/bash

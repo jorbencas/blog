@@ -1,0 +1,28 @@
+name: Lint MDX
+
+on:
+  push:
+    paths:
+      - "src/content/**/*.mdx"
+  pull_request:
+    paths:
+      - "src/content/**/*.mdx"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint MDX syntax
+        run: node scripts/lint-mdx.mjs
+
+      - name: Build check
+        run: npm run build

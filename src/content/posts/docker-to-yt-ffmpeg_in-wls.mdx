@@ -20,69 +20,97 @@ services:
     volumes:
       - /mnt/c/Users/TuUsuario/Videos/test_videos:/test_videos
     working_dir: /test_videos
+    user: root
     tty: true          # Equivalente a -t en docker run
     stdin_open: true   # Equivalente a -i en docker run
-    command: sh -c "apk update && apk add --no-cache ffmpeg python3 curl bash && curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp && chmod a+rx /usr/local/bin/yt-dlp && bash /test_videos/midu.sh && sh"
+    command: >-
+      sh -c "apk update &&
+      apk add --no-cache ffmpeg python3 curl bash su-exec &&
+      adduser -D -u 1000 tu_usuario &&
+      curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp &&
+      chmod a+rx /usr/local/bin/yt-dlp &&
+      su-exec tu_usuario bash /test_videos/midu.sh &&
+      su-exec tu_usuario sh"
 ```
 
 > **Sobre `tty` e `stdin_open`:** Estas dos opciones equivalen a pasar `-it` al `docker run`. Sin ellas, el contenedor no mantendría la terminal interactiva y no podrías escribir comandos dentro.
+
+> **Sobre los permisos (`user: root` y `su-exec`):** Por defecto Alpine ejecuta todo como `root`, lo que hace que los archivos creados en los volúmenes queden como `root:root`. La solución es mantener `user: root` para instalar paquetes (solo root puede escribir en `/usr/local/bin/`), pero usar `su-exec` para ejecutar el script y la shell como tu usuario real. `adduser -D -u 1000 tu_usuario` crea el usuario dentro del contenedor con el mismo UID que tu usuario del host. Cambia `tu_usuario` por el nombre de tu usuario en Linux (lo puedes ver ejecutando `whoami` en tu terminal).
 
 > **Ojo al detalle:** Recuerda cambiar `TuUsuario` por el nombre real de tu usuario en Windows (lo puedes ver en la terminal de WSL escribiendo `ls /mnt/c/Users/`).
 
 ## 2. El script de conversión (midu.sh)
 
-Crea un archivo `midu.sh` en la misma carpeta que el docker-compose.yml. Este script convierte todos los vídeos de una carpeta a mp4 (H.264 + AAC) ejecutando hasta 4 conversiones en paralelo:
+Crea un archivo `midu.sh` en la misma carpeta que el docker-compose.yml. Este script convierte todos los vídeos de una carpeta a mp4 (H.264 + AAC) ejecutando conversiones en paralelo (una por CPU disponible):
 
 ```bash
-# Definir el directorio de entrada y salida
 input_dir="/test_videos/test"
 output_dir="/test_videos/optimizados"
-max_threads=4
+max_threads=$(nproc)
+extensiones=("avi" "webm" "mkv" "mp4" "flv")
 
-if [[ ! -d $output_dir ]]; then
-    mkdir -p "$output_dir"
+mkdir -p "$output_dir"
+
+archivos=()
+for ext in "${extensiones[@]}"; do
+    while IFS= read -r -d '' file; do
+        archivos+=("$file")
+    done < <(find "$input_dir" -maxdepth 2 -type f -iname "*.$ext" -print0)
+done
+
+total=${#archivos[@]}
+
+if [[ $total -eq 0 ]]; then
+    echo "No se encontraron vídeos para convertir en $input_dir"
+    exit 0
 fi
 
-extensiones=("avi" "webm" "mkv" "mp4" "flv")
+echo "Encontrados $total archivos a convertir (hilos: $max_threads)"
+
+procesados=0
+fallidos=0
+active_threads=()
 
 convertir_archivo() {
     local file="$1"
     local output_dir="$2"
-    local filename=$(basename "$file")
+    local filename
+    filename=$(basename "$file")
     filename="${filename%.*}"
 
-    echo "Procesando: $file"
-    ffmpeg -i "$file" -c:v libx264 -crf 23 -preset medium -c:a aac -b:a 128k "$output_dir/$filename.mp4"
-
-    if [[ -f $file ]]; then
+    echo "[$procesados/$total] Procesando: $file"
+    if ffmpeg -i "$file" -c:v libx264 -crf 23 -preset medium -c:a aac -b:a 128k "$output_dir/$filename.mp4" 2>/dev/null; then
         rm "$file"
-        echo "Eliminado archivo original: $file"
+        echo "[$procesados/$total] Eliminado: $file"
+        return 0
+    else
+        echo "[$procesados/$total] ERROR al convertir: $file"
+        return 1
     fi
 }
 
-active_threads=()
+for file in "${archivos[@]}"; do
+    convertir_archivo "$file" "$output_dir" &
+    active_threads+=($!)
 
-for ext in "${extensiones[@]}"; do
-    for file in "$input_dir"/*."$ext"; do
-        [[ -e "$file" ]] || continue
-        convertir_archivo "$file" "$output_dir" &
-        active_threads+=($!)
-
-        while [ "${#active_threads[@]}" -ge "$max_threads" ]; do
-            for i in "${!active_threads[@]}"; do
-                if ! kill -0 "${active_threads[i]}" 2>/dev/null; then
-                    unset 'active_threads[i]'
-                fi
-            done
-            active_threads=("${active_threads[@]}")
-            sleep 1
+    while [ "${#active_threads[@]}" -ge "$max_threads" ]; do
+        for i in "${!active_threads[@]}"; do
+            if ! kill -0 "${active_threads[i]}" 2>/dev/null; then
+                wait "${active_threads[i]}" 2>/dev/null && ((procesados++)) || ((fallidos++))
+                unset 'active_threads[i]'
+            fi
         done
+        active_threads=("${active_threads[@]}")
+        sleep 0.5
     done
 done
 
-wait
+for pid in "${active_threads[@]}"; do
+    wait "$pid" 2>/dev/null && ((procesados++)) || ((fallidos++))
+done
 
-echo "Todos los archivos han sido procesados."
+echo ""
+echo "Completado: $procesados OK, $fallidos fallos de $total archivos."
 ```
 
 ## 3. Estructura de carpetas
@@ -180,10 +208,20 @@ services:
     volumes:
       - /home/TuUsuario/Videos/test_videos:/test_videos
     working_dir: /test_videos
+    user: root
     tty: true          # Equivalente a -t en docker run
     stdin_open: true   # Equivalente a -i en docker run
-    command: sh -c "apk update && apk add --no-cache ffmpeg python3 curl bash && curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp && chmod a+rx /usr/local/bin/yt-dlp && bash /test_videos/midu.sh && sh"
+    command: >-
+      sh -c "apk update &&
+      apk add --no-cache ffmpeg python3 curl bash su-exec &&
+      adduser -D -u $(id -u) tu_usuario &&
+      curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp &&
+      chmod a+rx /usr/local/bin/yt-dlp &&
+      su-exec tu_usuario bash /test_videos/midu.sh &&
+      su-exec tu_usuario sh"
 ```
+
+> **Sobre los permisos:** Igual que en la sección de WSL, usamos `user: root` + `su-exec` para evitar que los archivos se creen como `root`. Cambia `tu_usuario` por el nombre de tu usuario en Linux (`whoami`).
 
 Lanza el contenedor:
 
@@ -251,4 +289,38 @@ local filename=$(basename "$file" | sed 's/\.[^.]*$//')
 ```bash
 local filename=$(basename "$file")
 filename="${filename%.*}"
+```
+
+### Archivos creados como root en los volúmenes
+
+**Problema:** Al ejecutar el contenedor, los archivos descargados y convertidos quedan como `root:root` en vez de tu usuario normal:
+
+```sh
+$ ls -la /home/tu_usuario/Videos/test_videos/test/
+-rw-r--r-- 1 root root 12345678 video.mp4  # ← incorrecto
+```
+
+Esto pasa porque Alpine ejecuta todos los comandos como `root` por defecto.
+
+**Solución:** Usar `su-exec` para ejecutar el script y la shell como tu usuario, manteniendo `user: root` solo para la instalación de paquetes (que necesita permisos de administrador):
+
+```yaml
+user: root
+command: >-
+  sh -c "apk update &&
+  apk add --no-cache ffmpeg python3 curl bash su-exec &&
+  adduser -D -u 1000 tu_usuario &&
+  curl -L ... -o /usr/local/bin/yt-dlp &&
+  chmod a+rx /usr/local/bin/yt-dlp &&
+  su-exec tu_usuario bash /test_videos/midu.sh &&
+  su-exec tu_usuario sh"
+```
+
+- `adduser -D -u 1000 tu_usuario` — crea el usuario dentro del contenedor con el mismo UID que tu usuario del host. Cambia `tu_usuario` por tu nombre de usuario real (`whoami`).
+- `su-exec tu_usuario bash midu.sh` — ejecuta el script como tu usuario en vez de root.
+
+Si ya tienes archivos creados como root, corrígelos con:
+
+```sh
+sudo chown -R tu_usuario:tu_usuario /home/tu_usuario/Videos/test_videos
 ```

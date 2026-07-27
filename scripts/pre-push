@@ -1,0 +1,11 @@
+#!/bin/bash
+# Pre-push hook: lint MDX files before pushing
+# Install: cp scripts/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
+
+echo "Linting MDX files..."
+node scripts/lint-mdx.mjs
+if [ $? -ne 0 ]; then
+  echo "Fix the errors above before pushing."
+  exit 1
+fi
+echo "All checks passed."
