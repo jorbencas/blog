@@ -15,18 +15,15 @@ function lintFile(filePath) {
     const line = lines[i];
     const lineNum = i + 1;
 
-    if (line.match(/^```/)) {
-      const hasInfoString = line.match(/^```\w/);
-      const shouldToggle = !inCodeBlock || (inCodeBlock && !hasInfoString);
-      if (shouldToggle) {
-        if (!inCodeBlock) {
-          inCodeBlock = true;
-          codeBlockStart = lineNum;
-        } else {
-          inCodeBlock = false;
-        }
-        continue;
+    if (line.match(/^`{3,}/)) {
+      const hasInfoString = line.match(/^`{3,}\s*\S/);
+      if (!inCodeBlock) {
+        inCodeBlock = true;
+        codeBlockStart = lineNum;
+      } else if (!hasInfoString) {
+        inCodeBlock = false;
       }
+      continue;
     }
 
     if (inCodeBlock) continue;
