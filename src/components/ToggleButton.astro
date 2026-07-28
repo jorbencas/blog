@@ -32,7 +32,7 @@ const darkIcon = document.getElementById("theme-toggle-dark-icon");
 const lightIcon = document.getElementById("theme-toggle-light-icon");
 const toggleBtn = document.getElementById("theme-toggle");
 let selectedTheme = localStorage.getItem("color-theme");
-let isDark = selectedTheme === "dark";
+let isDark = selectedTheme === "dark" || (!selectedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches);
 
 darkIcon.classList.toggle("hidden", !isDark);
 lightIcon.classList.toggle("hidden", isDark);

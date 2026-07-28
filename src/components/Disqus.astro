@@ -16,26 +16,48 @@ const { url, identifier, title } = Astro.props;
 
 <script is:inline define:vars={{ url, identifier, title }}>
   (function () {
-    var isDark = document.documentElement.classList.contains('dark');
-    var safeBg = isDark ? '#0f172a' : '#ffffff';
+    function loadDisqus() {
+      var el = document.getElementById('disqus_thread');
+      if (!el) return;
 
-    var el = document.getElementById('disqus_thread');
-    while (el) {
-      el.style.backgroundColor = safeBg;
-      el = el.parentElement;
+      var isDark = document.documentElement.classList.contains('dark');
+      el.style.backgroundColor = isDark ? '#0f172a' : '#ffffff';
+
+      window.disqus_config = function () {
+        this.page.url = url;
+        this.page.identifier = identifier;
+        this.page.title = title;
+      };
+
+      var d = document, s = d.createElement('script');
+      s.src = 'https://blog-jorbencas-vercel-app.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', +new Date());
+      (d.head || d.body).appendChild(s);
     }
-    document.body.style.backgroundColor = safeBg;
 
-    window.disqus_config = function () {
-      this.page.url = url;
-      this.page.identifier = identifier;
-      this.page.title = title;
-    };
+    loadDisqus();
 
-    var d = document, s = d.createElement('script');
-  s.src = 'https://blog-jorbencas-vercel-app.disqus.com/embed.js';    
-  s.setAttribute('data-timestamp', +new Date());
-    (d.head || d.body).appendChild(s);
+    var lastDark = document.documentElement.classList.contains('dark');
+    var observer = new MutationObserver(function () {
+      var isDark = document.documentElement.classList.contains('dark');
+      if (isDark === lastDark) return;
+      lastDark = isDark;
+
+      var el = document.getElementById('disqus_thread');
+      if (!el) return;
+
+      el.style.backgroundColor = isDark ? '#0f172a' : '#ffffff';
+
+      if (window.DISQUS) {
+        try {
+          window.DISQUS.reload({ reset: true });
+        } catch (e) {
+          el.innerHTML = '';
+          loadDisqus();
+        }
+      }
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
   })();
 </script>
 
