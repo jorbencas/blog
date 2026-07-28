@@ -1,434 +1,29 @@
 ---
 draft: false
-title: "Guia de consegos y utilidades de yt-dlp y ffmpeg"
-description: "Recopilación de comandos útiles de ffmpeg y yt-dlp: unir audio a video, cortar fragmentos, concatenar, convertir lotes, y descargar streams con yt-dlp."
-pubDate: "2026/03/30"
-tags: ['web', 'sistemas', 'ffmpeg', 'bash']
+title: "Guía de comandos de yt-dlp y ffmpeg"
+description: "Recopilación de comandos útiles de ffmpeg y yt-dlp: convertir formatos, cortar, concatenar, comprimir, descargar streams y más con ejemplos prácticos."
+pubDate: "2026-03-30"
+tags: ['web', 'sistemas', 'ffmpeg', 'bash', 'yt-dlp', 'video']
 image: "img/guia_ffmpeg_y_yt_dlp/guia_ffmpeg_y_yt_dlp_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 ---
 
-Anteriormente vimos cómo usar **ffmpeg** para fusionar videoclases con su pista de audio en el post [Scripts Bash — Unir Video y Audio](/posts/Scripts_Bash_para_Unir_Video_y_Audio_con_FFmpeg/). Allí recorríamos carpetas de videos, buscábamos el audio correspondiente por número de tema y ejecutábamos ffmpeg para combinarlos. Aquí ampliamos con más casos de uso: cambiar codecs de audio, cortar fragmentos, concatenar videos, convertir lotes y descargar streams con yt-dlp.
+**ffmpeg** es una aplicación de línea de comandos para procesar audio y vídeo. **yt-dlp** es un descargador de audio/vídeo con soporte para miles de sitios web.
 
-**ffmpeg** es una aplicación de línea de comandos para procesar audio y vídeo.
+Para una guía de instalación con Docker en WSL/Ubuntu, consulta el post [Docker: ffmpeg y yt-dlp en Windows (WSL) y Ubuntu](/posts/docker-to-yt-ffmpeg_in-wls/).
 
+## Referencias oficiales
 
-Devolver audio a un vdeo con codecs de audio: 
+| Herramienta | Documentación oficial |
+|-------------|----------------------|
+| ffmpeg | [ffmpeg.org/documentation.html](https://ffmpeg.org/documentation.html) |
+| ffmpeg Wiki | [trac.ffmpeg.org/wiki](https://trac.ffmpeg.org/wiki) |
+| ffmpeg H.264 | [trac.ffmpeg.org/wiki/Encode/H.264](https://trac.ffmpeg.org/wiki/Encode/H.264) |
+| ffmpeg H.265 | [trac.ffmpeg.org/wiki/Encode/H.265](https://trac.ffmpeg.org/wiki/Encode/H.265) |
+| yt-dlp | [github.com/yt-dlp/yt-dlp](https://github.com/yt-dlp/yt-dlp) |
+| yt-dlp Wiki | [github.com/yt-dlp/yt-dlp/wiki](https://github.com/yt-dlp/yt-dlp/wiki) |
 
-```bash
-ffmpeg -i SENDOKAI\ \(Episodios\ 13-26\)-v1853275809.mp4 -c:v copy -c:a aac -b:a 128k 13-26.mp4
-```
-
-Si quieres descargar solo un trozo de un video:
-```bash
-yt-dlp --external-downloader ffmpeg        --external-downloader-args "ffmpeg_i:-ss 00:30:00 -to 00:34:05"        -f "bestvideo+bestaudio/best" "https://kick.com/sendosama/videos/30573887-0d08-4a0f-b792-c579b66e7641"
-```
-Si quieres cortar un video:
-```bash
-ffmpeg -i DETECTIVE\ CONAN\ 👓\ ARCO\ DE\ VERMOUT\ ｜\ GENTA\ FISIOCULTURISTA\ CANADIENSE\ \[0f57ec75-6375-49ee-9a2d-53654406defd\].mp4 -ss 00:00:00 -to 00:55:43 -c copy 01.mp4
-```
-Descargar video completo: 
-```bash
-yt-dlp --impersonate chrome --no-update https://kick.com/sendosama/videos/00eaba49-966a-4349-ac1d-d4a2ea624bbf
-```
-para unir 2  videos en uno :
-```bash
-ffmpeg -i video1.mp4 -i video2.mp4 -filter_complex "[0:v][0:a][1:v][1:a]concat=n=2:v=1:a=1" output.mp4
-```
-Script CLI completo con soporte para múltiples códecs de audio, presets de calidad, detección de GPU y progreso en tiempo real:
-
-```bash
-#!/bin/bash
-
-VERSION="2.0.0"
-
-show_help() {
-    cat <<EOF
-midu.sh v${VERSION} — Conversor de vídeo a mp4 con ffmpeg
-
-Uso: ./midu.sh [opciones] [directorio]
-
-Opciones:
-  -i, --input DIR      Directorio de entrada (default: ./test)
-  -o, --output DIR     Directorio de salida (default: ./optimizados)
-  -p, --preset PRESET  Calidad: web|default|archive|quality (default: default)
-  -a, --audio CODEC    Códec: aac|copy|opus|mp3|flac|vorbis|ac3|eac3|pcm_s16le|pcm_s24le
-  -b, --bitrate BR     Bitrate de audio (default: 128k)
-  -r, --resolution RES Resolución: original|4k|1080|720|480|360 (default: original)
-  -m, --max-size MB    Tamaño máximo de salida en MB (default: sin límite)
-                       Calcula el bitrate automáticamente según la duración.
-  -t, --threads N      Hilos máximos (default: nproc)
-  -e, --extensions EXT Extensiones separadas por coma
-  -h, --help           Muestra esta ayuda
-
-Ejemplos:
-  ./midu.sh                           # Modo default
-  ./midu.sh -m 2000                    # Todo menos de 2GB
-  ./midu.sh -m 100 -r 720              # Todo menos de 100MB, 720p
-  ./midu.sh -p web -a opus -b 96k      # Web, audio opus a 96k
-  ./midu.sh -r 1080                    # Todo a 1920x1080
-  ./midu.sh -r 720 -p web              # Todo a 720p, modo web
-  ./midu.sh -i /videos -o /salida      # Rutas personalizadas
-EOF
-}
-
-INPUT_DIR="./"
-OUTPUT_DIR="./optimizados"
-PRESET="default"
-AUDIO_CODEC="aac"
-AUDIO_BITRATE="128k"
-RESOLUTION="original"
-MAX_SIZE=""
-MAX_THREADS=$(nproc)
-EXTENSIONS="avi,webm,mkv,mp4,flv"
-
-while [[ $# -gt 0 ]]; do
-    case "$1" in
-        -i|--input)     INPUT_DIR="$2"; shift 2 ;;
-        -o|--output)    OUTPUT_DIR="$2"; shift 2 ;;
-        -p|--preset)    PRESET="$2"; shift 2 ;;
-        -a|--audio)     AUDIO_CODEC="$2"; shift 2 ;;
-        -b|--bitrate)   AUDIO_BITRATE="$2"; shift 2 ;;
-        -r|--resolution) RESOLUTION="$2"; shift 2 ;;
-        -m|--max-size)  MAX_SIZE="$2"; shift 2 ;;
-        -t|--threads)   MAX_THREADS="$2"; shift 2 ;;
-        -e|--extensions) EXTENSIONS="$2"; shift 2 ;;
-        -h|--help)      show_help; exit 0 ;;
-        -v|--version)   echo "midu.sh v${VERSION}"; exit 0 ;;
-        -*)             echo "Opción desconocida: $1"; show_help; exit 1 ;;
-        *)              INPUT_DIR="$1"; shift ;;
-    esac
-done
-
-IFS=',' read -ra EXT_ARRAY <<< "$EXTENSIONS"
-
-get_resolution_filter() {
-    case "$1" in
-        original) echo "" ;;
-        4k|2160)   echo "-vf scale=3840:2160:force_original_aspect_ratio=decrease,pad=3840:2160:(ow-iw)/2:(oh-ih)/2" ;;
-        1440)      echo "-vf scale=2560:1440:force_original_aspect_ratio=decrease,pad=2560:1440:(ow-iw)/2:(oh-ih)/2" ;;
-        1080)      echo "-vf scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2" ;;
-        720)       echo "-vf scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2" ;;
-        480)       echo "-vf scale=854:480:force_original_aspect_ratio=decrease,pad=854:480:(ow-iw)/2:(oh-ih)/2" ;;
-        360)       echo "-vf scale=640:360:force_original_aspect_ratio=decrease,pad=640:360:(ow-iw)/2:(oh-ih)/2" ;;
-        *)         echo "Resolución desconocida: $1"; exit 1 ;;
-    esac
-}
-
-case "$PRESET" in
-    web)      CRF=28; SPEED="fast" ;;
-    default)  CRF=23; SPEED="medium" ;;
-    archive)  CRF=18; SPEED="slow" ;;
-    quality)  CRF=15; SPEED="veryslow" ;;
-    *)        echo "Preset desconocido: $PRESET"; exit 1 ;;
-esac
-
-detect_gpu() {
-    if command -v nvidia-smi &>/dev/null && nvidia-smi &>/dev/null 2>&1; then
-        echo "nvenc"
-    elif command -v vainfo &>/dev/null 2>&1; then
-        echo "vaapi"
-    else
-        echo "cpu"
-    fi
-}
-
-get_audio_args() {
-    case "$1" in
-        copy)    echo "-c:a copy" ;;
-        aac)     echo "-c:a aac -b:a $AUDIO_BITRATE" ;;
-        opus)    echo "-c:a libopus -b:a $AUDIO_BITRATE" ;;
-        mp3)     echo "-c:a libmp3lame -b:a $AUDIO_BITRATE" ;;
-        flac)    echo "-c:a flac" ;;
-        vorbis)  echo "-c:a libvorbis -b:a $AUDIO_BITRATE" ;;
-        ac3)     echo "-c:a ac3 -b:a $AUDIO_BITRATE" ;;
-        eac3)    echo "-c:a eac3 -b:a $AUDIO_BITRATE" ;;
-        pcm_s16le) echo "-c:a pcm_s16le" ;;
-        pcm_s24le) echo "-c:a pcm_s24le" ;;
-        *)       echo "Códec desconocido: $1"; exit 1 ;;
-    esac
-}
-
-GPU=$(detect_gpu)
-
-echo "═══════════════════════════════════════"
-echo " midu.sh v${VERSION}"
-echo "═══════════════════════════════════════"
-echo " Entrada:    $INPUT_DIR"
-echo " Salida:     $OUTPUT_DIR"
-echo " Preset:     $PRESET (CRF $CRF, $SPEED)"
-echo " Audio:      $AUDIO_CODEC ($AUDIO_BITRATE)"
-echo " Resolución: $RESOLUTION"
-[[ -n "$MAX_SIZE" ]] && echo " Tamaño máx: ${MAX_SIZE}MB"
-echo " GPU:        $GPU"
-echo " Hilos:      $MAX_THREADS"
-echo "═══════════════════════════════════════"
-echo ""
-
-build_ffmpeg_args() {
-    local input="$1"
-    local output="$2"
-    local remux="$3"
-    local gpu="$4"
-    local duration="$5"
-
-    local args=(-y -i "$input")
-
-    if [[ "$remux" == "true" ]]; then
-        args+=(-c copy -movflags +faststart)
-    else
-        local res_filter
-        res_filter=$(get_resolution_filter "$RESOLUTION")
-
-        local audio_kbps
-        audio_kbps=$(echo "$AUDIO_BITRATE" | sed 's/k//')
-
-        if [[ -n "$MAX_SIZE" && -n "$duration" && "$duration" -gt 0 ]]; then
-            local total_bits=$((MAX_SIZE * 1024 * 8))
-            local total_kbits=$((total_bits / 1000))
-            local video_kbits=$((total_kbits - (audio_kbps * duration)))
-            local video_bitrate=$((video_kbits / duration))
-
-            if [[ "$video_bitrate" -lt 100 ]]; then
-                video_bitrate=100
-            fi
-
-            echo "  → Bitrate vídeo calculado: ${video_bitrate}k (para ${MAX_SIZE}MB en ${duration}s)"
-
-            case "$gpu" in
-                nvenc) args+=(-c:v h264_nvenc -b:v "${video_bitrate}k" -maxrate "$((video_bitrate * 2))k" -bufsize "${video_bitrate}k" -preset "$SPEED") ;;
-                vaapi) args+=(-vaapi_device /dev/dri/renderD128 -c:v h264_vaapi -b:v "${video_bitrate}k" -maxrate "$((video_bitrate * 2))k" -bufsize "${video_bitrate}k") ;;
-                *)     args+=(-c:v libx264 -b:v "${video_bitrate}k" -maxrate "$((video_bitrate * 2))k" -bufsize "${video_bitrate}k" -preset "$SPEED") ;;
-            esac
-        else
-            case "$gpu" in
-                nvenc) args+=(-c:v h264_nvenc -rc constqp -qp "$CRF" -preset "$SPEED") ;;
-                vaapi) args+=(-vaapi_device /dev/dri/renderD128 -c:v h264_vaapi -qp "$CRF") ;;
-                *)     args+=(-c:v libx264 -crf "$CRF" -preset "$SPEED") ;;
-            esac
-        fi
-
-        if [[ -n "$res_filter" ]]; then
-            args+=($res_filter)
-        fi
-
-        local audio_args
-        audio_args=$(get_audio_args "$AUDIO_CODEC")
-        args+=($audio_args -movflags +faststart)
-    fi
-
-    args+=(-map 0:v:0 -map 0:a:0 -map 0:s?: -map_metadata 0)
-    args+=("$output")
-    echo "${args[@]}"
-}
-
-can_remux() {
-    local v_codec a_codec
-    v_codec=$(ffprobe -v error -select_streams v:0 -show_entries stream=codec_name -of csv=p=0 "$1" 2>/dev/null)
-    a_codec=$(ffprobe -v error -select_streams a:0 -show_entries stream=codec_name -of csv=p=0 "$1" 2>/dev/null)
-    [[ "$v_codec" == "h264" && "$a_codec" == "aac" ]]
-}
-
-get_duration() {
-    ffprobe -v error -show_entries format=duration -of csv=p=0 "$1" 2>/dev/null | cut -d. -f1
-}
-
-format_time() {
-    printf "%02d:%02d:%02d" $(($1/3600)) $(($1%3600/60)) $(($1%60))
-}
-
-convertir_archivo() {
-    local file="$1"
-    local output_dir="$2"
-    local filename
-    filename=$(basename "$file")
-    filename="${filename%.*}"
-    local output_file="$output_dir/$filename.mp4"
-    local tmp_file="$output_dir/$filename.mp4.tmp"
-
-    local duration
-    duration=$(get_duration "$file")
-    local duration_fmt
-    duration_fmt=$(format_time "${duration:-0}")
-
-    local remux="false"
-    can_remux "$file" && remux="true"
-
-    echo "[$procesados/$total] Procesando: $file (${duration_fmt:-??:??:??}) [remux=$remux]"
-
-    local ffmpeg_args
-    IFS=' ' read -r -a ffmpeg_args <<< "$(build_ffmpeg_args "$file" "$tmp_file" "$remux" "$GPU" "$duration")"
-
-    ffmpeg "${ffmpeg_args[@]}" 2>&1 | while IFS= read -r line; do
-        if [[ "$line" =~ time=([0-9:]+) ]]; then
-            local current="${BASH_REMATCH[1]}"
-            local cur_secs=$(echo "$current" | awk -F: '{print ($1*3600)+($2*60)+$3}')
-            if [[ -n "$duration" && "$duration" -gt 0 ]]; then
-                printf "\r[%3d%%] %s / %s" $((cur_secs * 100 / duration)) "$current" "$duration_fmt"
-            fi
-        fi
-    done
-    echo ""
-
-    if [[ $? -ne 0 ]]; then
-        echo "[$procesados/$total] ERROR al convertir: $file"
-        rm -f "$tmp_file"
-        return 1
-    fi
-
-    [[ ! -f "$tmp_file" ]] && echo "[$procesados/$total] ERROR: no se creó $tmp_file" && return 1
-
-    local size
-    size=$(stat -c%s "$tmp_file" 2>/dev/null || stat -f%z "$tmp_file" 2>/dev/null || echo 0)
-    if [[ "$size" -lt 1024 ]]; then
-        echo "[$procesados/$total] ERROR: archivo muy pequeño (${size} bytes)"
-        rm -f "$tmp_file"
-        return 1
-    fi
-
-    mv "$tmp_file" "$output_file"
-    rm "$file"
-    echo "[$procesados/$total] OK: $file → $output_file"
-    return 0
-}
-
-mkdir -p "$OUTPUT_DIR"
-
-archivos=()
-saltados=0
-reanudando=0
-for ext in "${EXT_ARRAY[@]}"; do
-    ext=$(echo "$ext" | xargs)
-    while IFS= read -r -d '' file; do
-        filename=$(basename "$file")
-        filename="${filename%.*}"
-        output_file="$OUTPUT_DIR/$filename.mp4"
-        tmp_file="$OUTPUT_DIR/$filename.mp4.tmp"
-
-        if [[ -f "$output_file" ]]; then
-            out_size=$(stat -c%s "$output_file" 2>/dev/null || stat -f%z "$output_file" 2>/dev/null || echo 0)
-            [[ "$out_size" -gt 1024 ]] && ((saltados++)) && continue
-        fi
-
-        if [[ -f "$tmp_file" ]]; then
-            echo "Reanudando: $file"
-            rm -f "$tmp_file"
-            ((reanudando++))
-        fi
-
-        archivos+=("$file")
-    done < <(find "$INPUT_DIR" -maxdepth 2 -type f -iname "*.$ext" -print0)
-done
-
-total=${#archivos[@]}
-
-if [[ $total -eq 0 ]]; then
-    echo "No hay vídeos nuevos para convertir en $INPUT_DIR"
-    [[ $saltados -gt 0 ]] && echo "($saltados ya convertidos)"
-    exit 0
-fi
-
-echo "Encontrados $total archivos, $saltados ya hechos, $reanudando a reconvertir (hilos: $MAX_THREADS)"
-echo ""
-
-procesados=0
-fallidos=0
-active_threads=()
-
-for file in "${archivos[@]}"; do
-    convertir_archivo "$file" "$OUTPUT_DIR" &
-    active_threads+=($!)
-
-    while [ "${#active_threads[@]}" -ge "$MAX_THREADS" ]; do
-        for i in "${!active_threads[@]}"; do
-            if ! kill -0 "${active_threads[i]}" 2>/dev/null; then
-                wait "${active_threads[i]}" 2>/dev/null && ((procesados++)) || ((fallidos++))
-                unset 'active_threads[i]'
-            fi
-        done
-        active_threads=("${active_threads[@]}")
-        sleep 0.5
-    done
-done
-
-for pid in "${active_threads[@]}"; do
-    wait "$pid" 2>/dev/null && ((procesados++)) || ((fallidos++))
-done
-
-echo ""
-echo "Completado: $procesados OK, $fallidos fallos de $total archivos."
-```
-
-### Códecs de audio soportados
-
-| Códec | Uso | Bitrate típico |
-|-------|-----|----------------|
-| `aac` | Estándar, compatible con todo (default) | 128k-256k |
-| `copy` | Sin re-codificar, rápido | — |
-| `opus` | Mejor calidad/bitrate, moderno | 96k-192k |
-| `mp3` | Máxima compatibilidad | 128k-320k |
-| `flac` | Lossless, sin pérdida | — |
-| `vorbis` | Open source, buena calidad | 128k-256k |
-| `ac3` | Dolby Digital, compatible TV | 192k-640k |
-| `eac3` | Dolby Digital Plus | 256k-1024k |
-| `pcm_s16le` | Sin compresión, 16-bit | — |
-| `pcm_s24le` | Sin compresión, 24-bit | — |
-
-### Mejoras aplicadas a los scripts
-
-| Mejora | Antes | Después |
-|--------|-------|---------|
-| **CLI completo** | Sin argumentos | `-i`, `-o`, `-p`, `-a`, `-b`, `-t`, `-e`, `-h` |
-| **Códecs de audio** | Solo AAC | 10 opciones: aac, copy, opus, mp3, flac, vorbis, ac3, eac3, pcm |
-| **Remux automático** | Siempre re-codifica | Detecta H.264+AAC y usa `-c copy` (x100 más rápido) |
-| **GPU acceleration** | Solo CPU | Detecta nvenc/vaapi automáticamente |
-| **Presets de calidad** | CRF fijo a 23 | `web` (28), `default` (23), `archive` (18), `quality` (15) |
-| **Progreso en tiempo real** | Sin porcentaje | `[XX%] HH:MM:SS / HH:MM:SS` |
-| **Metadata preservada** | Se pierde | `-map_metadata 0` |
-| **Subtítulos** | Se ignoran | `-map 0:s?` copia si existen |
-| **Resume** | Borra y reconvierte | Usa `.tmp`, detecta parciales |
-
-Pequeño script para crear x archivo en blanco:
-```bash
-#!/bin/bash
-
-# Preguntar por el número de copias si no se proporciona como parámetro
-if [ -z "$1" ]; then
-  read -p "No se ha proporcionado un número de copias. ¿Cuántas copias deseas crear? (Presiona Enter para crear 1 copia): " NUM_COPIAS
-  # Si no se introduce un valor, hacer una copia
-  NUM_COPIAS=${NUM_COPIAS:-1}
-else
-  # Si el número de copias fue proporcionado como primer parámetro
-  NUM_COPIAS=$1
-fi
-
-# Archivo a copiar (si no se proporciona, será 'midu.sh')
-ARCHIVO_ORIGEN=${2:-midu.sh}
-
-# Crear el archivo si no existe
-if [ ! -f "$ARCHIVO_ORIGEN" ]; then
-  echo "El archivo '$ARCHIVO_ORIGEN' no existe, se va a crear."
-  echo "#!/bin/bash" > "$ARCHIVO_ORIGEN"
-  echo "echo 'Este es el archivo midu.sh por defecto'" >> "$ARCHIVO_ORIGEN"
-  chmod +x "$ARCHIVO_ORIGEN"
-fi
-
-# Crear la carpeta 'copias' si no existe
-if [ ! -d "copias" ]; then
-  mkdir copias
-fi
-
-# Bucle para hacer las copias
-for ((i=1; i<=NUM_COPIAS; i++))
-do
-  cp "$ARCHIVO_ORIGEN" "copias/${ARCHIVO_ORIGEN%.sh}_copia_$i.sh"
-  echo "Copia $i de $ARCHIVO_ORIGEN creada en 'copias/${ARCHIVO_ORIGEN%.sh}_copia_$i.sh'"
-done
-
-echo "Proceso de copias finalizado."
-```
-
-## yt-dlp: Comandos y opciones completas
+## yt-dlp: Quick Start
 
 ### Descarga básica
 
@@ -447,9 +42,6 @@ yt-dlp -f "bv+ba/b" --merge-output-format mp4 "URL"
 
 # Simular sin descargar (mostraría qué haría)
 yt-dlp --simulate "URL"
-
-# Ver información del vídeo en JSON
-yt-dlp -j "URL"
 
 # Verificar versión
 yt-dlp --version
@@ -562,9 +154,6 @@ yt-dlp --embed-subs --sub-lang es "URL"
 
 # Subtítulos en todos los idiomas disponibles
 yt-dlp --all-subs "URL"
-
-# Renombrar subtítulos según idioma
-yt-dlp --sub-lang es --sub-format "%(lang)s.%(ext)s" "URL"
 ```
 
 ### Metadatos y thumbnails
@@ -587,12 +176,6 @@ yt-dlp --write-description "URL"
 
 # Guardar información en formato JSON
 yt-dlp -j "URL" > info.json
-
-# Guardar página de información
-yt-dlp --write-info-json "URL"
-
-# Guardar comentarios (si están disponibles)
-yt-dlp --write-comments "URL"
 ```
 
 ### Cookies y autenticación
@@ -612,9 +195,6 @@ yt-dlp --cookies cookies.txt "URL"
 
 # Login con usuario y contraseña (no recomendado, usar cookies)
 yt-dlp --username usuario --password contraseña "URL"
-
-# Usar token de PoToken (para YouTube en 2026)
-yt-dlp --extractor-args "youtube:player_client=web" "URL"
 ```
 
 ### Rendimiento y red
@@ -646,9 +226,6 @@ yt-dlp -6 "URL"
 
 # Timeout de conexión
 yt-dlp --socket-timeout 30 "URL"
-
-# Buffer de descarga
-yt-dlp --http-chunk-size 10M "URL"
 ```
 
 ### Plantillas de salida
@@ -664,17 +241,13 @@ yt-dlp -o "%(channel)s/%(upload_date>%Y-%m-%d)s-%(title)s.%(ext)s" "URL"
 yt-dlp -o "%(playlist_index)02d-%(title)s.%(ext)s" "URL_PLAYLIST"
 
 # Variables disponibles:
-# %(title)s     → Título del vídeo
-# %(ext)s       → Extensión del archivo
-# %(id)s        → ID del vídeo
+# %(title)s       → Título del vídeo
+# %(ext)s         → Extensión del archivo
+# %(id)s          → ID del vídeo
 # %(upload_date)s → Fecha (YYYYMMDD)
-# %(channel)s   → Nombre del canal
-# %(duration)s  → Duración en segundos
-# %(view_count)s → Número de vistas
-# %(like_count)s → Número de likes
-# %(comment_count)s → Número de comentarios
-# %(playlist_title)s → Título de la playlist
-# %(playlist_index)s → Índice en la playlist
+# %(channel)s     → Nombre del canal
+# %(duration)s    → Duración en segundos
+# %(view_count)s  → Número de vistas
 ```
 
 ### Post-procesamiento
@@ -692,9 +265,6 @@ yt-dlp --exec "xdg-open" "URL"
 # No re-codificar, solo cambiar contenedor
 yt-dlp --merge-output-format mp4 "URL"
 
-# Ejecutar ffmpeg después de descargar
-yt-dlp --exec "ffmpeg -i {} -c:v libx264 -crf 28 {}.mp4" "URL"
-
 # Mover archivo a carpeta específica
 yt-dlp --exec "mv {} ~/Videos/" "URL"
 ```
@@ -710,37 +280,6 @@ yt-dlp --live-from-start --live-fragments-start 100 "URL"
 
 # Grabar solo el segmento actual (no desde el inicio)
 yt-dlp "URL_LIVE"
-```
-
-### Opciones útiles
-
-```sh
-# Ignorar errores y continuar
-yt-dlp --ignore-errors "URL"
-
-# Forzar re-descarga aunque exista
-yt-dlp -f "best" --force-overwrites "URL"
-
-# No sobreescribir archivos existentes
-yt-dlp --no-overwrites "URL"
-
-# Ver información del vídeo sin descargar
-yt-dlp --dump-json "URL"
-
-# Ver formatos disponibles en tabla
-yt-dlp -F "URL"
-
-# Bypass a restricciones de edad
-yt-dlp --age-limit 100 "URL"
-
-# No descargar, solo mostrar comandos
-yt-dlp --simulate --print-traffic "URL"
-
-# Forzar idioma de interfaz
-yt-dlp --prefer-información-lang es "URL"
-
-# Archivo de configuración (se ejecuta automáticamente)
-# ~/.config/yt-dlp/config
 ```
 
 ### Archivo de configuración
@@ -763,7 +302,7 @@ Se ejecuta automáticamente al usar yt-dlp. Puedes especificar otra ubicación:
 yt-dlp --config-location ~/mi_config.txt "URL"
 ```
 
-## ffmpeg: Comandos y opciones completas
+## ffmpeg: Quick Start
 
 ### Conversión de formatos
 
@@ -779,9 +318,6 @@ ffmpeg -i input.mp4 -c:v libvpx-vp9 -crf 30 output.webm
 
 # Convertir a mov (Apple)
 ffmpeg -i input.mp4 output.mov
-
-# Convertir a flv (Flash)
-ffmpeg -i input.mp4 output.flv
 
 # Sin re-codificar (solo cambiar contenedor)
 ffmpeg -i input.mkv -c copy output.mp4
@@ -811,9 +347,6 @@ ffmpeg -i video.mp4 -vn -ac 1 audio.mp3
 # Extraer a 22050 Hz (para voz/podcasts)
 ffmpeg -i video.mp4 -vn -ar 22050 audio.mp3
 
-# Extraer a 44100 Hz (calidad CD)
-ffmpeg -i video.mp4 -vn -ar 44100 audio.mp3
-
 # Extraer solo un segmento de audio
 ffmpeg -i video.mp4 -ss 00:01:00 -to 00:02:00 -vn -c:a libmp3lame audio.mp3
 ```
@@ -833,9 +366,6 @@ ffmpeg -i input.mp4 -t 00:00:30 -c copy output.mp4
 # Cortar desde el segundo 60 hasta el final
 ffmpeg -i input.mp4 -ss 00:01:00 -c copy output.mp4
 
-# Cortar por frames (ejemplo: del frame 100 al 500)
-ffmpeg -i input.mp4 -vf "select=between(n\,100\,500)" -c:v libx264 output.mp4
-
 # Cortar con precisión (para streaming)
 ffmpeg -i input.mp4 -ss 00:05:00 -t 00:10:00 -c:v libx264 -c:a aac -avoid_negative_ts make_zero output.mp4
 ```
@@ -852,9 +382,6 @@ ffmpeg -i video1.mp4 -i video2.mp4 -filter_complex "[0:v][0:a][1:v][1:a]concat=n
 # file 'video2.mp4'
 # file 'video3.mp4'
 ffmpeg -f concat -safe 0 -i lista.txt -c copy output.mp4
-
-# Concatenar 3 vídeos
-ffmpeg -i v1.mp4 -i v2.mp4 -i v3.mp4 -filter_complex "[0:v][0:a][1:v][1:a][2:v][2:a]concat=n=3:v=1:a=1" output.mp4
 
 # Concatenar con transición de fade
 ffmpeg -i v1.mp4 -i v2.mp4 -filter_complex "[0:v]fade=t=out:st=4:d=1[v0];[1:v]fade=t=in:st=0:d=1[v1];[v0][v1]concat=n=2:v=1:a=0" output.mp4
@@ -875,18 +402,12 @@ ffmpeg -i input.mp4 -vf scale=iw/2:ih/2 output.mp4
 # Escalar por ancho (alto automático)
 ffmpeg -i input.mp4 -vf "scale=1280:-2" output.mp4
 
-# Escalar por alto (ancho automático)
-ffmpeg -i input.mp4 -vf "scale=-2:720" output.mp4
-
 # Cropping (recortar)
 ffmpeg -i input.mp4 -vf "crop=640:480:100:50" output.mp4
 # crop=ancho:alto:x:y
 
 # Cropping centrado
 ffmpeg -i input.mp4 -vf "crop=640:480:(iw-640)/2:(ih-480)/2" output.mp4
-
-# Cropping al 50% centrado
-ffmpeg -i input.mp4 -vf "crop=iw/2:ih/2" output.mp4
 ```
 
 ### Video a GIF
@@ -900,9 +421,6 @@ ffmpeg -i input.mp4 -vf "fps=10,scale=320:-1:flags=lanczos,split[s0][s1];[s0]pal
 
 # GIF de un segmento específico
 ffmpeg -i input.mp4 -ss 00:01:00 -t 5 -vf "fps=15,scale=480:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" output.gif
-
-# GIF animado desde imagen
-ffmpeg -loop 1 -i imagen.png -vf "scale=320:-1" -t 5 output.gif
 ```
 
 ### Marca de agua
@@ -922,9 +440,6 @@ ffmpeg -i video.mp4 -vf "drawtext=text='© 2026':fontsize=20:fontcolor=white:bor
 
 # Marca de agua semi-transparente
 ffmpeg -i video.mp4 -i logo.png -filter_complex "format=rgba,colorchannelmixer=aa=0.3[wm];[0:v][wm]overlay=W-w-10:H-h-10" output.mp4
-
-# Marca de agua con timestamp
-ffmpeg -i video.mp4 -vf "drawtext=text='%{localtime}':fontsize=16:fontcolor=white:x=10:y=10" output.mp4
 ```
 
 ### Filtros de vídeo
@@ -939,41 +454,17 @@ ffmpeg -i input.mp4 -vf "eq=contrast=1.2" output.mp4
 # Ajustar saturación
 ffmpeg -i input.mp4 -vf "eq=saturation=1.5" output.mp4
 
-# Ajustar gamma
-ffmpeg -i input.mp4 -vf "eq=gamma=0.8" output.mp4
-
 # Filtro de nitidez
 ffmpeg -i input.mp4 -vf "unsharp=5:5:1.0" output.mp4
 
-# Filtro de desenfoque
-ffmpeg -i input.mp4 -vf "boxblur=5:5" output.mp4
-
-# Desenfoque gaussiano
-ffmpeg -i input.mp4 -vf "gblur=sigma=5" output.mp4
-
 # Voltear horizontalmente
 ffmpeg -i input.mp4 -vf "hflip" output.mp4
-
-# Voltear verticalmente
-ffmpeg -i input.mp4 -vf "vflip" output.mp4
 
 # Rotar 90 grados
 ffmpeg -i input.mp4 -vf "transpose=1" output.mp4
 
 # Rotar 180 grados
 ffmpeg -i input.mp4 -vf "transpose=2,transpose=2" output.mp4
-
-# Rotar 270 grados
-ffmpeg -i input.mp4 -vf "transpose=2" output.mp4
-
-# Rotar libremente (ejemplo: 45 grados)
-ffmpeg -i input.mp4 -vf "rotate=45*PI/180" output.mp4
-
-# Estabilizar vídeo (requiere vidstabdetect primero)
-ffmpeg -i input.mp4 -vf vidstabdetect output.stab
-
-# Aplicar estabilización
-ffmpeg -i input.mp4 -vf vidstabtransform=output.stab output.mp4
 ```
 
 ### Subtítulos
@@ -987,15 +478,6 @@ ffmpeg -i video.mp4 -vf "subtitles=subtitles.srt:force_style='FontSize=24,Primar
 
 # Incrustar subtítulos ASS
 ffmpeg -i video.mp4 -vf "ass=subtitles.ass" output.mp4
-
-# Cambiar编码 de subtítulos
-ffmpeg -i video.mp4 -c:s srt output.mp4
-
-# Copiar subtítulos sin re-codificar
-ffmpeg -i video.mkv -c:s copy output.mp4
-
-# Seleccionar pista de subtítulos específica
-ffmpeg -i video.mkv -map 0:s:0 -c:s srt output.srt
 ```
 
 ### Normalización de audio
@@ -1016,15 +498,6 @@ ffmpeg -i input.mp4 -af "volume=0.5" output.mp4
 # Ecualización (ejemplo: realzar graves)
 ffmpeg -i input.mp4 -af "equalizer=f=100:t=q:w=1:g=5" output.mp4
 
-# Ecualización (realzar agudos)
-ffmpeg -i input.mp4 -af "equalizer=f=8000:t=q:w=1:g=5" output.mp4
-
-# Filtro de ruido
-ffmpeg -i input.mp4 -af "afftdn=nf=-25" output.mp4
-
-# Compresión de audio
-ffmpeg -i input.mp4 -af "acompressor=threshold=-20dB:ratio=4" output.mp4
-
 # Fade in de audio
 ffmpeg -i input.mp4 -af "afade=t=in:st=0:d=2" output.mp4
 
@@ -1044,10 +517,6 @@ ffmpeg -i input.mp4 -c:v libx264 -b:v 5M -pass 2 output.mp4
 # Para H.265/HEVC
 ffmpeg -i input.mp4 -c:v libx265 -b:v 3M -pass 1 -f null /dev/null
 ffmpeg -i input.mp4 -c:v libx265 -b:v 3M -pass 2 output.mp4
-
-# Para VP9
-ffmpeg -i input.mp4 -c:v libvpx-vp9 -b:v 3M -pass 1 -f null /dev/null
-ffmpeg -i input.mp4 -c:v libvpx-vp9 -b:v 3M -pass 2 output.mp4
 ```
 
 ### Streaming HLS
@@ -1064,31 +533,6 @@ ffmpeg -i input.mp4 \
   -hls_time 4 -hls_playlist_type vod \
   -var_stream_map "v:0,a:0 v:1,a:0 v:2,a:0" \
   stream_%v.m3u8
-
-# HLS con segmentos en carpeta separada
-ffmpeg -i input.mp4 -c:v libx264 -c:a aac -f hls \
-  -hls_time 4 -hls_list_size 0 \
-  -hls_segment_filename "segments/segment_%03d.ts" \
-  output.m3u8
-```
-
-### Grabación de pantalla y webcam
-
-```sh
-# Grabar pantalla (Linux, X11)
-ffmpeg -f x11grab -framerate 30 -video_size 1920x1080 -i :0.0 -c:v libx264 output.mp4
-
-# Grabar pantalla con audio
-ffmpeg -f x11grab -framerate 30 -video_size 1920x1080 -i :0.0 -f pulse -i default -c:v libx264 -c:a aac output.mp4
-
-# Grabar webcam
-ffmpeg -f v4l2 -framerate 30 -video_size 640x480 -i /dev/video0 -c:v libx264 output.mp4
-
-# Grabar区域 específica de la pantalla
-ffmpeg -f x11grab -framerate 30 -video_size 640:480 -i :0.0+100,200 output.mp4
-
-# Grabar audio del sistema (PulseAudio)
-ffmpeg -f pulse -i default output.mp3
 ```
 
 ### Procesamiento por lotes
@@ -1105,12 +549,6 @@ for file in *.mp4; do ffmpeg -i "$file" -vf scale=1280:720 "${file%.mp4}_720p.mp
 
 # Extraer audio de todos los vídeos
 for file in *.mp4; do ffmpeg -i "$file" -vn -c:a libmp3lame "${file%.mp4}.mp3"; done
-
-# Comprimir todos los vídeos (CRF 28)
-for file in *.mp4; do ffmpeg -i "$file" -c:v libx264 -crf 28 -c:a aac "${file%.mp4}_small.mp4"; done
-
-# Cortar primeros 60 segundos de todos
-for file in *.mp4; do ffmpeg -i "$file" -t 00:01:00 -c copy "${file%.mp4}_1min.mp4"; done
 ```
 
 ### Opciones útiles
@@ -1140,12 +578,108 @@ ffprobe -v error -select_streams a:0 -show_entries stream=codec_name -of csv=p=0
 # Ver resolución
 ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 input.mp4
 
-# Ver bitrate
-ffprobe -v error -show_entries format=bit_rate -of csv=p=0 input.mp4
-
 # Ver FPS
 ffprobe -v error -select_streams v:0 -show_entries stream=r_frame_rate -of csv=p=0 input.mp4
 ```
+
+## Mejores prácticas de encoding
+
+Para una guía completa de compresión de vídeo, consulta la [FFmpeg Video Compression Best Practices Guide](https://ffhub.io/blog/ffmpeg-video-compression-best-practices).
+
+### Tabla de CRF por codec y uso
+
+CRF (Constant Rate Factor) controla la calidad. Menor valor = mejor calidad = archivo más grande.
+
+| Caso de uso | H.264 CRF | H.265 CRF | Notas |
+|-------------|-----------|-----------|-------|
+| Pérdida cercana a cero | 0–18 | 0–20 | Para archivado, backups |
+| Alta calidad | 18–22 | 22–26 | Entrega de calidad |
+| Web / uso general | 23–26 | 27–30 | Streaming, publicación |
+| Streaming / móvil | 27–32 | 30–35 | Bandwidth limitado |
+| Screencasts / presentaciones | 28–35 | 32–38 | Poco movimiento |
+
+**Regla práctica:** Cada +6 en CRF aproxima duplica el tamaño del archivo.
+
+### Presets: velocidad vs compresión
+
+El parámetro `-preset` controla cuánto tiempo dedica el encoder a optimizar. Más lento = mejor compresión.
+
+| Preset | Velocidad relativa | Tamaño archivo | Uso recomendado |
+|--------|-------------------|----------------|-----------------|
+| `ultrafast` | ~15x más rápido | ~40-50% más grande | Testing, previews |
+| `veryfast` | ~8x más rápido | ~25% más grande | Tiempo real |
+| `fast` | ~3x más rápido | ~10% más grande | Lotes donde velocidad importa |
+| `medium` | 1x (default) | Default | Uso general |
+| `slow` | ~0.5x | ~5% más pequeño | Renders finales, contenido importante |
+| `veryslow` | ~0.1x | ~10-15% más pequeño | Archivado, raramente vale la pena |
+
+**Recomendación:** `medium` para uso general, `fast` para lotes grandes, `slow` para contenido que se servirá muchas veces.
+
+### Comparación de códecs
+
+| Códec | Tamaño relativo | Velocidad encoding | Compatibilidad (2026) |
+|-------|-----------------|-------------------|----------------------|
+| H.264 (libx264) | 100% (baseline) | Rápido | 99%+ (universal) |
+| H.265 (libx265) | 55-65% | 3-5x más lento | iOS, Android 5+, Smart TVs modernos |
+| VP9 (libvpx-vp9) | 55-65% | 5-10x más lento | Chrome, Firefox, Edge |
+| AV1 (SVT-AV1) | 40-50% | 3-8x más lento | Chrome 17+, Firefox, Safari 17+ |
+
+**¿Qué códec usar?**
+
+- **Máxima compatibilidad:** H.264
+- **Archivos más pequeños (Apple/móvil):** H.265
+- **Web, royalty-free:** VP9
+- **Futuro, mejor compresión:** AV1
+
+### Comandos de ejemplo por códec
+
+```sh
+# H.264 — máxima compatibilidad
+ffmpeg -i input.mp4 -c:v libx264 -crf 23 -preset medium -c:a aac -b:a 128k output.mp4
+
+# H.265 — 40% más pequeño
+ffmpeg -i input.mp4 -c:v libx265 -crf 28 -preset medium -c:a aac -b:a 128k output.mp4
+
+# VP9 — royalty-free, bueno para web
+ffmpeg -i input.mp4 -c:v libvpx-vp9 -crf 30 -b:v 0 -row-mt 1 -c:a libopus -b:a 128k output.webm
+
+# AV1 (SVT-AV1) — mejor compresión
+ffmpeg -i input.mp4 -c:v libsvtav1 -crf 30 -preset 6 -c:a libopus -b:a 128k output.mp4
+```
+
+### Resolución y bitrate recomendado
+
+| Resolución | Bitrate típico H.264 | Bitrate típico H.265 |
+|------------|---------------------|---------------------|
+| 4K (3840x2160) | 15-30 Mbps | 8-15 Mbps |
+| 1440p (2560x1440) | 8-15 Mbps | 4-8 Mbps |
+| 1080p (1920x1080) | 4-8 Mbps | 2-4 Mbps |
+| 720p (1280x720) | 2-4 Mbps | 1-2 Mbps |
+| 480p (854x480) | 1-2 Mbps | 0.5-1 Mbps |
+| 360p (640x360) | 0.5-1 Mbps | 0.3-0.5 Mbps |
+
+### ¿Cuándo usar CRF vs Two-pass?
+
+- **CRF:** Cuando priorizas calidad constante (web, archivado). Más simple, una sola pasada.
+- **Two-pass:** Cuando necesitas un tamaño de archivo específico (ej: Discord 25MB, límite de email). Dos pasadas, más lento pero preciso.
+
+### ¿Cuándo usar `-c copy`?
+
+Cuando el vídeo ya está en el códec correcto (H.264+AAC) y solo necesitas cambiar el contenedor. Esto es **100x más rápido** que re-codificar:
+
+```sh
+# Cambiar mkv a mp4 sin re-codificar
+ffmpeg -i input.mkv -c copy output.mp4
+```
+
+Para detectar si puedes usar `-c copy`:
+
+```sh
+ffprobe -v error -select_streams v:0 -show_entries stream=codec_name -of csv=p=0 input.mp4
+ffprobe -v error -select_streams a:0 -show_entries stream=codec_name -of csv=p=0 input.mp4
+```
+
+Si el vídeo es `h264` y el audio es `aac`, puedes usar `-c copy`.
 
 ## Combinados: yt-dlp + ffmpeg
 
@@ -1292,322 +826,12 @@ yt-dlp -f "bv+ba/b" --yes-playlist \
 | `-vf scale=W:H` | Redimensionar |
 | `-ss / -to / -t` | Corte por tiempo |
 | `-vn` | Sin vídeo (extraer audio) |
-| `-an` | Sin audio |
 | `-y` | Sobreescribir |
 | `-movflags +faststart` | Optimizar para web |
 | `-crf 28` | Calidad (menor = mejor) |
 | `-preset fast` | Velocidad de codificación |
 | `-filter_complex` | Filtros complejos |
 | `-map` | Seleccionar pistas |
-
-## yt-dlp: Opciones avanzadas
-
-### Grabación de canales completos
-
-```sh
-# Descargar canal completo (todas las playlists)
-yt-dlp --yes-playlist "URL_CANAL/videos"
-
-# Descargar canal con límite de calidad
-yt-dlp -f "bestvideo[height<=1080]+bestaudio/best" \
-  --yes-playlist "URL_CANAL/videos"
-
-# Descargar canal y organizar por fecha
-yt-dlp -o "%(channel)s/%(upload_date>%Y-%m-%d)s-%(title)s.%(ext)s" \
-  --yes-playlist "URL_CANAL/videos"
-
-# Descargar solo los últimos 10 vídeos
-yt-dlp --playlist-items 1-10 "URL_CANAL/videos"
-
-# Descargar canal y comprimir cada vídeo
-yt-dlp --yes-playlist -f "bv+ba/b" "URL_CANAL/videos" \
-  --exec "ffmpeg -i {} -c:v libx264 -crf 28 -c:a aac {}_small.mp4"
-```
-
-### Descarga con proxy/VPN
-
-```sh
-# Usar proxy SOCKS5
-yt-dlp --proxy "socks5://127.0.0.1:1080" "URL"
-
-# Usar proxy HTTP
-yt-dlp --proxy "http://127.0.0.1:8080" "URL"
-
-# Usar proxy con autenticación
-yt-dlp --proxy "socks5://usuario:password@127.0.0.1:1080" "URL"
-
-# Forzar IPv4 (si IPv6 tiene problemas)
-yt-dlp -4 "URL"
-
-# Forzar IPv6
-yt-dlp -6 "URL"
-
-# Usar Tor
-yt-dlp --proxy "socks5://127.0.0.1:9050" "URL"
-```
-
-### Bypass a restricciones
-
-```sh
-# Saltar restricción de edad
-yt-dlp --age-limit 100 "URL"
-
-# Usar cookies de navegador autenticado
-yt-dlp --cookies-from-browser chrome "URL"
-
-# Forzar cliente web (para YouTube en 2026)
-yt-dlp --extractor-args "youtube:player_client=web" "URL"
-
-# Usar cliente Android
-yt-dlp --extractor-args "youtube:player_client=android" "URL"
-
-# Usar cliente iOS
-yt-dlp --extractor-args "youtube:player_client=ios" "URL"
-```
-
-### Errores comunes y soluciones
-
-| Error | Causa | Solución |
-|-------|-------|----------|
-| `ERROR: Unable to extract` | YouTube cambió su estructura | `yt-dlp -U` (actualizar) |
-| `HTTP Error 403` | Bloqueo de rate limiting | `--sleep-interval 5` |
-| `ERROR: Sign in to confirm` | Necesita cookies | `--cookies-from-browser chrome` |
-| `ERROR: PoToken` | Token de prueba falla | `--extractor-args "youtube:player_client=web"` |
-| `ERROR: File already exists` | Archivo existente | `--no-overwrites` |
-| `ERROR: Network unreachable` | Problema de red | `--proxy` o `-4` |
-| `ERROR: Fragment download failed` | Fragmento corrupto | `--fragment-retries 10` |
-| `ERROR: Requested format not available` | Formato no existe | `yt-dlp -F "URL"` (listar formatos) |
-
-### Solución a PoToken (YouTube 2026)
-
-YouTube requiere un Proof-of-Origin Token en 2026. Soluciones:
-
-```sh
-# Opción 1: Usar cookies de navegador
-yt-dlp --cookies-from-browser chrome "URL"
-
-# Opción 2: Forzar extractor específico
-yt-dlp --extractor-args "youtube:player_client=web" "URL"
-
-# Opción 3: Usar bgutil-ytdlp-pot-provider (recomendado)
-# Instalar: pip install bgutil-ytdlp-pot-provider
-# Luego usar normalmente
-yt-dlp "URL"
-```
-
-### Integración con otros herramientas
-
-```sh
-# Abrir en VLC después de descargar
-yt-dlp --exec "vlc {}" "URL"
-
-# Mover a carpeta de Plex
-yt-dlp -o "%(channel)s/%(title)s.%(ext)s" "URL" \
-  --exec "mv {} /srv/media/videos/"
-
-# Enviar notificación cuando termine
-yt-dlp "URL" --exec "notify-send 'Descarga completada' '{}'"
-
-# Agregar a cola de JDownloader (no recomendado, usar yt-dlp directamente)
-yt-dlp --write-info-json "URL"
-
-# Crear symlink para organización
-yt-dlp -o "%(upload_date>%Y-%m-%d)s-%(title)s.%(ext)s" "URL" \
-  --exec "ln -s {} /srv/videos/nuevos/"
-```
-
-## ffmpeg: Filtros y efectos avanzados
-
-### Filtros de imagen
-
-```sh
-# Desentrelazar (deinterlace)
-ffmpeg -i input.mp4 -vf bwdif output.mp4
-
-# Reducir ruido
-ffmpeg -i input.mp4 -vf "nlmeans=s=3:p=7:r=3" output.mp4
-
-# Reducir ruido (más rápido)
-ffmpeg -i input.mp4 -vf "hqdn3d=4:3:6:4.5" output.mp4
-
-# Nitidez avanzada
-ffmpeg -i input.mp4 -vf "unsharp=3:3:1.5:3:3:0.0" output.mp4
-
-# Viñeta (oscurecer bordes)
-ffmpeg -i input.mp4 -vf "vignette=PI/4" output.mp4
-
-# Corrección de lente
-ffmpeg -i input.mp4 -vf "lenscorrection=cx=0.5:cy=0.5:k1=0.1" output.mp4
-```
-
-### Efectos de movimiento
-
-```sh
-# Cámara lenta (50% velocidad)
-ffmpeg -i input.mp4 -vf "setpts=2.0*PTS" -af "atempo=0.5" output.mp4
-
-# Cámara lenta 4x
-ffmpeg -i input.mp4 -vf "setpts=4.0*PTS" -af "atempo=0.5,atempo=0.5" output.mp4
-
-# Acelerar 2x
-ffmpeg -i input.mp4 -vf "setpts=0.5*PTS" -af "atempo=2.0" output.mp4
-
-# Acelerar 4x
-ffmpeg -i input.mp4 -vf "setpts=0.25*PTS" -af "atempo=2.0,atempo=2.0" output.mp4
-
-# Reverse (al revés)
-ffmpeg -i input.mp4 -vf reverse -af areverse output.mp4
-
-# Boomerang (adelante y atrás)
-ffmpeg -i input.mp4 -vf "reverse,split[out0][out1];[out0]reverse[reversed];[out1][reversed]concat=n=2:v=1:a=0" output.mp4
-```
-
-### Picture-in-Picture (PiP)
-
-```sh
-# Vídeo pequeño en esquina superior derecha
-ffmpeg -i main.mp4 -i pip.mp4 \
-  -filter_complex "[1:v]scale=320:-1[pip];[0:v][pip]overlay=W-w-10:10" \
-  output.mp4
-
-# Vídeo pequeño en esquina inferior izquierda
-ffmpeg -i main.mp4 -i pip.mp4 \
-  -filter_complex "[1:v]scale=320:-1[pip];[0:v][pip]overlay=10:H-h-10" \
-  output.mp4
-
-# PiP con borde
-ffmpeg -i main.mp4 -i pip.mp4 \
-  -filter_complex "[1:v]scale=320:-1,pad=324:ih+4:2:2:white[pip];[0:v][pip]overlay=W-w-10:10" \
-  output.mp4
-
-# PiP animado (aparece después de 5 segundos)
-ffmpeg -i main.mp4 -i pip.mp4 \
-  -filter_complex "[1:v]scale=320:-1[pip];[0:v][pip]overlay=enable='gte(t,5)':W-w-10:10" \
-  output.mp4
-```
-
-### Transiciones
-
-```sh
-# Fade out al final
-ffmpeg -i input.mp4 -vf "fade=t=out:st=55:d=5" -af "afade=t=out:st=55:d=5" output.mp4
-
-# Fade in al inicio
-ffmpeg -i input.mp4 -vf "fade=t=in:st=0:d=5" -af "afade=t=in:st=0:d=5" output.mp4
-
-# Fade in + fade out
-ffmpeg -i input.mp4 -vf "fade=t=in:st=0:d=3,fade=t=out:st=57:d=3" output.mp4
-
-# Dissolve entre 2 vídeos
-ffmpeg -i v1.mp4 -i v2.mp4 -filter_complex \
-  "[0:v]fade=t=out:st=4:d=1[v0];[1:v]fade=t=in:st=0:d=1[v1];[v0][v1]concat=n=2:v=1:a=0" \
-  output.mp4
-
-# Transición wipe
-ffmpeg -i v1.mp4 -i v2.mp4 -filter_complex \
-  "[0:v][1:v]xfade=transition=wipeleft:duration=1:offset=5" output.mp4
-```
-
-### Crear thumbnails automáticamente
-
-```sh
-# Thumbnail cada 10 segundos
-ffmpeg -i input.mp4 -vf "fps=1/10" thumb_%03d.jpg
-
-# Thumbnail del segundo 30
-ffmpeg -i input.mp4 -ss 30 -frames:v 1 thumbnail.jpg
-
-# Thumbnail con texto
-ffmpeg -i input.mp4 -ss 10 -frames:v 1 \
-  -vf "drawtext=text='Preview':fontsize=48:fontcolor=red:x=(w-tw)/2:y=(h-th)/2" \
-  thumbnail.jpg
-
-# Contact sheet (múltiples thumbnails en una imagen)
-ffmpeg -i input.mp4 -vf "fps=1/30,scale=320:-1,tile=4x4" contact_sheet.jpg
-
-# Thumbnail de cada minuto
-ffmpeg -i input.mp4 -vf "fps=1/60,scale=640:-1" thumb_%04d.jpg
-```
-
-### Crear slideshow con música
-
-```sh
-# Slideshow de imágenes con música (5 segundos por imagen)
-ffmpeg -loop 1 -i img1.jpg -loop 1 -i img2.jpg -loop 1 -i img3.jpg \
-  -i musica.mp3 -filter_complex \
-  "[0:v]scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,setsar=1[v0]; \
-   [1:v]scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,setsar=1[v1]; \
-   [2:v]scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,setsar=1[v2]; \
-   [v0][v1][v2]concat=n=3:v=1:a=0[v]" \
-  -map "[v]" -map 2:a -shortest -c:v libx264 -c:a aac output.mp4
-
-# Slideshow con transiciones de fade
-ffmpeg -loop 1 -t 5 -i img1.jpg -loop 1 -t 5 -i img2.jpg -loop 1 -t 5 -i img3.jpg \
-  -filter_complex "[0:v][1:v][2:v]concat=n=3:v=1:a=0[v]" -map "[v]" -c:v libx264 output.mp4
-```
-
-### Extraer frames como imágenes
-
-```sh
-# Extraer frame cada segundo
-ffmpeg -i input.mp4 -vf fps=1 frame_%04d.jpg
-
-# Extraer frame cada 10 segundos
-ffmpeg -i input.mp4 -vf fps=1/10 frame_%04d.jpg
-
-# Extraer solo 60 frames (uniforme)
-ffmpeg -i input.mp4 -vf "select=not(mod(n\,100))" -vsync vfr frame_%04d.jpg
-
-# Extraer frame específico (ejemplo: frame 1000)
-ffmpeg -i input.mp4 -vf "select=eq(n\,1000)" -frames:v 1 frame.jpg
-
-# Extraer frames como PNG (calidad sin pérdida)
-ffmpeg -i input.mp4 -vf fps=1 frame_%04d.png
-```
-
-### Normalización de color (LUT)
-
-```sh
-# Aplicar LUT de color (ejemplo: cinematic)
-ffmpeg -i input.mp4 -vf "lut3d=cinematic.cube" output.mp4
-
-# Aplicar LUT y ajustar brillo/contraste
-ffmpeg -i input.mp4 -vf "lut3d=cinematic.cube,eq=brightness=0.05:contrast=1.1" output.mp4
-
-# Aplicar efecto vintage
-ffmpeg -i input.mp4 -vf "curves=vintage" output.mp4
-
-# Blanco y negro
-ffmpeg -i input.mp4 -vf "hue=s=0" output.mp4
-
-# Sepia
-ffmpeg -i input.mp4 -vf "colorchannelmixer=.393:.769:.189:0:.349:.686:.168:0:.272:.534:.131" output.mp4
-
-# Efecto película antigua
-ffmpeg -i input.mp4 -vf "curves=vintage,noise=alls=20:allf=t+u" output.mp4
-```
-
-### Stream a Twitch/YouTube Live
-
-```sh
-# Stream a Twitch
-ffmpeg -i input.mp4 -c:v libx264 -preset veryfast -b:v 3000k \
-  -c:a aac -b:a 128k -f flv "rtmp://live.twitch.tv/app/TU_STREAM_KEY"
-
-# Stream a YouTube Live
-ffmpeg -i input.mp4 -c:v libx264 -preset veryfast -b:v 4500k \
-  -c:a aac -b:a 128k -f flv "rtmp://a.rtmp.youtube.com/live2/TU_STREAM_KEY"
-
-# Stream webcam a Twitch
-ffmpeg -f v4l2 -i /dev/video0 -f pulse -i default \
-  -c:v libx264 -preset veryfast -b:v 2500k \
-  -c:a aac -b:a 128k -f flv "rtmp://live.twitch.tv/app/TU_STREAM_KEY"
-
-# Stream pantalla a YouTube
-ffmpeg -f x11grab -i :0.0 -f pulse -i default \
-  -c:v libx264 -preset veryfast -b:v 3000k \
-  -c:a aac -b:a 128k -f flv "rtmp://a.rtmp.youtube.com/live2/TU_STREAM_KEY"
-```
 
 ## Casos de uso específicos
 
@@ -1904,4 +1128,46 @@ Activar:
 ```sh
 sudo systemctl enable video-monitor
 sudo systemctl start video-monitor
+```
+
+## Solución de problemas
+
+### Errores comunes de yt-dlp
+
+| Error | Causa | Solución |
+|-------|-------|----------|
+| `ERROR: Unable to extract` | YouTube cambió su estructura | `yt-dlp -U` (actualizar) |
+| `HTTP Error 403` | Bloqueo de rate limiting | `--sleep-interval 5` |
+| `ERROR: Sign in to confirm` | Necesita cookies | `--cookies-from-browser chrome` |
+| `ERROR: PoToken` | Token de prueba falla | `--cookies-from-browser chrome` |
+| `ERROR: File already exists` | Archivo existente | `--no-overwrites` |
+| `ERROR: Network unreachable` | Problema de red | `--proxy` o `-4` |
+| `ERROR: Fragment download failed` | Fragmento corrupto | `--fragment-retries 10` |
+| `ERROR: Requested format not available` | Formato no existe | `yt-dlp -F "URL"` (listar formatos) |
+
+### Errores comunes de ffmpeg
+
+| Error | Causa | Solución |
+|-------|-------|----------|
+| `Invalid argument` | Parámetro mal formado | Revisar comillas y escapes |
+| `No such file` | Archivo no existe | Verificar ruta |
+| `Error opening input` | Formato no soportado | Actualizar ffmpeg |
+| `Encoder not found` | Códec no disponible | Compilar con libx264/libx265 |
+| `Cannot write` | Permisos o disco lleno | Verificar permisos/espacio |
+
+### Solución a PoToken (YouTube 2026)
+
+YouTube requiere un Proof-of-Origin Token en 2026. Soluciones:
+
+```sh
+# Opción 1: Usar cookies de navegador (recomendado)
+yt-dlp --cookies-from-browser chrome "URL"
+
+# Opción 2: Forzar extractor específico
+yt-dlp --extractor-args "youtube:player_client=web" "URL"
+
+# Opción 3: Usar bgutil-ytdlp-pot-provider
+# Instalar: pip install bgutil-ytdlp-pot-provider
+# Luego usar normalmente
+yt-dlp "URL"
 ```
