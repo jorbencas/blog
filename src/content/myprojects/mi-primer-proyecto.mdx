@@ -3,12 +3,13 @@ draft: false
 title: "Mecano: El Entrenador de Mecanografía Definitivo para Desarrolladores"
 description: "Mejora tu velocidad y precisión escribiendo código. Descubre Mecano, una plataforma web interactiva con prácticas reales, análisis de rendimiento y minijuegos. ¡Pruébala gratis y desata tu productividad!"
 pubDate: "2026/05/20"
-tags: ['web', 'react', 'desarrollo', 'tech', 'frontend', 'Javascript']
+updatedDate: "2026/07/28"
+tags: ['web', 'react', 'desarrollo', 'tech', 'frontend', 'Javascript', 'docker', 'postgresql']
 image: "img/mi_primer_proyecto/mi_primer_proyecto_cover-1200.webp"
 repository: "https://github.com/jorbencas/mecano_prueba_web"
 url: "https://proyecto-demo.com"
 author: "Jorge Beneyto Castelló"
-featured: false
+featured: true
 ---
 
 ## 1. El Planteamiento del Problema
@@ -623,3 +624,125 @@ Para dimensionar la madurez de despliegue del proyecto recomendamos la incursió
 ## 📄 Licencia
 
 Este proyecto es educativo. Úsalo como quieras.
+
+---
+
+## 🔄 Actualización: Julio 2026 — Auditoría Completa y Nuevas Features
+
+Desde la publicación inicial, Mecano ha recibido una auditoría completa de seguridad, maquetación y rendimiento, además de nuevas features significativas. A continuación se detalla todo lo implementado.
+
+### 🛡️ Seguridad Endurecida
+
+El backend fue reforzado con medidas de seguridad a nivel enterprise:
+
+- **SQL Injection:** Todas las queries reescritas con parámetros `$1, $2, ...` usando `pool.query()` directamente (nunca interpolación de strings). Se eliminaron todas las vulnerabilidades de SQL injection en el leaderboard y rutas admin.
+- **XP Privilege Escalation:** `POST /api/user-xp/award` ahora requiere rol admin + cap de ±10000 XP por operación. Antes cualquier usuario podía auto-asignarse XP ilimitado.
+- **Invite Codes Seguros:** Generados con `crypto.randomBytes()` en lugar de `Math.random()` con máximo 100 iteraciones. Los códigos de clase son ahora criptográficamente seguros.
+- **JWT Auth Mejorado:** Tokens con expiración, validados en middleware. La ruta `GET /settings` ahora requiere autenticación (antes era pública).
+- **Match-History Privacy:** El historial de partidas multijugador solo se muestra si hay amistad entre usuarios. Se verificó la relación de amistad antes de retornar datos.
+- **Admin Comment Deletion:** Ahora el admin puede eliminar cualquier comentario del foro, no solo los suyos.
+- **Audit Logging:** Todos los cambios de rol quedan registrados en la tabla `audit_logs` con admin_user_id, target_user_id, changes y timestamp.
+- **Input Validation:** Límites estrictos en speed (1-500), error_limit (0-1000), wpm_goal (1-500), progress (clamped a target_value), maxPlayers (2-10), room name (1-50 chars).
+- **Friend Request Security:** Bloqueado self-request y verificación de existencia antes de crear amistad.
+
+### 🐛 Bug Fixes Críticos
+
+- **Schema UUID:** `user_achievements.user_id` cambiado de `INTEGER` a `UUID` para compatibilidad con el sistema de usuarios existente.
+- **Admin Query Fix:** `mr.created_by` → `mr.creator_id` en la ruta admin de multijugador.
+- **Transaction Leaks:** `social.js` y `userXp.js` — movido `client.release()` después de COMMIT; ROLLBACK tiene `.catch(() => {})` para evitar leaks de conexiones.
+- **Missing Awaits:** 3 llamadas a `createNotification` en `websocket.js` ahora tienen `await` correcto.
+- **NaN in LIMIT/OFFSET:** `challenges.js` y `activity.js` ahora validan con `Math.min/Math.max` para prevenir queries con NaN.
+- **Dead Variables:** Eliminados 5 variables no usadas en `stats.js` leaderboard y `role` muerto en `auth.js`.
+- **FetchWithRetry Deduplicado:** `notifications.ts` ahora importa `fetchWithRetry` desde `apiClient.ts` en lugar de definirlo localmente.
+- **useTypingStats Accuracy:** Corregido para sumar `.count` values de charErrorMap en lugar de contar `Object.keys`.
+- **UserRole Enum:** Añadidos roles `STUDENT` y `TEACHER`; actualizadas todas las referencias `UserRole.USER` en los componentes.
+
+### 🎨 UX/UI Mejoras
+
+- **Admin Dashboard Rediseñado:** Refactorizado de ~1,565 líneas a ~120 líneas + 10 pestañas independientes (Users, Activity, Achievements, Challenges, Tracking, History, Multiplayer, Friends, Notifications, Settings).
+- **FriendsSystem Completo:** Tarjetas de perfil, reto directo, panel de comparación, favoritos (estrella), ordenación (nombre/online/nivel/WPM), filtro solo online, leaderboard de amigos con medallas, historial inline, acciones rápidas.
+- **Toast Rediseñado:** Notifications tipo modal centrado con backdrop overlay, barra de progreso, ESC para cerrar, mejoras en animación.
+- **Progress Predictor:** Estima WPM futuro basado en historial. Reduced threshold de 5 a 2 data points. Maneja slope ≤ 0. Guarda predicciones en `progress_predictions` con historial.
+- **Daily Challenges Flow:** Cola de retos guardada en localStorage. Navegación directa a ChallengePlay sin popup intermedio. Indicador de progreso "1/3" en ChallengePlay.
+- **Footer Sticky:** App.tsx ahora usa `flex flex-col min-h-screen` con `flex-1` en el contenido para que el footer siempre quede al fondo.
+- **Layout Widths:** App.tsx: `max-w-[1800px]`. FriendsSystem: `max-w-7xl`. Admin cards: `min-w-0 overflow-hidden min-h-[400px]`.
+
+### 🗄️ Base de Datos — Nuevas Tablas
+
+- **`progress_predictions`** — UUID PK, user_id, target_wpm, current_wpm, estimated_days, confidence, slope, milestones JSONB, actual_wpm, actual_days, status (pending/achieved/expired), timestamps.
+- **`user_preferences`** — Ahora almacena sync completo de localStorage→DB: typingStats, custom_texts, favorite_friends, freePractice_keys.
+- **`audit_logs`** — Registro de cambios de rol admin con admin_user_id, target_user_id, changes JSONB, ip_address.
+- **Endpoints nuevos:** `GET/POST/PATCH /api/stats/:userId/predictions`, `PATCH /api/preferences`, `GET /api/users` (admin all-users).
+
+### 🐳 Docker y DevOps
+
+- **Build Optimizado:** `npm run build` previo al Docker build para incluir el build de React en la imagen nginx.
+- **Concurrently:** `npm run dev:all` ejecuta frontend + backend en paralelo.
+- **Shell Scripts:** Backup (`db-dump.sh`) y restore (`db-restore.sh`) automatizados con timestamps.
+- **Health Checks:** Backend con `wget --spider` cada 30s. DB con `pg_isready` cada 10s.
+- **Watch Mode:** `docker compose watch` reconstruye automáticamente al detectar cambios en `src/` o `server/`.
+
+### 📱 Responsive y Maquetación
+
+Se realizó una auditoría completa de maquetación en las 10 pestañas del admin y todos los componentes principales:
+
+- **48 problemas de overflow** corregidos en las pestañas de admin.
+- **21 problemas adicionales** encontrados y corregidos en auditoría global (tablas sin scroll, cards sin containment, flex sin wrap, emails sin truncation).
+- **`overflow-x-hidden` global** en `html, body, #root` para prevenir scrollbar horizontal.
+- **`min-h-[500px]`** en todos los tab panels para evitar salto de layout al cambiar de pestaña.
+- **`min-h-[36px]`** en el breadcrumb wrapper para mantener altura consistente.
+- **`min-w-[200px]` eliminado** de las stat cards del admin (causaba overflow en pantallas pequeñas).
+- **`grid-cols-4` → `grid-cols-2 sm:grid-cols-4`** en AdminNotifications para responsive.
+- **`flex-wrap`** añadido a: filtros de Activity, header de Multiplayer, botones del perfil, filtros de notificaciones, stats bar responsive.
+- **`truncate max-w-[200px]`** en emails de tablas admin, nombres de sala, user IDs (UUIDs).
+- **`max-w-[1800px]`** consolidado en un solo nivel (App.tsx) eliminando duplicados en Leaderboard y DailyChallenges.
+
+### 📊 Endpoints del Backend (API Completa)
+
+| Endpoint | Método | Auth | Descripción |
+| :--- | :--- | :--- | :--- |
+| `/health` | GET | No | Health check |
+| `/api/auth/*` | POST/GET | No | Registro, login, Google OAuth |
+| `/api/users` | GET | Admin | Listar todos los usuarios |
+| `/api/users/:id` | PATCH | Admin | Actualizar usuario |
+| `/api/users/:id` | DELETE | Admin | Eliminar usuario |
+| `/api/settings` | GET/PATCH | Admin | Configuración global |
+| `/api/stats/:userId` | GET | Auth | Estadísticas de usuario |
+| `/api/stats/:userId/predictions` | GET/POST/PATCH | Auth | Predicciones de progreso |
+| `/api/user-xp/*` | GET/POST | Auth/Admin | Sistema de XP |
+| `/api/social/*` | GET/POST/DELETE | Auth | Foro, amigos, comentarios |
+| `/api/challenges/*` | GET/POST | Auth | Desafíos diarios |
+| `/api/multiplayer/*` | GET/POST | Auth | Salas multijugador |
+| `/api/admin/*` | GET/DELETE | Admin | Estadísticas admin |
+| `/api/preferences` | GET/PATCH | Auth | Preferencias (sync localStorage↔DB) |
+| `/api/classes/*` | GET/POST/DELETE | Auth | Sistema de clases |
+| `/api/activity` | GET | Auth | Logs de actividad |
+| `/api/notifications` | GET/PUT/DELETE | Auth | Notificaciones |
+| `/api/custom-levels` | GET/POST/PUT/DELETE | Auth | Niveles personalizados |
+
+### 🗃️ Schema Completo (26 Tablas)
+
+```
+users → user_sessions, activity_logs, practice_stats, level_progress,
+        user_preferences, user_xp, friendships, match_history,
+        notifications, followers, posts, comments, post_likes,
+        daily_challenges, challenge_rewards, classes, class_members,
+        assignments, assignment_results, custom_levels,
+        user_achievements, progress_predictions, audit_logs,
+        multiplayer_rooms, multiplayer_room_players, settings, achievements
+```
+
+### 📈 Métricas del Proyecto
+
+| Métrica | Valor |
+| :--- | :--- |
+| Componentes React | 50+ |
+| Hooks custom | 15+ |
+| Stores Zustand | 3 |
+| Archivos backend | 20+ rutas |
+| Tablas PostgreSQL | 26 |
+| Idiomas soportados | 4 (es/en/ca/va) |
+| Minijuegos | 15 |
+| Logros desbloqueables | 10 |
+| Niveles del currículo | 100 |
+| Contenedores Docker | 3 (frontend/backend/db) |
