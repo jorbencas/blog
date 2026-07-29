@@ -1,13 +1,16 @@
-import { readFileSync, readdirSync, statSync } from "fs";
+import { readFileSync, readdirSync, statSync, writeFileSync } from "fs";
 import { join, extname } from "path";
 
 const CONTENT_DIR = "src/content";
+const FIX_MODE = process.argv.includes("--fix");
 
 const errors = [];
+let totalFixed = 0;
 
 function lintFile(filePath) {
-  const content = readFileSync(filePath, "utf-8");
-  const lines = content.split("\n");
+  let content = readFileSync(filePath, "utf-8");
+  let lines = content.split("\n");
+  let fixed = 0;
   let inCodeBlock = false;
   let codeBlockStart = 0;
 
@@ -28,36 +31,55 @@ function lintFile(filePath) {
 
     if (inCodeBlock) continue;
 
+    // Fix: //> → />
     if (line.match(/^\/\/>/)) {
-      errors.push({
-        file: filePath,
-        line: lineNum,
-        message: "JSX tag cerrado con '//' en vez de '/>'. Ejemplo correcto: <Component />",
-      });
+      if (FIX_MODE) {
+        lines[i] = line.replace(/^\/\//, "");
+        fixed++;
+      } else {
+        errors.push({
+          file: filePath,
+          line: lineNum,
+          message: "JSX tag cerrado con '//' en vez de '/>'. Ejemplo correcto: <Component />",
+        });
+      }
     }
 
+    // Fix: missing > after / in tags like description="
     if (line.match(/^\/$/) && !line.match(/^(import |export )/)) {
       const prevLine = lines[i - 1] || "";
       if (prevLine.match(/description="/)) {
-        errors.push({
-          file: filePath,
-          line: lineNum,
-          message: "Tag JSX sin cerrar. Falta '>' después de '/'. Debería ser: />",
-        });
+        if (FIX_MODE) {
+          lines[i] = "/>";
+          fixed++;
+        } else {
+          errors.push({
+            file: filePath,
+            line: lineNum,
+            message: "Tag JSX sin cerrar. Falta '>' después de '/'. Debería ser: />",
+          });
+        }
       }
     }
 
-    if (line.match(/<ResourceCard[^/]*$/) && !line.match(/\/>$/) && !line.match(/>$/)) {
-      const nextLines = lines.slice(i + 1, i + 5).join(" ");
-      if (!nextLines.match(/\/>/) && !nextLines.match(/>/)) {
-        errors.push({
-          file: filePath,
-          line: lineNum,
-          message: "Posible <ResourceCard> sin cerrar. Verifica que tenga '/>' al final.",
-        });
+    // Fix: unclosed <ResourceCard> with only / on last line → add />
+    if (line.match(/<ResourceCard$/) && !inCodeBlock) {
+      const nextLine = lines[i + 1]?.trim();
+      if (nextLine === "/") {
+        if (FIX_MODE) {
+          lines[i + 1] = " />";
+          fixed++;
+        } else {
+          errors.push({
+            file: filePath,
+            line: lineNum,
+            message: "Posible <ResourceCard> sin cerrar. Verifica que tenga '/>' al final.",
+          });
+        }
       }
     }
 
+    // Check for unclosed tags (report only, too complex to auto-fix)
     const openTagMatch = line.match(/^<(\w+)/);
     if (openTagMatch && !line.match(/\/>$/) && !line.match(/>/) && !openTagMatch[1].match(/^(import|export)$/)) {
       const tagName = openTagMatch[1];
@@ -99,6 +121,12 @@ function lintFile(filePath) {
       message: `<ResourceCategory> desbalanceado: ${categoryOpens} aperturas, ${categoryCloses} cierres.`,
     });
   }
+
+  if (FIX_MODE && fixed > 0) {
+    writeFileSync(filePath, lines.join("\n"));
+    totalFixed += fixed;
+    console.log(`  🔧 ${filePath}: ${fixed} fix(es) aplicado(s)`);
+  }
 }
 
 function walkDir(dir) {
@@ -122,5 +150,9 @@ if (errors.length > 0) {
   }
   process.exit(1);
 } else {
-  console.log("✅ MDX syntax OK");
+  if (FIX_MODE && totalFixed > 0) {
+    console.log(`\n✅ ${totalFixed} fix(es) aplicado(s)`);
+  } else {
+    console.log("✅ MDX syntax OK");
+  }
 }
