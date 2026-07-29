@@ -29,6 +29,7 @@ interface Props {
   author: string;
   image: string;
   pubDate: string | Date;
+  updatedDate?: string | Date;
   section?: string;
   headings?: MarkdownHeading[];
   id?: number;
@@ -47,6 +48,7 @@ const {
   author,
   image,
   pubDate,
+  updatedDate,
   section = mode === "posts" ? "posts" : "proyectos",
   headings = [],
   id,
@@ -187,6 +189,14 @@ const relatedLayout = isPost ? "grid" : "list";
                 <span class="text-slate-500 dark:text-slate-400">FECHA:</span>
                 <time class="text-slate-900 dark:text-white font-bold">{formatDatePost(pubDate)}</time>
               </div>
+              {
+                updatedDate && (
+                  <div class="flex items-center gap-2">
+                    <span class="text-slate-500 dark:text-slate-400">ACTUALIZADO:</span>
+                    <time class="text-slate-900 dark:text-white font-bold">{formatDatePost(updatedDate)}</time>
+                  </div>
+                )
+              }
               <div class="flex items-center gap-2">
                 <span class="text-slate-500 dark:text-slate-400">AUTOR:</span>
                 <span class="text-slate-900 dark:text-white font-bold">{author}</span>

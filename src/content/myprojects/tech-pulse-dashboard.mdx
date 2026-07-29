@@ -1,15 +1,15 @@
 ---
 draft: false
 title: "Tech Pulse: Dashboard Automatizado de Noticias Tech con IA"
-description: "Scraper inteligente que recolecta 330+ fuentes tech (web, YouTube, RSS, GitHub Topics, Product Hunt), genera resúmenes con Gemini IA, filtra por categoría/badge/canal/fecha, ranking GitHub Stars, sección de referencia tech, y despliega dashboard SSR + Telegram con traducción automática + audio TTS. Código 100% SOLID con store observable JS, configuraciones externalizadas y estructura modular reorganizada."
+description: "Scraper inteligente que recolecta 350+ fuentes tech (web, YouTube, RSS, GitHub Topics, Product Hunt), genera resúmenes con Gemini IA, filtra por categoría/badge/canal/fecha, ranking GitHub Stars, sección de referencia tech, y despliega dashboard SSR + Telegram con traducción automática + audio TTS. Código 100% SOLID con store observable JS, configuraciones externalizadas y estructura modular reorganizada."
 pubDate: "2026/06/25"
-updatedDate: "2026/07/08"
+updatedDate: "2026/07/29"
 tags: ['python', 'ia', 'web-scraping', 'devops', 'automation', 'github-actions', 'rss']
 image: "img/tech_pulse_dashboard/tech_pulse_dashboard_cover-1200.webp"
 repository: "https://github.com/jorbencas/test_githubActions"
 url: "https://jorbencasdownloaderdocument.surge.sh"
 author: "Jorge Beneyto Castelló"
-featured: false
+featured: true
 ---
 
 ## 1. El Planteamiento del Problema
@@ -17,12 +17,12 @@ featured: false
 El ecosistema tecnológico publica decenas de noticias, vídeos y recursos cada día. Seguir el ritmo manualmente es imposible. Herramientas como Feedly o Google News son genéricas, no filtran por relevancia técnica real ni ofrecen resúmenes inteligentes.
 
 Se necesitaba un sistema que:
-- Recolectara automáticamente contenido de 330+ fuentes (YouTube, blogs tech, RSS, GitHub Topics, Product Hunt)
+- Recolectara automáticamente contenido de 350+ fuentes (YouTube, blogs tech, RSS, GitHub Topics, Product Hunt)
 - Clasificara y deduplicara el contenido en tiempo real
 - Generara resúmenes por noticia y un recap semanal con IA
 - Desplegara un dashboard SSR interactivo con filtros combinables
 - Enviara notificaciones por Telegram cada 30 minutos con audio TTS
-- Enviara una newsletter diaria con resúmenes curados
+- Enviara una newsletter diaria con resúmenes curados y videos
 
 ## 2. La Solución Arquitectónica
 
@@ -42,12 +42,12 @@ Se necesitaba un sistema que:
   - Traducción de títulos al español en lote
   - Generación de imágenes para posts con Imagen
 
-- **Capa de Persistencia:** Historial JSON con deduplicación automática por URL normalizada y título similar. Sin límite de entradas.
+- **Capa de Persistencia:** Historial JSON con deduplicación automática por URL normalizada y título similar. Sin límite de entradas. Caché de Telegram con TTL de 7 días.
 
 - **Capa de Distribución:**
   - Dashboard HTML SSR desplegado en Surge.sh (Python genera el HTML completo)
-  - Newsletter HTML con diseño responsive vía Mailgun
-  - Notificaciones Telegram cada 30 min con audio edge-tts (voz española)
+  - Newsletter HTML agrupada por fuente con sección de videos vía Mailgun
+  - Notificaciones Telegram cada 30 min con audio edge-tts (voz española) + caché GitHub Actions
   - Posts en markdown para blog Astro vía PR automático
 
 ### Pipeline de Contenido
@@ -64,8 +64,8 @@ scripts/
 │   ├── generate_weekly.py    # Recap semanal + dashboard HTML (SSR)
 │   ├── manage_resources.py   # Paginación, limpieza, dedup cross-file, fix de cards
 │   ├── merge_freefordev.py   # Merge de free-for-dev resources
-│   ├── send_email.py         # Newsletter Mailgun
-│   └── send_telegram.py      # Notificaciones Telegram con TTS
+│   ├── send_email.py         # Newsletter Mailgun (agrupada por fuente + videos)
+│   └── send_telegram.py      # Notificaciones Telegram con TTS + caché
 ├── tools/              # Utilidades de mantenimiento
 │   ├── fix_images.py         # Pipeline de imágenes (Unsplash + Gemini + WebP/AVIF)
 │   ├── hunt_challenges.py    # Generación IA de retos de programación
@@ -74,7 +74,7 @@ scripts/
 │   └── clean_news.py         # Verificación de enlaces
 ├── utils/              # Módulos compartidos
 │   ├── common.py             # Utilidades (JSON, URLs, dedup, IA)
-│   ├── constants_downloadfile.py  # 330 fuentes, templates, configuración
+│   ├── constants_downloadfile.py  # 350+ fuentes, templates, configuración
 │   └── cache.py              # Caché pluggable (FileCache + CacheManager)
 └── solutions/          # Base de datos de soluciones de retos
     ├── solutions_db.py       # Lookup + generación de soluciones
@@ -148,22 +148,79 @@ El dashboard client-side se reescribió siguiendo principios SOLID:
 Todo el JSON embebido, prompts de IA, plantillas HTML y valores por defecto se movieron a `constants_downloadfile.py`:
 - **Prompts de IA:** `PROMPT_RESUMIR_LOTE`, `PROMPT_RESUMIR_NOTICIA`, `PROMPT_RECAP_SEMANAL`, `PROMPT_TRADUCIR_TITULOS` como templates `.format()`.
 - **Config JS:** canales YouTube, tabs multimedia, opciones de filtro, URL del dashboard — se inyectan vía `data.json`.
-- **Plantillas:** Telegram (`TELEGRAM_MENSAJE_TEMPLATE`), email (`EMAIL_ROW_TEMPLATE`), fallbacks.
+- **Plantillas:** Telegram (`TELEGRAM_MENSAJE_TEMPLATE`), email (`EMAIL_ROW_TEMPLATE`, `EMAIL_SOURCE_HEADER`, `EMAIL_VIDEO_ROW`), fallbacks.
 - **Constantes de dict keys:** Todos los strings de acceso a diccionarios (`"enlace"`, `"fuente"`, `"titulo"`, `"yt"`, etc.) son constantes con nombre. Si en el futuro cambia un key del schema, se edita una sola línea.
 
-### 330 Fuentes de Contenido
+### 350+ Fuentes de Contenido
 
 | Tipo | Cantidad | Ejemplos |
 |------|----------|----------|
 | YouTube | 158 canales | MoureDev, Midudev, Pelado Nerd, Ringa Tech, Nethermind |
-| RSS XML | 32 feeds | web.dev, MDN, CSS-Tricks, Smashing Magazine, HN, Lobsters, W3C Blog, Chrome Developers |
-| HTML scraping | 82 sitios | Xataka, TechCrunch, The Verge, Wired, GitHub Blog, Slashdot |
-| GitHub Topics | 52 topics | AI, LLM, Docker, Kubernetes, CSS, HTML, algorithms, web-standards, linux-config, best-practices |
+| RSS XML (quick) | 55 feeds | TechCrunch, The Verge, Wired, Google Blog, Vercel, Docker, Krebs |
+| Web scraping (quick) | 11 sitios | Anthropic, Ollama, Mistral, LangChain, HuggingFace Papers, Mozilla Hacks |
+| HTML scraping | 82 sitios | Xataka, Genbeta, Slashdot, Applesfera, El País Tecnología |
+| GitHub Topics | 52 topics | AI, LLM, Docker, Kubernetes, CSS, HTML, algorithms |
 | GitHub Collections | 1 | AI Tools |
 | GitHub Repos | 5 | OpenWiki, Meetily, AutoPR, PR-Agent, Code-to-Docs |
 | Product Hunt | 1 | Top products daily |
 
-Los feeds RSS se scrapearán cada hora con `scrape_hourly_workflow.yml` gracias al flag `quick: True`. Los GitHub Topics se scrapearán diariamente con `daily_resources.yml`.
+Los feeds RSS y web scraping con `quick: True` se scrapearon cada hora con `scrape_hourly_workflow.yml`. Los GitHub Topics se scrapearon diariamente con `daily_resources.yml`.
+
+### Fuentes de IA China (Julio 2026)
+
+Se añadieron fuentes de empresas chinas de IA que no tenían RSS:
+
+| Fuente | Tipo | Selector |
+|--------|------|----------|
+| QbitAI (量子位) | RSS | Feed XML directo |
+| 36氪 AI | RSS | Feed XML directo |
+| Qwen Blog | Web scraping | `article h2, .post h2` |
+| DeepSeek Blog | Web scraping | `a[href*='Change Log']` |
+| 01.AI News | Web scraping | `.news-item a` |
+| THUDM ChatGLM | RSS (GitHub) | Atom releases |
+
+### Newsletter Agrupada por Fuente (Julio 2026)
+
+El email se reestructuró completamente:
+
+- **Agrupación por fuente:** noticias organizadas por sitio web (TechCrunch, The Verge, Xataka, etc.)
+- **Títulos traducidos:** Gemini traduce títulos al español automáticamente
+- **Resúmenes por noticia:** cada noticia lleva un resumen de 3-4 líneas en español
+- **Sección de videos:** YouTube videos con thumbnail, canal y duración
+- **Botón "Leer noticia":** enlace atractivo en lugar de URL cruda
+- **Iconos SVG reales:** GitHub, X/Twitter, GitLab, Email (no texto plano)
+- **Estilos por fuente:** cada sitio tiene color e icono personalizado
+
+### Telegram con Caché GitHub Actions (Julio 2026)
+
+Se eliminó la persistencia vía git commit/push y se migró a GitHub Actions Cache:
+
+- **`actions/cache@v4`** restaura `telegram_sent.json` entre runs
+- **TTL de 7 días** para noticias, 24 horas para audio de voz
+- **Filtro temporal** solo envía noticias de las últimas 24 horas
+- **Limpieza automática** `flush()` elimina entradas expiradas
+
+### Weekly Recap Agrupado por Fuente (Julio 2026)
+
+El blog post semanal se mejoró:
+
+- **Deduplicación** por título antes de renderizar
+- **Agrupación por fuente** con `OrderedDict` (mantiene orden)
+- **Sección de videos** con canal y enlace
+- **Sin tabla de estadísticas** — eliminada la sección "El panel en datos"
+
+### 350 Fuentes de Contenido
+
+| Tipo | Cantidad | Ejemplos |
+|------|----------|----------|
+| YouTube | 158 canales | MoureDev, Midudev, Pelado Nerd, Ringa Tech, Nethermind |
+| RSS XML | 55 feeds | web.dev, MDN, CSS-Tricks, Smashing Magazine, HN, Lobsters, W3C Blog |
+| Web scraping | 11 sitios | Anthropic, Ollama, Mistral, LangChain, HuggingFace Papers |
+| HTML scraping | 82 sitios | Xataka, TechCrunch, The Verge, Wired, GitHub Blog, Slashdot |
+| GitHub Topics | 52 topics | AI, LLM, Docker, Kubernetes, CSS, HTML, algorithms |
+| GitHub Collections | 1 | AI Tools |
+| GitHub Repos | 5 | OpenWiki, Meetily, AutoPR, PR-Agent, Code-to-Docs |
+| Product Hunt | 1 | Top products daily |
 
 ### Reorganización de Scripts (Julio 2026)
 
@@ -171,7 +228,7 @@ Los scripts se reorganizaron de la raíz del proyecto a subdirectorios modulares
 
 - **`utils.py` → `scripts/utils/common.py`**: Renombrado para evitar sombreado de módulos con `utils/` del sistema
 - **`solutions_db.py` y `solutions_data.py`**: Migrados desde el blog a `scripts/solutions/` (105+ soluciones curadas en 12 lenguajes)
-- **`tests/`**: Migrados desde `blog/tests/python/` (101 tests pytest)
+- **`tests/`**: Migrados desde `blog/tests/python/` (117 tests pytest)
 - **Todos los workflows actualizados** para usar `python -m scripts.subdir.script` en lugar de `python script.py`
 - **Nuevo workflow `tests.yml`**: Ejecuta pytest en cada push/PR a master
 - **Eliminados `scrape_social.py` y `scrape_trends.py`**: Redes sociales (Instagram, X/Twitter, Threads, TikTok) y Google Trends removidos del ecosistema
@@ -208,26 +265,27 @@ Python genera un `index.html` completo con todo el contenido pre-renderizado (no
 - Resumen IA de 3-4 líneas generado por Gemini en español
 - Títulos traducidos automáticamente al español vía `traducir_titulo()` con Gemini
 - Audio TTS con edge-tts (voz `es-ES-AlvaroNeural`) — resumen de todos los titulares una vez al día
-- Control de duplicados vía `telegram_sent.json` + `telegram_voice_sent.json`
+- Control de duplicados vía GitHub Actions Cache (7 días TTL)
+- Filtro temporal: solo noticias de las últimas 24 horas
 - Texto del audio limpio de emojis para mayor claridad
 
-> **Actualizado julio 2026:** Eliminadas todas las fuentes de redes sociales (Instagram, X/Twitter, TikTok, Threads, Google Trends). El ecosistema monitoriza actualmente **330 fuentes** en **7 categorías**.
+> **Actualizado julio 2026:** 350+ fuentes (55 RSS + 11 web scraping + 82 HTML + 158 YouTube + 52 GitHub Topics). Eliminadas redes sociales. Email agrupado por fuente con videos. Telegram con GitHub Actions Cache. Weekly recap deduplicado y agrupado.
 
 ## 4. Desglose del Feature Set
 
-- **330+ fuentes monitorizadas:** 158 YouTube, 32 RSS, 82 HTML, 52 GitHub Topics, 5 repos, 1 Product Hunt
+- **350+ fuentes monitorizadas:** 158 YouTube, 55 RSS, 11 web scraping, 82 HTML, 52 GitHub Topics, 5 repos, 1 Product Hunt
 - **Clasificación inteligente:** 6 categorías (IA, Programación, DevOps, Ciberseguridad, Hardware, Negocios) + badges Tech/RSS
 - **Dashboard SSR:** Python genera HTML completo, JS solo interactividad (~135 líneas)
 - **Config externalizada:** prompts IA, plantillas Telegram/email, canales YouTube, opciones de filtro — todo en `constants_downloadfile.py`
 - **Constantes con nombre:** todos los dict keys del schema son constantes (cambio en un solo sitio)
 - **Sección de Referencia Tech:** panel colapsable con Skills, LLMs, Lenguajes, Frameworks y Librerías
-- **Newsletter diaria:** resúmenes individuales por noticia con Gemini, estadísticas rápidas
-- **Telegram con IA:** traducción automática de títulos al español, resumen en español, audio TTS una vez al día
+- **Newsletter diaria:** agrupada por fuente, resúmenes individuales por noticia con Gemini, sección de videos, iconos SVG
+- **Telegram con IA:** traducción automática, resumen en español, audio TTS, caché GitHub Actions con TTL
 - **Ranking GitHub Stars:** top 20 repos ordenados por estrellas desde 52 GitHub Topics + Collections
 - **Deduplicación:** por URL normalizada y título similar en scrape, generación de dashboard, y **cross-file en resources**
 - **Fix de cards malformados:** `fix_malformed_cards()` repara ResourceCard tags con `/` en lugar de `/>`
 - **Estructura modular reorganizada:** scripts en subdirectorios (`scrapers/`, `publishers/`, `tools/`, `utils/`, `solutions/`)
-- **101 tests pytest:** cobertura completa de utilidades, caché, constantes, imágenes, recursos (incluyendo dedup cross-file y fix de cards) y soluciones
+- **117 tests pytest:** cobertura completa de utilidades, caché, constantes (incluyendo templates email), imágenes, recursos y soluciones
 - **CI/CD completo:** 11 workflows de GitHub Actions con badges en vivo en el README
 
 ## 5. Puesta en Marcha Local
@@ -241,10 +299,16 @@ pip install -r requirements.txt
 # Scrapear noticias (tier completo)
 python -m scripts.scrapers.scrape_news --tier full
 
+# Scrapear noticias (tier light - solo quick)
+python -m scripts.scrapers.scrape_news --tier light
+
 # Scrapear herramientas
 python -m scripts.scrapers.scrape_tools
 
-# Generar dashboard
+# Generar dashboard (solo HTML)
+python -m scripts.publishers.generate_weekly --dashboard-only
+
+# Generar dashboard + recap semanal
 python -m scripts.publishers.generate_weekly --blog-path blog
 
 # Enviar Telegram (dry-run)
@@ -261,7 +325,7 @@ El dashboard se genera en `public/index.html` y se puede previsualizar con `pyth
 
 ## 6. Live Demo
 
-El dashboard está desplegado y accesible públicamente, con actualización automática cada semana y notificaciones cada 30 minutos.
+El dashboard está desplegado y accesible públicamente, con actualización automática cada hora y notificaciones cada 30 minutos.
 
 👉 **[Abrir Tech Pulse Dashboard](https://jorbencasdownloaderdocument.surge.sh)**
 
