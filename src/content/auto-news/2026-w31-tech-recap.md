@@ -3,7 +3,7 @@ title: "Weekly Tech Recap W31"
 description: "Esta semana, la IA sigue su curso imparable, pero con un giro notable hacia la practicidad y el código abierto, alejándose del hype inicial para centr"
 pubDate: "2026-07-29"
 author: "Jorge Beneyto Castelló"
-image: "public/img/arquitectura_web.webp"
+image: "img/2026_w31_tech_recap/2026_w31_tech_recap_cover-1200.webp"
 tags: ["tech", "IA", "DevOps", "Ciberseguridad"]
 slug: "2026-w31-tech-recap"
 draft: true
