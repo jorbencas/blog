@@ -46,7 +46,7 @@ function lintFile(filePath) {
     }
 
     // Fix: missing > after / in tags like description="
-    if (line.match(/^\/$/) && !line.match(/^(import |export )/)) {
+    if (line.match(/^\s*\/[ \t]*$/) && !line.match(/^(import |export )/)) {
       const prevLine = lines[i - 1] || "";
       if (prevLine.match(/description="/)) {
         if (FIX_MODE) {
@@ -63,11 +63,13 @@ function lintFile(filePath) {
     }
 
     // Fix: unclosed <ResourceCard> with only / on last line → add />
-    if (line.match(/<ResourceCard$/) && !inCodeBlock) {
+    if (line.match(/<ResourceCard\s*$/) && !inCodeBlock) {
       const nextLine = lines[i + 1]?.trim();
-      if (nextLine === "/") {
+      if (nextLine === "/" || nextLine === "") {
         if (FIX_MODE) {
-          lines[i + 1] = " />";
+          if (nextLine === "/") {
+            lines[i + 1] = " />";
+          }
           fixed++;
         } else {
           errors.push({
