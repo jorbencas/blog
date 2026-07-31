@@ -1,16 +1,17 @@
 ---
 draft: false
 title: "Docker: ffmpeg y yt-dlp en Windows (WSL) y Ubuntu"
-description: "Guía práctica para usar ffmpeg y yt-dlp con Docker en WSL y Ubuntu."
+description: "Guía práctica para usar ffmpeg y yt-dlp con Docker en WSL y Ubuntu. Conversor, descargador y editor de vídeo con 20 modos CLI."
 pubDate: "2026-07-11"
+updatedDate: "2026-07-31"
 tags: ["docker", "devops", "linux", "windows", "ffmpeg", "yt-dlp"]
 image: "img/docker_to_yt_ffmpeg_in_wls/docker_to_yt_ffmpeg_in_wls_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 ---
 
-## 1. El docker-compose.yml adaptado
+## 1. El docker-compose.yml
 
-Lo ideal es que guardes los vídeos directamente en tu disco de Windows <code>(C:)</code> para que puedas abrirlos con el reproductor de Windows sin tener que buscarlos dentro de la máquina virtual de WSL. En WSL, tu disco <code>C:</code> está montado en la ruta <code>/mnt/c/</code>. Crea este archivo docker-compose.yml dentro de tu terminal de WSL:
+Guarda los vídeos en tu disco de Windows <code>(C:)</code> para abrirlos con el reproductor de Windows. En WSL, tu disco <code>C:</code> está montado en <code>/mnt/c/</code>.
 
 ```yaml
 services:
@@ -21,350 +22,152 @@ services:
       - /mnt/c/Users/TuUsuario/Videos/test_videos:/test_videos
     working_dir: /test_videos
     user: root
-    tty: true          # Equivalente a -t en docker run
-    stdin_open: true   # Equivalente a -i en docker run
+    tty: true
+    stdin_open: true
     command: >-
       sh -c "apk update &&
-      apk add --no-cache ffmpeg python3 curl bash su-exec &&
-      adduser -D -u 1000 tu_usuario &&
-      curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp &&
-      chmod a+rx /usr/local/bin/yt-dlp &&
-      su-exec tu_usuario bash /test_videos/midu.sh &&
-      su-exec tu_usuario sh"
+      apk add --no-cache ffmpeg bash python3 py3-pip &&
+      pip install --break-system-packages yt-dlp &&
+      id -u jorge >/dev/null 2>&1 || adduser -D -u 1000 jorge &&
+      chown -R jorge:jorge /test_videos &&
+      su-exec jorge bash midu.sh"
 ```
 
-> **Sobre `tty` e `stdin_open`:** Estas dos opciones equivalen a pasar `-it` al `docker run`. Sin ellas, el contenedor no mantendría la terminal interactiva y no podrías escribir comandos dentro.
+> **Sobre `tty` e `stdin_open`:** Equivalen a `-it` en `docker run`. Sin ellas, no podrías escribir comandos dentro.
 
-> **Sobre los permisos (`user: root` y `su-exec`):** Por defecto Alpine ejecuta todo como `root`, lo que hace que los archivos creados en los volúmenes queden como `root:root`. La solución es mantener `user: root` para instalar paquetes (solo root puede escribir en `/usr/local/bin/`), pero usar `su-exec` para ejecutar el script y la shell como tu usuario real. `adduser -D -u 1000 tu_usuario` crea el usuario dentro del contenedor con el mismo UID que tu usuario del host. Cambia `tu_usuario` por el nombre de tu usuario en Linux (lo puedes ver ejecutando `whoami` en tu terminal).
+> **Sobre los permisos:** `user: root` para instalar paquetes, `su-exec` para ejecutar como tu usuario real. Cambia `jorge` por tu nombre de usuario (`whoami`).
 
-> **Ojo al detalle:** Recuerda cambiar `TuUsuario` por el nombre real de tu usuario en Windows (lo puedes ver en la terminal de WSL escribiendo `ls /mnt/c/Users/`).
+> **Ojo:** Cambia `TuUsuario` por el nombre real de tu usuario en Windows (`ls /mnt/c/Users/`).
 
-## 2. El script de conversión (midu.sh)
+## 2. midu.sh v5.0.0 — Conversor, descargador y editor de vídeo
 
-Crea un archivo `midu.sh` en la misma carpeta que el docker-compose.yml. Conversor CLI con soporte para presets de calidad, múltiples códecs de audio, detección de GPU y progreso en tiempo real.
+Script CLI con **20 modos** independientes, menú interactivo, presets de calidad, detección de GPU, progreso en tiempo real y **configuración guardada por modo** en <code>conf.json</code>.
 
-```bash
-#!/bin/bash
+### Qué hace cada modo
 
-VERSION="2.0.0"
+| Flag | Modo | Descripción |
+|------|------|-------------|
+| `-d URL` | Descargar | YouTube, Twitch, Kick, TikTok, Instagram, +1000 sitios |
+| `--cut` | Cortar | Lossless, sin perder calidad |
+| `--cut --remove` | Eliminar secciones | Quitar partes del vídeo |
+| `--cut --extract` | Extraer clips | Sacar varios trozos y unirlos |
+| `--convert` | Convertir | Comprimir, ajustar tamaño y calidad |
+| `--gif` | GIF | Animación a partir del vídeo |
+| `--thumbnail` | Thumbnail | Captura de pantalla (PNG) |
+| `--info` | Info | Duración, codecs, resolución |
+| `--rotate` | Rotar | 90°, 180° o 270° |
+| `--crop` | Crop | Recortar a tamaño específico |
+| `--fade` | Fade | Fade in/out automático |
+| `--normalize` | Normalizar | Volumen de audio parejo |
+| `--watermark` | Marca de agua | Poner imagen encima |
+| `--deinterlace` | Desentrelazar | Quitar rayas de TV vieja |
+| `--fps` | FPS | Cambiar frames por segundo |
+| `--speed` | Velocidad | Más rápido o lento |
+| `-sl` / `-sh` | Subtítulos | Embeber o quemar |
+| `--concat` | Concatenar | Unir varios vídeos |
+| `-ao` | Extraer audio | Solo audio del vídeo |
+| `-ma` | Mezclar audio | Audio + vídeo |
+| `--watch` | Watch | Auto-convertir carpeta |
+| `--stabilize` | Estabilizar | Quitar temblor (vidstab) |
+| `--adjust` | Ajustar imagen | Brillo, contraste, saturación, gamma |
+| `--censor` | Censurar | Pixelar caras, matrículas, etc. |
+| `--denoise` | Denoise | Reducir ruido de vídeos viejos |
+| `--sharpen` | Sharpen | Enfocar vídeos borrosos |
+| `--reverse` | Reverse | Invertir vídeo (al revés) |
+| `--scenes` | Escenas | Detectar y cortar por escenas |
+| `--keyframes` | Keyframes | Extraer imágenes I-frame |
+| `--aspect` | Aspect Ratio | Cambiar ratio (16:9, 4:3, 21:9) |
+| `--metadata` | Metadata | Editar título, autor, etc. |
 
-show_help() {
-    cat <<EOF
-midu.sh v${VERSION} — Conversor de vídeo a mp4 con ffmpeg
+### Menú interactivo
 
-Uso: ./midu.sh [opciones] [directorio]
+Al ejecutar <code>./midu.sh</code> sin argumentos, se abre un menú con 6 pasos:
 
-Opciones:
-  -i, --input DIR      Directorio de entrada (default: ./test)
-  -o, --output DIR     Directorio de salida (default: ./optimizados)
-  -p, --preset PRESET  Calidad: web|default|archive|quality (default: default)
-  -a, --audio CODEC    Códec de audio: aac|copy|opus|mp3|flac|vorbis (default: aac)
-  -b, --bitrate BR     Bitrate de audio (default: 128k)
-  -r, --resolution RES Resolución de salida: original|4k|1080|720|480|360 (default: original)
-  -m, --max-size MB    Tamaño máximo de salida en MB (default: sin límite)
-                       Calcula el bitrate automáticamente según la duración.
-  -t, --threads N      Hilos máximos en paralelo (default: nproc)
-  -e, --extensions EXT Extensiones separadas por coma (default: avi,webm,mkv,mp4,flv)
-  -h, --help           Muestra esta ayuda
-  -v, --version        Versión
-
-Ejemplos:
-  ./midu.sh                           # Modo default
-  ./midu.sh -m 2000                    # Todo menos de 2GB
-  ./midu.sh -m 100 -r 720              # Todo menos de 100MB, 720p
-  ./midu.sh -p web -a opus -b 96k      # Web, audio opus a 96k
-  ./midu.sh -r 1080                    # Todo a 1920x1080
-  ./midu.sh -r 720 -p web              # Todo a 720p, modo web
-  ./midu.sh -i /videos -o /salida      # Rutas personalizadas
-EOF
-}
-
-INPUT_DIR="/test_videos/test"
-OUTPUT_DIR="/test_videos/optimizados"
-PRESET="default"
-AUDIO_CODEC="aac"
-AUDIO_BITRATE="128k"
-RESOLUTION="original"
-MAX_SIZE=""
-MAX_THREADS=$(nproc)
-EXTENSIONS="avi,webm,mkv,mp4,flv"
-
-while [[ $# -gt 0 ]]; do
-    case "$1" in
-        -i|--input)     INPUT_DIR="$2"; shift 2 ;;
-        -o|--output)    OUTPUT_DIR="$2"; shift 2 ;;
-        -p|--preset)    PRESET="$2"; shift 2 ;;
-        -a|--audio)     AUDIO_CODEC="$2"; shift 2 ;;
-        -b|--bitrate)   AUDIO_BITRATE="$2"; shift 2 ;;
-        -r|--resolution) RESOLUTION="$2"; shift 2 ;;
-        -m|--max-size)  MAX_SIZE="$2"; shift 2 ;;
-        -t|--threads)   MAX_THREADS="$2"; shift 2 ;;
-        -e|--extensions) EXTENSIONS="$2"; shift 2 ;;
-        -h|--help)      show_help; exit 0 ;;
-        -v|--version)   echo "midu.sh v${VERSION}"; exit 0 ;;
-        -*)             echo "Opción desconocida: $1"; show_help; exit 1 ;;
-        *)              INPUT_DIR="$1"; shift ;;
-    esac
-done
-
-IFS=',' read -ra EXT_ARRAY <<< "$EXTENSIONS"
-
-get_resolution_filter() {
-    case "$1" in
-        original) echo "" ;;
-        4k|2160)   echo "-vf scale=3840:2160:force_original_aspect_ratio=decrease,pad=3840:2160:(ow-iw)/2:(oh-ih)/2" ;;
-        1440)      echo "-vf scale=2560:1440:force_original_aspect_ratio=decrease,pad=2560:1440:(ow-iw)/2:(oh-ih)/2" ;;
-        1080)      echo "-vf scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2" ;;
-        720)       echo "-vf scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2" ;;
-        480)       echo "-vf scale=854:480:force_original_aspect_ratio=decrease,pad=854:480:(ow-iw)/2:(oh-ih)/2" ;;
-        360)       echo "-vf scale=640:360:force_original_aspect_ratio=decrease,pad=640:360:(ow-iw)/2:(oh-ih)/2" ;;
-        *)         echo "Resolución desconocida: $1"; exit 1 ;;
-    esac
-}
-
-case "$PRESET" in
-    web)      CRF=28; SPEED="fast" ;;
-    default)  CRF=23; SPEED="medium" ;;
-    archive)  CRF=18; SPEED="slow" ;;
-    quality)  CRF=15; SPEED="veryslow" ;;
-    *)        echo "Preset desconocido: $PRESET"; exit 1 ;;
-esac
-
-detect_gpu() {
-    if command -v nvidia-smi &>/dev/null && nvidia-smi &>/dev/null 2>&1; then
-        echo "nvenc"
-    elif command -v vainfo &>/dev/null 2>&1; then
-        echo "vaapi"
-    else
-        echo "cpu"
-    fi
-}
-
-get_audio_args() {
-    case "$1" in
-        copy)    echo "-c:a copy" ;;
-        aac)     echo "-c:a aac -b:a $AUDIO_BITRATE" ;;
-        opus)    echo "-c:a libopus -b:a $AUDIO_BITRATE" ;;
-        mp3)     echo "-c:a libmp3lame -b:a $AUDIO_BITRATE" ;;
-        flac)    echo "-c:a flac" ;;
-        vorbis)  echo "-c:a libvorbis -b:a $AUDIO_BITRATE" ;;
-        ac3)     echo "-c:a ac3 -b:a $AUDIO_BITRATE" ;;
-        eac3)    echo "-c:a eac3 -b:a $AUDIO_BITRATE" ;;
-        pcm_s16le) echo "-c:a pcm_s16le" ;;
-        pcm_s24le) echo "-c:a pcm_s24le" ;;
-        *)       echo "Códec desconocido: $1"; exit 1 ;;
-    esac
-}
-
-GPU=$(detect_gpu)
-
-echo "═══════════════════════════════════════"
-echo " midu.sh v${VERSION}"
-echo "═══════════════════════════════════════"
-echo " Entrada:    $INPUT_DIR"
-echo " Salida:     $OUTPUT_DIR"
-echo " Preset:     $PRESET (CRF $CRF, $SPEED)"
-echo " Audio:      $AUDIO_CODEC ($AUDIO_BITRATE)"
-echo " Resolución: $RESOLUTION"
-[[ -n "$MAX_SIZE" ]] && echo " Tamaño máx: ${MAX_SIZE}MB"
-echo " GPU:        $GPU"
-echo " Hilos:      $MAX_THREADS"
-echo "═══════════════════════════════════════"
-echo ""
-
-build_ffmpeg_args() {
-    local input="$1"
-    local output="$2"
-    local remux="$3"
-    local gpu="$4"
-    local duration="$5"
-
-    local args=(-y -i "$input")
-
-    if [[ "$remux" == "true" ]]; then
-        args+=(-c copy -movflags +faststart)
-    else
-        local res_filter
-        res_filter=$(get_resolution_filter "$RESOLUTION")
-
-        local audio_kbps
-        audio_kbps=$(echo "$AUDIO_BITRATE" | sed 's/k//')
-
-        if [[ -n "$MAX_SIZE" && -n "$duration" && "$duration" -gt 0 ]]; then
-            local total_bits=$((MAX_SIZE * 1024 * 8))
-            local total_kbits=$((total_bits / 1000))
-            local video_kbits=$((total_kbits - (audio_kbps * duration)))
-            local video_bitrate=$((video_kbits / duration))
-
-            if [[ "$video_bitrate" -lt 100 ]]; then
-                video_bitrate=100
-            fi
-
-            echo "  → Bitrate vídeo calculado: ${video_bitrate}k (para ${MAX_SIZE}MB en ${duration}s)"
-
-            case "$gpu" in
-                nvenc) args+=(-c:v h264_nvenc -b:v "${video_bitrate}k" -maxrate "$((video_bitrate * 2))k" -bufsize "${video_bitrate}k" -preset "$SPEED") ;;
-                vaapi) args+=(-vaapi_device /dev/dri/renderD128 -c:v h264_vaapi -b:v "${video_bitrate}k" -maxrate "$((video_bitrate * 2))k" -bufsize "${video_bitrate}k") ;;
-                *)     args+=(-c:v libx264 -b:v "${video_bitrate}k" -maxrate "$((video_bitrate * 2))k" -bufsize "${video_bitrate}k" -preset "$SPEED") ;;
-            esac
-        else
-            case "$gpu" in
-                nvenc) args+=(-c:v h264_nvenc -rc constqp -qp "$CRF" -preset "$SPEED") ;;
-                vaapi) args+=(-vaapi_device /dev/dri/renderD128 -c:v h264_vaapi -qp "$CRF") ;;
-                *)     args+=(-c:v libx264 -crf "$CRF" -preset "$SPEED") ;;
-            esac
-        fi
-
-        if [[ -n "$res_filter" ]]; then
-            args+=($res_filter)
-        fi
-
-        local audio_args
-        audio_args=$(get_audio_args "$AUDIO_CODEC")
-        args+=($audio_args -movflags +faststart)
-    fi
-
-    args+=(-map 0:v:0 -map 0:a:0 -map 0:s?: -map_metadata 0)
-    args+=("$output")
-    echo "${args[@]}"
-}
-
-can_remux() {
-    local v_codec a_codec
-    v_codec=$(ffprobe -v error -select_streams v:0 -show_entries stream=codec_name -of csv=p=0 "$1" 2>/dev/null)
-    a_codec=$(ffprobe -v error -select_streams a:0 -show_entries stream=codec_name -of csv=p=0 "$1" 2>/dev/null)
-    [[ "$v_codec" == "h264" && "$a_codec" == "aac" ]]
-}
-
-get_duration() {
-    ffprobe -v error -show_entries format=duration -of csv=p=0 "$1" 2>/dev/null | cut -d. -f1
-}
-
-format_time() {
-    printf "%02d:%02d:%02d" $(($1/3600)) $(($1%3600/60)) $(($1%60))
-}
-
-convertir_archivo() {
-    local file="$1"
-    local output_dir="$2"
-    local filename
-    filename=$(basename "$file")
-    filename="${filename%.*}"
-    local output_file="$output_dir/$filename.mp4"
-    local tmp_file="$output_dir/$filename.mp4.tmp"
-
-    local duration
-    duration=$(get_duration "$file")
-    local duration_fmt
-    duration_fmt=$(format_time "${duration:-0}")
-
-    local remux="false"
-    can_remux "$file" && remux="true"
-
-    echo "[$procesados/$total] Procesando: $file (${duration_fmt:-??:??:??}) [remux=$remux]"
-
-    local ffmpeg_args
-    IFS=' ' read -r -a ffmpeg_args <<< "$(build_ffmpeg_args "$file" "$tmp_file" "$remux" "$GPU" "$duration")"
-
-    ffmpeg "${ffmpeg_args[@]}" 2>&1 | while IFS= read -r line; do
-        if [[ "$line" =~ time=([0-9:]+) ]]; then
-            local current="${BASH_REMATCH[1]}"
-            local cur_secs=$(echo "$current" | awk -F: '{print ($1*3600)+($2*60)+$3}')
-            if [[ -n "$duration" && "$duration" -gt 0 ]]; then
-                printf "\r[%3d%%] %s / %s" $((cur_secs * 100 / duration)) "$current" "$duration_fmt"
-            fi
-        fi
-    done
-    echo ""
-
-    if [[ $? -ne 0 ]]; then
-        echo "[$procesados/$total] ERROR al convertir: $file"
-        rm -f "$tmp_file"
-        return 1
-    fi
-
-    [[ ! -f "$tmp_file" ]] && echo "[$procesados/$total] ERROR: no se creó $tmp_file" && return 1
-
-    local size
-    size=$(stat -c%s "$tmp_file" 2>/dev/null || stat -f%z "$tmp_file" 2>/dev/null || echo 0)
-    if [[ "$size" -lt 1024 ]]; then
-        echo "[$procesados/$total] ERROR: archivo muy pequeño (${size} bytes)"
-        rm -f "$tmp_file"
-        return 1
-    fi
-
-    mv "$tmp_file" "$output_file"
-    rm "$file"
-    echo "[$procesados/$total] OK: $file → $output_file"
-    return 0
-}
-
-mkdir -p "$OUTPUT_DIR"
-
-archivos=()
-saltados=0
-reanudando=0
-for ext in "${EXT_ARRAY[@]}"; do
-    ext=$(echo "$ext" | xargs)
-    while IFS= read -r -d '' file; do
-        filename=$(basename "$file")
-        filename="${filename%.*}"
-        output_file="$OUTPUT_DIR/$filename.mp4"
-        tmp_file="$OUTPUT_DIR/$filename.mp4.tmp"
-
-        if [[ -f "$output_file" ]]; then
-            out_size=$(stat -c%s "$output_file" 2>/dev/null || stat -f%z "$output_file" 2>/dev/null || echo 0)
-            [[ "$out_size" -gt 1024 ]] && ((saltados++)) && continue
-        fi
-
-        if [[ -f "$tmp_file" ]]; then
-            echo "Reanudando: $file"
-            rm -f "$tmp_file"
-            ((reanudando++))
-        fi
-
-        archivos+=("$file")
-    done < <(find "$INPUT_DIR" -maxdepth 2 -type f -iname "*.$ext" -print0)
-done
-
-total=${#archivos[@]}
-
-if [[ $total -eq 0 ]]; then
-    echo "No hay vídeos nuevos para convertir en $INPUT_DIR"
-    [[ $saltados -gt 0 ]] && echo "($saltados ya convertidos)"
-    exit 0
-fi
-
-echo "Encontrados $total archivos, $saltados ya hechos, $reanudando a reconvertir (hilos: $MAX_THREADS)"
-echo ""
-
-procesados=0
-fallidos=0
-active_threads=()
-
-for file in "${archivos[@]}"; do
-    convertir_archivo "$file" "$OUTPUT_DIR" &
-    active_threads+=($!)
-
-    while [ "${#active_threads[@]}" -ge "$MAX_THREADS" ]; do
-        for i in "${!active_threads[@]}"; do
-            if ! kill -0 "${active_threads[i]}" 2>/dev/null; then
-                wait "${active_threads[i]}" 2>/dev/null && ((procesados++)) || ((fallidos++))
-                unset 'active_threads[i]'
-            fi
-        done
-        active_threads=("${active_threads[@]}")
-        sleep 0.5
-    done
-done
-
-for pid in "${active_threads[@]}"; do
-    wait "$pid" 2>/dev/null && ((procesados++)) || ((fallidos++))
-done
-
-echo ""
-echo "Completado: $procesados OK, $fallidos fallos de $total archivos."
 ```
+═══════════════════════════════════════
+ midu.sh v5.0.0
+═══════════════════════════════════════
+
+  ¿Qué quieres hacer?
+
+     1) Descargar vídeo       — YouTube, Twitch, Kick, TikTok, +1000
+     2) Cortar vídeo          — Sin perder calidad
+     3) Convertir/comprimir   — Ajustar tamaño y calidad
+     4) Crear GIF             — Animación a partir del vídeo
+     5) Captura (thumbnail)   — Screenshot del vídeo
+     6) Info del vídeo        — Duración, codecs, resolución
+     7) Rotar vídeo           — 90°, 180° o 270°
+     8) Recortar (crop)       — Cortar a tamaño específico
+     9) Fade in/out           — Aparecer/desaparecer
+    10) Normalizar audio      — Volumen parejo
+    11) Marca de agua         — Poner imagen encima
+    12) Desentrelazar         — Quitar rayas de TV vieja
+    13) Cambiar FPS           — Frames por segundo
+    14) Cambiar velocidad     — Más rápido o lento
+    15) Subtítulos            — Embeber o quemar
+    16) Unir vídeos           — Concatenar varios archivos
+    17) Extraer audio         — Solo audio del vídeo
+    18) Estabilizar           — Quitar temblor (vidstab)
+    19) Ajustar imagen        — Brillo, contraste, saturación
+    20) Censurar              — Pixelar caras, matrículas
+    21) Reducir ruido         — Denoise para vídeo viejo
+    22) Enfocar               — Sharpen para vídeo borroso
+    23) Invertir              — Reproducir al revés
+    24) Cortar por escenas    — Auto-detectar cambios
+    25) Extraer keyframes     — Sacar imágenes I-frame
+    26) Cambiar aspect ratio  — 16:9, 4:3, 21:9
+    27) Editar metadata       — Título, autor, etc.
+
+  → Selecciona [1-27]:
+```
+
+Después de seleccionar el modo, el script:
+
+1. **Selecciona el(los) vídeo(s)** — Lista los archivos disponibles. Si solo hay 1, se selecciona automáticamente. Si hay varios, puedes elegir: `1,3,5` (lista), `1-5` (rango) o `all` (todos)
+2. **Elige directorio de salida** — O crea uno nuevo
+3. **Pide nombre de salida** — Si seleccionaste 1 archivo. Si son varios, cada uno mantiene su nombre
+4. **Configura parámetros** — Opciones específicas de cada modo
+5. **Procesa en paralelo** — Usa los threads configurados para procesar varios archivos a la vez
+6. **Guarda la config** — Para la próxima vez carga automáticamente
+
+### Selección múltiple de archivos
+
+En modos como convertir, GIF, rotar, etc., puedes seleccionar varios archivos a la vez:
+
+```
+  Vídeos disponibles:
+
+     1) video1.mkv (150MB)
+     2) video2.mkv (230MB)
+     3) video3.mkv (180MB)
+     4) video4.mkv (95MB)
+
+  Ejemplo: 1,3,5 o 1-5 o 'all' para todos
+  → Selecciona: 1,3
+  → Seleccionados: 2 archivo(s)
+    → video1.mkv
+    → video3.mkv
+```
+
+**Formatos de selección:**
+- `1,3,5` — Lista de archivos específicos
+- `1-4` — Rango del 1 al 4
+- `all` o `a` — Todos los archivos
+- `3` — Solo un archivo (si solo hay 1, se selecciona automáticamente)
+
+Los archivos se procesan en paralelo usando los threads configurados.
+
+### Presets de redes sociales
+
+| Red social | Resolución | Tamaño máx | Audio | Calidad |
+|------------|------------|------------|-------|---------|
+| WhatsApp | 720p | 1GB | aac 128k | web (CRF 28) |
+| Telegram | 1080p | 2GB | aac 128k | default (CRF 23) |
+| Instagram | 1080p | 500MB | aac 128k | default (CRF 23) |
+| TikTok | 1080p | 500MB | aac 128k | default (CRF 23) |
+| YouTube | Original | Sin límite | aac 192k | archive (CRF 18) |
+| Twitter/X | 720p | 500MB | aac 128k | web (CRF 28) |
+| Facebook | 1080p | 1GB | aac 128k | default (CRF 23) |
 
 ### Códecs de audio soportados
 
@@ -375,11 +178,242 @@ echo "Completado: $procesados OK, $fallidos fallos de $total archivos."
 | `opus` | Mejor calidad/bitrate, moderno | 96k-192k |
 | `mp3` | Máxima compatibilidad | 128k-320k |
 | `flac` | Lossless, sin pérdida | — |
-| `vorbis` | Open source, buena calidad | 128k-256k |
 | `ac3` | Dolby Digital, compatible TV | 192k-640k |
 | `eac3` | Dolby Digital Plus | 256k-1024k |
-| `pcm_s16le` | Sin compresión, 16-bit | — |
-| `pcm_s24le` | Sin compresión, 24-bit | — |
+
+### Configuración guardada por modo
+
+El archivo <code>conf.json</code> guarda la configuración de cada modo por separado:
+
+```json
+{
+  "inputDir": "/test_videos/test",
+  "outputDir": "/test_videos/optimizados",
+  "maxThreads": "8",
+  "extensions": "avi,webm,mkv,mp4,flv",
+  "verbose": false,
+  "modes": {
+    "convert": {
+      "social": "telegram",
+      "preset": "web",
+      "audioCodec": "aac",
+      "resolution": "1080",
+      "maxSize": "2"
+    },
+    "cut": {
+      "startTime": "00:05:00",
+      "endTime": "00:10:00"
+    },
+    "gif": {
+      "gifFps": "15",
+      "gifScale": "480:-1"
+    }
+  }
+}
+```
+
+### Flags CLI
+
+```bash
+# Descargar
+./midu.sh -d "https://kick.com/..."
+./midu.sh -d "URL" -ds 00:05:00 -de 00:10:00
+
+# Cortar un trozo
+./midu.sh --cut -ss 00:01:30 -e 00:03:45 -i /videos -o /cortes
+
+# Eliminar secciones (quitar partes del vídeo)
+./midu.sh --cut --remove -clips 00:01:00-00:02:30,00:05:00-00:07:15
+
+# Extraer clips y unirlos en un solo vídeo
+./midu.sh --cut --extract -clips 00:01:00-00:02:30,00:05:00-00:07:15
+
+# Convertir
+./midu.sh --convert -s telegram
+./midu.sh --convert -p web -s 1080 -g 2
+
+# GIF
+./midu.sh --gif --gif-fps 15 --gif-scale 480:-1
+
+# Thumbnail
+./midu.sh --thumbnail --thumbnail-time 00:01:30
+
+# Info
+./midu.sh --info
+
+# Rotar
+./midu.sh --rotate 90
+
+# Crop
+./midu.sh --crop 640:480
+
+# Fade
+./midu.sh --fade 2
+
+# Normalizar audio
+./midu.sh --normalize
+
+# Marca de agua
+./midu.sh --watermark logo.png
+
+# Desentrelazar
+./midu.sh --deinterlace
+
+# Cambiar FPS
+./midu.sh --fps 60
+
+# Velocidad
+./midu.sh --speed 2.0
+
+# Subtítulos
+./midu.sh -sl subs.srt
+./midu.sh -sh subs.srt
+
+# Concatenar
+./midu.sh --concat v1.mkv v2.mkv v3.mkv
+
+# Extraer audio
+./midu.sh -ao "https://youtube.com/watch?v=..."
+./midu.sh -of mp3
+
+# Mezclar audio
+./midu.sh -ma audio.mp3
+
+# Watch
+./midu.sh --watch
+
+# Guardar config
+./midu.sh --convert -p web -c
+```
+
+### Validación de URLs
+
+Al intentar descargar, el script comprueba si la URL es soportada antes de empezar. Si no lo es, avisa con un mensaje claro:
+
+```
+  Comprobando URL...
+ERROR: URL no soportada o no válida
+  yt-dlp no puede descargar de este sitio
+  Lista: https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md
+```
+
+Esto evita esperar a que yt-dlp falle al descargar.
+
+### Modos de corte avanzados
+
+El modo `--cut` tiene 3 sub-modos:
+
+**1. Cortar un trozo** (normal) — Mantiene solo el segmento indicado:
+```bash
+./midu.sh --cut -ss 00:01:30 -e 00:03:45
+```
+
+**2. Eliminar secciones** (`--remove`) — Quita las partes indicadas del vídeo:
+```bash
+./midu.sh --cut --remove -clips 00:01:00-00:02:30,00:05:00-00:07:15
+```
+Esto elimina los trozos del 1:00-2:30 y del 5:00-7:15, uniendo el resto.
+
+**3. Extraer clips** (`--extract`) — Saca varios trozos y los une en un solo vídeo:
+```bash
+./midu.sh --cut --extract -clips 00:01:00-00:02:30,00:05:00-00:07:15
+```
+Esto extrae los dos clips y los concatena en un único archivo.
+
+En el menú interactivo, al seleccionar "Cortar vídeo", aparecen las 3 opciones:
+```
+  Tipo de corte
+    1) Cortar un trozo     — Mantener solo ese trozo
+    2) Eliminar secciones  — Quitar partes del vídeo
+    3) Extraer clips       — Sacar varios trozos y unirlos
+```
+
+### Nuevos modos de edición de vídeo
+
+**Estabilizar** — Quitar el temblor de vídeos grabados a mano:
+```bash
+./midu.sh --stabilize              # Estabilización normal (shakiness=5)
+./midu.sh --stabilize 8            # Estabilización fuerte
+```
+
+**Ajustar imagen** — Brillo, contraste, saturación y gamma:
+```bash
+./midu.sh --adjust brightness=0.1 contrast=1.2 saturation=0.8
+./midu.sh --adjust gamma=1.5       # Aclarar vídeo oscuro
+```
+
+**Censurar** — Pixelar regiones del vídeo (caras, matrículas):
+```bash
+./midu.sh --censor 100:50:200:150                    # Una región
+./midu.sh --censor 100:50:200:150 300:100:150:100    # Varias regiones
+```
+
+**Denoise y Sharpen** — Mejorar calidad de vídeos viejos:
+```bash
+./midu.sh --denoise 50    # Reducir ruido (1-100)
+./midu.sh --sharpen 5     # Enfocar (1-10)
+```
+
+**Reverse** — Invertir vídeo (reproducción al revés):
+```bash
+./midu.sh --reverse
+```
+
+**Detectar escenas** — Cortar automáticamente en cambios de escena:
+```bash
+./midu.sh --scenes 0.3    # Umbral de detección (0.0-1.0)
+```
+
+**Extraer keyframes** — Sacar todas las imágenes I-frame:
+```bash
+./midu.sh --keyframes ./mis_keyframes
+```
+
+**Aspect ratio** — Cambiar ratio con letterboxing inteligente:
+```bash
+./midu.sh --aspect 16:9
+./midu.sh --aspect 21:9    # Cine
+./midu.sh --aspect 1:1     # Instagram
+./midu.sh --aspect 9:16    # TikTok/Stories
+```
+
+**Metadata** — Editar información del vídeo:
+```bash
+./midu.sh --metadata title="Mi vídeo" artist="Yo" comment="Tutorial"
+```
+
+### Opciones avanzadas
+
+**Two-pass encoding** — Mejor calidad al comprimir a tamaño fijo:
+```bash
+./midu.sh --convert --two-pass -g 2 -s telegram
+```
+
+**Aceleración por hardware** — Usar GPU para decodificar:
+```bash
+./midu.sh --convert --hw-accel -p web
+```
+
+**Dry-run** — Preview sin ejecutar:
+```bash
+./midu.sh --convert --dry-run -s telegram
+```
+
+**Checkpoint y resume** — Guardar progreso y continuar después:
+```bash
+./midu.sh --convert --checkpoint .progreso    # Guarda progreso
+./midu.sh --convert --resume .progreso        # Continúa desde checkpoint
+```
+
+**Descarga de subtítulos** — Descargar subs automáticamente:
+```bash
+./midu.sh -d "URL" --write-subs --sub-langs "es,en"
+```
+
+**Notificación** — Aviso al terminar lote:
+```bash
+./midu.sh --convert --notify
+```
 
 ## 3. Estructura de carpetas
 
@@ -387,67 +421,41 @@ echo "Completado: $procesados OK, $fallidos fallos de $total archivos."
 test_videos/
 ├── docker-compose.yml
 ├── midu.sh
-├── test/              ← meter aquí los vídeos a convertir
-└── optimizados/       ← se crea automáticamente con los mp4
+├── conf.json           ← se crea automáticamente al guardar config
+├── test/               ← meter aquí los vídeos
+└── optimizados/        ← se crea automáticamente
 ```
 
 ## 4. Pasos para ejecutarlo en WSL
 
-Abre tu terminal de WSL (Ubuntu) y sigue estos pasos:
+1. **Docker Desktop abierto** en Windows. En `Settings -> Resources -> WSL Integration`, activa tu distribución.
 
-1. **Asegurar Docker Desktop:** En Windows. Asegúrate de que Docker Desktop está abierto y que en sus ajustes (`Settings -> Resources -> WSL Integration`) tienes activada la casilla de tu distribución de WSL.
-
-2. **Lanzar el contenedor:** En WSL, ve a la carpeta donde guardaste los archivos y arráncalo en modo interactivo:
+2. **Lanzar el contenedor:**
 
     ```sh
-    docker compose run --rm downloader
+    docker compose run --remove-orphans --rm downloader
     ```
 
-3. **Descargar vídeo:** Dentro de Alpine, una vez veas el prompt `/ #`, pega el comando de descarga. Gracias a ffmpeg, bajará la máxima calidad disponible y unirá el audio y vídeo automáticamente:
+3. **Dentro del contenedor**, el menú interactivo se abre automáticamente. Solo selecciona el modo y sigue los pasos.
+
+4. **Si prefieres CLI directamente:**
 
     ```sh
-    yt-dlp -f "bv+ba/b" --merge-output-format mp4 -P /test_videos/test "AQUÍ_TU_URL"
+    bash midu.sh --convert -s telegram    # Convertir para Telegram
+    bash midu.sh --cut -ss 5 -e 10        # Cortar de 5s a 10s
+    bash midu.sh -d "URL"                  # Descargar vídeo
+    bash midu.sh --info                    # Ver info del vídeo
     ```
 
-Al terminar, el archivo aparecerá en la carpeta `test/`.
-
-**Importante:** El script `midu.sh` se ejecuta automáticamente al iniciar el contenedor. Esto significa que la primera vez no encontrará vídeos para convertir (porque aún no has descargado nada). Después de descargar vídeos con `yt-dlp`, ejecuta la conversión manualmente dentro del contenedor:
-
-```sh
-bash /test_videos/midu.sh
-```
-
-O reinicia el contenedor para que se ejecute de nuevo automáticamente.
-
-Cuando acabes, simplemente escribe `exit` en la terminal del contenedor.
-
-> **Nota:** Si usas una versión antigua de Docker, puede que necesites `docker-compose` (con guion) en vez de `docker compose` (con espacio).
+5. **Al acabar**, escribe `exit` en la terminal del contenedor.
 
 ## 5. Ejecutar directamente en Ubuntu (sin Docker)
 
-Si no quieres Docker, puedes ejecutar el script directamente en Ubuntu. Solo necesitas instalar las dependencias:
+Instala las dependencias:
 
 ```sh
 sudo apt update && sudo apt install ffmpeg
-```
-
-Para instalar yt-dlp:
-
-```sh
 sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp && sudo chmod a+rx /usr/local/bin/yt-dlp
-```
-
-Ajusta las rutas en `midu.sh` para que apunten a carpetas locales en vez de `/test_videos/`:
-
-```bash
-input_dir="$HOME/Videos/test"
-output_dir="$HOME/Videos/optimizados"
-```
-
-Añade el shebang al inicio del script (sin Docker es necesario para ejecución directa):
-
-```bash
-#!/bin/bash
 ```
 
 Hazlo ejecutable y ejecútalo:
@@ -459,151 +467,52 @@ chmod +x midu.sh
 
 ## 6. Ejecutar con Docker en Ubuntu (sin WSL)
 
-Si usas Ubuntu directamente (sin WSL ni Windows), el proceso es similar pero las rutas cambian. Primero instala Docker:
-
-```sh
-sudo apt update && sudo apt install docker.io docker-compose-v2
-sudo usermod -aG docker $USER
-```
-
-Cierra y vuelve a abrir la terminal para que el cambio de grupo surta efecto. Ajusta las rutas en `docker-compose.yml` para que apunten a carpetas de tu home de Linux:
+Ajusta las rutas en `docker-compose.yml`:
 
 ```yaml
-services:
-  downloader:
-    image: alpine:latest
-    container_name: yt_ffmpeg_downloader
-    volumes:
-      - /home/TuUsuario/Videos/test_videos:/test_videos
-    working_dir: /test_videos
-    user: root
-    tty: true          # Equivalente a -t en docker run
-    stdin_open: true   # Equivalente a -i en docker run
-    command: >-
-      sh -c "apk update &&
-      apk add --no-cache ffmpeg python3 curl bash su-exec &&
-      adduser -D -u $(id -u) tu_usuario &&
-      curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp &&
-      chmod a+rx /usr/local/bin/yt-dlp &&
-      su-exec tu_usuario bash /test_videos/midu.sh &&
-      su-exec tu_usuario sh"
+volumes:
+  - /home/TuUsuario/Videos/test_videos:/test_videos
 ```
-
-> **Sobre los permisos:** Igual que en la sección de WSL, usamos `user: root` + `su-exec` para evitar que los archivos se creen como `root`. Cambia `tu_usuario` por el nombre de tu usuario en Linux (`whoami`).
 
 Lanza el contenedor:
 
 ```sh
-docker compose run --rm downloader
+docker compose run --remove-orphans --rm downloader
 ```
 
-> **Nota:** Si `docker compose` no funciona, prueba con `docker-compose` (con guion).
-
-## 7. Desinstalar ffmpeg y yt-dlp locales
-
-Si instalaste ffmpeg y yt-dlp en tu sistema y ahora prefieres usarlos solo desde Docker:
-
-```sh
-sudo apt remove --purge ffmpeg
-sudo rm /usr/local/bin/yt-dlp
-```
-
-Para limpiar las dependencias que ya no se usan:
-
-```sh
-sudo apt autoremove
-```
-
-Esto no afecta al contenedor Docker, ya que Alpine instala sus propias copias de ffmpeg y yt-dlp al arrancar.
-
-## 8. Problemas que encontré y cómo los resolví
+## 7. Problemas que encontré y cómo los resolví
 
 ### Saltos de línea CRLF de Windows
 
-**Errores:**
+**Errores:** `mkdi: command not found`, `syntax error near unexpected token 'do'`
 
-```
-bash: line 7: mkdi: command not found
-bash: line 29: syntax error near unexpected token `do'
-bash: line 29: `fo ext in "${extensiones[@]}"; do'
-```
+**Causa:** El docker-compose.yml tenía saltos de línea Windows (CRLF).
 
-`mkdir` aparecía como `mkdi` y `for` como `fo`.
-
-**Causa:** El `docker-compose.yml` tenía saltos de línea Windows (CRLF = `\r\n`). El `\r` se incluía en el contenido del script que bash recibía, y el carriage return movía el cursor al inicio de la línea, haciendo que bash viera nombres de comando truncados.
-
-**Solución:** Reescribir el docker-compose.yml con saltos de línea LF (Unix). Si usas VS Code, haz clic en "CRLF" en la barra de estado inferior y cambia a "LF".
-
-### Shebang innecesario (solo en Docker)
-
-**Error:** `bash: line 1: #!/bin/bash: No such file or directory`
-
-El script tenía `#!/bin/bash` pero Docker ejecutaba el contenido con `bash -c`. El shebang solo sirve cuando ejecutas el script directamente (`./midu.sh`).
-
-**Solución en Docker:** Eliminar la línea `#!/bin/bash` del script, ya que bash se invoca explícitamente.
-
-**En Ubuntu sin Docker:** El shebang es necesario. Si ejecutas `./midu.sh`, bash necesita saber qué intérprete usar.
-
-### Regex innecesaria con sed
-
-El script original usaba `sed` para quitar la extensión del archivo:
-
-```bash
-local filename=$(basename "$file" | sed 's/\.[^.]*$//')
-```
-
-**Solución:** Reemplazar con parameter expansion de bash, más limpio y sin dependencia de `sed`:
-
-```bash
-local filename=$(basename "$file")
-filename="${filename%.*}"
-```
+**Solución:** Cambiar a LF en VS Code (clic en "CRLF" en la barra de estado).
 
 ### Archivos creados como root en los volúmenes
 
-**Problema:** Al ejecutar el contenedor, los archivos descargados y convertidos quedan como `root:root` en vez de tu usuario normal:
-
-```sh
-$ ls -la /home/tu_usuario/Videos/test_videos/test/
--rw-r--r-- 1 root root 12345678 video.mp4  # ← incorrecto
-```
-
-Esto pasa porque Alpine ejecuta todos los comandos como `root` por defecto.
-
-**Solución:** Usar `su-exec` para ejecutar el script y la shell como tu usuario, manteniendo `user: root` solo para la instalación de paquetes (que necesita permisos de administrador):
+**Solución:** Usar `su-exec` para ejecutar como tu usuario real:
 
 ```yaml
-user: root
-command: >-
-  sh -c "apk update &&
-  apk add --no-cache ffmpeg python3 curl bash su-exec &&
-  adduser -D -u 1000 tu_usuario &&
-  curl -L ... -o /usr/local/bin/yt-dlp &&
-  chmod a+rx /usr/local/bin/yt-dlp &&
-  su-exec tu_usuario bash /test_videos/midu.sh &&
-  su-exec tu_usuario sh"
+adduser -D -u 1000 tu_usuario &&
+su-exec tu_usuario bash midu.sh
 ```
 
-- `adduser -D -u 1000 tu_usuario` — crea el usuario dentro del contenedor con el mismo UID que tu usuario del host. Cambia `tu_usuario` por tu nombre de usuario real (`whoami`).
-- `su-exec tu_usuario bash midu.sh` — ejecuta el script como tu usuario en vez de root.
+### ffmpeg no encontraba subtítulos
 
-Si ya tienes archivos creados como root, corrígelos con:
+**Causa:** El path de los subtítulos tenía caracteres especiales.
+
+**Solución:** Escapar el path correctamente en el filtro de ffmpeg.
+
+### pip mostraba warning de root
+
+**Solución:** Redirigir output de pip:
 
 ```sh
-sudo chown -R tu_usuario:tu_usuario /home/tu_usuario/Videos/test_videos
+pip install --break-system-packages yt-dlp 2>/dev/null; true
 ```
 
+## 8. Guía completa de comandos
 
-## 9. Guía completa de comandos
-
-Para una guía completa de comandos de yt-dlp y ffmpeg, incluyendo:
-
-- Comandos y opciones de yt-dlp
-- Comandos y opciones de ffmpeg
-- Mejores prácticas de encoding (CRF, presets, códecs)
-- Combinados: yt-dlp + ffmpeg
-- Casos de uso específicos (WhatsApp, Telegram, Instagram, TikTok, YouTube)
-- Scripts completos de automatización
-- Solución de problemas
-
-Consulta el post: [Guía de comandos de yt-dlp y ffmpeg](/posts/guia_ffmpeg_y_ÿt_dlp/)
+Para una guía completa de comandos de yt-dlp y ffmpeg, consulta: [Guía de comandos de yt-dlp y ffmpeg](/posts/guia_ffmpeg_y_ÿt_dlp/)

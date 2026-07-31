@@ -10,6 +10,7 @@ const navLinks = [
   { href: "/herramientas/", label: "Herramientas" },
   { href: "/proyectos/", label: "Proyectos" },
   { href: "/weekly/", label: "Weekly" },
+  { href: "https://github.com/jorbencas/blog/issues/new/choose", label: "Bugs", external: true },
 ];
 
 const navLinkClass =
@@ -73,7 +74,11 @@ const navLinkClass =
           {
             navLinks.map((link) => (
               <li>
-                <a href={link.href} class={navLinkClass}>
+                <a
+                  href={link.href}
+                  class={navLinkClass}
+                  {...(link.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                >
                   {link.label}
                 </a>
               </li>

@@ -21,7 +21,7 @@ Se necesitaba un sistema que:
 - Clasificara y deduplicara el contenido en tiempo real
 - Generara resúmenes por noticia y un recap semanal con IA
 - Desplegara un dashboard SSR interactivo con filtros combinables
-- Enviara notificaciones por Telegram cada 30 minutos con audio TTS
+- Enviara notificaciones por Telegram cada 30 minutos con audio TTS a las 21:00 UTC
 - Enviara una newsletter diaria con resúmenes curados y videos
 
 ## 2. La Solución Arquitectónica
@@ -33,21 +33,22 @@ Se necesitaba un sistema que:
 - **Capa de Extracción (Scraping):** Arquitectura de extractores especializados:
   - `YouTubeExtractor` — parsea JSON `ytInitialData` directamente (vídeos, shorts, livestreams)
   - `WebExtractor` — BeautifulSoup con selectores CSS personalizados por fuente + `extraer_rss()` para feeds XML (RSS 2.0 y Atom) + `extraer_herramientas()` para GitHub Topics, Collections, Repos y Product Hunt
-  - `ScraperPro` facade con semáforo de concurrencia (5 peticiones simultáneas)
-  - `AvatarRepository` — caché de avatares de canales YouTube con fallback a UI Avatars
+  - `ScraperPro` facade con semáforo de concurrencia (5 peticiones simultáneas) + soporte para **fuentes duales** (YouTube + web scraping simultáneo)
+  - `AvatarRepository` — caché de avatares de canales YouTube con Google Favicons
 
 - **Capa de Procesamiento IA:** Integración con Gemini API para:
   - Resumen semanal con análisis de tendencias (modelo `gemini-2.5-pro`)
   - Resumen individual por noticia (vía `extraer_texto_articulo()` + `resumir_noticia()`)
-  - Traducción de títulos al español en lote
+  - Traducción de títulos al español en lote (**solo items nuevos** — flag `traducido` persiste en JSON)
   - Generación de imágenes para posts con Imagen
+  - **Resúmenes persistidos** en `noticias_historico.json` para evitar re-procesamiento
 
 - **Capa de Persistencia:** Historial JSON con deduplicación automática por URL normalizada y título similar. Sin límite de entradas. Caché de Telegram con TTL de 7 días.
 
 - **Capa de Distribución:**
   - Dashboard HTML SSR desplegado en Surge.sh (Python genera el HTML completo)
   - Newsletter HTML agrupada por fuente con sección de videos vía Mailgun
-  - Notificaciones Telegram cada 30 min con audio edge-tts (voz española) + caché GitHub Actions
+  - Notificaciones Telegram cada 30 min (**solo noticias, sin vídeos**) + **audio TTS a las 21:00 UTC con TODAS las noticias del día**
   - Posts en markdown para blog Astro vía PR automático
 
 ### Pipeline de Contenido
@@ -57,25 +58,27 @@ Cada script es independiente y orquestable por separado. La estructura se reorga
 ```
 scripts/
 ├── scrapers/           # Scraping de noticias y tools
-│   ├── scraper_base.py       # Extractores compartidos (YouTube, Web, ScraperPro)
+│   ├── scraper_base.py       # Extractores compartidos (YouTube, Web, ScraperPro + fuentes duales)
 │   ├── scrape_news.py        # Noticias (RSS + web + YouTube)
 │   └── scrape_tools.py       # GitHub Trending + Product Hunt + 52 GitHub Topics
 ├── publishers/         # Generación y distribución de contenido
 │   ├── generate_weekly.py    # Recap semanal + dashboard HTML (SSR)
 │   ├── manage_resources.py   # Paginación, limpieza, dedup cross-file, fix de cards
 │   ├── merge_freefordev.py   # Merge de free-for-dev resources
-│   ├── send_email.py         # Newsletter Mailgun (agrupada por fuente + videos)
-│   └── send_telegram.py      # Notificaciones Telegram con TTS + caché
+│   ├── send_email.py         # Newsletter Mailgun (agrupada por fuente + videos, smart translation)
+│   └── send_telegram.py      # Notificaciones Telegram (solo noticias + audio 21:00 UTC)
 ├── tools/              # Utilidades de mantenimiento
 │   ├── fix_images.py         # Pipeline de imágenes (Unsplash + Gemini + WebP/AVIF)
 │   ├── hunt_challenges.py    # Generación IA de retos de programación
 │   ├── make_cover_collage.py # Collages de portada
 │   ├── optimize.py           # Optimización de imágenes (dashboard)
+│   ├── update_resource_format.py  # Batch update ResourceCard al nuevo formato
 │   └── clean_news.py         # Verificación de enlaces
 ├── utils/              # Módulos compartidos
-│   ├── common.py             # Utilidades (JSON, URLs, dedup, IA)
+│   ├── common.py             # Utilidades (JSON, URLs, dedup, IA — soporte traducido flag)
 │   ├── constants_downloadfile.py  # 350+ fuentes, templates, configuración
 │   └── cache.py              # Caché pluggable (FileCache + CacheManager)
+├── backfill_traducido.py    # Migración: marca items existentes como traducidos
 └── solutions/          # Base de datos de soluciones de retos
     ├── solutions_db.py       # Lookup + generación de soluciones
     └── solutions_data.py     # 105+ soluciones curadas en 12 lenguajes
@@ -87,13 +90,39 @@ Todos los scripts se ejecutan con `python -m` desde la raíz del proyecto:
 2. `python -m scripts.scrapers.scrape_tools` → `files/herramientas.json` (GitHub Trending + Product Hunt + 52 Topics)
 3. `python -m scripts.publishers.generate_weekly --blog-path blog` → `auto-news/` (recap MD) + `public/` (dashboard HTML)
 4. `python -m scripts.publishers.send_email` → Mailgun (diario 09:00 UTC)
-5. `python -m scripts.publishers.send_telegram` → Telegram con TTS (cada 30 min)
+5. `python -m scripts.publishers.send_telegram` → Telegram solo noticias + audio TTS (cada 30 min, audio 21:00 UTC)
+6. `python scripts/backfill_traducido.py` → Marca items existentes como traducidos (una vez)
 
 ## 3. Retos Técnicos y Decisiones de Diseño
 
 ### Arquitectura Modular vs Monolito
 
 Originalmente todo el scraping vivía en un único `downloadFile.py`. Se refactorizó a scripts independientes agrupados en subdirectorios (`scrapers/`, `publishers/`, `tools/`, `utils/`) para permitir ejecución selectiva por workflow y facilitar el mantenimiento. Cada script tiene sus propias dependencias y puede ejecutarse en solitario con `python -m scripts.subdir.script`.
+
+### Fuentes Duales: YouTube + Web Scraping
+
+Cuando una fuente tiene tanto `url` como `yt` (como MoureDev, Midudev, Carlos Azaustre, Xataka), `ScraperPro.extraer()` ahora extrae de **ambas fuentes simultáneamente** usando `asyncio.gather()`. Los items de YouTube van a la sección Multimedia, los de web scraping a Noticias, y ambos muestran chips de filtro en ambas secciones.
+
+```python
+elif YT_KEY in info and URL_KEY in info:
+    yt_url = info[YT_KEY]
+    web_url = info[URL_KEY]
+    yt_results, web_results = await asyncio.gather(
+        self._extraer_yt(session, nombre, yt_url),
+        self._extraer_web(session, nombre, web_url, info),
+    )
+    results = yt_results + web_results
+```
+
+### Traducción Inteligente — Solo Items Nuevos
+
+Se eliminó la re-traducción masiva. Ahora cada item tiene un flag `traducido=True` que persiste en `noticias_historico.json`. Solo se traducen items nuevos:
+
+- `traducir_titulos_ia()` en `common.py` — salta items con `traducido=True`
+- `send_telegram.py` — usa título ya traducido si existe
+- `send_email.py` — salta traducción si ya está traducido
+- Resúmenes se persisten en `n['resumen']` para evitar re-summarización
+- `backfill_traducido.py` — migración una vez para marcar 6,612 items existentes
 
 ### Deduplicación Inteligente
 
@@ -110,17 +139,6 @@ def normalizar_url(url: str) -> str:
 ### Deduplicación Cross-File en Resources
 
 `manage_resources.py` implementa `deduplicate_all_files()` con un `global_seen_urls` que deduplica no solo dentro de cada archivo, sino **entre todos los archivos** del blog. Si una URL aparece en `resources.mdx` y también en `resources3.mdx`, se elimina la duplicada manteniendo la primera aparición.
-
-```python
-global_seen_urls: set = set()
-for archivo in archivos:
-    urls_archivo = set()
-    for line in lines:
-        url = _extraer_url_card(line)
-        if url in global_seen_urls:
-            continue  # duplicado cross-file → eliminar
-        global_seen_urls.add(url)
-```
 
 ### Fix de Cards Malformados
 
@@ -159,6 +177,7 @@ Todo el JSON embebido, prompts de IA, plantillas HTML y valores por defecto se m
 | RSS XML (quick) | 55 feeds | TechCrunch, The Verge, Wired, Google Blog, Vercel, Docker, Krebs |
 | Web scraping (quick) | 11 sitios | Anthropic, Ollama, Mistral, LangChain, HuggingFace Papers, Mozilla Hacks |
 | HTML scraping | 82 sitios | Xataka, Genbeta, Slashdot, Applesfera, El País Tecnología |
+| **Fuentes duales (YT + Web)** | **4 fuentes** | **MoureDev, Midudev, Carlos Azaustre, Xataka** |
 | GitHub Topics | 52 topics | AI, LLM, Docker, Kubernetes, CSS, HTML, algorithms |
 | GitHub Collections | 1 | AI Tools |
 | GitHub Repos | 5 | OpenWiki, Meetily, AutoPR, PR-Agent, Code-to-Docs |
@@ -166,39 +185,24 @@ Todo el JSON embebido, prompts de IA, plantillas HTML y valores por defecto se m
 
 Los feeds RSS y web scraping con `quick: True` se scrapearon cada hora con `scrape_hourly_workflow.yml`. Los GitHub Topics se scrapearon diariamente con `daily_resources.yml`.
 
-### Fuentes de IA China (Julio 2026)
-
-Se añadieron fuentes de empresas chinas de IA que no tenían RSS:
-
-| Fuente | Tipo | Selector |
-|--------|------|----------|
-| QbitAI (量子位) | RSS | Feed XML directo |
-| 36氪 AI | RSS | Feed XML directo |
-| Qwen Blog | Web scraping | `article h2, .post h2` |
-| DeepSeek Blog | Web scraping | `a[href*='Change Log']` |
-| 01.AI News | Web scraping | `.news-item a` |
-| THUDM ChatGLM | RSS (GitHub) | Atom releases |
-
 ### Newsletter Agrupada por Fuente (Julio 2026)
 
 El email se reestructuró completamente:
 
 - **Agrupación por fuente:** noticias organizadas por sitio web (TechCrunch, The Verge, Xataka, etc.)
-- **Títulos traducidos:** Gemini traduce títulos al español automáticamente
-- **Resúmenes por noticia:** cada noticia lleva un resumen de 3-4 líneas en español
+- **Smart translation:** solo traduce items nuevos (`traducido` flag), salta los ya traducidos
+- **Resúmenes persistidos:** se guardan en `noticias_historico.json` para evitar re-summarización
 - **Sección de videos:** YouTube videos con thumbnail, canal y duración
 - **Botón "Leer noticia":** enlace atractivo en lugar de URL cruda
-- **Iconos SVG reales:** GitHub, X/Twitter, GitLab, Email (no texto plano)
 - **Estilos por fuente:** cada sitio tiene color e icono personalizado
 
-### Telegram con Caché GitHub Actions (Julio 2026)
+### Telegram: Solo Noticias + Audio a las 21:00 UTC
 
-Se eliminó la persistencia vía git commit/push y se migró a GitHub Actions Cache:
-
-- **`actions/cache@v4`** restaura `telegram_sent.json` entre runs
-- **TTL de 7 días** para noticias, 24 horas para audio de voz
-- **Filtro temporal** solo envía noticias de las últimas 24 horas
-- **Limpieza automática** `flush()` elimina entradas expiradas
+- **Solo noticias:** se filtraron los vídeos del envío (flag `id_video`)
+- **Audio a las 21:00 UTC:** resumen de voz con TODAS las noticias del día (no solo las 5 del run actual)
+- **Caché GitHub Actions:** `actions/cache@v4` con TTL 7 días (noticias) / 24h (audio)
+- **Traducción inteligente:** usa título ya traducido si existe, solo traduce nuevos
+- **Resúmenes persistidos:** `n['resumen']` se guarda para no re-summarizar
 
 ### Weekly Recap Agrupado por Fuente (Julio 2026)
 
@@ -208,19 +212,6 @@ El blog post semanal se mejoró:
 - **Agrupación por fuente** con `OrderedDict` (mantiene orden)
 - **Sección de videos** con canal y enlace
 - **Sin tabla de estadísticas** — eliminada la sección "El panel en datos"
-
-### 350 Fuentes de Contenido
-
-| Tipo | Cantidad | Ejemplos |
-|------|----------|----------|
-| YouTube | 158 canales | MoureDev, Midudev, Pelado Nerd, Ringa Tech, Nethermind |
-| RSS XML | 55 feeds | web.dev, MDN, CSS-Tricks, Smashing Magazine, HN, Lobsters, W3C Blog |
-| Web scraping | 11 sitios | Anthropic, Ollama, Mistral, LangChain, HuggingFace Papers |
-| HTML scraping | 82 sitios | Xataka, TechCrunch, The Verge, Wired, GitHub Blog, Slashdot |
-| GitHub Topics | 52 topics | AI, LLM, Docker, Kubernetes, CSS, HTML, algorithms |
-| GitHub Collections | 1 | AI Tools |
-| GitHub Repos | 5 | OpenWiki, Meetily, AutoPR, PR-Agent, Code-to-Docs |
-| Product Hunt | 1 | Top products daily |
 
 ### Reorganización de Scripts (Julio 2026)
 
@@ -234,53 +225,33 @@ Los scripts se reorganizaron de la raíz del proyecto a subdirectorios modulares
 - **Eliminados `scrape_social.py` y `scrape_trends.py`**: Redes sociales (Instagram, X/Twitter, Threads, TikTok) y Google Trends removidos del ecosistema
 - **Dashboard migrado a SSR**: Python genera `index.html` completo, JavaScript solo maneja interactividad (~135 líneas)
 
-### Fix de Pipeline de Imágenes (Julio 2026)
-
-Se corrigió un bug en `fix_images.py` que eliminaba el `import ResponsiveImage` de posts del blog:
-
-- **Causa**: el script borraba el import siempre y solo lo re-agregaba si encontraba `<ResponsiveImage` en el contenido
-- **Solución**: nueva lógica condicional que preserva el import cuando el componente se usa:
-  - Si componente existe + import falta → agregar import después del frontmatter
-  - Si componente NO existe + import existe → eliminar import
-  - Si ambos existen → no hacer nada (mantener)
-
-### Node.js 22 Upgrade (Julio 2026)
-
-El workflow `test.yml` se actualizó de Node.js 20 a 22, requerido por Astro 6.4 que soporta `>=22.12.0`.
-
 ### Renderizado SSR del Dashboard
 
 Python genera un `index.html` completo con todo el contenido pre-renderizado (noticias, vídeos YouTube, ranking GitHub). JavaScript (`script.js`) es mínimo (~135 líneas) y solo maneja:
 
 - **Filtros combinables:** categoría (IA, Programación, DevOps, etc.), tipo (Tech/RSS), fuente RSS específica, canal, semana
-- **Chips con favicon:** cada chip de canal/fuente muestra avatar o favicon via Google S2 (`//www.google.com/s2/favicons?domain=...`)
+- **Chips con favicon:** cada chip de canal/fuente muestra avatar o favicon via Google S2
+- **Chips duales:** fuentes con YouTube + web (MoureDev, Midudev, Carlos Azaustre, Xataka) muestran chips en ambas secciones
 - **Ranking GitHub Stars:** top 20 repos ordenados por estrellas extraídos de GitHub Topics/Collections, con filtro por nombre/lenguaje
 - **Sección de Referencia Tech:** panel colapsable con Skills, LLMs, Lenguajes, Frameworks y Librerías ordenados por categoría — datos inyectados desde Python, sin hardcode en JS
 - **Badges con clases CSS unificadas:** `.badge-tech`, `.badge-rss`, `.badge-cat`
 - **Config externalizada:** canales, tabs, opciones de filtro se inyectan directamente en el HTML desde Python
 
-### Telegram con Audio por Noticia
-
-`send_telegram.py` envía cada noticia nueva como mensaje separado con:
-- Resumen IA de 3-4 líneas generado por Gemini en español
-- Títulos traducidos automáticamente al español vía `traducir_titulo()` con Gemini
-- Audio TTS con edge-tts (voz `es-ES-AlvaroNeural`) — resumen de todos los titulares una vez al día
-- Control de duplicados vía GitHub Actions Cache (7 días TTL)
-- Filtro temporal: solo noticias de las últimas 24 horas
-- Texto del audio limpio de emojis para mayor claridad
-
-> **Actualizado julio 2026:** 350+ fuentes (55 RSS + 11 web scraping + 82 HTML + 158 YouTube + 52 GitHub Topics). Eliminadas redes sociales. Email agrupado por fuente con videos. Telegram con GitHub Actions Cache. Weekly recap deduplicado y agrupado.
+> **Actualizado julio 2026:** 350+ fuentes con 4 fuentes duales (YouTube + Web). Solo noticias en Telegram. Audio TTS a las 21:00 UTC con todas las noticias del día. Smart translation con flag `traducido`. Resúmenes persistidos en JSON. ResourceCard con headline, features y platform.
 
 ## 4. Desglose del Feature Set
 
-- **350+ fuentes monitorizadas:** 158 YouTube, 55 RSS, 11 web scraping, 82 HTML, 52 GitHub Topics, 5 repos, 1 Product Hunt
+- **350+ fuentes monitorizadas:** 158 YouTube, 55 RSS, 11 web scraping, 82 HTML, 4 fuentes duales, 52 GitHub Topics, 5 repos, 1 Product Hunt
 - **Clasificación inteligente:** 6 categorías (IA, Programación, DevOps, Ciberseguridad, Hardware, Negocios) + badges Tech/RSS
 - **Dashboard SSR:** Python genera HTML completo, JS solo interactividad (~135 líneas)
 - **Config externalizada:** prompts IA, plantillas Telegram/email, canales YouTube, opciones de filtro — todo en `constants_downloadfile.py`
 - **Constantes con nombre:** todos los dict keys del schema son constantes (cambio en un solo sitio)
 - **Sección de Referencia Tech:** panel colapsable con Skills, LLMs, Lenguajes, Frameworks y Librerías
-- **Newsletter diaria:** agrupada por fuente, resúmenes individuales por noticia con Gemini, sección de videos, iconos SVG
-- **Telegram con IA:** traducción automática, resumen en español, audio TTS, caché GitHub Actions con TTL
+- **Newsletter diaria:** agrupada por fuente, resúmenes individuales por noticia con Gemini, sección de videos
+- **Telegram solo noticias:** sin vídeos, audio TTS a las 21:00 UTC con todas las noticias del día
+- **Smart translation:** flag `traducido` persiste, solo traduce items nuevos
+- **Resúmenes persistidos:** `n['resumen']` se guarda en JSON para evitar re-summarización
+- **Fuentes duales:** YouTube + web scraping simultáneo (MoureDev, Midudev, Carlos Azaustre, Xataka)
 - **Ranking GitHub Stars:** top 20 repos ordenados por estrellas desde 52 GitHub Topics + Collections
 - **Deduplicación:** por URL normalizada y título similar en scrape, generación de dashboard, y **cross-file en resources**
 - **Fix de cards malformados:** `fix_malformed_cards()` repara ResourceCard tags con `/` en lugar de `/>`
@@ -316,6 +287,9 @@ python -m scripts.publishers.send_telegram --dry-run --max-items 3
 
 # Enviar email (dry-run)
 python -m scripts.publishers.send_email --dry-run --max-items 5
+
+# Marcar items existentes como traducidos (una vez)
+python scripts/backfill_traducido.py
 
 # Ejecutar tests
 python -m pytest tests/ -v
