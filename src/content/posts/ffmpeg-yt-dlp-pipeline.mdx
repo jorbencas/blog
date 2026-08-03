@@ -1,0 +1,190 @@
+---
+draft: false
+title: "FFmpeg + yt-dlp Pipeline: Conversor, Descargador y Editor de Vídeo con 27 Modos"
+description: "Script de 4797 líneas con 27 modos de operación: descarga de YouTube, conversión para redes sociales, corte lossless, efectos de imagen, subtítulos y más. Docker + preview watcher en VLC."
+pubDate: "2026-08-03"
+tags: ["ffmpeg", "yt-dlp", "docker", "bash", "vídeo", "automatización", "linux"]
+author: "Jorge Beneyto Castelló"
+---
+
+Tienes vídeos en diferentes formatos (AVI, MKV, WebM, FLV) que necesitas convertir, cortar, comprimir, o editar. Necesitas una herramienta que haga todo desde la línea de comandos, con soporte para red social, aceleración por hardware y modo interactivo.
+
+---
+
+## El problema
+
+Necesitas una única herramienta que descargue vídeos de cualquier sitio, los convierta para distintas redes sociales, los corte, les aplique efectos y maneje subtítulos. Todo desde la terminal, sin depender de interfaces gráficas.
+
+## La solución
+
+`midu.sh`: un script de **4797 líneas** con **27 modos de operación**, que corre en Docker (Alpine + ffmpeg + yt-dlp) y se integra con un **preview watcher** para abrir vídeos en VLC desde WSL.
+
+## Los 27 modos
+
+### Descarga y extracción
+| Modo | Descripción | Ejemplo |
+|------|-------------|---------|
+| `download` | Descargar de YouTube, Twitch, Kick, TikTok, +1000 sitios | `-d "URL"` |
+| `audio-only` | Extraer solo audio (mp3, m4a, flac, wav, opus) | `-ao "URL"` |
+
+### Corte y edición
+| Modo | Descripción | Ejemplo |
+|------|-------------|---------|
+| `cut` | Cortar lossless (sin re-encoding) | `--cut -ss 00:01:30 -e 00:03:45` |
+| `cut --remove` | Eliminar secciones del vídeo | `--cut --remove --clips 00:01:00-00:02:30` |
+| `cut --extract` | Extraer clips y unirlos | `--cut --extract --clips 00:01:00-00:02:30` |
+| `concat` | Unir varios vídeos | `--concat v1.mkv v2.mkv v3.mkv` |
+
+### Conversión y compresión
+| Modo | Descripción | Ejemplo |
+|------|-------------|---------|
+| `convert` | Convertir/comprimir con presets | `--convert -s telegram` |
+| `fps` | Cambiar frames por segundo | `--fps 60` |
+| `speed` | Acelerar o ralentizar | `--speed 2.0` |
+
+### Efectos de imagen
+| Modo | Descripción | Ejemplo |
+|------|-------------|---------|
+| `rotate` | Girar 90°, 180° o 270° | `--rotate 90` |
+| `crop` | Recortar a tamaño específico | `--crop 640:480` |
+| `fade` | Fade in/out automático | `--fade 2` |
+| `stabilize` | Quitar temblor (vidstab) | `--stabilize 5` |
+| `adjust` | Brillo, contraste, saturación, gamma | `--adjust brightness=0.5` |
+| `denoise` | Reducir ruido | `--denoise 50` |
+| `sharpen` | Enfocar vídeo borroso | `--sharpen 5` |
+| `reverse` | Invertir vídeo (al revés) | `--reverse` |
+| `deinterlace` | Quitar rayas de TV vieja | `--deinterlace` |
+
+### Multimedia
+| Modo | Descripción | Ejemplo |
+|------|-------------|---------|
+| `gif` | Crear GIF animado | `--gif --gif-fps 15 --gif-scale 320:-1` |
+| `thumbnail` | Extraer frame como PNG | `--thumbnail --thumbnail-time 00:01:30` |
+| `watermark` | Poner imagen encima | `--watermark logo.png` |
+
+### Análisis y metadatos
+| Modo | Descripción | Ejemplo |
+|------|-------------|---------|
+| `info` | Mostrar duración, codecs, resolución | `--info` |
+| `scenes` | Detectar escenas y cortar auto | `--scenes 0.3` |
+| `keyframes` | Extraer imágenes I-frame | `--keyframes` |
+| `aspect` | Cambiar ratio de aspecto | `--aspect 16:9` |
+| `metadata` | Editar título, autor, comentario | `--metadata title="Mi vídeo"` |
+
+### Avanzados
+| Modo | Descripción | Ejemplo |
+|------|-------------|---------|
+| `subtitles` | Embeber (soft) o quemar (hard) subtítulos | `-sh subs.srt` |
+| `censor` | Pixelar regiones (caras, matrículas) | `--censor 100:50:200:150` |
+
+## Presets de red social
+
+```bash
+./midu.sh --convert -s whatsapp    # 720p, 1GB, h264, preset web
+./midu.sh --convert -s telegram    # 1080p, 2GB, hevc, preset default
+./midu.sh --convert -s instagram   # 1080p, 0.5GB, h264
+./midu.sh --convert -s tiktok      # 1080p, 0.5GB, h264
+./midu.sh --convert -s youtube     # original, sin límite, h264, archive
+./midu.sh --convert -s twitter     # 720p, 0.5GB, h264, web
+./midu.sh --convert -s facebook    # 1080p, 1GB, h264
+```
+
+## Presets de calidad
+
+| Preset | CRF | Velocidad | Uso |
+|--------|-----|-----------|-----|
+| `ultrafast` | 28 | ultrafast | Muy rápido, poco peso |
+| `web` | 28 | fast | Rápido, buen balance |
+| `default` | 23 | medium | Equilibrado |
+| `archive` | 18 | slow | Alta calidad |
+| `quality` | 15 | veryslow | Máxima calidad |
+
+## Códecs soportados
+
+| Códec | Encoder | Notas |
+|-------|---------|-------|
+| `h264` | libx264 | Máxima compatibilidad |
+| `hevc` | libx265 | Mejor calidad/menor tamaño |
+| `av1` | libsvtav1 | Máxima eficiencia (muy lento) |
+| `vp9` | libvpx-vp9 | Buen equilibrio para web |
+
+## Aceleración por hardware
+
+- **NVENC** (NVIDIA): auto-detecta `nvidia-smi`
+- **VAAPI** (Intel/AMD): auto-detecta `vainfo`
+- **CPU**: fallback con libx264/libx265
+
+## Flags generales
+
+| Flag | Descripción |
+|------|-------------|
+| `-n, --non-interactive` | Sin prompts |
+| `-c, --save-config` | Guardar config en conf.json |
+| `-v, --verbose` | Progreso detallado |
+| `--two-pass` | Two-pass encoding |
+| `--hw-accel` | Aceleración por hardware |
+| `--dry-run` | Preview sin ejecutar |
+| `--collision skip\|rename\|overwrite` | Colisión de archivos |
+| `--notify` | Notificación al terminar |
+| `--write-subs` | Descargar subtítulos |
+| `--checkpoint FILE` | Guardar progreso |
+| `--resume [FILE]` | Reanudar desde checkpoint |
+| `--retry` | Reintentar fallidos |
+
+## Preview Watcher (WSL)
+
+Script que se ejecuta en el host (WSL) y abre automáticamente los vídeos en VLC cuando `midu.sh` los solicita desde el contenedor Docker.
+
+```bash
+bash preview_watcher.sh --daemon   # segundo plano
+bash preview_watcher.sh --stop     # detener
+bash preview_watcher.sh --status   # verificar
+bash preview_watcher.sh --once     # procesar una petición
+bash preview_watcher.sh            # debug en primer plano
+```
+
+### Cómo funciona el watcher
+
+1. `midu.sh` escribe la ruta del vídeo en `test_video/.midu_preview_req`
+2. El watcher detecta el archivo y convierte la ruta Linux a Windows
+3. Abre el vídeo en VLC (o reproductor por defecto)
+4. Elimina el archivo de petición
+
+## Configuración persistente
+
+```bash
+# Guardar config actual
+./midu.sh -c --convert -s telegram
+
+# Al ejecutar de nuevo, carga automáticamente
+./midu.sh
+# → "Configuración guardada encontrada. ¿Usarla? [S/n]"
+```
+
+## Uso típico
+
+```bash
+# 1. Construir la imagen
+docker compose build
+
+# 2. Ejecutar (interactivo o CLI)
+docker compose up
+
+# 3. En WSL, arrancar el watcher (opcional)
+bash preview_watcher.sh --daemon
+
+# 4. Usar midu.sh dentro del contenedor
+# Los vídeos se abren automáticamente en VLC en Windows
+```
+
+## Peculiaridades
+
+- **Remux automático**: Si el vídeo ya es h264+aac sin corte, se remuxa sin re-encoding
+- **Reintentos de tamaño**: Si supera el límite, re-codifica con menor bitrate (hasta 2 intentos)
+- **Panel de progreso**: Muestra progreso por archivo con hilos paralelos (max 4)
+- **Checkpoint/resume**: Guarda estado para reanudar si se interrumpe
+- **Colisión**: Opciones skip/rename/overwrite
+- **Notificaciones**: notify-send (Linux) y ntfy.sh (push)
+- **Detección de GPU**: Auto-detecta NVENC/VAAPI
+- **Filtros combinados**: Resolución + velocidad + subtítulos en una sola cadena `-vf`
+- **atempo encadenado**: Para velocidades extremas (0.25x, 4x) usa múltiples filtros atempo

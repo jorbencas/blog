@@ -1,9 +1,9 @@
 ---
 draft: false
 title: "Docker: ffmpeg y yt-dlp en Windows (WSL) y Ubuntu"
-description: "Guía práctica para usar ffmpeg y yt-dlp con Docker en WSL y Ubuntu. Conversor, descargador y editor de vídeo con 20 modos CLI."
+description: "Guía práctica para usar ffmpeg y yt-dlp con Docker en WSL y Ubuntu. Instalación, configuración y resolución de problemas comunes."
 pubDate: "2026-07-11"
-updatedDate: "2026-07-31"
+updatedDate: "2026-08-03"
 tags: ["docker", "devops", "linux", "windows", "ffmpeg", "yt-dlp"]
 image: "img/docker_to_yt_ffmpeg_in_wls/docker_to_yt_ffmpeg_in_wls_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
@@ -39,383 +39,7 @@ services:
 
 > **Ojo:** Cambia `TuUsuario` por el nombre real de tu usuario en Windows (`ls /mnt/c/Users/`).
 
-## 2. midu.sh v5.0.0 — Conversor, descargador y editor de vídeo
-
-Script CLI con **20 modos** independientes, menú interactivo, presets de calidad, detección de GPU, progreso en tiempo real y **configuración guardada por modo** en <code>conf.json</code>.
-
-### Qué hace cada modo
-
-| Flag | Modo | Descripción |
-|------|------|-------------|
-| `-d URL` | Descargar | YouTube, Twitch, Kick, TikTok, Instagram, +1000 sitios |
-| `--cut` | Cortar | Lossless, sin perder calidad |
-| `--cut --remove` | Eliminar secciones | Quitar partes del vídeo |
-| `--cut --extract` | Extraer clips | Sacar varios trozos y unirlos |
-| `--convert` | Convertir | Comprimir, ajustar tamaño y calidad |
-| `--gif` | GIF | Animación a partir del vídeo |
-| `--thumbnail` | Thumbnail | Captura de pantalla (PNG) |
-| `--info` | Info | Duración, codecs, resolución |
-| `--rotate` | Rotar | 90°, 180° o 270° |
-| `--crop` | Crop | Recortar a tamaño específico |
-| `--fade` | Fade | Fade in/out automático |
-| `--normalize` | Normalizar | Volumen de audio parejo |
-| `--watermark` | Marca de agua | Poner imagen encima |
-| `--deinterlace` | Desentrelazar | Quitar rayas de TV vieja |
-| `--fps` | FPS | Cambiar frames por segundo |
-| `--speed` | Velocidad | Más rápido o lento |
-| `-sl` / `-sh` | Subtítulos | Embeber o quemar |
-| `--concat` | Concatenar | Unir varios vídeos |
-| `-ao` | Extraer audio | Solo audio del vídeo |
-| `-ma` | Mezclar audio | Audio + vídeo |
-| `--watch` | Watch | Auto-convertir carpeta |
-| `--stabilize` | Estabilizar | Quitar temblor (vidstab) |
-| `--adjust` | Ajustar imagen | Brillo, contraste, saturación, gamma |
-| `--censor` | Censurar | Pixelar caras, matrículas, etc. |
-| `--denoise` | Denoise | Reducir ruido de vídeos viejos |
-| `--sharpen` | Sharpen | Enfocar vídeos borrosos |
-| `--reverse` | Reverse | Invertir vídeo (al revés) |
-| `--scenes` | Escenas | Detectar y cortar por escenas |
-| `--keyframes` | Keyframes | Extraer imágenes I-frame |
-| `--aspect` | Aspect Ratio | Cambiar ratio (16:9, 4:3, 21:9) |
-| `--metadata` | Metadata | Editar título, autor, etc. |
-
-### Menú interactivo
-
-Al ejecutar <code>./midu.sh</code> sin argumentos, se abre un menú con 6 pasos:
-
-```
-═══════════════════════════════════════
- midu.sh v5.0.0
-═══════════════════════════════════════
-
-  ¿Qué quieres hacer?
-
-     1) Descargar vídeo       — YouTube, Twitch, Kick, TikTok, +1000
-     2) Cortar vídeo          — Sin perder calidad
-     3) Convertir/comprimir   — Ajustar tamaño y calidad
-     4) Crear GIF             — Animación a partir del vídeo
-     5) Captura (thumbnail)   — Screenshot del vídeo
-     6) Info del vídeo        — Duración, codecs, resolución
-     7) Rotar vídeo           — 90°, 180° o 270°
-     8) Recortar (crop)       — Cortar a tamaño específico
-     9) Fade in/out           — Aparecer/desaparecer
-    10) Normalizar audio      — Volumen parejo
-    11) Marca de agua         — Poner imagen encima
-    12) Desentrelazar         — Quitar rayas de TV vieja
-    13) Cambiar FPS           — Frames por segundo
-    14) Cambiar velocidad     — Más rápido o lento
-    15) Subtítulos            — Embeber o quemar
-    16) Unir vídeos           — Concatenar varios archivos
-    17) Extraer audio         — Solo audio del vídeo
-    18) Estabilizar           — Quitar temblor (vidstab)
-    19) Ajustar imagen        — Brillo, contraste, saturación
-    20) Censurar              — Pixelar caras, matrículas
-    21) Reducir ruido         — Denoise para vídeo viejo
-    22) Enfocar               — Sharpen para vídeo borroso
-    23) Invertir              — Reproducir al revés
-    24) Cortar por escenas    — Auto-detectar cambios
-    25) Extraer keyframes     — Sacar imágenes I-frame
-    26) Cambiar aspect ratio  — 16:9, 4:3, 21:9
-    27) Editar metadata       — Título, autor, etc.
-
-  → Selecciona [1-27]:
-```
-
-Después de seleccionar el modo, el script:
-
-1. **Selecciona el(los) vídeo(s)** — Lista los archivos disponibles. Si solo hay 1, se selecciona automáticamente. Si hay varios, puedes elegir: `1,3,5` (lista), `1-5` (rango) o `all` (todos)
-2. **Elige directorio de salida** — O crea uno nuevo
-3. **Pide nombre de salida** — Si seleccionaste 1 archivo. Si son varios, cada uno mantiene su nombre
-4. **Configura parámetros** — Opciones específicas de cada modo
-5. **Procesa en paralelo** — Usa los threads configurados para procesar varios archivos a la vez
-6. **Guarda la config** — Para la próxima vez carga automáticamente
-
-### Selección múltiple de archivos
-
-En modos como convertir, GIF, rotar, etc., puedes seleccionar varios archivos a la vez:
-
-```
-  Vídeos disponibles:
-
-     1) video1.mkv (150MB)
-     2) video2.mkv (230MB)
-     3) video3.mkv (180MB)
-     4) video4.mkv (95MB)
-
-  Ejemplo: 1,3,5 o 1-5 o 'all' para todos
-  → Selecciona: 1,3
-  → Seleccionados: 2 archivo(s)
-    → video1.mkv
-    → video3.mkv
-```
-
-**Formatos de selección:**
-- `1,3,5` — Lista de archivos específicos
-- `1-4` — Rango del 1 al 4
-- `all` o `a` — Todos los archivos
-- `3` — Solo un archivo (si solo hay 1, se selecciona automáticamente)
-
-Los archivos se procesan en paralelo usando los threads configurados.
-
-### Presets de redes sociales
-
-| Red social | Resolución | Tamaño máx | Audio | Calidad |
-|------------|------------|------------|-------|---------|
-| WhatsApp | 720p | 1GB | aac 128k | web (CRF 28) |
-| Telegram | 1080p | 2GB | aac 128k | default (CRF 23) |
-| Instagram | 1080p | 500MB | aac 128k | default (CRF 23) |
-| TikTok | 1080p | 500MB | aac 128k | default (CRF 23) |
-| YouTube | Original | Sin límite | aac 192k | archive (CRF 18) |
-| Twitter/X | 720p | 500MB | aac 128k | web (CRF 28) |
-| Facebook | 1080p | 1GB | aac 128k | default (CRF 23) |
-
-### Códecs de audio soportados
-
-| Códec | Uso | Bitrate típico |
-|-------|-----|----------------|
-| `aac` | Estándar, compatible con todo (default) | 128k-256k |
-| `copy` | Sin re-codificar, rápido | — |
-| `opus` | Mejor calidad/bitrate, moderno | 96k-192k |
-| `mp3` | Máxima compatibilidad | 128k-320k |
-| `flac` | Lossless, sin pérdida | — |
-| `ac3` | Dolby Digital, compatible TV | 192k-640k |
-| `eac3` | Dolby Digital Plus | 256k-1024k |
-
-### Configuración guardada por modo
-
-El archivo <code>conf.json</code> guarda la configuración de cada modo por separado:
-
-```json
-{
-  "inputDir": "/test_videos/test",
-  "outputDir": "/test_videos/optimizados",
-  "maxThreads": "8",
-  "extensions": "avi,webm,mkv,mp4,flv",
-  "verbose": false,
-  "modes": {
-    "convert": {
-      "social": "telegram",
-      "preset": "web",
-      "audioCodec": "aac",
-      "resolution": "1080",
-      "maxSize": "2"
-    },
-    "cut": {
-      "startTime": "00:05:00",
-      "endTime": "00:10:00"
-    },
-    "gif": {
-      "gifFps": "15",
-      "gifScale": "480:-1"
-    }
-  }
-}
-```
-
-### Flags CLI
-
-```bash
-# Descargar
-./midu.sh -d "https://kick.com/..."
-./midu.sh -d "URL" -ds 00:05:00 -de 00:10:00
-
-# Cortar un trozo
-./midu.sh --cut -ss 00:01:30 -e 00:03:45 -i /videos -o /cortes
-
-# Eliminar secciones (quitar partes del vídeo)
-./midu.sh --cut --remove -clips 00:01:00-00:02:30,00:05:00-00:07:15
-
-# Extraer clips y unirlos en un solo vídeo
-./midu.sh --cut --extract -clips 00:01:00-00:02:30,00:05:00-00:07:15
-
-# Convertir
-./midu.sh --convert -s telegram
-./midu.sh --convert -p web -s 1080 -g 2
-
-# GIF
-./midu.sh --gif --gif-fps 15 --gif-scale 480:-1
-
-# Thumbnail
-./midu.sh --thumbnail --thumbnail-time 00:01:30
-
-# Info
-./midu.sh --info
-
-# Rotar
-./midu.sh --rotate 90
-
-# Crop
-./midu.sh --crop 640:480
-
-# Fade
-./midu.sh --fade 2
-
-# Normalizar audio
-./midu.sh --normalize
-
-# Marca de agua
-./midu.sh --watermark logo.png
-
-# Desentrelazar
-./midu.sh --deinterlace
-
-# Cambiar FPS
-./midu.sh --fps 60
-
-# Velocidad
-./midu.sh --speed 2.0
-
-# Subtítulos
-./midu.sh -sl subs.srt
-./midu.sh -sh subs.srt
-
-# Concatenar
-./midu.sh --concat v1.mkv v2.mkv v3.mkv
-
-# Extraer audio
-./midu.sh -ao "https://youtube.com/watch?v=..."
-./midu.sh -of mp3
-
-# Mezclar audio
-./midu.sh -ma audio.mp3
-
-# Watch
-./midu.sh --watch
-
-# Guardar config
-./midu.sh --convert -p web -c
-```
-
-### Validación de URLs
-
-Al intentar descargar, el script comprueba si la URL es soportada antes de empezar. Si no lo es, avisa con un mensaje claro:
-
-```
-  Comprobando URL...
-ERROR: URL no soportada o no válida
-  yt-dlp no puede descargar de este sitio
-  Lista: https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md
-```
-
-Esto evita esperar a que yt-dlp falle al descargar.
-
-### Modos de corte avanzados
-
-El modo `--cut` tiene 3 sub-modos:
-
-**1. Cortar un trozo** (normal) — Mantiene solo el segmento indicado:
-```bash
-./midu.sh --cut -ss 00:01:30 -e 00:03:45
-```
-
-**2. Eliminar secciones** (`--remove`) — Quita las partes indicadas del vídeo:
-```bash
-./midu.sh --cut --remove -clips 00:01:00-00:02:30,00:05:00-00:07:15
-```
-Esto elimina los trozos del 1:00-2:30 y del 5:00-7:15, uniendo el resto.
-
-**3. Extraer clips** (`--extract`) — Saca varios trozos y los une en un solo vídeo:
-```bash
-./midu.sh --cut --extract -clips 00:01:00-00:02:30,00:05:00-00:07:15
-```
-Esto extrae los dos clips y los concatena en un único archivo.
-
-En el menú interactivo, al seleccionar "Cortar vídeo", aparecen las 3 opciones:
-```
-  Tipo de corte
-    1) Cortar un trozo     — Mantener solo ese trozo
-    2) Eliminar secciones  — Quitar partes del vídeo
-    3) Extraer clips       — Sacar varios trozos y unirlos
-```
-
-### Nuevos modos de edición de vídeo
-
-**Estabilizar** — Quitar el temblor de vídeos grabados a mano:
-```bash
-./midu.sh --stabilize              # Estabilización normal (shakiness=5)
-./midu.sh --stabilize 8            # Estabilización fuerte
-```
-
-**Ajustar imagen** — Brillo, contraste, saturación y gamma:
-```bash
-./midu.sh --adjust brightness=0.1 contrast=1.2 saturation=0.8
-./midu.sh --adjust gamma=1.5       # Aclarar vídeo oscuro
-```
-
-**Censurar** — Pixelar regiones del vídeo (caras, matrículas):
-```bash
-./midu.sh --censor 100:50:200:150                    # Una región
-./midu.sh --censor 100:50:200:150 300:100:150:100    # Varias regiones
-```
-
-**Denoise y Sharpen** — Mejorar calidad de vídeos viejos:
-```bash
-./midu.sh --denoise 50    # Reducir ruido (1-100)
-./midu.sh --sharpen 5     # Enfocar (1-10)
-```
-
-**Reverse** — Invertir vídeo (reproducción al revés):
-```bash
-./midu.sh --reverse
-```
-
-**Detectar escenas** — Cortar automáticamente en cambios de escena:
-```bash
-./midu.sh --scenes 0.3    # Umbral de detección (0.0-1.0)
-```
-
-**Extraer keyframes** — Sacar todas las imágenes I-frame:
-```bash
-./midu.sh --keyframes ./mis_keyframes
-```
-
-**Aspect ratio** — Cambiar ratio con letterboxing inteligente:
-```bash
-./midu.sh --aspect 16:9
-./midu.sh --aspect 21:9    # Cine
-./midu.sh --aspect 1:1     # Instagram
-./midu.sh --aspect 9:16    # TikTok/Stories
-```
-
-**Metadata** — Editar información del vídeo:
-```bash
-./midu.sh --metadata title="Mi vídeo" artist="Yo" comment="Tutorial"
-```
-
-### Opciones avanzadas
-
-**Two-pass encoding** — Mejor calidad al comprimir a tamaño fijo:
-```bash
-./midu.sh --convert --two-pass -g 2 -s telegram
-```
-
-**Aceleración por hardware** — Usar GPU para decodificar:
-```bash
-./midu.sh --convert --hw-accel -p web
-```
-
-**Dry-run** — Preview sin ejecutar:
-```bash
-./midu.sh --convert --dry-run -s telegram
-```
-
-**Checkpoint y resume** — Guardar progreso y continuar después:
-```bash
-./midu.sh --convert --checkpoint .progreso    # Guarda progreso
-./midu.sh --convert --resume .progreso        # Continúa desde checkpoint
-```
-
-**Descarga de subtítulos** — Descargar subs automáticamente:
-```bash
-./midu.sh -d "URL" --write-subs --sub-langs "es,en"
-```
-
-**Notificación** — Aviso al terminar lote:
-```bash
-./midu.sh --convert --notify
-```
-
-## 3. Estructura de carpetas
+## 2. Estructura de carpetas
 
 ```
 test_videos/
@@ -426,7 +50,7 @@ test_videos/
 └── optimizados/        ← se crea automáticamente
 ```
 
-## 4. Pasos para ejecutarlo en WSL
+## 3. Pasos para ejecutarlo en WSL
 
 1. **Docker Desktop abierto** en Windows. En `Settings -> Resources -> WSL Integration`, activa tu distribución.
 
@@ -449,7 +73,7 @@ test_videos/
 
 5. **Al acabar**, escribe `exit` en la terminal del contenedor.
 
-## 5. Ejecutar directamente en Ubuntu (sin Docker)
+## 4. Ejecutar directamente en Ubuntu (sin Docker)
 
 Instala las dependencias:
 
@@ -465,7 +89,7 @@ chmod +x midu.sh
 ./midu.sh
 ```
 
-## 6. Ejecutar con Docker en Ubuntu (sin WSL)
+## 5. Ejecutar con Docker en Ubuntu (sin WSL)
 
 Ajusta las rutas en `docker-compose.yml`:
 
@@ -480,7 +104,7 @@ Lanza el contenedor:
 docker compose run --remove-orphans --rm downloader
 ```
 
-## 7. Problemas que encontré y cómo los resolví
+## 6. Problemas que encontré y cómo los resolví
 
 ### Saltos de línea CRLF de Windows
 
@@ -512,7 +136,3 @@ su-exec tu_usuario bash midu.sh
 ```sh
 pip install --break-system-packages yt-dlp 2>/dev/null; true
 ```
-
-## 8. Guía completa de comandos
-
-Para una guía completa de comandos de yt-dlp y ffmpeg, consulta: [Guía de comandos de yt-dlp y ffmpeg](/posts/guia_ffmpeg_y_ÿt_dlp/)

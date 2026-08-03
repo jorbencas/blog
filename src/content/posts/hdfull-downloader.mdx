@@ -1,0 +1,109 @@
+---
+draft: false
+title: "HDFull Downloader: Descargador Automatizado de Películas con Docker y noVNC"
+description: "Descargador automatizado de películas de HDFull con resolución manual de captcha via noVNC. Detección de streams DASH/HLS/MP4, Chromium automatizado y ffmpeg en Docker."
+pubDate: "2026-08-03"
+tags: ["python", "docker", "ffmpeg", "chromium", "automatización", "noVNC"]
+author: "Jorge Beneyto Castelló"
+---
+
+HDFull es una plataforma de streaming que usa reCAPTCHA y streams MPEG-DASH. No hay forma sencilla de descargar películas para ver offline, especialmente cuando el reproductor sirve señuelos (720p.mp4 que devuelve 404) y el stream real está fragmentado.
+
+---
+
+## El problema
+
+HDFull protege sus streams con reCAPTCHA y sirve señuelos que confunden a las herramientas de descarga. El stream real está fragmentado en DASH o HLS, y el reproductor devuelve URLs falsas.
+
+## La solución
+
+Un contenedor Docker que automatiza Chromium, expone noVNC en el navegador para que resuelvas el captcha manualmente, y luego captura el stream real (DASH/HLS/MP4) con ffmpeg.
+
+## Arquitectura
+
+```
+Docker (Alpine + Xvfb + openbox + x11vnc + novnc + chromium + ffmpeg + DrissionPage)
+        │
+        ├── noVNC  (http://localhost:6080/vnc.html)  ← TÚ resuelves el captcha
+        ├── VNC    (localhost:5900)
+        └── hdfull_downloader.py
+                ├── login en hdfull.sbs
+                ├── click en el botón de play
+                ├── espera a que superes el reCAPTCHA (timeout 900s)
+                ├── extrae la URL real del vídeo
+                └── descarga con ffmpeg → /app/downloads
+```
+
+## Flujo de uso
+
+1. **Configura credenciales** en `.env`:
+   ```env
+   HDFULL_USER=tu_usuario
+   HDFULL_PASS=tu_contraseña
+   ```
+
+2. **Lanza el menú interactivo**:
+   ```bash
+   ./menu.sh
+   ```
+
+3. **Elige opción 1** (descargar película) - pide la URL
+
+4. **Abre noVNC** en `http://localhost:6080/vnc.html` y resuelve el captcha
+
+5. **El script detecta** que el captcha se superó y descarga automáticamente
+
+## Detección de streams
+
+| Tipo | Método |
+|------|--------|
+| **DASH** (.mpd) | `performance.getEntriesByType('resource')` → ffmpeg `-c copy -f mp4` |
+| **HLS** (.m3u8) | Ídem |
+| **MP4 directo** | `requests` con cookies del navegador |
+| **blob:** | Hook de `URL.createObjectURL` → fetch + base64 en chunks |
+
+## Robustez
+
+- **Señuelos filtrados**: El `720p.mp4` del reproductor powwideo se ignora
+- **Fragmento fantasma**: El último fragmento del MPD suele dar 404; el script corta con `-t (duración − 6s)`
+- **Buffer de performance**: Si evicta el manifest, se deriva de la base del fragmento
+- **Diagnóstico**: Si falla, escribe `/app/diagnostics.txt` con estado completo
+
+## Variables de entorno
+
+| Variable | Default | Descripción |
+|----------|---------|-------------|
+| `HDFULL_USER` | — | Usuario (obligatorio) |
+| `HDFULL_PASS` | — | Contraseña (obligatorio) |
+| `HDFULL_URL` | — | URL de la película (obligatoria, también acepta `argv[1]`) |
+| `HDFULL_CAPTCHA_TIMEOUT` | 900 | Segundos esperando captcha |
+| `HDFULL_OUT` | `/app/downloads` | Directorio de salida |
+
+## Comandos rápidos
+
+```bash
+# Eliminar contenedor antiguo
+docker compose down
+
+# Construir imagen
+docker compose build
+
+# Ejecutar (menú interactivo)
+./menu.sh
+
+# Ejecutar directamente
+docker compose run --rm --service-ports downloader
+
+# Con otra película (por variable de entorno)
+docker compose run --rm --service-ports \
+  -e HDFULL_URL="https://hdfull.sbs/pelicula/otra-pelicula" downloader
+
+# Con otra película (por argumento posicional)
+docker compose run --rm --service-ports downloader \
+  "https://hdfull.sbs/pelicula/otra-pelicula"
+
+# Ver logs
+docker compose logs -f
+```
+
+> `--service-ports` es necesario para exponer los puertos 6080/5900 de noVNC. La sesión de Chromium persiste en el volumen `profile`, así que el login y el captcha se mantienen entre ejecuciones.

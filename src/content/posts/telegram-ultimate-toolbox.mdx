@@ -1,0 +1,104 @@
+---
+draft: false
+title: "Telegram Ultimate Toolbox: Descargador Masivo, Clonador y Vigilante con Docker"
+description: "Descargador masivo de canales de Telegram, clonador con traducción automática y modo vigilante con alertas por palabras. Credenciales cifradas con AES, todo en Docker."
+pubDate: "2026-08-03"
+tags: ["python", "docker", "telegram", "telethon", "automatización"]
+author: "Jorge Beneyto Castelló"
+---
+
+Necesitas respaldar canales enteros de Telegram, descargar contenido protegido o monitorear chats en tiempo real. La interfaz de Telegram no permite descargas masivas, no tiene traducción automática y no filtra spam.
+
+---
+
+## El problema
+
+Telegram no ofrece una forma nativa de descargar grandes volúmenes de contenido, traducir automáticamente los mensajes o vigilar canales con alertas personalizadas. Las herramientas existentes suelen ser limitadas o poco seguras.
+
+## La solución
+
+Un script Python con TelegramClient (Telethon) que ofrece tres módulos principales: descarga masiva, clonación con traducción y vigilante de contenido. Las credenciales se almacenan cifradas con AES.
+
+## Uso con Docker
+
+```bash
+cd downloader_telegram
+docker compose build
+docker compose up
+```
+
+## Uso sin Docker
+
+```bash
+cd downloader_telegram
+python3 -m venv .venv
+source .venv/bin/activate
+python test_download_protected_content_telegram.py
+```
+
+## Generador de sesiones portátiles
+
+```bash
+# Con Docker
+docker compose run --rm telegram python test_string.py
+
+# Sin Docker
+python test_string.py
+```
+
+## Menú principal
+
+```
+1. Descargas Masivas (Enlace/Rango/TXT)
+2. Clonación & Backup (Filtro + Traducción)
+3. Modo Vigilante (Alertas por palabras)
+4. Re-configurar / Salir
+```
+
+### Opción 1: Descarga Masiva
+
+```
+a) Enlace Único       → pega un enlace directo
+b) Rango de IDs       → usa enlaces.txt
+c) Procesar enlaces.txt
+
+¿Traducir textos detectados? (s/n):
+```
+
+### Opción 2: Clonación & Backup
+
+```
+ID/Username del canal ORIGEN:
+ID/Username del canal DESTINO:
+¿Cuántos mensajes clonar?:
+¿Descargar multimedia también? (s/n):
+¿Traducir contenido al clonar? (s/n):
+```
+
+### Opción 3: Modo Vigilante
+
+```
+Palabras clave extra para alertas (separadas por coma):
+```
+
+## Seguridad
+
+- **Credenciales cifradas**: API ID/Hash almacenados en `config.bin` con AES (Fernet)
+- **Llave separada**: `secret.key` generado una sola vez (si lo borras, pierdes acceso al config)
+- **Archivo .session**: Token de persistencia que no necesita re-login
+
+## Filtro de spam
+
+Lista negra predefinida:
+```
+crypto, ganar dinero, casino, poker, estafa, bet, sex, porn, gore, nude
+```
+
+## Tecnologías
+
+- `Telethon` - Cliente de Telegram para Python
+- `cryptography` (Fernet) - Cifrado AES de credenciales
+- `mtranslate` - Traducción automática
+- `cryptg` - Aceleración de descargas
+- `rich` - Panel de logs con iconos coloreados por tipo
+- `inquirerpy` - Menús interactivos (select, confirm, text, secret)

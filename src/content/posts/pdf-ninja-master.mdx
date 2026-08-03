@@ -1,0 +1,74 @@
+---
+draft: false
+title: "PDF Ninja Master: Desbloquear, Unir, Dividir y Comprimir PDFs con Docker"
+description: "Gestor definitivo de documentos PDF: desbloqueo híbrido con pikepdf y PyMuPDF, unión interactiva, división por páginas y compresión inteligente. Todo desde la terminal con Docker."
+pubDate: "2026-08-03"
+tags: ["python", "docker", "pdf", "pymupdf", "pikepdf", "automatización"]
+author: "Jorge Beneyto Castelló"
+---
+
+Tienes certificados, títulos académicos o documentos protegidos que necesitas modificar, unir o comprimir. La mayoría de herramientas online son lentas, limitadas o ponen marcas de agua. Necesitas algo local, rápido y sin restricciones.
+
+---
+
+## El problema
+
+Los PDFs protegidos con restricciones de "solo lectura" o contraseñas de apertura son un obstáculo común. Necesitas uneir varios PDFs, dividir uno en partes o comprimir el tamaño, pero las herramientas online tienen limitaciones y las de escritorio suelen ser de pago.
+
+## La solución
+
+Una herramienta de línea de comandos en Python que gestiona PDFs protegidos con un sistema de doble intento: primero intenta la vía rápida (`pikepdf`) y si falla, activa la vía profunda (`PyMuPDF`). Todo con una interfaz de terminal con colores y progreso en tiempo real.
+
+## Uso con Docker
+
+```bash
+cd pdfmanager
+docker compose build
+docker compose up
+```
+
+Los PDFs se procesan desde `./pdfs_protegidos/` y salen en `./pdfs_libres/`.
+
+## Uso sin Docker
+
+```bash
+cd pdfmanager
+python3 -m venv .venv
+source .venv/bin/activate
+python desproteger_pdf.py
+```
+
+## Características principales
+
+- **Desbloqueo híbrido**: Si `pikepdf` no puede eliminar las restricciones de propiedad, `PyMuPDF` toma el relevo automáticamente
+- **Unión interactiva**: Modo "carrito" donde seleccionas uno a uno el orden de unión, o unión alfabética automática
+- **División por páginas**: Extrae rangos específicos de un PDF
+- **Conversión de imágenes**: Convierte JPG/PNG/WEBP a un único PDF
+- **Compresión inteligente**: Reduce el peso sin romper la validez del documento
+- **Salto inteligente**: Detecta archivos ya procesados para evitar duplicar trabajo
+
+## Menú interactivo
+
+```
+1. Desbloqueo Limpio
+2. Desbloqueo + COMPRESIÓN
+3. Herramienta: UNIR PDFs
+4. Herramienta: DIVIDIR PDF
+5. Imágenes a PDF
+6. Salir
+```
+
+## Tecnologías
+
+- `PyMuPDF` (fitz) - Lectura y manipulación de PDFs
+- `pikepdf` - Eliminación de restricciones de seguridad
+- `rich` - Interfaz de terminal con colores y paneles
+- `inquirerpy` - Menús interactivos con selección visual
+- `tqdm` - Barras de progreso
+- `Pillow` - Conversión de imágenes
+
+## Notas técnicas
+
+- El sistema de doble intento maneja PDFs con restricciones de "solo lectura" (dueño) y contraseñas de apertura
+- La compresión usa `garbage=4` y `deflate=True` para máxima reducción de tamaño
+- La unión interactiva usa `readchar` para navegación en tiempo real con teclado

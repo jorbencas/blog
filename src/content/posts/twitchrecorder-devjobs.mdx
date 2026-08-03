@@ -1,0 +1,141 @@
+---
+draft: false
+title: "TwitchRecorder v2: Grabador Automático de Twitch, YouTube y Kick con Docker"
+description: "Grabador automático de directos de Twitch, YouTube y Kick usando Python, Streamlink, yt-dlp y Docker. Detecta cuándo un canal entra en directo, graba y guarda los vídeos organizados por fecha."
+pubDate: "2026-08-03"
+tags: ["python", "docker", "twitch", "youtube", "kick", "streamlink", "yt-dlp", "automatización"]
+author: "Jorge Beneyto Castelló"
+---
+
+Quieres grabar directos de Twitch (o YouTube/Kick) pero no puedes estar pendiente todo el día. Necesitas algo que detecte cuándo un streamer está en vivo, grabe automáticamente y guarde los vídeos organizados por fecha.
+
+---
+
+## El problema
+
+Grabar directos manualmente requiere estar pendiente, y si te pierdes el principio no hay forma de recuperarlo. Las soluciones existentes suelen ser complicadas o solo soportan una plataforma.
+
+## La solución
+
+Un contenedor Docker que monitorea canales configurados cada N segundos, graba automáticamente cuando detecta que hay directo, y guarda los vídeos estructurados por año/mes.
+
+## Plataformas soportadas
+
+| Plataforma | `platform` | Herramienta |
+|------------|------------|-------------|
+| Twitch | `twitch` | Streamlink |
+| YouTube | `youtube` | yt-dlp |
+| Kick | `kick` | yt-dlp |
+
+## Configuración
+
+Edita `config.json`:
+
+```json
+{
+    "channels": {
+        "sendosama": { "platform": "twitch" },
+        "MrBeast": { "platform": "youtube" },
+        "adin": { "platform": "kick" }
+    },
+    "record_path": "/recordings",
+    "days": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
+    "start_time": "21:30",
+    "check_every": 30,
+    "max_duration": "24:00:00",
+    "retry_interval": 60,
+    "copy_to_test": true
+}
+```
+
+### Formato legacy (solo Twitch)
+
+```json
+{
+    "channels": ["sendosama"]
+}
+```
+
+### Campos principales
+
+| Campo | Descripción |
+|-------|-------------|
+| `channels` | Canales a grabar (dict con platform o array legacy) |
+| `record_path` | Ruta de grabación dentro del contenedor |
+| `days` | Días de la semana que graba |
+| `start_time` | Hora de inicio de comprobación |
+| `check_every` | Intervalo de comprobación (segundos) |
+| `max_duration` | Duración máxima de grabación |
+| `retry_interval` | Segundos antes de reconectar si se pierde |
+| `copy_to_test` | Copiar vídeos a `test/` después de grabar |
+
+## Uso
+
+### Ejecutar en background (producción)
+
+```bash
+docker compose up -d
+```
+
+Se reinicia solo si el PC se reinicia (`restart: unless-stopped`).
+
+### Ejecutar una vez (test)
+
+```bash
+docker compose run --rm run
+```
+
+### Dry-run (sin grabar)
+
+```bash
+docker compose run --rm run --dry-run
+```
+
+Detecta el directo pero no graba. Ideal para verificar que la config funciona.
+
+### Ver logs
+
+```bash
+docker compose logs -f
+```
+
+Formato de logs: `17:35:28 [sendosama] Grabación iniciada`
+
+### Parar
+
+```bash
+docker compose down
+```
+
+## Estructura de grabaciones
+
+```
+grabaciones/
+├── 2026/
+│   └── 07/
+│       ├── sendosama_2026-07-25_21-30-00.mp4
+│       ├── MrBeast_2026-07-26_21-15-00.mp4
+│       └── adin_2026-07-27_22-00-00.mp4
+└── test/
+    └── sendosama_2026-07-26_21-15-00.mp4
+```
+
+## Cambiar ruta de grabación
+
+En `docker-compose.yml`, modifica la línea de volumes:
+
+```yaml
+volumes:
+  - ./config.json:/app/config.json:ro
+  - /ruta/local/en/tu/pc:/recordings
+```
+
+## Ejecutar con config temporal
+
+```bash
+docker run --rm \
+  -v ./config.json:/app/config.json:ro \
+  -v /home/jorge/test_videos:/recordings \
+  -e TZ=Europe/Madrid \
+  twitchrecorder-run
+```
