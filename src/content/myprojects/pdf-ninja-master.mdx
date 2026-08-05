@@ -1,9 +1,11 @@
 ---
 draft: false
 title: "PDF Ninja Master: Desbloquear, Unir, Dividir y Comprimir PDFs con Docker"
-description: "Gestor definitivo de documentos PDF: desbloqueo híbrido con pikepdf y PyMuPDF, unión interactiva, división por páginas y compresión inteligente. Todo desde la terminal con Docker."
+description: "Gestor definitivo de documentos PDF: desbloqueo híbrido con pikepdf y PyMuPDF, unión interactiva con interfaz TUI, división por páginas y compresión inteligente. Todo desde la terminal con Docker."
 pubDate: "2026/08/03"
+updatedDate: "2026/08/04"
 tags: ["python", "docker", "pdf", "pymupdf", "pikepdf", "automatización"]
+image: "img/pdf_ninja/pdf_ninja_cover-1200.webp"
 repository: "https://github.com/jorbencas/devjobs/tree/master/pdfmanager"
 author: "Jorge Beneyto Castelló"
 ---
@@ -14,11 +16,119 @@ Tienes certificados, títulos académicos o documentos protegidos que necesitas 
 
 ## El problema
 
-Los PDFs protegidos con restricciones de "solo lectura" o contraseñas de apertura son un obstáculo común. Necesitas uneir varios PDFs, dividir uno en partes o comprimir el tamaño, pero las herramientas online tienen limitaciones y las de escritorio suelen ser de pago.
+Los PDFs protegidos con restricciones de "solo lectura" o contraseñas de apertura son un obstáculo común. Las herramientas online tienen limitaciones de tamaño, ponen marcas de agua o envían tus documentos a servidores externos. Las de escritorio suelen ser de pago o no manejan bien las restricciones de propiedad.
 
 ## La solución
 
-Una herramienta de línea de comandos en Python que gestiona PDFs protegidos con un sistema de doble intento: primero intenta la vía rápida (`pikepdf`) y si falla, activa la vía profunda (`PyMuPDF`). Todo con una interfaz de terminal con colores y progreso en tiempo real.
+Una herramienta de línea de comandos en Python que gestiona PDFs protegidos con un sistema de doble intento: primero intenta la vía rápida (`pikepdf`) y si falla, activa la vía profunda (`PyMuPDF`). Todo con una interfaz de terminal con colores, paneles y progreso en tiempo real.
+
+---
+
+## Sistema de doble intento
+
+El corazón del desbloqueo es el método `ejecutar_mision()` que usa dos bibliotecas complementarias:
+
+### Intento 1: pikepdf (rápido)
+
+```python
+with pikepdf.open(r_in, password=password) as pdf:
+    pdf.save(r_out)
+```
+
+`pikepdf` se basa en QPDF y es excelente para eliminar restricciones de propiedad (como "solo lectura" impuesto por el creador). No necesita contraseña de apertura si el PDF solo tiene restricciones de edición.
+
+### Intento 2: PyMuPDF (profundo)
+
+```python
+doc = fitz.open(r_out)
+doc.save(r_out, garbage=4 if comprimir else 3, deflate=comprimir, incremental=False)
+doc.close()
+```
+
+Si `pikepdf` falla (por ejemplo, si el PDF tiene contraseñas de apertura o restricciones más complejas), `PyMuPDF` (fitz) toma el relevo. También se usa para la compresión:
+
+- `garbage=4`: Elimina objetos no referenciados (máxima limpieza)
+- `deflate=True`: Comprime streams de datos
+- `incremental=False`: Guarda el archivo completo, no incremental
+
+### Contraseñas de apertura
+
+Si el PDF tiene contraseña de apertura, el script la pide al usuario:
+
+```python
+except pikepdf.PasswordError:
+    password = Prompt.ask("Introduce la contraseña para este PDF")
+    if not password:
+        # Saltar archivo
+```
+
+---
+
+## Unión interactiva: interfaz TUI
+
+El modo de unión usa una interfaz de terminal completa con `rich.live` y `readchar` para navegación en tiempo real:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  PDF NINJA (Filtro: )                                    │
+│ ┌─────────────────────────────────────────────────────┐ │
+│ │ 🥷 MANDOS                                           │ │
+│ │  MODO:   SELECCIÓN                                  │ │
+│ │  TECLAS: [TAB] Switch | [ENTER] Añadir | [CTRL+S] Unir │ │
+│ ├────────────────────────────┬────────────────────────┤ │
+│ │ 📂 DISPONIBLES             │ 🛒 COLA                │ │
+│ │  certificado.pdf           │  titulo.pdf            │ │
+│ │  titulo.pdf                │                        │ │
+│ │  informe.pdf               │                        │ │
+│ └────────────────────────────┴────────────────────────┘ │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Controles
+
+| Tecla | Acción |
+|-------|--------|
+| `↑` / `↓` | Navegar por la lista |
+| `ENTER` | Añadir archivo a la cola |
+| `TAB` | Alternar entre disponibles y cola |
+| `CTRL+X` | Eliminar de la cola |
+| `CTRL+S` | Unir archivos en la cola |
+| `ESC` | Cancelar |
+| Filtro | Escribe para filtrar por nombre |
+
+La unión usa `fitz.open()` y `doc_u.insert_pdf()` para combinar los PDFs, luego guarda con `garbage=4` y `deflate=True` para máxima compresión.
+
+---
+
+## Conversión de imágenes
+
+Convierte JPG, PNG o WebP en un único PDF:
+
+```python
+for foto in tqdm(fotos, desc="Procesando imágenes"):
+    img = Image.open(os.path.join(self.entrada, foto)).convert("RGB")
+    lista_imgs.append(img)
+
+primera = lista_imgs.pop(0)
+primera.save(nombre_out, save_all=True, append_images=lista_imgs)
+```
+
+---
+
+## División por páginas
+
+Extrae rangos específicos de un PDF:
+
+```python
+with fitz.open(archivo_sel) as doc:
+    desde = IntPrompt.ask("Desde página", default=1)
+    hasta = IntPrompt.ask("Hasta página", default=doc.page_count)
+    nuevo = fitz.open()
+    nuevo.insert_pdf(doc, from_page=desde-1, to_page=hasta-1)
+    nuevo.save(f"split_{archivo_sel}")
+```
+
+---
 
 ## Uso con Docker
 
@@ -39,37 +149,55 @@ source .venv/bin/activate
 python desproteger_pdf.py
 ```
 
-## Características principales
-
-- **Desbloqueo híbrido**: Si `pikepdf` no puede eliminar las restricciones de propiedad, `PyMuPDF` toma el relevo automáticamente
-- **Unión interactiva**: Modo "carrito" donde seleccionas uno a uno el orden de unión, o unión alfabética automática
-- **División por páginas**: Extrae rangos específicos de un PDF
-- **Conversión de imágenes**: Convierte JPG/PNG/WEBP a un único PDF
-- **Compresión inteligente**: Reduce el peso sin romper la validez del documento
-- **Salto inteligente**: Detecta archivos ya procesados para evitar duplicar trabajo
+---
 
 ## Menú interactivo
 
 ```
-1. Desbloqueo Limpio
-2. Desbloqueo + COMPRESIÓN
-3. Herramienta: UNIR PDFs
-4. Herramienta: DIVIDIR PDF
-5. Imágenes a PDF
-6. Salir
+╔═══════════════════════════════════════════════════════════╗
+║  🥷 PDF NINJA MASTER                                     ║
+║  Gestor definitivo de PDFs                                ║
+║  Desbloquear · Unir · Dividir · Comprimir                 ║
+╚═══════════════════════════════════════════════════════════╝
+
+▸ Elige una misión:
+  🔓  Desbloqueo Limpio
+  📦  Desbloqueo + COMPRESIÓN
+  🔗  UNIR PDFs
+  ✂️   DIVIDIR PDF
+  🖼️   Imágenes a PDF
+  ─────────────────
+  🚪  Salir
 ```
+
+| Opción | Qué hace |
+|--------|----------|
+| `Desbloqueo Limpio` | Elimina restricciones de propiedad (pikepdf → PyMuPDF) |
+| `Desbloqueo + COMPRESIÓN` | Lo mismo pero con compresión máxima |
+| `UNIR PDFs` | Interfaz TUI para seleccionar y ordenar archivos |
+| `DIVIDIR PDF` | Extrae un rango de páginas |
+| `Imágenes a PDF` | Convierte JPG/PNG/WEBP a un único PDF |
+
+---
 
 ## Tecnologías
 
-- `PyMuPDF` (fitz) - Lectura y manipulación de PDFs
-- `pikepdf` - Eliminación de restricciones de seguridad
-- `rich` - Interfaz de terminal con colores y paneles
-- `inquirerpy` - Menús interactivos con selección visual
-- `tqdm` - Barras de progreso
-- `Pillow` - Conversión de imágenes
+| Librería | Para qué |
+|----------|----------|
+| `PyMuPDF` (fitz) | Lectura, manipulación y compresión de PDFs |
+| `pikepdf` | Eliminación de restricciones de seguridad |
+| `rich` | Interfaz de terminal con colores, paneles y tablas |
+| `inquirerpy` | Menús interactivos con selección visual |
+| `readchar` | Navegación en tiempo real con teclado |
+| `tqdm` | Barras de progreso |
+| `Pillow` | Conversión de imágenes |
 
-## Notas técnicas
+---
 
-- El sistema de doble intento maneja PDFs con restricciones de "solo lectura" (dueño) y contraseñas de apertura
-- La compresión usa `garbage=4` y `deflate=True` para máxima reducción de tamaño
-- La unión interactiva usa `readchar` para navegación en tiempo real con teclado
+## Peculiaridades
+
+- **Salto inteligente**: Detecta archivos ya procesados para evitar duplicar trabajo
+- **Auto-setup**: Instala dependencias automáticamente si faltan
+- **Colores consistentes**: Paleta azul/verde (`BG = "blue"`, `FG = "green"`) en toda la interfaz
+- **Compresión máxima**: `garbage=4` + `deflate=True` para reducir tamaño sin romper validez
+- **Manejo de errores**: Si un archivo falla, lo salta y continúa con el siguiente

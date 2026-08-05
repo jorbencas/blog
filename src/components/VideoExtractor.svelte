@@ -133,6 +133,10 @@
   }
 
   // --- MOTOR EXTRACCIÓN DE FRAMES ---
+  function yieldToMain() {
+    return new Promise(resolve => setTimeout(resolve, 0));
+  }
+
   async function extractFrames() {
     if (!currentFile) return;
     imagesDataURLs = [];
@@ -156,6 +160,7 @@
       }
     }
 
+    const BATCH_SIZE = 5;
     for (let i = 0; i < timestamps.length; i++) {
       if (cancelRequested) break;
       try {
@@ -167,9 +172,13 @@
       } catch (err) {
         // Fallo silencioso
       }
-      statusText = `Procesando: ${imagesDataURLs.length} / ${timestamps.length} imágenes`;
-      progress = Math.round(((i + 1) / timestamps.length) * 100);
+      if (i % BATCH_SIZE === 0) {
+        statusText = `Procesando: ${imagesDataURLs.length} / ${timestamps.length} imágenes`;
+        progress = Math.round(((i + 1) / timestamps.length) * 100);
+        await yieldToMain();
+      }
     }
+    statusText = cancelRequested ? "Extracción cancelada" : `¡${imagesDataURLs.length} fotogramas extraídos!`;
     isExtracting = false;
   }
 
@@ -208,7 +217,10 @@
 
   async function processSingleCut(cut) {
     return new Promise((resolve) => {
-      visibleVideoElement.currentTime = cut.start;
+      let resolved = false;
+      const doResolve = () => {
+        if (!resolved) { resolved = true; cleanup(); resolve(); }
+      };
       const onSeeked = () => {
         visibleVideoElement.removeEventListener('seeked', onSeeked);
         const stream = visibleVideoElement.captureStream();
@@ -226,19 +238,23 @@
           a.download = `recorte_${(currentFile?.name || 'video').replace(/\.[^.]+$/, '')}_${cut.startStr.replace(/:/g, '-')}_${cut.endStr.replace(/:/g, '-')}.${ext}`;
           a.click();
           URL.revokeObjectURL(url);
-          resolve();
+          doResolve();
         };
         recorder.onerror = () => {
           visibleVideoElement.pause();
-          resolve();
+          doResolve();
         };
         const durationMs = Math.max(100, (cut.end - cut.start) * 1000);
         recorder.start();
         visibleVideoElement.play();
         setTimeout(() => recorder.stop(), durationMs);
       };
-      videoElement.addEventListener('seeked', onSeeked, { once: true });
-      setTimeout(() => { videoElement.removeEventListener('seeked', onSeeked); resolve(); }, 5000);
+      const cleanup = () => {
+        visibleVideoElement.removeEventListener('seeked', onSeeked);
+      };
+      visibleVideoElement.addEventListener('seeked', onSeeked, { once: true });
+      visibleVideoElement.currentTime = cut.start;
+      setTimeout(doResolve, 10000);
     });
   }
 
@@ -254,24 +270,47 @@
       return;
     }
     const isFirefox = navigator.userAgent.includes('Firefox');
+    const totalSeconds = keepCuts.reduce((sum, c) => sum + (c.end - c.start), 0);
+    const maxSegment = Math.max(...keepCuts.map(c => c.end - c.start));
+
     if (isFirefox) {
-      alert('Firefox no captura audio con captureStream. Los segmentos se descargarán sin sonido. Además, la duración del procesamiento es igual a la duración real del segmento.');
-    } else {
-      const totalSeconds = keepCuts.reduce((sum, c) => sum + (c.end - c.start), 0);
-      if (totalSeconds > 30) {
-        alert(`La duración total a procesar es de ${Math.ceil(totalSeconds)}s. La grabación se hará en tiempo real, tardará al menos ese tiempo.`);
-      }
+      alert('Firefox no captura audio con captureStream. Los segmentos se descargarán sin sonido.');
     }
+
+    if (maxSegment > 300) {
+      const ok = confirm(
+        `El tramo más largo es de ${Math.round(maxSegment)}s (${Math.round(maxSegment / 60)} min).\n\n` +
+        `La grabación es en TIEMPO REAL: tardará al menos ese tiempo.\n\n` +
+        `¿Continuar?`
+      );
+      if (!ok) return;
+    } else if (totalSeconds > 30) {
+      const ok = confirm(
+        `Duración total: ${Math.round(totalSeconds)}s. ` +
+        `La grabación tardará al menos ese tiempo. ¿Continuar?`
+      );
+      if (!ok) return;
+    }
+
     cancelRequested = false;
     progress = 0;
     isExtracting = true;
+    const startTime = Date.now();
+
     for (let i = 0; i < keepCuts.length; i++) {
       if (cancelRequested) break;
-      statusText = `Procesando tramo ${i + 1} de ${keepCuts.length}: ${keepCuts[i].startStr} - ${keepCuts[i].endStr}`;
-      try { await processSingleCut(keepCuts[i]); } catch (e) { console.error(e); }
+      const cut = keepCuts[i];
+      const cutDuration = cut.end - cut.start;
+      statusText = `Tramo ${i + 1}/${keepCuts.length}: ${cut.startStr} → ${cut.endStr} (${Math.round(cutDuration)}s)`;
+      try { await processSingleCut(cut); } catch (e) { console.error(e); }
       progress = Math.round(((i + 1) / keepCuts.length) * 100);
+      await yieldToMain();
     }
-    statusText = cancelRequested ? 'Procesamiento cancelado' : `¡${keepCuts.length} tramo(s) descargado(s)!`;
+
+    const elapsed = Math.round((Date.now() - startTime) / 1000);
+    statusText = cancelRequested
+      ? `Cancelado tras ${elapsed}s`
+      : `¡${keepCuts.length} tramo(s) descargado(s)! (${elapsed}s de procesamiento)`;
     isExtracting = false;
   }
 
@@ -302,10 +341,21 @@
 
   function seekVideoTo(timeInSec) {
     return new Promise((resolve) => {
-      let timeout = setTimeout(() => resolve(), 300);
-      const onSeeked = () => { clearTimeout(timeout); resolve(); };
-      videoElement.addEventListener("seeked", onSeeked, { once: true });
-      videoElement.currentTime = Math.min(timeInSec, videoElement.duration || 0);
+      const target = Math.min(timeInSec, videoElement.duration || 0);
+      let resolved = false;
+      const timeout = setTimeout(() => {
+        if (!resolved) { resolved = true; resolve(); }
+      }, 3000);
+      const onSeeked = () => {
+        if (!resolved) {
+          resolved = true;
+          clearTimeout(timeout);
+          videoElement.removeEventListener("seeked", onSeeked);
+          resolve();
+        }
+      };
+      videoElement.addEventListener("seeked", onSeeked);
+      videoElement.currentTime = target;
     });
   }
 
@@ -321,11 +371,20 @@
 
   function reset() {
     if (videoPreviewSrc) URL.revokeObjectURL(videoPreviewSrc);
+    cancelRequested = true;
     currentFile = null; 
     savedCuts = []; 
     imagesDataURLs = []; 
+    timestamps = [];
     videoPreviewSrc = ""; 
     activeLightboxIndex = null;
+    isExtracting = false;
+    progress = 0;
+    cropStart = 0;
+    cropEnd = 0;
+    cropStartStr = "00:00:00";
+    cropEndStr = "00:00:00";
+    maxDuration = 0;
     if (fileInput) fileInput.value = "";
   }
 </script>
@@ -413,6 +472,9 @@
 
       {:else}
         <div class="cutter-tab-layout">
+          <div class="realtime-warning bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-sm text-amber-800 dark:text-amber-200">
+            <strong>Tiempo real:</strong> La grabación dura lo mismo que el tramo seleccionado. Un clip de 5 min tarda 5 min. Para vídeos largos, corta en tramos pequeños.
+          </div>
           <div class="cutter-header-mode">
             <span class="section-instruction text-slate-500 dark:text-slate-400">Ajusta y afina al segundo los límites del tramo utilizando los controles numéricos:</span>
             <div class="mode-selector bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700">
@@ -527,6 +589,7 @@
   .tab-content-card { border-radius: 12px; padding: 20px; }
 
   /* Layout Pestaña 1 */
+  .realtime-warning { margin-bottom: 12px; }
   .frames-tab-layout { display: flex; flex-direction: column; gap: 16px; }
   .settings-row { display: flex; flex-wrap: wrap; gap: 16px; }
   .control-group { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 200px; }

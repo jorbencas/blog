@@ -3,7 +3,9 @@ draft: false
 title: "FFmpeg + yt-dlp Pipeline: Conversor, Descargador y Editor de Vídeo con 27 Modos"
 description: "Script de 4797 líneas con 27 modos de operación: descarga de YouTube, conversión para redes sociales, corte lossless, efectos de imagen, subtítulos y más. Docker + preview watcher en VLC."
 pubDate: "2026/08/03"
+updatedDate: "2026/08/04"
 tags: ["ffmpeg", "yt-dlp", "docker", "bash", "vídeo", "automatización", "linux"]
+image: "img/guia_ffmpeg_y_yt_dlp/guia_ffmpeg_y_yt_dlp_cover-1200.webp"
 repository: "https://github.com/jorbencas/devjobs/tree/master/ffmpeg-yt-dlp"
 author: "Jorge Beneyto Castelló"
 ---
@@ -14,21 +16,25 @@ Tienes vídeos en diferentes formatos (AVI, MKV, WebM, FLV) que necesitas conver
 
 ## El problema
 
-Necesitas una única herramienta que descargue vídeos de cualquier sitio, los convierta para distintas redes sociales, los corte, les aplique efectos y maneje subtítulos. Todo desde la terminal, sin depender de interfaces gráficas.
+Necesitas una única herramienta que descargue vídeos de cualquier sitio, los convierta para distintas redes sociales, los corte, les aplique efectos y maneje subtítulos. Todo desde la terminal, sin depender de interfaces gráficas. Las herramientas existentes suelen ser limitadas a una sola función o requieren configuración complicada.
 
 ## La solución
 
 `midu.sh`: un script de **4797 líneas** con **27 modos de operación**, que corre en Docker (Alpine + ffmpeg + yt-dlp) y se integra con un **preview watcher** para abrir vídeos en VLC desde WSL.
 
+---
+
 ## Los 27 modos
 
 ### Descarga y extracción
+
 | Modo | Descripción | Ejemplo |
 |------|-------------|---------|
 | `download` | Descargar de YouTube, Twitch, Kick, TikTok, +1000 sitios | `-d "URL"` |
 | `audio-only` | Extraer solo audio (mp3, m4a, flac, wav, opus) | `-ao "URL"` |
 
 ### Corte y edición
+
 | Modo | Descripción | Ejemplo |
 |------|-------------|---------|
 | `cut` | Cortar lossless (sin re-encoding) | `--cut -ss 00:01:30 -e 00:03:45` |
@@ -36,7 +42,10 @@ Necesitas una única herramienta que descargue vídeos de cualquier sitio, los c
 | `cut --extract` | Extraer clips y unirlos | `--cut --extract --clips 00:01:00-00:02:30` |
 | `concat` | Unir varios vídeos | `--concat v1.mkv v2.mkv v3.mkv` |
 
+El corte lossless funciona porque ffmpeg puede leer y escribir contenedores como MKV y MP4 sin re-codificar el stream de vídeo. Solo cambia los timestamps de inicio y fin.
+
 ### Conversión y compresión
+
 | Modo | Descripción | Ejemplo |
 |------|-------------|---------|
 | `convert` | Convertir/comprimir con presets | `--convert -s telegram` |
@@ -44,6 +53,7 @@ Necesitas una única herramienta que descargue vídeos de cualquier sitio, los c
 | `speed` | Acelerar o ralentizar | `--speed 2.0` |
 
 ### Efectos de imagen
+
 | Modo | Descripción | Ejemplo |
 |------|-------------|---------|
 | `rotate` | Girar 90°, 180° o 270° | `--rotate 90` |
@@ -57,6 +67,7 @@ Necesitas una única herramienta que descargue vídeos de cualquier sitio, los c
 | `deinterlace` | Quitar rayas de TV vieja | `--deinterlace` |
 
 ### Multimedia
+
 | Modo | Descripción | Ejemplo |
 |------|-------------|---------|
 | `gif` | Crear GIF animado | `--gif --gif-fps 15 --gif-scale 320:-1` |
@@ -64,6 +75,7 @@ Necesitas una única herramienta que descargue vídeos de cualquier sitio, los c
 | `watermark` | Poner imagen encima | `--watermark logo.png` |
 
 ### Análisis y metadatos
+
 | Modo | Descripción | Ejemplo |
 |------|-------------|---------|
 | `info` | Mostrar duración, codecs, resolución | `--info` |
@@ -73,12 +85,17 @@ Necesitas una única herramienta que descargue vídeos de cualquier sitio, los c
 | `metadata` | Editar título, autor, comentario | `--metadata title="Mi vídeo"` |
 
 ### Avanzados
+
 | Modo | Descripción | Ejemplo |
 |------|-------------|---------|
 | `subtitles` | Embeber (soft) o quemar (hard) subtítulos | `-sh subs.srt` |
 | `censor` | Pixelar regiones (caras, matrículas) | `--censor 100:50:200:150` |
 
+---
+
 ## Presets de red social
+
+Cada preset define resolución, tamaño máximo, códec y preset de codificación optimizado para la plataforma:
 
 ```bash
 ./midu.sh --convert -s whatsapp    # 720p, 1GB, h264, preset web
@@ -90,6 +107,16 @@ Necesitas una única herramienta que descargue vídeos de cualquier sitio, los c
 ./midu.sh --convert -s facebook    # 1080p, 1GB, h264
 ```
 
+### Reintentos de tamaño
+
+Si el vídeo supera el límite de la plataforma, el script re-codifica con menor bitrate automáticamente (hasta 2 intentos):
+
+1. Intento 1: bitrate calculado para el tamaño objetivo
+2. Si supera → Intento 2: bitrate reducido un 20%
+3. Si sigue superando → Advertencia pero continúa
+
+---
+
 ## Presets de calidad
 
 | Preset | CRF | Velocidad | Uso |
@@ -100,37 +127,54 @@ Necesitas una única herramienta que descargue vídeos de cualquier sitio, los c
 | `archive` | 18 | slow | Alta calidad |
 | `quality` | 15 | veryslow | Máxima calidad |
 
+**CRF** (Constant Rate Factor): valor de 0-51 donde menor = mejor calidad. 18 es prácticamente indistinguible del original.
+
+---
+
 ## Códecs soportados
 
 | Códec | Encoder | Notas |
 |-------|---------|-------|
 | `h264` | libx264 | Máxima compatibilidad |
-| `hevc` | libx265 | Mejor calidad/menor tamaño |
-| `av1` | libsvtav1 | Máxima eficiencia (muy lento) |
+| `hevc` | libx265 | Mejor calidad/menor tamaño (50% menos bitrate) |
+| `av1` | libsvtav1 | Máxima eficiencia (muy lento de codificar) |
 | `vp9` | libvpx-vp9 | Buen equilibrio para web |
+
+---
 
 ## Aceleración por hardware
 
-- **NVENC** (NVIDIA): auto-detecta `nvidia-smi`
-- **VAAPI** (Intel/AMD): auto-detecta `vainfo`
-- **CPU**: fallback con libx264/libx265
+El script detecta automáticamente el hardware disponible:
+
+- **NVENC** (NVIDIA): Si `nvidia-smi` está disponible → usa `h264_nvenc` / `hevc_nvenc`
+- **VAAPI** (Intel/AMD): Si `vainfo` está disponible → usa `h264_vaapi`
+- **CPU**: Fallback con libx264/libx265
+
+```bash
+./midu.sh --convert -s telegram --hw-accel  # Usar GPU si está disponible
+```
+
+---
 
 ## Flags generales
 
 | Flag | Descripción |
 |------|-------------|
-| `-n, --non-interactive` | Sin prompts |
+| `-n, --non-interactive` | Sin prompts, usa valores por defecto |
 | `-c, --save-config` | Guardar config en conf.json |
 | `-v, --verbose` | Progreso detallado |
-| `--two-pass` | Two-pass encoding |
+| `--two-pass` | Two-pass encoding (mejor calidad con --max-gb) |
 | `--hw-accel` | Aceleración por hardware |
-| `--dry-run` | Preview sin ejecutar |
+| `--dry-run` | Preview sin ejecutar (muestra comandos) |
 | `--collision skip\|rename\|overwrite` | Colisión de archivos |
-| `--notify` | Notificación al terminar |
-| `--write-subs` | Descargar subtítulos |
-| `--checkpoint FILE` | Guardar progreso |
-| `--resume [FILE]` | Reanudar desde checkpoint |
-| `--retry` | Reintentar fallidos |
+| `--notify` | Notificación al terminar (notify-send) |
+| `--write-subs` | Descargar subtítulos con yt-dlp |
+| `--sub-langs LANGS` | Idiomas de subtítulos (default: es,en) |
+| `--checkpoint FILE` | Guardar progreso para resume |
+| `--resume [FILE]` | Continuar desde checkpoint |
+| `--retry` | Reintentar archivos fallidos al terminar |
+
+---
 
 ## Preview Watcher (WSL)
 
@@ -140,16 +184,27 @@ Script que se ejecuta en el host (WSL) y abre automáticamente los vídeos en VL
 bash preview_watcher.sh --daemon   # segundo plano
 bash preview_watcher.sh --stop     # detener
 bash preview_watcher.sh --status   # verificar
-bash preview_watcher.sh --once     # procesar una petición
+bash preview_watcher.sh --once     # procesar una petición y salir
 bash preview_watcher.sh            # debug en primer plano
 ```
 
 ### Cómo funciona el watcher
 
 1. `midu.sh` escribe la ruta del vídeo en `test_video/.midu_preview_req`
-2. El watcher detecta el archivo y convierte la ruta Linux a Windows
-3. Abre el vídeo en VLC (o reproductor por defecto)
-4. Elimina el archivo de petición
+2. El watcher detecta el archivo (poling cada 2 segundos)
+3. Convierte la ruta Linux a Windows (`/mnt/c/...` → `C:\...`)
+4. Abre el vídeo en VLC (o reproductor por defecto)
+5. Elimina el archivo de petición
+
+### Variables del watcher
+
+| Variable | Default | Descripción |
+|----------|---------|-------------|
+| `IDLE_TIMEOUT` | 600 | Segundos sin actividad antes de apagarse |
+| `MIDU_CONTAINER_NAME` | yt_ffmpeg_downloader | Nombre del contenedor Docker |
+| `MIDU_CONTAINER_MATCH` | `^(yt_ffmpeg_downloader\|ffmpeg-yt-dlp-downloader)` | Regex para detectar el contenedor |
+
+---
 
 ## Configuración persistente
 
@@ -161,6 +216,30 @@ bash preview_watcher.sh            # debug en primer plano
 ./midu.sh
 # → "Configuración guardada encontrada. ¿Usarla? [S/n]"
 ```
+
+El archivo `conf.json` almacena:
+
+```json
+{
+  "inputDir": ".",
+  "outputDir": "./optimizados",
+  "extensions": "avi,webm,mkv,mp4,flv",
+  "verbose": true,
+  "modes": {
+    "convert": {
+      "social": "",
+      "preset": "default",
+      "videoCodec": "h264",
+      "audioCodec": "aac",
+      "audioBitrate": "128k",
+      "resolution": "720",
+      "maxSize": "1.5"
+    }
+  }
+}
+```
+
+---
 
 ## Uso típico
 
@@ -178,14 +257,45 @@ bash preview_watcher.sh --daemon
 # Los vídeos se abren automáticamente en VLC en Windows
 ```
 
+### Flujo recomendado
+
+```bash
+# 1. Descargar
+./midu.sh -d "https://youtube.com/watch?v=..."
+
+# 2. Cortar (lossless, sin re-encoding)
+./midu.sh --cut -ss 00:05:00 -e 00:10:00
+
+# 3. Convertir para Telegram
+./midu.sh --convert -s telegram
+```
+
+---
+
 ## Peculiaridades
 
-- **Remux automático**: Si el vídeo ya es h264+aac sin corte, se remuxa sin re-encoding
+- **Remux automático**: Si el vídeo ya es h264+aac sin corte, se remuxa sin re-encoding (copia directa de streams)
 - **Reintentos de tamaño**: Si supera el límite, re-codifica con menor bitrate (hasta 2 intentos)
 - **Panel de progreso**: Muestra progreso por archivo con hilos paralelos (max 4)
 - **Checkpoint/resume**: Guarda estado para reanudar si se interrumpe
-- **Colisión**: Opciones skip/rename/overwrite
-- **Notificaciones**: notify-send (Linux) y ntfy.sh (push)
-- **Detección de GPU**: Auto-detecta NVENC/VAAPI
+- **Colisión**: Opciones skip/rename/overwrite para archivos existentes
+- **Notificaciones**: notify-send (Linux) y ntfy.sh (push a móvil)
+- **Detección de GPU**: Auto-detecta NVENC/VAAPI y usa aceleración por hardware
 - **Filtros combinados**: Resolución + velocidad + subtítulos en una sola cadena `-vf`
-- **atempo encadenado**: Para velocidades extremas (0.25x, 4x) usa múltiples filtros atempo
+- **atempo encadenado**: Para velocidades extremas (0.25x, 4x) usa múltiples filtros atempo (ffmpeg limita cada filtro a 0.5x-100x)
+- **Auto-setup**: El Dockerfile instala todas las dependencias automáticamente
+
+---
+
+## Estructura
+
+```
+ffmpeg-yt-dlp/
+├── conf.json              # configuración de conversión
+├── docker-compose.yml     # servicio Docker (Alpine + ffmpeg + yt-dlp)
+├── preview_watcher.sh     # abre vídeos en WSL/Windows (host)
+└── test_video/
+    ├── midu.sh            # script principal (4797 líneas, 27 modos)
+    ├── optimizados/       # vídeos convertidos (por defecto)
+    └── test/              # vídeos de entrada (por defecto)
+```

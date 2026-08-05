@@ -3,6 +3,7 @@ draft: false
 title: "Telegram Ultimate Toolbox: Descargador Masivo, Clonador y Vigilante con Docker"
 description: "Descargador masivo de canales de Telegram, clonador con traducción automática y modo vigilante con alertas por palabras. Credenciales cifradas con AES, todo en Docker."
 pubDate: "2026/08/03"
+updatedDate: "2026/08/04"
 tags: ["python", "docker", "telegram", "telethon", "automatización"]
 repository: "https://github.com/jorbencas/devjobs/tree/master/downloader_telegram"
 author: "Jorge Beneyto Castelló"
@@ -14,11 +15,206 @@ Necesitas respaldar canales enteros de Telegram, descargar contenido protegido o
 
 ## El problema
 
-Telegram no ofrece una forma nativa de descargar grandes volúmenes de contenido, traducir automáticamente los mensajes o vigilar canales con alertas personalizadas. Las herramientas existentes suelen ser limitadas o poco seguras.
+Telegram no ofrece una forma nativa de descargar grandes volúmenes de contenido, traducir automáticamente los mensajes o vigilar canales con alertas personalizadas. Las herramientas existentes suelen ser limitadas, poco seguras o no manejan bien las restricciones de canales protegidos.
 
 ## La solución
 
-Un script Python con TelegramClient (Telethon) que ofrece tres módulos principales: descarga masiva, clonación con traducción y vigilante de contenido. Las credenciales se almacenan cifradas con AES.
+Un script Python con TelegramClient (Telethon) que ofrece tres módulos principales: descarga masiva, clonación con traducción y vigilante de contenido. Las credenciales se almacenan cifradas con AES (Fernet) y el sistema de logs muestra el progreso con iconos coloreados por tipo de mensaje.
+
+---
+
+## Arquitectura
+
+```
+Telegram Ultimate Toolbox
+├── Telethon (TelegramClient)
+│   ├── Descarga masiva (enlace/rango/ TXT)
+│   ├── Clonación con traducción
+│   └── Vigilante en tiempo real
+├── Cifrado AES (Fernet)
+│   ├── config.bin → API ID/Hash cifrados
+│   └── secret.key → llave de cifrado
+├── Filtro inteligente
+│   ├── Lista negra de spam
+│   └── Traducción automática (mtranslate)
+└── Interfaz CLI
+    ├── rich (paneles, logs con iconos)
+    └── inquirerpy (menús interactivos)
+```
+
+---
+
+## Los 3 módulos
+
+### 1. Descarga Masiva
+
+Descarga contenido de canales de Telegram de tres formas:
+
+| Método | Descripción | Uso |
+|--------|-------------|-----|
+| **Enlace Único** | Pegas un enlace directo | Para archivos sueltos |
+| **Rango de IDs** | Usa `enlaces.txt` con IDs | Para rangos específicos |
+| **Procesar enlaces.txt** | Lee todos los enlaces del archivo | Para descarga masiva |
+
+El módulo maneja:
+- Resolución de canales con caché (`peer_cache`)
+- Descarga robusta con resume (archivos `.part`)
+- Progreso en tiempo real por archivo
+- Filtro de spam automático
+- Traducción opcional de textos detectados
+
+```python
+async def download_media_robust(client, message, folder):
+    # Archivo temporal .part para resume
+    temp_path = full_path + ".part"
+    if os.path.exists(full_path):
+        return True  # Ya existe, saltar
+    
+    with open(temp_path, 'wb') as f:
+        await client.download_media(message, file=f, progress_callback=prog)
+    os.rename(temp_path, full_path)
+```
+
+### 2. Clonación & Backup
+
+Clona mensajes de un canal a otro con opciones avanzadas:
+
+```
+ID/Username del canal ORIGEN: @canal_origen
+ID/Username del canal DESTINO: @canal_destino
+¿Cuántos mensajes clonar?: 100
+¿Descargar multimedia también? (s/n): s
+¿Traducir contenido al clonar? (s/n): s
+```
+
+Características:
+- **Traducción automática**: Traduce el contenido al clonar usando `mtranslate`
+- **Descarga de multimedia**: Opción de descargar archivos adjuntos
+- **Filtro de spam**: Salta mensajes que contengan palabras de la lista negra
+- **Límite configurable**: Puedes clonar N mensajes específicos
+- **Velocidad controlada**: Sleep de 0.8s entre mensajes para evitar rate limits
+
+### 3. Modo Vigilante
+
+Monitorea canales en tiempo real y envía alertas cuando detecta contenido relevante:
+
+```
+Palabras clave extra (separadas por coma): bitcoin, invertir, urgente
+```
+
+El vigilante:
+- Escucha `events.NewMessage` en tiempo real
+- Aplica el filtro de spam automático
+- Compara con las palabras clave personalizadas
+- Envía alertas a "me" (mensajes guardados) de Telegram
+- Se detiene con `Ctrl+C`
+
+```python
+@client.on(events.NewMessage)
+async def handler(event):
+    texto = event.message.message
+    if procesar_texto_inteligente(texto) == "FILTERED_CONTENT" or \
+       any(p in texto.lower() for p in palabras):
+        await client.send_message('me', f"🔔 Alerta Vigilante:\n{texto}")
+```
+
+---
+
+## Seguridad: cifrado AES
+
+Las credenciales de la API de Telegram se almacenan cifradas con Fernet (AES-CBC):
+
+### Flujo de cifrado
+
+```
+1. Usuario introduce API ID y API HASH
+2. Se genera una llave Fernet (si no existe secret.key)
+3. Los datos se cifran con Fernet.encrypt()
+4. Se guardan en config.bin (binario)
+5. La llave se guarda en secret.key (NUNCA commitear)
+```
+
+### Flujo de descifrado
+
+```python
+key = open("secret.key", "rb").read()
+cipher = Fernet(key)
+with open("config.bin", "rb") as f:
+    datos_cifrados = f.read()
+    datos_planos = cipher.decrypt(datos_cifrados).decode('utf-8')
+    config = json.loads(datos_planos)
+```
+
+### Archivos importantes
+
+| Archivo | Contenido | Protección |
+|---------|-----------|------------|
+| `config.bin` | API ID y Hash cifrados | No commitear |
+| `secret.key` | Llave de cifrado | **NUNCA commitear** (si lo borras, pierdes acceso) |
+| `ultimate_session.token` | Token de persistencia | No commitear |
+
+---
+
+## Filtro de spam
+
+Lista negra predefinida que se aplica automáticamente:
+
+```python
+SPAM_LIST = [
+    "crypto", "ganar dinero", "casino", "poker", 
+    "estafa", "bet", "sex", "porn", "gore", "nude"
+]
+```
+
+El filtro se aplica en:
+- Descarga masiva: salta mensajes que contengan estas palabras
+- Clonación: no clona contenido filtrado
+- Vigilante: marca como alerta si detecta contenido filtrado
+
+---
+
+## Sistema de logs
+
+Cada mensaje de log tiene un icono y color según su tipo:
+
+| Icono | Tipo | Color |
+|-------|------|-------|
+| `ℹ` | INFO | Azul |
+| `✓` | OK | Verde |
+| `⚠` | WARN | Amarillo |
+| `✗` | ERR | Rojo |
+| `↓` | DB (descarga) | Azul |
+| `🚫` | SPAM | Rojo |
+| `📝` | TRAD (traducción) | Cyan |
+
+Ejemplo de salida:
+```
+  14:32:15 ℹ Módulo de Descarga Masiva
+  14:32:18 ℹ Cargados 45 enlaces desde enlaces.txt
+  14:32:19 ↓ Bajando: video_2026.mp4
+    -> video_2026.mp4: 67.3%
+  14:32:25 ✓ Completado: video_2026.mp4
+  14:32:26 🚫 Mensaje 12345 bloqueado por filtro.
+  14:32:27 📝 ID 12346: Este es un mensaje traducido al español...
+```
+
+---
+
+## Generador de sesiones portátiles
+
+Para generar un token de sesión que se pueda usar en otros dispositivos:
+
+```bash
+# Con Docker
+docker compose run --rm telegram python test_string.py
+
+# Sin Docker
+python test_string.py
+```
+
+El token generado (`ultimate_session.session`) contiene las credenciales de autenticación. Cópialo a tu otro dispositivo y úsalo como archivo de sesión.
+
+---
 
 ## Uso con Docker
 
@@ -37,69 +233,52 @@ source .venv/bin/activate
 python test_download_protected_content_telegram.py
 ```
 
-## Generador de sesiones portátiles
-
-```bash
-# Con Docker
-docker compose run --rm telegram python test_string.py
-
-# Sin Docker
-python test_string.py
-```
+---
 
 ## Menú principal
 
 ```
-1. Descargas Masivas (Enlace/Rango/TXT)
-2. Clonación & Backup (Filtro + Traducción)
-3. Modo Vigilante (Alertas por palabras)
-4. Re-configurar / Salir
+╔═══════════════════════════════════════════════════════════╗
+║  📦 TELEGRAM TOOLBOX                                      ║
+║  Descargador · Clonador · Vigilante                        ║
+╚═══════════════════════════════════════════════════════════╝
+
+▸ Selecciona módulo:
+  📥  Descargas Masivas (Enlace/Rango/TXT)
+  🔄  Clonación & Backup (Filtro + Traducción)
+  👁️   Modo Vigilante (Alertas por palabras)
+  ─────────────────
+  🚪  Re-configurar / Salir
 ```
 
-### Opción 1: Descarga Masiva
-
-```
-a) Enlace Único       → pega un enlace directo
-b) Rango de IDs       → usa enlaces.txt
-c) Procesar enlaces.txt
-
-¿Traducir textos detectados? (s/n):
-```
-
-### Opción 2: Clonación & Backup
-
-```
-ID/Username del canal ORIGEN:
-ID/Username del canal DESTINO:
-¿Cuántos mensajes clonar?:
-¿Descargar multimedia también? (s/n):
-¿Traducir contenido al clonar? (s/n):
-```
-
-### Opción 3: Modo Vigilante
-
-```
-Palabras clave extra para alertas (separadas por coma):
-```
-
-## Seguridad
-
-- **Credenciales cifradas**: API ID/Hash almacenados en `config.bin` con AES (Fernet)
-- **Llave separada**: `secret.key` generado una sola vez (si lo borras, pierdes acceso al config)
-- **Archivo .session**: Token de persistencia que no necesita re-login
-
-## Filtro de spam
-
-Lista negra predefinida:
-```
-crypto, ganar dinero, casino, poker, estafa, bet, sex, porn, gore, nude
-```
+---
 
 ## Tecnologías
 
-- `Telethon` - Cliente de Telegram para Python
-- `cryptography` (Fernet) - Cifrado AES de credenciales
-- `mtranslate` - Traducción automática
-- `cryptg` - Aceleración de descargas
-- `rich` - Panel de logs con iconos coloreados por tipo
-- `inquirerpy` - Menús interactivos (select, confirm, text, secret)
+| Librería | Para qué |
+|----------|----------|
+| `Telethon` | Cliente de Telegram para Python (async) |
+| `cryptography` (Fernet) | Cifrado AES de credenciales |
+| `mtranslate` | Traducción automática de textos |
+| `cryptg` | Aceleración de descargas con cryptografía nativa |
+| `rich` | Panel de logs con iconos coloreados por tipo |
+| `inquirerpy` | Menús interactivos (select, confirm, text, secret) |
+
+---
+
+## Requisitos
+
+- Python 3.8+
+- Cuenta de Telegram con API ID y API Hash (de [my.telegram.org](https://my.telegram.org))
+- (Opcional) Docker
+
+---
+
+## Peculiaridades
+
+- **Auto-setup**: Instala dependencias automáticamente si faltan
+- **Resume de descargas**: Si se interrumpe, continúa desde donde quedó (archivos `.part`)
+- **Caché de canales**: Resuelve entidades de canales una sola vez y las reutiliza
+- **Rate limit controlado**: Sleep de 0.8s entre mensajes para no ser bloqueado
+- **2FA soportado**: Maneja automáticamente la verificación en dos pasos
+- **Sesión persistente**: No necesita re-login entre ejecuciones

@@ -2,35 +2,142 @@
 draft: false
 title: "TwitchRecorder v2: Grabador Automático de Twitch, YouTube y Kick con Docker"
 description: "Grabador automático de directos de Twitch, YouTube y Kick usando Python, Streamlink, yt-dlp y Docker. Detecta cuándo un canal entra en directo, graba y guarda los vídeos organizados por fecha."
-pubDate: "2026/08/03"
+pubDate: "2026/07/25"
+updatedDate: "2026/08/04"
 tags: ["python", "docker", "twitch", "youtube", "kick", "streamlink", "yt-dlp", "automatización"]
+image: "img/twitchrecorder/twitchrecorder_cover-1200.webp"
 repository: "https://github.com/jorbencas/devjobs/tree/master/TwitchRecorder"
 author: "Jorge Beneyto Castelló"
 ---
 
-Quieres grabar directos de Twitch (o YouTube/Kick) pero no puedes estar pendiente todo el día. Necesitas algo que detecte cuándo un streamer está en vivo, grabe automáticamente y guarde los vídeos organizados por fecha.
+Grabar directos de Twitch manualmente es un fastidio. Siempre te pierdes el principio, o se te olvida darle a grabar, o tienes que tener OBS abierto todo el rato. La solución: un Docker que lo haga todo solo. Y no solo Twitch: también YouTube y Kick.
 
 ---
 
-## El problema
+## Qué hace
 
-Grabar directos manualmente requiere estar pendiente, y si te pierdes el principio no hay forma de recuperarlo. Las soluciones existentes suelen ser complicadas o solo soportan una plataforma.
+TwitchRecorder detecta cuándo un canal entra en directo en Twitch, YouTube o Kick, graba el stream con calidad original (sin recompresión), y guarda el vídeo organizado por fecha. Si se pierde la conexión, reconecta automáticamente.
 
-## La solución
+En resumen: arrancas el Docker y te olvidas. Cuando tu streamer favorito empiece, se graba solo.
 
-Un contenedor Docker que monitorea canales configurados cada N segundos, graba automáticamente cuando detecta que hay directo, y guarda los vídeos estructurados por año/mes.
+---
 
-## Plataformas soportadas
+## Tecnologías
 
-| Plataforma | `platform` | Herramienta |
-|------------|------------|-------------|
-| Twitch | `twitch` | Streamlink |
-| YouTube | `youtube` | yt-dlp |
-| Kick | `kick` | yt-dlp |
+- **Python** — orquestador del sistema. Controla horarios, comprobaciones, inicio/fin de grabación y organización de archivos.
+- **Streamlink** — obtiene el stream de Twitch directamente. Sin navegador, sin Selenium, sin calidad reducida. Es lo que usa `vlc` por debajo.
+- **yt-dlp** — obtiene el stream de YouTube y Kick. La misma herramienta que usas para descargar vídeos de YouTube.
+- **Docker** — contenedor portátil. Una vez construido, funciona igual en cualquier máquina con Docker instalado.
+- **FFmpeg** — dentro del contenedor, Streamlink y yt-dlp lo usan internamente para manejar el stream.
+
+---
+
+## Por qué no usar OBS
+
+OBS es fantástico para grabar tu pantalla, pero para este caso de uso tiene problemas:
+
+- Necesita tener la ventana abierta
+- Consume más CPU (decodifica y vuelve a codificar)
+- Si se cierra, se para la grabación
+- No puedes programarlo fácilmente
+
+Streamlink descarga el stream tal cual sale de Twitch. Sin recompresión, sin pérdida de calidad, sin CPU de más.
+
+---
+
+## Qué es Streamlink
+
+Streamlink es una herramienta de línea de comandos que extrae streams de más de 100 plataformas de streaming y los reproduce directamente en un reproductor local (VLC, MPV, etc.) o los guarda en un archivo. Nació en 2016 como fork de Livestreamer.
+
+**¿Por qué usar Streamlink en vez de un navegador?**
+
+| | Navegador | Streamlink |
+|---|-----------|------------|
+| RAM | 2-4 GB | < 100 MB |
+| CPU | 30-50% | Mínimo |
+| Calidad | Recompresión | Directa (sin pérdida) |
+| Dependencias | Flash, JS, cookies | Solo Python |
+
+**Plataformas soportadas (algunas):**
+
+| Plataforma | Tipo | Notas |
+|------------|------|-------|
+| Twitch | Live + VOD | Soporte completo, baja latencia |
+| YouTube | Live + VOD | Calidades múltiples |
+| Dailymotion | Live + VOD | — |
+| Vimeo | Live + VOD | — |
+| NicoNico | Live + VOD | Requiere cuenta |
+| Picarto | Live + VOD | Comunidad creativa |
+| NASA+ | Live + VOD | Contenido espacial |
+
+**Otros usos de Streamlink:**
+
+- **Reproducir en VLC:** `streamlink twitch.tv/canal best` — abre el stream directamente en VLC
+- **Grabar a archivo:** `streamlink twitch.tv/canal best -o grabacion.mp4`
+- **Seleccionar calidad:** `best`, `worst`, `720p`, `1080p60`, `audio_only`
+- **Baja latencia:** `--twitch-low-latency` para menos delay
+
+Streamlink es ideal para automatización porque es ligero, no necesita navegador, y funciona como un proceso externo que puedes controlar con Python.
+
+---
+
+## Qué es yt-dlp
+
+yt-dlp es un fork de youtube-dl, la herramienta más popular para descargar vídeos de YouTube. Soporta más de 1000 sitios web y es la herramienta estándar para descargar contenido multimedia de internet.
+
+**¿Por qué yt-dlp para YouTube y Kick?**
+
+Streamlink no tiene plugins para YouTube ni Kick. yt-dlp sí. Además, yt-dlp es más maduro para YouTube: maneja autenticación, calidades, formatos, y actualizaciones frecuentes cuando YouTube cambia su API.
+
+**Plataformas soportadas (algunas):**
+
+| Plataforma | Tipo | Notas |
+|------------|------|-------|
+| YouTube | Live + VOD | La más completa |
+| Kick | Live + VOD | Soporte nativo |
+| TikTok | Live + VOD | — |
+| Instagram | Live + VOD | Requiere login |
+| Twitter/X | Live + VOD | — |
+| Facebook | Live + VOD | — |
+
+**Otros usos de yt-dlp:**
+
+- **Descargar vídeos:** `yt-dlp URL` — descarga el mejor formato
+- **Solo audio:** `yt-dlp -f bestaudio URL` — extrae solo el audio
+- **Listas de reproducción:** `yt-dlp URL.playlist` — descarga toda la lista
+- **Subtítulos:** `yt-dlp --write-subs URL` — descarga subtítulos
+
+yt-dlp se actualiza frecuentemente (varias veces al mes) para adaptarse a los cambios de las plataformas. Es la herramienta más fiable para contenido que Streamlink no soporta.
+
+---
+
+## Multi-plataforma: Twitch, YouTube y Kick
+
+El config usa un diccionario con plataforma:
+
+```json
+{
+    "channels": {
+        "sendosama": { "platform": "twitch" },
+        "MrBeast": { "platform": "youtube" },
+        "adin": { "platform": "kick" }
+    }
+}
+```
+
+Cada plataforma usa su herramienta:
+
+| Plataforma | Detección | Grabación |
+|------------|-----------|-----------|
+| Twitch | Streamlink API | Streamlink CLI |
+| YouTube | yt-dlp | yt-dlp |
+| Kick | yt-dlp | yt-dlp |
+
+El `recorder.py` detecta la plataforma y ejecuta el comando correcto. Para Twitch usa Streamlink, para el resto usa yt-dlp. La lógica de monitorización, reconexión y guardado es la misma para todas.
+
+---
 
 ## Configuración
-
-Edita `config.json`:
 
 ```json
 {
@@ -49,26 +156,60 @@ Edita `config.json`:
 }
 ```
 
-### Formato legacy (solo Twitch)
-
-```json
-{
-    "channels": ["sendosama"]
-}
-```
-
 ### Campos principales
 
 | Campo | Descripción |
 |-------|-------------|
-| `channels` | Canales a grabar (dict con platform o array legacy) |
-| `record_path` | Ruta de grabación dentro del contenedor |
-| `days` | Días de la semana que graba |
-| `start_time` | Hora de inicio de comprobación |
-| `check_every` | Intervalo de comprobación (segundos) |
-| `max_duration` | Duración máxima de grabación |
-| `retry_interval` | Segundos antes de reconectar si se pierde |
-| `copy_to_test` | Copiar vídeos a `test/` después de grabar |
+| `channels` | Diccionario con canales. Cada uno indica su plataforma: `twitch`, `youtube` o `kick` |
+| `record_path` | Ruta dentro del contenedor donde se guardan los vídeos |
+| `days` | Días de la semana en los que se comprueba si hay directo |
+| `start_time` | Hora mínima para empezar a comprobar (no desperdicia recursos antes) |
+| `check_every` | Cada cuántos segundos se comprueba si el canal está en directo |
+| `max_duration` | Duración máxima de grabación en formato `HH:MM:SS` |
+| `retry_interval` | Si se pierde la conexión, espera estos segundos antes de reconectar |
+| `copy_to_test` | Si es `true`, copia cada vídeo a una carpeta `test/` para fácil acceso |
+
+---
+
+## Cómo funciona
+
+```
+Docker arranca
+    │
+    ▼
+¿Hoy es día programado?
+    │
+    NO → Espera al siguiente día
+    │
+    SÍ
+    ▼
+¿Ya es hora de start_time?
+    │
+    NO → Espera (sin consumir CPU)
+    │
+    SÍ
+    ▼
+¿El canal está en directo?
+    │
+    NO → Espera check_every segundos
+    │
+    SÍ
+    ▼
+Inicia grabación con Streamlink
+    │
+    ▼
+Monitor comprueba cada 5 segundos:
+    │
+    ├── ¿Sigue online? → Sigue grabando
+    ├── ¿Se cayó pero sigue en directo? → Reconecta en retry_interval segundos
+    ├── ¿El directo terminó? → Para y guarda
+    └── ¿Pasó max_duration? → Para y guarda
+    │
+    ▼
+Espera al siguiente directo
+```
+
+---
 
 ## Uso
 
@@ -77,8 +218,6 @@ Edita `config.json`:
 ```bash
 docker compose up -d
 ```
-
-Se reinicia solo si el PC se reinicia (`restart: unless-stopped`).
 
 ### Ejecutar una vez (test)
 
@@ -100,15 +239,50 @@ Detecta el directo pero no graba. Ideal para verificar que la config funciona.
 docker compose logs -f
 ```
 
-Formato de logs: `17:35:28 [sendosama] Grabación iniciada`
-
 ### Parar
 
 ```bash
 docker compose down
 ```
 
-## Estructura de grabaciones
+### Ejecutar con config temporal
+
+```bash
+docker run --rm \
+  -v ./config.json:/app/config.json:ro \
+  -v /home/jorge/test_videos:/recordings \
+  -e TZ=Europe/Madrid \
+  twitchrecorder-run
+```
+
+---
+
+## Estructura del proyecto
+
+```
+TwitchRecorder/
+├── Dockerfile
+├── docker-compose.yml
+├── .dockerignore
+├── config.json
+├── requirements.txt
+├── main.py
+├── utils/
+│   ├── __init__.py
+│   ├── config.py         # Carga y valida config.json
+│   ├── twitch.py         # Comprueba si un canal está en directo (Twitch)
+│   ├── youtube.py        # Comprueba si un canal está en directo (YouTube)
+│   ├── kick.py           # Comprueba si un canal está en directo (Kick)
+│   ├── recorder.py       # Graba el stream con Streamlink o yt-dlp
+│   ├── scheduler.py      # Controla horarios y comprobaciones
+│   ├── files.py          # Organiza archivos por fecha
+│   └── logger.py         # Log con timestamps
+└── tests/
+```
+
+---
+
+## Organización de archivos
 
 ```
 grabaciones/
@@ -118,25 +292,165 @@ grabaciones/
 │       ├── MrBeast_2026-07-26_21-15-00.mp4
 │       └── adin_2026-07-27_22-00-00.mp4
 └── test/
-    └── sendosama_2026-07-26_21-15-00.mp4
+    └── sendosama_2026-07-27_22-00-00.mp4
 ```
 
-## Cambiar ruta de grabación
+**Nombre del archivo:** `canal_YYYY-MM-DD_HH-MM-SS.mp4`
 
-En `docker-compose.yml`, modifica la línea de volumes:
+---
 
-```yaml
-volumes:
-  - ./config.json:/app/config.json:ro
-  - /ruta/local/en/tu/pc:/recordings
+## Bugs encontrados durante el desarrollo
+
+### 1. URL saltada al usar binario streamlink
+
+En Linux, el binario `streamlink` se instala en `/usr/local/bin/streamlink`. Al usarlo directamente, el código construía mal el comando y se saltaba la URL del canal:
+
+```python
+# Mal — cmd[1:] se salta la URL
+cmd = ["https://www.twitch.tv/canal", "best", "-o", "archivo.mp4", "--force"]
+self.process = subprocess.Popen([sl_exe] + cmd[1:], ...)
+
+# Bien
+self.process = subprocess.Popen([sl_exe] + cmd, ...)
 ```
 
-## Ejecutar con config temporal
+### 2. Buffer de stdout lleno
 
-```bash
-docker run --rm \
-  -v ./config.json:/app/config.json:ro \
-  -v /home/jorge/test_videos:/recordings \
-  -e TZ=Europe/Madrid \
-  twitchrecorder-run
+Streamlink escribe mucha información a stderr. Si usas `stdout=subprocess.PIPE`, el buffer se llena y el proceso se bloquea:
+
+```python
+# Mal — el buffer se llena y el proceso muere
+stdout=subprocess.PIPE, stderr=subprocess.PIPE
+
+# Bien — redirige a /dev/null
+stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
 ```
+
+---
+
+## El camino recorrido: de la idea al Docker
+
+Todo empezó con una necesidad simple: grabar directos de Twitch sin tener que estar pendiente. La idea original usaba Selenium, ChromeDriver, y automatización del navegador. Pero cuanto más lo pensábamos, más frágil parecía. Si Twitch cambiaba algo, todo se rompía.
+
+Así que decidimos ir por otro camino: **Streamlink**. Una herramienta que hace exactamente lo que necesitamos, sin navegador, sin interfaces, sin complicaciones. Más tarde, la necesidad de grabar de YouTube y Kick nos llevó a añadir **yt-dlp**.
+
+### Fase 1: Estructura y configuración
+
+Creamos la carpeta `utils/` con módulos separados. El `config.py` carga el JSON y rellena valores por defecto:
+
+```python
+def load_config(path: Path = CONFIG_PATH) -> dict:
+    if not path.exists():
+        save_config(DEFAULT_CONFIG, path)
+        return DEFAULT_CONFIG.copy()
+
+    with open(path, "r", encoding="utf-8") as f:
+        config = json.load(f)
+
+    for key, value in DEFAULT_CONFIG.items():
+        if key not in config:
+            config[key] = value
+
+    return config
+```
+
+### Fase 2: Detección de directos con Streamlink
+
+```python
+from streamlink import Streamlink
+
+session = Streamlink()
+streams = session.streams("https://www.twitch.tv/shinchan_oficial")
+# {'160p': ..., '360p': ..., '720p': ..., 'best': ...}
+```
+
+### Fase 3: La grabación
+
+```python
+IS_WINDOWS = platform.system() == "Windows"
+
+popen_kwargs = dict(stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+if IS_WINDOWS:
+    popen_kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
+```
+
+### Fase 4: El scheduler
+
+El scheduler recarga `config.json` en cada ciclo. Si añades un canal mientras corre, se detecta automáticamente. Cuando cambia el día, los grabadores se reinician.
+
+### Fase 5: Multi-plataforma con yt-dlp
+
+```python
+import yt_dlp
+
+def is_live(channel: str) -> bool:
+    url = f"https://www.youtube.com/@{channel}/live"
+    ydl_opts = {"quiet": True, "skip_download": True}
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(url, download=False)
+        return info and info.get("is_live", False)
+```
+
+El `recorder.py` se adaptó para detectar la plataforma y ejecutar el comando correcto.
+
+### Fase 6: Docker
+
+```dockerfile
+FROM python:3.12-slim
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+RUN mkdir -p /recordings
+ENTRYPOINT ["python", "-u", "main.py"]
+CMD []
+```
+
+**`python:3.12-slim`** en lugar de `python:3.12` completa (~150MB vs ~900MB). **`-u`** en el CMD desactiva el buffer de Python para ver logs en tiempo real.
+
+---
+
+## Recuperación automática
+
+| Escenario | Qué hace |
+|-----------|----------|
+| Stream pierde conexión | Espera y reconecta |
+| Streamlink/yt-dlp devuelve error | Reintenta en 60 segundos |
+| PC pierde Internet | Espera y continúa |
+| Directo termina | Guarda el archivo y espera al siguiente |
+
+---
+
+## Lo que aprendimos
+
+1. **Streamlink es fantástico** para Twitch. Sin navegador, sin dependencias, sin complicaciones.
+2. **yt-dlp es la navaja suiza** para YouTube y Kick. La misma herramienta para detectar y grabar.
+3. **Los buffers de subprocess** son una fuente infinita de bugs. Siempre usar `DEVNULL`.
+4. **Docker facilita todo**. Una vez que funciona local, encapsularlo es trivial.
+5. **Un config.json bien pensado** ahorra mucho trabajo.
+
+---
+
+## Requisitos
+
+- Docker instalado ([docker.com](https://www.docker.com))
+- Un canal de Twitch, YouTube o Kick que quieras grabar
+- Un PC o servidor que pueda estar encendido cuando empiece el directo
+
+---
+
+## Resumen de comandos
+
+| Comando | Qué hace |
+|---------|----------|
+| `docker compose up -d` | Arranca en background |
+| `docker compose down` | Para todo |
+| `docker compose run --rm run` | Ejecuta una vez |
+| `docker compose run --rm run --dry-run` | Simula sin grabar |
+| `docker compose logs -f` | Muestra logs en tiempo real |
+| `docker compose build` | Reconstruye la imagen |
+
+---
+
+Y eso es todo. Un Docker que graba tus directos favoritos sin que tengas que hacer nada. Lo dejas corriendo y a disfrutar del ocio.

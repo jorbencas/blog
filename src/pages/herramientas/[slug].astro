@@ -2,6 +2,8 @@
 import { getCollection, render } from "astro:content";
 import ToolLayout from "@layouts/ToolLayout.astro";
 import VideoExtractor from "@components/VideoExtractor.svelte";
+import JuegosLogicos from "@components/JuegosLogicos.svelte";
+import TicTacToe from "@components/TicTacToe.svelte";
 
 export async function getStaticPaths() {
   const allTools = await getCollection("tools");
@@ -33,6 +35,26 @@ const slug = tool.id.replace(/\.[^/.]+$/, "");
           Pruébalo ahora
         </h2>
         <VideoExtractor client:load />
+      </div>
+    )
+  }
+  {
+    component === "JuegosLogicos" && (
+      <div class="not-prose max-w-3xl mx-auto mt-12">
+        <h2 class="text-xl sm:text-2xl font-black uppercase italic tracking-tighter text-slate-900 dark:text-white mb-6">
+          Juega ahora
+        </h2>
+        <JuegosLogicos client:load />
+      </div>
+    )
+  }
+  {
+    component === "TicTacToe" && (
+      <div class="not-prose max-w-3xl mx-auto mt-12">
+        <h2 class="text-xl sm:text-2xl font-black uppercase italic tracking-tighter text-slate-900 dark:text-white mb-6">
+          Juega ahora
+        </h2>
+        <TicTacToe client:load />
       </div>
     )
   }
