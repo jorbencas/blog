@@ -486,8 +486,8 @@
   .juegos-wrapper { max-width: 700px; margin: 0 auto; font-family: system-ui, sans-serif; }
   .tabs-navigation { display: flex; gap: 4px; padding: 4px; border-radius: 8px; margin-bottom: 16px; flex-wrap: wrap; }
   .tab-btn { flex: 1; min-width: 80px; border: none; background: transparent; padding: 10px 6px; font-weight: 600; font-size: 0.8rem; cursor: pointer; border-radius: 6px; transition: all 0.15s; }
-  .tab-btn.active { background: #ffffff; color: #1e293b !important; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
-  :global(.dark) .tab-btn.active { background: #1e293b; color: #ffffff !important; }
+  .tab-btn.active { background: #ffffff !important; color: #1e293b !important; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+  :global(.dark) .tab-btn.active { background: #1e293b !important; color: #ffffff !important; }
   .game-card { border-radius: 12px; }
   .game-content { display: flex; flex-direction: column; gap: 14px; }
   .game-title { font-size: 1.3rem; font-weight: 800; margin: 0; }

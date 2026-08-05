@@ -166,9 +166,9 @@
 
   function getSymbolSvg(piece) {
     if (piece === "X") {
-      return `<svg viewBox="0 0 460.775 460.775" fill="none" stroke="white" stroke-width="40"><line x1="60" y1="60" x2="400" y2="400"/><line x1="400" y1="60" x2="60" y2="400"/></svg>`;
+      return `<svg viewBox="0 0 460.775 460.775" fill="none" stroke="currentColor" stroke-width="40"><line x1="60" y1="60" x2="400" y2="400"/><line x1="400" y1="60" x2="60" y2="400"/></svg>`;
     }
-    return `<svg viewBox="0 0 200 200" fill="none" stroke="white" stroke-width="8"><circle cx="100" cy="100" r="80"/></svg>`;
+    return `<svg viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="8"><circle cx="100" cy="100" r="80"/></svg>`;
   }
 
   function getWinLine() {
@@ -355,22 +355,22 @@
   .board-wrapper { display: flex; justify-content: center; }
   .board {
     display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
-    width: 360px; height: 360px;
+    width: 420px; height: 420px;
   }
-  @media (max-width: 400px) { .board { width: 280px; height: 280px; } }
+  @media (max-width: 400px) { .board { width: 300px; height: 300px; } }
 
   .cell {
     background: var(--color-bg-secondary, #141414); border: 3px solid rgba(255,255,255,0.06);
     border-radius: 6px; display: flex; justify-content: center; align-items: center;
-    cursor: pointer; transition: all 0.15s; font-size: 2.5rem; font-weight: 800;
-    color: var(--color-text);
+    cursor: pointer; transition: all 0.15s; font-size: 2.2rem; font-weight: 800;
+    color: var(--color-text); overflow: hidden;
   }
   .cell:hover:not(:disabled) { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.12); }
   .cell:disabled { cursor: default; }
   .cell-x .cell-symbol { color: #00e5ff; }
   .cell-o .cell-symbol { color: #ff9100; }
   .cell-win { border-color: #00c853 !important; background: rgba(0,200,83,0.08) !important; }
-  .cell-symbol { line-height: 1; }
+  .cell-symbol { line-height: 1; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
 
   .start-btn {
     width: 100%; padding: 12px; background: white; color: black; border: none;
