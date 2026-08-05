@@ -186,7 +186,7 @@
   <div class="ttt-layout">
     <!-- Panel lateral -->
     <div class="side-panel">
-      <select class="ttt-select" onchange={(e) => changeMode(e.target.value)} disabled={gameActive}>
+      <select class="ttt-select bg-white dark:bg-[#141414] border border-slate-300 dark:border-white/[0.08] text-slate-900 dark:text-white" onchange={(e) => changeMode(e.target.value)} disabled={gameActive}>
         <option value="ai">VS IA</option>
         <option value="multi">MULTIPLAYER</option>
       </select>
@@ -196,26 +196,26 @@
           <div class="piece-selector">
             <span class="piece-label">Elige tu pieza:</span>
             <div class="piece-buttons">
-              <button type="button" class="piece-btn" class:active={playerPiece === 'X'} onclick={() => selectPiece('X')}>
+              <button type="button" class="piece-btn bg-white dark:bg-[#141414] border-2 border-slate-300 dark:border-white/10 hover:border-slate-400 dark:hover:border-white/30" class:active={playerPiece === 'X'} onclick={() => selectPiece('X')}>
                 <span class="piece-x">X</span>
               </button>
-              <button type="button" class="piece-btn" class:active={playerPiece === 'O'} onclick={() => selectPiece('O')}>
+              <button type="button" class="piece-btn bg-white dark:bg-[#141414] border-2 border-slate-300 dark:border-white/10 hover:border-slate-400 dark:hover:border-white/30" class:active={playerPiece === 'O'} onclick={() => selectPiece('O')}>
                 <span class="piece-o">O</span>
               </button>
             </div>
           </div>
 
           {#if mode === 'multi'}
-            <input type="text" class="ttt-input" placeholder="Nombre Jugador 1" bind:value={player1Name} />
-            <input type="text" class="ttt-input" placeholder="Nombre Jugador 2" bind:value={player2Name} />
+            <input type="text" class="ttt-input bg-white dark:bg-[#141414] border border-slate-300 dark:border-white/[0.08] text-slate-900 dark:text-white" placeholder="Nombre Jugador 1" bind:value={player1Name} />
+            <input type="text" class="ttt-input bg-white dark:bg-[#141414] border border-slate-300 dark:border-white/[0.08] text-slate-900 dark:text-white" placeholder="Nombre Jugador 2" bind:value={player2Name} />
           {/if}
 
-          <button type="button" class="start-btn" onclick={startGame}>INICIAR PARTIDA</button>
+          <button type="button" class="start-btn bg-slate-900 dark:bg-white text-white dark:text-black hover:bg-slate-800 dark:hover:bg-slate-200" onclick={startGame}>INICIAR PARTIDA</button>
         </div>
       {/if}
 
       {#if gameActive || showSummary}
-        <div class="player-card" class:active={gameActive && currentPlayer === 'X'}>
+        <div class="player-card bg-white dark:bg-[#141414] border border-slate-200 dark:border-white/[0.06]" class:active={gameActive && currentPlayer === 'X'}>
           <div class="player-header">
             <span class="piece-icon" class:icon-x={playerPiece === 'X'} class:icon-o={playerPiece !== 'X'}>{playerPiece}</span>
             <span class="player-name">{player1Name}</span>
@@ -225,7 +225,7 @@
 
         <div class="divider">VS</div>
 
-        <div class="player-card" class:active={gameActive && currentPlayer !== 'X'}>
+        <div class="player-card bg-white dark:bg-[#141414] border border-slate-200 dark:border-white/[0.06]" class:active={gameActive && currentPlayer !== 'X'}>
           <div class="player-header">
             <span class="piece-icon" class:icon-x={playerPiece !== 'X'} class:icon-o={playerPiece === 'X'}>{playerPiece === 'X' ? 'O' : 'X'}</span>
             <span class="player-name">{player2Name}</span>
@@ -246,7 +246,7 @@
           {#each board as cell, i}
             <button
               type="button"
-              class="cell"
+              class="cell bg-white dark:bg-[#141414] border-slate-200 dark:border-white/[0.06] hover:bg-slate-100 dark:hover:bg-white/[0.04] hover:border-slate-300 dark:hover:border-white/[0.12] text-slate-900 dark:text-white"
               class:cell-x={cell === 'X'}
               class:cell-o={cell === 'O'}
               class:cell-win={getWinLine()?.includes(i)}
@@ -291,7 +291,7 @@
             {/each}
           </div>
 
-          <button type="button" class="start-btn" onclick={resetAll} style="margin-top: 24px;">VOLVER A EMPEZAR</button>
+          <button type="button" class="start-btn bg-slate-900 dark:bg-white text-white dark:text-black hover:bg-slate-800 dark:hover:bg-slate-200" onclick={resetAll} style="margin-top: 24px;">VOLVER A EMPEZAR</button>
         </div>
       {/if}
     </div>
@@ -309,7 +309,7 @@
 
 <style>
   .ttt-wrapper { max-width: 900px; margin: 0 auto; text-align: center; }
-  .ttt-title { font-size: 0.85rem; letter-spacing: 0.4rem; font-weight: 300; opacity: 0.6; margin-bottom: 30px; color: var(--color-text); }
+  .ttt-title { font-size: 0.85rem; letter-spacing: 0.4rem; font-weight: 300; opacity: 0.6; margin-bottom: 30px; }
 
   .ttt-layout { display: flex; gap: 50px; align-items: flex-start; justify-content: center; }
   @media (max-width: 700px) { .ttt-layout { flex-direction: column; align-items: center; gap: 24px; } }
@@ -318,8 +318,7 @@
   @media (max-width: 700px) { .side-panel { flex: none; width: 100%; max-width: 320px; } }
 
   .ttt-select, .ttt-input {
-    width: 100%; padding: 10px 12px; background: var(--color-bg-secondary, #141414);
-    border: 1px solid rgba(255,255,255,0.08); color: var(--color-text);
+    width: 100%; padding: 10px 12px;
     font-size: 0.82rem; border-radius: 6px; outline: none; font-family: inherit;
   }
   .ttt-select:focus, .ttt-input:focus { border-color: #00e5ff; }
@@ -329,63 +328,46 @@
   .piece-label { font-size: 0.82rem; opacity: 0.7; }
   .piece-buttons { display: flex; gap: 10px; }
   .piece-btn {
-    width: 52px; height: 52px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.1);
-    background: var(--color-bg-secondary, #141414); cursor: pointer; transition: all 0.15s;
+    width: 52px; height: 52px; border-radius: 8px; cursor: pointer; transition: all 0.15s;
     display: flex; align-items: center; justify-content: center;
   }
-  .piece-btn:hover { border-color: rgba(255,255,255,0.3); }
-  .piece-btn.active { border-color: #00e5ff; background: rgba(0,229,255,0.08); }
   .piece-x { color: #00e5ff; font-size: 1.4rem; font-weight: 800; }
   .piece-o { color: #ff9100; font-size: 1.4rem; font-weight: 800; }
 
-  .player-card {
-    background: var(--color-bg-secondary, #141414); padding: 16px; border-radius: 8px;
-    border: 1px solid rgba(255,255,255,0.06); transition: all 0.2s;
-  }
-  .player-card.active { border-color: #00e5ff; background: rgba(0,229,255,0.03); }
   .player-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
   .piece-icon { font-weight: 800; font-size: 1.1rem; }
   .icon-x { color: #00e5ff; }
   .icon-o { color: #ff9100; }
-  .player-name { font-weight: 600; font-size: 0.95rem; color: var(--color-text); }
-  .score-badge { font-size: 0.72rem; letter-spacing: 1px; opacity: 0.45; color: var(--color-text); }
-  .divider { text-align: center; font-size: 0.65rem; opacity: 0.2; font-weight: 800; color: var(--color-text); }
-  .round-info { text-align: center; font-size: 0.75rem; opacity: 0.5; color: var(--color-text); }
 
   .board-wrapper { display: flex; justify-content: center; }
   .board {
     display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
-    width: 420px; height: 420px;
+    width: 420px; height: 420px; flex-shrink: 0;
   }
   @media (max-width: 400px) { .board { width: 300px; height: 300px; } }
 
   .cell {
-    background: var(--color-bg-secondary, #141414); border: 3px solid rgba(255,255,255,0.06);
     border-radius: 6px; display: flex; justify-content: center; align-items: center;
     cursor: pointer; transition: all 0.15s; font-size: 2.2rem; font-weight: 800;
-    color: var(--color-text); overflow: hidden;
+    overflow: hidden; border: 3px solid; aspect-ratio: 1;
   }
-  .cell:hover:not(:disabled) { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.12); }
-  .cell:disabled { cursor: default; }
   .cell-x .cell-symbol { color: #00e5ff; }
   .cell-o .cell-symbol { color: #ff9100; }
-  .cell-win { border-color: #00c853 !important; background: rgba(0,200,83,0.08) !important; }
+  .cell-win { border-color: #00c853 !important; }
   .cell-symbol { line-height: 1; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
 
   .start-btn {
-    width: 100%; padding: 12px; background: white; color: black; border: none;
-    font-weight: 700; font-size: 0.78rem; letter-spacing: 1px; cursor: pointer;
-    border-radius: 6px; transition: all 0.15s; font-family: inherit;
+    width: 100%; padding: 12px; font-weight: 700; font-size: 0.78rem;
+    letter-spacing: 1px; cursor: pointer; border-radius: 6px; transition: all 0.15s;
+    font-family: inherit; border: none;
   }
-  .start-btn:hover { background: #e2e8f0; }
 
   .summary-view { text-align: center; animation: fadeIn 0.4s ease; }
-  .summary-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 20px; color: var(--color-text); }
+  .summary-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 20px; }
   .summary-scores { display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 16px; }
   .summary-score { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-  .summary-name { font-size: 0.8rem; opacity: 0.6; color: var(--color-text); }
-  .summary-wins { font-size: 2rem; font-weight: 800; color: var(--color-text); }
-  .summary-divider { font-size: 1.5rem; opacity: 0.3; color: var(--color-text); }
+  .summary-wins { font-size: 2rem; font-weight: 800; }
+  .summary-divider { font-size: 1.5rem; opacity: 0.3; }
 
   .badge-container { display: flex; gap: 8px; justify-content: center; margin-top: 12px; }
   .badge {
@@ -404,7 +386,7 @@
   }
   .announcement-box {
     font-size: 1.8rem; font-weight: 800; padding: 24px 48px;
-    border: 2px solid; border-radius: 12px; background: rgba(10,10,10,0.95);
+    border: 2px solid; border-radius: 12px;
     animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 

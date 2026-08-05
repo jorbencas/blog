@@ -1,4 +1,5 @@
 <script>
+  import { onMount } from 'svelte';
   let activeGame = $state("pinpoint");
 
   // ============================================================
@@ -309,8 +310,11 @@
     zMessage = "¡Correcto! Distribución平衡ada.";
   }
 
-  // Init
-  $effect(() => {
+  function setGame(game) {
+    activeGame = game;
+  }
+
+  onMount(() => {
     ppStartNew();
     ccStartNew();
     qInit();
@@ -321,11 +325,11 @@
 
 <div class="juegos-wrapper text-slate-800 dark:text-slate-100">
   <div class="tabs-navigation bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-    <button type="button" class="tab-btn text-slate-600 dark:text-slate-400" class:active={activeGame === 'pinpoint'} onclick={() => activeGame = 'pinpoint'}>🎯 Pinpoint</button>
-    <button type="button" class="tab-btn text-slate-600 dark:text-slate-400" class:active={activeGame === 'crossclimb'} onclick={() => activeGame = 'crossclimb'}>🪜 Crossclimb</button>
-    <button type="button" class="tab-btn text-slate-600 dark:text-slate-400" class:active={activeGame === 'queens'} onclick={() => activeGame = 'queens'}>♛ Queens</button>
-    <button type="button" class="tab-btn text-slate-600 dark:text-slate-400" class:active={activeGame === 'tango'} onclick={() => activeGame = 'tango'}>💃 Tango</button>
-    <button type="button" class="tab-btn text-slate-600 dark:text-slate-400" class:active={activeGame === 'zip'} onclick={() => activeGame = 'zip'}>📦 Zip</button>
+    <button type="button" class="tab-btn text-slate-600 dark:text-slate-400" class:active={activeGame === 'pinpoint'} onclick={() => setGame('pinpoint')}>🎯 Pinpoint</button>
+    <button type="button" class="tab-btn text-slate-600 dark:text-slate-400" class:active={activeGame === 'crossclimb'} onclick={() => setGame('crossclimb')}>🪜 Crossclimb</button>
+    <button type="button" class="tab-btn text-slate-600 dark:text-slate-400" class:active={activeGame === 'queens'} onclick={() => setGame('queens')}>♛ Queens</button>
+    <button type="button" class="tab-btn text-slate-600 dark:text-slate-400" class:active={activeGame === 'tango'} onclick={() => setGame('tango')}>💃 Tango</button>
+    <button type="button" class="tab-btn text-slate-600 dark:text-slate-400" class:active={activeGame === 'zip'} onclick={() => setGame('zip')}>📦 Zip</button>
   </div>
 
   <div class="game-card bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-5">
