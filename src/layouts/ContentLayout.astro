@@ -64,6 +64,16 @@ const imagenLimpia = resolveImagePath(image);
 const currentSlug = Astro.url.pathname.replace(/\/$/, "").split("/").pop() ?? "";
 const postUrl = Astro.url.href;
 
+let resolvedAudioSrc = audioSrc;
+if (audioSrc && audioSrc.startsWith("/audio/")) {
+  try {
+    const audioMap = await import("../../../data/audio-map.json");
+    resolvedAudioSrc = audioMap.default[audioSrc] || audioSrc;
+  } catch {
+    // audio-map.json not found, use local path
+  }
+}
+
 const tagsArray = Array.isArray(tags)
   ? tags
   : typeof tags === "string"
@@ -211,7 +221,7 @@ const relatedLayout = isPost ? "grid" : "list";
               }
             </div>
 
-            {isPost && audioSrc && <AudioPlayer src={audioSrc} />}
+            {isPost && resolvedAudioSrc && <AudioPlayer src={resolvedAudioSrc} />}
 
             {
               isPost && rawContent && (
@@ -236,6 +246,7 @@ const relatedLayout = isPost ? "grid" : "list";
                     <a
                       href={repository}
                       target="_blank"
+                      rel="noopener noreferrer"
                       class="group inline-flex items-center gap-2 border-2 border-slate-900 dark:border-white bg-white dark:bg-slate-900 px-6 py-3 text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white transition-all hover:bg-cyan-500 hover:border-cyan-500 hover:text-white active:bg-cyan-500 active:border-cyan-500 active:text-white active:translate-y-1 active:shadow-none"
                     >
                       <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
@@ -248,6 +259,7 @@ const relatedLayout = isPost ? "grid" : "list";
                     <a
                       href={url}
                       target="_blank"
+                      rel="noopener noreferrer"
                       class="group inline-flex items-center gap-2 border-2 border-slate-900 dark:border-white bg-white dark:bg-slate-900 px-6 py-3 text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white transition-all hover:bg-cyan-500 hover:border-cyan-500 hover:text-white active:bg-cyan-500 active:border-cyan-500 active:text-white active:translate-y-1 active:shadow-none"
                     >
                       <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">

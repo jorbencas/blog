@@ -1,4 +1,3 @@
-
 ---
 draft: false
 title: "Arquitectura Web"
@@ -8,12 +7,213 @@ tags: ['web']
 image: "img/arquitectura_web/arquitectura_web_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 ---
-##
-- [Introducción](#introducción)
-- [Desarrollo](#desarrollo)
-- [Conclusión](#conclusión)
-- 
-Hui vaig ha ensenyar-vos una aplicacio web per a fer mapes mentals, la idea, es que sigua mes facil, al hora de estudiar, per la facilitat visual que oferixen els mapes mentals, ha continuacció adjunte el meu mapa mental:
 
-[L’aplicacio web per ha fer mapes mentals](https://www.mapul.com//v4/www/index.html#/?v=45&action=viewmap&id=82499)
+## Introducción
 
+La arquitectura web define cómo se estructuran, organizan y comunican los componentes de una aplicación web. Elegir la arquitectura correcta impacta directamente en la escalabilidad, mantenibilidad y rendimiento del proyecto.
+
+En 2017, el panorama web presenta múltiples opciones tanto en frontend como en backend, con una tendencia clara hacia la separación de capas y la comunicación mediante APIs.
+
+## Modelos de arquitectura
+
+### Monolítica
+
+La arquitectura monolítica concentra toda la aplicación — frontend, backend y base de datos — en un único despliegue. Es el modelo más tradicional y aún muy utilizado.
+
+| Aspecto | Detalle |
+|---------|---------|
+| **Estructura** | Todo en un solo proyecto (controladores, modelos, vistas, lógica de negocio) |
+| **Despliegue** | Un único paquete (WAR, JAR, carpeta PHP, etc.) |
+| **Ventajas** | Desarrollo rápido, depuración sencilla, bajo coste inicial |
+| **Desventajas** | Difícil de escalar por partes, un bug puede tumbar toda la aplicación, despliegues pesados |
+
+**Tecnologías típicas en 2017**: Laravel (PHP), Django (Python), Ruby on Rails, Spring MVC (Java), ASP.NET MVC.
+
+### Microservicios
+
+La arquitectura de microservicios divide la aplicación en servicios pequeños e independientes, cada uno con su propia base de datos y lógica de negocio. Se comunican entre sí mediante APIs REST o mensajería asíncrona.
+
+| Aspecto | Detalle |
+|---------|---------|
+| **Estructura** | Múltiples servicios independientes, cada unoresponsable de una función |
+| **Comunicación** | APIs REST, HTTP, message queues (RabbitMQ, Kafka) |
+| **Ventajas** | Escalado independiente por servicio, despliegues parciales, fallos aislados |
+| **Desventajas** | Complejidad operativa, latencia en comunicaciones entre servicios, debugging distribuido |
+
+**Tecnologías clave**: Docker (contenedores), Kubernetes (orquestación), Docker Compose, Netflix OSS (Eureka, Zuul).
+
+### SPA (Single Page Application)
+
+El frontend se carga una única vez y toda la interacción se gestiona desde JavaScript sin recargar la página. El servidor solo sirve archivos estáticos y la lógica vive completamente en el navegador.
+
+| Aspecto | Detalle |
+|---------|---------|
+| **Estructura** | Un HTML, CSS y JS que se cargan al inicio; el routing es cliente |
+| **Frameworks** | Angular (4.x), React (16), Vue.js (2.x) |
+| **Ventajas** | Experiencia de usuario fluida, menor carga al servidor, mejor rendimiento percibido |
+| **Desventajas** | SEO más complejo, primer cargado más lento, JS pesado en el cliente |
+
+**Ejemplo típico**: Una aplicación construida con Angular 4 + TypeScript que consume una API REST de Laravel o Node.js.
+
+### Server-Side Rendering (SSR)
+
+Modelo donde el HTML se genera en el servidor para cada petición. Es el enfoque clásico que siguen PHP, Python/Django, Ruby on Rails y Java/Spring.
+
+| Aspecto | Detalle |
+|---------|---------|
+| **Estructura** | El servidor genera el HTML completo y lo envía al navegador |
+| **Ventajas** | SEO nativo, primer cargado rápido, mejor para contenido estático |
+| **Desventajas** | Recarga completa en cada navegación, menos interactivo, más carga al servidor |
+
+**Tendencia en 2017**: Next.js (React SSR, lanzado en 2016) está ganando tracción para combinar lo mejor de SPA y SSR.
+
+### Arquitectura híbrida (SSR + SPA)
+
+Muchas aplicaciones modernas combinan ambos enfoques: SSR para las primeras páginas (SEO y rendimiento) y SPA para la navegación posterior (experiencia de usuario).
+
+| Aspecto | Detalle |
+|---------|---------|
+| **Herramienta estrella** | Next.js (React), Nuxt.js (Vue.js, en desarrollo activo) |
+| **Ventajas** | SEO + experiencia de usuario, primer cargado rápido, navegación fluida |
+| **Desventajas** | Complejidad de configuración, requiere conocimiento tanto de backend como de frontend |
+
+## Capas de una arquitectura web típica en 2017
+
+```
+┌─────────────────────────────────┐
+│          CLIENTE                │
+│   (Navegador / App Móvil)       │
+│   HTML + CSS + JavaScript       │
+│   Angular / React / Vue.js      │
+└──────────────┬──────────────────┘
+               │ HTTP/HTTPS (JSON)
+┌──────────────▼──────────────────┐
+│        API / SERVIDOR           │
+│   Node.js / Laravel / Django    │
+│   Spring Boot / .NET Core       │
+│   Lógica de negocio             │
+└──────────────┬──────────────────┘
+               │
+┌──────────────▼──────────────────┐
+│       BASE DE DATOS             │
+│   MySQL / PostgreSQL / MongoDB  │
+│   Redis (caché)                 │
+│   Elasticsearch (búsqueda)      │
+└─────────────────────────────────┘
+```
+
+## Tecnologías dominantes en 2017
+
+### Frontend
+
+| Tecnología | Estado en 2017 |
+|------------|----------------|
+| **Angular 4** | Framework completo de Google, muy usado en empresas |
+| **React 16** | Librería de Facebook, la más popular del momento |
+| **Vue.js 2.x** | En ascenso, fácil de adoptar, gran comunidad |
+| **jQuery** | Aún en muchos proyectos legados, pero en declive |
+| **Bootstrap 3/4** | Framework CSS más usado para diseño responsive |
+| **Webpack** | Bundler estándar para gestionar dependencias JS |
+| **Sass/Less** | Preprocesadores CSS casi universales |
+
+### Backend
+
+| Tecnología | Estado en 2017 |
+|------------|----------------|
+| **Node.js + Express** | Muy popular para APIs y tiempo real |
+| **PHP + Laravel 5.x** | El framework PHP más maduro y completo |
+| **Python + Django 1.11** | Robusto para proyectos con lógica compleja |
+| **Ruby on Rails 5.x** | Aunque pierde cuota, sigue siendo productivo |
+| **Spring Boot (Java)** | Estándar en entornos empresariales |
+| **.NET Core** | Microsoft apostando por cross-platform |
+
+### Infraestructura
+
+| Tecnología | Estado en 2017 |
+|------------|----------------|
+| **Docker** | Enormemente popular, contenedores casi universales |
+| **Kubernetes** | En crecimiento exponencial para orquestación |
+| **AWS** | Líder del cloud, EC2, S3, RDS, Lambda |
+| **Nginx** | Servidor web y proxy inverso más usado |
+| **Varnish** | caché HTTP para acelerar sitios |
+| **Jenkins** | CI/CD estándar en muchas empresas |
+
+### Bases de datos
+
+| Tipo | Tecnologías |
+|------|------------|
+| **Relacional** | MySQL 5.7, PostgreSQL 9.6 |
+| **NoSQL documento** | MongoDB 3.x |
+| **Caché** | Redis 3.x |
+| **Búsqueda** | Elasticsearch 5.x |
+| **Cola de mensajes** | RabbitMQ, Apache Kafka |
+
+## Patrones de diseño comunes en 2017
+
+### MVC (Model-View-Controller)
+
+El patrón más extendido. Separa la aplicación en tres componentes:
+
+- **Modelo**: Gestiona datos y lógica de negocio
+- **Vista**: Muestra la interfaz al usuario
+- **Controlador**: Recibe peticiones y coordina modelo y vista
+
+Usado por: Laravel, Django, Rails, Spring MVC, ASP.NET MVC.
+
+### API REST
+
+El estándar de comunicación entre frontend y backend. Recursos representados como URLs, operaciones con métodos HTTP (GET, POST, PUT, DELETE), y datos en formato JSON.
+
+```http
+GET    /api/users/123      → Obtener usuario
+POST   /api/users          → Crear usuario
+PUT    /api/users/123      → Actualizar usuario
+DELETE /api/users/123      → Eliminar usuario
+```
+
+### Repository Pattern
+
+Abstrae el acceso a datos. La lógica de negocio no accede directamente a la base de datos sino a través de una interfaz que oculta la implementación.
+
+### CQRS (Command Query Responsibility Segregation)
+
+Separa las operaciones de lectura (query) de las de escritura (command). Cada una puede tener su propio modelo optimizado. Gana popularidad en 2017 para sistemas complejos.
+
+## Progressive Web Apps (PWA)
+
+Una de las tendencias más fuertes de 2017. Las PWA combinan lo mejor de las web apps y las apps nativas:
+
+- **Service Workers**: Permiten funcionar offline y cachear recursos
+- **Manifest.json**: La web se puede "instalar" en el escritorio o móvil
+- **HTTPS obligatorio**: Seguridad como requisito base
+- **Push Notifications**: Notificaciones nativas desde el navegador
+
+**Ejemplos reales en 2017**: Twitter Lite, Pinterest, Flipboard, OLX.
+
+## GraphQL vs REST
+
+En 2017, GraphQL (creado por Facebook en 2012 y open-sourceado en 2015) empieza a ganar tracción como alternativa a REST:
+
+| Aspecto | REST | GraphQL |
+|---------|------|---------|
+| **Endpoints** | Múltiples URLs | Un único endpoint |
+| **Datos** | El servidor define qué devuelve | El cliente pide exactamente lo que necesita |
+| **Over-fetching** | Común (devuelve más datos de los necesarios) | Eliminado |
+| **Under-fetching** | Común (necesitas múltiples peticiones) | Eliminado |
+| **Madurez** | Muy maduro, amplio ecosistema | Emergente en 2017, menos herramientas |
+
+**Herramientas clave en 2017**: Apollo (cliente GraphQL para React), GraphiQL (IDE para probar queries), Prisma (capa de acceso a BD para GraphQL).
+
+## Buenas prácticas en 2017
+
+1. **Separar frontend y backend** mediante APIs REST claras
+2. **Usar contenedores Docker** para entornos de desarrollo y producción consistentes
+3. **CI/CD automatizado** con Jenkins, GitLab CI o Travis CI
+4. **Caché en Redis** para datos que no cambian frecuentemente
+5. **HTTPS en todas partes** — Let's Encrypt ha facilitado enormemente la adopción de certificados gratuitos
+6. **Responsive design** — Bootstrap o Flexbox para adaptar a móviles
+7. **Testing automatizado** — Jest para JS, PHPUnit para PHP, pytest para Python
+
+## Conclusión
+
+La arquitectura web en 2017 está en un momento de transición. El modelo monolítico sigue siendo válido para proyectos pequeños y medianos, pero la tendencia clara es hacia la separación en microservicios y APIs REST. En frontend, Angular, React y Vue.js dominan el panorama, mientras que las PWAs prometen acercar las web apps al rendimiento de las nativas. La contenedORIZACIÓN con Docker y la orquestación con Kubernetes están cambiando radicalmente la forma de desplegar y gestionar aplicaciones. Elegir la arquitectura adecuada depende del tamaño del proyecto, el equipo disponible y los requisitos de escalabilidad — no existe una solución única para todos los casos.

@@ -23,6 +23,10 @@ Personal tech & development blog built with Astro 6, Svelte 5 and Tailwind CSS 4
 - **Responsive images** — WebP/AVIF pipeline with SSIM-based adaptive compression and blur placeholder
 - **CodeTabs** — interactive multi-language code tabs (Python/JS/Java/TS) in challenges
 - **VideoExtractor** — browser-based video clip extraction (WebM/MP4)
+- **View Transitions** — ClientRouter for instant navigation between pages
+- **Audio player** — WaveSurfer-based with Vercel Blob storage
+- **Security headers** — CSP, X-Frame-Options, X-Content-Type-Options via vercel.json
+- **Rate limiting** — API endpoints protected (views counter, OG images)
 - **Strict TypeScript** — `strict` + `noUncheckedIndexedAccess`
 
 ---
@@ -50,8 +54,12 @@ Personal tech & development blog built with Astro 6, Svelte 5 and Tailwind CSS 4
 blog/
 ├── public/                     # Static assets
 │   ├── audio/  fonts/  icons/  img/  rss/
+├── scripts/
+│   ├── generate_puzzles.py     # Puzzle generator for JuegosLogicos
+│   └── upload-audio.ts         # Upload MP3s to Vercel Blob
 ├── src/
-│   ├── components/             # 25+ Astro + Svelte components
+│   ├── components/             # 30+ Astro + Svelte components
+│   │   └── home/               # Homepage sections (Hero, Stats, Ticker, etc.)
 │   ├── content/                # 5 MDX collections
 │   │   ├── auto-challenges/    # 46 programming challenges
 │   │   ├── auto-news/          # Weekly news recaps
@@ -59,11 +67,15 @@ blog/
 │   │   ├── posts/              # Technical articles
 │   │   └── tools/              # Interactive tools
 │   ├── content.config.ts       # Zod schemas + loaders
-│   ├── data/  layouts/  pages/  styles/  utils.js
+│   ├── data/
+│   │   ├── audio-map.json      # Blob URL mapping for audio files
+│   │   └── views.json          # Page view counters
+│   ├── layouts/  pages/  styles/  utils.js
 ├── .github/workflows/
 │   ├── issues_handel.yml       # Feedback management
 │   ├── spelling.yml            # LanguageTool (Spanish)
 │   └── trigger-optimize.yml    # Dispatch image optimization
+├── vercel.json                 # Security headers (CSP, X-Frame-Options, etc.)
 ├── astro.config.mjs / pagefind.yml
 ├── svelte.config.ts / tsconfig.json
 └── AGENTS.md / docs/contexto.md
@@ -79,6 +91,7 @@ blog/
 | `npm run build`        | Static build + Pagefind indexing |
 | `npm run preview`      | Preview production build |
 | `npm run cleaner`      | Reinstall dependencies |
+| `npm run upload-audio` | Upload MP3s to Vercel Blob |
 
 ---
 
@@ -112,6 +125,70 @@ Resources (`resources.mdx`, `resources2.mdx`) use **ResourceCard** and **Resourc
 - `ResourceCategory.astro` — section wrapper with ID anchor and title
 
 Both live in `src/components/` and follow the blog's design system.
+
+---
+
+## Audio — Vercel Blob
+
+Los archivos de audio (`public/audio/*.mp3`) se almacenan en **Vercel Blob Storage** para no sobrecargar el build con 59MB de MP3.
+
+### Configuración inicial
+
+1. **Obtener token** — Vercel Dashboard → Tu proyecto → Settings → Tokens → Create Token
+2. **Variables de entorno** — Añadir `BLOB_READ_WRITE_TOKEN` al `.env` del proyecto:
+   ```
+   BLOB_READ_WRITE_TOKEN=vercel_blob_rw_xxxxx
+   ```
+3. **Añadir al `.env.example`** para que quede documentado:
+   ```
+   BLOB_READ_WRITE_TOKEN= # Vercel Blob read/write token
+   ```
+
+### Subir audios a Blob
+
+```bash
+npm run upload-audio
+```
+
+Este script:
+- Lee todos los `.mp3` de `public/audio/`
+- Los sube a Vercel Blob bajo el prefijo `audio/`
+- Genera `data/audio-map.json` con el mapping `{ "/audio/file.mp3": "https://..." }`
+- El `audio-map.json` **debe commitearse** al repo
+
+### Cómo funciona la resolución
+
+Los posts definen `audioSrc` en frontmatter con rutas locales:
+
+```yaml
+---
+audioSrc: "/audio/pdf_ninja.mp3"
+---
+```
+
+`ContentLayout.astro` resuelve automáticamente la URL:
+1. Lee `data/audio-map.json`
+2. Si la ruta `/audio/xxx.mp3` existe en el map → usa la URL de Blob
+3. Si no existe (fallback) → usa la ruta local de `public/audio/`
+
+Esto permite que funcione tanto en desarrollo (sin Blob) como en producción (con Blob).
+
+### Añadir un nuevo audio
+
+1. Colocar el `.mp3` en `public/audio/`
+2. Ejecutar `npm run upload-audio`
+3. Hacer commit del `data/audio-map.json` generado
+4. Referenciar en el MDX: `audioSrc: "/audio/nuevo_audio.mp3"`
+
+### Eliminar audios locales (opcional)
+
+Una vez subidos a Blob, puedes borrar `public/audio/` para reducir el tamaño del repo:
+
+```bash
+rm -rf public/audio/
+```
+
+El blog seguirá funcionando porque resuelve las URLs desde `audio-map.json`.
 
 ---
 

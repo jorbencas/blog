@@ -17,6 +17,9 @@ RUN npm install -g serve
 COPY --from=builder /app/.vercel/output/static ./dist
 COPY --from=builder /app/public ./public
 
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+
 EXPOSE 4321
 
 CMD ["serve", "dist", "-l", "4321", "--single"]

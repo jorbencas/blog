@@ -9,16 +9,79 @@ author: "Jorge Beneyto Castelló"
 component: "JuegosLogicos"
 ---
 
-## 5 juegos, 5 habilidades
+## 🎯 Pinpoint — Deducción por eliminación
 
-| Juego | Habilidad | Mecánica |
-|-------|-----------|----------|
-| 🎯 **Pinpoint** | Deducción | Adivina una palabra con pistas progresivas |
-| 🪜 **Crossclimb** | Vocabulario | Conecta dos palabras cambiando 1 letra por paso |
-| ♛ **Queens** | Razonamiento espacial | 1 reina por fila, columna y región (sin diagonales) |
-| 💃 **Tango** | Patrones | Cuadrícula sin 3+ celdas seguidas del mismo color |
-| 📦 **Zip** | Combinatoria | 2 de cada color por fila y columna |
+Adivina una palabra oculta. Empiezas con 1 pista; cada error desbloquea la siguiente. La pista #6 es la más directa.
 
-## Cómo funciona
+| Regla | Detalle |
+|-------|---------|
+| Objetivo | Adivinar la palabra en el menor número de intentos |
+| Pistas | 6 por palabra, de genérica a específica |
+| Límite | 6 intentos máximo |
+| Ejemplo | Pista 1: "Animal" → Pista 2: "Trompa" → ... → Pista 6: "Paquidermo" → ELEFANTE |
 
-Todo ocurre en tu navegador — sin APIs, sin cuentas, sin guardado remoto. Los puzzles se generan algorítmicamente con Svelte 5 y Tailwind CSS.
+---
+
+## 🪜 Crossclimb — Escalera de palabras
+
+Conecta dos palabras cambiando **UNA letra** en cada paso. Ejemplo: `PATO → GATO` (cambia P→G).
+
+| Regla | Detalle |
+|-------|---------|
+| Objetivo | Llegar de la palabra inicial a la final en el menor número de pasos |
+| Restricción | Cada palabra nueva difiere en exactamente 1 letra de la anterior |
+| Longitud | Todas las palabras deben tener la misma cantidad de letras |
+| Validación | El juego rechaza palabras que no cumplan las reglas |
+
+---
+
+## ♛ Queens — Reinas sin conflicto
+
+Coloca **N reinas** en un tablero NxN sin que se ataquen entre sí.
+
+| Regla | Detalle |
+|-------|---------|
+| 1 reina por fila | Solo puede haber una reina en cada fila |
+| 1 reina por columna | Solo puede haber una reina en cada columna |
+| 1 reina por región | Cada zona de color debe tener exactamente una reina |
+| Sin diagonales | Las reinas no pueden compartir diagonal |
+| Interacción | Clic para colocar/quitar. Celdas en rojo = atacadas |
+
+---
+
+## 💃 Tango — Sin tres seguidas
+
+Completa una cuadrícula 6×6 con dos colores **sin crear bloques de 3+ iguales**.
+
+| Regla | Detalle |
+|-------|---------|
+| Colores | ● Azul y ○ Naranja |
+| Restricción | No pueden haber 3+ del mismo color seguidos en fila ni en columna |
+| Celdas fijas | Las gris ya están colocadas y no se pueden cambiar |
+| Interacción | Clic en celdas vacías para alternar entre azul/naranja |
+| Victoria | Rellenar todas las celdas sin violar la regla |
+
+---
+
+## 📦 Zip — Distribución exacta
+
+Distribuye 3 colores en una cuadrícula 6×6 respetando la proporción exacta.
+
+| Regla | Detalle |
+|-------|---------|
+| Colores | 🔴 Rojo, 🔵 Azul, 🟢 Verde |
+| Fila | Exactamente 2 de cada color por fila (6 celdas) |
+| Columna | Exactamente 2 de cada color por columna (6 celdas) |
+| Interacción | Clic para ciclar entre los 3 colores |
+| Victoria | Rellenar las 36 celdas cumpliendo la proporción |
+
+---
+
+## Tecnología
+
+| Aspecto | Detalle |
+|---------|---------|
+| Framework | Svelte 5 (runes `$state`) |
+| Puzzles | Pre-validados con solver de backtracking (Queens) y validador combinatorio (Tango, Zip) |
+| Estilo | Tailwind CSS con dark mode |
+| Offline | 100% cliente, sin backend ni APIs |

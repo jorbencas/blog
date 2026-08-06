@@ -1,12 +1,14 @@
 <script>
   import { onMount } from 'svelte';
+  import puzzles from './juegos_logicos_puzzles.json';
+
   let activeGame = $state("pinpoint");
 
   // ============================================================
   // PINPOINT - Adivina la palabra con pistas progresivas
   // ============================================================
   const PINPOINT_WORDS = [
-    { word: "ELEFANTE", hints: ["Animal", "Tronco", "Trompa", "Grande", "Película Disney", "Paquidermo"] },
+    { word: "ELEFANTE", hints: ["Animal", "Trompa", "Grande", "Paquidermo", "Safari", "Circus"] },
     { word: "GUITARRA", hints: ["Instrumento", "Cuerdas", "Música", "Acústica", "Rock", "Vibras"] },
     { word: "BIBLIOTECA", hints: ["Lugar", "Libros", "Lectura", "Préstamo", "Silencio", "Estanterías"] },
     { word: "CAFETERA", hints: ["Cocina", "Café", "Máquina", "Aromática", "Mañana", "Filtrado"] },
@@ -19,7 +21,7 @@
     { word: "RELÓGIO", hints: ["Tiempo", "Manecillas", "Pulsera", "Cuarzo", "Alarma", "Digital"] },
     { word: "CANGREJO", hints: ["Mar", "Pinzas", "Caparazón", "Playa", "Movimiento lateral", "Mariscos"] },
     { word: "AEROPUERTO", hints: ["Viajes", "Aviones", "Vuelos", "Equipaje", "Pasaporte", "Terminal"] },
-    { word: "PIRÁMIDE", hints: ["Egipto", "Farayón", "Arena", "Antigua", "Triángulo", "Sangre"] },
+    { word: "PIRÁMIDE", hints: ["Egipto", "Faraón", "Arena", "Antigua", "Triángulo", "Sangre"] },
     { word: "CHOCOLATE", hints: ["Dulce", "Cacao", "Tableta", "Tostado", "Suizo", "Postre"] },
   ];
 
@@ -54,23 +56,8 @@
   }
 
   // ============================================================
-  // CROSSCLIMB - Escalera de palabras (misma longitud, 1 letra por paso)
+  // CROSSCLIMB - Escalera de palabras (pre-validated pairs)
   // ============================================================
-  const CROSSCLIMB_PAIRS = [
-    { start: "PATO", end: "GATO" },
-    { start: "SOL", end: "SOP" },
-    { start: "ROJO", end: "ROTO" },
-    { start: "LUNA", end: "MUNA" },
-    { start: "CASA", end: "CASA" },
-    { start: "TRES", end: "PRES" },
-    { start: "FLOR", end: "FLON" },
-    { start: "MESA", end: "MESA" },
-    { start: "AMOR", end: "AVOR" },
-    { start: "CARRO", end: "CARPO" },
-    { start: "VERDE", end: "CERDE" },
-    { start: "PERRO", end: "PERNO" },
-  ];
-
   let ccPair = $state(null);
   let ccUserPath = $state([]);
   let ccInput = $state("");
@@ -79,8 +66,7 @@
   let ccHistory = $state([]);
 
   function ccStartNew() {
-    const valid = CROSSCLIMB_PAIRS.filter(p => p.start !== p.end);
-    ccPair = valid[Math.floor(Math.random() * valid.length)];
+    ccPair = puzzles.crossclimb[Math.floor(Math.random() * puzzles.crossclimb.length)];
     ccUserPath = [ccPair.start.toUpperCase()];
     ccInput = "";
     ccWon = false;
@@ -117,60 +103,33 @@
   }
 
   // ============================================================
-  // QUEENS - Colocar reinas por fila/columna/región sin tocarse
+  // QUEENS - Pre-generated solvable puzzles
   // ============================================================
   const QUEENS_COLORS = ["#ef4444", "#3b82f6", "#22c55e", "#f59e0b", "#a855f7", "#ec4899", "#06b6d4"];
   let qSize = $state(7);
-  let qGrid = $state([]);
-  let qRegions = $state([]);
+  let qPuzzle = $state(null);
   let qQueens = $state([]);
   let qMessage = $state("");
   let qWon = $state(false);
 
-  function qGenerateRegions() {
-    const n = qSize;
-    const totalCells = n * n;
-    const numRegions = Math.min(n, 7);
-    const regionSize = Math.floor(totalCells / numRegions);
-    let cells = Array.from({ length: totalCells }, (_, i) => i);
-    let regions = [];
-    for (let r = 0; r < numRegions; r++) {
-      let region = [];
-      let startIdx = Math.floor(Math.random() * cells.length);
-      region.push(cells.splice(startIdx, 1)[0]);
-      while (region.length < regionSize && cells.length > 0) {
-        let lastCell = region[region.length - 1];
-        let neighbors = cells.filter(c => {
-          let r1 = Math.floor(lastCell / n), c1 = lastCell % n;
-          let r2 = Math.floor(c / n), c2 = c % n;
-          return Math.abs(r1 - r2) <= 1 && Math.abs(c1 - c2) <= 1;
-        });
-        if (neighbors.length > 0) {
-          let next = neighbors[Math.floor(Math.random() * neighbors.length)];
-          region.push(cells.splice(cells.indexOf(next), 1)[0]);
-        } else {
-          let idx = Math.floor(Math.random() * cells.length);
-          region.push(cells.splice(idx, 1)[0]);
-        }
-      }
-      regions.push(region);
-    }
-    while (cells.length > 0) {
-      regions[regions.length - 1].push(cells.shift());
-    }
-    return regions;
-  }
-
   function qInit() {
+    qPuzzle = puzzles.queens[Math.floor(Math.random() * puzzles.queens.length)];
+    qSize = qPuzzle.size;
     qQueens = [];
     qMessage = "";
     qWon = false;
-    qRegions = qGenerateRegions();
-    qGrid = Array.from({ length: qSize * qSize }, (_, i) => i);
   }
 
   function qCellRegion(cellIdx) {
-    return qRegions.findIndex(r => r.includes(cellIdx));
+    if (!qPuzzle) return -1;
+    const row = Math.floor(cellIdx / qSize);
+    const col = cellIdx % qSize;
+    for (let r = 0; r < qPuzzle.regions.length; r++) {
+      for (const [rr, cc] of qPuzzle.regions[r]) {
+        if (rr === row && cc === col) return r;
+      }
+    }
+    return -1;
   }
 
   function qCellColor(cellIdx) {
@@ -208,30 +167,43 @@
     for (const q of qQueens) {
       if (qIsAttacked(q)) return;
     }
-    for (const region of qRegions) {
-      if (!region.some(c => qQueens.includes(c))) return;
+    for (const region of qPuzzle.regions) {
+      if (!region.some(([r, c]) => qQueens.includes(r * qSize + c))) return;
     }
     qWon = true;
     qMessage = `¡Correcto! ${qSize} reinas colocadas sin conflicto.`;
   }
 
   // ============================================================
-  // TANGO - Cuadrícula con reglas de color/fila/columna
+  // TANGO - Pre-generated valid grids, clear cells for player
   // ============================================================
   let tSize = $state(6);
+  let tSolution = $state([]);
   let tGrid = $state([]);
+  let tRevealed = $state([]);
   let tMessage = $state("");
   let tWon = $state(false);
 
   function tInit() {
-    const n = tSize;
-    tGrid = Array.from({ length: n * n }, () => 0);
-    tMessage = "Alterna las celdas (clic) para que no haya 3+ seguidas del mismo color en fila o columna. Rellena todas las celdas.";
+    tSolution = puzzles.tango[Math.floor(Math.random() * puzzles.tango.length)];
+    tSize = 6;
+    // Reveal ~40% of cells as hints
+    tRevealed = Array.from({ length: 36 }, () => false);
+    let revealed = 0;
+    while (revealed < 14) {
+      const idx = Math.floor(Math.random() * 36);
+      if (!tRevealed[idx]) {
+        tRevealed[idx] = true;
+        revealed++;
+      }
+    }
+    tGrid = tSolution.map((v, i) => tRevealed[i] ? v : 0);
+    tMessage = "Rellena las celdas vacías. No puede haber 3+ del mismo color seguidas en fila o columna.";
     tWon = false;
   }
 
   function tToggleCell(idx) {
-    if (tWon) return;
+    if (tWon || tRevealed[idx]) return;
     tGrid[idx] = tGrid[idx] === 0 ? 1 : tGrid[idx] === 1 ? 2 : 0;
     tGrid = [...tGrid];
     tCheckWin();
@@ -239,6 +211,7 @@
 
   function tCheckWin() {
     const n = tSize;
+    // Check no 3+ consecutive in rows
     for (let r = 0; r < n; r++) {
       for (let c = 0; c < n - 2; c++) {
         const a = tGrid[r * n + c];
@@ -247,6 +220,7 @@
         if (a !== 0 && a === b && b === d) return;
       }
     }
+    // Check no 3+ consecutive in cols
     for (let c = 0; c < n; c++) {
       for (let r = 0; r < n - 2; r++) {
         const a = tGrid[r * n + c];
@@ -255,26 +229,26 @@
         if (a !== 0 && a === b && b === d) return;
       }
     }
+    // Check all filled
     if (tGrid.some(v => v === 0)) return;
     tWon = true;
     tMessage = "¡Correcto! Sin tres seguidas del mismo color.";
   }
 
   // ============================================================
-  // ZIP - Completar cuadrícula con reglas de color
+  // ZIP - Pre-generated valid solutions, clear all for player
   // ============================================================
-  const ZIP_COLORS = ["#ef4444", "#3b82f6", "#22c55e"];
   let zSize = $state(6);
-  let zGrid = $state([]);
   let zSolution = $state([]);
+  let zGrid = $state([]);
   let zMessage = $state("");
   let zWon = $state(false);
 
   function zInit() {
-    const n = zSize;
-    zSolution = Array.from({ length: n * n }, () => Math.floor(Math.random() * 3));
-    zGrid = Array.from({ length: n * n }, () => -1);
-    zMessage = "Rellena cada celda con el color correcto. Cada fila y columna debe tener exactamente 2 de cada color (3 colores, 6 celdas).";
+    zSolution = puzzles.zip[Math.floor(Math.random() * puzzles.zip.length)];
+    zSize = 6;
+    zGrid = Array(36).fill(-1);
+    zMessage = "Rellena cada celda. Cada fila y columna debe tener exactamente 2 de cada color (3 colores).";
     zWon = false;
   }
 
@@ -288,6 +262,7 @@
   function zCheckWin() {
     if (zGrid.some(v => v === -1)) return;
     const n = zSize;
+    // Check rows
     for (let r = 0; r < n; r++) {
       for (let c = 0; c < 3; c++) {
         let count = 0;
@@ -297,6 +272,7 @@
         if (count !== 2) return;
       }
     }
+    // Check cols
     for (let c = 0; c < n; c++) {
       for (let clr = 0; clr < 3; clr++) {
         let count = 0;
@@ -307,7 +283,7 @@
       }
     }
     zWon = true;
-    zMessage = "¡Correcto! Distribución平衡ada.";
+    zMessage = "¡Correcto! Distribución balanceada.";
   }
 
   function setGame(game) {
@@ -338,14 +314,17 @@
     {#if activeGame === 'pinpoint'}
       <div class="game-content">
         <h2 class="game-title text-slate-900 dark:text-white">🎯 Pinpoint</h2>
-        <p class="game-desc text-slate-500 dark:text-slate-400">Adivina la palabra. Cada intento fallido desbloquea una pista.</p>
+        <p class="game-desc text-slate-500 dark:text-slate-400">Adivina la palabra oculta. Empiezas con 1 pista; cada error desbloquea la siguiente. La pista #6 es la más directa.</p>
+        <div class="rules-box bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm text-slate-600 dark:text-slate-400">
+          <strong>Reglas:</strong> Escribe una palabra y pulsa Enter. Si fallas, se muestra una pista nueva. Gana el que adivine en menos intentos. Máximo 6 pistas.
+        </div>
         {#if !ppWord}
           <button type="button" class="btn btn-primary" onclick={ppStartNew}>Empezar</button>
         {:else}
           <div class="hints-list">
             {#each ppWord.hints.slice(0, ppHintIndex + 1) as hint, i}
               <div class="hint-pill bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300">
-                Pista {i + 1}: {hint}
+                Pista {i + 1}/6: {hint}
               </div>
             {/each}
           </div>
@@ -374,7 +353,10 @@
     {:else if activeGame === 'crossclimb'}
       <div class="game-content">
         <h2 class="game-title text-slate-900 dark:text-white">🪜 Crossclimb</h2>
-        <p class="game-desc text-slate-500 dark:text-slate-400">Cambia UNA letra por paso para llegar de "{ccPair?.start}" a "{ccPair?.end}".</p>
+        <p class="game-desc text-slate-500 dark:text-slate-400">Conecta "{ccPair?.start}" con "{ccPair?.end}" cambiando UNA letra en cada paso.</p>
+        <div class="rules-box bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm text-slate-600 dark:text-slate-400">
+          <strong>Reglas:</strong> Cada palabra nueva debe diferir en exactamente 1 letra de la anterior. Misma longitud. Ejemplo: PATO → GATO (cambia P→G). Intenta llegar en el menor número de pasos.
+        </div>
         {#if ccPair}
           <div class="ladder">
             {#each ccUserPath as word, i}
@@ -385,6 +367,9 @@
             {/each}
           </div>
           {#if !ccWon}
+            <p class="text-sm text-slate-500 dark:text-slate-400">
+              Pasos: {ccUserPath.length - 1} | Palabras de {ccPair.start.length} letras
+            </p>
             <div class="input-row">
               <input type="text" bind:value={ccInput} placeholder="Siguiente palabra..." class="game-input bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100"
                 onkeydown={(e) => e.key === 'Enter' && ccStep()} />
@@ -402,27 +387,34 @@
     {:else if activeGame === 'queens'}
       <div class="game-content">
         <h2 class="game-title text-slate-900 dark:text-white">♛ Queens</h2>
-        <p class="game-desc text-slate-500 dark:text-slate-400">Coloca 1 reina por fila, columna y región de color. No pueden tocarse (ni en diagonal).</p>
-        <div class="queens-grid" style="grid-template-columns: repeat({qSize}, 1fr);">
-          {#each qGrid as cell, i}
-            {@const regionColor = qCellColor(i)}
-            {@const isQueen = qQueens.includes(i)}
-            {@const attacked = qIsAttacked(i)}
-            <button type="button"
-              class="queen-cell"
-              class:has-queen={isQueen}
-              class:attacked={attacked && !isQueen}
-              style="background-color: {regionColor}22; border-color: {regionColor}44;"
-              onclick={() => qToggleQueen(i)}>
-              {#if isQueen}♛{/if}
-            </button>
-          {/each}
+        <p class="game-desc text-slate-500 dark:text-slate-400">Coloca {qSize} reinas en un tablero {qSize}×{qSize} sin que se ataquen entre sí.</p>
+        <div class="rules-box bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm text-slate-600 dark:text-slate-400">
+          <strong>Reglas:</strong> 1 reina por fila, 1 por columna, 1 por región de color. Las reinas no pueden compartir fila, columna ni diagonal. Clic para colocar/quitar. Las celdas en rojo están atacadas.
         </div>
-        <div class="legend text-slate-500 dark:text-slate-400">
-          <span class="legend-item">♛ = reina</span>
-          <span class="legend-item">Rojo = atacada</span>
-          <span class="legend-item">{qQueens.length}/{qSize} reinas</span>
-        </div>
+        {#if qPuzzle}
+          <div class="queens-grid" style="grid-template-columns: repeat({qSize}, 1fr);">
+            {#each Array(qSize * qSize) as _, i}
+              {@const regionColor = qCellColor(i)}
+              {@const isQueen = qQueens.includes(i)}
+              {@const attacked = qIsAttacked(i)}
+              <button type="button"
+                class="queen-cell"
+                class:has-queen={isQueen}
+                class:attacked={attacked && !isQueen}
+                style="background-color: {regionColor}22; border-color: {regionColor}44;"
+                onclick={() => qToggleQueen(i)}>
+                {#if isQueen}♛{/if}
+              </button>
+            {/each}
+          </div>
+          <div class="legend text-slate-500 dark:text-slate-400">
+            <span class="legend-item">♛ = reina colocada</span>
+            <span class="legend-item" style="color: #ef4444;">■ = celda atacada</span>
+            <span class="legend-item">{qQueens.length}/{qSize} reinas</span>
+            <span class="legend-item">Tablero {qSize}×{qSize}</span>
+            <span class="legend-item">Clic para colocar/quitar</span>
+          </div>
+        {/if}
         {#if qMessage}
           <div class="game-message" class:success={qWon}>{qMessage}</div>
         {/if}
@@ -433,22 +425,27 @@
     {:else if activeGame === 'tango'}
       <div class="game-content">
         <h2 class="game-title text-slate-900 dark:text-white">💃 Tango</h2>
-        <p class="game-desc text-slate-500 dark:text-slate-400">No puede haber 3+ celdas seguidas del mismo color en fila o columna.</p>
+        <p class="game-desc text-slate-500 dark:text-slate-400">Completa la cuadrícula 6×6 con dos colores sin crear bloques de 3+ iguales.</p>
+        <div class="rules-box bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm text-slate-600 dark:text-slate-400">
+          <strong>Reglas:</strong> Clic en las celdas vacías para alternar entre ● Azul y ○ Naranja. Las celdas gris ya están fijas y no se pueden cambiar. No pueden haber 3+ del mismo color seguidas en fila ni en columna.
+        </div>
         <div class="tango-grid" style="grid-template-columns: repeat({tSize}, 1fr);">
           {#each tGrid as cell, i}
             <button type="button"
               class="tango-cell"
               class:cell-a={cell === 1}
               class:cell-b={cell === 2}
+              class:cell-revealed={tRevealed[i]}
               onclick={() => tToggleCell(i)}>
               {#if cell === 1}●{:else if cell === 2}○{/if}
             </button>
           {/each}
         </div>
-        <div class="legend text-slate-500 dark:text-slate-400">
-          <span class="legend-item">● Azul | ○ Naranja | Vacío</span>
-          <span class="legend-item">Clic para cambiar</span>
-        </div>
+          <div class="legend text-slate-500 dark:text-slate-400">
+            <span class="legend-item">● Azul | ○ Naranja | Vacío</span>
+            <span class="legend-item">Gris = bloqueado (no se cambia)</span>
+            <span class="legend-item">Clic para alternar color</span>
+          </div>
         {#if tMessage}
           <div class="game-message" class:success={tWon}>{tMessage}</div>
         {/if}
@@ -459,7 +456,10 @@
     {:else if activeGame === 'zip'}
       <div class="game-content">
         <h2 class="game-title text-slate-900 dark:text-white">📦 Zip</h2>
-        <p class="game-desc text-slate-500 dark:text-slate-400">Cada fila y columna debe tener exactamente 2 de cada color (4 colores).</p>
+        <p class="game-desc text-slate-500 dark:text-slate-400">Distribuye 3 colores en una cuadrícula 6×6 respetando la proporción exacta.</p>
+        <div class="rules-box bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm text-slate-600 dark:text-slate-400">
+          <strong>Reglas:</strong> Clic en una celda para ciclar entre 🔴 Rojo, 🔵 Azul y 🟢 Verde. Cada fila y cada columna debe tener exactamente 2 de cada color. Rellena las 36 celdas.
+        </div>
         <div class="zip-grid" style="grid-template-columns: repeat({zSize}, 1fr);">
           {#each zGrid as cell, i}
             <button type="button"
@@ -467,16 +467,16 @@
               class:z-red={cell === 0}
               class:z-blue={cell === 1}
               class:z-green={cell === 2}
-              class:z-yellow={cell === 3}
               onclick={() => zCycleColor(i)}>
               {#if cell >= 0}{['🔴', '🔵', '🟢'][cell]}{:else}?{/if}
             </button>
           {/each}
         </div>
-        <div class="legend text-slate-500 dark:text-slate-400">
-          <span class="legend-item">🔴 🔵 🟢 (2 de cada por fila/columna)</span>
-          <span class="legend-item">Clic para cambiar color</span>
-        </div>
+          <div class="legend text-slate-500 dark:text-slate-400">
+            <span class="legend-item">🔴 Rojo | 🔵 Azul | 🟢 Verde</span>
+            <span class="legend-item">2 de cada por fila y columna</span>
+            <span class="legend-item">Clic para ciclar color</span>
+          </div>
         {#if zMessage}
           <div class="game-message" class:success={zWon}>{zMessage}</div>
         {/if}
@@ -496,6 +496,7 @@
   .game-content { display: flex; flex-direction: column; gap: 14px; }
   .game-title { font-size: 1.3rem; font-weight: 800; margin: 0; }
   .game-desc { font-size: 0.9rem; margin: 0; }
+  .rules-box { line-height: 1.5; }
 
   .input-row { display: flex; gap: 8px; }
   .game-input { flex: 1; padding: 10px 14px; border: 1px solid; border-radius: 8px; font-size: 1rem; outline: none; }
@@ -546,6 +547,7 @@
   .tango-cell { aspect-ratio: 1; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 1.2rem; cursor: pointer; transition: all 0.1s; display: flex; align-items: center; justify-content: center; background: #f8fafc; }
   :global(.dark) .tango-cell { background: #1e293b; border-color: #475569; }
   .tango-cell:hover { transform: scale(1.05); }
+  .tango-cell.cell-revealed { opacity: 0.6; cursor: not-allowed; }
   .cell-a { background: #dbeafe !important; color: #2563eb; }
   .cell-b { background: #ffedd5 !important; color: #ea580c; }
   :global(.dark) .cell-a { background: #1e3a5f !important; }
@@ -559,5 +561,4 @@
   .z-red { background: #fee2e2 !important; }
   .z-blue { background: #dbeafe !important; }
   .z-green { background: #dcfce7 !important; }
-  .z-yellow { background: #fef9c3 !important; }
 </style>

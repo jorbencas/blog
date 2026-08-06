@@ -5,7 +5,11 @@ import Information from "@components/Information.astro";
 import { getSortedPosts } from "src/utils";
 import { getCollection } from "astro:content";
 import Weekly from "@components/Weekly.astro";
-import { SOCIAL_LINKS, SITE_DESCRIPTION } from "src/consts";
+import HeroSection from "@components/home/HeroSection.astro";
+import StatsBar from "@components/home/StatsBar.astro";
+import TickerSection from "@components/home/TickerSection.astro";
+import MostReadSection from "@components/home/MostReadSection.astro";
+import NewsletterCTA from "@components/home/NewsletterCTA.astro";
 
 const allPosts = await getCollection("posts");
 const sortedPosts = await getSortedPosts(allPosts);
@@ -88,588 +92,141 @@ const badgeAmber =
 const badgeYellow =
   "inline-flex items-center gap-2 bg-gradient-to-r from-yellow-600 to-yellow-400 dark:from-yellow-600 dark:to-yellow-400 px-5 py-2.5 text-xs sm:text-sm font-black uppercase tracking-[0.25em] text-white dark:text-slate-900 shadow-[4px_4px_0px_0px_rgba(234,179,8,0.3)]";
 
-const stickers = [
-  {
-    name: "html",
-    pos: "top: 0%; right: 10px;",
-    rot: "5deg",
-    c: "#06b6d4",
-    d: "0s",
-  },
-  {
-    name: "python",
-    pos: "top: 8%; right: 120px;",
-    rot: "-4deg",
-    c: "#10b981",
-    d: "0.3s",
-  },
-  {
-    name: "js",
-    pos: "top: 22%; right: 55px;",
-    rot: "-6deg",
-    c: "#f59e0b",
-    d: "0.6s",
-  },
-  {
-    name: "git",
-    pos: "top: 34%; right: 150px;",
-    rot: "3deg",
-    c: "#a855f7",
-    d: "0.9s",
-  },
-  {
-    name: "ts",
-    pos: "top: 44%; right: 20px;",
-    rot: "7deg",
-    c: "#22d3ee",
-    d: "1.2s",
-  },
-  {
-    name: "docker",
-    pos: "top: 56%; right: 75px;",
-    rot: "-2deg",
-    c: "#34d399",
-    d: "1.5s",
-  },
+const stats = [
+  { label: "Proyectos", count: listProjects.length, accent: "text-purple-600 dark:text-purple-500" },
+  { label: "Artículos", count: sortedPosts.length, accent: "text-cyan-600 dark:text-cyan-500" },
+  { label: "Retos", count: challengesPosts.length, accent: "text-amber-600 dark:text-amber-500" },
+  { label: "Herramientas", count: listTools.length, accent: "text-emerald-600 dark:text-emerald-400" },
+  { label: "Semanales", count: listWeeklyPosts.length, accent: "text-yellow-600 dark:text-yellow-500" },
 ];
 ---
 
 <Layout title="Blog | Jorge Beneyto Castelló" section="home">
   <div class="max-w-6xl mx-auto sm:px-6 lg:px-8 mt-10 sm:mt-20">
-    <!-- HERO -->
-    <section class="relative mb-20 md:mb-32">
-      <div
-        class="absolute inset-0 z-0 pointer-events-none select-none circuit-bg"
-        aria-hidden="true"
-      >
-        <div
-          class="absolute inset-0"
-          style="background: radial-gradient(ellipse at 20% 30%, rgba(6,182,212,0.18) 0%, transparent 50%), radial-gradient(ellipse at 75% 25%, rgba(168,85,247,0.12) 0%, transparent 45%), radial-gradient(ellipse at 55% 80%, rgba(245,158,11,0.08) 0%, transparent 40%);"
-        >
-        </div>
-      </div>
-      <div
-        class="hidden md:block absolute inset-0 pointer-events-none select-none z-10"
-      >
-        {
-          stickers.map((s) => (
-            <div
-              class="sticker-float absolute flex items-center justify-center w-[88px] h-[88px] xl:w-[100px] xl:h-[100px] rounded-2xl bg-white dark:bg-slate-900 border-2 shadow-lg"
-              style={`${s.pos} border-color: ${s.c}; --r: ${s.rot}; --gc: ${s.c}40; animation: float 4s ease-in-out ${s.d} infinite;`}
-            >
-              <img
-                src={`/icons/${s.name}.svg`}
-                alt={s.name}
-                class="w-10 h-10 xl:w-12 xl:h-12"
-              />
-            </div>
-          ))
-        }
-      </div>
-
-      <div class="flex flex-col gap-6 relative z-10 lg:max-w-xl xl:max-w-2xl">
-        <h1
-          class="text-3xl sm:text-5xl md:text-5xl font-black uppercase italic tracking-tighter leading-[1.1]"
-        >
-          <span
-            class="bg-clip-text text-transparent bg-gradient-to-r from-sky-800 to-cyan-500 dark:from-sky-400 dark:to-cyan-300"
-          >
-            Problemas de un<br />desarrollador Web
-          </span>
-        </h1>
-        <p
-          class="text-lg sm:text-xl text-slate-500 dark:text-slate-400 max-w-2xl leading-relaxed font-medium"
-        >
-          {SITE_DESCRIPTION}
-        </p>
-        <p
-          class="flex items-center gap-1.5 text-sm text-slate-400 dark:text-slate-500 font-medium"
-        >
-          Llevo <strong
-            class="streak-number text-slate-600 dark:text-slate-300 tabular-nums"
-            >{daysSinceFirstPost}</strong
-          > días escribiendo
-        </p>
-        <div class="flex flex-wrap gap-3 items-center mt-2">
-          {
-            SOCIAL_LINKS.slice(0, 5).map((link) => (
-              <a
-                href={link.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 hover:border-[var(--brand)] hover:text-[var(--brand)] dark:hover:text-[var(--brand)] transition-all no-underline"
-                style={`--brand: ${link.color}`}
-              >
-                <img src={link.icon} alt="" class="w-4 h-4" />
-                {link.label}
-              </a>
-            ))
-          }
-        </div>
-      </div>
-    </section>
-
-    <!-- STATS BAR -->
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-10">
-      {
-        [
-          {
-            label: "Proyectos",
-            count: listProjects.length,
-            accent: "text-purple-600 dark:text-purple-500",
-          },
-          {
-            label: "Artículos",
-            count: sortedPosts.length,
-            accent: "text-cyan-600 dark:text-cyan-500",
-          },
-          {
-            label: "Retos",
-            count: challengesPosts.length,
-            accent: "text-amber-600 dark:text-amber-500",
-          },
-          {
-            label: "Herramientas",
-            count: listTools.length,
-            accent: "text-emerald-600 dark:text-emerald-400",
-          },
-          {
-            label: "Semanales",
-            count: listWeeklyPosts.length,
-            accent: "text-yellow-600 dark:text-yellow-500",
-          },
-        ].map((stat) => (
-          <div class="flex flex-col items-center justify-center p-6 rounded-xl border border-slate-200/60 dark:border-slate-800 bg-white/80 dark:bg-slate-900 backdrop-blur-md shadow-sm">
-            <span class={`text-3xl sm:text-4xl font-black ${stat.accent}`}>
-              {stat.count}
-            </span>
-            <span class="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mt-1">
-              {stat.label}
-            </span>
-          </div>
-        ))
-      }
-    </div>
-
-    <!-- TICKER DE ACTIVIDAD -->
-    <div
-      class="mb-16 md:mb-32 overflow-hidden rounded-xl border border-slate-200/60 dark:border-slate-800 bg-white/80 dark:bg-slate-900 backdrop-blur-md shadow-sm"
-    >
-      <div
-        class="flex items-center gap-3 px-4 py-2.5 border-b border-slate-200/60 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/50 backdrop-blur-sm"
-      >
-        <span class="relative flex h-2.5 w-2.5">
-          <span
-            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"
-          ></span>
-          <span
-            class="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-500"
-          ></span>
-        </span>
-        <span
-          class="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500"
-          >Actividad reciente</span
-        >
-      </div>
-      <div class="relative overflow-hidden py-3 mask-ticker">
-        <div
-          class="ticker-track flex items-center gap-4 sm:gap-8 whitespace-nowrap w-max"
-        >
-          {
-            [...tickerItems, ...tickerItems].map((item) => (
-              <a
-                href={item.href}
-                class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-200/50 dark:border-slate-800 bg-white/60 dark:bg-slate-800/50 backdrop-blur-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors no-underline group"
-              >
-                <span class="text-sm">{item.icon}</span>
-                <span class="text-xs font-bold text-slate-600 dark:text-slate-300 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors truncate max-w-[200px]">
-                  {item.title}
-                </span>
-              </a>
-            ))
-          }
-        </div>
-      </div>
-    </div>
-
-    <!-- LO MÁS LEÍDO -->
-    <section class="mb-16 md:mb-32" id="most-read-section">
-      <div
-        class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0 mb-10"
-      >
-        <h2 class={badgeAmber}>🔥 Lo más leído</h2>
-        <a
-          href="/posts"
-          class={`${linkBase} text-slate-400 hover:text-amber-500`}
-        >
-          Ver todos <span
-            class="inline-block transition-transform group-hover:translate-x-1"
-            >→</span
-          >
-          <span
-            class="absolute bottom-0 left-0 w-0 h-0.5 bg-amber-500 transition-all duration-300 group-hover:w-full"
-          ></span>
-        </a>
-      </div>
-      <div id="most-read-list" class="space-y-3">
-        <div
-          class="flex items-center gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 animate-pulse"
-        >
-          <div class="w-8 h-8 rounded-lg bg-slate-200 dark:bg-slate-800"></div>
-          <div class="flex-1 space-y-2">
-            <div class="h-4 bg-slate-200 dark:bg-slate-800 rounded w-3/4">
-            </div><div class="h-3 bg-slate-200 dark:bg-slate-800 rounded w-1/2">
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+    <HeroSection daysSinceFirstPost={daysSinceFirstPost} />
+    <StatsBar stats={stats} />
+    <TickerSection items={tickerItems} />
+    <MostReadSection />
 
     <div class="space-y-16 md:space-y-32 mb-16 md:mb-20">
-      <!-- SECCIÓN: PROYECTOS -->
+      <!-- PROYECTOS -->
       <section class="space-y-10">
-        <div
-          class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0"
-        >
+        <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0">
           <h2 class={badgeProyectos}>💻 Proyectos</h2>
-          <a
-            href="/proyectos"
-            class={`${linkBase} text-slate-400 hover:text-purple-500`}
-          >
-            Ver portafolio <span
-              class="inline-block transition-transform group-hover:translate-x-1"
-              >→</span
-            >
-            <span
-              class="absolute bottom-0 left-0 w-0 h-0.5 bg-purple-500 transition-all duration-300 group-hover:w-full"
-            ></span>
+          <a href="/proyectos" class={`${linkBase} text-slate-400 hover:text-purple-500`}>
+            Ver portafolio <span class="inline-block transition-transform group-hover:translate-x-1">→</span>
+            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-purple-500 transition-all duration-300 group-hover:w-full"></span>
           </a>
         </div>
-        {
-          latestProjects.length > 0 ? (
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {latestProjects.map((project) => (
-                <Card
-                  {...project.data}
-                  href={`/proyectos/${project.id.replace(/\.[^/.]+$/, "")}`}
-                  accent="purple"
-                  aspectRatio="video"
-                  overlay="white"
-                />
-              ))}
-            </div>
-          ) : (
-            <Information section="proyectos" hideButtons />
-          )
-        }
+        {latestProjects.length > 0 ? (
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {latestProjects.map((project) => (
+              <Card {...project.data} href={`/proyectos/${project.id.replace(/\.[^/.]+$/, "")}`} accent="purple" aspectRatio="video" overlay="white" />
+            ))}
+          </div>
+        ) : (
+          <Information section="proyectos" hideButtons />
+        )}
       </section>
 
-      <!-- SECCIÓN: HERRAMIENTAS -->
+      <!-- HERRAMIENTAS -->
       <section class="space-y-10">
-        <div
-          class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0"
-        >
+        <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0">
           <h2 class={badgeHerramientas}>🛠️ Mini Herramientas</h2>
-          <a
-            href="/herramientas"
-            class={`${linkBase} text-slate-400 hover:text-emerald-500`}
-          >
-            Ver herramientas <span
-              class="inline-block transition-transform group-hover:translate-x-1"
-              >→</span
-            >
-            <span
-              class="absolute bottom-0 left-0 w-0 h-0.5 bg-emerald-500 transition-all duration-300 group-hover:w-full"
-            ></span>
+          <a href="/herramientas" class={`${linkBase} text-slate-400 hover:text-emerald-500`}>
+            Ver herramientas <span class="inline-block transition-transform group-hover:translate-x-1">→</span>
+            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-emerald-500 transition-all duration-300 group-hover:w-full"></span>
           </a>
         </div>
-        {
-          latestTools.length > 0 ? (
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {latestTools.map((tool) => (
-                <Card
-                  {...tool.data}
-                  href={`/herramientas/${tool.id.replace(/\.[^/.]+$/, "")}`}
-                  accent="emerald"
-                  aspectRatio="video"
-                  overlay="white"
-                />
-              ))}
-            </div>
-          ) : (
-            <Information section="herramientas" hideButtons />
-          )
-        }
+        {latestTools.length > 0 ? (
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {latestTools.map((tool) => (
+              <Card {...tool.data} href={`/herramientas/${tool.id.replace(/\.[^/.]+$/, "")}`} accent="emerald" aspectRatio="video" overlay="white" />
+            ))}
+          </div>
+        ) : (
+          <Information section="herramientas" hideButtons />
+        )}
       </section>
 
-      <!-- SECCIÓN: RETOS -->
+      <!-- RETOS -->
       <section class="space-y-10">
-        <div
-          class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0"
-        >
+        <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0">
           <h2 class={badgeAmber}>🏆 Retos</h2>
-          <a
-            href="/retos"
-            class={`${linkBase} text-slate-400 hover:text-amber-500`}
-          >
-            Ver retos <span
-              class="inline-block transition-transform group-hover:translate-x-1"
-              >→</span
-            >
-            <span
-              class="absolute bottom-0 left-0 w-0 h-0.5 bg-amber-500 transition-all duration-300 group-hover:w-full"
-            ></span>
+          <a href="/retos" class={`${linkBase} text-slate-400 hover:text-amber-500`}>
+            Ver retos <span class="inline-block transition-transform group-hover:translate-x-1">→</span>
+            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-amber-500 transition-all duration-300 group-hover:w-full"></span>
           </a>
         </div>
-        {
-          latestChallenges.length > 0 ? (
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {latestChallenges.map((ch) => (
-                <Card
-                  {...ch.data}
-                  href={`/retos/${ch.id.replace(/\.[^/.]+$/, "")}`}
-                  accent="amber"
-                />
-              ))}
-            </div>
-          ) : (
-            <Information section="retos" hideButtons />
-          )
-        }
+        {latestChallenges.length > 0 ? (
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {latestChallenges.map((ch) => (
+              <Card {...ch.data} href={`/retos/${ch.id.replace(/\.[^/.]+$/, "")}`} accent="amber" />
+            ))}
+          </div>
+        ) : (
+          <Information section="retos" hideButtons />
+        )}
       </section>
 
-      <!-- SECCIÓN: BLOG -->
+      <!-- BLOG -->
       <section class="space-y-10">
-        <div
-          class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0"
-        >
+        <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0">
           <h2 class={sectionBadge}>📝 Últimos Posts</h2>
-          <a
-            href="/posts"
-            class={`${linkBase} text-slate-400 hover:text-cyan-500`}
-          >
-            Ir a la bitácora <span
-              class="inline-block transition-transform group-hover:translate-x-1"
-              >→</span
-            >
-            <span
-              class="absolute bottom-0 left-0 w-0 h-0.5 bg-cyan-500 transition-all duration-300 group-hover:w-full"
-            ></span>
+          <a href="/posts" class={`${linkBase} text-slate-400 hover:text-cyan-500`}>
+            Ir a la bitácora <span class="inline-block transition-transform group-hover:translate-x-1">→</span>
+            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-cyan-500 transition-all duration-300 group-hover:w-full"></span>
           </a>
         </div>
-        {
-          featuredPost ? (
-            <>
-              <div class="mb-8">
-                <Card
-                  href={`/posts/${featuredPost.id}`}
-                  {...featuredPost.data}
-                  accent="cyan"
-                />
+        {featuredPost ? (
+          <>
+            <div class="mb-8">
+              <Card href={`/posts/${featuredPost.id}`} {...featuredPost.data} accent="cyan" />
+            </div>
+            {remainingPosts.length > 0 && (
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {remainingPosts.map((p) => (
+                  <Card href={`/posts/${p.id}`} {...p.data} accent="cyan" />
+                ))}
               </div>
-              {remainingPosts.length > 0 && (
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {remainingPosts.map((p) => (
-                    <Card href={`/posts/${p.id}`} {...p.data} accent="cyan" />
-                  ))}
-                </div>
-              )}
-            </>
-          ) : (
-            <Information section="posts" hideButtons />
-          )
-        }
+            )}
+          </>
+        ) : (
+          <Information section="posts" hideButtons />
+        )}
       </section>
 
-      <!--SECCIÓN WEEKLY-->
-
+      <!-- WEEKLY -->
       <section class="space-y-10">
-        <div
-          class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0"
-        >
+        <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0">
           <h2 class={badgeYellow}>📰 Resúmenes Semanales</h2>
-          <a
-            href="/weekly"
-            class={`${linkBase} text-slate-400 hover:text-yellow-500`}
-          >
-            Ver todo el archivo <span
-              class="inline-block transition-transform group-hover:translate-x-1"
-              >→</span
-            >
-            <span
-              class="absolute bottom-0 left-0 w-0 h-0.5 bg-yellow-500 transition-all duration-300 group-hover:w-full"
-            ></span>
+          <a href="/weekly" class={`${linkBase} text-slate-400 hover:text-yellow-500`}>
+            Ver todo el archivo <span class="inline-block transition-transform group-hover:translate-x-1">→</span>
+            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-yellow-500 transition-all duration-300 group-hover:w-full"></span>
           </a>
         </div>
-        {
-          latest6Weekly.length > 0 ? (
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {latest6Weekly.map((weekly, index) => (
-                <div class={index === 0 ? "md:col-span-2 lg:col-span-2" : ""}>
-                  <Weekly post={weekly} />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <Information section="weekly" hideButtons />
-          )
-        }
+        {latest6Weekly.length > 0 ? (
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {latest6Weekly.map((weekly, index) => (
+              <div class={index === 0 ? "md:col-span-2 lg:col-span-2" : ""}>
+                <Weekly post={weekly} />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <Information section="weekly" hideButtons />
+        )}
       </section>
 
-      <!-- NEWSLETTER CTA -->
-      <section class="section-non-blog">
-        <div
-          class="relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-gradient-to-br from-sky-900 via-cyan-800 to-sky-900 p-8 sm:p-12"
-        >
-          <div
-            class="absolute inset-0 opacity-10 pointer-events-none"
-            style="background-image: url('/img/circuit-bg.svg'); background-size: 200px;"
-          >
-          </div>
-          <div class="relative z-10 max-w-xl">
-            <h2
-              class="text-2xl sm:text-3xl font-black uppercase italic tracking-tighter text-white mb-3"
-            >
-              📬 Newsletter
-            </h2>
-            <p
-              class="text-cyan-100/80 text-sm sm:text-base leading-relaxed mb-6"
-            >
-              Recibe en tu inbox los resúmenes semanales, nuevos artículos y las
-              mejores herramientas descubiertas en el mundo del desarrollo web.
-            </p>
-            <div class="flex flex-col sm:flex-row gap-3">
-              <input
-                type="email"
-                placeholder="tu@email.com"
-                class="flex-1 px-4 py-3 rounded-lg border border-white/20 bg-white/10 text-white placeholder-white/50 text-sm font-medium focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400"
-              />
-              <button
-                class="px-6 py-3 bg-white text-sky-900 font-black uppercase tracking-wider text-sm rounded-lg hover:bg-cyan-100 transition-colors shrink-0"
-              >
-                Suscribirse →
-              </button>
-            </div>
-            <p class="text-cyan-200/50 text-xs mt-3">
-              Sin spam. Cancela cuando quieras.
-            </p>
-          </div>
-        </div>
-      </section>
+      <NewsletterCTA />
     </div>
   </div>
 </Layout>
 
-<script is:inline>
-// --- Most Read: fetch views from API and render ---
-(() => {
-  const container = document.getElementById("most-read-list");
-  if (!container) return;
-
-  const slugs = [
-    "guia-0-100-astro.mdx",
-    "tech-pulse-dashboard.mdx",
-    "guia-0-100-csharp.mdx",
-    "docker-instalacion-primeros-pasos.mdx",
-    "creacion-porfolio-optimizado.mdx",
-  ];
-
-  const labels = {
-    "guia-0-100-astro.mdx": "Guía 0 a 100: Astro",
-    "tech-pulse-dashboard.mdx": "Tech Pulse Dashboard",
-    "guia-0-100-csharp.mdx": "Guía 0 a 100: C#",
-    "docker-instalacion-primeros-pasos.mdx":
-      "Docker: Instalación y primeros pasos",
-    "creacion-porfolio-optimizado.mdx": "Creación de portafolio optimizado",
-  };
-
-  const accents = [
-    "text-amber-500",
-    "text-slate-400",
-    "text-amber-700",
-    "text-slate-400",
-    "text-slate-400",
-  ];
-  const medals = ["🥇", "🥈", "🥉", "4", "5"];
-
-  fetch("/api/views")
-    .then((r) => r.json())
-    .then((data) => {
-      if (!Array.isArray(data) || data.length === 0) {
-        container.innerHTML = slugs
-          .map(
-            (slug, i) => `
-            <a href="/posts/${slug.replace(
-              ".mdx",
-              ""
-            )}" class="flex items-center gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-amber-500/50 transition-colors no-underline group">
-              <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-lg font-black ${accents[i]
-              }">${medals[i]}</span>
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-bold text-slate-700 dark:text-slate-200 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors truncate">${labels[slug] || slug
-              }</p>
-                <p class="text-xs text-slate-400 dark:text-slate-500">${Math.floor(
-                Math.random() * 80 + 20
-              )} vistas</p>
-              </div>
-            </a>
-          `
-          )
-          .join("");
-        return;
-      }
-
-      container.innerHTML = data
-        .map(
-          (item, i) => `
-          <a href="/posts/${item.slug.replace(
-            ".mdx",
-            ""
-          )}" class="flex items-center gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-amber-500/50 transition-colors no-underline group">
-            <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-lg font-black ${accents[i] || "text-slate-400"
-            }">${medals[i] || i + 1}</span>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-bold text-slate-700 dark:text-slate-200 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors truncate">${labels[item.slug] || item.slug
-            }</p>
-              <p class="text-xs text-slate-400 dark:text-slate-500">${item.views
-            } vistas</p>
-            </div>
-          </a>
-        `
-        )
-        .join("");
-    })
-    .catch(() => {
-      container.innerHTML = slugs
-        .map(
-          (slug, i) => `
-          <a href="/posts/${slug.replace(
-            ".mdx",
-            ""
-          )}" class="flex items-center gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-amber-500/50 transition-colors no-underline group">
-            <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-lg font-black ${accents[i]
-            }">${medals[i]}</span>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-bold text-slate-700 dark:text-slate-200 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors truncate">${labels[slug] || slug
-            }</p>
-            </div>
-          </a>
-        `
-        )
-        .join("");
-    });
-})();
-</script>
-
 <style is:global>
   @keyframes float {
-    0%,
-    100% {
-      transform: translateY(0px) rotate(var(--r, 0deg));
-    }
-    50% {
-      transform: translateY(-12px) rotate(var(--r, 0deg));
-    }
+    0%, 100% { transform: translateY(0px) rotate(var(--r, 0deg)); }
+    50% { transform: translateY(-12px) rotate(var(--r, 0deg)); }
   }
   .sticker-float {
     transition: all 0.3s ease;
@@ -683,13 +240,8 @@ const stickers = [
     animation: pulse-streak 3s ease-in-out infinite;
   }
   @keyframes pulse-streak {
-    0%,
-    100% {
-      transform: scale(1);
-    }
-    50% {
-      transform: scale(1.08);
-    }
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
   }
   .circuit-bg {
     background-image: url("/img/circuit-bg.svg");

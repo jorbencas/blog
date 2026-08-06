@@ -94,7 +94,9 @@ export const GET: APIRoute = async ({ request }) => {
     const title = rawTitle
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
-      .replace(/&/g, "&amp;");
+      .replace(/&/g, "&amp;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#x27;");
 
     const sectionParam = searchParams.get("section")?.trim()?.toLowerCase() || "";
     const tagsParam = searchParams.get("tags")?.trim() ?? "";
@@ -111,7 +113,7 @@ export const GET: APIRoute = async ({ request }) => {
       tags = sec.stickers;
     } else {
       tags = tagsParam.length > 0
-        ? tagsParam.split(",").filter(Boolean).map((t) => t.trim().toLowerCase())
+        ? tagsParam.split(",").filter(Boolean).map((t) => t.trim().toLowerCase().replace(/[^a-z0-9\-]/g, ""))
         : [];
       if (tags.length === 0) tags = ["default"];
     }
