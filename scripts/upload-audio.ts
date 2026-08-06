@@ -20,6 +20,7 @@ import path from "path";
 
 const AUDIO_DIR = path.resolve(process.cwd(), "public/audio");
 const OUTPUT_MAP = path.resolve(process.cwd(), "data/audio-map.json");
+const OUTPUT_MAP_SRC = path.resolve(process.cwd(), "src/data/audio-map.json");
 
 async function main() {
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
@@ -62,8 +63,12 @@ async function main() {
 
   fs.mkdirSync(path.dirname(OUTPUT_MAP), { recursive: true });
   fs.writeFileSync(OUTPUT_MAP, JSON.stringify(map, null, 2));
+  
+  // Also write to src/data/ for build imports
+  fs.mkdirSync(path.dirname(OUTPUT_MAP_SRC), { recursive: true });
+  fs.writeFileSync(OUTPUT_MAP_SRC, JSON.stringify(map, null, 2));
 
-  console.log(`\nDone! Map written to ${OUTPUT_MAP}`);
+  console.log(`\nDone! Map written to ${OUTPUT_MAP} and ${OUTPUT_MAP_SRC}`);
   console.log(`Total files uploaded: ${Object.keys(map).length}/${files.length}`);
 }
 
