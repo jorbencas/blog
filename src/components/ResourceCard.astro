@@ -9,17 +9,19 @@ interface Props {
   platform?: string;
   favicon?: string;
   pricing?: "free" | "freemium" | "paid";
+  useCases?: string;
+  rating?: string;
 }
 
-const { href, title, description, category, headline, features, platform, favicon, pricing } = Astro.props;
+const { href, title, description, category, headline, features, platform, favicon, pricing, useCases, rating } = Astro.props;
 const domain = favicon || new URL(href).hostname;
 const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
 const hasNewFormat = headline || (features && features.length > 0) || platform;
 
 const pricingConfig = {
-  free: { label: "Gratis", class: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800" },
-  freemium: { label: "Plan gratuito", class: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 border-amber-200 dark:border-amber-800" },
-  paid: { label: "De pago", class: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400 border-orange-200 dark:border-orange-800" },
+  free: { label: "Gratis", class: "bg-gradient-to-r from-emerald-800 to-emerald-500 text-white" },
+  freemium: { label: "Plan gratuito", class: "bg-gradient-to-r from-amber-800 to-amber-500 text-white" },
+  paid: { label: "De pago", class: "bg-gradient-to-r from-orange-800 to-orange-500 text-white" },
 };
 
 const badge = pricing ? pricingConfig[pricing] : null;
@@ -43,16 +45,19 @@ const badge = pricing ? pricingConfig[pricing] : null;
     <div class="flex items-center gap-2 flex-wrap">
       <span class="font-bold text-slate-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">{title}</span>
       {category && (
-        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800">
+        <span class="bg-gradient-to-r from-sky-800 to-cyan-500 px-2 py-0.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-white">
           {category}
         </span>
       )}
       {badge && (
-        <span class={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${badge.class}`}>
+        <span class={`bg-gradient-to-r px-2 py-0.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-white ${badge.class}`}>
           {badge.label}
         </span>
       )}
     </div>
+    {rating && (
+      <p class="text-xs text-amber-500 dark:text-amber-400 mt-1 font-semibold">{rating}</p>
+    )}
     {hasNewFormat ? (
       <div class="mt-1">
         {headline && (
@@ -74,6 +79,9 @@ const badge = pricing ? pricingConfig[pricing] : null;
       </div>
     ) : (
       <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">{description}</p>
+    )}
+    {useCases && (
+      <p class="text-xs text-slate-400 dark:text-slate-500 mt-1 italic">{useCases}</p>
     )}
   </div>
 </a>

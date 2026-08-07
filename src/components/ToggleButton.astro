@@ -34,9 +34,8 @@
     const toggleBtn = document.getElementById("theme-toggle");
     if (!darkIcon || !lightIcon || !toggleBtn) return;
 
-    let isDark = document.documentElement.classList.contains("dark");
-
     function updateIcons() {
+      const isDark = document.documentElement.classList.contains("dark");
       darkIcon.classList.toggle("hidden", !isDark);
       lightIcon.classList.toggle("hidden", isDark);
     }
@@ -44,7 +43,7 @@
     updateIcons();
 
     toggleBtn.onclick = () => {
-      isDark = document.documentElement.classList.toggle("dark");
+      const isDark = document.documentElement.classList.toggle("dark");
       updateIcons();
       localStorage.setItem("color-theme", isDark ? "dark" : "light");
     };

@@ -159,7 +159,7 @@ const initialResources = resources.slice(0, INITIAL_BATCH);
             <div class="category-group" data-category={cat}>
               <div class="flex items-center gap-3 mb-4 mt-2">
                 <h2 class="text-lg font-bold text-slate-900 dark:text-white">{categoryLabels[cat] || cat}</h2>
-                <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800">{items.length}</span>
+                <span class="bg-gradient-to-r from-sky-800 to-cyan-500 px-2 py-0.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-white">{items.length}</span>
                 <div class="flex-1 h-px bg-slate-200 dark:bg-slate-700"></div>
               </div>
               <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -228,9 +228,9 @@ const initialResources = resources.slice(0, INITIAL_BATCH);
 
     function renderItems(items) {
       const pricingConfig = {
-        free: { label: "Gratis", class: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800" },
-        freemium: { label: "Plan gratuito", class: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 border-amber-200 dark:border-amber-800" },
-        paid: { label: "De pago", class: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400 border-orange-200 dark:border-orange-800" },
+        free: { label: "Gratis", class: "bg-gradient-to-r from-emerald-800 to-emerald-500 text-white" },
+        freemium: { label: "Plan gratuito", class: "bg-gradient-to-r from-amber-800 to-amber-500 text-white" },
+        paid: { label: "De pago", class: "bg-gradient-to-r from-orange-800 to-orange-500 text-white" },
       };
 
       const categoryCounts = {};
@@ -248,7 +248,7 @@ const initialResources = resources.slice(0, INITIAL_BATCH);
             group.innerHTML = `
               <div class="flex items-center gap-3 mb-4 mt-2">
                 <h2 class="text-lg font-bold text-slate-900 dark:text-white">${categoryLabels[cat] || cat}</h2>
-                <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800">${count}</span>
+                <span class="bg-gradient-to-r from-sky-800 to-cyan-500 px-2 py-0.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-white">${count}</span>
                 <div class="flex-1 h-px bg-slate-200 dark:bg-slate-700"></div>
               </div>
               <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
@@ -267,7 +267,7 @@ const initialResources = resources.slice(0, INITIAL_BATCH);
         div.dataset.title = r.title.toLowerCase();
         div.dataset.description = r.description.toLowerCase();
         const badge = r.pricing ? pricingConfig[r.pricing] : null;
-        const badgeHtml = badge ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${badge.class}">${badge.label}</span>` : "";
+        const badgeHtml = badge ? `<span class="bg-gradient-to-r ${badge.class} px-2 py-0.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-white">${badge.label}</span>` : "";
         div.innerHTML = `
           <a href="${r.href}" class="flex items-start gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-orange-400 dark:hover:border-orange-400 hover:shadow-xl hover:-translate-y-1 transition-all no-underline group" target="_blank" rel="noopener noreferrer">
             <img src="https://www.google.com/s2/favicons?domain=${new URL(r.href).hostname}&sz=32" width="20" height="20" class="mt-1 shrink-0 rounded bg-slate-100 dark:bg-slate-800 p-0.5" alt="${r.title}" loading="lazy" />
@@ -276,7 +276,10 @@ const initialResources = resources.slice(0, INITIAL_BATCH);
                 <span class="font-bold text-slate-900 dark:text-white group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">${r.title}</span>
                 ${badgeHtml}
               </div>
+              ${r.rating ? `<p class="text-xs text-amber-500 dark:text-amber-400 mt-1 font-semibold">${r.rating}</p>` : ""}
               <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">${r.description}</p>
+              ${r.features && r.features.length > 0 ? `<ul class="mt-1 space-y-0.5">${r.features.map(f => `<li class="text-xs text-cyan-600 dark:text-cyan-400 flex items-center gap-1"><span>✓</span><span>${f}</span></li>`).join("")}</ul>` : ""}
+              ${r.useCases ? `<p class="text-xs text-slate-400 dark:text-slate-500 mt-1 italic">${r.useCases}</p>` : ""}
             </div>
           </a>
         `;

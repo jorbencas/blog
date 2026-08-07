@@ -34,9 +34,14 @@ const finalDescription = description || SITE_DESCRIPTION;
   <head>
     <script is:inline>
       (() => {
-        const stored = localStorage.getItem("color-theme");
-        const isDark = stored === "dark" || (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches);
-        if (isDark) document.documentElement.classList.add("dark");
+        function applyTheme() {
+          const stored = localStorage.getItem("color-theme");
+          const isDark = stored === "dark" || (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches);
+          document.documentElement.classList.toggle("dark", isDark);
+        }
+        applyTheme();
+        document.addEventListener("astro:page-load", applyTheme);
+        document.addEventListener("astro:after-swap", applyTheme);
       })();
     </script>
     <style>
