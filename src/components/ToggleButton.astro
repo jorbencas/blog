@@ -2,7 +2,7 @@
   id="theme-toggle"
   type="button"
   aria-label="Cambiar tema"
-  class="text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 text-sm p-2.5 transition-all duration-300"
+  class="flex items-center justify-center h-9 w-9 rounded-lg text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200"
 >
   <svg
     id="theme-toggle-dark-icon"
@@ -28,18 +28,35 @@
 </button>
 
 <script is:inline>
-const darkIcon = document.getElementById("theme-toggle-dark-icon");
-const lightIcon = document.getElementById("theme-toggle-light-icon");
-const toggleBtn = document.getElementById("theme-toggle");
-let selectedTheme = localStorage.getItem("color-theme");
-let isDark = selectedTheme === "dark" || (!selectedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches);
+(function() {
+  function initToggle() {
+    const darkIcon = document.getElementById("theme-toggle-dark-icon");
+    const lightIcon = document.getElementById("theme-toggle-light-icon");
+    const toggleBtn = document.getElementById("theme-toggle");
 
-darkIcon.classList.toggle("hidden", !isDark);
-lightIcon.classList.toggle("hidden", isDark);
-toggleBtn.addEventListener("click", () => {
-  isDark = document.documentElement.classList.toggle("dark");
-  darkIcon.classList.toggle("hidden", !isDark);
-  lightIcon.classList.toggle("hidden", isDark);
-  localStorage.setItem("color-theme", isDark ? "dark" : "light");
-});
+    if (!darkIcon || !lightIcon || !toggleBtn) return;
+
+    let selectedTheme = localStorage.getItem("color-theme");
+    let isDark = selectedTheme === "dark" || (!selectedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches);
+
+    function updateIcons() {
+      darkIcon.classList.toggle("hidden", !isDark);
+      lightIcon.classList.toggle("hidden", isDark);
+    }
+
+    updateIcons();
+
+    toggleBtn.addEventListener("click", () => {
+      isDark = document.documentElement.classList.toggle("dark");
+      updateIcons();
+      localStorage.setItem("color-theme", isDark ? "dark" : "light");
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initToggle);
+  } else {
+    initToggle();
+  }
+})();
 </script>

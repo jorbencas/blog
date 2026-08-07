@@ -3,6 +3,7 @@ interface Props {
   href: string;
   title: string;
   description: string;
+  category?: string;
   headline?: string;
   features?: string[];
   platform?: string;
@@ -10,7 +11,7 @@ interface Props {
   pricing?: "free" | "freemium" | "paid";
 }
 
-const { href, title, description, headline, features, platform, favicon, pricing } = Astro.props;
+const { href, title, description, category, headline, features, platform, favicon, pricing } = Astro.props;
 const domain = favicon || new URL(href).hostname;
 const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
 const hasNewFormat = headline || (features && features.length > 0) || platform;
@@ -41,6 +42,11 @@ const badge = pricing ? pricingConfig[pricing] : null;
   <div class="flex-1 min-w-0">
     <div class="flex items-center gap-2 flex-wrap">
       <span class="font-bold text-slate-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">{title}</span>
+      {category && (
+        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800">
+          {category}
+        </span>
+      )}
       {badge && (
         <span class={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${badge.class}`}>
           {badge.label}
