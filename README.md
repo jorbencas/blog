@@ -132,45 +132,55 @@ Both live in `src/components/` and follow the blog's design system.
 
 Los archivos de audio (`public/audio/*.mp3`) se almacenan en **Vercel Blob Storage** para no sobrecargar el build con 59MB de MP3.
 
-### Configuración inicial
+### Variables de entorno necesarias
 
-#### Opción A: Vercel CLI (recomendado)
+| Variable | Descripción | Dónde obtenerla |
+|----------|-------------|-----------------|
+| `BLOB_READ_WRITE_TOKEN` | Token de acceso a Vercel Blob | Vercel Dashboard (ver abajo) |
+| `BUTTONDOWN_API_KEY` | API key de Buttondown (newsletter) | Buttondown → Settings → API |
 
-1. **Instalar Vercel CLI** (si no lo tienes):
-   ```bash
-   npm i -g vercel
-   vercel login
-   ```
-
-2. **Crear Blob Store** en tu proyecto:
-   ```bash
-   cd /home/jorge/dev/blog
-   vercel blob enable
-   ```
-   Esto crea el store y genera el token automáticamente.
-
-3. **Copiar el token a `.env`**:
-   ```bash
-   # En /home/jorge/dev/blog/.env
-   BLOB_READ_WRITE_TOKEN=vercel_blob_rw_xxxxxx...
-   ```
-
-#### Opción B: Dashboard web
+### Cómo obtener BLOB_READ_WRITE_TOKEN
 
 1. Ve a [vercel.com/dashboard](https://vercel.com/dashboard)
-2. Selecciona tu proyecto → **Settings** → **Storage**
-3. Haz clic en **Create Blob Store** → nómbralo (ej: `blog-audio`)
-4. Copia el token → pégalo en `.env`:
-   ```
-   BLOB_READ_WRITE_TOKEN=vercel_blob_rw_xxxxxx...
-   ```
+2. Selecciona el proyecto **blog**
+3. Menú lateral → **Settings**
+4. Pestaña **Environment Variables**
+5. Haz clic en **Add**:
+   - Key: `BLOB_READ_WRITE_TOKEN`
+   - Value: (ver paso 6)
+6. **Crear el token:**
+   - Menú lateral → **Storage**
+   - Haz clic en **Create Store** → selecciona **Blob**
+   - Nómbralo (ej: `blog-audio`) → **Create**
+   - En la página del store → pestaña **Tokens**
+   - **Create Token** → cópialo
+7. Vuelve a **Settings → Environment Variables** y pega el token
 
-#### Paso final
+### Cómo obtener BUTTONDOWN_API_KEY
 
-Añadir al `.env.example` para documentación:
+1. Ve a [buttondown.com](https://buttondown.com/) y crea cuenta
+2. Settings → API Keys → **Create API Key**
+3. Copia la key
+4. En Vercel Dashboard → **Settings → Environment Variables**:
+   - Key: `BUTTONDOWN_API_KEY`
+   - Value: (la key copiada)
+
+### Añadir las variables en Vercel
+
+En el dashboard de Vercel:
+
 ```
-BLOB_READ_WRITE_TOKEN= # Vercel Blob read/write token
+Settings → Environment Variables → Add
+
+┌─────────────────────────┬──────────────────────────────┐
+│ Key                     │ Value                        │
+├─────────────────────────┼──────────────────────────────┤
+│ BLOB_READ_WRITE_TOKEN   │ vercel_blob_rw_xxxxx...      │
+│ BUTTONDOWN_API_KEY      │ 2fe6df88-xxxx...             │
+└─────────────────────────┴──────────────────────────────┘
 ```
+
+Seleccionar: **Production**, **Preview**, **Development** (las 3)
 
 ### Subir audios a Blob
 

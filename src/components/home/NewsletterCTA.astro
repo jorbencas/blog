@@ -1,6 +1,4 @@
 ---
-const linkBase = "group relative text-xs font-black uppercase tracking-[0.2em] italic transition-colors w-fit";
-const badgeYellow = "inline-flex items-center gap-2 bg-gradient-to-r from-yellow-600 to-yellow-400 dark:from-yellow-600 dark:to-yellow-400 px-5 py-2.5 text-xs sm:text-sm font-black uppercase tracking-[0.25em] text-white dark:text-slate-900 shadow-[4px_4px_0px_0px_rgba(234,179,8,0.3)]";
 ---
 
 <section class="section-non-blog">
@@ -11,17 +9,65 @@ const badgeYellow = "inline-flex items-center gap-2 bg-gradient-to-r from-yellow
       <p class="text-cyan-100/80 text-sm sm:text-base leading-relaxed mb-6">
         Recibe en tu inbox los resúmenes semanales, nuevos artículos y las mejores herramientas descubiertas en el mundo del desarrollo web.
       </p>
-      <div class="flex flex-col sm:flex-row gap-3">
+      <form id="newsletter-form" class="flex flex-col sm:flex-row gap-3">
         <input
           type="email"
+          name="email"
           placeholder="tu@email.com"
+          required
           class="flex-1 px-4 py-3 rounded-lg border border-white/20 bg-white/10 text-white placeholder-white/50 text-sm font-medium focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400"
         />
-        <button class="px-6 py-3 bg-white text-sky-900 font-black uppercase tracking-wider text-sm rounded-lg hover:bg-cyan-100 transition-colors shrink-0">
+        <button
+          type="submit"
+          class="px-6 py-3 bg-white text-sky-900 font-black uppercase tracking-wider text-sm rounded-lg hover:bg-cyan-100 transition-colors shrink-0"
+        >
           Suscribirse →
         </button>
-      </div>
+      </form>
+      <p id="newsletter-msg" class="text-cyan-200/50 text-xs mt-3 hidden"></p>
       <p class="text-cyan-200/50 text-xs mt-3">Sin spam. Cancela cuando quieras.</p>
     </div>
   </div>
 </section>
+
+<script>
+  const form = document.getElementById("newsletter-form") as HTMLFormElement;
+  const msg = document.getElementById("newsletter-msg");
+
+  form?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const fd = new FormData(form);
+    const email = fd.get("email");
+    const btn = form.querySelector("button") as HTMLButtonElement;
+
+    btn.disabled = true;
+    btn.textContent = "Suscribiendo...";
+
+    try {
+      const res = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+
+      if (msg) {
+        msg.textContent = data.message || data.error || "Respuesta recibida";
+        msg.classList.remove("hidden");
+        msg.classList.toggle("text-cyan-300", res.ok);
+        msg.classList.toggle("text-red-300", !res.ok);
+      }
+
+      if (res.ok) form.reset();
+    } catch {
+      if (msg) {
+        msg.textContent = "Error de conexión";
+        msg.classList.remove("hidden");
+        msg.classList.add("text-red-300");
+      }
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Suscribirse →";
+    }
+  });
+</script>
