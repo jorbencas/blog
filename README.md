@@ -134,15 +134,43 @@ Los archivos de audio (`public/audio/*.mp3`) se almacenan en **Vercel Blob Stora
 
 ### Configuración inicial
 
-1. **Obtener token** — Vercel Dashboard → Tu proyecto → Settings → Tokens → Create Token
-2. **Variables de entorno** — Añadir `BLOB_READ_WRITE_TOKEN` al `.env` del proyecto:
+#### Opción A: Vercel CLI (recomendado)
+
+1. **Instalar Vercel CLI** (si no lo tienes):
+   ```bash
+   npm i -g vercel
+   vercel login
    ```
-   BLOB_READ_WRITE_TOKEN=vercel_blob_rw_xxxxx
+
+2. **Crear Blob Store** en tu proyecto:
+   ```bash
+   cd /home/jorge/dev/blog
+   vercel blob enable
    ```
-3. **Añadir al `.env.example`** para que quede documentado:
+   Esto crea el store y genera el token automáticamente.
+
+3. **Copiar el token a `.env`**:
+   ```bash
+   # En /home/jorge/dev/blog/.env
+   BLOB_READ_WRITE_TOKEN=vercel_blob_rw_xxxxxx...
    ```
-   BLOB_READ_WRITE_TOKEN= # Vercel Blob read/write token
+
+#### Opción B: Dashboard web
+
+1. Ve a [vercel.com/dashboard](https://vercel.com/dashboard)
+2. Selecciona tu proyecto → **Settings** → **Storage**
+3. Haz clic en **Create Blob Store** → nómbralo (ej: `blog-audio`)
+4. Copia el token → pégalo en `.env`:
    ```
+   BLOB_READ_WRITE_TOKEN=vercel_blob_rw_xxxxxx...
+   ```
+
+#### Paso final
+
+Añadir al `.env.example` para documentación:
+```
+BLOB_READ_WRITE_TOKEN= # Vercel Blob read/write token
+```
 
 ### Subir audios a Blob
 

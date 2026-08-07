@@ -7,18 +7,12 @@ import sitemap from "@astrojs/sitemap";
 import vercel from "@astrojs/vercel";
 import svelte from "@astrojs/svelte";
 import remarkGfm from "remark-gfm";
-import path from "path";
 export default defineConfig({
   output: "static",
   adapter: vercel(),
   integrations: [mdx({ remarkPlugins: [remarkGfm] }), sitemap(), svelte()],
   vite: {
     plugins: [tailwindcss()],
-    resolve: {
-      alias: {
-        "@data": path.resolve("./data"),
-      },
-    },
     build: {
       rollupOptions: {
         external: (id) => id === "/pagefind/pagefind.js",

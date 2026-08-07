@@ -20,6 +20,8 @@ import type { MarkdownHeading } from "astro";
 import AudioPlayer from "@components/AudioPlayer.astro";
 import CopyPost from "@components/CopyPost.astro";
 import Disqus from "@components/Disqus.astro";
+import fs from "fs";
+import path from "path";
 
 interface Props {
   mode: "posts" | "proyectos";
@@ -67,8 +69,9 @@ const postUrl = Astro.url.href;
 let resolvedAudioSrc = audioSrc;
 if (audioSrc && audioSrc.startsWith("/audio/")) {
   try {
-    const audioMap = await import("src/data/audio-map.json");
-    resolvedAudioSrc = audioMap.default[audioSrc] || audioSrc;
+    const mapPath = path.resolve(process.cwd(), "src/data/audio-map.json");
+    const audioMap = JSON.parse(fs.readFileSync(mapPath, "utf-8"));
+    resolvedAudioSrc = audioMap[audioSrc] || audioSrc;
   } catch {
     // audio-map.json not found, use local path
   }

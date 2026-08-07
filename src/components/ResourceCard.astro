@@ -7,12 +7,21 @@ interface Props {
   features?: string[];
   platform?: string;
   favicon?: string;
+  pricing?: "free" | "freemium" | "paid";
 }
 
-const { href, title, description, headline, features, platform, favicon } = Astro.props;
+const { href, title, description, headline, features, platform, favicon, pricing } = Astro.props;
 const domain = favicon || new URL(href).hostname;
 const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
 const hasNewFormat = headline || (features && features.length > 0) || platform;
+
+const pricingConfig = {
+  free: { label: "Gratis", class: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800" },
+  freemium: { label: "Plan gratuito", class: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 border-amber-200 dark:border-amber-800" },
+  paid: { label: "De pago", class: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400 border-orange-200 dark:border-orange-800" },
+};
+
+const badge = pricing ? pricingConfig[pricing] : null;
 ---
 
 <a
@@ -29,8 +38,15 @@ const hasNewFormat = headline || (features && features.length > 0) || platform;
     alt={title}
     loading="lazy"
   />
-  <div>
-    <span class="font-bold text-slate-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">{title}</span>
+  <div class="flex-1 min-w-0">
+    <div class="flex items-center gap-2 flex-wrap">
+      <span class="font-bold text-slate-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">{title}</span>
+      {badge && (
+        <span class={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${badge.class}`}>
+          {badge.label}
+        </span>
+      )}
+    </div>
     {hasNewFormat ? (
       <div class="mt-1">
         {headline && (

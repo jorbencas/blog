@@ -387,6 +387,25 @@ ffmpeg -f concat -safe 0 -i lista.txt -c copy output.mp4
 ffmpeg -i v1.mp4 -i v2.mp4 -filter_complex "[0:v]fade=t=out:st=4:d=1[v0];[1:v]fade=t=in:st=0:d=1[v1];[v0][v1]concat=n=2:v=1:a=0" output.mp4
 ```
 
+### Concatenación inteligente (con auto-detección)
+
+Cuando los archivos tienen codecs, resoluciones o FPS distintos, el `concat` básico falla o produce corruptos. La solución es detectar compatibilidad y usar stream copy o re-encode automáticamente:
+
+```sh
+# Detectar si dos archivos son compatibles para concat
+ffprobe -v error -select_streams v:0 -show_entries stream=codec_name,width,height,r_frame_rate -of csv=p=0 video1.mp4
+ffprobe -v error -select_streams v:0 -show_entries stream=codec_name,width,height,r_frame_rate -of csv=p=0 video2.mp4
+
+# Si la salida es idéntica → stream copy (rápido)
+# Si difiere → re-encode con filter_complex concat
+
+# Crossfade entre dos vídeos (transición suave)
+ffmpeg -i v1.mp4 -i v2.mp4 \
+  -filter_complex "[0:v][1:v]xfade=transition=fade:duration=1:offset=9[v]; \
+                   [0:a][1:a]acrossfade=d=1[a]" \
+  -map "[v]" -map "[a]" -c:v libx264 -preset fast -c:a aac output.mp4
+```
+
 ### Redimensionado y escalado
 
 ```sh
@@ -1128,6 +1147,74 @@ Activar:
 ```sh
 sudo systemctl enable video-monitor
 sudo systemctl start video-monitor
+```
+
+## Aceleración por hardware (GPU)
+
+ffmpeg puede usar la GPU para acelerar la codificación de vídeo. Los encoders principales:
+
+| GPU | Encoder | Comando |
+|-----|---------|---------|
+| NVIDIA | NVENC | `-c:v h264_nvenc -preset fast` |
+| Intel/AMD | VAAPI | `-vaapi_device /dev/dri/renderD128 -c:v h264_vaapi` |
+| CPU | libx264 | `-c:v libx264 -preset fast` |
+
+```sh
+# NVIDIA: detectar si hay GPU disponible
+nvidia-smi
+
+# Codificar con NVENC (2-5x más rápido)
+ffmpeg -i input.mp4 -c:v h264_nvenc -preset fast -c:a copy output.mp4
+
+# Codificar con NVENC HEVC (mejor compresión)
+ffmpeg -i input.mp4 -c:v hevc_nvenc -preset fast -c:a copy output.mp4
+
+# Intel/AMD: codificar con VAAPI
+ffmpeg -vaapi_device /dev/dri/renderD128 -i input.mp4 \
+  -vf 'format=nv12,hwupload' -c:v h264_vaapi -c:a copy output.mp4
+
+# Detectar GPU automáticamente (script)
+if command -v nvidia-smi &>/dev/null && nvidia-smi &>/dev/null 2>&1; then
+    ENCODER="h264_nvenc"
+elif [[ -e /dev/dri/renderD128 ]] && command -v vainfo &>/dev/null; then
+    ENCODER="h264_vaapi"
+else
+    ENCODER="libx264"
+fi
+ffmpeg -i input.mp4 -c:v "$ENCODER" -preset fast -c:a copy output.mp4
+```
+
+**Speedup típico:**
+
+| Operación | CPU (libx264) | GPU (NVENC) | Speedup |
+|-----------|---------------|-------------|---------|
+| Convertir 1080p | 30 fps | 120 fps | 4x |
+| Estabilizar | 15 fps | 60 fps | 4x |
+| Denoise | 10 fps | 40 fps | 4x |
+
+## Pipeline encadenado con ffmpeg
+
+Ejecutar múltiples operaciones en un solo comando, evitando archivos intermedios:
+
+```sh
+# Cortar + convertir + fade en un solo pass
+ffmpeg -i input.mp4 \
+  -ss 00:01:00 -t 00:04:00 \
+  -vf "scale=1280:720,fade=t=in:st=0:d=2,fade=t=out:st=178:d=2" \
+  -c:v libx264 -preset fast -c:a aac -b:a 128k \
+  -movflags +faststart output.mp4
+
+# Rotar + denoise + enfocar
+ffmpeg -i input.mp4 \
+  -vf "transpose=1,nlmeans=s=3:p=3:r=9,unsharp=5:5:3:5:5:0" \
+  -c:v libx264 -preset fast -c:a copy output.mp4
+
+# Pipeline completo: descargar + cortar + convertir (yt-dlp + ffmpeg)
+yt-dlp -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]" -o "temp.mp4" "URL" && \
+ffmpeg -i temp.mp4 -ss 00:01:00 -t 00:05:00 \
+  -vf "scale=1280:720" -c:v libx264 -preset fast -c:a aac \
+  -movflags +faststart output.mp4 && \
+rm temp.mp4
 ```
 
 ## Solución de problemas
