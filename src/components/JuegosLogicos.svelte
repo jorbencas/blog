@@ -29,6 +29,7 @@
   let ppHintIndex = $state(0);
   let ppGuess = $state("");
   let ppWon = $state(false);
+  let ppLost = $state(false);
   let ppMessage = $state("");
   let ppHistory = $state([]);
 
@@ -37,17 +38,21 @@
     ppHintIndex = 0;
     ppGuess = "";
     ppWon = false;
+    ppLost = false;
     ppMessage = "";
     ppHistory = [];
   }
 
   function ppGuessWord() {
-    if (!ppGuess.trim() || ppWon) return;
+    if (!ppGuess.trim() || ppWon || ppLost) return;
     const guess = ppGuess.trim().toUpperCase();
-    ppHistory.push({ guess, hint: ppHintIndex + 1 });
+    ppHistory.push({ guess, hint: ppHintIndex + 1, correct: guess === ppWord.word });
     if (guess === ppWord.word) {
       ppWon = true;
       ppMessage = `¡Correcto! La palabra era "${ppWord.word}" en ${ppHintIndex + 1} pista(s).`;
+    } else if (ppHintIndex >= ppWord.hints.length - 1) {
+      ppLost = true;
+      ppMessage = `La palabra era "${ppWord.word}". ¡Mejor suerte la próxima vez!`;
     } else {
       ppHintIndex = Math.min(ppHintIndex + 1, ppWord.hints.length - 1);
       ppMessage = "Incorrecto. Pista nueva desbloqueada.";
@@ -62,6 +67,7 @@
   let ccUserPath = $state([]);
   let ccInput = $state("");
   let ccWon = $state(false);
+  let ccLost = $state(false);
   let ccMessage = $state("");
   let ccHistory = $state([]);
 
@@ -70,6 +76,7 @@
     ccUserPath = [ccPair.start.toUpperCase()];
     ccInput = "";
     ccWon = false;
+    ccLost = false;
     ccMessage = `Cambia UNA letra de "${ccPair.start}" para llegar a "${ccPair.end}"`;
     ccHistory = [];
   }
@@ -84,7 +91,7 @@
   }
 
   function ccStep() {
-    if (!ccInput.trim() || ccWon) return;
+    if (!ccInput.trim() || ccWon || ccLost) return;
     const word = ccInput.trim().toUpperCase();
     const last = ccUserPath[ccUserPath.length - 1];
     if (!ccDiffersByOne(last, word)) {
@@ -96,6 +103,9 @@
     if (word === ccPair.end.toUpperCase()) {
       ccWon = true;
       ccMessage = `¡Llegaste a "${ccPair.end}" en ${ccUserPath.length - 1} paso(s)!`;
+    } else if (ccUserPath.length > 12) {
+      ccLost = true;
+      ccMessage = `Demasiados pasos (${ccUserPath.length - 1}). La ruta óptima era más corta. Intenta de nuevo.`;
     } else {
       ccMessage = `Ahora desde "${word}" → llega a "${ccPair.end}"`;
     }
@@ -321,27 +331,41 @@
         {#if !ppWord}
           <button type="button" class="btn btn-primary" onclick={ppStartNew}>Empezar</button>
         {:else}
+          {#if ppWon}
+            <div class="result-banner win-banner">
+              <div class="result-icon">🎉</div>
+              <div class="result-text">
+                <span class="result-title">¡Victoria!</span>
+                <span class="result-detail">Adivinaste "{ppWord.word}" en {ppHistory.length} intento(s)</span>
+              </div>
+            </div>
+          {:else if ppLost}
+            <div class="result-banner lose-banner">
+              <div class="result-icon">😔</div>
+              <div class="result-text">
+                <span class="result-title">¡Derrota!</span>
+                <span class="result-detail">La palabra era "{ppWord.word}"</span>
+              </div>
+            </div>
+          {/if}
           <div class="hints-list">
             {#each ppWord.hints.slice(0, ppHintIndex + 1) as hint, i}
-              <div class="hint-pill bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300">
+              <div class="hint-pill" class:hint-current={i === ppHintIndex && !ppWon && !ppLost}>
                 Pista {i + 1}/6: {hint}
               </div>
             {/each}
           </div>
-          {#if !ppWon}
+          {#if !ppWon && !ppLost}
             <div class="input-row">
               <input type="text" bind:value={ppGuess} placeholder="Tu guess..." class="game-input bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100"
                 onkeydown={(e) => e.key === 'Enter' && ppGuessWord()} />
               <button type="button" class="btn btn-primary" onclick={ppGuessWord}>Adivinar</button>
             </div>
           {/if}
-          {#if ppMessage}
-            <div class="game-message" class:success={ppWon}>{ppMessage}</div>
-          {/if}
           {#if ppHistory.length > 0}
-            <div class="history text-slate-500 dark:text-slate-400">
+            <div class="history">
               {#each ppHistory as h, i}
-                <span class="history-item" class:wrong={true}>#{i + 1} {h.guess} (pista {h.hint})</span>
+                <span class="history-item" class:correct={h.correct}>{#if h.correct}✓{:else}✗{/if} #{i + 1} {h.guess}</span>
               {/each}
             </div>
           {/if}
@@ -358,15 +382,32 @@
           <strong>Reglas:</strong> Cada palabra nueva debe diferir en exactamente 1 letra de la anterior. Misma longitud. Ejemplo: PATO → GATO (cambia P→G). Intenta llegar en el menor número de pasos.
         </div>
         {#if ccPair}
+          {#if ccWon}
+            <div class="result-banner win-banner">
+              <div class="result-icon">🎉</div>
+              <div class="result-text">
+                <span class="result-title">¡Llegaste!</span>
+                <span class="result-detail">{ccPair.start} → {ccPair.end} en {ccUserPath.length - 1} paso(s)</span>
+              </div>
+            </div>
+          {:else if ccLost}
+            <div class="result-banner lose-banner">
+              <div class="result-icon">😔</div>
+              <div class="result-text">
+                <span class="result-title">Demasiados pasos</span>
+                <span class="result-detail">{ccUserPath.length - 1} pasos. Intenta una ruta más corta.</span>
+              </div>
+            </div>
+          {/if}
           <div class="ladder">
             {#each ccUserPath as word, i}
-              <div class="ladder-step" class:step-first={i === 0} class:step-current={i === ccUserPath.length - 1 && !ccWon}>
+              <div class="ladder-step" class:step-first={i === 0} class:step-current={i === ccUserPath.length - 1 && !ccWon} class:step-end={word === ccPair.end.toUpperCase()}>
                 <span class="step-num text-slate-400 dark:text-slate-500">{i}.</span>
                 <span class="step-word text-slate-900 dark:text-white">{word}</span>
               </div>
             {/each}
           </div>
-          {#if !ccWon}
+          {#if !ccWon && !ccLost}
             <p class="text-sm text-slate-500 dark:text-slate-400">
               Pasos: {ccUserPath.length - 1} | Palabras de {ccPair.start.length} letras
             </p>
@@ -376,8 +417,8 @@
               <button type="button" class="btn btn-primary" onclick={ccStep}>Paso</button>
             </div>
           {/if}
-          {#if ccMessage}
-            <div class="game-message" class:success={ccWon}>{ccMessage}</div>
+          {#if ccMessage && !ccWon && !ccLost}
+            <div class="game-message">{ccMessage}</div>
           {/if}
           <button type="button" class="btn btn-secondary mt-3" onclick={ccStartNew}>Nueva escalera</button>
         {/if}
@@ -391,6 +432,15 @@
         <div class="rules-box bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm text-slate-600 dark:text-slate-400">
           <strong>Reglas:</strong> 1 reina por fila, 1 por columna, 1 por región de color. Las reinas no pueden compartir fila, columna ni diagonal. Clic para colocar/quitar. Las celdas en rojo están atacadas.
         </div>
+        {#if qWon}
+          <div class="result-banner win-banner">
+            <div class="result-icon">🎉</div>
+            <div class="result-text">
+              <span class="result-title">¡Tablero resuelto!</span>
+              <span class="result-detail">{qSize} reinas colocadas sin conflicto</span>
+            </div>
+          </div>
+        {/if}
         {#if qPuzzle}
           <div class="queens-grid" style="grid-template-columns: repeat({qSize}, 1fr);">
             {#each Array(qSize * qSize) as _, i}
@@ -415,9 +465,6 @@
             <span class="legend-item">Clic para colocar/quitar</span>
           </div>
         {/if}
-        {#if qMessage}
-          <div class="game-message" class:success={qWon}>{qMessage}</div>
-        {/if}
         <button type="button" class="btn btn-secondary mt-3" onclick={qInit}>Nuevo tablero</button>
       </div>
 
@@ -429,6 +476,15 @@
         <div class="rules-box bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm text-slate-600 dark:text-slate-400">
           <strong>Reglas:</strong> Clic en las celdas vacías para alternar entre ● Azul y ○ Naranja. Las celdas gris ya están fijas y no se pueden cambiar. No pueden haber 3+ del mismo color seguidas en fila ni en columna.
         </div>
+        {#if tWon}
+          <div class="result-banner win-banner">
+            <div class="result-icon">🎉</div>
+            <div class="result-text">
+              <span class="result-title">¡Completado!</span>
+              <span class="result-detail">Sin tres seguidas del mismo color</span>
+            </div>
+          </div>
+        {/if}
         <div class="tango-grid" style="grid-template-columns: repeat({tSize}, 1fr);">
           {#each tGrid as cell, i}
             <button type="button"
@@ -446,9 +502,6 @@
             <span class="legend-item">Gris = bloqueado (no se cambia)</span>
             <span class="legend-item">Clic para alternar color</span>
           </div>
-        {#if tMessage}
-          <div class="game-message" class:success={tWon}>{tMessage}</div>
-        {/if}
         <button type="button" class="btn btn-secondary mt-3" onclick={tInit}>Nuevo tablero</button>
       </div>
 
@@ -460,6 +513,15 @@
         <div class="rules-box bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm text-slate-600 dark:text-slate-400">
           <strong>Reglas:</strong> Clic en una celda para ciclar entre 🔴 Rojo, 🔵 Azul y 🟢 Verde. Cada fila y cada columna debe tener exactamente 2 de cada color. Rellena las 36 celdas.
         </div>
+        {#if zWon}
+          <div class="result-banner win-banner">
+            <div class="result-icon">🎉</div>
+            <div class="result-text">
+              <span class="result-title">¡Distribución perfecta!</span>
+              <span class="result-detail">2 de cada color en cada fila y columna</span>
+            </div>
+          </div>
+        {/if}
         <div class="zip-grid" style="grid-template-columns: repeat({zSize}, 1fr);">
           {#each zGrid as cell, i}
             <button type="button"
@@ -477,9 +539,6 @@
             <span class="legend-item">2 de cada por fila y columna</span>
             <span class="legend-item">Clic para ciclar color</span>
           </div>
-        {#if zMessage}
-          <div class="game-message" class:success={zWon}>{zMessage}</div>
-        {/if}
         <button type="button" class="btn btn-secondary mt-3" onclick={zInit}>Nuevo tablero</button>
       </div>
     {/if}
@@ -516,12 +575,26 @@
   :global(.dark) .game-message { background: #451a1a; color: #fca5a5; }
   :global(.dark) .game-message.success { background: #14532d; color: #86efac; }
 
+  .result-banner { display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-radius: 12px; font-weight: 600; }
+  .result-icon { font-size: 2rem; line-height: 1; }
+  .result-text { display: flex; flex-direction: column; gap: 2px; }
+  .result-title { font-size: 1.1rem; font-weight: 800; }
+  .result-detail { font-size: 0.85rem; font-weight: 500; opacity: 0.85; }
+  .win-banner { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #166534; border: 1px solid #86efac; }
+  :global(.dark) .win-banner { background: linear-gradient(135deg, #14532d, #166534); color: #86efac; border-color: #22c55e; }
+  .lose-banner { background: linear-gradient(135deg, #fef2f2, #fecaca); color: #991b1b; border: 1px solid #fca5a5; }
+  :global(.dark) .lose-banner { background: linear-gradient(135deg, #451a1a, #7f1d1d); color: #fca5a5; border-color: #ef4444; }
+
   /* PINPOINT */
   .hints-list { display: flex; flex-wrap: wrap; gap: 6px; }
-  .hint-pill { padding: 4px 12px; border-radius: 20px; font-size: 0.82rem; font-weight: 600; }
+  .hint-pill { padding: 4px 12px; border-radius: 20px; font-size: 0.82rem; font-weight: 600; background: #e0f2fe; color: #0369a1; }
+  :global(.dark) .hint-pill { background: #0c4a6e; color: #7dd3fc; }
+  .hint-current { outline: 2px solid currentColor; outline-offset: 1px; }
   .history { display: flex; flex-wrap: wrap; gap: 6px; font-size: 0.8rem; }
-  .history-item { padding: 2px 8px; background: #fee2e2; color: #991b1b; border-radius: 4px; }
+  .history-item { padding: 2px 8px; background: #fee2e2; color: #991b1b; border-radius: 4px; font-weight: 600; }
   :global(.dark) .history-item { background: #451a1a; color: #fca5a5; }
+  .history-item.correct { background: #dcfce7; color: #166534; }
+  :global(.dark) .history-item.correct { background: #14532d; color: #86efac; }
 
   /* CROSSCLIMB */
   .ladder { display: flex; flex-direction: column; gap: 4px; }
@@ -529,6 +602,8 @@
   :global(.dark) .ladder-step { background: #1e293b; border-color: #334155; }
   .step-first { border-left: 3px solid #22c55e; }
   .step-current { border-left: 3px solid #3498db; }
+  .step-end { border-left: 3px solid #22c55e; background: #f0fdf4; }
+  :global(.dark) .step-end { background: #14532d; }
   .step-num { font-size: 0.8rem; font-weight: 700; min-width: 20px; }
   .step-word { font-family: monospace; font-size: 1.1rem; font-weight: 700; letter-spacing: 2px; }
 

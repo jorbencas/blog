@@ -8,7 +8,7 @@
 
 Personal tech & development blog built with Astro 6, Svelte 5 and Tailwind CSS 4. Features technical articles, programming challenges, personal projects, interactive tools, and a weekly AI-generated news recap.
 
-**[→ blog-jorbencas.vercel.app](https://blog-jorbencas.vercel.app/)** · [RSS](/rss.xml)
+**[→ blog-jorbencas.vercel.app](https://blog-jorbencas.vercel.app/)** · [RSS](https://blog-jorbencas.vercel.app/rss.xml)
 
 ---
 

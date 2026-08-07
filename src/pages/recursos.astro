@@ -146,18 +146,37 @@ const initialResources = resources.slice(0, INITIAL_BATCH);
         Mostrando <span id="visible-count">{INITIAL_BATCH}</span> de {resources.length} recursos
       </p>
 
-      <!-- Resources grid (initial batch rendered server-side) -->
-      <div id="resources-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {initialResources.map((r) => (
-          <div
-            class="resource-item"
-            data-category={r.category}
-            data-title={r.title.toLowerCase()}
-            data-description={r.description.toLowerCase()}
-          >
-            <ResourceCard href={r.href} title={r.title} description={r.description} pricing={r.pricing} />
-          </div>
-        ))}
+      <!-- Resources grid (initial batch rendered server-side, grouped by category) -->
+      <div id="resources-grid" class="space-y-8">
+        {(() => {
+          const groups: Record<string, typeof initialResources> = {};
+          for (const r of initialResources) {
+            const cat = r.category || "general";
+            if (!groups[cat]) groups[cat] = [];
+            groups[cat].push(r);
+          }
+          return Object.entries(groups).map(([cat, items]) => (
+            <div class="category-group" data-category={cat}>
+              <div class="flex items-center gap-3 mb-4 mt-2">
+                <h2 class="text-lg font-bold text-slate-900 dark:text-white">{categoryLabels[cat] || cat}</h2>
+                <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800">{items.length}</span>
+                <div class="flex-1 h-px bg-slate-200 dark:bg-slate-700"></div>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {items.map((r) => (
+                  <div
+                    class="resource-item"
+                    data-category={r.category}
+                    data-title={r.title.toLowerCase()}
+                    data-description={r.description.toLowerCase()}
+                  >
+                    <ResourceCard href={r.href} title={r.title} description={r.description} pricing={r.pricing} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ));
+        })()}
       </div>
 
       <!-- Loading spinner -->
@@ -203,6 +222,10 @@ const initialResources = resources.slice(0, INITIAL_BATCH);
       if (visibleCount) visibleCount.textContent = visible;
     }
 
+    const categoryLabels = {"administración de sistemas":"🖥️ Sistemas","algoritmos y práctica":"🧮 Algoritmos","apis":"🔌 APIs","aprendizaje":"📚 Aprendizaje","backend as a service":"⚡ BaaS","blogs":"📝 Blogs","canales de youtube":"📺 YouTube","certificaciones informáticas":"🎓 Certificaciones","cms":"📰 CMS","componentes ui":"🎨 UI","comunidad":"👥 Comunidad","conversión de archivos":"🔄 Archivos","diseño gráfico / figma":"✏️ Diseño","documentación":"📖 Docs","dominios":"🌐 Dominios","editores con ia / editores multimedia":"🎬 Editores","extensiones":"🧩 Extensiones","extracción de información de imágenes/vídeos":"🖼️ Extracción","frameworks":"🏗️ Frameworks","gaming / vr / ar":"🎮 Gaming","git / control de versiones":"🔀 Git","hacking / ciberseguridad":"🛡️ Seguridad","herramientas dev":"🛠️ Dev Tools","hosting / nube":"☁️ Hosting","iconos":"🔷 Iconos","inteligencia artificial":"🤖 IA","multimedia":"🎵 Multimedia","noticias de tecnología":"📰 Noticias","nuevas herramientas descubiertas":"🆕 Nuevas","nuevas-herramientas":"🆕 Nuevas","productividad":"⚡ Productividad","redes / wifi / ethernet":"📶 Redes","rendimiento":"🚀 Rendimiento","repositorios destacados github":"⭐ GitHub","retos de programación":"🎯 Retos","state management":"📦 State","terminal":"💻 Terminal","testing":"🧪 Testing","utilidades dev":"🔧 Utilidades","general":"📌 General"};
+
+    let lastCategory = "";
+
     function renderItems(items) {
       const pricingConfig = {
         free: { label: "Gratis", class: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800" },
@@ -210,7 +233,34 @@ const initialResources = resources.slice(0, INITIAL_BATCH);
         paid: { label: "De pago", class: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400 border-orange-200 dark:border-orange-800" },
       };
 
+      const categoryCounts = {};
+
       items.forEach((r) => {
+        const cat = r.category || "general";
+
+        if (cat !== lastCategory) {
+          const existingGroup = grid.querySelector(`.category-group[data-category="${cat}"]`);
+          if (!existingGroup) {
+            const group = document.createElement("div");
+            group.className = "category-group";
+            group.dataset.category = cat;
+            const count = items.filter((i) => i.category === cat).length;
+            group.innerHTML = `
+              <div class="flex items-center gap-3 mb-4 mt-2">
+                <h2 class="text-lg font-bold text-slate-900 dark:text-white">${categoryLabels[cat] || cat}</h2>
+                <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800">${count}</span>
+                <div class="flex-1 h-px bg-slate-200 dark:bg-slate-700"></div>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            `;
+            grid.appendChild(group);
+          }
+          lastCategory = cat;
+        }
+
+        const group = grid.querySelector(`.category-group[data-category="${cat}"] .grid`);
+        if (!group) return;
+
         const div = document.createElement("div");
         div.className = "resource-item";
         div.dataset.category = r.category;
@@ -218,21 +268,19 @@ const initialResources = resources.slice(0, INITIAL_BATCH);
         div.dataset.description = r.description.toLowerCase();
         const badge = r.pricing ? pricingConfig[r.pricing] : null;
         const badgeHtml = badge ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${badge.class}">${badge.label}</span>` : "";
-        const categoryHtml = r.category ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800">${r.category}</span>` : "";
         div.innerHTML = `
           <a href="${r.href}" class="flex items-start gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-orange-400 dark:hover:border-orange-400 hover:shadow-xl hover:-translate-y-1 transition-all no-underline group" target="_blank" rel="noopener noreferrer">
             <img src="https://www.google.com/s2/favicons?domain=${new URL(r.href).hostname}&sz=32" width="20" height="20" class="mt-1 shrink-0 rounded bg-slate-100 dark:bg-slate-800 p-0.5" alt="${r.title}" loading="lazy" />
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 flex-wrap">
                 <span class="font-bold text-slate-900 dark:text-white group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">${r.title}</span>
-                ${categoryHtml}
                 ${badgeHtml}
               </div>
               <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">${r.description}</p>
             </div>
           </a>
         `;
-        grid.appendChild(div);
+        group.appendChild(div);
       });
       updateCount();
     }
@@ -290,6 +338,7 @@ const initialResources = resources.slice(0, INITIAL_BATCH);
       currentPage = 1;
       hasMore = true;
       isLoading = false;
+      lastCategory = "";
       endMessage.classList.add("hidden");
       emptyState.classList.add("hidden");
       if (sentinel.parentNode) sentinel.parentNode.removeChild(sentinel);
@@ -300,28 +349,31 @@ const initialResources = resources.slice(0, INITIAL_BATCH);
 
     function filterExisting() {
       const query = activeSearch.toLowerCase();
-      const items = grid.querySelectorAll(".resource-item");
-      let visible = 0;
+      const groups = grid.querySelectorAll(".category-group");
+      let totalVisible = 0;
 
-      items.forEach((item) => {
-        const el = item;
-        const cat = el.dataset.category || "";
-        const title = el.dataset.title || "";
-        const desc = el.dataset.description || "";
-
-        const matchesChip = activeCategory === "all" || cat === activeCategory;
-        const matchesSearch = !query || title.includes(query) || desc.includes(query) || cat.includes(query);
-
-        if (matchesChip && matchesSearch) {
-          el.style.display = "";
-          visible++;
-        } else {
-          el.style.display = "none";
-        }
+      groups.forEach((group) => {
+        const items = group.querySelectorAll(".resource-item");
+        let groupVisible = 0;
+        items.forEach((item) => {
+          const cat = item.dataset.category || "";
+          const title = item.dataset.title || "";
+          const desc = item.dataset.description || "";
+          const matchesChip = activeCategory === "all" || cat === activeCategory;
+          const matchesSearch = !query || title.includes(query) || desc.includes(query) || cat.includes(query);
+          if (matchesChip && matchesSearch) {
+            item.style.display = "";
+            groupVisible++;
+          } else {
+            item.style.display = "none";
+          }
+        });
+        group.style.display = groupVisible === 0 ? "none" : "";
+        totalVisible += groupVisible;
       });
 
       updateCount();
-      emptyState.classList.toggle("hidden", visible > 0);
+      emptyState.classList.toggle("hidden", totalVisible > 0);
     }
 
     // Chip clicks

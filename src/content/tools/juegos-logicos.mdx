@@ -9,9 +9,13 @@ author: "Jorge Beneyto Castelló"
 component: "JuegosLogicos"
 ---
 
+5 juegos de lógica pura que entrenan razonamiento, deducción y pensamiento combinatorio. Todo ejecuta en el navegador — sin servidores, sin APIs, sin conexión necesaria.
+
+---
+
 ## 🎯 Pinpoint — Deducción por eliminación
 
-Adivina una palabra oculta. Empiezas con 1 pista; cada error desbloquea la siguiente. La pista #6 es la más directa.
+Adivina una palabra oculta a partir de pistas progresivas. Cada pista te acerca más, pero intenta adivinar cuanto antes.
 
 | Regla | Detalle |
 |-------|---------|
@@ -20,11 +24,23 @@ Adivina una palabra oculta. Empiezas con 1 pista; cada error desbloquea la sigui
 | Límite | 6 intentos máximo |
 | Ejemplo | Pista 1: "Animal" → Pista 2: "Trompa" → ... → Pista 6: "Paquidermo" → ELEFANTE |
 
+### Estrategia
+
+- **Pista 1-2**: Piensa en categorías amplias. ¿Animal, objeto, lugar, concepto?
+- **Pista 3-4**: La palabra empieza a definirse. Usa process of elimination.
+- **Pista 5-6**: Son casi definitorias. Si llegas aquí, ya deberías tenerla.
+- **Tip**: Palabras comunes del español suelen aparecer. Evita sinónimos raros.
+
+### Victoria y derrota
+
+- **Victoria**: Adivinas la palabra antes de agotar las 6 pistas. El banner verde muestra cuántos intentos necesitaste.
+- **Derrota**: Si usas las 6 pistas sin acertar, se revela la palabra. El banner rojo te invita a intentarlo de nuevo.
+
 ---
 
 ## 🪜 Crossclimb — Escalera de palabras
 
-Conecta dos palabras cambiando **UNA letra** en cada paso. Ejemplo: `PATO → GATO` (cambia P→G).
+Conecta dos palabras cambiando **UNA letra** en cada paso. Es un clásico de los juegos lingüísticos.
 
 | Regla | Detalle |
 |-------|---------|
@@ -33,11 +49,30 @@ Conecta dos palabras cambiando **UNA letra** en cada paso. Ejemplo: `PATO → GA
 | Longitud | Todas las palabras deben tener la misma cantidad de letras |
 | Validación | El juego rechaza palabras que no cumplan las reglas |
 
+### Ejemplo resuelto
+
+```
+PATO → GATO → GATO → GATO
+ (P→G)    (A→A)    (T→T)
+```
+
+### Estrategia
+
+- **Mira la diferencia**: ¿Cuántas letras cambian entre inicio y fin? Eso te da el mínimo de pasos.
+- **Cambia una a la vez**: No intentes cambiar varias letras juntas. El juego lo rechazará.
+- **Piensa en familias**: ¿Qué palabras comparten la misma raíz con una letra diferente?
+- **Tip**: Si te atasca, intenta palabras comunes con la misma longitud. El diccionario mental es tu mejor herramienta.
+
+### Victoria y derrota
+
+- **Victoria**: Llegas a la palabra final. El banner verde muestra cuántos pasos necesitaste.
+- **Derrota**: Si superas 12 pasos, el juego te avisa de que la ruta era demasiado larga. Prueba una ruta más corta.
+
 ---
 
 ## ♛ Queens — Reinas sin conflicto
 
-Coloca **N reinas** en un tablero NxN sin que se ataquen entre sí.
+El puzzle clásico de las N-reinas. Coloca **N reinas** en un tablero NxN sin que se ataquen entre sí.
 
 | Regla | Detalle |
 |-------|---------|
@@ -47,11 +82,25 @@ Coloca **N reinas** en un tablero NxN sin que se ataquen entre sí.
 | Sin diagonales | Las reinas no pueden compartir diagonal |
 | Interacción | Clic para colocar/quitar. Celdas en rojo = atacadas |
 
+### Estrategia
+
+- **Empieza por las regiones pequeñas**: Si una región tiene pocas celdas, es más fácil determinar dónde va la reina.
+- **Usa el rojo como guía**: Las celdas en rojo muestran dónde NO puedes colocar una reina. Úsalas para eliminar opciones.
+- **Una reina por fila**: Si ya tienes una reina en una fila, elimina todas las demás celdas de esa fila.
+- **Backtracking**: Si te atasca, quita la última reina coloca y prueba otra posición.
+
+### Victoria
+
+El banner verde aparece cuando:
+- Todas las N reinas están colocadas
+- Ninguna reina se ataca entre sí
+- Cada región tiene exactamente una reina
+
 ---
 
 ## 💃 Tango — Sin tres seguidas
 
-Completa una cuadrícula 6×6 con dos colores **sin crear bloques de 3+ iguales**.
+Completa una cuadrícula 6×6 con dos colores **sin crear bloques de 3+ iguales**. Inspirado en puzzles de restricción combinatoria.
 
 | Regla | Detalle |
 |-------|---------|
@@ -61,11 +110,25 @@ Completa una cuadrícula 6×6 con dos colores **sin crear bloques de 3+ iguales*
 | Interacción | Clic en celdas vacías para alternar entre azul/naranja |
 | Victoria | Rellenar todas las celdas sin violar la regla |
 
+### Estrategia
+
+- **Mira las filas completas**: Si una fila tiene 2 azules seguidos, la siguiente no puede ser azul.
+- **Columnas también cuentan**: No olvides verificar la restricción en columnas, no solo filas.
+- **Empieza por las esquinas**: Las celdas con menos restricciones son las esquinas y bordes.
+- **Patrón交替**: Alterna colores para evitar bloques de 3. ABABAB es un patrón seguro.
+
+### Victoria
+
+El banner verde aparece cuando:
+- Todas las celdas vacías están rellenadas
+- No hay 3+ del mismo color seguidos en fila ni columna
+- Las celdas fijas se mantienen sin cambios
+
 ---
 
 ## 📦 Zip — Distribución exacta
 
-Distribuye 3 colores en una cuadrícula 6×6 respetando la proporción exacta.
+Distribuye 3 colores en una cuadrícula 6×6 respetando la proporción exacta. Un ejercicio de equilibrio combinatorio.
 
 | Regla | Detalle |
 |-------|---------|
@@ -74,6 +137,20 @@ Distribuye 3 colores en una cuadrícula 6×6 respetando la proporción exacta.
 | Columna | Exactamente 2 de cada color por columna (6 celdas) |
 | Interacción | Clic para ciclar entre los 3 colores |
 | Victoria | Rellenar las 36 celdas cumpliendo la proporción |
+
+### Estrategia
+
+- **Cuenta por fila**: Antes de colocar, cuenta cuántos de cada color ya tienes en esa fila.
+- **Cuenta por columna**: Lo mismo aplica para columnas. El doble check es clave.
+- **Empieza por filas casi completas**: Si una fila tiene 5 celdas, la última está determinada.
+- **Patrón**: Un patrón común es R-R-B-B-V-V en filas, pero alterno en columnas.
+
+### Victoria
+
+El banner verde aparece cuando:
+- Las 36 celdas están rellenadas
+- Cada fila tiene exactamente 2 de cada color
+- Cada columna tiene exactamente 2 de cada color
 
 ---
 
@@ -85,3 +162,19 @@ Distribuye 3 colores en una cuadrícula 6×6 respetando la proporción exacta.
 | Puzzles | Pre-validados con solver de backtracking (Queens) y validador combinatorio (Tango, Zip) |
 | Estilo | Tailwind CSS con dark mode |
 | Offline | 100% cliente, sin backend ni APIs |
+
+---
+
+## Preguntas frecuentes
+
+**¿Se guardan las puntuaciones?**
+No, todo es en memoria. Cada vez que recargas la página, empiezas de cero.
+
+**¿Hay niveles de dificultad?**
+Pinpoint y Crossclimb son aleatorios — la dificultad varía según la palabra elegida. Queens usa tableros pre-generados de diferentes tamaños. Tango y Zip tienen puzzles pre-validados de dificultad constante.
+
+**¿Puedo jugar en móvil?**
+Sí, todos los juegos son responsive y táctiles. Los tableros se adaptan al tamaño de pantalla.
+
+**¿Por qué 6×6 en Tango/Zip?**
+Es el tamaño estándar para estos puzzles. Más grande sería demasiado complejo para jugar en navegador; más pequeño sería demasiado fácil.

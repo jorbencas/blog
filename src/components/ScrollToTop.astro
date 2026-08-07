@@ -17,11 +17,12 @@
   </svg>
 </button>
 
-<script>
-  const btn = document.getElementById("scroll-top");
-  if (btn) {
+<script is:inline>
+  function initScrollToTop() {
+    const btn = document.getElementById("scroll-top");
+    if (!btn) return;
     let ticking = false;
-    window.addEventListener("scroll", () => {
+    function onScroll() {
       if (!ticking) {
         requestAnimationFrame(() => {
           const visible = window.scrollY > 400;
@@ -35,9 +36,15 @@
         });
         ticking = true;
       }
-    });
-    btn.addEventListener("click", () => {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    });
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    btn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  document.addEventListener("astro:page-load", initScrollToTop);
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initScrollToTop);
+  } else {
+    initScrollToTop();
   }
 </script>
