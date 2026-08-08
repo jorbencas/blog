@@ -3,7 +3,7 @@ title: "Weekly Tech Recap W32"
 description: "Otro sábado y el café ya está listo. Esta semana ha sido un buen recordatorio de que, si bien la IA sigue volando, también nos está pisando los talone"
 pubDate: "2026-08-08"
 author: "Jorge Beneyto Castelló"
-image: "public/img/arquitectura_web.webp"
+image: "img/2026_w32_tech_recap/2026_w32_tech_recap_cover-1200.webp"
 tags: ["tech", "weekly-recap", "ia", "ciberseguridad", "hardware", "devops", "programacion", "llm", "devto", "nvidia"]
 slug: "2026-w32-tech-recap"
 draft: true
