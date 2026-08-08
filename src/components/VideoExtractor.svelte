@@ -134,7 +134,7 @@
 
   // --- MOTOR EXTRACCIÓN DE FRAMES ---
   function yieldToMain() {
-    return new Promise(resolve => setTimeout(resolve, 0));
+    return new Promise(resolve => requestAnimationFrame(resolve));
   }
 
   async function extractFrames() {
@@ -160,7 +160,7 @@
       }
     }
 
-    const BATCH_SIZE = 5;
+    const BATCH_SIZE = 3;
     for (let i = 0; i < timestamps.length; i++) {
       if (cancelRequested) break;
       try {
@@ -178,6 +178,7 @@
         await yieldToMain();
       }
     }
+    progress = 100;
     statusText = cancelRequested ? "Extracción cancelada" : `¡${imagesDataURLs.length} fotogramas extraídos!`;
     isExtracting = false;
   }
@@ -314,9 +315,26 @@
     isExtracting = false;
   }
 
+  const ALLOWED_VIDEO_TYPES = [
+    'video/mp4', 'video/webm', 'video/ogg', 'video/quicktime',
+    'video/x-msvideo', 'video/x-matroska', 'video/x-flv', 'video/x-m4v',
+  ];
+
+  function isSupportedVideo(file) {
+    if (!file) return false;
+    if (ALLOWED_VIDEO_TYPES.includes(file.type)) return true;
+    const ext = (file.name || '').split('.').pop()?.toLowerCase();
+    return ['mp4', 'webm', 'ogg', 'ogv', 'mov', 'avi', 'mkv', 'm4v', 'flv', 'wmv'].includes(ext);
+  }
+
   // --- MANEJO DE ARCHIVOS ---
   async function handleFile(file) {
-    if (!file || !file.type.startsWith("video/")) return;
+    if (!file) return;
+    if (!isSupportedVideo(file)) {
+      alert('Formato no soportado. Usa MP4, WebM, OGG, MOV o AVI.');
+      if (fileInput) fileInput.value = '';
+      return;
+    }
     if (videoPreviewSrc) URL.revokeObjectURL(videoPreviewSrc);
 
     currentFile = file;
@@ -397,7 +415,7 @@
       <span class="filename text-slate-500 dark:text-slate-400">{currentFile.name}</span>
     {/if}
   </div>
-  <input type="file" bind:this={fileInput} onchange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} accept="video/*" class="hidden-input" />
+  <input type="file" bind:this={fileInput} onchange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} accept="video/mp4,video/webm,video/ogg,video/quicktime,video/x-msvideo,.mp4,.webm,.ogg,.mov,.avi,.mkv,.m4v" class="hidden-input" />
 
   {#if currentFile}
     <div class="video-preview-wrapper">

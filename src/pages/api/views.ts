@@ -2,6 +2,8 @@ import type { APIRoute } from "astro";
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 
+export const prerender = false;
+
 const DATA_DIR = join(process.cwd(), "data");
 const VIEWS_FILE = join(DATA_DIR, "views.json");
 const MAX_ENTRIES = 5000;

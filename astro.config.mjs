@@ -6,11 +6,12 @@ import mdx from "@astrojs/mdx";
 import sitemap from "@astrojs/sitemap";
 import vercel from "@astrojs/vercel";
 import svelte from "@astrojs/svelte";
+import rehypeTableWrapper from "./rehype-table-wrapper.mjs";
 import remarkGfm from "remark-gfm";
 export default defineConfig({
   output: "static",
   adapter: vercel(),
-  integrations: [mdx({ remarkPlugins: [remarkGfm] }), sitemap(), svelte()],
+  integrations: [mdx({ remarkPlugins: [remarkGfm], rehypePlugins: [rehypeTableWrapper] }), sitemap(), svelte()],
   vite: {
     plugins: [tailwindcss()],
     build: {

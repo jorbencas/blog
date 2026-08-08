@@ -311,11 +311,11 @@
 
 <div class="juegos-wrapper text-slate-800 dark:text-slate-100">
   <div class="tabs-navigation bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-    <button type="button" class="tab-btn text-slate-600 dark:text-slate-400" class:active={activeGame === 'pinpoint'} onclick={() => setGame('pinpoint')}>🎯 Pinpoint</button>
-    <button type="button" class="tab-btn text-slate-600 dark:text-slate-400" class:active={activeGame === 'crossclimb'} onclick={() => setGame('crossclimb')}>🪜 Crossclimb</button>
-    <button type="button" class="tab-btn text-slate-600 dark:text-slate-400" class:active={activeGame === 'queens'} onclick={() => setGame('queens')}>♛ Queens</button>
-    <button type="button" class="tab-btn text-slate-600 dark:text-slate-400" class:active={activeGame === 'tango'} onclick={() => setGame('tango')}>💃 Tango</button>
-    <button type="button" class="tab-btn text-slate-600 dark:text-slate-400" class:active={activeGame === 'zip'} onclick={() => setGame('zip')}>📦 Zip</button>
+    <button type="button" class="tab-btn text-slate-600 dark:text-slate-400" class:active={activeGame === 'pinpoint'} onclick={() => setGame('pinpoint')}>🎯 Pinpoint<span class="tab-sub">Adivina la palabra</span></button>
+    <button type="button" class="tab-btn text-slate-600 dark:text-slate-400" class:active={activeGame === 'crossclimb'} onclick={() => setGame('crossclimb')}>🪜 Crossclimb<span class="tab-sub">Escalera de palabras</span></button>
+    <button type="button" class="tab-btn text-slate-600 dark:text-slate-400" class:active={activeGame === 'queens'} onclick={() => setGame('queens')}>♛ Queens<span class="tab-sub">Reinas sin conflicto</span></button>
+    <button type="button" class="tab-btn text-slate-600 dark:text-slate-400" class:active={activeGame === 'tango'} onclick={() => setGame('tango')}>💃 Tango<span class="tab-sub">Sin tres seguidas</span></button>
+    <button type="button" class="tab-btn text-slate-600 dark:text-slate-400" class:active={activeGame === 'zip'} onclick={() => setGame('zip')}>📦 Zip<span class="tab-sub">Distribución 2-2-2</span></button>
   </div>
 
   <div class="game-card bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-5">
@@ -324,9 +324,9 @@
     {#if activeGame === 'pinpoint'}
       <div class="game-content">
         <h2 class="game-title text-slate-900 dark:text-white">🎯 Pinpoint</h2>
-        <p class="game-desc text-slate-500 dark:text-slate-400">Adivina la palabra oculta. Empiezas con 1 pista; cada error desbloquea la siguiente. La pista #6 es la más directa.</p>
+        <p class="game-desc text-slate-500 dark:text-slate-400">Adivina la palabra oculta. Cada error revela una pista más específica. Empiezas con 1 pista y vas desbloqueando hasta 6.</p>
         <div class="rules-box bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm text-slate-600 dark:text-slate-400">
-          <strong>Reglas:</strong> Escribe una palabra y pulsa Enter. Si fallas, se muestra una pista nueva. Gana el que adivine en menos intentos. Máximo 6 pistas.
+          <strong>Cómo jugar:</strong> Escribe una palabra y pulsa Enter o haz clic en "Adivinar". Si fallas, aparece una pista nueva (más concreta). Gana el que adivine en menos intentos. Las pistas van de generales (ej: "Animal") a específicas (ej: "Circus"). Máximo 6 intentos.
         </div>
         {#if !ppWord}
           <button type="button" class="btn btn-primary" onclick={ppStartNew}>Empezar</button>
@@ -351,7 +351,7 @@
           <div class="hints-list">
             {#each ppWord.hints.slice(0, ppHintIndex + 1) as hint, i}
               <div class="hint-pill" class:hint-current={i === ppHintIndex && !ppWon && !ppLost}>
-                Pista {i + 1}/6: {hint}
+                Pista {i + 1}/{ppWord.hints.length}: {hint}
               </div>
             {/each}
           </div>
@@ -379,7 +379,7 @@
         <h2 class="game-title text-slate-900 dark:text-white">🪜 Crossclimb</h2>
         <p class="game-desc text-slate-500 dark:text-slate-400">Conecta "{ccPair?.start}" con "{ccPair?.end}" cambiando UNA letra en cada paso.</p>
         <div class="rules-box bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm text-slate-600 dark:text-slate-400">
-          <strong>Reglas:</strong> Cada palabra nueva debe diferir en exactamente 1 letra de la anterior. Misma longitud. Ejemplo: PATO → GATO (cambia P→G). Intenta llegar en el menor número de pasos.
+          <strong>Cómo jugar:</strong> Escribe una palabra que difiera en exactamente 1 letra de la anterior. Ejemplo: PATO → GATO (cambia P por G). Cada palabra debe tener la misma longitud. El objetivo es llegar a la palabra final en el menor número de pasos. Si superas 12 pasos, pierdes.
         </div>
         {#if ccPair}
           {#if ccWon}
@@ -430,7 +430,7 @@
         <h2 class="game-title text-slate-900 dark:text-white">♛ Queens</h2>
         <p class="game-desc text-slate-500 dark:text-slate-400">Coloca {qSize} reinas en un tablero {qSize}×{qSize} sin que se ataquen entre sí.</p>
         <div class="rules-box bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm text-slate-600 dark:text-slate-400">
-          <strong>Reglas:</strong> 1 reina por fila, 1 por columna, 1 por región de color. Las reinas no pueden compartir fila, columna ni diagonal. Clic para colocar/quitar. Las celdas en rojo están atacadas.
+          <strong>Cómo jugar:</strong> Haz clic en una celda para colocar o quitar una reina. El tablero tiene regiones de colores. Debes colocar exactamente 1 reina por fila, 1 por columna y 1 por región de color. Las reinas no pueden compartir fila, columna ni diagonal. Las celdas en rojo indican que están atacadas por otra reina.
         </div>
         {#if qWon}
           <div class="result-banner win-banner">
@@ -474,7 +474,7 @@
         <h2 class="game-title text-slate-900 dark:text-white">💃 Tango</h2>
         <p class="game-desc text-slate-500 dark:text-slate-400">Completa la cuadrícula 6×6 con dos colores sin crear bloques de 3+ iguales.</p>
         <div class="rules-box bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm text-slate-600 dark:text-slate-400">
-          <strong>Reglas:</strong> Clic en las celdas vacías para alternar entre ● Azul y ○ Naranja. Las celdas gris ya están fijas y no se pueden cambiar. No pueden haber 3+ del mismo color seguidas en fila ni en columna.
+          <strong>Cómo jugar:</strong> Haz clic en las celdas vacías para cambiar entre ● Azul y ○ Naranja. Las celdas grises ya están fijas como pistas y no se pueden modificar. No pueden haber 3 o más del mismo color seguidos en fila ni en columna. Completa todas las celdas vacías para ganar.
         </div>
         {#if tWon}
           <div class="result-banner win-banner">
@@ -511,7 +511,7 @@
         <h2 class="game-title text-slate-900 dark:text-white">📦 Zip</h2>
         <p class="game-desc text-slate-500 dark:text-slate-400">Distribuye 3 colores en una cuadrícula 6×6 respetando la proporción exacta.</p>
         <div class="rules-box bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm text-slate-600 dark:text-slate-400">
-          <strong>Reglas:</strong> Clic en una celda para ciclar entre 🔴 Rojo, 🔵 Azul y 🟢 Verde. Cada fila y cada columna debe tener exactamente 2 de cada color. Rellena las 36 celdas.
+          <strong>Cómo jugar:</strong> Haz clic en una celda para cambiar entre 🔴 Rojo, 🔵 Azul y 🟢 Verde. El objetivo: cada fila y cada columna debe tener exactamente 2 de cada color. Rellena las 36 celdas para completar el tablero.
         </div>
         {#if zWon}
           <div class="result-banner win-banner">
@@ -548,7 +548,8 @@
 <style>
   .juegos-wrapper { max-width: 700px; margin: 0 auto; font-family: system-ui, sans-serif; }
   .tabs-navigation { display: flex; gap: 4px; padding: 4px; border-radius: 8px; margin-bottom: 16px; flex-wrap: wrap; }
-  .tab-btn { flex: 1; min-width: 80px; border: none; background: transparent; padding: 10px 6px; font-weight: 600; font-size: 0.8rem; cursor: pointer; border-radius: 6px; transition: all 0.15s; }
+  .tab-btn { flex: 1; min-width: 80px; border: none; background: transparent; padding: 10px 6px; font-weight: 600; font-size: 0.8rem; cursor: pointer; border-radius: 6px; transition: all 0.15s; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .tab-sub { font-size: 0.6rem; font-weight: 400; opacity: 0.6; }
   .tab-btn.active { background: #ffffff !important; color: #1e293b !important; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
   :global(.dark) .tab-btn.active { background: #1e293b !important; color: #ffffff !important; }
   .game-card { border-radius: 12px; }

@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "FFmpeg + yt-dlp Pipeline: Conversor, Descargador y Editor de Vídeo con 31 Modos"
-description: "Script de 5585 líneas con 31 modos de operación: descarga de YouTube con selección de calidad, conversión para redes sociales, corte lossless, efectos de imagen, GPU encoding automático, pipeline encadenado y más."
+description: "Navaja suiza del vídeo: 31 modos de operación para descargar, convertir, cortar, poner efectos y editar. Selección de calidad, GPU automática, presets para redes sociales y pipeline encadenado. Todo en un solo script de 5585 líneas."
 pubDate: "2026/08/03"
 updatedDate: "2026/08/07"
 tags: ["ffmpeg", "yt-dlp", "docker", "bash", "vídeo", "automatización", "linux"]
@@ -10,17 +10,27 @@ repository: "https://github.com/jorbencas/devjobs/tree/master/ffmpeg-yt-dlp"
 author: "Jorge Beneyto Castelló"
 ---
 
-Tienes vídeos en diferentes formatos (AVI, MKV, WebM, FLV) que necesitas convertir, cortar, comprimir, o editar. Necesitas una herramienta que haga todo desde la línea de comandos, con soporte para red social, aceleración por hardware y modo interactivo.
+Tengo un problema que me llevaba persiguiendo mucho tiempo: acumulo vídeos en montones de formatos diferentes (AVI, MKV, WebM, FLV) que necesito convertir, cortar, comprimir o editar. Cada vez que quiero hacer algo tengo que buscar en Google "cómo convertir vídeo a telegram", "cómo cortar vídeo sin perder calidad", "cómo ponerle efecto fade"... y termino copiando comandos de ffmpeg que no entiendo del todo.
+
+Un día me dije: **esto tiene que ser más fácil**. Quiero una sola herramienta donde pueda decirle "cortame esto de aquí a aquí y pásalo a formato Telegram" y que haga todo solo. Sin copiar comandos, sin buscar tutoriales, sin equivocarme.
+
+Así nació **midu.sh**: un script que ahora tiene 5585 líneas y 31 modos de operación. Empezó siendo un scriptito para cortar vídeos y fue creciendo hasta convertirse en una navaja suiza del vídeo.
 
 ---
 
-## El problema
+## El problema real
 
-Necesitas una única herramienta que descargue vídeos de cualquier sitio, los convierta para distintas redes sociales, los corte, les aplique efectos y maneje subtítulos. Todo desde la terminal, sin depender de interfaces gráficas. Las herramientas existentes suelen ser limitadas a una sola función o requieren configuración complicada.
+Cada vez que necesito hacer algo con un vídeo, tengo que:
 
-## La solución
+1. **Buscar el comando correcto** de ffmpeg (que es potente pero complicadísimo)
+2. **Aprenderme los parámetros** (¿cuál es el bitrate correcto para Instagram? ¿cuánto puedo subir a Telegram?)
+3. **Ejecutarlo sin equivocarme** (un parámetro mal y el vídeo sale corrupto o pesadísimo)
 
-`midu.sh`: un script de **5585 líneas** con **31 modos de operación**, que corre en Docker (Alpine + ffmpeg + yt-dlp) y se integra con un **preview watcher** para abrir vídeos en VLC desde WSL.
+Y si quiero descargar algo de YouTube, necesito otra herramienta. Si quiero cortar, otra. Si quiero ponerle efectos, otra. Son 4-5 herramientas distintas para cosas que deberían hacerse desde un solo sitio.
+
+## Lo que hice
+
+Creé **midu.sh**: un script que junta todo lo que necesitas para trabajar con vídeos en un solo comando. Lo puse en Docker para que funcione en cualquier máquina sin instalar nada, y le añadí un "preview watcher" que abre automáticamente los vídeos en VLC cuando estoy en WSL.
 
 ---
 

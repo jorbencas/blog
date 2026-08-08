@@ -606,6 +606,77 @@ author: "Jorge Beneyto Castelló"
     * `--rerere-autoupdate`: Si tienes rerere activado, resuelve conflictos conocidos automáticamente.
     * `--reschedule-failed-exec`: Vuelve a programar pasos `exec` fallidos al final del rebase en lugar de abortar.
 
+#### Cambiar la fecha de un commit antiguo
+
+**Método 1: Para el ÚLTIMO commit (rápido):**
+```bash
+# Cambiar solo la fecha del autor
+git commit --amend --date="2026-08-01T10:30:00"
+
+# Cambiar fecha del autor Y del committer
+GIT_AUTHOR_DATE="2026-08-01T10:30:00" GIT_COMMITTER_DATE="2026-08-01T10:30:00" git commit --amend --no-edit
+```
+
+**Método 2: Para commits ANTERIORES (rebase interactivo):**
+```bash
+# 1. Abre rebase interactivo desde el commit ANTERIOR al que quieres cambiar
+git rebase -i HEAD~3  # Para los últimos 3 commits
+
+# 2. En el editor, cambia "pick" por "edit" en el commit que quieres modificar
+# pick abc1234 commit viejo
+# pick def5678 otro commit
+
+# 3. Guarda y sal del editor. Git se pausa en ese commit.
+
+# 4. Cambia la fecha del autor
+git commit --amend --date="2026-08-01T10:30:00" --no-edit
+
+# 5. Cambia también la fecha del committer (opcional pero recomendado)
+GIT_COMMITTER_DATE="2026-08-01T10:30:00" git commit --amend --no-edit
+
+# 6. Continúa el rebase
+git rebase --continue
+```
+
+**Método 3: Para MÚLTIPLES commits de golpe:**
+```bash
+# Script que cambia la fecha de todos los commits de un rango
+git rebase -i HEAD~5 --exec '
+    GIT_AUTHOR_DATE="2026-08-01T10:00:00" \
+    GIT_COMMITTER_DATE="2026-08-01T10:00:00" \
+    git commit --amend --no-edit --date="2026-08-01T10:00:00"
+'
+```
+
+**Método 4: Usar filter-repo (para TODO el historial):**
+```bash
+# Cambiar TODAS las fechas de autor de un autor específico
+git filter-repo --mailmap '
+    Antiguo Nombre <antiguo@email.com> => Nuevo Nombre <nuevo@email.com>
+'
+```
+
+**Formatos de fecha aceptados:**
+```bash
+# ISO 8601
+git commit --amend --date="2026-08-01T10:30:00+02:00"
+git commit --amend --date="2026-08-01T10:30:00"
+
+# Relativo
+git commit --amend --date="2 days ago"
+git commit --amend --date="yesterday"
+
+# RFC 2822
+git commit --amend --date="Fri, 1 Aug 2026 10:30:00 +0200"
+```
+
+**Verificar que la fecha cambió:**
+```bash
+git log --format='%h %ai %s' -5     # Formato ISO
+git log --format='%h %ar %s' -5     # Formato relativo
+git log --format='%h %ad %s' --date=short -5  # Formato corto
+```
+
 * **`git range-diff`**:
     * `--creation-factor=<N>`: Ajusta la sensibilidad para detectar commits nuevos (default 60).
     * `--no-dual-color`: Desactiva el coloreado dual (solo rojo/verde normal).
@@ -639,7 +710,45 @@ author: "Jorge Beneyto Castelló"
     * `--recurse-submodules`: Resetea también los submódulos al estado del commit destino.
 
 ### Recuperación
-* **`git reflog`**: El historial de movimientos local para recuperar ramas o commits borrados.
+* **`git reflog`**: El historial de movimientos local para recuperar ramas o commits borrados. Cada vez que HEAD se mueve (commit, reset, checkout, rebase, merge), reflog guarda una entrada.
+
+    * `show [<ref>]`: Muestra el reflog de una referencia específica (por defecto HEAD).
+    * `-n <N>` (`--max-count`): Limita a N entradas.
+    * `--all`: Muestra el reflog de todas las referencias.
+    * `--date=<formato>`: Formato de fecha (`relative`, `iso`, `rfc2822`, `short`, `raw`).
+    * `--pretty=<formato>`: Formato de salida personalizado.
+
+    **Cada entrada del reflog muestra:**
+    ```
+    a1b2c3d HEAD@{0}: commit: mi último commit
+    e4f5g6h HEAD@{1}: reset: moving to HEAD~3
+    i7j8k9l HEAD@{2}: merge feature/branch: Merge
+    ```
+
+    **Casos de uso prácticos:**
+    ```bash
+    # Recuperar un commit borrado con reset --hard
+    git reflog                          # Busca el hash del commit perdido
+    git checkout a1b2c3d               # Accede al commit
+    git branch rama-recuperada          # Crea una rama desde ahí
+
+    # Recuperar una rama borrada
+    git reflog                          # Busca la última entrada de la rama
+    git checkout -b rama-recuperada HEAD@{5}  # Recrea la rama
+
+    # Deshacer un rebase malo
+    git reflog                          # Antes del rebase aparece como HEAD@{n}
+    git reset --hard HEAD@{5}           # Vuelve al estado anterior
+
+    # Ver qué pasó hace 2 horas
+    git reflog --date=relative          # Muestra fechas relativas
+    ```
+
+    **Diferencia con `git log`:**
+    - `git log` muestra commits (públicos, del repositorio)
+    - `git reflog` muestra movimientos de HEAD (privados, solo locales)
+    - reflog se auto-limpia después de 90 días (por defecto)
+    - reflog no se sube al remoto (es solo local)
 * **`git cherry-pick <hash>`**:
     * `-n` (`--no-commit`): Aplica los cambios al stage sin crear commit (útil para cherry-pick múltiple).
     * `-x`: Añade una línea al mensaje indicando de dónde se cherry-pickeó.
@@ -905,6 +1014,540 @@ author: "Jorge Beneyto Castelló"
 
 ---
 
+## 7.5. filter-branch y filter-repo (Reescritura masiva)
+
+### `git filter-branch` ⚠️ DEPRECADO
+
+> **⚠️ ADVERTENCIA:** `git filter-branch` está **deprecado** desde Git 2.24. Usa `git filter-repo` en su lugar. Es más rápido, más seguro y más fácil de usar.
+
+`git filter-branch` reescribe el historial de forma masiva. Es peligroso porque改变了 hashes de commits y puede romper colaboradores.
+
+**Uso básico:**
+```bash
+# Eliminar un archivo de TODO el historial
+git filter-branch --tree-filter 'rm -f secrets.env' HEAD
+
+# Eliminar un archivo del índice (dejar de rastrearlo)
+git filter-branch --index-filter 'git rm --cached --ignore-unmatch secrets.env' HEAD
+
+# Cambiar el email en todos los commits
+git filter-branch --env-filter '
+    if [ "$GIT_AUTHOR_EMAIL" = "antiguo@email.com" ]; then
+        export GIT_AUTHOR_EMAIL="nuevo@email.com"
+        export GIT_COMMITTER_EMAIL="nuego@email.com"
+    fi
+' --tag-name-filter cat -- --all
+
+# Eliminar commits vacíos
+git filter-branch --force --index-filter \
+    'git rm --cached --ignore-unmatch $(git diff --name-only --diff-filter=A HEAD)' \
+    --prune-empty --tag-name-filter cat -- --all
+```
+
+**Flags importantes:**
+| Flag | Qué hace |
+|------|----------|
+| `--tree-filter 'comando'` | Ejecuta el comando en cada commit y guarda el resultado |
+| `--index-filter 'comando'` | Modifica el índice (más rápido que --tree-filter) |
+| `--env-filter 'script'` | Modifica variables de entorno (autor, email, fecha) |
+| `--subdirectory-filter <dir>` | Mueve un subdirectorio a la raíz |
+| `--tag-name-filter cat` | Preserva tags (los re-apunta a nuevos commits) |
+| `--prune-empty` | Elimina commits que quedaron vacíos tras el filtro |
+| `--force` | Fuerza la ejecución |
+| `--all` | Aplica a todas las ramas y tags |
+
+### `git filter-repo` ✅ RECOMENDADO
+
+La alternativa moderna y recomendada. Más rápida, más segura, más fácil.
+
+```bash
+# Instalar (pip)
+pip install filter-repo
+
+# Eliminar un archivo de todo el historial
+git filter-repo --path secrets.env --invert-paths
+
+# Eliminar una carpeta entera
+git filter-repo --path node_modules/ --invert-paths
+
+# Cambiar email en todos los commits
+git filter-repo --mailmap '
+    Antiguo Nombre <antiguo@email.com> => Nuevo Nombre <nuevo@email.com>
+'
+
+# Mantener solo un subdirectorio (útil para extraer un monorepo)
+git filter-repo --subdirectory-filter src/mi-app
+
+# Eliminar archivos grandes (>10MB)
+git filter-repo --strip-blobs-bigger-than 10M
+
+# Poner un subdirectorio en la raíz
+git filter-repo --path src/ --path-rename src/:
+```
+
+**Diferencias con filter-branch:**
+| Aspecto | filter-branch | filter-repo |
+|---------|---------------|-------------|
+| Velocidad | Lento (commit por commit) | Muy rápido (batch processing) |
+| Seguridad | Puede romper el repo | Verifica integridad siempre |
+| Filosofía | Modifica el historial existente | Crea un historial nuevo limpio |
+| Instalación | Viene con Git | Se instala aparte (pip) |
+
+### Cuándo usar reescritura de historial
+
+| Caso | Herramienta | Ejemplo |
+|------|-------------|---------|
+| Subir `.env` por error | filter-repo | `git filter-repo --path .env --invert-paths` |
+| Archivo muy grande | filter-repo | `git filter-repo --strip-blobs-bigger-than 10M` |
+| Cambiar email antiguo | filter-repo | `git filter-repo --mailmap` |
+| Extraer subdirectorio | filter-repo | `git filter-repo --subdirectory-filter src/` |
+| Arreglar autor en pocos commits | rebase -i | Más fácil y seguro |
+
+---
+
+## 8. Hooks (Automatización de Git)
+
+Los hooks son scripts que se ejecutan automáticamente antes o después de ciertas acciones de Git. Viven en `.git/hooks/` y se ejecutan en el lado local (el servidor también tiene hooks, pero son diferentes).
+
+### Hooks más importantes
+
+| Hook | Cuándo se ejecuta | Para qué sirve |
+|------|-------------------|----------------|
+| `pre-commit` | Antes de crear un commit | Linting, formateo, tests rápidos |
+| `prepare-commit-msg` | Después de abrir el editor, antes del commit | Modificar el mensaje automáticamente |
+| `commit-msg` | Después de escribir el mensaje | Validar formato (conventional commits) |
+| `post-commit` | Después del commit | Notificaciones, logs |
+| `pre-push` | Antes de push | Tests completos, verificar que no se sube main |
+| `pre-rebase` | Antes de rebase | Evitar rebases peligrosos |
+| `post-checkout` | Después de checkout/switch | Instalar dependencias, limpiar cache |
+| `post-merge` | Después de merge | Instalar dependencias, regenerar archivos |
+| `pre-auto-gc` | Antes de git gc --auto | Verificar espacio en disco |
+
+### Cómo funcionan
+
+```bash
+# Los hooks están en .git/hooks/
+ls .git/hooks/
+
+# Cada hook es un script ejecutable
+cat .git/hooks/pre-commit
+#!/bin/sh
+# Tu script aquí
+exit 0  # 0 = permitir la operación, 1 = cancelarla
+```
+
+### Crear un hook
+
+```bash
+# 1. Crea el script
+cat > .git/hooks/pre-commit << 'EOF'
+#!/bin/sh
+echo "Ejecutando linting antes del commit..."
+npm run lint
+if [ $? -ne 0 ]; then
+    echo "❌ Linting falló. Commit cancelado."
+    exit 1
+fi
+echo "✅ Linting OK"
+EOF
+
+# 2. Hazlo ejecutable (IMPORTANTE)
+chmod +x .git/hooks/pre-commit
+```
+
+### Hook de ejemplo: pre-commit con lint-staged
+
+```bash
+#!/bin/sh
+# .git/hooks/pre-commit
+# Ejecuta lint solo en los archivos que se van a commitear
+
+staged_files=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(js|ts|jsx|tsx)$')
+
+if [ -n "$staged_files" ]; then
+    echo "Linting archivos:"
+    echo "$staged_files"
+    echo "$staged_files" | xargs npx eslint --fix
+    if [ $? -ne 0 ]; then
+        echo "❌ Linting falló"
+        exit 1
+    fi
+fi
+exit 0
+```
+
+### Hook de ejemplo: commit-msg para conventional commits
+
+```bash
+#!/bin/sh
+# .git/hooks/commit-msg
+# Valida que el mensaje siga el formato conventional commits
+
+commit_msg=$(cat "$1")
+pattern="^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?: .{1,72}"
+
+if ! echo "$commit_msg" | grep -qE "$pattern"; then
+    echo "❌ Mensaje de commit no válido"
+    echo "Formato esperado: tipo(alcance): descripción"
+    echo "Ejemplos: feat(auth): añadir login, fix: corregir bug #123"
+    exit 1
+fi
+exit 0
+```
+
+### Gestión de hooks con herramientas
+
+En lugar de crear hooks manualmente, usa herramientas que los gestionan por ti:
+
+**Husky (Node.js):**
+```bash
+# Instalar husky
+npm install husky --save-dev
+
+# Inicializar
+npx husky init
+
+# Crear hook pre-commit
+echo "npx lint-staged" > .husky/pre-commit
+
+# Crear hook commit-msg
+echo "npx --no -- commitlint --edit \$1" > .husky/commit-msg
+```
+
+**Lefthook (Go, multi-idioma):**
+```bash
+# Instalar lefthook
+brew install lefthook   # macOS
+# o
+go install github.com/evilmartians/lefthook@latest
+
+# Inicializar
+lethook install
+
+# Configurar en lefthook.yml
+pre-commit:
+  commands:
+    lint:
+      run: npx lint-staged {staged_files}
+      glob: "*.{js,ts,jsx,tsx}"
+```
+
+### Hooks compartidos del equipo
+
+Los hooks de `.git/hooks/` **no se suben al repositorio**. Para compartirlos:
+
+1. **Carpeta `.githooks/` en el repo:**
+   ```bash
+   # Configurar Git para usar esa carpeta
+   git config core.hooksPath .githooks
+
+   # O en .git/config
+   [core]
+       hooksPath = .githooks
+   ```
+
+2. **Con Husky (recomendado):** Husky guarda los hooks en `.husky/` que sí se sube al repo.
+
+3. **Con package.json:**
+   ```json
+   {
+     "scripts": {
+       "prepare": "husky"
+     }
+   }
+   ```
+   Esto ejecuta `husky` automáticamente al hacer `npm install`.
+
+### Desactivar hooks temporalmente
+
+```bash
+# Saltar hooks de pre-commit
+git commit --no-verify -m "commit rápido"
+
+# Saltar hooks de pre-push
+git push --no-verify
+```
+
+---
+
+## 9. Alias (Atajos personalizados)
+
+Los alias son atajos que simplifican comandos largos. Se configuran con `git config` y se guardan en `~/.gitconfig` o `.git/config`.
+
+### Crear alias
+
+```bash
+# Sintaxis básica
+git config --global alias.<nombre> "<comando>"
+
+# Ejemplos básicos
+git config --global alias.st status
+git config --global alias.co checkout
+git config --global alias.br branch
+git config --global alias.cm commit
+git config --global alias.lg "log --oneline --graph --all"
+```
+
+### Alias útiles para el día a día
+
+```bash
+# Ver estado
+git config --global alias.st status
+
+# Log visual
+git config --global alias.lg "log --oneline --graph --all --decorate"
+git config --global alias.ll "log --pretty=format:'%C(yellow)%h%Creset %s %C(green)(%cr)%Creset %C(blue)<%an>%Creset' --graph"
+git config --global alias.la "log --pretty=format:'%C(yellow)%h%Creset %s %C(green)(%cr)%Creset' --graph --all"
+
+# Commits
+git config --global alias.amend "commit --amend --no-edit"
+git config --global alias.last "commit -C HEAD"
+git config --global alias.undo "reset --soft HEAD~1"
+
+# Diffs
+git config --global alias.ds "diff --staged"
+git config --global alias.dh "diff HEAD~1"
+
+# Ramas
+git config --global alias.branches "branch -a --sort=-committerdate"
+git config --global alias.unmerged "branch --no-merged"
+
+# Stash
+git config --global alias.s "stash"
+git config --global alias.sp "stash push"
+git config --global alias.sl "stash list"
+
+# Limpieza
+git config --global alias.cleanup "!git branch --merged | grep -v '\\*\\|main\\|master' | xargs -n 1 git branch -d"
+```
+
+### Alias avanzados con `!` (ejecutar shell)
+
+Los alias que empiezan con `!` ejecutan comandos de shell directamente:
+
+```bash
+# Ver el último commit con diff
+git config --global alias.lastdiff "!git show --stat HEAD"
+
+# Commits de hoy
+git config --global alias.today "log --since='00:00:00' --oneline --no-merges"
+
+# Commits de esta semana
+git config --global alias.week "log --since='1 week ago' --oneline --no-merges"
+
+# Autores por número de commits
+git config --global alias.top-authors "shortlog -s -n --no-merges"
+
+# Limpiar ramas ya mergeadas
+git config --global alias.cleanup "!git branch --merged | grep -v '\\*\\|main\\|master\\|develop' | xargs -n 1 git branch -d"
+
+# Abrir el último commit en el navegador (GitHub)
+git config --global alias.browse "!git remote -v | head -1 | sed 's/.*github.com[:/]/https:\\/\\/github.com\\//' | sed 's/\\.git$//' | xargs open"
+
+# Ver archivos ignorados
+git config --global alias.ignored "status --ignored -s"
+
+# Diff con solo nombres de archivos
+git config --global alias.changed "diff --name-only"
+
+# Tag el commit actual
+git config --global alias.tag-now "!git tag -a $(date +%Y%m%d-%H%M%S) -m 'Tag automático'"
+```
+
+### Ver y gestionar alias
+
+```bash
+# Ver todos los alias
+git config --global --get-regexp alias
+
+# Ver un alias concreto
+git config --global alias.lg
+
+# Eliminar un alias
+git config --global --unset alias.lg
+
+# Editar alias manualmente
+git config --global --edit
+```
+
+### Configuración recomendada en `.gitconfig`
+
+```ini
+[alias]
+    st = status
+    co = checkout
+    br = branch
+    cm = commit
+    lg = log --oneline --graph --all --decorate
+    ll = log --pretty=format:'%C(yellow)%h%Creset %s %C(green)(%cr)%Creset %C(blue)<%an>%Creset' --graph
+    amend = commit --amend --no-edit
+    undo = reset --soft HEAD~1
+    ds = diff --staged
+    branches = branch -a --sort=-committerdate
+    cleanup = !git branch --merged | grep -v '\\*\\|main\\|master' | xargs -n 1 git branch -d
+    ignored = status --ignored -s
+    top-authors = shortlog -s -n --no-merges
+```
+
+---
+
+## 10. Comandos Advanced que debes conocer
+
+### Aplicar parches
+
+* **`git apply`**: Aplica parches en formato diff a tu working tree. No crea commits, solo modifica archivos.
+    * `--check`: Verifica si el parche se puede aplicar sin hacer nada (dry-run).
+    * `--stat`: Muestra un resumen de lo que cambiaría el parche.
+    * `--reject`: Aplica lo que puede y guarda lo que falla en archivos `.rej`.
+    * `--3way` (`-3`): Intenta fusión a 3 bandas si el parche no aplica limpiamente.
+    * `--reverse`: Invierte el parche (deshace los cambios).
+    * `--cached`: Aplica los cambios solo al stage (índice).
+    * `-v` (`--verbose`): Salida detallada.
+    * `--whitespace=nowarn` / `--whitespace=fix`: Controla qué hacer con espacios en blanco.
+
+    ```bash
+    git apply --check parche.diff       # ¿Se puede aplicar?
+    git apply parche.diff               # Aplicar al working tree
+    git apply --3way parche.diff        # Aplicar con merge a 3 bandas
+    git apply --reverse parche.diff     # Deshacer el parche
+    ```
+
+* **`git stash`**: Ya cubierto en la sección 2, pero recuerda:
+    * `git stash apply --index` intenta restaurar el stage exacto.
+    * `git stash branch nueva-rama` crea una rama desde el stash.
+
+### Herramientas gráficas y web
+
+* **`git gui`**: Abre una interfaz gráfica para commits ( Tcl/Tk). Útil para:
+    * Ver el diff stageado lado a lado
+    * Hacer amend rápidamente
+    * Navegar el historial de un archivo
+    * Gestionar ramas
+
+* **`gitk`**: Visor de historial gráfico.
+    * `--all`: Muestra todas las ramas.
+    * `--regexp-ignore-case`: Búsqueda insensible a mayúsculas.
+    * `--select=<commit>`: Selecciona un commit específico al abrir.
+    * `--full-history`: Historial completo (sin simplificación).
+
+* **`git citool`**: Alternativa a `git gui` para commits rápidos. Más simple, solo para staging y commit.
+
+* **`git instaweb`**: Levanta un servidor web local para explorar el repositorio en el navegador.
+    * `--httpd=<servidor>`: Servidor a usar (lighttpd, apache, python).
+    * `-p <puerto>`: Puerto (por defecto 1234).
+    * `--start` / `--stop`: Inicia/detiene el servidor.
+    * `--browse`: Abre el navegador automáticamente.
+
+    ```bash
+    git instaweb --start --httpd=python  # Levantar en Python
+    # Abre http://localhost:1234
+    git instaweb --stop                  # Detener
+    ```
+
+### Merge avanzado
+
+* **`git merge-tree`**: Simula un merge sin modificar el working tree. Útil para prever conflictos.
+    * `<base> <ours> <theirs>`: Los tres árboles a fusionar.
+    * El resultado se escribe en stdout con marcadores de conflicto si los hay.
+
+    ```bash
+    # Ver qué pasaría si fusionamos feature en main
+    git merge-tree main feature | head -50
+
+    # Comparar con el merge real
+    git diff HEAD...feature --stat
+    ```
+
+* **`git read-tree`**: Lee un tree object en el índice. Útil para scripting avanzado.
+    * `-m <tree>`: Fusiona un tree en el índice (como un merge sin commit).
+    * `-u`: Actualiza el working tree después de leer el tree.
+    * `--prefix=<prefijo>`: Lee el tree en un subdirectorio del índice.
+
+### Gestión de packs y objetos
+
+* **`git multi-pack-index`** (Git 2.20+): Gestiona un índice que abarca múltiples packs. Acelera operaciones en repos grandes.
+    * `write`: Escribe/actualiza el multi-pack-index.
+    * `verify`: Verifica la integridad del índice.
+    * `expire`: Elimina packs vacíos del índice.
+    * `repack`: Repacka y actualiza el índice.
+    * `--object-dir=<dir>`: Directorio de objetos (para worktrees).
+
+    ```bash
+    git multi-pack-index write          # Generar/actualizar índice
+    git multi-pack-index verify         # Verificar integridad
+    ```
+
+* **`git commit-graph`** (Git 2.18+): Genera un grafo de commits que acelera `git log`, `git merge-base` y `git rev-list`.
+    * `write`: Genera el archivo `commit-graph`.
+    * `verify`: Verifica el archivo.
+    * `read`: Muestra información del grafo.
+    * `--reachable`: Incluye commits alcanzables desde refs.
+    * `--changed-paths`: Añade información de paths cambiados (para `git log --diff-filter` más rápido).
+
+    ```bash
+    git commit-graph write --reachable   # Generar grafo completo
+    git log --commit-graph --oneline     # Usar el grafo (más rápido)
+    ```
+
+### Logs avanzados
+
+* **`git whatchanged`**: Formato antiguo de log que muestra el diff de cada commit. Útil para ver qué archivos cambian en cada commit.
+    * `-p`: Muestra el diff completo (por defecto).
+    * `--stat`: Solo resumen de archivos.
+    * `--oneline`: Formato compacto.
+    * `--since=<fecha>`: Filtrado por fecha.
+
+    ```bash
+    git whatchanged -p --since="2 weeks ago"  # Diffs de los últimos 2 semanas
+    ```
+
+* **`git log --source`**: Muestra de qué rama vino cada commit. Útil en rebase interactivo o cuando usas `--cherry-pick`.
+    * Combined con `--oneline` muestra la rama origen.
+
+* **`git log --cherry-pick`**: Evita mostrar commits equivalentes entre ramas (útil para ver qué falta por integrar sin duplicados).
+
+* **`git log --cherry`**: Como `--cherry-pick` pero en formato `=` (equivale) o `-` (no equivale).
+
+### Peticiones de merge y email
+
+* **`git request-pull`**: Genera un mensaje para pedir que hagan merge de tu rama.
+    * `<origen> <destino> [<url> [<descripción>]]`: Crea el mensaje con la diff entre ramas.
+
+    ```bash
+    git request-pull origin/main feature/login https://github.com/user/repo
+    ```
+
+* **`git send-email`**: Envía parches por email (usado en proyectos Linux/kernel).
+    * `--to=<email>`: Destinatario.
+    * `--cc=<email>`: Copia.
+    * `--cover-letter`: Incluye carta de presentación.
+    * `--annotate`: Añade comentarios a cada parche.
+
+### Información del repositorio
+
+* **`git count-objects -vH`**: Estadísticas de almacenamiento del repo.
+    ```
+    count: 150
+    size: 580.00 KiB
+    in-pack: 1250
+    packs: 1
+    size-pack: 2.30 MiB
+    ```
+
+* **`git fsck --lost-found`**: Restaura objetos huérfanos a `.git/lost-found/`. Útil para recuperar commits perdidos.
+
+* **`git verify-pack -v .git/objects/pack/*.idx`**: Muestra qué objetos están en un pack y su tamaño. Útil para encontrar archivos grandes.
+
+    ```bash
+    # Encontrar los 10 archivos más grandes en el historial
+    git rev-list --objects --all | \
+      git cat-file --batch-check='%(objecttype) %(objectname) %(objectsize) %(rest)' | \
+      sed -n 's/^blob //p' | \
+      sort -rnk2 | head -10
+    ```
+
+---
+
 ## 📂 Bonus: Configuración Global de `.gitignore`
 Evita subir archivos basura de sistema o herramientas en todos tus proyectos locales:
 
@@ -924,8 +1567,287 @@ git config --global core.excludesfile ~/.gitignore_global
 
 # .env
 ```
+---
+
+## 🧹 Guía: Eliminar un archivo del historial de Git como si nunca hubiera existido
+
+Es posible que hayas subido un archivo que **nunca debió estar en el repositorio**: un `.env` con contraseñas, un `node_modules/` de 500MB, un vídeo de prueba, o cualquier archivo que no debería estar ahí. El problema es que, aunque lo borres con `git rm`, el archivo sigue en el historial. Cualquiera que clone el repo puede verlo con `git log -p`.
+
+Esta guía te muestra **cómo eliminar un archivo de TODO el historial** de forma que sea como si nunca hubiera existido.
+
+### ⚠️ Antes de empezar: Entiende las consecuencias
+
+| Consecuencia | Explicación |
+|---|---|
+| **Cambia hashes** | Todos los commits que contenían el archivo tendrán nuevos hashes |
+| **Rompe colaboradores** | Todos los que tengan el repo necesitan clonar de nuevo |
+| **Rompe pull requests** | PRs abiertos contra ramas antiguas dejarán de funcionar |
+| **Rompe CI/CD** | Pipelines que usen commits antiguos fallarán |
+| **No se puede deshacer** | Una vez hecho, no hay vuelta atrás |
+
+**Regla de oro:** Solo haz esto si **realmente necesitas** que el archivo desaparezca del historial (seguridad, datos sensibles, archivos muy grandes).
 
 ---
+
+### Método 1: git filter-repo (RECOMENDADO)
+
+La forma moderna, rápida y segura.
+
+#### Paso 1: Instalar filter-repo
+
+```bash
+# macOS
+brew install filter-repo
+
+# Linux (pip)
+pip install filter-repo
+
+# Ubuntu/Debian
+sudo apt install git-filter-repo
+```
+
+#### Paso 2: Eliminar un archivo concreto
+
+```bash
+# Eliminar un archivo específico de TODO el historial
+git filter-repo --path .env --invert-paths
+
+# Eliminar un archivo con nombre específico
+git filter-repo --path secrets/passwords.txt --invert-paths
+
+# Eliminar MÚLTIPLES archivos
+git filter-repo --path .env --path secrets.json --path *.key --invert-paths
+```
+
+#### Paso 3: Eliminar una carpeta completa
+
+```bash
+# Eliminar toda la carpeta node_modules/
+git filter-repo --path node_modules/ --invert-paths
+
+# Eliminar la carpeta .env/ con todo su contenido
+git filter-repo --path .env/ --invert-paths
+
+# Eliminar archivos grandes (>10MB)
+git filter-repo --strip-blobs-bigger-than 10M
+```
+
+#### Paso 4: Reconfigurar el remote
+
+```bash
+# filter-repo cambia las URLs del remote. Reconfigura:
+git remote add origin https://github.com/tu-usuario/tu-repo.git
+git push origin --all --force
+git push origin --tags --force
+```
+
+---
+
+### Método 2: BFG Repo-Cleaner (alternativa fácil)
+
+BFG es una herramienta externa más fácil de usar que filter-repo para casos comunes.
+
+#### Instalar BFG
+
+```bash
+# macOS
+brew install bfg
+
+# Linux (descargar jar)
+wget https://repo1.maven.org/maven2/com/madgag/bfg/1.14.0/bfg-1.14.0.jar
+# Usar con: java -jar bfg-1.14.0.jar
+```
+
+#### Usar BFG
+
+```bash
+# Eliminar un archivo
+bfg --delete-files .env
+
+# Eliminar una carpeta
+bfg --delete-folders node_modules
+
+# Eliminar archivos >50MB
+bfg --strip-blobs-bigger-than 50M
+
+# Reemplazar texto (ej. contraseñas)
+bfg --replace-text passwords.txt
+```
+
+BFG es más rápido porque no toca commits que no contienen el archivo objetivo.
+
+---
+
+### Método 3: git filter-branch (DEPRECADO)
+
+> ⚠️ **No recomendado.** Úsalo solo si no puedes instalar filter-repo ni BFG.
+
+```bash
+# Eliminar un archivo de TODO el historial
+git filter-branch --tree-filter 'rm -f .env' HEAD
+
+# Eliminar del índice (más rápido)
+git filter-branch --index-filter 'git rm --cached --ignore-unmatch .env' HEAD
+
+# Eliminar una carpeta
+git filter-branch --tree-filter 'rm -rf node_modules' HEAD
+
+# Limpiar después
+git filter-branch --prune-empty --tag-name-filter cat -- --all
+```
+
+---
+
+### Después de eliminar: Pasos obligatorios
+
+#### 1. Verificar que el archivo desapareció
+
+```bash
+# Buscar el archivo en el historial (debería no encontrar nada)
+git log --all --full-history -- .env
+
+# Buscar texto específico en el historial
+git log --all -S "API_KEY" --oneline
+
+# Verificar tamaño del repo
+git count-objects -vH
+```
+
+#### 2. Limpiar el repo local
+
+```bash
+# Eliminar referencias originales
+git reflog expire --expire=now --all
+git gc --prune=now --aggressive
+```
+
+#### 3. Forzar push (BORRA el historial en el remoto)
+
+```bash
+# ⚠️ ESTO BORRA EL HISTORIAL EN EL SERVIDOR
+git push origin --all --force
+git push origin --tags --force
+```
+
+#### 4. Notificar a tu equipo
+
+**Esto es CRÍTICO.** Todos los que tengan el repo necesitan hacer esto:
+
+```bash
+# Cada colaborador debe eliminar su copia local y clonar de nuevo
+cd ..
+rm -rf tu-repo
+git clone https://github.com/tu-usuario/tu-repo.git
+```
+
+**O si quieren conservar su trabajo:**
+```bash
+cd tu-repo
+
+# Guardar ramas locales importantes
+git branch -a > /tmp/ramas.txt
+
+# Fetch el nuevo historial
+git fetch --all
+
+# Resetear a el nuevo main
+git reset --hard origin/main
+
+# Re-crear ramas locales desde el nuevo historial
+git checkout -b mi-feature origin/mi-feature
+```
+
+#### 5. Invalidar caché en plataformas
+
+Si el repo está en GitHub/GitLab, necesitas invalidar la caché:
+
+- **GitHub:** Contacta soporte o haz un push vacío después de 24h
+- **GitLab:** Ve a Repository > Cleanup > Start cleanup
+- **Bitbucket:** Contacta soporte
+
+---
+
+### Casos prácticos
+
+#### Caso 1: Subí un `.env` con credenciales
+
+```bash
+# 1. Eliminar del historial
+git filter-repo --path .env --invert-paths
+
+# 2. Añadir a .gitignore (si no está)
+echo ".env" >> .gitignore
+git add .gitignore
+git commit -m "chore: añadir .gitignore"
+
+# 3. Revocar TODAS las credenciales que estaban en .env
+# (esto es lo más importante: las credenciales están comprometidas)
+
+# 4. Force push
+git push origin --all --force
+```
+
+#### Caso 2: Subí `node_modules/` (500MB)
+
+```bash
+# 1. Eliminar del historial
+git filter-repo --path node_modules/ --invert-paths
+
+# 2. Añadir a .gitignore
+echo "node_modules/" >> .gitignore
+
+# 3. Limpiar y push
+git reflog expire --expire=now --all
+git gc --prune=now --aggressive
+git push origin --all --force
+```
+
+#### Caso 3: Un vídeo de 2GB en el historial
+
+```bash
+# 1. Eliminar archivos >50MB
+git filter-repo --strip-blobs-bigger-than 50M
+
+# 2. O eliminar el archivo específico
+git filter-repo --path videos/test.mp4 --invert-paths
+
+# 3. Limpiar
+git reflog expire --expire=now --all
+git gc --prune=now --aggressive
+git push origin --all --force
+```
+
+#### Caso 4: Quiero ver qué archivos grandes hay en el historial
+
+```bash
+# Encontrar los 10 archivos más grandes que ALGUNA VEZ estuvieron en el repo
+git rev-list --objects --all | \
+  git cat-file --batch-check='%(objecttype) %(objectname) %(objectsize) %(rest)' | \
+  sed -n 's/^blob //p' | \
+  sort -rnk2 | head -10
+
+# Salida:
+# abc123def456  234567890  videos/demo.mp4
+# 789xyz012abc  123456789  node_modules/big-package.tar.gz
+# ...
+```
+
+---
+
+### Resumen rápido
+
+| Situación | Comando |
+|---|---|
+| Archivo con credenciales | `git filter-repo --path .env --invert-paths` |
+| node_modules subido | `git filter-repo --path node_modules/ --invert-paths` |
+| Archivos grandes | `git filter-repo --strip-blobs-bigger-than 50M` |
+| Múltiples archivos | `git filter-repo --path a.txt --path b.txt --invert-paths` |
+| Ver archivos grandes | `git rev-list --objects --all \| git cat-file --batch-check=...` |
+| Limpiar después | `git reflog expire --expire=now --all && git gc --prune=now --aggressive` |
+| Push obligigatorio | `git push origin --all --force && git push origin --tags --force` |
+
+---
+
 ## 🔗 Recursos
 
 ### Del blog (recopilación de recursos)
