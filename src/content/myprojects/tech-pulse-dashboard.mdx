@@ -1,9 +1,9 @@
 ---
 draft: false
 title: "Tech Pulse: Dashboard Automatizado de Noticias Tech con IA"
-description: "Pipeline automatizado que monitoriza 350+ fuentes tech (YouTube, RSS, GitHub Topics, Product Hunt), genera resúmenes con IA, filtra por categoría y despliega un dashboard interactivo + Telegram + email newsletter."
+description: "Pipeline automatizado que monitoriza 400+ fuentes tech (YouTube, RSS, GitHub Topics, Product Hunt), genera resúmenes con IA, filtra por categoría y despliega un dashboard interactivo + Telegram + email newsletter + Markdown Tools."
 pubDate: "2026/06/25"
-updatedDate: "2026/07/29"
+updatedDate: "2026/08/08"
 tags: ['python', 'ia', 'web-scraping', 'devops', 'automation', 'github-actions', 'rss']
 image: "img/tech_pulse_dashboard/tech_pulse_dashboard_cover-1200.webp"
 repository: "https://github.com/jorbencas/test_githubActions"
@@ -16,9 +16,9 @@ featured: true
 
 Cada día aparecen decenas de noticias, vídeos y recursos nuevos en el mundo de la tecnología. Sigue el ritmo manualmente es imposible: tienes que revisar YouTube, RSS, blogs, GitHub, Product Hunt... y al final te pierdes lo más importante.
 
-**Mi motivación:** Empecé a hacer un blog de tecnología y me di cuenta de que necesitaba contenido fresco constantemente. Pero no quería copiar y pegar de otros sitios: quería curar, filtrar y resumir lo mejor. El problema es que revisar 350+ fuentes cada día a mano era un trabajo de tiempo completo.
+**Mi motivación:** Empecé a hacer un blog de tecnología y me di cuenta de que necesitaba contenido fresco constantemente. Pero no quería copiar y pegar de otros sitios: quería curar, filtrar y resumir lo mejor. El problema es que revisar 400+ fuentes cada día a mano era un trabajo de tiempo completo.
 
-Así que hice **Tech Pulse**: un sistema que hace todo automáticamente. Recolecta contenido de más de 350 fuentes, lo clasifica con inteligencia artificial, genera resúmenes y lo manda por Telegram y email. Yo solo tengo que leer lo que me interesa.
+Así que hice **Tech Pulse**: un sistema que hace todo automáticamente. Recolecta contenido de más de 400 fuentes, lo clasifica con inteligencia artificial, genera resúmenes y lo manda por Telegram y email. Yo solo tengo que leer lo que me interesa.
 
 ---
 
@@ -27,12 +27,13 @@ Así que hice **Tech Pulse**: un sistema que hace todo automáticamente. Recolec
 El ecosistema tecnológico publica decenas de noticias, vídeos y recursos cada día. Seguir el ritmo manualmente es imposible. Herramientas como Feedly o Google News son genéricas, no filtran por relevancia técnica real ni ofrecen resúmenes inteligentes.
 
 Se necesitaba un sistema que:
-- Recolectara automáticamente contenido de 350+ fuentes (YouTube, blogs tech, RSS, GitHub Topics, Product Hunt)
+- Recolectara automáticamente contenido de 400+ fuentes (YouTube, blogs tech, RSS, GitHub Topics, Product Hunt)
 - Clasificara y deduplicara el contenido en tiempo real
 - Generara resúmenes por noticia y un recap semanal con IA
 - Desplegara un dashboard SSR interactivo con filtros combinables
 - Enviara notificaciones por Telegram cada 30 minutos con audio TTS a las 21:00 UTC
 - Enviara una newsletter diaria con resúmenes curados y videos
+- Incluyera herramientas Markdown offline (PDF, diapositivas, tablas, snippets, cheatsheet)
 
 ## La solución
 
@@ -86,7 +87,9 @@ scripts/
 │   └── clean_news.py         # Verificación de enlaces
 ├── utils/              # Módulos compartidos
 │   ├── common.py             # Utilidades (JSON, URLs, dedup, IA — soporte traducido flag)
-│   ├── constants_downloadfile.py  # 350+ fuentes, templates, configuración
+│   ├── constants_sources.py      # FUENTES dict con 400+ fuentes
+│   ├── constants_templates.py    # HTML, Email, MD, prompts de IA
+│   ├── constants_mdtools.py      # Plantillas HTML de Markdown Tools
 │   └── cache.py              # Caché pluggable (FileCache + CacheManager)
 ├── backfill_traducido.py    # Migración: marca items existentes como traducidos
 └── solutions/          # Base de datos de soluciones de retos
@@ -173,13 +176,14 @@ El dashboard client-side se reescribió siguiendo principios SOLID:
 
 ### Externalización de Configuración
 
-Todo el JSON embebido, prompts de IA, plantillas HTML y valores por defecto se movieron a `constants_downloadfile.py`:
-- **Prompts de IA:** `PROMPT_RESUMIR_LOTE`, `PROMPT_RESUMIR_NOTICIA`, `PROMPT_RECAP_SEMANAL`, `PROMPT_TRADUCIR_TITULOS` como templates `.format()`.
+Todo el JSON embebido, prompts de IA, plantillas HTML y valores por defecto se movieron a módulos especializados:
+- **Prompts de IA:** `PROMPT_RESUMIR_LOTE`, `PROMPT_RESUMIR_NOTICIA`, `PROMPT_RECAP_SEMANAL`, `PROMPT_TRADUCIR_TITULOS` como templates `.format()` en `constants_templates.py`.
 - **Config JS:** canales YouTube, tabs multimedia, opciones de filtro, URL del dashboard — se inyectan vía `data.json`.
-- **Plantillas:** Telegram (`TELEGRAM_MENSAJE_TEMPLATE`), email (`EMAIL_ROW_TEMPLATE`, `EMAIL_SOURCE_HEADER`, `EMAIL_VIDEO_ROW`), fallbacks.
+- **Plantillas:** Telegram (`TELEGRAM_MENSAJE_TEMPLATE`), email (`EMAIL_ROW_TEMPLATE`, `EMAIL_SOURCE_HEADER`, `EMAIL_VIDEO_ROW`), fallbacks — todo en `constants_templates.py`.
 - **Constantes de dict keys:** Todos los strings de acceso a diccionarios (`"enlace"`, `"fuente"`, `"titulo"`, `"yt"`, etc.) son constantes con nombre. Si en el futuro cambia un key del schema, se edita una sola línea.
+- **Fuentes:** `constants_sources.py` contiene el dict `FUENTES` con 400+ fuentes, separado del resto de configuración.
 
-### 350+ Fuentes de Contenido
+### 400+ Fuentes de Contenido
 
 | Tipo | Cantidad | Ejemplos |
 |------|----------|----------|
@@ -188,12 +192,12 @@ Todo el JSON embebido, prompts de IA, plantillas HTML y valores por defecto se m
 | Web scraping (quick) | 11 sitios | Anthropic, Ollama, Mistral, LangChain, HuggingFace Papers, Mozilla Hacks |
 | HTML scraping | 82 sitios | Xataka, Genbeta, Slashdot, Applesfera, El País Tecnología |
 | **Fuentes duales (YT + Web)** | **4 fuentes** | **MoureDev, Midudev, Carlos Azaustre, Xataka** |
-| GitHub Topics | 52 topics | AI, LLM, Docker, Kubernetes, CSS, HTML, algorithms |
+| GitHub Topics | 98 topics | AI, LLM, Docker, Kubernetes, CSS, HTML, algorithms, ui-ux, design-tools, machine-learning, ai-writing... |
 | GitHub Collections | 1 | AI Tools |
 | GitHub Repos | 5 | OpenWiki, Meetily, AutoPR, PR-Agent, Code-to-Docs |
 | Product Hunt | 1 | Top products daily |
 
-Los feeds RSS y web scraping con `quick: True` se scrapearon cada hora con `scrape_hourly_workflow.yml`. Los GitHub Topics se scrapearon diariamente con `daily_resources.yml`.
+Los feeds RSS y web scraping con `quick: True` se scrapearon cada hora con `scrape_hourly_workflow.yml`. Los GitHub Topics se scrapearon diariamente con `daily_resources.yml`. Actualmente hay 98 topics de GitHub (incluyendo ui-ux, design-tools, machine-learning, ai-writing, etc.).
 
 ### Newsletter Agrupada por Fuente (Julio 2026)
 
@@ -234,6 +238,7 @@ Los scripts se reorganizaron de la raíz del proyecto a subdirectorios modulares
 - **Nuevo workflow `tests.yml`**: Ejecuta pytest en cada push/PR a master
 - **Eliminados `scrape_social.py` y `scrape_trends.py`**: Redes sociales (Instagram, X/Twitter, Threads, TikTok) y Google Trends removidos del ecosistema
 - **Dashboard migrado a SSR**: Python genera `index.html` completo, JavaScript solo maneja interactividad (~135 líneas)
+- **Markdown Tools**: Sección de herramientas Markdown offline (PDF, Slides, Table, Snippets, Cheatsheet) integrada en el dashboard, generada por `mdtools/build.py` con templates en `constants_mdtools.py`
 
 ### Renderizado SSR del Dashboard
 
@@ -247,14 +252,14 @@ Python genera un `index.html` completo con todo el contenido pre-renderizado (no
 - **Badges con clases CSS unificadas:** `.badge-tech`, `.badge-rss`, `.badge-cat`
 - **Config externalizada:** canales, tabs, opciones de filtro se inyectan directamente en el HTML desde Python
 
-> **Actualizado julio 2026:** 350+ fuentes con 4 fuentes duales (YouTube + Web). Solo noticias en Telegram. Audio TTS a las 21:00 UTC con todas las noticias del día. Smart translation con flag `traducido`. Resúmenes persistidos en JSON. ResourceCard con headline, features y platform.
+> **Actualizado agosto 2026:** 400+ fuentes con 98 GitHub Topics y 4 fuentes duales. Markdown Tools (PDF, Slides, Table, Snippets, Cheatsheet) integradas en el dashboard. Constants reorganizadas en 3 archivos modulares. Smart translation con flag `traducido`. Resúmenes persistidos en JSON.
 
 ## 4. Desglose del Feature Set
 
-- **350+ fuentes monitorizadas:** 158 YouTube, 55 RSS, 11 web scraping, 82 HTML, 4 fuentes duales, 52 GitHub Topics, 5 repos, 1 Product Hunt
+- **400+ fuentes monitorizadas:** 158 YouTube, 55 RSS, 11 web scraping, 82 HTML, 4 fuentes duales, 98 GitHub Topics, 5 repos, 1 Product Hunt
 - **Clasificación inteligente:** 6 categorías (IA, Programación, DevOps, Ciberseguridad, Hardware, Negocios) + badges Tech/RSS
 - **Dashboard SSR:** Python genera HTML completo, JS solo interactividad (~135 líneas)
-- **Config externalizada:** prompts IA, plantillas Telegram/email, canales YouTube, opciones de filtro — todo en `constants_downloadfile.py`
+- **Config externalizada:** prompts IA, plantillas Telegram/email, canales YouTube, opciones de filtro — todo en `constants_sources.py` y `constants_templates.py`
 - **Constantes con nombre:** todos los dict keys del schema son constantes (cambio en un solo sitio)
 - **Sección de Referencia Tech:** panel colapsable con Skills, LLMs, Lenguajes, Frameworks y Librerías
 - **Newsletter diaria:** agrupada por fuente, resúmenes individuales por noticia con Gemini, sección de videos
@@ -266,6 +271,7 @@ Python genera un `index.html` completo con todo el contenido pre-renderizado (no
 - **Deduplicación:** por URL normalizada y título similar en scrape, generación de dashboard, y **cross-file en resources**
 - **Fix de cards malformados:** `fix_malformed_cards()` repara ResourceCard tags con `/` en lugar de `/>`
 - **Estructura modular reorganizada:** scripts en subdirectorios (`scrapers/`, `publishers/`, `tools/`, `utils/`, `solutions/`)
+- **Constants reorganizadas:** `constants_sources.py` (fuentes), `constants_templates.py` (HTML/email/prompts), `constants_mdtools.py` (plantillas Markdown Tools)
 - **117 tests pytest:** cobertura completa de utilidades, caché, constantes (incluyendo templates email), imágenes, recursos y soluciones
 - **CI/CD completo:** 11 workflows de GitHub Actions con badges en vivo en el README
 
@@ -307,12 +313,30 @@ python -m pytest tests/ -v
 
 El dashboard se genera en `public/index.html` y se puede previsualizar con `python -m http.server -d public`.
 
-## 6. Live Demo
+## 6. Markdown Tools (Agosto 2026)
+
+Desde el dashboard se accede a una sección de **Markdown Tools** — 5 herramientas offline que funcionan 100% en el navegador:
+
+- **Markdown a PDF** — Convierte Markdown a PDF con tablas, listas, bloques de código y encabezados estilizados (pdfmake). Limitaciones documentadas en la UI: máx. 50 páginas, máx. 500 filas por tabla, sin syntax highlighting en PDF.
+- **Diapositivas** — Crea presentaciones estilo Reveal.js desde Markdown, separando slides con `---`. Navegación con flechas y modo fullscreen.
+- **Tabla Markdown** — Genera tablas Markdown a partir de datos tabulares (TSV, CSV, JSON) con alineación configurable.
+- **Snippets de Código** — Extrae y formatea fragmentos de código con numeración de líneas.
+- **Cheatsheet** — Referencia rápida de Markdown: encabezados, texto, listas, tablas, emojis, shortcodes.
+
+### Arquitectura
+
+- **Python generator:** `mdtools/build.py` genera 6 páginas HTML usando `constants_mdtools.py` (string templates con `{placeholders}`, mismo patrón que `HTML_TEMPLATE`)
+- **CSS modular:** 6 archivos (base, nav, editor, tools, dark-theme, responsive) con variables CSS y soporte `prefers-color-scheme`
+- **JS client-side:** markdown-it (Web Worker), pdfmake (Web Worker), navegación, generación de tablas y snippets
+- **Deploy compartido:** mdtools se genera en `public/mdtools/` y se despliega junto con el dashboard en el mismo dominio Surge.sh
+- **Nav integrada:** enlace "← Dashboard" en mdtools, enlace "Markdown Tools" en el dashboard
+
+## 7. Live Demo
 
 El dashboard está desplegado y accesible públicamente, con actualización automática cada hora y notificaciones cada 30 minutos.
 
-👉 **[Abrir Tech Pulse Dashboard](https://jorbencasdownloaderdocument.surge.sh)**
+👉 **[Abrir Tech Pulse Dashboard](https://jorbencasdownloaderdocument.surge.sh)** | **[Markdown Tools](https://jorbencasdownloaderdocument.surge.sh/mdtools/)**
 
 ---
 
-*Este proyecto es el motor de contenido automatizado detrás de las secciones de noticias del blog.*
+*Este proyecto es el motor de contenido automatizado detrás de las secciones de noticias del blog. Incluye Markdown Tools para convertir y transformar Markdown directamente en el navegador.*
