@@ -134,6 +134,21 @@
     resetGame();
   }
 
+  async function repeatSequence() {
+    if (!gameActive || showingSequence || difficulty !== "easy") return;
+    showingSequence = true;
+    await waitFor(400);
+    for (let i = 0; i < sequence.length; i++) {
+      if (!gameActive) return;
+      const c = sequence[i];
+      activeColor = c;
+      await waitFor(getSpeed() * 0.7);
+      activeColor = "";
+      await waitFor(getSpeed() * 0.4);
+    }
+    showingSequence = false;
+  }
+
   function resetGame() {
     level = 1;
     score = 0;
@@ -216,6 +231,10 @@
           <div class="status-badge showing">👁 Observa la secuencia</div>
         {:else if gameActive}
           <div class="status-badge your-turn">🎯 Tu turno</div>
+        {/if}
+
+        {#if gameActive && !showingSequence && difficulty === 'easy'}
+          <button type="button" class="repeat-btn" onclick={repeatSequence}>🔄 Repetir secuencia</button>
         {/if}
 
         {#if gameActive}
@@ -331,6 +350,14 @@
   }
   .status-badge.showing { background: rgba(234,179,8,0.15); color: #eab308; border: 1px solid rgba(234,179,8,0.3); }
   .status-badge.your-turn { background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); }
+
+  .repeat-btn {
+    width: 100%; padding: 10px; font-weight: 700; font-size: 0.75rem;
+    letter-spacing: 0.5px; cursor: pointer; border-radius: 6px; transition: all 0.15s;
+    font-family: inherit; border: 2px solid #00e5ff; color: #00e5ff;
+    background: rgba(0,229,255,0.08);
+  }
+  .repeat-btn:hover { background: rgba(0,229,255,0.18); }
 
   .board-wrapper { display: flex; justify-content: center; }
   .simon-board {
