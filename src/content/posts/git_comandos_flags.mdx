@@ -226,10 +226,32 @@ author: "Jorge Beneyto Castelló"
     * `set-head <nombre> <rama>`: Establece la rama por defecto del remote.
     * `set-branches <nombre> <rama>...`: Restringe las ramas que fetch obtiene del remote.
 
-> **Cambio rápido de SSH a HTTPS** — Si `git push` falla con `Permission denied (publickey)` y no tienes clave SSH configurada, cambia la URL del remote en un solo comando:
+> **Cambio rápido de SSH a HTTPS** — `git remote set-url` modifica el archivo `.git/config`, reemplazando la URL que Git usa para comunicarse con el servidor remoto. No descarga nada ni modifica el historial; solo cambia la dirección de conexión.
+>
+> Por ejemplo, si tu `.git/config` tiene:
+>
+> ```
+> [remote "origin"]
+>     url = git@github.com:usuario/repo.git
+> ```
+>
+> Al ejecutar `git remote set-url origin https://github.com/usuario/repo.git`, Git reemplaza esa línea por la nueva URL. A partir de ese momento, `git push` y `git pull` usan HTTPS en lugar de SSH.
 >
 > ```bash
+> # Ver la URL actual
+> git remote -v
+> # origin  git@github.com:usuario/repo.git (fetch)
+> # origin  git@github.com:usuario/repo.git (push)
+>
+> # Cambiar a HTTPS
 > git remote set-url origin https://github.com/usuario/repo.git
+>
+> # Verificar el cambio
+> git remote -v
+> # origin  https://github.com/usuario/repo.git (fetch)
+> # origin  https://github.com/usuario/repo.git (push)
+>
+> # Ahora funciona sin clave SSH
 > git push
 > ```
 >
@@ -238,8 +260,6 @@ author: "Jorge Beneyto Castelló"
 > ```bash
 > git remote set-url origin git@github.com:usuario/repo.git
 > ```
->
-> Comprueba la URL actual con `git remote -v`.
 
 * **`git fetch`**:
     * `--all`: Obtiene datos de **todos** los remotos configurados.
