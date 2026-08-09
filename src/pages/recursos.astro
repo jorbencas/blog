@@ -80,19 +80,32 @@ const initialResources = resources.slice(0, INITIAL_BATCH);
     </div>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <!-- Search -->
-      <div class="max-w-xl mx-auto mb-6">
-        <div class="relative">
-          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-          </svg>
-          <input
-            id="resource-search"
-            type="text"
-            placeholder="Buscar recursos..."
-            class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-          />
-        </div>
+      <!-- Pricing chips -->
+      <div id="pricing-container" class="flex flex-wrap gap-2 justify-center mb-4">
+        <button
+          data-pricing="all"
+          class="pricing-chip px-3 py-1.5 rounded-full text-xs font-semibold border-2 transition-all cursor-pointer bg-orange-500 text-white border-orange-500"
+        >
+          Todos los precios
+        </button>
+        <button
+          data-pricing="free"
+          class="pricing-chip px-3 py-1.5 rounded-full text-xs font-semibold border-2 transition-all cursor-pointer bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-orange-400 dark:hover:border-orange-400"
+        >
+          🟢 Gratis ({resources.filter(r => r.pricing === "free").length})
+        </button>
+        <button
+          data-pricing="freemium"
+          class="pricing-chip px-3 py-1.5 rounded-full text-xs font-semibold border-2 transition-all cursor-pointer bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-orange-400 dark:hover:border-orange-400"
+        >
+          🟡 Plan gratuito ({resources.filter(r => r.pricing === "freemium").length})
+        </button>
+        <button
+          data-pricing="paid"
+          class="pricing-chip px-3 py-1.5 rounded-full text-xs font-semibold border-2 transition-all cursor-pointer bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-orange-400 dark:hover:border-orange-400"
+        >
+          🟠 De pago ({resources.filter(r => r.pricing === "paid").length})
+        </button>
       </div>
 
       <!-- Category chips -->
@@ -113,32 +126,19 @@ const initialResources = resources.slice(0, INITIAL_BATCH);
         ))}
       </div>
 
-      <!-- Pricing chips -->
-      <div id="pricing-container" class="flex flex-wrap gap-2 justify-center mb-6">
-        <button
-          data-pricing="all"
-          class="pricing-chip px-3 py-1.5 rounded-full text-xs font-semibold border-2 transition-all cursor-pointer bg-slate-800 text-white border-slate-800 dark:bg-slate-200 dark:text-slate-900 dark:border-slate-200"
-        >
-          Todos los precios
-        </button>
-        <button
-          data-pricing="free"
-          class="pricing-chip px-3 py-1.5 rounded-full text-xs font-semibold border-2 transition-all cursor-pointer bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-900/30"
-        >
-          🟢 Gratis ({resources.filter(r => r.pricing === "free").length})
-        </button>
-        <button
-          data-pricing="freemium"
-          class="pricing-chip px-3 py-1.5 rounded-full text-xs font-semibold border-2 transition-all cursor-pointer bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800 hover:bg-amber-50 dark:hover:bg-amber-900/30"
-        >
-          🟡 Plan gratuito ({resources.filter(r => r.pricing === "freemium").length})
-        </button>
-        <button
-          data-pricing="paid"
-          class="pricing-chip px-3 py-1.5 rounded-full text-xs font-semibold border-2 transition-all cursor-pointer bg-white dark:bg-slate-800 text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-800 hover:bg-orange-50 dark:hover:bg-orange-900/30"
-        >
-          🟠 De pago ({resources.filter(r => r.pricing === "paid").length})
-        </button>
+      <!-- Search -->
+      <div class="max-w-xl mx-auto mb-6">
+        <div class="relative">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <input
+            id="resource-search"
+            type="text"
+            placeholder="Buscar recursos..."
+            class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+          />
+        </div>
       </div>
 
       <!-- Results count -->
@@ -165,7 +165,7 @@ const initialResources = resources.slice(0, INITIAL_BATCH);
               <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {items.map((r) => (
                   <div
-                    class="resource-item"
+                    class="resource-item h-full"
                     data-category={r.category}
                     data-title={r.title.toLowerCase()}
                     data-description={r.description.toLowerCase()}
@@ -179,9 +179,32 @@ const initialResources = resources.slice(0, INITIAL_BATCH);
         })()}
       </div>
 
-      <!-- Loading spinner -->
-      <div id="loading-spinner" class="flex justify-center py-8">
-        <div class="w-8 h-8 border-4 border-orange-200 dark:border-orange-800 border-t-orange-500 rounded-full animate-spin"></div>
+      <!-- Loading skeleton -->
+      <div id="loading-skeleton" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+        <div class="skeleton-card animate-pulse rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 space-y-3">
+          <div class="flex items-center gap-3">
+            <div class="w-5 h-5 rounded bg-slate-200 dark:bg-slate-700"></div>
+            <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded w-2/3"></div>
+          </div>
+          <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded w-full"></div>
+          <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded w-4/5"></div>
+        </div>
+        <div class="skeleton-card animate-pulse rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 space-y-3">
+          <div class="flex items-center gap-3">
+            <div class="w-5 h-5 rounded bg-slate-200 dark:bg-slate-700"></div>
+            <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/2"></div>
+          </div>
+          <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded w-full"></div>
+          <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded w-3/4"></div>
+        </div>
+        <div class="skeleton-card animate-pulse rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 space-y-3">
+          <div class="flex items-center gap-3">
+            <div class="w-5 h-5 rounded bg-slate-200 dark:bg-slate-700"></div>
+            <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/5"></div>
+          </div>
+          <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded w-full"></div>
+          <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded w-2/3"></div>
+        </div>
       </div>
 
       <!-- Empty state -->
@@ -209,7 +232,7 @@ const initialResources = resources.slice(0, INITIAL_BATCH);
     let debounceTimer = null;
 
     const grid = document.getElementById("resources-grid");
-    const spinner = document.getElementById("loading-spinner");
+    const skeleton = document.getElementById("loading-skeleton");
     const emptyState = document.getElementById("empty-state");
     const endMessage = document.getElementById("end-message");
     const visibleCount = document.getElementById("visible-count");
@@ -262,14 +285,14 @@ const initialResources = resources.slice(0, INITIAL_BATCH);
         if (!group) return;
 
         const div = document.createElement("div");
-        div.className = "resource-item";
+        div.className = "resource-item h-full";
         div.dataset.category = r.category;
         div.dataset.title = r.title.toLowerCase();
         div.dataset.description = r.description.toLowerCase();
         const badge = r.pricing ? pricingConfig[r.pricing] : null;
         const badgeHtml = badge ? `<span class="bg-gradient-to-r ${badge.class} px-2 py-0.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-white">${badge.label}</span>` : "";
         div.innerHTML = `
-          <a href="${r.href}" class="flex items-start gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-orange-400 dark:hover:border-orange-400 hover:shadow-xl hover:-translate-y-1 transition-all no-underline group" target="_blank" rel="noopener noreferrer">
+          <a href="${r.href}" class="flex flex-col h-full gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-orange-400 dark:hover:border-orange-400 hover:shadow-xl hover:-translate-y-1 transition-all no-underline group" target="_blank" rel="noopener noreferrer">
             <img src="https://www.google.com/s2/favicons?domain=${new URL(r.href).hostname}&sz=32" width="20" height="20" class="mt-1 shrink-0 rounded bg-slate-100 dark:bg-slate-800 p-0.5" alt="${r.title}" loading="lazy" />
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 flex-wrap">
@@ -288,12 +311,10 @@ const initialResources = resources.slice(0, INITIAL_BATCH);
       updateCount();
     }
 
-    let loadTimer = null;
-
     async function loadMore() {
       if (isLoading || !hasMore) return;
       isLoading = true;
-      spinner.classList.remove("hidden");
+      skeleton.classList.remove("hidden");
 
       try {
         const params = new URLSearchParams({
@@ -318,7 +339,7 @@ const initialResources = resources.slice(0, INITIAL_BATCH);
       }
 
       isLoading = false;
-      spinner.classList.add("hidden");
+      skeleton.classList.add("hidden");
 
       if (!hasMore && grid.querySelectorAll(".resource-item").length > 0) {
         endMessage.classList.remove("hidden");
@@ -327,12 +348,10 @@ const initialResources = resources.slice(0, INITIAL_BATCH);
       const totalVisible = grid.querySelectorAll(".resource-item:not([style*='display: none'])").length;
       emptyState.classList.toggle("hidden", totalVisible > 0);
 
-      clearTimeout(loadTimer);
-      loadTimer = setTimeout(() => {
-        observer.disconnect();
-        if (sentinel.parentNode) sentinel.parentNode.appendChild(sentinel);
+      if (hasMore && sentinel.parentNode) {
+        observer.unobserve(sentinel);
         observer.observe(sentinel);
-      }, 100);
+      }
     }
 
     function resetAndLoad() {
@@ -400,43 +419,21 @@ const initialResources = resources.slice(0, INITIAL_BATCH);
     });
 
     // Pricing chip clicks
-    function updatePricingChips() {
-      pricingChips.forEach((c) => {
-        const isActive = c.dataset.pricing === activePricing;
-        // Remove all state classes
-        c.classList.remove(
-          "bg-slate-800", "text-white", "border-slate-800",
-          "dark:bg-slate-200", "dark:text-slate-900", "dark:border-slate-200",
-          "bg-white", "dark:bg-slate-800",
-          "bg-emerald-50", "dark:bg-emerald-900/30",
-          "bg-amber-50", "dark:bg-amber-900/30",
-          "bg-orange-50", "dark:bg-orange-900/30"
-        );
-        
-        if (isActive) {
-          if (c.dataset.pricing === "all") {
-            c.classList.add("bg-slate-800", "text-white", "border-slate-800");
-            c.classList.add("dark:bg-slate-200", "dark:text-slate-900", "dark:border-slate-200");
-          } else if (c.dataset.pricing === "free") {
-            c.classList.add("bg-emerald-500", "text-white", "border-emerald-500");
-            c.classList.add("dark:bg-emerald-500", "dark:text-white", "dark:border-emerald-500");
-          } else if (c.dataset.pricing === "freemium") {
-            c.classList.add("bg-amber-500", "text-white", "border-amber-500");
-            c.classList.add("dark:bg-amber-500", "dark:text-white", "dark:border-amber-500");
-          } else if (c.dataset.pricing === "paid") {
-            c.classList.add("bg-orange-500", "text-white", "border-orange-500");
-            c.classList.add("dark:bg-orange-500", "dark:text-white", "dark:border-orange-500");
-          }
-        } else {
-          c.classList.add("bg-white", "dark:bg-slate-800");
-        }
-      });
-    }
-
     pricingChips.forEach((chip) => {
       chip.addEventListener("click", () => {
         activePricing = chip.dataset.pricing || "all";
-        updatePricingChips();
+        pricingChips.forEach((c) => {
+          const isActive = c.dataset.pricing === activePricing;
+          c.classList.toggle("bg-orange-500", isActive);
+          c.classList.toggle("text-white", isActive);
+          c.classList.toggle("border-orange-500", isActive);
+          c.classList.toggle("bg-white", !isActive);
+          c.classList.toggle("dark:bg-slate-800", !isActive);
+          c.classList.toggle("text-slate-600", !isActive);
+          c.classList.toggle("dark:text-slate-300", !isActive);
+          c.classList.toggle("border-slate-200", !isActive);
+          c.classList.toggle("dark:border-slate-700", !isActive);
+        });
         resetAndLoad();
       });
     });
@@ -470,7 +467,7 @@ const initialResources = resources.slice(0, INITIAL_BATCH);
     if (INITIAL_BATCH >= grid.querySelectorAll(".resource-item").length) {
       hasMore = grid.querySelectorAll(".resource-item").length < parseInt(visibleCount?.textContent || "0");
       if (!hasMore) {
-        spinner.classList.add("hidden");
+        skeleton.classList.add("hidden");
         endMessage.classList.remove("hidden");
       }
     }

@@ -1,0 +1,524 @@
+---
+draft: false
+title: "IA y Markdown: Cómo Configurar Agents, Skills y Prompts con el Lenguaje Universal"
+description: "Guía completa sobre cómo Markdown se ha convertido en el lenguaje base para configurar agentes de IA, definir skills, estructurar system prompts y organizar el contexto. Incluye ejemplos reales de OpenCode, Cursor, Claude Code, Windsurf, Copilot y más. Con recursos gratuitos para empezar."
+pubDate: "2026/08/09"
+tags: ["ia", "markdown", "agents", "prompts", "herramientas"]
+author: "Jorge Beneyto Castelló"
+---
+
+# IA y Markdown: Cómo Configurar Agents, Skills y Prompts con el Lenguaje Universal
+
+Si hace unos años Markdown era "eso que usaba GitHub para el README", hoy es algo completamente diferente: **es el lenguaje con el que se le dice a la IA qué hacer, cómo comportarse y qué contexto tener en cuenta**. Y no es una moda pasajera — es la base sobre la que se construye toda la configuración de agentes de IA modernos.
+
+En este post vamos a ver exactamente qué está pasando, cómo configurar las principales herramientas de IA con Markdown, y qué recursos hay para aprender todo esto desde cero.
+
+---
+
+## 📋 Tabla de contenidos
+
+- [¿Por qué Markdown para la IA?](#-por-qué-markdown-para-la-ia)
+- [Los 8 agents de IA que se configuran con Markdown](#-los-8-agents-de-ia-que-se-configuran-con-markdown)
+- [Skills: Instrucciones reutilizables en Markdown](#-skills-instrucciones-reutilizables-en-markdown)
+- [System Prompts estructurados en Markdown](#-system-prompts-estructurados-en-markdown)
+- [Patrones de diseño para prompts en Markdown](#-patrones-de-diseño-para-prompts-en-markdown)
+- [Recursos gratuitos para aprender](#-recursos-gratuitos-para-aprender)
+- [Herramientas prácticas para trabajar con Markdown](#-herramientas-prácticas-para-trabajar-con-markdown)
+
+---
+
+## 🤖 ¿Por qué Markdown para la IA?
+
+La razón es simple: **Markdown es legible tanto para humanos como para máquinas**. Un archivo `.md` puede contener instrucciones, estructura, ejemplos y contexto — y cualquier modelo de lenguaje lo entiende perfectamente.
+
+Pero hay más razones:
+
+- **Versionado**: al ser texto plano, puedes usar Git para trackear cambios en la configuración de tu agente
+- **Colaboración**: cualquier miembro del equipo puede editar las reglas sin herramientas especiales
+- **Portabilidad**: el mismo formato funciona en OpenCode, Cursor, Claude, Windsurf y casi cualquier herramienta
+- **Legibilidad**: a diferencia de JSON o YAML, Markdown es fácil de leer y escribir sin formateo especial
+
+Los principales desarrolladores de herramientas de IA lo entendieron y adoptaron Markdown como estándar. Hoy, **8 de las herramientas de IA más populares usan archivos Markdown para su configuración**.
+
+---
+
+## 🗂️ Los 8 agents de IA que se configuran con Markdown
+
+### 1. OpenCode — `AGENTS.md`
+
+OpenCode usa `AGENTS.md` como archivo principal de configuración. Puede estar en la raíz del proyecto o en `.opencode/AGENTS.md`.
+
+```markdown
+# Instrucciones del proyecto
+
+## Convenciones
+- Usar TypeScript estricto con `strict: true`
+- Funciones con tipos explícitos
+- Tests con Vitest
+
+## Arquitectura
+- Componentes en `src/components/`
+- Utilidades en `src/utils/`
+- API routes en `src/api/`
+```
+
+**Ubicaciones:**
+| Nivel | Ruta |
+|-------|------|
+| Proyecto | `AGENTS.md` o `.opencode/AGENTS.md` |
+| Global | `~/.config/opencode/AGENTS.md` |
+
+OpenCode también es compatible con `CLAUDE.md` como fallback, y puede leer skills de `.claude/skills/`.
+
+### 2. Cursor — `.cursor/rules/*.mdc`
+
+Cursor migró de `.cursorrules` (legacy) a un sistema de rules con frontmatter YAML:
+
+```yaml
+---
+description: Convenciones de React y TypeScript
+globs: ["**/*.tsx", "**/*.ts"]
+alwaysApply: false
+---
+
+# Reglas de React
+
+- Usar functional components siempre
+- Hooks personalizados en `src/hooks/`
+- No usar `any` — tipar todo
+- Componentes de menos de 200 líneas
+```
+
+**4 modos de activación:**
+- **Always Apply**: se aplica a todas las conversaciones
+- **Auto-attached**: se activa cuando el glob coincide con archivos abiertos
+- **Agent-requested**: el agente decide cuándo usarlo según la descripción
+- **Manual**: solo se activa con `@mention`
+
+### 3. Claude Code — `CLAUDE.md`
+
+Claude Code (Anthropic) usa `CLAUDE.md` como archivo de memoria principal:
+
+```markdown
+# Proyecto: Mi App
+
+## Stack
+- Next.js 14 con App Router
+- PostgreSQL + Prisma
+- Despliegue en Vercel
+
+## Reglas de código
+- Funciones puras cuando sea posible
+- Manejo de errores con try/catch explícito
+- Comments solo en funciones públicas
+
+## Comandos útiles
+- `npm run dev` — desarrollo
+- `npm run build` — producción
+- `npx prisma studio` — base de datos
+```
+
+**Archivos de Claude Code:**
+| Archivo | Propósito |
+|---------|-----------|
+| `CLAUDE.md` | Instrucciones principales del proyecto |
+| `CLAUDE.local.md` | Configuración personal (gitignored) |
+| `.claude/rules/*.md` | Reglas específicas con `paths:` frontmatter |
+| `~/.claude/CLAUDE.md` | Configuración global del usuario |
+
+Claude también escribe automáticamente en `MEMORY.md` dentro de `~/.claude/projects/` con lo que aprende durante la sesión.
+
+### 4. Windsurf — `.windsurf/rules/*.md`
+
+Windsurf (Codeium) sigue un patrón similar a Cursor:
+
+```yaml
+---
+trigger: always_on
+description: Reglas generales del proyecto
+---
+
+# Estándares del proyecto
+
+- Python 3.11+ con type hints
+- Tests con pytest
+- Formatting con black
+- Linting con ruff
+```
+
+**Límites importantes:**
+- 12,000 caracteres totales en reglas del workspace
+- 6,000 caracteres por archivo individual
+- Reglas globales en `~/.codeium/windsurf/memories/global_rules.md` (6KB max)
+
+### 5. GitHub Copilot — `.github/copilot-instructions.md`
+
+Copilot usa un enfoque diferente: `.github/copilot-instructions.md` para instrucciones repo-wide:
+
+```markdown
+# Instrucciones para GitHub Copilot
+
+## Convenciones
+- Usar ES modules (import/export)
+- Async/await sobre callbacks
+- Funciones puras cuando sea posible
+
+## Formato
+- 2 espacios de indentación
+- Punto y coma al final
+- Comillas simples en strings
+```
+
+También soporta instrucciones por path:
+```yaml
+# .github/instructions/python.instructions.md
+---
+applyTo: "**/*.py"
+---
+- Usar type hints en todas las funciones
+- Docstrings en formato Google
+```
+
+### 6. Aider — `CONVENTIONS.md`
+
+Aider usa `CONVENTIONS.md` como archivo de convenciones del proyecto:
+
+```markdown
+# Convenciones del Proyecto
+
+## Estilo
+- Funciones cortas (máx 30 líneas)
+- Nombres descriptivos en inglés
+- Sin abreviaturas en nombres de variables
+
+## Arquitectura
+- Patrón Repository para acceso a datos
+- Servicios para lógica de negocio
+- Controladores para HTTP
+
+## Tests
+- Un test por comportamiento
+- Mock externo de APIs
+- Datos de test en fixtures/
+```
+
+Se carga con `--read CONVENTIONS.md` o en `.aider.conf.yml`:
+```yaml
+read:
+  - CONVENTIONS.md
+  - ARCHITECTURE.md
+```
+
+### 7. Continue.dev — `.continue/rules/*.md`
+
+Continue es open-source y usa archivos Markdown simples:
+
+```markdown
+# Reglas de TypeScript
+
+- Usar `const` y `let`, nunca `var`
+- Tipar parámetros y retornos de funciones
+- Evitar `any` — usar `unknown` si es necesario
+- Funciones puras cuando sea posible
+```
+
+**Ubicaciones:**
+| Nivel | Ruta |
+|-------|------|
+| Proyecto | `.continue/rules/` |
+| Global | `~/.continue/rules/` |
+
+### 8. Cline — `.clinerules/`
+
+Cline carga todos los archivos `.md` y `.txt` de `.clinerules/`:
+
+```markdown
+# Reglas de Cline
+
+## Código
+- TypeScript estricto
+- Componentes funcionales React
+- Tests con Vitest
+
+## Comunicación
+- Explicar cambios antes de hacerlos
+- Preguntar antes de borrar código
+- Mostrar progreso en pasos largos
+```
+
+Cline también lee `.cursorrules`, `.windsurfrules` y `AGENTS.md` como fallback.
+
+---
+
+## 🎯 Skills: Instrucciones reutilizables en Markdown
+
+Los skills son paquetes de instrucciones que un agente puede cargar bajo demanda. No son solo "reglas" — son **módulos completos con scripts, referencias y metadatos**.
+
+### Estructura de un Skill en OpenCode
+
+```
+.opencode/skills/
+└── git-release/
+    ├── SKILL.md          ← Instrucciones del skill
+    ├── scripts/
+    │   └── changelog.ts  ← Scripts auxiliares
+    └── references/
+        └── release-policy.md  ← Documentación de referencia
+```
+
+### Ejemplo de SKILL.md
+
+```markdown
+---
+name: git-release
+description: Crear releases y changelogs consistentes
+license: MIT
+compatibility: opencode
+metadata:
+  audience: maintainers
+  workflow: github
+---
+
+## Qué hago
+- Genero release notes a partir de PRs merged
+- Propongo bump de versión según conventional commits
+- Creo el tag y la release en GitHub
+
+## Cuándo usarme
+Úsame cuando estés preparando un release etiquetado.
+
+## Requisitos
+- Git inicializado
+- Acceso a GitHub CLI (`gh`)
+- PRs mergeados con títulos descriptivos
+```
+
+### Reglas de naming para skills
+
+- Solo minúsculas, números y guiones
+- Guiones simples (no dobles)
+- 1-64 caracteres
+- El nombre debe coincidir con el directorio
+
+### Búsqueda de skills
+
+OpenCode busca skills en múltiples ubicaciones:
+1. `.opencode/skills/` (proyecto)
+2. `.claude/skills/` (compatibilidad)
+3. `~/.config/opencode/skills/` (global)
+4. `~/.claude/skills/` (global Claude)
+5. `.agents/skills/` (estándar abierto)
+
+La especificación está abierta en [openagentskills.dev](https://openagentskills.dev/docs/specification).
+
+---
+
+## 📝 System Prompts estructurados en Markdown
+
+Un system prompt bien estructurado en Markdown tiene 4 capas:
+
+```markdown
+# Identidad
+Eres un asistente de código para el equipo de Backend.
+
+# Capacidades
+- Puedes leer y modificar archivos del proyecto
+- Tienes acceso a la terminal
+- Puedes ejecutar tests
+
+# Restricciones
+- No modifiquest archivos de configuración sin preguntar
+- No hagas commit sin confirmación explícita
+- No compartas secrets o credenciales
+
+# Formato de salida
+- Explica cada cambio antes de hacerlo
+- Usa bloques de código para mostrar diff
+- Responde en español
+```
+
+### Patrones de diseño efectivos
+
+**XML tags para Claude** (el parsing más fiable):
+```markdown
+<instructions>
+Usa type hints en todas las funciones de Python.
+</instructions>
+
+<examples>
+def process(data: list[dict]) -> str:
+    return json.dumps(data)
+</examples>
+
+<output>
+JSON con campos: status, message, data
+</output>
+```
+
+**Headers Markdown para estructura**:
+```markdown
+# Rol
+Eres un reviewer de código senior.
+
+# Objetivo
+Detectar bugs, code smells y vulnerabilidades.
+
+# Output Format
+Lista de issues con severidad (high/medium/low).
+```
+
+**Presupuesto de tokens**: 200-800 tokens para la mayoría de agentes; 500-3,000 para sistemas en producción.
+
+**Recency bias**: las reglas críticas van AL FINAL del system prompt — los modelos prestan más atención a lo último que leen.
+
+---
+
+## 🧠 Patrones de diseño para prompts en Markdown
+
+### Chain-of-Thought (CoT)
+
+```markdown
+Antes de responder, escribe:
+
+<reasoning>
+Paso 1: Identificar el problema
+Paso 2: Revisar el contexto relevante
+Paso 3: Proponer solución
+</reasoning>
+
+<answer>Tu respuesta aquí</answer>
+```
+
+CoT da un boost de 19 puntos en MMLU-Pro para modelos estándar. Para modelos con reasoning extendido (o-series, Claude Extended Thinking), no lo necesitas — lo hacen internamente.
+
+### Output estructurado
+
+```markdown
+## Formato de salida
+
+Devolver JSON con:
+- `verdict` (string, una oración)
+- `issues` (array de strings, cada uno <15 palabras)
+- `rewrite` (string, versión mejorada, o null)
+```
+
+### Variables reutilizables
+
+```markdown
+# Prompt para revisión de PR
+
+Revisar el PR #{{pr_number}} del repo {{repo_name}}.
+
+## Checklist
+- [ ] Tests pasan
+- [ ] Tipos correctos
+- [ ] No hay console.log
+- [ ] README actualizado si aplica
+```
+
+### Knowledge files
+
+Mantén archivos `.md` o `.txt` como contexto — se parsean 3 veces mejor que PDFs:
+
+```
+context/
+├── INDEX.md          ← Tabla de contenido
+├── arquitectura.md   ← Decisiones de diseño
+├── api-reference.md  ← Endpoints disponibles
+└── conventions.md    ← Estilo de código
+```
+
+---
+
+## 📚 Recursos gratuitos para aprender
+
+### Cursos completos
+
+La mayoría son gratuitos. Algunos ofrecen certificado de pago opcional, pero el contenido siempre está disponible sin coste.
+
+| Recurso | Enfoque | Duración |
+|---------|---------|----------|
+| [LearnLLM.dev](https://learnllm.dev/) | Fundamentos a producción, playground en navegador | 110+ lecciones |
+| [mlabonne/llm-course](https://github.com/mlabonne/llm-course) | Roadmaps + Colab notebooks, pistas LLM Scientist/Engineer | Auto-paced |
+| [LLM Zoomcamp](https://github.com/DataTalksClub/llm-zoomcamp) | RAG, agents, búsqueda vectorial, certificado gratis | 10 semanas |
+| [Hugging Face Agents Course](https://huggingface.co/learn/agents-course) | Fundamentos de agents, frameworks, benchmarks | Con certificación |
+| [Zero to AI](https://zero-to-ai.dev/) | 950+ notebooks Jupyter, Python a producción | Auto-paced |
+| [AI Engineering from Scratch](https://github.com/rohitg00/ai-engineering-from-scratch) | 503 lecciones, 20 fases, Python/TypeScript/Rust | Auto-paced |
+| [Activeloop LLM Course](https://learn.activeloop.ai/courses/llms) | Entrenamiento y fine-tuning de LLMs | 67 lecciones |
+| [W&B LLM App Development](https://www.wandb.courses/courses/building-llm-powered-apps) | Prompt engineering y despliegue | 31 lecciones |
+
+### Canales de YouTube
+
+- **3Blue1Brown** — Intuición de redes neuronales con animaciones increíbles
+- **freeCodeCamp** — Cursos completos de deep learning y ML
+- **Patrick Loeber** — Tutoriales prácticos de PyTorch
+- **Andrej Karpathy** — Fundamentos de LLMs desde cero (nanoGPT, etc.)
+- **Fireship** — Resúmenes rápidos de tecnologías de IA
+
+### Documentación oficial de agents
+
+| Herramienta | Documentación |
+|-------------|---------------|
+| OpenCode | [opencode.ai/docs](https://opencode.ai/docs/) |
+| Cursor | [cursor.com/docs](https://cursor.com/docs/rules) |
+| Claude Code | [code.claude.com/docs](https://code.claude.com/docs/en/memory) |
+| Windsurf | [docs.windsurf.com](https://docs.windsurf.com/windsurf/cascade/rules) |
+| GitHub Copilot | [docs.github.com/copilot](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/add-custom-instructions) |
+| Continue | [docs.continue.dev](https://docs.continue.dev/customize/rules) |
+| Cline | [docs.cline.bot](https://docs.cline.bot/customization/cline-rules) |
+| Aider | [aider.chat/docs](https://aider.chat/docs/usage/conventions.html) |
+
+### Comunidades y recursos adicionales
+
+- [r/LocalLLaMA](https://reddit.com/r/LocalLLaMA) — Comunidad de modelos locales
+- [Hugging Face](https://huggingface.co/) — Modelos, datasets y espacios
+- [awesome-ai-tools](https://github.com/mahseema/awesome-ai-tools) — Lista curada de herramientas de IA
+- [OpenAgentsSkills.dev](https://openagentskills.dev/) — Especificación abierta de skills
+
+---
+
+## 🛠️ Herramientas prácticas para trabajar con Markdown
+
+Si vas a escribir system prompts, skills y configuraciones de agentes en Markdown, necesitas buenas herramientas para:
+
+- **Vista previa en vivo** — ver cómo se renderiza tu Markdown mientras escribes
+- **Exportar a PDF** — compartir configuraciones con tu equipo
+- **Generar presentaciones** — explicar la estructura de prompts a tu equipo
+- **Referencia rápida** — tener la sintaxis de Markdown siempre a mano
+
+Ahí es donde entran las **Markdown Tools** — herramientas offline que ejecutan directamente en el navegador:
+
+- **[Markdown a PDF](https://blog-jorbencas.vercel.app/mdtools/pdf.html)** — Convierte tus prompts y configuraciones a PDF con soporte de tablas, código y listas
+- **[Diapositivas](https://blog-jorbencas.vercel.app/mdtools/slides.html)** — Crea presentaciones de tus system prompts para presentar al equipo
+- **[Cheatsheet](https://blog-jorbencas.vercel.app/mdtools/cheatsheet.html)** — Referencia completa de Markdown con preview en vivo de cada ejemplo
+
+Todo funciona sin servidor, sin APIs, sin suscripciones. Solo abres el navegador y empiezas a trabajar.
+
+---
+
+## 📊 Tabla resumen: Configuración por herramienta
+
+| Herramienta | Archivo principal | Archivos de rules | Skills |
+|-------------|-------------------|-------------------|--------|
+| **OpenCode** | `AGENTS.md` | Instrucciones en `opencode.json` | `.opencode/skills/` |
+| **Cursor** | `.cursor/rules/*.mdc` | Frontmatter YAML | — |
+| **Claude Code** | `CLAUDE.md` | `.claude/rules/*.md` | `.claude/skills/` |
+| **Windsurf** | `.windsurf/rules/*.md` | Frontmatter `trigger` | — |
+| **Copilot** | `.github/copilot-instructions.md` | `.github/instructions/*.instructions.md` | — |
+| **Aider** | `CONVENTIONS.md` | `.aider.conf.yml` | — |
+| **Continue** | `.continue/rules/*.md` | — | — |
+| **Cline** | `.clinerules/*.md` | Frontmatter `paths` | — |
+
+---
+
+## Conclusión
+
+Markdown ya no es solo para documentar proyectos. Es el lenguaje universal para comunicarse con la IA: configura agents, define skills, estructura prompts y organiza el contexto.
+
+Lo mejor de todo: **es el mismo formato en todas las herramientas**. Si aprendes a escribir un buen `AGENTS.md` para OpenCode, ese mismo conocimiento te sirve para `CLAUDE.md`, `.cursor/rules` o `.windsurf/rules`.
+
+Empieza pequeño: crea un `AGENTS.md` en tu proyecto, define las convenciones básicas, y ve añadiendo reglas conforme descubras qué funciona. Tu agente de IA te lo agradecerá.
+
+---
+
+*¿Quieres practicar la sintaxis de Markdown? Usa las [Markdown Tools](https://blog-jorbencas.vercel.app/mdtools/) para crear, previsualizar y exportar tus configuraciones.*
