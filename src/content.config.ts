@@ -80,6 +80,7 @@ const tools = defineCollection({
     title: z.string(),
     description: z.string(),
     pubDate: z.string().or(z.date()).transform((v) => new Date(v)),
+    dateModified: z.string().or(z.date()).transform((v) => new Date(v)).optional(),
     tags: z.array(z.string()).default([]),
     image: z.string().optional(),
     author: z.string().default("Jorge Beneyto Castelló"),

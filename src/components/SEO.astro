@@ -8,10 +8,12 @@ interface Props {
   tags?: string[];
   section?: string;
   pubDate?: string | Date;
+  dateModified?: string | Date;
   author?: string;
+  pageType?: "blog" | "tool";
 }
 
-const { title, description, tags = [], section, pubDate, author } = Astro.props;
+const { title, description, tags = [], section, pubDate, dateModified, author, pageType = "blog" } = Astro.props;
 
 const truncateAtWord = (text, maxLen) => {
   if (text.length <= maxLen) return text;
@@ -42,28 +44,103 @@ const canonicalURL =
     ? canonicalObj.toString().slice(0, -1)
     : canonicalObj.toString();
 const pubDateISO = pubDate ? new Date(pubDate).toISOString() : undefined;
+const modDateISO = dateModified ? new Date(dateModified).toISOString() : pubDateISO;
 
-const jsonLD = {
-  "@context": "https://schema.org",
-  "@type": "BlogPosting",
-  headline: title,
-  description: description,
-  keywords: tags.join(", "),
-  url: canonicalURL.toString(),
-  mainEntityOfPage: canonicalURL.toString(),
-  image: ogImageUrl,
-  ...(pubDateISO && { datePublished: pubDateISO, dateModified: pubDateISO }),
-  ...(author && {
-    author: {
-      "@type": "Person",
-      name: author,
+const cleanAltText = title
+  .replace(/\s*[-—–]\s*/g, " ")
+  .replace(/\s+/g, " ")
+  .trim();
+
+const breadcrumbItems = [
+  { name: "Inicio", url: Astro.site?.toString() || "/" },
+];
+if (section === "herramientas") {
+  breadcrumbItems.push({ name: "Mini Herramientas", url: `${Astro.site}herramientas` });
+} else if (section === "posts") {
+  breadcrumbItems.push({ name: "Bitácora", url: `${Astro.site}posts` });
+} else if (section === "retos") {
+  breadcrumbItems.push({ name: "Retos", url: `${Astro.site}retos/1` });
+} else if (section === "proyectos") {
+  breadcrumbItems.push({ name: "Proyectos", url: `${Astro.site}proyectos` });
+}
+breadcrumbItems.push({ name: title, url: canonicalURL });
+
+let jsonLD;
+if (pageType === "tool") {
+  jsonLD = [
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      name: title,
+      description: description,
+      url: canonicalURL.toString(),
+      image: ogImageUrl,
+      applicationCategory: "GameApplication",
+      operatingSystem: "Any",
+      offers: {
+        "@type": "Offer",
+        price: "0",
+        priceCurrency: "USD",
+      },
+      ...(author && {
+        author: {
+          "@type": "Person",
+          name: author,
+        },
+      }),
+      publisher: {
+        "@type": "Person",
+        name: AUTHOR_NAME,
+      },
+      ...(pubDateISO && { datePublished: pubDateISO }),
+      ...(modDateISO && { dateModified: modDateISO }),
     },
-  }),
-  publisher: {
-    "@type": "Person",
-    name: AUTHOR_NAME,
-  },
-};
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: breadcrumbItems.map((item, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        name: item.name,
+        item: item.url,
+      })),
+    },
+  ];
+} else {
+  jsonLD = [
+    {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      headline: title,
+      description: description,
+      keywords: tags.join(", "),
+      url: canonicalURL.toString(),
+      mainEntityOfPage: canonicalURL.toString(),
+      image: ogImageUrl,
+      ...(pubDateISO && { datePublished: pubDateISO, dateModified: modDateISO }),
+      ...(author && {
+        author: {
+          "@type": "Person",
+          name: author,
+        },
+      }),
+      publisher: {
+        "@type": "Person",
+        name: AUTHOR_NAME,
+      },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: breadcrumbItems.map((item, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        name: item.name,
+        item: item.url,
+      })),
+    },
+  ];
+}
 ---
 
 <!-- SEO Estándar -->
@@ -84,7 +161,7 @@ const jsonLD = {
 <meta name="theme-color" content="#06b6d4" />
 
 <!-- Open Graph / Facebook / LinkedIn -->
-<meta property="og:type" content="article" />
+<meta property="og:type" content={pageType === "tool" ? "website" : "article"} />
 <meta property="og:url" content={canonicalURL.toString()} />
 <meta property="og:title" content={cleanTitle} />
 <meta property="og:description" content={cleanDescription} />
@@ -92,7 +169,7 @@ const jsonLD = {
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta property="og:image:type" content="image/png" />
-<meta property="og:image:alt" content={`Portada del artículo: ${title}`} />
+<meta property="og:image:alt" content={`${cleanAltText} — ${SITE_NAME}`} />
 <meta property="og:site_name" content={SITE_NAME} />
 <meta property="og:locale" content="es_ES" />
 
@@ -106,5 +183,6 @@ const jsonLD = {
 <meta property="twitter:title" content={cleanTitle} />
 <meta property="twitter:description" content={cleanDescription} />
 <meta property="twitter:image" content={ogImageUrl} />
+<meta name="twitter:image:alt" content={`${cleanAltText} — ${SITE_NAME}`} />
 
 <script type="application/ld+json" set:html={JSON.stringify(jsonLD)} />

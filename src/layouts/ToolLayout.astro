@@ -13,6 +13,7 @@ interface Props {
   author: string;
   image: string;
   pubDate: string | Date;
+  dateModified?: string | Date;
   section?: string;
 }
 
@@ -23,6 +24,7 @@ const {
   author,
   image,
   pubDate,
+  dateModified,
   section = "herramientas",
 } = Astro.props;
 
@@ -41,7 +43,9 @@ const tagsArray = Array.isArray(tags)
   tags={tagsArray}
   section={section}
   pubDate={pubDate}
+  dateModified={dateModified}
   author={author}
+  pageType="tool"
 >
   <div
     class="max-w-screen-xl mx-auto px-4 lg:px-0 py-10 font-sans"

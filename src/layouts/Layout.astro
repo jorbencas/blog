@@ -14,7 +14,9 @@ export interface Props {
   tags?: string[];
   section?: string;
   pubDate?: string | Date;
+  dateModified?: string | Date;
   author?: string;
+  pageType?: "blog" | "tool";
 }
 const {
   title,
@@ -22,7 +24,9 @@ const {
   tags = [],
   section,
   pubDate = new Date().toString(),
+  dateModified,
   author = AUTHOR_NAME,
+  pageType = "blog",
 } = Astro.props as Props;
 
 const finalTitle = title || `Blog | ${SITE_NAME}`;
@@ -65,7 +69,9 @@ const finalDescription = description || SITE_DESCRIPTION;
       tags={tags}
       section={section}
       pubDate={pubDate}
+      dateModified={dateModified}
       author={author}
+      pageType={pageType}
     />
     <ClientRouter />
   </head>

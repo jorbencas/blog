@@ -11,7 +11,18 @@ import remarkGfm from "remark-gfm";
 export default defineConfig({
   output: "static",
   adapter: vercel(),
-  integrations: [mdx({ remarkPlugins: [remarkGfm], rehypePlugins: [rehypeTableWrapper] }), sitemap(), svelte()],
+  integrations: [mdx({ remarkPlugins: [remarkGfm], rehypePlugins: [rehypeTableWrapper] }), sitemap({
+    serialize(item) {
+      if (item.url.includes("/herramientas/")) {
+        item.priority = 0.8;
+        item.changefreq = "monthly";
+      } else if (item.url.includes("/posts/")) {
+        item.priority = 0.7;
+        item.changefreq = "weekly";
+      }
+      return item;
+    },
+  }), svelte()],
   vite: {
     plugins: [tailwindcss()],
     build: {
