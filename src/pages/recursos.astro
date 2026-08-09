@@ -464,12 +464,12 @@ const initialResources = resources.slice(0, INITIAL_BATCH);
     observer.observe(sentinel);
 
     // Initial load status
-    if (INITIAL_BATCH >= grid.querySelectorAll(".resource-item").length) {
-      hasMore = grid.querySelectorAll(".resource-item").length < parseInt(visibleCount?.textContent || "0");
-      if (!hasMore) {
-        skeleton.classList.add("hidden");
-        endMessage.classList.remove("hidden");
-      }
+    const totalItems = grid.querySelectorAll(".resource-item").length;
+    const totalCount = parseInt(visibleCount?.textContent || "0");
+    if (totalItems >= totalCount) {
+      hasMore = false;
+      skeleton.classList.add("hidden");
+      endMessage.classList.remove("hidden");
     }
   </script>
 </Layout>
