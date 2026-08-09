@@ -4,6 +4,7 @@ import ToolLayout from "@layouts/ToolLayout.astro";
 import VideoExtractor from "@components/VideoExtractor.svelte";
 import JuegosLogicos from "@components/JuegosLogicos.svelte";
 import TicTacToe from "@components/TicTacToe.svelte";
+import SimonSays from "@components/SimonSays.svelte";
 
 export async function getStaticPaths() {
   const allTools = await getCollection("tools");
@@ -55,6 +56,16 @@ const slug = tool.id.replace(/\.[^/.]+$/, "");
           Juega ahora
         </h2>
         <TicTacToe client:visible />
+      </div>
+    )
+  }
+  {
+    component === "SimonSays" && (
+      <div class="not-prose max-w-3xl mx-auto mt-12">
+        <h2 class="text-xl sm:text-2xl font-black uppercase italic tracking-tighter text-slate-900 dark:text-white mb-6">
+          Juega ahora
+        </h2>
+        <SimonSays client:visible />
       </div>
     )
   }
