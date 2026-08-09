@@ -226,6 +226,21 @@ author: "Jorge Beneyto Castelló"
     * `set-head <nombre> <rama>`: Establece la rama por defecto del remote.
     * `set-branches <nombre> <rama>...`: Restringe las ramas que fetch obtiene del remote.
 
+> **Cambio rápido de SSH a HTTPS** — Si `git push` falla con `Permission denied (publickey)` y no tienes clave SSH configurada, cambia la URL del remote en un solo comando:
+>
+> ```bash
+> git remote set-url origin https://github.com/usuario/repo.git
+> git push
+> ```
+>
+> Para volver a SSH:
+>
+> ```bash
+> git remote set-url origin git@github.com:usuario/repo.git
+> ```
+>
+> Comprueba la URL actual con `git remote -v`.
+
 * **`git fetch`**:
     * `--all`: Obtiene datos de **todos** los remotos configurados.
     * `--prune`: Elimina las referencias remotas locales que ya no existen en el servidor.
