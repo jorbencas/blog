@@ -70,9 +70,9 @@
       if (!gameActive) return;
       const c = sequence[i];
       activeColor = c;
-      await waitFor(getSpeed() * 0.6);
+      await waitFor(getSpeed() * 0.7);
       activeColor = "";
-      await waitFor(getSpeed() * 0.3);
+      await waitFor(getSpeed() * 0.4);
     }
 
     showingSequence = false;
@@ -155,7 +155,10 @@
     const c = COLOR_MAP[color];
     if (!c) return "";
     const isActive = activeColor === color;
-    return `background-color: ${c.bg}; ${isActive ? `box-shadow: 0 0 30px ${c.glow}, inset 0 0 20px rgba(255,255,255,0.2); transform: scale(1.05);` : `box-shadow: 0 4px 15px rgba(0,0,0,0.3);`}`;
+    if (isActive) {
+      return `background-color: ${c.bg}; box-shadow: 0 0 40px ${c.glow}, 0 0 80px ${c.glow}, inset 0 0 30px rgba(255,255,255,0.3); transform: scale(1.08); border: 3px solid rgba(255,255,255,0.6); filter: brightness(1.3);`;
+    }
+    return `background-color: ${c.bg}; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: 3px solid transparent;`;
   }
 </script>
 
@@ -337,7 +340,8 @@
   @media (max-width: 400px) { .simon-board { width: 280px; height: 280px; } }
 
   .color-btn {
-    border-radius: 12px; border: none; cursor: pointer; transition: all 0.2s ease;
+    border-radius: 12px; border: 3px solid transparent; cursor: pointer;
+    transition: all 0.15s ease;
     display: flex; align-items: center; justify-content: center;
     font-family: inherit; color: white; font-weight: 700; font-size: 0.85rem;
     letter-spacing: 0.5px; text-transform: uppercase;
@@ -345,7 +349,7 @@
   .color-btn:not(:disabled):hover { transform: scale(1.03); }
   .color-btn:not(:disabled):active { transform: scale(0.97); }
   .color-btn:disabled { cursor: not-allowed; opacity: 0.7; }
-  .color-label { text-shadow: 0 1px 3px rgba(0,0,0,0.4); }
+  .color-label { text-shadow: 0 1px 3px rgba(0,0,0,0.4); pointer-events: none; }
 
   .badge-container { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
   .badge {
