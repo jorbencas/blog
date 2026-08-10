@@ -2,6 +2,8 @@ import type { APIRoute } from "astro";
 import fs from "fs";
 import path from "path";
 
+export const prerender = false;
+
 export const GET: APIRoute = async ({ url }) => {
   const page = parseInt(url.searchParams.get("page") || "1");
   const limit = parseInt(url.searchParams.get("limit") || "50");

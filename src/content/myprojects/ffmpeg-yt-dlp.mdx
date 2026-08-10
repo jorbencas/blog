@@ -1,9 +1,9 @@
 ---
 draft: false
-title: "FFmpeg + yt-dlp Pipeline: Conversor, Descargador y Editor de Vídeo con 31 Modos"
-description: "Navaja suiza del vídeo: 31 modos de operación para descargar, convertir, cortar, poner efectos y editar. Selección de calidad, GPU automática, presets para redes sociales y pipeline encadenado. Todo en un solo script de 5585 líneas."
+title: "FFmpeg + yt-dlp Pipeline: Conversor, Descargador y Editor de Vídeo con 33 Modos"
+description: "Navaja suiza del vídeo: 33 modos de operación para descargar, convertir, cortar, poner efectos y editar. Compose mode, HLS streaming, scripts de automatización, GPU automática y presets para redes sociales. Todo en un solo script."
 pubDate: "2026/08/03"
-updatedDate: "2026/08/07"
+updatedDate: "2026/08/10"
 tags: ["ffmpeg", "yt-dlp", "docker", "bash", "vídeo", "automatización", "linux"]
 image: "img/ffmpeg_yt_dlp/ffmpeg_yt_dlp_cover-1200.webp"
 repository: "https://github.com/jorbencas/devjobs/tree/master/ffmpeg-yt-dlp"
@@ -14,7 +14,7 @@ Tengo un problema que me llevaba persiguiendo mucho tiempo: acumulo vídeos en m
 
 Un día me dije: **esto tiene que ser más fácil**. Quiero una sola herramienta donde pueda decirle "cortame esto de aquí a aquí y pásalo a formato Telegram" y que haga todo solo. Sin copiar comandos, sin buscar tutoriales, sin equivocarme.
 
-Así nació **midu.sh**: un script que ahora tiene 5585 líneas y 31 modos de operación. Empezó siendo un scriptito para cortar vídeos y fue creciendo hasta convertirse en una navaja suiza del vídeo.
+Así nació **midu.sh**: un script que ahora tiene 33 modos de operación. Empezó siendo un scriptito para cortar vídeos y fue creciendo hasta convertirse en una navaja suiza del vídeo.
 
 ---
 
@@ -34,7 +34,7 @@ Creé **midu.sh**: un script que junta todo lo que necesitas para trabajar con v
 
 ---
 
-## Los 31 modos
+## Los 33 modos
 
 ### Descarga y extracción
 
@@ -60,6 +60,18 @@ Creé **midu.sh**: un script que junta todo lo que necesitas para trabajar con v
 
 # Solo subtítulos
 ./midu.sh -d "URL" --dl-subs-only
+
+# No re-descargar (archive)
+./midu.sh -d "URL" --download-archive ~/descargas.txt
+
+# Filtrar por fecha
+./midu.sh -d "URL" --dateafter 20260101 --datebefore 20260801
+
+# Seleccionar items de playlist
+./midu.sh -d "URL" --playlist-items 1-5
+
+# Listar playlist sin descargar
+./midu.sh -d "URL" --flat-playlist
 ```
 
 ### Corte y edición
@@ -124,7 +136,7 @@ El corte lossless funciona porque ffmpeg puede leer y escribir contenedores como
 | `remux` | Cambiar contenedor sin re-encoding | `--remux --container mkv` |
 | `tracks` | Reordenar pistas de vídeo/audio/subtítulos | `--tracks "v:0,a:1,s:0"` |
 
-### Pipeline encadenado (NUEVO)
+### Pipeline encadenado
 
 ```bash
 # Cortar + convertir + fade en un solo comando
@@ -138,6 +150,58 @@ El corte lossless funciona porque ffmpeg puede leer y escribir contenedores como
 ```
 
 Operaciones disponibles: `cut`, `convert`, `rotate`, `fade`, `reverse`, `denoise`, `sharpen`, `normalize`.
+
+### Compose (selección de pistas)
+
+Selecciona qué pistas de vídeo, audio y subtítulos quieres en el archivo final, con codec y bitrate independientes por cada pista de audio:
+
+```bash
+./midu.sh --compose
+```
+
+Flujo:
+1. Seleccionar pista de vídeo (copy sin re-encode o elegir otra)
+2. Elegir varias pistas de audio (rango: 1-3 o selección múltiple 1,2,4)
+3. Asignar codec individual por cada pista de audio (aac, copy, opus, ac3, eac3, flac)
+4. Elegir subtítulos (opcional)
+5. Seleccionar contenedor de salida (mkv, mp4, ts)
+
+```bash
+# Ejemplo: mkv con 3 pistas de audio (español + inglés + director) cada una con codec diferente
+./midu.sh --compose
+# → Selecciona pista 1 de vídeo (copy)
+# → Selecciona pistas 1,2,3 de audio
+# → Asigna: español→aac 192k, inglés→copy, director→opus 128k
+# → Añade subtítulos español
+# → Salida en mkv
+```
+
+El modo compose es ideal para crear archivos multimedia con múltiples pistas de audio (películas multilingües, comentarios de director, etc.) sin necesidad de escribir comandos ffmpeg complejos con `-map`.
+
+### HLS (streaming)
+
+Prepara vídeos para streaming con múltiples calidades y playlist maestro adaptativo:
+
+```bash
+./midu.sh --hls
+```
+
+Genera:
+- Múltiples calidades (360p a 4K)
+- Segmentos configurables (default 4s)
+- Playlist maestro adaptativo (master.m3u8)
+
+```bash
+# Ejemplo de salida:
+# video_hls/
+# ├── master.m3u8          # Playlist maestro
+# ├── 720p/
+# │   ├── playlist.m3u8    # Playlist 720p
+# │   └── segment_000.ts   # Segmentos
+# └── 1080p/
+#     ├── playlist.m3u8    # Playlist 1080p
+#     └── segment_000.ts   # Segmentos
+```
 
 ---
 
@@ -241,7 +305,6 @@ El script detecta automáticamente el hardware disponible:
 | Flag | Descripción |
 |------|-------------|
 | `-n, --non-interactive` | Sin prompts, usa valores por defecto |
-| `-c, --save-config` | Guardar config en conf.json |
 | `-v, --verbose` | Progreso detallado |
 | `--two-pass` | Two-pass encoding (mejor calidad con --max-gb) |
 | `--hw-accel` | Aceleración por hardware |
@@ -250,9 +313,11 @@ El script detecta automáticamente el hardware disponible:
 | `--notify` | Notificación al terminar (notify-send) |
 | `--write-subs` | Descargar subtítulos con yt-dlp |
 | `--sub-langs LANGS` | Idiomas de subtítulos (default: es,en) |
+| `--audio-lang LANG` | Idioma de audio a seleccionar (default: español) |
 | `--checkpoint FILE` | Guardar progreso para resume |
 | `--resume [FILE]` | Continuar desde checkpoint |
 | `--retry` | Reintentar archivos fallidos al terminar |
+| `--compose` | Modo compose: selección de pistas personalizada |
 
 ---
 
@@ -286,37 +351,36 @@ bash preview_watcher.sh            # debug en primer plano
 
 ---
 
-## Configuración persistente
+## Scripts de automatización
+
+### Backup de canales de YouTube
+
+`scripts/backup_youtube.sh` descarga canal completo con archive automático (no re-descarga):
 
 ```bash
-# Guardar config actual
-./midu.sh -c --convert -s telegram
+# Backup de canales específicos
+bash scripts/backup_youtube.sh https://www.youtube.com/@Canal1 https://www.youtube.com/@Canal2
 
-# Al ejecutar de nuevo, carga automáticamente
-./midu.sh
-# → "Configuración guardada encontrada. ¿Usarla? [S/n]"
+# Con calidad y formato personalizados
+bash scripts/backup_youtube.sh -q 720 -f mkv https://www.youtube.com/@Canal1
+
+# Directorio personalizado
+BACKUP_DIR=/mnt/backup bash scripts/backup_youtube.sh https://www.youtube.com/@Canal1
 ```
 
-El archivo `conf.json` almacena:
+### Monitor de carpeta (compresión automática)
 
-```json
-{
-  "inputDir": ".",
-  "outputDir": "./optimizados",
-  "extensions": "avi,webm,mkv,mp4,flv",
-  "verbose": true,
-  "modes": {
-    "convert": {
-      "social": "",
-      "preset": "default",
-      "videoCodec": "h264",
-      "audioCodec": "aac",
-      "audioBitrate": "128k",
-      "resolution": "720",
-      "maxSize": "1.5"
-    }
-  }
-}
+`scripts/monitor_folder.sh` vigila una carpeta y comprime vídeos nuevos:
+
+```bash
+# Monitor con configuración por defecto
+bash scripts/monitor_folder.sh ~/Downloads/videos
+
+# Personalizar CRF, preset y destino
+bash scripts/monitor_folder.sh -o /mnt/comp -c 23 -p medium ~/Videos/nuevos
+
+# Con intervalo de polling personalizado
+bash scripts/monitor_folder.sh --interval 60 ~/Videos/para_comprimir
 ```
 
 ---
@@ -354,6 +418,10 @@ bash preview_watcher.sh --daemon
 
 ## Peculiaridades
 
+- **Compose mode**: Selección visual de pistas de vídeo/audio/subtítulos con codec independiente por cada pista de audio
+- **HLS streaming**: Genera múltiples calidades con playlist maestro adaptativo
+- **Auto-detección de español**: Selecciona automáticamente la pista de audio en español (spa/es/español/castellano), configurable con `--audio-lang`
+- **Scripts de automatización**: Backup de canales de YouTube y monitoreo de carpeta con compresión automática
 - **Remux automático**: Si el vídeo ya es h264+aac sin corte, se remuxa sin re-encoding (copia directa de streams)
 - **Reintentos de tamaño**: Si supera el límite, re-codifica con menor bitrate (hasta 2 intentos)
 - **Panel de progreso**: Muestra progreso por archivo con hilos paralelos (max 4)
@@ -371,11 +439,13 @@ bash preview_watcher.sh --daemon
 
 ```
 ffmpeg-yt-dlp/
-├── conf.json              # configuración de conversión
 ├── docker-compose.yml     # servicio Docker (Alpine + ffmpeg + yt-dlp)
 ├── preview_watcher.sh     # abre vídeos en WSL/Windows (host)
+├── scripts/
+│   ├── backup_youtube.sh  # backup automático de canales de YouTube
+│   └── monitor_folder.sh  # monitoreo y compresión automática
 └── test_video/
-    ├── midu.sh            # script principal (4797 líneas, 27 modos)
+    ├── midu.sh            # script principal (~6000 líneas, 33 modos)
     ├── optimizados/       # vídeos convertidos (por defecto)
     └── test/              # vídeos de entrada (por defecto)
 ```

@@ -2,6 +2,8 @@ import type { APIRoute } from "astro";
 
 const BUTTONDOWN_API_KEY = process.env.BUTTONDOWN_API_KEY;
 
+export const prerender = false;
+
 export const POST: APIRoute = async ({ request }) => {
   if (!BUTTONDOWN_API_KEY) {
     return new Response(
