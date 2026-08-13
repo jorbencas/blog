@@ -128,7 +128,7 @@ async def handler(event):
 
 ### 4. Modo Uploader (`subir_videos.py`)
 
-Sube vídeos comprimidos a **varios grupos** de Telegram automáticamente. Es la última pieza del pipeline **"Grabar → Comprimir → Subir a Telegram"**: vigila una carpeta y por cada `*_compressed.mp4` lo envía a todos los grupos de `grupos.json`.
+Sube vídeos comprimidos a grupos de Telegram automáticamente. Es la última pieza del pipeline **"Grabar → Comprimir → Subir a Telegram"**: vigila una carpeta y por cada `*_compressed.mp4` lo sube, **con ruteo automático por keyword del directo**.
 
 ```bash
 # Setup de sesión (una vez, crea uploader.session)
@@ -142,7 +142,7 @@ docker compose up -d uploader
 ```
 
 Características:
-- **Varios grupos**: definidos en `grupos.json` (acepta IDs numéricos con `-` para grupos/canales y `@usernames`).
+- **Ruteo por keyword**: el `TwitchRecorder` lee el título del directo y lo incrusta en el nombre (`*_KW_<keyword>_compressed.mp4`). El uploader sube el vídeo **solo al grupo cuyo `nombre` coincida** con la keyword; si no hay coincidencia, al `default`.
 - **Sesión propia**: usa `uploader.session`, separada de la sesión del menú interactivo (`ultimate_session`). Así puedes correr el menú de descargas y el uploader **a la vez** sin conflictos.
 - **Límite de 2 GB**: si un vídeo supera 2 GB, lo divide en partes con `ffmpeg -c copy` (sin recompresión) antes de subir.
 - **Registro de enviados** (`enviados.json`): no reenvía lo ya subido y elimina el original al completar.
@@ -150,11 +150,12 @@ Características:
 - **Configurable por entorno** (`UPLOADER_API_ID`, `UPLOADER_INTERVALO`, `UPLOADER_CARPETAS`, `UPLOADER_SESION`, `UPLOADER_GRUPOS`, `UPLOADER_ENVIADOS`, `UPLOADER_PARTES`...).
 
 ```json
-// grupos.json
+// grupos.json — ruteo por keyword
 {
+    "default": -100999888777,
     "grupos": [
-        "@mi_grupo_publico",
-        -1001234567890
+        { "nombre": "prueba", "id": -100111222333 },
+        { "nombre": "sendo", "id": -100444555666 }
     ]
 }
 ```
