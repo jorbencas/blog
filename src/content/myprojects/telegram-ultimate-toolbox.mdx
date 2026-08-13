@@ -1,9 +1,9 @@
 ---
 draft: false
-title: "Telegram Ultimate Toolbox: Descargador Masivo, Clonador y Vigilante con Docker"
-description: "Tres herramientas en una: descargador masivo de canales, clonador con traducción automática y vigilante de contenido con alertas por palabras. Credenciales cifradas con AES, progreso en tiempo real, todo en Docker."
+title: "Telegram Ultimate Toolbox: Descargador Masivo, Clonador, Vigilante y Uploader con Docker"
+description: "Cuatro herramientas en una: descargador masivo de canales, clonador con traducción automática, vigilante de contenido con alertas por palabras y subidor automático de vídeos a grupos. Credenciales cifradas con AES, progreso en tiempo real, todo en Docker."
 pubDate: "2026/08/03"
-updatedDate: "2026/08/04"
+updatedDate: "2026/08/13"
 tags: ["python", "docker", "telegram", "telethon", "automatización"]
 image: "img/telegram_ultimate_toolbox/telegram_ultimate_toolbox_cover-1200.webp"
 repository: "https://github.com/jorbencas/devjobs/tree/master/downloader_telegram"
@@ -14,19 +14,19 @@ Tengo canales de Telegram donde comparten archivos importantes: documentos, víd
 
 **Mi motivación:** Un día necesitaba respaldar un canal entero que estaba a punto de ser eliminado. Tenía cientos de archivos útiles y no quería perderlos. Empecé a descargar uno por uno y me di cuenta de que iba a tardar horas (o días). Además, algunos canales están en otros idiomas y necesitaba traducir los mensajes automáticamente.
 
-También quería vigilar ciertos canales en tiempo real para recibir alertas cuando apareciera contenido relevante (ofertas de trabajo, descuentos, noticias). Pero Telegram no tiene esa función de alertas por palabras clave.
+También quería vigilar ciertos canales en tiempo real para recibir alertas cuando apareciera contenido relevante (ofertas de trabajo, descuentos, noticias). Y, con el tiempo, también quería **subir vídeos a varios grupos de Telegram de forma automática** cuando no estoy delante del ordenador. Pero Telegram no tiene esa función de alertas por palabras clave ni un uploader multi-grupo.
 
-Así que hice **Telegram Ultimate Toolbox**: un script con tres módulos que resuelven todos estos problemas.
+Así que hice **Telegram Ultimate Toolbox**: un script con cuatro módulos que resuelven todos estos problemas.
 
 ---
 
 ## El problema
 
-Telegram no ofrece una forma nativa de descargar grandes volúmenes de contenido, traducir automáticamente los mensajes o vigilar canales con alertas personalizadas. Las herramientas existentes suelen ser limitadas, poco seguras o no manejan bien las restricciones de canales protegidos.
+Telegram no ofrece una forma nativa de descargar grandes volúmenes de contenido, traducir automáticamente los mensajes, vigilar canales con alertas personalizadas ni subir vídeos a varios grupos de golpe. Las herramientas existentes suelen ser limitadas, poco seguras o no manejan bien las restricciones de canales protegidos.
 
 ## La solución
 
-Un script Python con TelegramClient (Telethon) que ofrece tres módulos principales: descarga masiva, clonación con traducción y vigilante de contenido. Las credenciales se almacenan cifradas con AES (Fernet) y el sistema de logs muestra el progreso con iconos coloreados por tipo de mensaje.
+Un script Python con TelegramClient (Telethon) que ofrece cuatro módulos principales: descarga masiva, clonación con traducción, vigilante de contenido y subidor automático a grupos. Las credenciales se almacenan cifradas con AES (Fernet) y el sistema de logs muestra el progreso con iconos coloreados por tipo de mensaje.
 
 ---
 
@@ -37,7 +37,8 @@ Telegram Ultimate Toolbox
 ├── Telethon (TelegramClient)
 │   ├── Descarga masiva (enlace/rango/ TXT)
 │   ├── Clonación con traducción
-│   └── Vigilante en tiempo real
+│   ├── Vigilante en tiempo real
+│   └── Uploader a grupos (subir_videos.py)
 ├── Cifrado AES (Fernet)
 │   ├── config.bin → API ID/Hash cifrados
 │   └── secret.key → llave de cifrado
@@ -51,7 +52,7 @@ Telegram Ultimate Toolbox
 
 ---
 
-## Los 3 módulos
+## Los 4 módulos
 
 ### 1. Descarga Masiva
 
@@ -123,6 +124,39 @@ async def handler(event):
     if procesar_texto_inteligente(texto) == "FILTERED_CONTENT" or \
        any(p in texto.lower() for p in palabras):
         await client.send_message('me', f"🔔 Alerta Vigilante:\n{texto}")
+```
+
+### 4. Modo Uploader (`subir_videos.py`)
+
+Sube vídeos comprimidos a **varios grupos** de Telegram automáticamente. Es la última pieza del pipeline **"Grabar → Comprimir → Subir a Telegram"**: vigila una carpeta y por cada `*_compressed.mp4` lo envía a todos los grupos de `grupos.json`.
+
+```bash
+# Setup de sesión (una vez, crea uploader.session)
+docker compose run --rm uploader python /app/subir_videos.py --setup
+
+# Descubrir tus chats/grupos (copia los IDs a grupos.json)
+docker compose run --rm uploader python /app/subir_videos.py --list-chats
+
+# Modo automático (bucle, sube cada intervalo)
+docker compose up -d uploader
+```
+
+Características:
+- **Varios grupos**: definidos en `grupos.json` (acepta IDs numéricos con `-` para grupos/canales y `@usernames`).
+- **Sesión propia**: usa `uploader.session`, separada de la sesión del menú interactivo (`ultimate_session`). Así puedes correr el menú de descargas y el uploader **a la vez** sin conflictos.
+- **Límite de 2 GB**: si un vídeo supera 2 GB, lo divide en partes con `ffmpeg -c copy` (sin recompresión) antes de subir.
+- **Registro de enviados** (`enviados.json`): no reenvía lo ya subido y elimina el original al completar.
+- **Robusto**: maneja credenciales corruptas, `grupos.json` mal formado, sesión vencida (sugiere `--setup`) y fallos por grupo sin marcar como enviado.
+- **Configurable por entorno** (`UPLOADER_API_ID`, `UPLOADER_INTERVALO`, `UPLOADER_CARPETAS`, `UPLOADER_SESION`, `UPLOADER_GRUPOS`, `UPLOADER_ENVIADOS`, `UPLOADER_PARTES`...).
+
+```json
+// grupos.json
+{
+    "grupos": [
+        "@mi_grupo_publico",
+        -1001234567890
+    ]
+}
 ```
 
 ---
@@ -228,7 +262,11 @@ El token generado (`ultimate_session.session`) contiene las credenciales de aute
 ```bash
 cd downloader_telegram
 docker compose build
-docker compose up
+docker compose up                # menú interactivo (descarga/clonado/vigilante)
+
+# Uploader (pipeline "Grabar → Comprimir → Subir"):
+docker compose up -d uploader    # vigila /comprimidos y sube a los grupos
+docker compose logs -f uploader  # logs del uploader
 ```
 
 ## Uso sin Docker
@@ -247,7 +285,7 @@ python test_download_protected_content_telegram.py
 ```
 ╔═══════════════════════════════════════════════════════════╗
 ║  📦 TELEGRAM TOOLBOX                                      ║
-║  Descargador · Clonador · Vigilante                        ║
+║  Descargador · Clonador · Vigilante · Uploader             ║
 ╚═══════════════════════════════════════════════════════════╝
 
 ▸ Selecciona módulo:
@@ -270,6 +308,7 @@ python test_download_protected_content_telegram.py
 | `cryptg` | Aceleración de descargas con cryptografía nativa |
 | `rich` | Panel de logs con iconos coloreados por tipo |
 | `inquirerpy` | Menús interactivos (select, confirm, text, secret) |
+| `ffmpeg` | División en partes de vídeos >2 GB en el uploader |
 
 ---
 
@@ -289,3 +328,5 @@ python test_download_protected_content_telegram.py
 - **Rate limit controlado**: Sleep de 0.8s entre mensajes para no ser bloqueado
 - **2FA soportado**: Maneja automáticamente la verificación en dos pasos
 - **Sesión persistente**: No necesita re-login entre ejecuciones
+- **Uploader multi-grupo**: Sesión propia (`uploader.session`), sin conflictos con el menú interactivo
+- **División >2 GB**: Corta vídeos grandes en partes con `ffmpeg -c copy` antes de subir

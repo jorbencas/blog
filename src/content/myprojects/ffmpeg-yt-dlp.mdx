@@ -3,7 +3,7 @@ draft: false
 title: "FFmpeg + yt-dlp Pipeline: Conversor, Descargador y Editor de Vídeo con 33 Modos"
 description: "Navaja suiza del vídeo: 33 modos de operación para descargar, convertir, cortar, poner efectos y editar. Compose mode, HLS streaming, scripts de automatización, GPU automática y presets para redes sociales. Todo en un solo script."
 pubDate: "2026/08/03"
-updatedDate: "2026/08/10"
+updatedDate: "2026/08/13"
 tags: ["ffmpeg", "yt-dlp", "docker", "bash", "vídeo", "automatización", "linux"]
 image: "img/ffmpeg_yt_dlp/ffmpeg_yt_dlp_cover-1200.webp"
 repository: "https://github.com/jorbencas/devjobs/tree/master/ffmpeg-yt-dlp"
@@ -381,7 +381,40 @@ bash scripts/monitor_folder.sh -o /mnt/comp -c 23 -p medium ~/Videos/nuevos
 
 # Con intervalo de polling personalizado
 bash scripts/monitor_folder.sh --interval 60 ~/Videos/para_comprimir
+
+# Solo procesar grabaciones terminadas, escalando a 720p (uso en pipeline)
+bash scripts/monitor_folder.sh --completed-only -r 720 /ruta/a/vigilar
 ```
+
+**Flags clave del monitor**
+
+| Flag | Descripción | Default |
+|------|-------------|---------|
+| `-o, --output DIR` | Directorio de salida | `Videos/comprimidos` |
+| `-c, --crf VALUE` | Calidad CRF (menor = mejor) | `28` |
+| `-p, --preset NAME` | Preset de velocidad | `fast` |
+| `--codec NAME` | Códec de vídeo | `libx264` |
+| `-r, --resolution N` | Escalar altura a N px (ej: `720`) | sin reescalar |
+| `--completed-only` | Procesar solo `*_completed.*` | off |
+| `--interval SEGS` | Segundos entre comprobaciones | `30` |
+
+### Pregunta de borrado del original (convert)
+
+En el modo conversión interactivo (`midu.sh --convert`), al terminar cada archivo el script pregunta **"¿Eliminar archivo ORIGINAL? [s/N]"** (solo en terminal interactiva). El modo automatizado (`monitor`) conserva siempre el original.
+
+### Monitor como servicio del pipeline
+
+El proyecto define el servicio Docker **`monitor`** (`ffmpeg_monitor`), pensado para el pipeline de compresión automática:
+
+```bash
+cd /home/jorge/dev/devjobs/ffmpeg-yt-dlp
+docker compose build
+docker compose up -d monitor      # arranca el monitor en background
+docker compose logs -f monitor    # logs del monitor
+docker compose stop monitor       # parar solo el monitor
+```
+
+Vigila `/home/jorge/dev/devjobs/test_videos/test` (donde TwitchRecorder deja los `*_completed.mp4`), comprime a 720p y guarda en `/home/jorge/dev/devjobs/Videos/comprimidos`. Es la pieza central del pipeline **"Grabar → Comprimir → Subir a Telegram"**.
 
 ---
 
@@ -439,13 +472,15 @@ bash preview_watcher.sh --daemon
 
 ```
 ffmpeg-yt-dlp/
-├── docker-compose.yml     # servicio Docker (Alpine + ffmpeg + yt-dlp)
+├── docker-compose.yml     # servicios Docker: downloader + monitor
 ├── preview_watcher.sh     # abre vídeos en WSL/Windows (host)
 ├── scripts/
 │   ├── backup_youtube.sh  # backup automático de canales de YouTube
-│   └── monitor_folder.sh  # monitoreo y compresión automática
+│   └── monitor_folder.sh  # monitoreo y compresión automática (+ pipeline)
 └── test_video/
     ├── midu.sh            # script principal (~6000 líneas, 33 modos)
     ├── optimizados/       # vídeos convertidos (por defecto)
     └── test/              # vídeos de entrada (por defecto)
 ```
+
+> Detalle completo del monitor y su papel en el pipeline: `README_MONITOR.md`.
