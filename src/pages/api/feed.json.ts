@@ -12,9 +12,6 @@ export const GET: APIRoute = async () => {
   const allChallenges = await getCollection('auto-challenges');
   const sortedChallenges = await getSortedPosts(allChallenges);
 
-  const allTools = await getCollection('tools');
-  const sortedTools = await getSortedPosts(allTools);
-
   const allWeekly = await getCollection('weeklyPosts');
   const sortedWeekly = await getSortedPosts(allWeekly);
 
@@ -36,14 +33,6 @@ export const GET: APIRoute = async () => {
       date_published: p.data.pubDate ? new Date(p.data.pubDate).toISOString() : undefined,
       tags: p.data.tags || [],
       _section: 'retos',
-    })),
-    ...sortedTools.map(p => ({
-      id: `${SITE_URL.replace(/\/$/, '')}/herramientas/${p.id.replace(/\.[^/.]+$/, '')}`,
-      url: `${SITE_URL.replace(/\/$/, '')}/herramientas/${p.id.replace(/\.[^/.]+$/, '')}`,
-      title: p.data.name || p.data.title || '',
-      content_text: p.data.description || '',
-      tags: p.data.tags || [],
-      _section: 'herramientas',
     })),
     ...sortedWeekly.map(p => ({
       id: `${SITE_URL.replace(/\/$/, '')}/weekly/${p.id}`,

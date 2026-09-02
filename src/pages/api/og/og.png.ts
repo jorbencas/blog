@@ -13,7 +13,6 @@ const SECTION_STICKERS: Record<string, { header: string; stickers: string[] }> =
   posts:        { header: "Blog",              stickers: ["js", "python", "ts"] },
   retos:        { header: "Retos",             stickers: ["python", "js", "java", "ts"] },
   proyectos:    { header: "Proyectos",         stickers: ["github", "docker", "ts"] },
-  herramientas: { header: "Herramientas",      stickers: ["docker", "nodejs", "python"] },
   weekly:       { header: "Weekly",            stickers: ["rss", "github", "email"] },
   tags:         { header: "Etiquetas",         stickers: ["github", "code", "blog"] },
 };
@@ -24,7 +23,6 @@ const SECTION_COLORS: Record<string, { from: string; to: string }> = {
   posts:        { from: "#075985", to: "#06b6d4" },
   retos:        { from: "#b45309", to: "#f59e0b" },
   proyectos:    { from: "#6b21a8", to: "#a855f7" },
-  herramientas: { from: "#065f46", to: "#10b981" },
   weekly:       { from: "#075985", to: "#06b6d4" },
   tags:         { from: "#075985", to: "#06b6d4" },
 };
