@@ -3,9 +3,9 @@ draft: false
 title: "FFmpeg + yt-dlp Pipeline: Conversor, Descargador y Editor de Vídeo con 33 Modos"
 description: "Navaja suiza del vídeo: 33 modos de operación para descargar, convertir, cortar, poner efectos y editar. Compose mode, HLS streaming, scripts de automatización, GPU automática y presets para redes sociales. Todo en un solo script."
 pubDate: "2026/08/03"
-updatedDate: "2026/08/13"
+updatedDate: "2026/09/03"
 tags: ["ffmpeg", "yt-dlp", "docker", "bash", "vídeo", "automatización", "linux"]
-image: "img/ffmpeg_yt_dlp/ffmpeg_yt_dlp_cover-1200.webp"
+image: "img/ffmpeg_yt-dlp/ffmpeg_yt-dlp_cover-1200.webp"
 repository: "https://github.com/jorbencas/devjobs/tree/master/ffmpeg-yt-dlp"
 author: "Jorge Beneyto Castelló"
 ---
@@ -404,7 +404,7 @@ En el modo conversión interactivo (`midu.sh --convert`), al terminar cada archi
 
 ### Monitor como servicio del pipeline
 
-El proyecto define el servicio Docker **`monitor`** (`ffmpeg_monitor`), pensado para el pipeline de compresión automática:
+El proyecto define el servicio Docker **`monitor`** (`ffmpeg_monitor-sendo`), pensado para el pipeline de compresión automática. Este monitor es la pieza central del pipeline **"Grabar → Comprimir → Subir a Telegram"**: vigila la carpeta de grabaciones, comprime los vídeos nuevos a 720p y los deja listos para que el uploader los suba a Telegram.
 
 ```bash
 cd /home/jorge/dev/devjobs/ffmpeg-yt-dlp
@@ -414,7 +414,29 @@ docker compose logs -f monitor    # logs del monitor
 docker compose stop monitor       # parar solo el monitor
 ```
 
-Vigila `/home/jorge/dev/devjobs/test_videos/test` (donde TwitchRecorder deja los `*_completed.mp4`), comprime a 720p y guarda en `/home/jorge/dev/devjobs/Videos/comprimidos`. Es la pieza central del pipeline **"Grabar → Comprimir → Subir a Telegram"**.
+Vigila `data/pipeline/grabaciones/test/` (donde TwitchRecorder deja los `*_completed.mp4`), comprime a 720p y guarda en `data/pipeline/comprimidos/`.
+
+**Parámetros del monitor:**
+
+| Parámetro | Default | Descripción |
+|-----------|---------|-------------|
+| `-t, --threads N` | 4 | Hilos de ffmpeg (parallel encoding) |
+| `--completed-only` | off | Solo procesar archivos `*_completed.*` |
+| `--directo-completo` | off | Procesar directos completos (no dividir) |
+| `--codec NAME` | `libx264` | Códec de vídeo |
+| `-c, --crf VALUE` | 28 | Calidad CRF |
+| `-p, --preset NAME` | `fast` | Preset de velocidad |
+| `-r, --resolution N` | sin reescalar | Escalar altura a N px |
+
+**Flujo del pipeline completo:**
+
+```
+TwitchRecorder graba → grabaciones/test/*_completed.mp4
+        ↓
+ffmpeg_monitor-sendo comprime → comprimidos/*_compressed.mp4
+        ↓
+telegram-uploader-sendo sube → Telegram (por topic/serie)
+```
 
 ---
 
@@ -478,7 +500,7 @@ ffmpeg-yt-dlp/
 │   ├── backup_youtube.sh  # backup automático de canales de YouTube
 │   └── monitor_folder.sh  # monitoreo y compresión automática (+ pipeline)
 └── test_video/
-    ├── midu.sh            # script principal (~6000 líneas, 33 modos)
+    ├── midu.sh            # script principal (~6000 líneas, 33 modos, v5.0.0)
     ├── optimizados/       # vídeos convertidos (por defecto)
     └── test/              # vídeos de entrada (por defecto)
 ```

@@ -1,9 +1,9 @@
 ---
 draft: false
 title: "Tech Pulse: Dashboard Automatizado de Noticias Tech con IA"
-description: "Pipeline automatizado que monitoriza 400+ fuentes tech (YouTube, RSS, GitHub Topics, Product Hunt), genera resúmenes con IA, filtra por categoría y despliega un dashboard interactivo + Telegram + email newsletter + Markdown Tools."
+description: "Pipeline automatizado que monitoriza 515 fuentes tech (YouTube, RSS, GitHub Topics, Product Hunt), genera resúmenes con IA, filtra por categoría y despliega un dashboard interactivo + Telegram + email newsletter + tips + herramientas IA."
 pubDate: "2026/06/25"
-updatedDate: "2026/08/08"
+updatedDate: "2026/09/03"
 tags: ['python', 'ia', 'web-scraping', 'devops', 'automation', 'github-actions', 'rss']
 image: "img/tech_pulse_dashboard/tech_pulse_dashboard_cover-1200.webp"
 repository: "https://github.com/jorbencas/test_githubActions"
@@ -188,16 +188,16 @@ Todo el JSON embebido, prompts de IA, plantillas HTML y valores por defecto se m
 | Tipo | Cantidad | Ejemplos |
 |------|----------|----------|
 | YouTube | 158 canales | MoureDev, Midudev, Pelado Nerd, Ringa Tech, Nethermind |
-| RSS XML (quick) | 55 feeds | TechCrunch, The Verge, Wired, Google Blog, Vercel, Docker, Krebs |
-| Web scraping (quick) | 11 sitios | Anthropic, Ollama, Mistral, LangChain, HuggingFace Papers, Mozilla Hacks |
-| HTML scraping | 82 sitios | Xataka, Genbeta, Slashdot, Applesfera, El País Tecnología |
+| RSS XML (quick) | 151 feeds | TechCrunch, The Verge, Wired, Google Blog, Vercel, Docker, Krebs |
+| Web scraping (quick) | 43 sitios | Anthropic, Ollama, Mistral, LangChain, HuggingFace Papers, Mozilla Hacks |
+| HTML scraping | 64 sitios | Xataka, Genbeta, Slashdot, Applesfera, El País Tecnología |
 | **Fuentes duales (YT + Web)** | **4 fuentes** | **MoureDev, Midudev, Carlos Azaustre, Xataka** |
-| GitHub Topics | 98 topics | AI, LLM, Docker, Kubernetes, CSS, HTML, algorithms, ui-ux, design-tools, machine-learning, ai-writing... |
+| GitHub Topics | 89 topics | AI, LLM, Docker, Kubernetes, CSS, HTML, algorithms, ui-ux, design-tools, machine-learning, ai-writing... |
 | GitHub Collections | 1 | AI Tools |
-| GitHub Repos | 5 | OpenWiki, Meetily, AutoPR, PR-Agent, Code-to-Docs |
+| GitHub Repos | 8 | OpenWiki, Meetily, AutoPR, PR-Agent, Code-to-Docs |
 | Product Hunt | 1 | Top products daily |
 
-Los feeds RSS y web scraping con `quick: True` se scrapearon cada hora con `scrape_hourly_workflow.yml`. Los GitHub Topics se scrapearon diariamente con `daily_resources.yml`. Actualmente hay 98 topics de GitHub (incluyendo ui-ux, design-tools, machine-learning, ai-writing, etc.).
+Los feeds RSS y web scraping con `quick: True` se scrapean cada hora con `scrape_hourly_workflow.yml`. Los GitHub Topics se scrapean diariamente con `daily_resources.yml`.
 
 ### Newsletter Agrupada por Fuente (Julio 2026)
 
@@ -252,11 +252,11 @@ Python genera un `index.html` completo con todo el contenido pre-renderizado (no
 - **Badges con clases CSS unificadas:** `.badge-tech`, `.badge-rss`, `.badge-cat`
 - **Config externalizada:** canales, tabs, opciones de filtro se inyectan directamente en el HTML desde Python
 
-> **Actualizado agosto 2026:** 400+ fuentes con 98 GitHub Topics y 4 fuentes duales. Markdown Tools (PDF, Slides, Table, Snippets, Cheatsheet) integradas en el dashboard. Constants reorganizadas en 3 archivos modulares. Smart translation con flag `traducido`. Resúmenes persistidos en JSON.
+> **Actualizado septiembre 2026:** 515 fuentes con 89 GitHub Topics y 4 fuentes duales. Markdown Tools (PDF, Slides, Table, Snippets, Cheatsheet) integradas en el dashboard. Tips de IT con 283 conceptos. Herramientas IA con 150 categorías y auto-detección. AI Agent Skills de GitHub. Blog resources migrados (2108). 134 tests pytest.
 
 ## 4. Desglose del Feature Set
 
-- **400+ fuentes monitorizadas:** 158 YouTube, 55 RSS, 11 web scraping, 82 HTML, 4 fuentes duales, 98 GitHub Topics, 5 repos, 1 Product Hunt
+- **515 fuentes monitorizadas:** 158 YouTube, 151 RSS, 43 web scraping, 64 HTML, 4 fuentes duales, 89 GitHub Topics, 8 repos, 1 Product Hunt
 - **Clasificación inteligente:** 6 categorías (IA, Programación, DevOps, Ciberseguridad, Hardware, Negocios) + badges Tech/RSS
 - **Dashboard SSR:** Python genera HTML completo, JS solo interactividad (~135 líneas)
 - **Config externalizada:** prompts IA, plantillas Telegram/email, canales YouTube, opciones de filtro — todo en `constants_sources.py` y `constants_templates.py`
@@ -267,13 +267,16 @@ Python genera un `index.html` completo con todo el contenido pre-renderizado (no
 - **Smart translation:** flag `traducido` persiste, solo traduce items nuevos
 - **Resúmenes persistidos:** `n['resumen']` se guarda en JSON para evitar re-summarización
 - **Fuentes duales:** YouTube + web scraping simultáneo (MoureDev, Midudev, Carlos Azaustre, Xataka)
-- **Ranking GitHub Stars:** top 20 repos ordenados por estrellas desde 52 GitHub Topics + Collections
-- **Deduplicación:** por URL normalizada y título similar en scrape, generación de dashboard, y **cross-file en resources**
-- **Fix de cards malformados:** `fix_malformed_cards()` repara ResourceCard tags con `/` en lugar de `/>`
+- **Ranking GitHub Stars:** top 20 repos ordenados por estrellas desde 89 GitHub Topics + Collections
+- **Deduplicación:** por URL normalizada y título similar en scrape, generación de dashboard, y cross-file en resources
 - **Estructura modular reorganizada:** scripts en subdirectorios (`scrapers/`, `publishers/`, `tools/`, `utils/`, `solutions/`)
 - **Constants reorganizadas:** `constants_sources.py` (fuentes), `constants_templates.py` (HTML/email/prompts), `constants_mdtools.py` (plantillas Markdown Tools)
-- **117 tests pytest:** cobertura completa de utilidades, caché, constantes (incluyendo templates email), imágenes, recursos y soluciones
-- **CI/CD completo:** 11 workflows de GitHub Actions con badges en vivo en el README
+- **134 tests pytest:** cobertura completa de utilidades, caché, constantes (incluyendo templates email), imágenes, recursos y soluciones
+- **CI/CD completo:** 15 workflows de GitHub Actions con badges en vivo en el README
+- **Tips de IT:** 283 conceptos con preguntas de entrevista, Gemini + Wikipedia + fallback local
+- **Herramientas IA:** 150 categorías, auto-detección de herramientas (HF + GitHub + Product Hunt)
+- **AI Agent Skills:** 37 skills de GitHub para mejorar respuestas del bot
+- **Blog resources migrados:** 2108 recursos del blog disponibles en el bot de Telegram
 
 ## 5. Puesta en Marcha Local
 
