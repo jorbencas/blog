@@ -1,0 +1,343 @@
+---
+draft: false
+title: "Devjobs Automation Suite: Pipelines de Video, Bots IA y Scrapers Automatizados"
+description: "Suite completa de automatización con Docker: pipeline de Twitch a Telegram, pipeline de YouTube a Telegram, bot de Telegram con IA, scrapers de noticias y herramientas de Productividad. Todo self-hosted y sin intervención manual."
+pubDate: "2026/09/03"
+updatedDate: "2026/09/03"
+tags: ["docker", "python", "automatización", "telegram", "ia", "scraping", "pipeline"]
+image: "img/devjobs_automation_suite/devjobs_automation_suite_cover-1200.webp"
+repository: "https://github.com/jorbencas/devjobs"
+author: "Jorge Beneyto Castelló"
+---
+
+Llevo meses construyendo un ecosistema completo de automatización que ejecuta pipelines de vídeo, bots de IA, scrapers de noticias y herramientas de productividad — todo auto-hospedado con Docker y sin intervención manual. Lo que empezó como un grabador de directos de Twitch se convirtió en una suite de 6 herramientas interconectadas.
+
+**Mi motivación:** Quería automatizar tareas repetitivas: grabar directos, comprimirlos, subirlos a Telegram, descargar vídeos de YouTube, generar contenido de programación con IA, y scrapear noticias de cine. Todo esto ejecutándose solo, 24/7, sin que yo tenga que hacer nada.
+
+---
+
+## El problema real
+
+Cada herramienta existente resolvía un problema:
+- **TwitchRecorder** grababa directos pero no los comprimía ni subía
+- **ffmpeg** convertía vídeos pero no los monitorizaba
+- **yt-dlp** descargaba de YouTube pero no subía a Telegram
+- **Bots de Telegram** existían pero no tenían IA ni descargas
+- **Scrapers** scrapeaban pero no enviaban resultados
+
+Necesitaba **conectar todo** en pipelines automáticos.
+
+---
+
+## Arquitectura completa
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    DEVJOBS AUTOMATION SUITE                         │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  ┌─────────────┐   ┌──────────────┐   ┌──────────────┐            │
+│  │TwitchRecorder│──▶│ ffmpeg-yt-dlp │──▶│  Uploader    │            │
+│  │ (grabar)    │   │ (comprimir)  │   │ (subir)      │            │
+│  └─────────────┘   └──────────────┘   └──────────────┘            │
+│        │                  │                  │                      │
+│        └──────────────────┴──────────────────┘                     │
+│                           │                                         │
+│                    data/pipeline/                                   │
+│                                                                     │
+│  ┌─────────────┐   ┌──────────────┐   ┌──────────────┐            │
+│  │ 158 canales │──▶│  download.py │──▶│  upload.py   │            │
+│  │  YouTube    │   │  (descargar) │   │ (subir)      │            │
+│  └─────────────┘   └──────────────┘   └──────────────┘            │
+│        │                  │                  │                      │
+│        └──────────────────┴──────────────────┘                     │
+│                           │                                         │
+│                    data/yt-pipeline/                                │
+│                                                                     │
+│  ┌─────────────┐   ┌──────────────┐   ┌──────────────┐            │
+│  │ @jorbencas  │──▶│   Gemini     │──▶│  Scrapers    │            │
+│  │    bot      │   │    IA        │   │  (noticias)  │            │
+│  └─────────────┘   └──────────────┘   └──────────────┘            │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Pipeline 1: Twitch → Telegram (Sendo Sama)
+
+Automatización completa que graba directos de **sendo sama**, los comprime a 720p y los sube a grupos de Telegram con temas organizados.
+
+### Flujo paso a paso
+
+| Paso | Servicio | Qué hace |
+|------|----------|----------|
+| 1. Grabar | `twitchrecorder-sendo` | Graba el directo con calidad original |
+| 2. Keyword | `twitchrecorder-sendo` | Extrae el título y lo pone en el nombre |
+| 3. Cola | `data/pipeline/grabaciones/test/` | Espera como `*_completed.mp4` |
+| 4. Comprimir | `ffmpeg_monitor-sendo` | Convierte a 720p (CRF 28, 2 pasadas si >2GB) |
+| 5. OCR | `ffmpeg_monitor-sendo` | Detecta episodios por imagen |
+| 6. Subir | `telegram-uploader-sendo` | Rutea por keyword a temas de Telegram |
+
+### Resultado
+
+Un directo grabado a las 21:00 aparece comprimido y subido a su tema/serie sin que yo haga nada.
+
+```bash
+# Arrancar todo el pipeline
+pipe_up
+
+# Ver logs de los 3 a la vez
+plogs
+
+# Parar todo
+pipe_down
+```
+
+---
+
+## Pipeline 2: YouTube → Telegram (158 canales)
+
+Pipeline diario que descarga vídeos de 158 canales de YouTube, los convierte a 720p y los sube a un grupo de Telegram con 158 temas organizados por canal.
+
+### Configuración
+
+| Parámetro | Valor |
+|-----------|-------|
+| Canales | 158 (Midudev, MoureDev, Carlos Azaustre, etc.) |
+| Temas | 158 (uno por canal en "Stream Tecnologia") |
+| Calidad | 720p H.264/AAC |
+| Cron | 01:00 → 18:00 (mismo día) |
+| Límite | 2 vídeos por canal a la vez |
+
+### Flujo
+
+```
+01:00 Cron arranca
+  ↓
+download.py (descarga de 158 canales)
+  ↓
+convert.py (convierte a 720p, 95% target size)
+  ↓
+upload.py (sube a Telegram con topic_id)
+  ↓
+18:00 Cron para
+```
+
+```bash
+# Ver logs del cron
+cat data/yt-pipeline/logs/cron_$(date +%Y%m%d).log
+
+# Parar manualmente
+cd yt-to-telegram && docker compose down
+```
+
+---
+
+## Bot de Telegram (@jorbencas_bot)
+
+Bot interactivo con comandos, botones inline y contenido generado por IA.
+
+### Comandos
+
+| Comando | Descripción |
+|---------|-------------|
+| `/descarga URL` | Descargar vídeo de cualquier plataforma |
+| `/tip` | Tip de programación (Gemini + Wikipedia) |
+| `/concepto` | Concepto con código de ejemplo |
+| `/tool` | Herramienta IA |
+| `/noticias` | Últimas noticias tech |
+
+### Características técnicas
+
+| Característica | Detalle |
+|----------------|---------|
+| **Descarga** | yt-dlp + HLS fallback (para sitios que yt-dlp no soporta) |
+| **Formato** | `bv+ba/b` (video+audio merge automático) |
+| **Timeout** | 30 minutos |
+| **Conversión** | H.264/AAC, 720p, 2 pasadas si >50MB |
+| **IA** | Gemini API para tips y herramientas |
+| **Noticias** | Scrapers de 80+ fuentes españolas |
+
+### Arquitectura del bot
+
+```
+┌─────────────────────────────────────────────┐
+│         🤖 BOT API (python-telegram-bot)    │
+├─────────────────────────────────────────────┤
+│  💡 Contenido IA (tips, tools, concepts)   │
+│  📥 Descarga vídeos (yt-dlp + HLS)         │
+│  📰 Noticias scrapeadas                    │
+│  🎯 AI Agent Skills                        │
+└──────────┬──────────────┬──────────────────┘
+           │              │
+    Lee/escribe       Lee/escribe
+    descargas/        scripts/
+           │              │
+           v              v
+┌──────────────────┐  ┌──────────────────┐
+│  Descargas bot   │  │ test_githubActions│
+│  *.mp4           │  │  scripts/         │
+│                  │  │  utils/           │
+│                  │  │  tips_database    │
+└──────────────────┘  └──────────────────┘
+```
+
+---
+
+## Scrapers Automatizados
+
+### Eixam (Película)
+
+Scraper dedicado a la película "Eixam" (Enjambre) de Óscar Bernàcer:
+
+| Fuente | Tipo |
+|--------|------|
+| Directo cinema (Dirigido, Title-Magazine) | Reseñas |
+| Bing Search | Noticias |
+| Filmaffinity vía Bing | Reseñas |
+| MSN | URLs normalizadas |
+
+**80 elementos archivados**: 56 noticias, 15 tráilers, 5 reseñas, 2 fotos, 1 entrevista, 1 póster.
+
+### Tips Generator
+
+Base de datos de **283 conceptos** de programación con preguntas de entrevista:
+
+| Categoría | Conceptos |
+|-----------|-----------|
+| Programación general | 45 |
+| JavaScript | 24 |
+| Python | 22 |
+| Testing | 15 |
+| IA / ML | 14 |
+| LLMs | 13 |
+| Linux | 12 |
+| Design Patterns | 10 |
+| Soft Skills | 10 |
+| DevOps | 9 |
+
+**Funciones:**
+- Scraping de Wikipedia EN para definiciones
+- Mapeo español → inglés para términos técnicos
+- Fallback a Gemini API cuando falla Wikipedia
+- Fallback simple: "X es un concepto técnico..."
+- Preguntas de entrevista incluidas
+
+### AI Agent Skills
+
+Scraper de habilidades de agentes IA desde GitHub:
+
+```json
+{
+  "skills": [
+    {
+      "name": "web-scraping",
+      "description": "Extract data from websites",
+      "source": "github"
+    }
+  ]
+}
+```
+
+**37 skills** de GitHub incluidos en el bot.
+
+---
+
+## Herramientas Docker
+
+### Contenedores
+
+| Contenedor | Proyecto | Función |
+|------------|----------|---------|
+| `twitchrecorder-sendo` | TwitchRecorder | Graba directos |
+| `ffmpeg_monitor-sendo` | ffmpeg-yt-dlp | Comprime vídeos |
+| `telegram-uploader-sendo` | downloader_telegram | Sube a Telegram |
+| `telegram-bot` | downloader_telegram | Bot API |
+| `yt-to-telegram` | yt-to-telegram | Pipeline YouTube |
+
+### Volúmenes de datos
+
+```
+data/
+├── pipeline/                    ← Pipeline Twitch
+│   ├── grabaciones/2026/        Grabaciones en bruto
+│   ├── grabaciones/test/        Cola de espera
+│   ├── comprimidos/             Listos para subir
+│   ├── comprimidos/.processed/  Originales comprimidos
+│   ├── partes/                  Partes divididas (>2GB)
+│   └── backups/                 Backups de config
+├── yt-pipeline/                 ← Pipeline YouTube
+│   ├── downloads/               Vídeos descargados
+│   ├── converted/               Convertidos a 720p
+│   ├── uploaded/                Histórico
+│   └── logs/                    Logs de operaciones
+└── jorbencas_bot/               ← Bot de Telegram
+    ├── *.mp4                    Descargas del bot
+    └── .test_githubActions/     Código AI
+```
+
+---
+
+## Scripts de Productividad
+
+### Cron Pipeline
+
+```bash
+# Automático: 01:00 arranca, 18:00 para
+0 1 * * * /home/jorge/dev/devjobs/yt-to-telegram/scripts/run_pipeline_cron.sh
+```
+
+### Aliases Docker
+
+```bash
+# Pipeline completo
+pipe_up / pipe_down / pipe_logs / pipe_ps
+
+# Por proyecto
+ff_logs / ff_stop / ff_restart
+tw_logs / tw_stop / tw_restart
+tg_logs / tg_stop / tg_restart
+```
+
+---
+
+##stack técnico
+
+| Tecnología | Uso |
+|------------|-----|
+| **Docker** | Todos los servicios |
+| **Python** | Bots, scrapers, pipelines |
+| **ffmpeg** | Conversión de vídeo |
+| **yt-dlp** | Descarga de vídeos |
+| **Telethon** | Cliente de Telegram |
+| **python-telegram-bot** | Bot API |
+| **Gemini API** | Generación de contenido IA |
+| **BeautifulSoup** | Web scraping |
+| **Rich** | CLI con progreso |
+| **InquirerPy** | Menús interactivos |
+
+---
+
+## Lo que aprendí
+
+1. **Pipelines complejos**: Conectar 3 servicios que se comunican por archivos (watcher pattern)
+2. **Docker en producción**: Volumes, restart policies, health checks
+3. **Bots de Telegram**: Comandos, botones inline, manejo de archivos grandes
+4. **Scraping robusto**: Múltiples fuentes, fallbacks, deduplicación
+5. **Automatización 24/7**: Cron jobs, systemd services, monitoreo
+6. **IA en producción**: Gemini API para generación de contenido
+
+---
+
+## Repositorio
+
+El código completo está en [github.com/jorbencas/devjobs](https://github.com/jorbencas/devjobs):
+
+| Proyecto | README |
+|----------|--------|
+| `TwitchRecorder/` | [README](https://github.com/jorbencas/devjobs/tree/master/TwitchRecorder) |
+| `ffmpeg-yt-dlp/` | [README](https://github.com/jorbencas/devjobs/tree/master/ffmpeg-yt-dlp) |
+| `downloader_telegram/` | [README](https://github.com/jorbencas/devjobs/tree/master/downloader_telegram) |
+| `yt-to-telegram/` | [README](https://github.com/jorbencas/devjobs/tree/master/yt-to-telegram) |
+| `test_githubActions/` | [README](https://github.com/jorbencas/test_githubActions) |
