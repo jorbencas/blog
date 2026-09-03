@@ -68,6 +68,8 @@ Necesitaba **conectar todo** en pipelines automáticos.
 
 Automatización completa que graba directos de **sendo sama**, los comprime a 720p y los sube a un grupo de Telegram con temas organizados por serie.
 
+> **Detalle técnico completo:** [Telegram Ultimate Toolbox: Descargador Masivo, Clonador, Vigilante y Uploader con Docker](/myprojects/telegram-ultimate-toolbox)
+
 ### El grupo de Telegram y el sistema de temas
 
 El grupo de Telegram **"Stream Tecnologia"** usa el sistema de **foro/temas** de Telegram. Cada tema es un hilo independiente dedicado a una serie o contenido específico. Cuando subo un vídeo de "One Piece", ese vídeo aparece en el tema de "One Piece" dentro del grupo, no en el chat general.
@@ -84,6 +86,8 @@ Esto es clave porque mantiene el grupo organizado: cada serie tiene su propio hi
 | 4. Comprimir | `ffmpeg_monitor-sendo` | Convierte a 720p (CRF 28, 2 pasadas si >2GB) | Telegram tiene límite de 2GB; 720p es suficiente |
 | 5. OCR | `ffmpeg_monitor-sendo` | Detecta episodios por imagen | Sabe qué serie es por la imagen del frame |
 | 6. Subir | `telegram-uploader-sendo` | Rutea por keyword a temas de Telegram | Cada serie va a su tema/foro |
+
+> **Detalle técnico del compresor:** [FFmpeg + yt-dlp Pipeline: Conversor, Descargador y Editor de Vídeo con 33 Modos](/myprojects/ffmpeg-yt-dlp)
 
 ### Resultado
 
@@ -155,6 +159,8 @@ cd yt-to-telegram && docker compose down
 
 Bot interactivo con comandos, botones inline y contenido generado por IA. El bot se conecta al mismo grupo "Stream Tecnologia" para enviar contenido.
 
+> **Detalle técnico completo:** [Telegram Ultimate Toolbox: Descargador Masivo, Clonador, Vigilante y Uploader con Docker](/myprojects/telegram-ultimate-toolbox)
+
 ### Comandos
 
 | Comando | Descripción | Cómo funciona |
@@ -176,33 +182,11 @@ Bot interactivo con comandos, botones inline y contenido generado por IA. El bot
 | **IA** | Gemini API para tips y herramientas | Genera contenido dinámico sin repetir |
 | **Noticias** | Scrapers de 80+ fuentes españolas | Agrega noticias de múltiples fuentes en un solo lugar |
 
-### Arquitectura del bot
-
-```
-┌─────────────────────────────────────────────┐
-│         🤖 BOT API (python-telegram-bot)    │
-├─────────────────────────────────────────────┤
-│  💡 Contenido IA (tips, tools, concepts)   │
-│  📥 Descarga vídeos (yt-dlp + HLS)         │
-│  📰 Noticias scrapeadas                    │
-│  🎯 AI Agent Skills                        │
-└──────────┬──────────────┬──────────────────┘
-           │              │
-    Lee/escribe       Lee/escribe
-    descargas/        scripts/
-           │              │
-           v              v
-┌──────────────────┐  ┌──────────────────┐
-│  Descargas bot   │  │ test_githubActions│
-│  *.mp4           │  │  scripts/         │
-│                  │  │  utils/           │
-│                  │  │  tips_database    │
-└──────────────────┘  └──────────────────┘
-```
-
 ---
 
 ## Scrapers Automatizados
+
+> **Detalle técnico completo:** [Tech Pulse: Dashboard Automatizado de Noticias Tech con IA](/myprojects/tech-pulse-dashboard)
 
 ### Eixam (Película)
 
