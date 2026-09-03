@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "Devjobs Automation Suite: Pipelines de Video, Bots IA y Scrapers Automatizados"
-description: "Suite completa de automatización con Docker: pipeline de Twitch a Telegram, pipeline de YouTube a Telegram, bot de Telegram con IA, scrapers de noticias y herramientas de Productividad. Todo self-hosted y sin intervención manual."
+description: "Suite completa de automatización con Docker: pipeline de Twitch a Telegram, pipeline de YouTube a Telegram, bot de Telegram con IA, scrapers de noticias y herramientas de productividad. Todo self-hosted y sin intervención manual."
 pubDate: "2026/09/03"
 updatedDate: "2026/09/03"
 tags: ["docker", "python", "automatización", "telegram", "ia", "scraping", "pipeline"]
@@ -66,22 +66,28 @@ Necesitaba **conectar todo** en pipelines automáticos.
 
 ## Pipeline 1: Twitch → Telegram (Sendo Sama)
 
-Automatización completa que graba directos de **sendo sama**, los comprime a 720p y los sube a grupos de Telegram con temas organizados.
+Automatización completa que graba directos de **sendo sama**, los comprime a 720p y los sube a un grupo de Telegram con temas organizados por serie.
+
+### El grupo de Telegram y el sistema de temas
+
+El grupo de Telegram **"Stream Tecnologia"** usa el sistema de **foro/temas** de Telegram. Cada tema es un hilo independiente dedicado a una serie o contenido específico. Cuando subo un vídeo de "One Piece", ese vídeo aparece en el tema de "One Piece" dentro del grupo, no en el chat general.
+
+Esto es clave porque mantiene el grupo organizado: cada serie tiene su propio hilo, los usuarios pueden seguir solo las series que les interesan, y el contenido no se mezcla.
 
 ### Flujo paso a paso
 
-| Paso | Servicio | Qué hace |
-|------|----------|----------|
-| 1. Grabar | `twitchrecorder-sendo` | Graba el directo con calidad original |
-| 2. Keyword | `twitchrecorder-sendo` | Extrae el título y lo pone en el nombre |
-| 3. Cola | `data/pipeline/grabaciones/test/` | Espera como `*_completed.mp4` |
-| 4. Comprimir | `ffmpeg_monitor-sendo` | Convierte a 720p (CRF 28, 2 pasadas si >2GB) |
-| 5. OCR | `ffmpeg_monitor-sendo` | Detecta episodios por imagen |
-| 6. Subir | `telegram-uploader-sendo` | Rutea por keyword a temas de Telegram |
+| Paso | Servicio | Qué hace | Por qué |
+|------|----------|----------|---------|
+| 1. Grabar | `twitchrecorder-sendo` | Graba el directo con calidad original | Twitch no guarda VODs indefinidamente |
+| 2. Keyword | `twitchrecorder-sendo` | Extrae el título y lo pone en el nombre | Para poder ruteear a la serie correcta |
+| 3. Cola | `data/pipeline/grabaciones/test/` | Espera como `*_completed.mp4` | Patrón watcher: el siguiente servicio vigila esta carpeta |
+| 4. Comprimir | `ffmpeg_monitor-sendo` | Convierte a 720p (CRF 28, 2 pasadas si >2GB) | Telegram tiene límite de 2GB; 720p es suficiente |
+| 5. OCR | `ffmpeg_monitor-sendo` | Detecta episodios por imagen | Sabe qué serie es por la imagen del frame |
+| 6. Subir | `telegram-uploader-sendo` | Rutea por keyword a temas de Telegram | Cada serie va a su tema/foro |
 
 ### Resultado
 
-Un directo grabado a las 21:00 aparece comprimido y subido a su tema/serie sin que yo haga nada.
+Un directo grabado a las 21:00 aparece comprimido y subido a su tema/serie sin que yo haga nada. El sistema funciona 24/7: si nameof hace un directo a las 3 de la madrugada, se graba, se comprime y aparece en Telegram al día siguiente.
 
 ```bash
 # Arrancar todo el pipeline
@@ -100,15 +106,26 @@ pipe_down
 
 Pipeline diario que descarga vídeos de 158 canales de YouTube, los convierte a 720p y los sube a un grupo de Telegram con 158 temas organizados por canal.
 
+### Por qué 158 canales
+
+Cada canal de YouTube tiene contenido diferente: tutoriales, noticias, entrevistas, proyectos. En lugar de tener que revisar YouTube cada día, el pipeline descarga automáticamente los nuevos vídeos de cada canal y los organiza en el grupo de Telegram por canal/tema.
+
+Por ejemplo:
+- El canal de **Midudev** tiene su propio tema en el grupo
+- El canal de **MoureDev** tiene otro tema
+- El canal de **Carlos Azaustre** tiene otro
+
+Cuando subo un vídeo de Midudev, ese vídeo aparece en el tema de "Midudev" dentro del grupo "Stream Tecnologia".
+
 ### Configuración
 
-| Parámetro | Valor |
-|-----------|-------|
-| Canales | 158 (Midudev, MoureDev, Carlos Azaustre, etc.) |
-| Temas | 158 (uno por canal en "Stream Tecnologia") |
-| Calidad | 720p H.264/AAC |
-| Cron | 01:00 → 18:00 (mismo día) |
-| Límite | 2 vídeos por canal a la vez |
+| Parámetro | Valor | Por qué |
+|-----------|-------|---------|
+| Canales | 158 (Midudev, MoureDev, Carlos Azaustre, etc.) | Los canales que sigo y quiero archivar |
+| Temas | 158 (uno por canal en "Stream Tecnologia") | Organización por creador de contenido |
+| Calidad | 720p H.264/AAC | Balance entre calidad y tamaño (límite 50MB Telegram) |
+| Cron | 01:00 → 18:00 (mismo día) | Horario nocturno para no saturar la red |
+| Límite | 2 vídeos por canal a la vez | Para no descargar todo el historial de cada canal |
 
 ### Flujo
 
@@ -136,28 +153,28 @@ cd yt-to-telegram && docker compose down
 
 ## Bot de Telegram (@jorbencas_bot)
 
-Bot interactivo con comandos, botones inline y contenido generado por IA.
+Bot interactivo con comandos, botones inline y contenido generado por IA. El bot se conecta al mismo grupo "Stream Tecnologia" para enviar contenido.
 
 ### Comandos
 
-| Comando | Descripción |
-|---------|-------------|
-| `/descarga URL` | Descargar vídeo de cualquier plataforma |
-| `/tip` | Tip de programación (Gemini + Wikipedia) |
-| `/concepto` | Concepto con código de ejemplo |
-| `/tool` | Herramienta IA |
-| `/noticias` | Últimas noticias tech |
+| Comando | Descripción | Cómo funciona |
+|---------|-------------|---------------|
+| `/descarga URL` | Descargar vídeo de cualquier plataforma | yt-dlp descarga, el bot convierte y envía como vídeo de Telegram |
+| `/tip` | Tip de programación | Gemini + Wikipedia generan tips con preguntas de entrevista |
+| `/concepto` | Concepto con código de ejemplo | Base de datos de 283 conceptos con interview questions |
+| `/tool` | Herramienta IA | Herramientas seleccionadas de 2108 recursos migrados del blog |
+| `/noticias` | Últimas noticias tech | Scrapers de 80+ fuentes españolas |
 
 ### Características técnicas
 
-| Característica | Detalle |
-|----------------|---------|
-| **Descarga** | yt-dlp + HLS fallback (para sitios que yt-dlp no soporta) |
-| **Formato** | `bv+ba/b` (video+audio merge automático) |
-| **Timeout** | 30 minutos |
-| **Conversión** | H.264/AAC, 720p, 2 pasadas si >50MB |
-| **IA** | Gemini API para tips y herramientas |
-| **Noticias** | Scrapers de 80+ fuentes españolas |
+| Característica | Detalle | Por qué |
+|----------------|---------|---------|
+| **Descarga** | yt-dlp + HLS fallback | yt-dlp no soporta todos los sitios; HLS es el fallback para streams |
+| **Formato** | `bv+ba/b` (video+audio merge automático) | YouTube usa streams separados de video y audio |
+| **Timeout** | 30 minutos | Vídeos grandes tardan; 5 minutos era poco |
+| **Conversión** | H.264/AAC, 720p, 2 pasadas si >50MB | Límite de Bot API de Telegram: 50MB |
+| **IA** | Gemini API para tips y herramientas | Genera contenido dinámico sin repetir |
+| **Noticias** | Scrapers de 80+ fuentes españolas | Agrega noticias de múltiples fuentes en un solo lugar |
 
 ### Arquitectura del bot
 
@@ -191,12 +208,12 @@ Bot interactivo con comandos, botones inline y contenido generado por IA.
 
 Scraper dedicado a la película "Eixam" (Enjambre) de Óscar Bernàcer:
 
-| Fuente | Tipo |
-|--------|------|
-| Directo cinema (Dirigido, Title-Magazine) | Reseñas |
-| Bing Search | Noticias |
-| Filmaffinity vía Bing | Reseñas |
-| MSN | URLs normalizadas |
+| Fuente | Tipo | Por qué |
+|--------|------|---------|
+| Directo cinema (Dirigido, Title-Magazine) | Reseñas | Fuentes especializadas en cine |
+| Bing Search | Noticias | Para encontrar artículos recientes |
+| Filmaffinity vía Bing | Reseñas | Filmaffinity tiene las mejores reseñas |
+| MSN | URLs normalizadas | Para encontrar artículos de medios generalistas |
 
 **80 elementos archivados**: 56 noticias, 15 tráilers, 5 reseñas, 2 fotos, 1 entrevista, 1 póster.
 
@@ -204,22 +221,22 @@ Scraper dedicado a la película "Eixam" (Enjambre) de Óscar Bernàcer:
 
 Base de datos de **283 conceptos** de programación con preguntas de entrevista:
 
-| Categoría | Conceptos |
-|-----------|-----------|
-| Programación general | 45 |
-| JavaScript | 24 |
-| Python | 22 |
-| Testing | 15 |
-| IA / ML | 14 |
-| LLMs | 13 |
-| Linux | 12 |
-| Design Patterns | 10 |
-| Soft Skills | 10 |
-| DevOps | 9 |
+| Categoría | Conceptos | Por qué |
+|-----------|-----------|---------|
+| Programación general | 45 | Fundamentos que toda entrevista pregunta |
+| JavaScript | 24 | El lenguaje más usado en web |
+| Python | 22 | Segundo más demandado |
+| Testing | 15 | Cada vez se valora más en entrevistas |
+| IA / ML | 14 | El campo con más crecimiento |
+| LLMs | 13 | Lo más nuevo y demandado |
+| Linux | 12 | Saber Linux es casi obligatorio |
+| Design Patterns | 10 | Patrones que diferencian a un senior |
+| Soft Skills | 10 | Las preguntas que más fallan |
+| DevOps | 9 | Cada vez más integrado en el rol |
 
 **Funciones:**
-- Scraping de Wikipedia EN para definiciones
-- Mapeo español → inglés para términos técnicos
+- Scraping de Wikipedia EN para definiciones (en español no hay buena documentación técnica)
+- Mapeo español → inglés para términos técnicos (ej: "patrón de diseño" → "design pattern")
 - Fallback a Gemini API cuando falla Wikipedia
 - Fallback simple: "X es un concepto técnico..."
 - Preguntas de entrevista incluidas
@@ -240,7 +257,7 @@ Scraper de habilidades de agentes IA desde GitHub:
 }
 ```
 
-**37 skills** de GitHub incluidos en el bot.
+**37 skills** de GitHub incluidos en el bot. Estas skills se usan para mejorar las respuestas del bot con conocimiento específico de agentes IA.
 
 ---
 
@@ -306,10 +323,10 @@ Los servicios systemd hacen que el pipeline y el bot se levanten solos al encend
 
 ### Servicios instalados
 
-| Servicio | Qué hace |
-|----------|----------|
-| `twitch-stream-pipeline.service` | Arranca los 3 daemons del pipeline |
-| `telegram-bot.service` | Arranca el bot API |
+| Servicio | Qué hace | Por qué |
+|----------|----------|---------|
+| `twitch-stream-pipeline.service` | Arranca los 3 daemons del pipeline | Para que siempre esté grabando |
+| `telegram-bot.service` | Arranca el bot API | Para que siempre esté respondiendo |
 
 ### Gestión
 
@@ -499,7 +516,7 @@ ffmpeg -c:v libx264 -crf 28 -preset fast -vf scale=-2:720
 
 ---
 
-##stack técnico
+## Stack técnico
 
 | Tecnología | Uso |
 |------------|-----|
