@@ -490,6 +490,78 @@ bash preview_watcher.sh --daemon
 
 ---
 
+## Instalación completa
+
+### Con Docker (recomendado)
+
+```bash
+# 1. Clonar el repo
+git clone https://github.com/jorbencas/devjobs.git
+cd devjobs/ffmpeg-yt-dlp
+
+# 2. Construir la imagen
+docker compose build
+
+# 3. Ejecutar (menú interactivo)
+docker compose up
+```
+
+### Sin Docker
+
+```bash
+# Instalar dependencias (Ubuntu/Debian)
+sudo apt update
+sudo apt install ffmpeg python3 python3-pip
+
+# Instalar yt-dlp
+pip install yt-dlp
+
+# Ejecutar
+cd devjobs/ffmpeg-yt-dlp/test_video
+bash midu.sh
+```
+
+### Para el pipeline de compresión automática
+
+```bash
+# Arrancar el monitor (vigila carpetas y comprime)
+docker compose up -d monitor
+
+# Ver logs
+docker compose logs -f monitor
+
+# Parar
+docker compose stop monitor
+```
+
+### Preview Watcher (WSL)
+
+```bash
+# En Windows/WSL, arrancar el watcher para abrir vídeos en VLC
+bash preview_watcher.sh --daemon
+
+# Verificar estado
+bash preview_watcher.sh --status
+
+# Parar
+bash preview_watcher.sh --stop
+```
+
+### Verificación
+
+```bash
+# Comprobar que ffmpeg funciona
+docker compose run --rm downloader ffmpeg -version
+
+# Comprobar que yt-dlp funciona
+docker compose run --rm downloader yt-dlp --version
+
+# Probar una descarga
+docker compose run --rm downloader ./midu.sh -d "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+```
+
+---
+
 ## Estructura
 
 ```

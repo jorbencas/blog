@@ -531,6 +531,201 @@ ffmpeg -c:v libx264 -crf 28 -preset fast -vf scale=-2:720
 
 ---
 
+## Instalación completa desde cero
+
+Guía paso a paso para montar todo el ecosistema en una máquina nueva (Windows + WSL2 o Linux).
+
+### Requisitos previos
+
+| Requisito | Por qué | Cómo obtenerlo |
+|-----------|---------|----------------|
+| **Docker Desktop** | Todos los servicios corren en contenedores | [docker.com](https://www.docker.com/products/docker-desktop/) |
+| **WSL2** (Windows) o **Linux** | Entorno de ejecución | Windows: `wsl --install` / Linux: ya viene |
+| **API ID y Hash de Telegram** | Para el uploader y el bot | [my.telegram.org/apps](https://my.telegram.org/apps) |
+| **Token del bot de Telegram** | Para el bot @jorbencas_bot | [@BotFather](https://t.me/BotFather) en Telegram |
+| **API Key de Gemini** (opcional) | Para contenido IA (tips, herramientas) | [Google AI Studio](https://aistudio.google.com/) |
+| **Cuenta de Twitch** (opcional) | Para grabar directos | [twitch.tv](https://www.twitch.tv/) |
+
+### Paso 1: Clonar el repo
+
+```bash
+git clone https://github.com/jorbencas/devjobs.git
+cd devjobs
+```
+
+### Paso 2: Configurar variables de entorno
+
+```bash
+# Copiar el ejemplo de environment
+cp .env.example .env
+
+# Editar con tus credenciales
+nano .env
+```
+
+Variables necesarias en `.env`:
+
+```bash
+# Telegram (obligatorio)
+TG_API_ID=tu_api_id
+TG_API_HASH=tu_api_hash
+TG_SESSION=tu_session_string
+
+# Bot de Telegram (obligatorio para el bot)
+BOT_TOKEN=token_de_botfather
+BOT_ADMINS=tu_user_id
+
+# Gemini (opcional, para contenido IA)
+GEMINI_API_KEY=tu_api_key
+
+# Twitch (opcional, para grabar directos)
+TWITCH_USERNAME=tu_usuario
+TWITCH_OAUTH=tu_oauth_token
+```
+
+### Paso 3: Crear sesión de Telegram
+
+```bash
+cd downloader_telegram
+docker compose build
+docker compose run --rm telegram python test_string.py
+```
+
+Esto te pedirá tu número de teléfono y código de verificación. Genera un `session.token` que se usará para autenticar.
+
+### Paso 4: Configurar grupos de Telegram
+
+```bash
+# Descubrir tus chats/grupos
+docker compose run --rm telegram python subir_videos.py --list-chats
+
+# Copiar los IDs a config/grupos.json
+nano config/grupos.json
+```
+
+Ejemplo de `config/grupos.json`:
+
+```json
+{
+    "default": -100999888777,
+    "grupos": [
+        { "nombre": "prueba", "id": -100111222333 },
+        { "nombre": "sendo", "id": -100444555666 }
+    ]
+}
+```
+
+### Paso 5: Construir las imágenes Docker
+
+```bash
+# Desde la raíz del proyecto
+cd devjobs
+
+# Construir cada servicio
+docker compose -f TwitchRecorder/docker-compose.yml build
+docker compose -f ffmpeg-yt-dlp/docker-compose.yml build
+docker compose -f downloader_telegram/docker-compose.yml build
+docker compose -f yt-to-telegram/docker-compose.yml build
+```
+
+### Paso 6: Instalar aliases
+
+```bash
+# Instalar aliases en ~/.bashrc
+bash servicios/instalar_aliases.sh
+
+# Recargar bash
+source ~/.bashrc
+```
+
+### Paso 7: Probar el pipeline
+
+```bash
+# Arrancar los 3 daemons del pipeline
+pipe_up
+
+# Ver logs
+plogs
+
+# Ver estado
+pipe_ps
+
+# Parar todo
+pipe_down
+```
+
+### Paso 8: Instalar auto-arranque (systemd)
+
+```bash
+# Copiar servicios
+sudo cp servicios/twitch-stream-pipeline.service /etc/systemd/system/
+sudo cp servicios/telegram-bot.service /etc/systemd/system/
+
+# Recargar systemd
+sudo systemctl daemon-reload
+
+# Habilitar auto-arranque
+sudo systemctl enable twitch-stream-pipeline.service
+sudo systemctl enable telegram-bot.service
+
+# Arrancar
+sudo systemctl start twitch-stream-pipeline.service
+sudo systemctl start telegram-bot.service
+```
+
+### Paso 9: Configurar el pipeline de YouTube (opcional)
+
+```bash
+# Editar canales
+nano yt-to-telegram/config/channels.json
+
+# Editar topics (temas de Telegram)
+nano yt-to-telegram/config/topics.json
+
+# Probar el pipeline
+cd yt-to-telegram
+docker compose up -d
+docker compose logs -f
+```
+
+### Paso 10: Configurar cron (opcional)
+
+```bash
+# Abrir crontab
+crontab -e
+
+# Añadir: pipeline de YouTube a las 01:00
+0 1 * * * /home/tu_usuario/devjobs/yt-to-telegram/scripts/run_pipeline_cron.sh >> /home/tu_usuario/devjobs/data/yt-pipeline/logs/cron_$(date +\%Y\%m\%d).log 2>&1
+```
+
+### Verificación final
+
+```bash
+# Comprobar que todo está corriendo
+pipe_ps
+
+# Ver logs del pipeline
+plogs
+
+# Ver logs del bot
+tg_bot_logs
+
+# Probar el bot en Telegram
+# Enviar /ping a @jorbencas_bot
+```
+
+### Troubleshooting
+
+| Problema | Solución |
+|----------|----------|
+| `docker: permission denied` | Añadir tu usuario al grupo docker: `sudo usermod -aG docker $USER` |
+| `No session file` | Ejecutar `docker compose run --rm telegram python test_string.py` |
+| `Bot no responde` | Verificar `BOT_TOKEN` en `.env` y que el bot está arrancado |
+| `Pipeline no arranca` | Verificar que Docker Desktop está corriendo |
+| `Aliases no funcionan` | Ejecutar `source ~/.bashrc` después de instalar |
+
+---
+
 ## Repositorio
 
 El código completo está en [github.com/jorbencas/devjobs](https://github.com/jorbencas/devjobs):
