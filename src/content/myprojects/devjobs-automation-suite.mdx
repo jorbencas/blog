@@ -244,16 +244,224 @@ Scraper de habilidades de agentes IA desde GitHub:
 
 ---
 
+## Sistema de Aliases: Control desde cualquier Terminal
+
+El sistema de aliases es la capa de abstracción que hace que todo sea fácil de controlar. Un solo script instala más de 40 aliases en `~/.bashrc` que funcionan desde cualquier carpeta.
+
+### Cómo se instala
+
+```bash
+# Una sola vez
+bash servicios/instalar_aliases.sh && source ~/.bashrc
+```
+
+### Convención de nombres
+
+Los aliases siguen un patrón claro para que nunca te pierdas:
+
+| Prefijo | Significado | Ejemplo |
+|---------|-------------|---------|
+| `pipe_*` | Los 3 daemons del pipeline a la vez | `pipe_up`, `pipe_down`, `plogs` |
+| `*_logs` | Ver logs de un daemon específico | `ff_logs`, `tw_logs`, `tg_logs` |
+| `*_stop` | Parar un daemon específico | `ff_stop`, `tw_stop`, `tg_stop` |
+| `*_restart` | Reiniciar un daemon | `ff_restart`, `tw_restart` |
+| `*_manual_*` | Versión para probar a mano (con `--rm`) | `ff_midu`, `tw_run` |
+| `*_down` | Parar TODO el proyecto (ambas instancias) | `tg_down`, `tw_down` |
+| `tg_bot_*` | Bot API de Telegram | `tg_bot`, `tg_bot_logs` |
+| `*_sys_*` | Control vía systemd | `pipe_sys_start`, `tg_bot_sys_status` |
+
+### Ejemplos reales
+
+```bash
+# Pipeline completo de Twitch
+pipe_up              # Arrancar los 3 daemons
+plogs                # Ver logs de los 3 a la vez (color: azul/amarillo/rojo)
+pipe_down            # Parar los 3
+pipe_ps              # Estado de los 3 contenedores
+pipe_recreate        # Recrear (aplica cambios de CONFIG)
+pipe_rebuild         # Rebuild + recrear (cambios de CÓDIGO)
+
+# Un proyecto individual
+ff_logs              # Logs del monitor ffmpeg
+ff_stop              # Parar el monitor
+ff_restart           # Reiniciar el monitor
+ff_midu              # Lanzar midu.sh interactivo (docker compose run --rm)
+
+# Bot de Telegram
+tg_bot               # Arrancar el bot
+tg_bot_logs          # Ver logs
+tg_bot_stop          # Parar
+tg_bot_rebuild       # Rebuild imagen + arrancar
+```
+
+### Por qué no `docker compose up` directamente
+
+Si ejecutas `docker compose down` en la carpeta de `downloader_telegram`, pararías **todos** los servicios de esa carpeta (uploader + bot + CLI). Los aliases evitan esto: `pipe_down` solo para los 3 daemons del pipeline, mientras que `tg_down` para todo el proyecto de Telegram.
+
+---
+
+## Systemd: Auto-arranque al Boot
+
+Los servicios systemd hacen que el pipeline y el bot se levanten solos al encender el PC. No tienes que acordarte de nada.
+
+### Servicios instalados
+
+| Servicio | Qué hace |
+|----------|----------|
+| `twitch-stream-pipeline.service` | Arranca los 3 daemons del pipeline |
+| `telegram-bot.service` | Arranca el bot API |
+
+### Gestión
+
+```bash
+# Pipeline
+sudo systemctl status   twitch-stream-pipeline.service   # ver estado
+sudo systemctl restart  twitch-stream-pipeline.service   # reiniciar
+sudo systemctl stop     twitch-stream-pipeline.service   # parar
+sudo systemctl disable  twitch-stream-pipeline.service   # quitar auto-arranque
+
+# Bot
+sudo systemctl status   telegram-bot.service
+sudo systemctl restart  telegram-bot.service
+
+# O con aliases (sin sudo)
+pipe_sys_start         # Arrancar pipeline
+pipe_sys_stop          # Parar pipeline
+pipe_sys_status        # Ver estado
+tg_bot_sys_start       # Arrancar bot
+tg_bot_sys_stop        # Parar bot
+```
+
+### Qué pasa al encender el PC
+
+1. Systemd arranca `twitch-stream-pipeline.service`
+2. El servicio ejecuta `docker compose up -d` en los 3 proyectos
+3. Los 3 daemons empiezan a vigilar sus carpetas
+4. Si hay un directo en curso, se empieza a grabar
+5. Si hay vídeos en `grabaciones/test/`, se comprimen
+6. Si hay vídeos en `comprimidos/`, se suben a Telegram
+
+### Bootstrap automático en otra máquina
+
+Un script hace todo el montaje en una máquina nueva (Windows + WSL2):
+
+```bash
+# Opción A (recomendada, sin descargar nada)
+bash <(curl -fsSL https://raw.githubusercontent.com/jorbencas/devjobs/main/servicios/bootstrap_instalar.sh)
+
+# Opción B
+curl -fsSL -o bootstrap_instalar.sh https://raw.githubusercontent.com/jorbencas/devjobs/main/servicios/bootstrap_instalar.sh
+chmod +x bootstrap_instalar.sh
+./bootstrap_instalar.sh
+```
+
+El script hace 8 pasos:
+1. Comprueba Docker y WSL2
+2. Clona el repo en `~/devjobs`
+3. Ajusta las rutas a tu máquina
+4. Crea las carpetas de vídeo
+5. Revisa secretos y credenciales
+6. Construye las imágenes Docker
+7. Instala el servicio systemd
+8. Añade los aliases al `~/.bashrc`
+
+---
+
+## Docker Help: El Cheatsheet Completo
+
+El archivo `docker_help.txt` (482 líneas) es la documentación completa de todo el ecosistema. Se puede consultar con el alias `docker_help`.
+
+### Secciones
+
+| Sección | Contenido |
+|---------|-----------|
+| 1. Docker general | Imágenes, contenedores, limpieza, build, run, red |
+| 2. Docker compose | Comandos genéricos de compose |
+| 3. Proyectos | Cada proyecto con sus alias (daemon + manual) |
+| 4. Pipeline | Los 3 daemons a la vez (pipe_*) |
+| 5. Systemd | Auto-arranque al boot |
+| 6. Montar en otra máquina | Script bootstrap para Windows + WSL2 |
+| 7. Utilidades | Estado, disco, comandos útiles |
+
+### Ejemplo de consulta
+
+```bash
+# Ver todo el cheatsheet
+docker_help
+
+# Ver solo la sección del pipeline
+docker_help | grep -A 30 "PIPELINE: DIRECTO"
+
+# Ver los aliases de un proyecto
+docker_help | grep -A 20 "FFMPEG-YT-DLP"
+```
+
+---
+
+## Cron Pipeline: Automatización Diaria
+
+El pipeline de YouTube se ejecuta automáticamente cada día con un cron job:
+
+### Configuración
+
+```bash
+# Cron: 01:00 arranca, 18:00 para (mismo día)
+0 1 * * * /home/jorge/dev/devjobs/yt-to-telegram/scripts/run_pipeline_cron.sh
+```
+
+### Flujo interno del script
+
+```
+01:00 cron ejecuta el script
+  ↓
+1. Marca timestamp de inicio
+  ↓
+2. Calcula hora de parada (01:00 + 17h = 18:00)
+  ↓
+3. docker compose up -d yt-pipeline
+  ↓
+4. Bucle cada 5 minutos:
+   - ¿Sigue corriendo el contenedor?
+   - ¿Es hora de parar?
+   - Log cada hora con tiempo restante
+  ↓
+5. 18:00: docker compose down
+  ↓
+6. Resume: vídeos convertidos sin subir
+```
+
+### Gestión manual
+
+```bash
+# Ver logs del cron de hoy
+cat data/yt-pipeline/logs/cron_$(date +%Y%m%d).log
+
+# Ejecutar manualmente ahora
+bash /home/jorge/dev/devjobs/yt-to-telegram/scripts/run_pipeline_cron.sh
+
+# Parar el pipeline
+cd yt-to-telegram && docker compose down
+
+# Ver si está corriendo
+docker ps | grep yt-to-telegram
+```
+
+### Videos pendientes
+
+Si el cron se para antes de tiempo (por ejemplo, si apagas el PC), los vídeos pendientes se guardan en `data/yt-pipeline/logs/pending_videos.log`. La próxima vez que arranque, el pipeline continuará desde donde se quedó.
+
+---
+
 ## Herramientas Docker
 
 ### Contenedores
 
 | Contenedor | Proyecto | Función |
 |------------|----------|---------|
-| `twitchrecorder-sendo` | TwitchRecorder | Graba directos |
-| `ffmpeg_monitor-sendo` | ffmpeg-yt-dlp | Comprime vídeos |
+| `twitchrecorder-sendo` | TwitchRecorder | Graba directos de Twitch |
+| `ffmpeg_monitor-sendo` | ffmpeg-yt-dlp | Comprime vídeos a 720p |
 | `telegram-uploader-sendo` | downloader_telegram | Sube a Telegram |
-| `telegram-bot` | downloader_telegram | Bot API |
+| `telegram-bot` | downloader_telegram | Bot API interactivo |
 | `yt-to-telegram` | yt-to-telegram | Pipeline YouTube |
 
 ### Volúmenes de datos
@@ -261,43 +469,32 @@ Scraper de habilidades de agentes IA desde GitHub:
 ```
 data/
 ├── pipeline/                    ← Pipeline Twitch
-│   ├── grabaciones/2026/        Grabaciones en bruto
-│   ├── grabaciones/test/        Cola de espera
-│   ├── comprimidos/             Listos para subir
-│   ├── comprimidos/.processed/  Originales comprimidos
+│   ├── grabaciones/2026/        Grabaciones en bruto por fecha
+│   ├── grabaciones/test/        Cola de espera *_completed.mp4
+│   ├── comprimidos/             Listos para subir *_compressed.mp4
+│   ├── comprimidos/.processed/  Originales ya comprimidos
 │   ├── partes/                  Partes divididas (>2GB)
 │   └── backups/                 Backups de config
 ├── yt-pipeline/                 ← Pipeline YouTube
-│   ├── downloads/               Vídeos descargados
+│   ├── downloads/               Vídeos descargados de 158 canales
 │   ├── converted/               Convertidos a 720p
-│   ├── uploaded/                Histórico
-│   └── logs/                    Logs de operaciones
+│   ├── uploaded/                Histórico de vídeos subidos
+│   └── logs/                    Logs de uploads/conversiones
 └── jorbencas_bot/               ← Bot de Telegram
-    ├── *.mp4                    Descargas del bot
-    └── .test_githubActions/     Código AI
+    ├── *.mp4                    Descargas del bot (/descarga)
+    └── .test_githubActions/     Código AI (tips, tools, noticias)
 ```
 
----
+### Conversión unificada
 
-## Scripts de Productividad
-
-### Cron Pipeline
+Todos los pipelines usan la misma configuración de ffmpeg:
 
 ```bash
-# Automático: 01:00 arranca, 18:00 para
-0 1 * * * /home/jorge/dev/devjobs/yt-to-telegram/scripts/run_pipeline_cron.sh
-```
+ffmpeg -c:v libx264 -crf 28 -preset fast -vf scale=-2:720
+       -c:a aac -b:a 128k -map 0:v:0 -map 0:a:0
+       -map_metadata 0 -movflags +faststart -f mp4
 
-### Aliases Docker
-
-```bash
-# Pipeline completo
-pipe_up / pipe_down / pipe_logs / pipe_ps
-
-# Por proyecto
-ff_logs / ff_stop / ff_restart
-tw_logs / tw_stop / tw_restart
-tg_logs / tg_stop / tg_restart
+# 2 pasadas si >50MB (Telegram) o >1900MB (uploader)
 ```
 
 ---
@@ -306,27 +503,30 @@ tg_logs / tg_stop / tg_restart
 
 | Tecnología | Uso |
 |------------|-----|
-| **Docker** | Todos los servicios |
+| **Docker** | Todos los servicios (6 contenedores) |
 | **Python** | Bots, scrapers, pipelines |
-| **ffmpeg** | Conversión de vídeo |
-| **yt-dlp** | Descarga de vídeos |
-| **Telethon** | Cliente de Telegram |
-| **python-telegram-bot** | Bot API |
+| **ffmpeg** | Conversión de vídeo (720p, CRF 28) |
+| **yt-dlp** | Descarga de vídeos (1000+ sitios) |
+| **Telethon** | Cliente de Telegram (uploader, CLI) |
+| **python-telegram-bot** | Bot API de Telegram |
 | **Gemini API** | Generación de contenido IA |
-| **BeautifulSoup** | Web scraping |
-| **Rich** | CLI con progreso |
+| **BeautifulSoup** | Web scraping (noticias, cine) |
+| **Rich** | CLI con progreso y paneles |
 | **InquirerPy** | Menús interactivos |
+| **Systemd** | Auto-arranque al boot |
+| **Cron** | Ejecución diaria del pipeline YouTube |
 
 ---
 
 ## Lo que aprendí
 
-1. **Pipelines complejos**: Conectar 3 servicios que se comunican por archivos (watcher pattern)
-2. **Docker en producción**: Volumes, restart policies, health checks
-3. **Bots de Telegram**: Comandos, botones inline, manejo de archivos grandes
-4. **Scraping robusto**: Múltiples fuentes, fallbacks, deduplicación
-5. **Automatización 24/7**: Cron jobs, systemd services, monitoreo
-6. **IA en producción**: Gemini API para generación de contenido
+1. **Pipelines complejos**: Conectar 3 servicios que se comunican por archivos (watcher pattern) — cada uno vigila una carpeta y procesa lo que encuentra
+2. **Docker en producción**: Volumes para persistencia, restart policies para resiliencia, health checks para monitoreo
+3. **Bots de Telegram**: Comandos, botones inline, manejo de archivos grandes (>50MB con compresión automática)
+4. **Scraping robusto**: Múltiples fuentes con fallbacks, deduplicación, y envío a Telegram
+5. **Automatización 24/7**: Cron jobs para tareas diarias, systemd para auto-arranque, aliases para control fácil
+6. **IA en producción**: Gemini API para generación de contenido, fallback a bases de datos locales
+7. **Sistemas de aliases**: Convención de nombres clara que hace que 40+ comandos sean fáciles de recordar
 
 ---
 
