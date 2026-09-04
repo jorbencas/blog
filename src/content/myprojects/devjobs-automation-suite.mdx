@@ -76,6 +76,45 @@ El grupo de Telegram **"Stream Tecnologia"** usa el sistema de **foro/temas** de
 
 Esto es clave porque mantiene el grupo organizado: cada serie tiene su propio hilo, los usuarios pueden seguir solo las series que les interesan, y el contenido no se mezcla.
 
+### Configuración por canal
+
+Cada canal tiene su propia configuración de horarios, plataformas y comportamiento:
+
+```json
+{
+    "channels": {
+        "sendosama": {
+            "platform": [
+                { "platform": "web", "url": "https://watch.sendosama.net/", "detectar": true, "corte": true },
+                { "platform": "youtube", "channel": "sendosenpai", "descripcion": true },
+                { "platform": "twitch", "detectar": true, "corte": true },
+                { "platform": "kick", "detectar": true, "corte": true }
+            ],
+            "start_time": { "Sunday": "19:00", "*": "21:30" },
+            "dias_plataforma": {
+                "Sunday": ["youtube", "twitch", "web", "kick"],
+                "*": ["web", "twitch", "kick"]
+            }
+        },
+        "midudev": {
+            "platform": [
+                { "platform": "youtube", "descripcion": true },
+                { "platform": "twitch", "detectar": false, "corte": false }
+            ],
+            "days": ["Monday", "Tuesday", "Wednesday", "Thursday"],
+            "start_time": "18:00"
+        }
+    }
+}
+```
+
+**Características clave:**
+- **`dias_plataforma`**: Cambia qué plataformas se prueban según el día (domingo YouTube primero, resto web/twitch/kick)
+- **`days`**: Días de la semana en los que se comprueba si hay directo
+- **`start_time`**: Hora mínima para empezar a comprobar (str o dict por día)
+- **`detectar`/`corte`**: Control de detección de episodios y corte de extremos por fuente
+- **`descripcion`**: Usar descripción del directo como caption (para YouTube)
+
 ### Flujo paso a paso
 
 | Paso | Servicio | Qué hace | Por qué |
@@ -88,6 +127,14 @@ Esto es clave porque mantiene el grupo organizado: cada serie tiene su propio hi
 | 6. Subir | `telegram-uploader-sendo` | Rutea por keyword a temas de Telegram | Cada serie va a su tema/foro |
 
 > **Detalle técnico del compresor:** [FFmpeg + yt-dlp Pipeline: Conversor, Descargador y Editor de Vídeo con 33 Modos](/myprojects/ffmpeg-yt-dlp)
+
+### Contenedores Docker
+
+| Contenedor | Servicio | Función |
+|------------|----------|---------|
+| `twitchrecorder-sendo` | Grabador | Detecta directos, graba con calidad original, concatena partes |
+| `ffmpeg_monitor-sendo` | Compresor | Convierte a 720p, detecta episodios por OCR, gestiona sidecars |
+| `telegram-uploader-sendo` | Subidor | Rutea por keyword, sube a temas de Telegram, limpia residuos |
 
 ### Resultado
 
