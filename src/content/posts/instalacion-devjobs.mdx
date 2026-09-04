@@ -1,0 +1,349 @@
+---
+draft: false
+title: "Instalación del Ecosistema Devjobs: Pipeline Completo desde Cero"
+description: "Guía paso a paso para montar el ecosistema completo de automatización: pipeline de Twitch a Telegram, pipeline de YouTube, bot de IA y scrapers. Todo con Docker, aliases y auto-arranque."
+pubDate: "2026/09/04"
+updatedDate: "2026/09/04"
+tags: ["docker", "instalación", "guía", "pipeline", "linux", "wsl2"]
+image: "img/instalacion_devjobs/instalacion_devjobs_cover-1200.webp"
+author: "Jorge Beneyto Castelló"
+---
+
+En este post te explico cómo montar desde cero todo el ecosistema Devjobs en tu máquina. No es solo "clonar y ejecutar": hay una serie de archivos que crear, credenciales que obtener y configuraciones que entender. Voy a explicarte **qué** necesitas, **por qué** lo necesitas, **cómo** obtenerlo y **dónde** va cada cosa.
+
+¿Por qué no un simple `docker compose up`? Porque este ecosistema usa **6 contenedores Docker** que se comunican entre sí, necesitan credenciales de Telegram, y tienen que arrancar automáticamente al encender el PC. Si solo clonas y ejecutas, nada funciona.
+
+---
+
+## 1. Requisitos previos
+
+Antes de tocar nada, necesitas entender qué vas a necesitar y por qué.
+
+| Requisito | Para qué lo necesitas | Cómo obtenerlo |
+|-----------|----------------------|----------------|
+| **Docker Desktop** | Todos los servicios corren en contenedores aislados | [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/) — instalar y reiniciar |
+| **WSL2** (Windows) o **Linux** | Entorno de ejecución para Docker | Windows: `wsl --install` en PowerShell (admin) / Linux: ya viene |
+| **API ID y Hash de Telegram** | Para que el uploader y el bot se autentiquen con tu cuenta de Telegram | [my.telegram.org/apps](https://my.telegram.org/apps) — explicado abajo |
+| **Token del bot de Telegram** | Para que @jorbencas_bot pueda responder comandos | [@BotFather](https://t.me/BotFather) en Telegram — explicado abajo |
+| **API Key de Gemini** (opcional) | Para que el bot genere tips, conceptos y herramientas con IA | [Google AI Studio](https://aistudio.google.com/) — explicado abajo |
+
+---
+
+## 2. Obtener el API ID y Hash de Telegram
+
+Este es el paso que más confusión genera. Telegram exige una **aplicación registrada** para usar su API. No es lo mismo que el token del bot.
+
+**Qué es:** Son credenciales que identifican tu aplicación ante Telegram. Piensa en ello como tu "cédula de identidad" de desarrollador.
+
+**Cómo obtenerlo:**
+
+1. Ve a [my.telegram.org/apps](https://my.telegram.org/apps)
+2. Inicia sesión con tu **número de teléfono** de Telegram (te enviará un código)
+3. Haz clic en **"Create new application"**
+4. Rellena el formulario (da igual el nombre, puedes poner "devjobs")
+5. Copia el `api_id` (un número como `39937314`) y el `api_hash` (una cadena hexadecimal como `be1b57db99dfe149a2a06db3b47d68c3`)
+
+**¿Por qué no usar un bot?** Porque el uploader necesita acceder a canales **protegidos** que un bot no puede leer. Necesitas autenticarte como **usuario real**, no como bot.
+
+**Importante:** El API ID y Hash son **personales**. No los compartas. Si alguien los obtiene, puede acceder a tus canales de Telegram.
+
+---
+
+## 3. Obtener el token del bot de Telegram
+
+**Qué es:** Es la "contraseña" de tu bot. Con él, el bot puede recibir comandos y enviar mensajes.
+
+**Cómo obtenerlo:**
+
+1. Abre Telegram y busca a [@BotFather](https://t.me/BotFather)
+2. Envía `/newbot`
+3. Elige un nombre para tu bot (ej: "Mi Bot Devjobs")
+4. Elige un username que termine en `bot` (ej: `mibotdevjobs_bot`)
+5. BotFather te dará un token como `8580222159:AAE4e21gzeq6q...`
+6. **Copia ese token** — lo necesitarás en el paso 5
+
+**¿Por qué @BotFather?** Es el bot oficial de Telegram para crear bots. No hay otra forma legítima de obtener un token de bot.
+
+**Nota:** Los proyectos `downloader_telegram`, `yt-to-telegram` y `test_githubActions` usan el **mismo bot** (el mismo token), pero en canales/topics diferentes.
+
+---
+
+## 4. Clonar el repo
+
+```bash
+git clone https://github.com/jorbencas/devjobs.git
+cd devjobs
+```
+
+---
+
+## 5. Configurar variables de entorno
+
+El archivo `.env` es donde le dices al sistema quién eres y a quién enviar contenido. Sin él, nada funciona.
+
+### 5.1. Archivo principal de Telegram
+
+Crea `downloader_telegram/.env` con tus credenciales:
+
+```bash
+# API de Telegram (obligatorio para uploader y CLI)
+API_ID=39937314          # Tu API ID de my.telegram.org
+API_HASH=be1b57db99dfe149a2a06db3b47d68c3  # Tu API Hash
+
+# Bot de Telegram (obligatorio para el bot interactivo)
+BOT_TOKEN=8580222159:AAE4e21gzeq6q...  # Token de @BotFather
+
+# Gemini API (opcional, para tips y herramientas IA)
+GEMINI_API_KEY=tu_api_key  # De Google AI Studio
+```
+
+**¿Dónde va?** En la raíz de `downloader_telegram/`.
+
+**¿Por qué `API_ID` y no `API_IS`?** El código espera `API_ID`. Si pones `API_IS`, el uploader no funcionará.
+
+### 5.2. Archivo del pipeline de YouTube
+
+Crea `yt-to-telegram/.env`:
+
+```bash
+# Token del bot (el mismo que arriba)
+BOT_TOKEN=8580222159:AAE4e21gzeq6q...
+
+# ID del grupo de Telegram donde se subirán los vídeos
+TELEGRAM_GROUP_ID=-1004332325883
+```
+
+**¿Dónde va?** En la raíz de `yt-to-telegram/`.
+
+**¿Cómo obtengo el ID del grupo?** Si tu grupo tiene temas/foros activados, el ID es el que aparece en la URL al abrir el grupo en Telegram web. Los IDs de grupos son **negativos** y empiezan por `-100`.
+
+---
+
+## 6. Crear sesión de Telegram
+
+La sesión es un archivo que guarda tus credenciales de autenticación para que no tengas que re-login cada vez. Es como una cookie persistente.
+
+```bash
+cd downloader_telegram
+
+# Construir la imagen Docker
+docker compose build
+
+# Ejecutar el generador de sesión
+docker compose run --rm telegram python test_string.py
+```
+
+Te pedirá tu **número de teléfono** y un **código de verificación** que Telegram te enviará. Al finalizar, se crea `sessions/tg_menu.session`.
+
+**¿Por qué en Docker?** Para no instalar dependencias en tu sistema. Docker trae todo lo necesario.
+
+**¿Qué pasa si pierdo la sesión?** Vuelve a ejecutar el comando. No se pierde nada.
+
+---
+
+## 7. Configurar grupos de Telegram
+
+Necesitas decirle al sistema **a qué grupo subir** los vídeos. Cada grupo tiene un ID numérico.
+
+```bash
+# Descubrir tus chats y grupos
+docker compose run --rm telegram python subir_videos.py --list-chats
+```
+
+Esto te mostrará una lista de todos los grupos a los que perteneces, con sus IDs. Copia el ID del grupo que quieras usar.
+
+Luego crea `downloader_telegram/config/grupos.json`:
+
+```json
+{
+    "default": -100999888777,
+    "grupos": [
+        { "nombre": "mi_grupo", "id": -100111222333 },
+        { "nombre": "sendo", "id": -100444555666 }
+    ]
+}
+```
+
+- **`default`**: Grupo por defecto si no hay coincidencia de keyword
+- **`grupos`**: Lista de grupos con nombre (para ruteo por keyword) e ID
+
+**¿Por qué un JSON?** Porque el uploader usa el nombre del grupo para ruteo automático. Cuando un vídeo tiene en el nombre "sendo", se sube al grupo cuyo `nombre` es "sendo".
+
+---
+
+## 8. Construir las imágenes Docker
+
+```bash
+cd devjobs
+
+# Construir cada servicio (tarda la primera vez)
+docker compose -f TwitchRecorder/docker-compose.yml build
+docker compose -f ffmpeg-yt-dlp/docker-compose.yml build
+docker compose -f downloader_telegram/docker-compose.yml build
+docker compose -f yt-to-telegram/docker-compose.yml build
+```
+
+**¿Por qué construir cada uno por separado?** Cada proyecto tiene su propio `Dockerfile` con dependencias diferentes. No hay una imagen unificada.
+
+---
+
+## 9. Instalar aliases
+
+Los aliases son como atajos de teclado para la terminal. En lugar de escribir `docker compose up -d` cada vez, puedes escribir `pipe_up`.
+
+```bash
+# Instalar aliases en ~/.bashrc
+bash servicios/instalar_aliases.sh
+
+# Recargar bash para que tengan efecto
+source ~/.bashrc
+```
+
+**¿Por qué?** Porque hay 40+ comandos diferentes. Sin aliases, tendrías que memorizar rutas largas como `docker compose -f /home/jorge/devjobs/ffmpeg-yt-dlp/docker-compose.yml up -d monitor`.
+
+**¿Qué aliases se instalan?**
+
+| Prefijo | Significado | Ejemplo |
+|---------|-------------|---------|
+| `pipe_*` | Pipeline completo (3 daemons) | `pipe_up`, `pipe_down`, `plogs` |
+| `*_logs` | Ver logs de un servicio | `ff_logs`, `tw_logs`, `tg_logs` |
+| `*_stop` | Parar un servicio | `ff_stop`, `tw_stop` |
+| `tg_bot_*` | Bot de Telegram | `tg_bot`, `tg_bot_logs` |
+
+---
+
+## 10. Probar el pipeline
+
+```bash
+# Arrancar los 3 daemons del pipeline
+pipe_up
+
+# Ver logs de los 3 a la vez
+plogs
+
+# Ver estado de los contenedores
+pipe_ps
+
+# Parar todo
+pipe_down
+```
+
+Si ves los 3 contenedores corriendo (`twitchrecorder-sendo`, `ffmpeg_monitor-sendo`, `telegram-uploader-sendo`), el pipeline funciona.
+
+---
+
+## 11. Instalar auto-arranque (systemd)
+
+Para que el pipeline y el bot se arranquen solos al encender el PC:
+
+```bash
+# Copiar servicios
+sudo cp servicios/twitch-stream-pipeline.service /etc/systemd/system/
+sudo cp servicios/telegram-bot.service /etc/systemd/system/
+
+# Recargar systemd
+sudo systemctl daemon-reload
+
+# Habilitar auto-arranque
+sudo systemctl enable twitch-stream-pipeline.service
+sudo systemctl enable telegram-bot.service
+
+# Arrancar ahora mismo
+sudo systemctl start twitch-stream-pipeline.service
+sudo systemctl start telegram-bot.service
+```
+
+**¿Qué pasa al encender el PC?**
+
+1. Systemd arranca `twitch-stream-pipeline.service`
+2. El servicio ejecuta `docker compose up -d` en los 3 proyectos
+3. Los 3 daemons empiezan a vigilar sus carpetas
+4. Si hay un directo en curso, se empieza a grabar
+5. Si hay vídeos en `grabaciones/test/`, se comprimen
+6. Si hay vídeos en `comprimidos/`, se suben a Telegram
+
+**¿Y si quiero pararlo?**
+
+```bash
+# Con systemd
+sudo systemctl stop twitch-stream-pipeline.service
+
+# Con aliases (sin sudo)
+pipe_sys_stop
+```
+
+---
+
+## 12. Configurar el pipeline de YouTube (opcional)
+
+Si quieres que el pipeline descargue vídeos de YouTube automáticamente:
+
+```bash
+# Editar canales (añade los que quieras)
+nano yt-to-telegram/config/channels.json
+
+# Estructura de cada canal:
+# {
+#   "name": "Midudev",
+#   "url": "https://www.youtube.com/@midudev/videos",
+#   "enabled": true,
+#   "max_videos": 2
+# }
+
+# Probar el pipeline
+cd yt-to-telegram
+docker compose up -d
+docker compose logs -f
+```
+
+### Configurar el cron (automático cada día)
+
+```bash
+# Abrir crontab
+crontab -e
+
+# Añadir esta línea (pipeline a las 01:00)
+0 1 * * * /home/tu_usuario/devjobs/yt-to-telegram/scripts/run_pipeline_cron.sh >> /home/tu_usuario/devjobs/data/yt-pipeline/logs/cron_$(date +\%Y\%m\%d).log 2>&1
+```
+
+**¿Por qué a las 01:00?** Para no saturar la red durante el día. El pipeline dura hasta 17 horas (para a las 18:00).
+
+---
+
+## Verificación final
+
+```bash
+# Comprobar que todo está corriendo
+pipe_ps
+
+# Ver logs del pipeline
+plogs
+
+# Ver logs del bot
+tg_bot_logs
+
+# Probar el bot en Telegram
+# Enviar /ping a @jorbencas_bot
+```
+
+---
+
+## Troubleshooting
+
+| Problema | Causa probable | Solución |
+|----------|----------------|----------|
+| `docker: permission denied` | Tu usuario no tiene permisos Docker | `sudo usermod -aG docker $USER` + reiniciar sesión |
+| `No session file` | No se ha creado la sesión | Ejecutar `docker compose run --rm telegram python test_string.py` |
+| `Bot no responde` | Token incorrecto o bot apagado | Verificar `BOT_TOKEN` en `.env` y que el bot está arrancado |
+| `Pipeline no arranca` | Docker no está corriendo | Abrir Docker Desktop y esperar a que esté "Running" |
+| `Aliases no funcionan` | Bash no se ha recargado | `source ~/.bashrc` después de instalar |
+| `API_IS not recognized` | Typo en `.env` | Cambiar `API_IS` por `API_ID` |
+
+---
+
+¿Listo para usar el ecosistema? Consulta los posts de cada proyecto para ver cómo funciona por dentro:
+
+- [FFmpeg + yt-dlp Pipeline: Conversor y Descargador de Vídeo](/myprojects/ffmpeg-yt-dlp)
+- [Telegram Ultimate Toolbox: Descargador y Uploader con Docker](/myprojects/telegram-ultimate-toolbox)
+- [Tech Pulse: Dashboard Automatizado de Noticias Tech](/myprojects/tech-pulse-dashboard)
+- [Devjobs Automation Suite: Pipelines de Video y Bots IA](/myprojects/devjobs-automation-suite)

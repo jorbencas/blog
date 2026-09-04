@@ -1,0 +1,262 @@
+---
+draft: false
+title: "Instalación de FFmpeg + yt-dlp: Conversor de Vídeo y Pipeline de Compresión"
+description: "Guía completa para instalar y configurar midu.sh, el conversor de vídeo con 33 modos. Docker, sin Docker, monitor de compresión automática y preview watcher para WSL."
+pubDate: "2026/09/04"
+updatedDate: "2026/09/04"
+tags: ["ffmpeg", "yt-dlp", "docker", "instalación", "vídeo", "linux"]
+image: "img/instalacion_ffmpeg/instalacion_ffmpeg_cover-1200.webp"
+author: "Jorge Beneyto Castelló"
+---
+
+FFmpeg es la navaja suiza del vídeo: puede convertir, cortar, comprimir, poner efectos, extraer audio... Pero su sintaxis es brutal. Un solo comando puede tener 30 parámetros y si te equivocas en uno, el vídeo sale corrupto o pesadísimo.
+
+**midu.sh** es un wrapper que simplifica todo: 33 modos de operación donde solo tienes que decirle "cortame esto de aquí a aquí" y él se encarga del resto. Pero para que funcione, necesitas instalarlo correctamente. Aquí te explico cómo, por qué cada paso importa, y dónde configurar cada cosa.
+
+---
+
+## 1. Por qué FFmpeg + yt-dlp (y no otra cosa)
+
+| Herramienta | Qué hace | Por qué esta y no otra |
+|-------------|----------|------------------------|
+| **FFmpeg** | Convertir, cortar, comprimir, editar vídeos | Estándar de facto, soporta todo codec, gratuito, potente. No hay alternativa real comparable |
+| **yt-dlp** | Descargar de YouTube y 1000+ sitios | Fork de youtube-dl activo, más rápido, más sitios soportados, mejor mantenido |
+| **midu.sh** | Wrapper de ambos con 33 modos | Simplifica la sintaxis de ffmpeg, añade presets para redes sociales, auto-detección de GPU |
+
+**¿Por qué no Handbrake?** Handbrake es GUI y no se automatiza. No puedes ponerlo en un pipeline Docker.
+**¿Por qué no autres?** Ninguna otra herramienta combina descarga + conversión + edición + automatización en un solo script.
+
+---
+
+## 2. Requisitos previos
+
+| Requisito | Para qué | Cómo obtenerlo |
+|-----------|----------|----------------|
+| **Docker** (recomendado) | Ejecutar todo sin instalar nada en el sistema | [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/) |
+| **FFmpeg** (sin Docker) | Motor de conversión de vídeo | `sudo apt install ffmpeg` (Ubuntu/Debian) |
+| **yt-dlp** (sin Docker) | Descarga de vídeos | `pip install yt-dlp` |
+| **Python 3** (sin Docker) | Para scripts auxiliares | `sudo apt install python3` |
+
+---
+
+## 3. Instalación con Docker (recomendado)
+
+La forma más fácil. Docker trae todo preinstalado: ffmpeg, yt-dlp, bash, python3.
+
+```bash
+# 1. Clonar el repo
+git clone https://github.com/jorbencas/devjobs.git
+cd devjobs/ffmpeg-yt-dlp
+
+# 2. Construir la imagen
+docker compose build
+
+# 3. Ejecutar (menú interactivo)
+docker compose up
+```
+
+**¿Qué hace `docker compose build`?** Descarga una imagen base Alpine Linux y le instala ffmpeg, yt-dlp, bash y python3. Tarda ~2 minutos la primera vez.
+
+**¿Qué hace `docker compose up`?** Arranca el contenedor `downloader` con el menú interactivo de midu.sh. Puedes seleccionar entre los 33 modos.
+
+### Verificar que funciona
+
+```bash
+# Comprobar que ffmpeg está instalado
+docker compose run --rm downloader ffmpeg -version
+
+# Comprobar que yt-dlp funciona
+docker compose run --rm downloader yt-dlp --version
+
+# Probar una descarga
+docker compose run --rm downloader ./midu.sh -d "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+```
+
+---
+
+## 4. Instalación sin Docker
+
+Si prefieres instalar en tu sistema directamente:
+
+```bash
+# 1. Instalar dependencias (Ubuntu/Debian)
+sudo apt update
+sudo apt install ffmpeg python3 python3-pip
+
+# 2. Instalar yt-dlp
+pip install yt-dlp
+
+# 3. Ejecutar
+cd devjobs/ffmpeg-yt-dlp/test_video
+bash midu.sh
+```
+
+**¿Por qué no se recomienda?** Porque ffmpeg cambia de versión frecuentemente y yt-dlp también. Docker te da una versión fija y reproducible. Sin Docker, si actualizas ffmpeg, algo podría romperse.
+
+---
+
+## 5. Configurar el monitor de compresión automática
+
+El monitor es un daemon que vigila una carpeta y comprime automáticamente los vídeos nuevos. Es la pieza central del pipeline **"Grabar → Comprimir → Subir a Telegram"**.
+
+### 5.1. Arrancar el monitor
+
+```bash
+cd ffmpeg-yt-dlp
+
+# Arrancar el monitor en background
+docker compose up -d monitor
+
+# Ver logs
+docker compose logs -f monitor
+
+# Parar solo el monitor
+docker compose stop monitor
+```
+
+### 5.2. Configurar carpetas
+
+El monitor vigila por defecto `data/pipeline/grabaciones/test/` y comprime en `data/pipeline/comprimidos/`. Estas rutas están configuradas en `docker-compose.yml`:
+
+```yaml
+environment:
+  - OUTPUT_DIR=/comprimidos
+  - POLL_INTERVAL=30
+  - DIRECTO_COMPLETO=true
+```
+
+**¿Puedo cambiar las rutas?** Sí, edita `docker-compose.yml` y cambia los volúmenes:
+
+```yaml
+volumes:
+  - /ruta/que/quieras/vigilar:/grabaciones
+  - /ruta/de/salida:/comprimidos
+```
+
+### 5.3. Parámetros del monitor
+
+| Parámetro | Default | Descripción | Cuándo cambiarlo |
+|-----------|---------|-------------|------------------|
+| `-t, --threads N` | 4 | Hilos de ffmpeg | Si tienes CPU potente, sube a 8 |
+| `--completed-only` | off | Solo procesar `*_completed.*` | Actívalo si quieres que solo comprima directos terminados |
+| `--directo-completo` | off | Procesar directos completos | Actívalo si no quieres dividir en partes |
+| `-c, --crf VALUE` | 28 | Calidad (menor = mejor) | Baja a 23 si quieres más calidad |
+| `-p, --preset NAME` | fast | Velocidad | Cambia a `medium` si tu PC es potente |
+| `-r, --resolution N` | sin reescalar | Escalar a N píxeles de altura | Pon 720 si quieres 720p fijo |
+
+**¿Qué es CRF?** Es el "Constant Rate Factor": un valor de 0-51 donde 0 es calidad perfecta y 51 es basura. 28 es un buen balance entre calidad y tamaño. 18 es prácticamente indistinguible del original.
+
+---
+
+## 6. Configurar el Preview Watcher (WSL)
+
+Si usas Windows con WSL, el watcher abre automáticamente los vídeos en VLC cuando midu.sh los genera. Es como tener un preview en tiempo real.
+
+### 6.1. Arrancar el watcher
+
+```bash
+# En una terminal de WSL (no en Docker)
+cd devjobs/ffmpeg-yt-dlp
+bash preview_watcher.sh --daemon
+```
+
+### 6.2. Verificar que funciona
+
+```bash
+# Ver estado
+bash preview_watcher.sh --status
+
+# Ver logs
+bash preview_watcher.sh
+
+# Parar
+bash preview_watcher.sh --stop
+```
+
+### 6.3. Cómo funciona
+
+1. `midu.sh` escribe la ruta del vídeo en `test_video/.midu_preview_req`
+2. El watcher detecta el archivo (poling cada 2 segundos)
+3. Convierte la ruta Linux a Windows (`/mnt/c/...` → `C:\...`)
+4. Abre el vídeo en VLC
+5. Elimina el archivo de petición
+
+**¿Por qué funciona así?** Porque Docker en WSL no puede abrir aplicaciones de Windows directamente. El watcher hace de puente entre el contenedor y el sistema host.
+
+---
+
+## 7. Notificaciones (opcional)
+
+Si quieres que te avisen cuando termine una conversión, puedes configurar notificaciones push con ntfy.sh:
+
+```bash
+# 1. Crear un topic en ntfy.sh (gratis)
+# Ve a https://ntfy.sh y elige un nombre de topic
+
+# 2. Crear .env en ffmpeg-yt-dlp/
+cat > ffmpeg-yt-dlp/.env << EOF
+NTFY_URL=https://ntfy.sh/tu_topic
+EOF
+
+# 3. Instalar la app de ntfy.sh en tu móvil (opcional)
+# Disponible en App Store y Google Play
+```
+
+**¿Cómo funciona?** Cuando midu.sh termina, envía un POST a ntfy.sh con el resultado. Si tienes la app, recibes una notificación push en el móvil.
+
+---
+
+## 8. Uso típico
+
+```bash
+# 1. Descargar un vídeo
+docker compose run --rm downloader ./midu.sh -d "https://youtube.com/watch?v=..."
+
+# 2. Cortar (lossless, sin re-encoding)
+docker compose run --rm downloader ./midu.sh --cut -ss 00:05:00 -e 00:10:00
+
+# 3. Convertir para Telegram
+docker compose run --rm downloader ./midu.sh --convert -s telegram
+
+# 4. Comprimir para el pipeline
+docker compose run --rm downloader ./midu.sh --convert -s telegram -crf 28
+```
+
+---
+
+## 9. Estructura de archivos
+
+```
+ffmpeg-yt-dlp/
+├── docker-compose.yml     # Servicios: downloader + monitor
+├── .env                   # Configuración (ntfy.sh, opcional)
+├── preview_watcher.sh     # Abre vídeos en VLC (WSL)
+├── scripts/
+│   ├── backup_youtube.sh  # Backup de canales de YouTube
+│   └── monitor_folder.sh  # Monitor de compresión (usado por Docker)
+└── test_video/
+    ├── midu.sh            # Script principal (~6000 líneas, 33 modos)
+    ├── optimizados/       # Vídeos convertidos
+    └── test/              # Vídeos de entrada
+```
+
+---
+
+## Troubleshooting
+
+| Problema | Causa | Solución |
+|----------|-------|----------|
+| `ffmpeg: not found` | No está instalado (sin Docker) | `sudo apt install ffmpeg` |
+| `yt-dlp: not found` | No está instalado (sin Docker) | `pip install yt-dlp` |
+| `Permission denied` | Falta permiso de ejecución | `chmod +x midu.sh` |
+| `VLC no abre` | Watcher no está corriendo | Ejecutar `bash preview_watcher.sh --daemon` |
+| `Monitor no vigila` | Monitor no está arrancado | `docker compose up -d monitor` |
+| `Vídeo muy pesado` | CRF muy bajo | Subir CRF a 28 o 32 |
+
+---
+
+¿Quieres ver cómo funciona el pipeline completo? Consulta los posts de los proyectos que usan este compresor:
+
+- [Instalación del Ecosistema Devjobs: Pipeline Completo desde Cero](/posts/instalacion-devjobs)
+- [FFmpeg + yt-dlp Pipeline: Conversor y Descargador de Vídeo](/myprojects/ffmpeg-yt-dlp)
+- [Telegram Ultimate Toolbox: Descargador y Uploader con Docker](/myprojects/telegram-ultimate-toolbox)
