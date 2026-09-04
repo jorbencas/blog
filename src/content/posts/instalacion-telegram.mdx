@@ -49,10 +49,14 @@ Este es el paso más confuso. Telegram exige registrar una "aplicación" para us
 **Cómo obtenerlos:**
 
 1. Ve a [my.telegram.org/apps](https://my.telegram.org/apps)
-2. Inicia sesión con tu **número de teléfono** de Telegram
-3. Haz clic en **"Create new application"**
-4. Rellena el formulario (nombre: "devjobs", plataforma: "Android" o "Desktop")
-5. Copia el `api_id` (numérico) y el `api_hash` (hexadecimal)
+2. Inicia sesión con tu **número de teléfono** de Telegram. Formato: `+34 612 345 678` (España) o `+52 55 1234 5678` (México). Incluye el prefijo internacional sin espacios ni guiones.
+3. Telegram te enviará un **código de verificación** por el propio Telegram (no por SMS). Es un código de 5 dígitos. Ábrelo en la app de Telegram, en el chat con "Telegram" (el servicio oficial).
+4. Haz clic en **"Create new application"**
+5. Rellena el formulario:
+   - **App title**: da igual, puedes poner "devjobs"
+   - **Short name**: también da igual, "devjobs"
+   - **Platform**: selecciona "Desktop" (da igual cuál elijas)
+6. Copia el `api_id` (numérico, como `39937314`) y el `api_hash` (hexadecimal, como `be1b57db99dfe149a2a06db3b47d68c3`)
 
 **¿Por qué no usar un bot?** Porque el uploader necesita acceder a canales **protegidos**. Un bot no puede leer canales donde no es administrador. Un usuario real sí puede.
 
@@ -66,11 +70,12 @@ Si quieres usar el bot interactivo (@jorbencas_bot), necesitas un token.
 
 **Cómo obtenerlo:**
 
-1. Abre Telegram y busca [@BotFather](https://t.me/BotFather)
-2. Envía `/newbot`
-3. Elige un nombre (ej: "Mi Bot")
-4. Elige un username que termine en `bot` (ej: `mibot_bot`)
-5. Copia el token que te dé
+1. Abre Telegram (en el móvil o en el escritorio) y busca [@BotFather](https://t.me/BotFather). Es el bot oficial de Telegram para crear bots.
+2. Envía `/newbot` (escribe `/newbot` y dale a enviar)
+3. BotFather te preguntará: **"¿Cómo se llamará tu bot?"** — Escribe un nombre descriptivo, ej: "Mi Bot"
+4. BotFather te preguntará: **"¿Cuál será el username?"** — Debe terminar en `bot`. Ejemplo: `mibot_bot`. Si no te deja, prueba con otro nombre.
+5. BotFather te dará un token como `8580222159:AAE4e21gzeq6q...`. **Copia y guarda ese token inmediatamente** — solo se muestra una vez.
+6. Si pierdes el token, puedes pedirlo de nuevo con `/mybots` → selecciona tu bot → "API Token"
 
 **¿Por qué es opcional?** Porque el uploader y el CLI interactivo no necesitan el bot. Solo lo necesitas si quieres comandos como `/tip`, `/descarga`, `/noticias`.
 
@@ -100,10 +105,10 @@ GEMINI_API_KEY=tu_api_key
 
 | Variable | Para qué | Si no la pones |
 |----------|----------|----------------|
-| `API_ID` | Autenticación de usuario real | El uploader no funciona |
+| `API_ID` | Autenticación de usuario real | El uploader no funciona (no da error, simplemente no conecta) |
 | `API_HASH` | Autenticación de usuario real | El uploader no funciona |
 | `BOT_TOKEN` | Token del bot interactivo | El bot no responde |
-| `GEMINI_API_KEY` | Resúmenes IA, tips, herramientas | Funciona con fallback a DB local |
+| `GEMINI_API_KEY` | Resúmenes IA, tips, herramientas | Funciona con fallback a DB local (menos variedad) |
 
 ### 5.3. Dónde va el archivo
 
@@ -135,9 +140,12 @@ docker compose build
 docker compose run --rm telegram python test_string.py
 ```
 
-Te pedirá tu **número de teléfono** y un **código de verificación** que Telegram te enviará.
+**Qué pasará:**
 
-**¿Qué se genera?** Un archivo `sessions/tg_menu.session` con tus credenciales cifradas.
+1. El script te pedirá tu **número de teléfono**. Formato: `+34612345678` (sin espacios, sin guiones, con el prefijo internacional).
+2. Telegram te enviará un **código de verificación** por el propio Telegram (no por SMS). Ábrelo en la app de Telegram, en el chat con "Telegram". Es un código de 5 dígitos.
+3. Si tienes **2FA (verificación en dos pasos)** configurada, también te pedirá tu contraseña. Es la contraseña que configuraste cuando activaste la verificación en dos pasos en Telegram (Ajustes → Privacidad → Verificación en dos pasos).
+4. Al finalizar, se crea `sessions/tg_menu.session`.
 
 **¿Por qué en Docker?** Para no instalar telethon, cryptography ni otras dependencias en tu sistema. Docker trae todo.
 
@@ -181,6 +189,8 @@ Chat: Mi grupo de prueba
   Tiene topics: no
 ```
 
+**¿Cómo interpretar esto?** El ID es el número que necesitas copiar. Los IDs de grupos son **negativos** y empiezan por `-100`. Si "Tiene topics: sí", el grupo tiene el sistema de foros activado (cada tema es un hilo independiente).
+
 ### 7.2. Crear `config/grupos.json`
 
 Copia los IDs a `downloader_telegram/config/grupos.json`:
@@ -195,13 +205,21 @@ Copia los IDs a `downloader_telegram/config/grupos.json`:
 }
 ```
 
-**¿Qué es `default`?** El grupo donde se sube un vídeo si no hay coincidencia de keyword en el nombre.
+- **`default`**: Grupo por defecto si no hay coincidencia de keyword
+- **`grupos`**: Lista de grupos con nombre (para ruteo por keyword) e ID
 
 **¿Qué es `nombre`?** El nombre que se usa para ruteo por keyword. Si un vídeo se llama `OnePiece_KW_sendo_compressed.mp4`, se sube al grupo cuyo `nombre` es "sendo".
 
 ### 7.3. Verificar que el bot es administrador
 
 Si usas el uploader, el bot (o tu usuario) debe ser **administrador** del grupo. Sin permisos de administración, no puede enviar mensajes ni crear temas.
+
+**Cómo añadir el bot como administrador:**
+1. Abre el grupo en Telegram
+2. Toca el nombre del grupo → "Administradores"
+3. "Añadir administrador"
+4. Busca tu bot por username
+5. Dale permisos de "Enviar mensajes" y "Añadir temas"
 
 ---
 
@@ -252,6 +270,8 @@ docker compose up -d telegram_bot
 # Ver logs
 docker compose logs -f telegram_bot
 ```
+
+**¿Cómo obtengo mi user ID?** Envía un mensaje a tu bot y luego abre `https://api.telegram.org/botTU_TOKEN/getUpdates`. Busca `"from":{"id":12345678}` — ese número es tu user ID.
 
 ---
 
@@ -310,8 +330,9 @@ python test_download_protected_content_telegram.py
 | `No session file` | No se ha creado la sesión | Ejecutar `--setup` o `test_string.py` |
 | `Bot no responde` | Token incorrecto | Verificar `BOT_TOKEN` en `.env` |
 | `Permission denied for chat` | Bot no es administrador | Añadir bot como admin del grupo |
-| `FloodWaitError` | Telegram te bloquea temporalmente | Esperar el tiempo que indique el error |
+| `FloodWaitError` | Telegram te bloquea temporalmente | Esperar el tiempo que indique el error (ej: "wait 300 seconds") |
 | `Config bin corrupted` | `config.bin` dañado | Borrar `config.bin` y `secret.key`, ejecutar `--setup` de nuevo |
+| `2FA failed` | Contraseña 2FA incorrecta | Recuperar contraseña en Ajustes → Privacidad → Verificación en dos pasos |
 
 ---
 

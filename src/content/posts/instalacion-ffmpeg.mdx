@@ -24,7 +24,7 @@ FFmpeg es la navaja suiza del vídeo: puede convertir, cortar, comprimir, poner 
 | **midu.sh** | Wrapper de ambos con 33 modos | Simplifica la sintaxis de ffmpeg, añade presets para redes sociales, auto-detección de GPU |
 
 **¿Por qué no Handbrake?** Handbrake es GUI y no se automatiza. No puedes ponerlo en un pipeline Docker.
-**¿Por qué no autres?** Ninguna otra herramienta combina descarga + conversión + edición + automatización en un solo script.
+**¿Por qué no otras?** Ninguna otra herramienta combina descarga + conversión + edición + automatización en un solo script.
 
 ---
 
@@ -64,12 +64,15 @@ docker compose up
 ```bash
 # Comprobar que ffmpeg está instalado
 docker compose run --rm downloader ffmpeg -version
+# Salida esperada: ffmpeg version 6.x.x ...
 
 # Comprobar que yt-dlp funciona
 docker compose run --rm downloader yt-dlp --version
+# Salida esperada: 2024.x.x ...
 
 # Probar una descarga
 docker compose run --rm downloader ./midu.sh -d "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+# Se descargará el vídeo en test_video/
 ```
 
 ---
@@ -107,7 +110,7 @@ cd ffmpeg-yt-dlp
 # Arrancar el monitor en background
 docker compose up -d monitor
 
-# Ver logs
+# Ver logs en tiempo real
 docker compose logs -f monitor
 
 # Parar solo el monitor
@@ -121,8 +124,8 @@ El monitor vigila por defecto `data/pipeline/grabaciones/test/` y comprime en `d
 ```yaml
 environment:
   - OUTPUT_DIR=/comprimidos
-  - POLL_INTERVAL=30
-  - DIRECTO_COMPLETO=true
+  - POLL_INTERVAL=30        # Cada 30 segundos comprueba si hay vídeos nuevos
+  - DIRECTO_COMPLETO=true   # Procesar directos completos (no dividir)
 ```
 
 **¿Puedo cambiar las rutas?** Sí, edita `docker-compose.yml` y cambia los volúmenes:
@@ -133,18 +136,23 @@ volumes:
   - /ruta/de/salida:/comprimidos
 ```
 
+**¿Qué pasa si la carpeta de entrada no existe?** El monitor la crea automáticamente al arrancar.
+
 ### 5.3. Parámetros del monitor
 
 | Parámetro | Default | Descripción | Cuándo cambiarlo |
 |-----------|---------|-------------|------------------|
-| `-t, --threads N` | 4 | Hilos de ffmpeg | Si tienes CPU potente, sube a 8 |
+| `-t, --threads N` | 4 | Hilos de ffmpeg (parallel encoding) | Si tienes CPU potente (8+ cores), sube a 8 |
 | `--completed-only` | off | Solo procesar `*_completed.*` | Actívalo si quieres que solo comprima directos terminados |
 | `--directo-completo` | off | Procesar directos completos | Actívalo si no quieres dividir en partes |
-| `-c, --crf VALUE` | 28 | Calidad (menor = mejor) | Baja a 23 si quieres más calidad |
-| `-p, --preset NAME` | fast | Velocidad | Cambia a `medium` si tu PC es potente |
-| `-r, --resolution N` | sin reescalar | Escalar a N píxeles de altura | Pon 720 si quieres 720p fijo |
+| `--codec NAME` | `libx264` | Códec de vídeo | Cámbialo si tu dispositivo soporta NVENC o VAAPI |
+| `-c, --crf VALUE` | 28 | Calidad (menor = mejor) | Baja a 23 si quieres más calidad (pero más peso) |
+| `-p, --preset NAME` | fast | Velocidad | Cambia a `medium` si tu PC es potente y quieres mejor calidad |
+| `-r, --resolution N` | sin reescalar | Escalar altura a N píxeles | Pon 720 si quieres 720p fijo |
 
 **¿Qué es CRF?** Es el "Constant Rate Factor": un valor de 0-51 donde 0 es calidad perfecta y 51 es basura. 28 es un buen balance entre calidad y tamaño. 18 es prácticamente indistinguible del original.
+
+**¿Qué es el preset?** Controla la velocidad de codificación. `ultrafast` es rápido pero pesa más. `veryslow` tarda mucho pero pesa menos. `fast` es un buen balance.
 
 ---
 
@@ -165,6 +173,7 @@ bash preview_watcher.sh --daemon
 ```bash
 # Ver estado
 bash preview_watcher.sh --status
+# Debería decir: "Watcher running (PID: xxxx)"
 
 # Ver logs
 bash preview_watcher.sh
@@ -178,10 +187,12 @@ bash preview_watcher.sh --stop
 1. `midu.sh` escribe la ruta del vídeo en `test_video/.midu_preview_req`
 2. El watcher detecta el archivo (poling cada 2 segundos)
 3. Convierte la ruta Linux a Windows (`/mnt/c/...` → `C:\...`)
-4. Abre el vídeo en VLC
+4. Abre el vídeo en VLC (o el reproductor por defecto)
 5. Elimina el archivo de petición
 
 **¿Por qué funciona así?** Porque Docker en WSL no puede abrir aplicaciones de Windows directamente. El watcher hace de puente entre el contenedor y el sistema host.
+
+**¿Qué pasa si no tengo VLC?** Instálalo: `sudo apt install vlc` o descárgalo de [videolan.org](https://www.videolan.org/).
 
 ---
 
@@ -191,15 +202,17 @@ Si quieres que te avisen cuando termine una conversión, puedes configurar notif
 
 ```bash
 # 1. Crear un topic en ntfy.sh (gratis)
-# Ve a https://ntfy.sh y elige un nombre de topic
+# Ve a https://ntfy.sh y elige un nombre de topic (ej: "mi-devjobs")
+# No necesitas cuenta, solo elegir un nombre único
 
 # 2. Crear .env en ffmpeg-yt-dlp/
 cat > ffmpeg-yt-dlp/.env << EOF
-NTFY_URL=https://ntfy.sh/tu_topic
+NTFY_URL=https://ntfy.sh/mi-devjobs
 EOF
 
 # 3. Instalar la app de ntfy.sh en tu móvil (opcional)
-# Disponible en App Store y Google Play
+# Disponible en App Store (iOS) y Google Play (Android)
+# Suscríbete al mismo topic que configuraste arriba
 ```
 
 **¿Cómo funciona?** Cuando midu.sh termina, envía un POST a ntfy.sh con el resultado. Si tienes la app, recibes una notificación push en el móvil.
@@ -209,13 +222,13 @@ EOF
 ## 8. Uso típico
 
 ```bash
-# 1. Descargar un vídeo
+# 1. Descargar un vídeo de YouTube
 docker compose run --rm downloader ./midu.sh -d "https://youtube.com/watch?v=..."
 
-# 2. Cortar (lossless, sin re-encoding)
+# 2. Cortar (lossless, sin re-encoding — muy rápido)
 docker compose run --rm downloader ./midu.sh --cut -ss 00:05:00 -e 00:10:00
 
-# 3. Convertir para Telegram
+# 3. Convertir para Telegram (720p, CRF 28)
 docker compose run --rm downloader ./midu.sh --convert -s telegram
 
 # 4. Comprimir para el pipeline
@@ -249,9 +262,10 @@ ffmpeg-yt-dlp/
 | `ffmpeg: not found` | No está instalado (sin Docker) | `sudo apt install ffmpeg` |
 | `yt-dlp: not found` | No está instalado (sin Docker) | `pip install yt-dlp` |
 | `Permission denied` | Falta permiso de ejecución | `chmod +x midu.sh` |
-| `VLC no abre` | Watcher no está corriendo | Ejecutar `bash preview_watcher.sh --daemon` |
+| `VLC no abre` | Watcher no está corriendo | Ejecutar `bash preview_watcher.sh --daemon` en otra terminal |
 | `Monitor no vigila` | Monitor no está arrancado | `docker compose up -d monitor` |
 | `Vídeo muy pesado` | CRF muy bajo | Subir CRF a 28 o 32 |
+| `Conversión muy lenta` | Usando CPU en lugar de GPU | Instalar NVIDIA drivers o usar `--hw-accel` |
 
 ---
 

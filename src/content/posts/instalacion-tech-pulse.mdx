@@ -50,10 +50,11 @@ Tech Pulse es un pipeline completo de automatización: scraping de 515 fuentes, 
 **Cómo obtenerla:**
 
 1. Ve a [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
-2. Inicia sesión con tu cuenta de Google
+2. Inicia sesión con tu cuenta de Google (la misma que usas para Gmail)
 3. Haz clic en **"Create API Key"**
-4. Selecciona un proyecto (o crea uno nuevo)
+4. Selecciona un proyecto (o crea uno nuevo — da igual cuál)
 5. Copia la API key que empieza por `AIza...`
+6. **Guarda esa key** — la necesitarás en el paso 8
 
 **¿Es gratis?** Sí, el tier gratuito permite 1500 requests/día. Tech Pulse hace ~100 requests/día, así que sobra.
 
@@ -67,20 +68,28 @@ Tech Pulse es un pipeline completo de automatización: scraping de 515 fuentes, 
 
 **Cómo obtenerlo:**
 
-1. Abre Telegram y busca [@BotFather](https://t.me/BotFather)
-2. Envía `/newbot`
-3. Elige un nombre (ej: "Tech Pulse Bot")
-4. Elige un username que termine en `bot` (ej: `techpulse_bot`)
-5. Copia el token
+1. Abre Telegram (en el móvil o en el escritorio) y busca [@BotFather](https://t.me/BotFather)
+2. Envía `/newbot` (escribe `/newbot` y dale a enviar)
+3. BotFather te preguntará: **"¿Cómo se llamará tu bot?"** — Escribe un nombre descriptivo, ej: "Tech Pulse Bot"
+4. BotFather te preguntará: **"¿Cuál será el username?"** — Debe terminar en `bot`. Ejemplo: `techpulse_bot`
+5. BotFather te dará un token como `8580222159:AAE4e21gzeq6q...`. **Copia y guarda ese token inmediatamente**
+6. Si pierdes el token, puedes pedirlo de nuevo con `/mybots` → selecciona tu bot → "API Token"
 
 **¿Y el chat_id?** Es el ID del canal o grupo donde quieres recibir notificaciones. Para obtenerlo:
 
-```bash
-# Añadir el bot al grupo, luego:
-curl "https://api.telegram.org/botTU_TOKEN/getUpdates" | jq '.result[].message.chat.id'
-```
+**Opción A (grpib):**
+1. Añade tu bot al grupo de Telegram
+2. Envía un mensaje al grupo
+3. Abre `https://api.telegram.org/botTU_TOKEN/getUpdates` en el navegador
+4. Busca `"chat":{"id":-1001234567890}` — ese número es tu chat_id
 
-O simplemente envía un mensaje al bot y mira la respuesta de `getUpdates`.
+**Opción B (simple):**
+1. Crea un canal privado en Telegram
+2. Añade tu bot como administrador
+3. Envía un mensaje al canal
+4. Usa el mismo método de arriba para obtener el chat_id
+
+**¿Por qué no funciona sin chat_id?** Porque Telegram necesita saber **dónde** enviar el mensaje. Sin chat_id, el bot no tiene destino.
 
 ---
 
@@ -91,12 +100,14 @@ O simplemente envía un mensaje al bot y mira la respuesta de `getUpdates`.
 **Cómo obtenerla:**
 
 1. Ve a [signup.mailgun.com](https://signup.mailgun.com/)
-2. Crea una cuenta (gratis: 100 emails/día durante 30 días)
+2. Crea una cuenta (gratis: 100 emails/día durante 30 días, luego $1/mes)
 3. En el dashboard, ve a **Sending** → **API Keys**
 4. Copia la API key (empieza por `key-...`)
-5. En **Domains**, verifica un dominio (o usa el dominio de prueba)
+5. En **Domains**, verifica un dominio (o usa el dominio de prueba `sandbox...mailgun.org`)
 
 **¿Es indispensable?** No. Si no configuras Mailgun, el newsletter no se envía pero el resto funciona (dashboard, Telegram, tips).
+
+**¿Qué pasa si uso el dominio de prueba?** Solo puedes enviar emails a direcciones que hayas verificado en Mailgun. Para envíos reales, necesitas un dominio propio.
 
 ---
 
@@ -107,10 +118,10 @@ O simplemente envía un mensaje al bot y mira la respuesta de `getUpdates`.
 **Cómo obtenerla:**
 
 1. Ve a [unsplash.com/developers](https://unsplash.com/developers)
-2. Crea una cuenta
+2. Crea una cuenta (gratis)
 3. Haz clic en **"New Application"**
-4. Acepta los términos
-5. Copia la **Access Key**
+4. Acepta los términos de uso
+5. Copia la **Access Key** (empieza por `...`)
 
 **¿Es indispensable?** No. Sin ella, los posts no tienen imágenes pero el contenido funciona igual.
 
@@ -131,6 +142,8 @@ source .venv/bin/activate  # Linux/Mac
 # 3. Instalar dependencias
 pip install -r requirements.txt
 ```
+
+**¿Qué instala?** Todas las dependencias necesarias: requests, beautifulsoup4, google-generativeai, telethon, etc.
 
 ---
 
@@ -201,6 +214,8 @@ python -m scripts.scrapers.scrape_tools
 - `herramientas.json` — Herramientas de GitHub
 
 **¿Cuánto tarda?** El scraping completo tarda ~30 minutos. El ligero ~15 minutos. Es normal porque hay 515 fuentes que consultar.
+
+**¿Qué pasa si falla alguna fuente?** El sistema tiene fallbacks: si una fuente falla, la salta y sigue con las demás. No se detiene por un error individual.
 
 ---
 
@@ -321,6 +336,7 @@ python -m pytest tests/ -v --tb=short
 | `Telegram send failed` | Token o chat_id incorrecto | Verificar en `.env` o GitHub Secrets |
 | `Connection refused` (Mailgun) | API key incorrecta | Verificar en dashboard de Mailgun |
 | `No module named 'bs4'` | Falta beautifulsoup | `pip install beautifulsoup4` |
+| `Timeout` | scraping tarda mucho | Normal en `--tier full`; usar `--tier light` para probar |
 
 ---
 
