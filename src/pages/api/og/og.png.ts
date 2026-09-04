@@ -310,7 +310,7 @@ export const GET: APIRoute = async ({ request }) => {
             display: "flex",
             flexDirection: "column",
             fontFamily,
-            backgroundColor: "#131926",
+            background: "linear-gradient(180deg, #131926 0%, #1a2332 50%, #1f2937 100%)",
           },
           children: [
             {
