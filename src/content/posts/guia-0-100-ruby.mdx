@@ -4048,6 +4048,29 @@ Esta guía se ha elaborado a partir de las siguientes fuentes consultadas durant
 
 ---
 
+## ⚠️ Errores comunes
+
+Estos son los fallos que más se repiten al empezar con Ruby. La mayoría tienen que ver con gemas, métodos sobre `nil` o sintaxis.
+
+| Error | Causa | Solución |
+|---|---|---|
+| `LoadError: cannot load such file -- 'x'` | Falta la gema o no está en el `$LOAD_PATH` | `gem install x` o añádela a tu `Gemfile` y ejecuta `bundle install` |
+| `bundler: command not found` | Bundler no está instalado en el entorno actual | `gem install bundler` y luego `bundle install` |
+| `undefined method 'x' for nil:NilClass` | Llamas a un método sobre una variable que es `nil` | Comprueba que el valor existe antes de usarlo (p. ej. con `&&.` o `nil?`) |
+| `NoMethodError: undefined method 'x' for ...` | El método `x` no existe en esa clase u objeto | Revisa el nombre del método y la clase a la que pertenece la instancia |
+| `syntax error, unexpected end-of-input` | Falta un `end` para cerrar un `def`, `do` o `if` | Cuenta los bloques abiertos y cierra cada uno con su `end` |
+| `Gem::RemoteFetcher::FetchError: too many connection resets` | Problema de red al descargar gemas | Repite el comando, comprueba tu conexión y el proxy; usa el índice de rubygems.org |
+| `NameError: uninitialized constant X` | La clase o constante no está definida o no está cargada | Añade el `require` del fichero o revisa el nombre de la constante |
+
+---
+
+## 🔗 Guías relacionadas
+
+- Para empaquetar tu aplicación Ruby en contenedores: [Guía de Docker: De 0 a 100](/posts/guia-0-100-docker/).
+- Primeros pasos con contenedores: [Instalación de Docker y primeros pasos](/posts/docker-instalacion-primeros-pasos/).
+
+---
+
 ## 🏆 Retos Relacionados
 
 Pon a prueba lo aprendido con estos desafíos:

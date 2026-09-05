@@ -3439,6 +3439,28 @@ new Intl.DateTimeFormat("es-ES", { dateStyle: "full" }).format(new Date());
 
 ---
 
+## ⚠️ Errores comunes
+
+| Error | Causa | Solución |
+|---|---|---|
+| `Cannot read properties of undefined (reading 'x')` | Accedes a una propiedad de un objeto que es `undefined` sin comprobar su existencia | Usa optional chaining (`obj?.x`), inicializa el objeto con valores por defecto, o valida antes de acceder |
+| `SyntaxError: Unexpected token` | Sintaxis mal formada: coma colgante, paréntesis sin cerrar, spread mal usado, o sintaxis moderna en entorno legacy | Revisa la línea indicada; si usas `...` o `??` en Node viejo, ajusta el target de Babel o actualiza Node |
+| `ReferenceError: X is not defined` | Variable usada sin declarar (`let`, `const`, `var`) o fuera de su scope | Declara la variable antes de usarla; comprueba que no esté confundida con un nombre de propiedad o global |
+| Resultado inesperado con `+` entre string y número | JavaScript aplica coerción de tipos: `"5" + 3` devuelve `"53"` en vez de `8` | Usa `Number()`, `parseInt()` o `+variable` antes de la operación; o usa template literals para concatenar intencionalmente |
+| `await is only valid in async functions` | Se usa `await` en una función que no está declarada como `async` | Añade `async` antes del `function` o convierte la función a arrow async: `const fn = async () => { ... }` |
+| `GET ... 404` al usar `fetch` desde Node.js o SSR | Se intenta acceder a una URL relativa (`/api/datos`) desde el servidor donde no hay origin | Usa la URL completa (`https://midominio.com/api/datos`) o `import.meta.env.SITE` en Astro/Vite para construir la URL absoluta |
+| Promesa que nunca se resuelve (memory leak) | Se crea una promesa con `new Promise()` pero no se llama `resolve` ni `reject` en todas las ramas | Asegúrate de que todas las ramas del código asíncrono terminen llamando a `resolve` o `reject`; usa `Promise.race` con timeout para evitar bloqueos |
+
+## 🔗 Guías relacionadas
+
+Complementa tu conocimiento de JavaScript con estas guías:
+
+- [Guía de TypeScript: de 0 a 100](/posts/guia-0-100-typescript/) — añade tipado estático a tu JavaScript para evitar muchos de estos errores en tiempo de compilación
+- [Guía de Astro: de 0 a 100](/posts/guia-0-100-astro/) — usa JavaScript en la práctica con componentes, SSR e Islands
+- [Guía de Markdown y MDX: de 0 a 100](/posts/guia-0-100-markdown/) — entiende el formato base de la mayoría de documentaciones y blogs modernos
+
+---
+
 ## Referencias y documentación oficial
 
 - **MDN Web Docs**: [developer.mozilla.org/en-US/docs/Web/JavaScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript)

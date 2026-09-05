@@ -3825,6 +3825,30 @@ RUSTFLAGS="-Cprofile-use=/tmp/pgo-data" cargo build --release
 
 ---
 
+## ⚠️ Errores comunes
+
+Estos son los errores de compilación que más se repiten al empezar con Rust. El borrow checker y el sistema de tipos son estrictos, pero sus mensajes suelen indicar exactamente dónde y cómo arreglarlo.
+
+| Error | Causa | Solución |
+|---|---|---|
+| `error[E0308]: mismatched types` | Pasas o devuelves un tipo distinto al esperado | Revisa los tipos declarados y convierte o adapta el valor (`.into()`, `as`, etc.) |
+| `error[E0382]: use of moved value` | Usas una variable después de moverla con `vec!`/`String` etc. | Clona el valor (`clone()`) o haz referencia con `&` en vez de pasarlo por valor |
+| `error[E0502]: cannot borrow X as immutable because it is also borrowed as mutable` | Tienes un `&mut` y un `&` del mismo dato a la vez | Separa los accesos en bloques o usa `clone()` para romper la doble dependencia |
+| `error[E0599]: no method named 'x' found` | Llamas a un método que no existe o no está en ámbito (falta `use`) | Importa el trait con `use` o revisa el nombre del método y del tipo |
+| `error: linker 'cc' not found` | Falta un enlazador o toolchain de C en tu sistema | Instala las build tools (en Linux `build-essential`, en macOS Xcode CLT, en Windows MSVC) |
+| `the msvc target is not available` | Instalaste el toolchain GNU y necesitas el MSVC en Windows | `rustup target add x86_64-pc-windows-msvc` o instala el compilador con `rustup toolchain install stable-msvc` |
+| `cargo: command not found` | Cargo no está en el PATH o Rust no está instalado | Instala/repasa `rustup` y añade `~/.cargo/bin` al PATH; verifica con `rustup --version` |
+| `error: failed to run custom build command` | Una dependencia con bindings de C falla al compilar | Instala las dependencias del sistema (librerías de desarrollo) o la herramienta que pide la crate |
+
+---
+
+## 🔗 Guías relacionadas
+
+- Para empaquetar tu binario Rust en contenedores (build multi-stage): [Guía de Docker: De 0 a 100](/posts/guia-0-100-docker/).
+- Primeros pasos con contenedores: [Instalación de Docker y primeros pasos](/posts/docker-instalacion-primeros-pasos/).
+
+---
+
 ## Referencias y documentación oficial
 
 1. [Rust Programming Language (oficial)](https://www.rust-lang.org/)

@@ -1,56 +1,143 @@
 ---
 draft: false
-title: "Cómo proteger con contraseña una carpeta con Webmin"
-description: "Protege una carpeta con usuario y contraseña utilizando Webmin y Apache."
+title: "Cómo proteger una carpeta con contraseña usando Webmin y Apache"
+description: "Protege un directorio de tu servidor web con autenticación básica (usuario y contraseña) desde Webmin. Incluye creación de usuarios de Apache, configuración paso a paso y comprobación desde el navegador."
 pubDate: "2016/01/18"
-tags: ['sistemas']
+tags: ['sistemas', 'webmin', 'apache', 'web', 'seguridad']
 image: "img/como_proteger_una_carpeta_con_contrasenya_en_webmin/como_proteger_una_carpeta_con_contrasenya_en_webmin_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 ---
 
 import ResponsiveImage from "@components/ResponsiveImage.astro";
 
-Hoy vamos ha ver como proteger una carpeta con Webmin, lo que significa que esa capeta estara protegida con un usuario y una contraseña
+¿Tienes un directorio en tu servidor web que no debería ser accesible para todo el mundo? Con Webmin puedes proteger cualquier carpeta de Apache con un usuario y una contraseña en pocos pasos, sin tocar archivos de configuración. Es una forma rápida de añadir autenticación básica a archivos internos, paneles de administración o secciones privadas de tu sitio.
 
-Ahora nos vamos ha nuestro Webmin, a otros y ha directorios Protegidos, aqui sera donde  crearemos nuestro directorio protegido, nos vamos ha agregar protección para un directorio.
+## 🤔 ¿Qué vamos a conseguir?
 
-Aqui es donde especificamos la ruta de la carpeta que queremos proteger, nuestro nombre de dominio
+- Proteger una carpeta con autenticación básica (usuario + contraseña) desde la interfaz de Webmin.
+- Crear **usuarios de Apache** específicos para esa carpeta.
+- Verificar que al acceder a la ruta desde el navegador aparece el cuadro de autenticación.
+- Entender cómo funciona la autenticación básica de Apache y sus limitaciones.
 
+## 🧰 Prerrequisitos
+
+- Un servidor con **Apache** instalado y funcionando.
+- **Webmin** instalado y accesible (normalmente en `https://ip_del_servidor:10000`).
+- Un directorio existente en el servidor web que quieras proteger (por ejemplo, `/var/www/html/client`).
+- Un navegador web para probar la protección.
+
+## 🛠️ Instalar Webmin (si no lo tienes)
+
+```bash
+# Añade el repositorio oficial de Webmin
+sudo sh -c 'echo "deb http://download.webmin.com/download/repository sarge contrib" > /etc/apt/sources.list.d/webmin.list'
+wget -q -O - https://www.webmin.com/jcameron-key.asc | sudo apt-key add -
+sudo apt update
+sudo apt install webmin
+```
+
+Accede desde el navegador en `https://ip_del_servidor:10000`. Acepta el certificado autofirmado y entra con tu usuario root o un usuario con permisos sudo.
+
+## 🚀 Proteger una carpeta desde Webmin
+
+### Paso 1 — Acceder a Directorios Protegidos
+
+1. Entra en Webmin con tu navegador.
+2. Ve a **Otros → Directorios Protegidos** (en la sección de módulos).
+3. Si el módulo no aparece, instálalo desde **Webmin → Webmin Configuration → Webmin Modules** buscando "apache".
+
+### Paso 2 — Crear el directorio protegido
+
+1. En **Directorios Protegidos**, haz clic en **Agregar protección para un directorio**.
+2. Rellena los campos:
+   - **Nombre de la protección**: un nombre descriptivo (ej. `client_area`).
+   - **Ruta del directorio**: la ruta completa del directorio a proteger, por ejemplo `/var/www/html/client`.
+   - **Nombre de dominio**: el dominio o IP de tu servidor (ej. `www.beneyto.com` o `192.168.101.1`).
+3. Pulsa **Crear**.
 
 <ResponsiveImage
   avif="/img/como_proteger_una_carpeta_con_contrasenya_en_webmin/como_proteger_una_carpeta_con_contrasenya_en_webmin_1-480.avif 480w, /img/como_proteger_una_carpeta_con_contrasenya_en_webmin/como_proteger_una_carpeta_con_contrasenya_en_webmin_1-768.avif 768w, /img/como_proteger_una_carpeta_con_contrasenya_en_webmin/como_proteger_una_carpeta_con_contrasenya_en_webmin_1-1200.avif 1200w"
   webp="/img/como_proteger_una_carpeta_con_contrasenya_en_webmin/como_proteger_una_carpeta_con_contrasenya_en_webmin_1-480.webp 480w, /img/como_proteger_una_carpeta_con_contrasenya_en_webmin/como_proteger_una_carpeta_con_contrasenya_en_webmin_1-768.webp 768w, /img/como_proteger_una_carpeta_con_contrasenya_en_webmin/como_proteger_una_carpeta_con_contrasenya_en_webmin_1-1200.webp 1200w"
   fallback="/img/como_proteger_una_carpeta_con_contrasenya_en_webmin/como_proteger_una_carpeta_con_contrasenya_en_webmin_1-1200.webp"
-  alt="webmin"
+  alt="Configuración del directorio protegido en Webmin"
   blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDApWULjDK30pKB1FWSOCMRkKaK2bZFMK/KKK19mYOtZ7H/2Q=="
 />
 
+### Paso 3 — Crear usuarios de autenticación
 
-Ahora es hora de introducir el usuario que pondremos luego y su contraseña
+Una vez creado el directorio protegido:
 
-Ya tenemos nuestro usuario y contraseña creado
-
-
-<ResponsiveImage
-  avif="/img/como_proteger_una_carpeta_con_contrasenya_en_webmin/como_proteger_una_carpeta_con_contrasenya_en_webmin_2-480.avif 480w, /img/como_proteger_una_carpeta_con_contrasenya_en_webmin/como_proteger_una_carpeta_con_contrasenya_en_webmin_2-768.avif 768w, /img/como_proteger_una_carpeta_con_contrasenya_en_webmin/como_proteger_una_carpeta_con_contrasenya_en_webmin_2-1200.avif 1200w"
-  webp="/img/como_proteger_una_carpeta_con_contrasenya_en_webmin/como_proteger_una_carpeta_con_contrasenya_en_webmin_2-480.webp 480w, /img/como_proteger_una_carpeta_con_contrasenya_en_webmin/como_proteger_una_carpeta_con_contrasenya_en_webmin_2-768.webp 768w, /img/como_proteger_una_carpeta_con_contrasenya_en_webmin/como_proteger_una_carpeta_con_contrasenya_en_webmin_2-1200.webp 1200w"
-  fallback="/img/como_proteger_una_carpeta_con_contrasenya_en_webmin/como_proteger_una_carpeta_con_contrasenya_en_webmin_2-1200.webp"
-  alt="Craer usuario en Webmin"
-  blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDCCgjJZR9aXYP+eifr/hTKB1FWSO8tuwyPUUVs2yKYV+UUVr7Mwdaz2P/Z"
-/>
-
-
-Una el usuario ya está creado, lo que hay que hacer es ir a nuestra maquina cliente, abrir nuestro navegador y poner `http://www.beneyto.com/~client/` una vez le demos enter nos aparezera una ventana en la cual debemos introducir un usuario y contraseña
-
+1. Haz clic sobre el nombre de la protección que acabas de crear (ej. `client_area`).
+2. Pulsa **Crear usuario de este directorio**.
+3. Rellena:
+   - **Nombre de usuario**: el usuario que accederá a la carpeta (ej. `admin`).
+   - **Contraseña**: una contraseña segura.
+   - **Confirmar contraseña**: repite la contraseña.
+4. Pulsa **Crear**.
 
 <ResponsiveImage
   avif="/img/como_proteger_una_carpeta_con_contrasenya_en_webmin/como_proteger_una_carpeta_con_contrasenya_en_webmin_2-480.avif 480w, /img/como_proteger_una_carpeta_con_contrasenya_en_webmin/como_proteger_una_carpeta_con_contrasenya_en_webmin_2-768.avif 768w, /img/como_proteger_una_carpeta_con_contrasenya_en_webmin/como_proteger_una_carpeta_con_contrasenya_en_webmin_2-1200.avif 1200w"
   webp="/img/como_proteger_una_carpeta_con_contrasenya_en_webmin/como_proteger_una_carpeta_con_contrasenya_en_webmin_2-480.webp 480w, /img/como_proteger_una_carpeta_con_contrasenya_en_webmin/como_proteger_una_carpeta_con_contrasenya_en_webmin_2-768.webp 768w, /img/como_proteger_una_carpeta_con_contrasenya_en_webmin/como_proteger_una_carpeta_con_contrasenya_en_webmin_2-1200.webp 1200w"
   fallback="/img/como_proteger_una_carpeta_con_contrasenya_en_webmin/como_proteger_una_carpeta_con_contrasenya_en_webmin_2-1200.webp"
-  alt="Craer usuario en Webmin"
+  alt="Crear usuario de autenticación en Webmin"
   blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDCCgjJZR9aXYP+eifr/hTKB1FWSO8tuwyPUUVs2yKYV+UUVr7Mwdaz2P/Z"
 />
 
+### Paso 4 — Verificar desde el navegador
 
-Apartir de ahora cada vez que queramos acceder a nuestra pagina web tendremos que introducir un usuario y una contraseña, y luego podremos acceder a nuestra pagina web.
+Abre el navegador de un equipo cliente y navega a la carpeta protegida:
 
+```
+http://www.beneyto.com/~client/
+```
+
+Aparecerá un cuadro de diálogo pidiendo **usuario y contraseña**. Introduce las credenciales que creaste en Webmin y accederás al contenido.
+
+<ResponsiveImage
+  avif="/img/como_proteger_una_carpeta_con_contrasenya_en_webmin/como_proteger_una_carpeta_con_contrasenya_en_webmin_2-480.avif 480w, /img/como_proteger_una_carpeta_con_contrasenya_en_webmin/como_proteger_una_carpeta_con_contrasenya_en_webmin_2-768.avif 768w, /img/como_proteger_una_carpeta_con_contrasenya_en_webmin/como_proteger_una_carpeta_con_contrasenya_en_webmin_2-1200.avif 1200w"
+  webp="/img/como_proteger_una_carpeta_con_contrasenya_en_webmin/como_proteger_una_carpeta_con_contrasenya_en_webmin_2-480.webp 480w, /img/como_proteger_una_carpeta_con_contrasenya_en_webmin/como_proteger_una_carpeta_con_contrasenya_en_webmin_2-768.webp 768w, /img/como_proteger_una_carpeta_con_contrasenya_en_webmin/como_proteger_una_carpeta_con_contrasenya_en_webmin_2-1200.webp 1200w"
+  fallback="/img/como_proteger_una_carpeta_con_contrasenya_en_webmin/como_proteger_una_carpeta_con_contrasenya_en_webmin_2-1200.webp"
+  alt="Cuadro de autenticación al acceder a la carpeta protegida"
+  blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDCCgjJZR9aXYP+eifr/hTKB1FWSO8tuwyPUUVs2yKYV+UUVr7Mwdaz2P/Z"
+/>
+
+## 🧪 Comprobar que funciona
+
+- **Con credenciales correctas**: introduces usuario y contraseña y accedes al contenido de la carpeta.
+- **Con credenciales incorrectas**: el navegador muestra `401 Unauthorized` o vuelve a pedir las credenciales.
+- **Sin credenciales** (navegador privado): al acceder a la ruta, aparece el cuadro de autenticación automáticamente.
+- **Desde la terminal** (comprobación programática):
+
+```bash
+# Debería devolver 401 (Unauthorized) sin credenciales
+curl -s -o /dev/null -w "%{http_code}" http://www.beneyto.com/~client/
+
+# Debería devolver 200 con credenciales
+curl -s -o /dev/null -w "%{http_code}" -u admin:contraseña http://www.beneyto.com/~client/
+```
+
+## ⚠️ Errores comunes
+
+| Error | Causa | Solución |
+|---|---|---|
+| `403 Forbidden` | El directorio no tiene un `index.html` o `index.php`, o permisos incorrectos | Crea un `index.html` en la carpeta o ajusta permisos: `chmod 755 /var/www/html/client` |
+| `401 Unauthorized` pero no pide usuario | Apache no está procesando la configuración de `.htaccess` | Verifica que el VirtualHost tiene `AllowOverride All` o que Webmin creó los archivos `.htpasswd` correctamente |
+| El cuadro de autenticación no aparece | La ruta escrita en el navegador no coincide con la protegida | Revisa la ruta exacta en Webmin y asegúrate de que coincida con la URL |
+| `Could not open password file` | El archivo `.htpasswd` no tiene permisos de lectura para Apache | `sudo chown www-data:www-data /etc/apache2/.htpasswd && sudo chmod 644 /etc/apache2/.htpasswd` |
+| Webmin no muestra el módulo de Directorios Protegidos | El módulo no está instalado | Ve a **Webmin → Webmin Modules** e instala el módulo "Apache" |
+
+## 🪜 Siguiente nivel
+
+Una vez domines la autenticación básica, la escalera natural es:
+
+1. **Certificados SSL** — cifra las conexiones para que las contraseñas no viajen en claro: [Cómo obtener un certificado SSL](/posts/como_obtener_un_certificado_ssl/).
+2. **Servidor virtual con Apache** — aloja múltiples sitios web en el mismo servidor: [Cómo crear un servidor virtual](/posts/como_crear_un_servidor_virtual/).
+3. **Protección avanzada** — usa autenticación por certificados client TLS o integra LDAP para gestión centralizada de usuarios.
+4. **Firewall y fail2ban** — protege tu servidor de intentos de fuerza bruta contra la autenticación.
+
+## 🔗 Enlaces y recursos
+
+- [Apache — documentación de autenticación básica](https://httpd.apache.org/docs/2.4/howto/auth_basic.html)
+- [Webmin — documentación oficial](https://webmin.com/docs.html)
+- [DigitalOcean — How To Set Up Password Authentication with Apache](https://www.digitalocean.com/community/tutorials/how-to-set-up-password-authentication-with-apache-on-ubuntu-22-04)
+- [Apache — módulo mod_auth_basic](https://httpd.apache.org/docs/2.4/mod/mod_auth_basic.html)

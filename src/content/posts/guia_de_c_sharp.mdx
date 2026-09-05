@@ -1,37 +1,222 @@
-
 ---
-draft: true 
-title: "Guia de C Sharp y .NET"
-description: "Guia paso a paso para empezar ha conocer el ecosistema de .NET y C Sharp"
+draft: true
+title: "Arranque rápido en C#: tu primera clase y el Hola mundo"
+description: "La primera clase de C# en 15 minutos: instalas el SDK, creas tu primer proyecto 'Hola mundo', entiendes la estructura de un programa y aprendes a imprimir en consola de dos formas distintas. Guía de arranque rápido que complementa la guía 0-100 de C#."
 pubDate: "2022/11/07"
-tags: ['sistemas','C Sharp']
+tags: ['sistemas', 'csharp', 'dotnet', 'programacion']
 image: "img/guia_de_c_sharp/guia_de_c_sharp_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 ---
-Guia paso a paso para empezar ha programar en C Sharp
 
-## Intordución
+C# permite crear de todo: aplicaciones empresariales para capturar y procesar datos, webs dinámicas, juegos 2D y 3D, apps financieras y científicas, servicios en la nube y aplicaciones móviles. Pero, ¿cómo se empieza? Este es el **arranque rápido**: en un par de minutos tendrás tu SDK instalado, tu primer proyecto creado y verás tu primer `hola mundo` en la consola. Es la primera clase del curso; la guía completa con todo el camino hasta 100 la tienes enlazada al final.
 
-1 - El lenguaje de programación C# permite crear muchos tipos de aplicaciones, por ejemplo:
+## 🤔 ¿Qué vamos a conseguir?
 
-- Aplicaciones empresariales para capturar, analizar y procesar datos
-- Aplicaciones web dinámicas a las que se puede acceder desde un explorador web
-- Juegos, tanto en 2D como en 3D
-- Aplicaciones financieras y científicas
-- Aplicaciones basadas en la nube
-- Aplicaciones móviles
+- Instalar el **SDK de .NET** en tu máquina (Windows, Linux o macOS).
+- Crear y ejecutar tu **primer proyecto de consola** con `dotnet new` y `dotnet run`.
+- Escribir tu primera clase en C# con su método `Main`, la puerta de entrada de todo programa.
+- Imprimir mensajes en la consola con **dos técnicas distintas** (`Console.WriteLine` y concatenación/interpolación).
+- Entender los **elementos básicos de la sintaxis**: clases, métodos, operadores y variables.
 
-Pero, ¿cómo se empieza a usar?
+## 🧰 Prerrequisitos
 
-Sin duda, la mejor manera de aprender a codificar consiste en escribir el máximo de código posible. Por tanto, le recomendamos que escriba código al realizar los ejercicios de este módulo y de todos los demás de esta ruta de aprendizaje. Si escribe usted mismo el código de cada ejercicio y resuelve los pequeños problemas de codificación, aprenderá mucho más rápido.
+- Conocer lo mínimo de una terminal: navegar carpetas y ejecutar comandos.
+- Un editor de texto: **Visual Studio Code** con la extensión *C# Dev Kit*, o **Visual Studio**.
+- Saber qué es un lenguaje compilado (el código se traduce a un ejecutable) — no hace falta dominarlo.
 
-Además, debe empezar a aprender los conceptos básicos y seguir desarrollándolos con la práctica y la exploración continuas.
+Instala el SDK de .NET. La forma recomendada en cada sistema:
 
-2 - En este módulo, aprenderá a:
+**Windows:**
+```powershell
+winget install Microsoft.DotNet.SDK.9
+```
 
-- Escribir las primeras líneas de código de C#.
-- Usar dos técnicas distintas para imprimir un mensaje en una consola de texto.
-- Diagnosticar errores cuando escriba código incorrectamente.
-- Identificar distintos elementos de la sintaxis de C#, como operadores, clases y métodos.
+**Linux (Debian/Ubuntu):**
+```bash
+sudo apt update
+sudo apt install dotnet-sdk-9.0
+```
 
-Al final de este módulo, podrá escribir código de C# para imprimir un mensaje en una consola de texto, como el símbolo del sistema de Windows. Estas líneas de código le permitirán echar un primer vistazo a la sintaxis de C# y le proporcionarán información valiosa de forma inmediata. De hecho, en este módulo se presentarán muchas ideas nuevas, que se ampliarán en otros módulos.
+**macOS (Homebrew):**
+```bash
+brew install dotnet-sdk
+```
+
+Comprueba que quedó instalado:
+
+```bash
+dotnet --version
+```
+
+## 🐳 Docker: practicar sin instalar el SDK
+
+Si no quieres tocar tu sistema, levanta un contenedor con el SDK oficial:
+
+```bash
+docker run -it --rm -v "$(pwd):/app" -w /app \
+  mcr.microsoft.com/dotnet/sdk:9.0 bash
+```
+
+Dentro del contenedor tendrás `dotnet` listo para usar, y la carpeta actual se monta en `/app` para guardar tus proyectos en el host.
+
+## 🛠️ Crear tu primer proyecto
+
+La CLI de .NET (`dotnet`) es tu mejor amiga. Crea una carpeta y un proyecto de consola:
+
+```bash
+mkdir HolaMundo
+cd HolaMundo
+dotnet new console
+```
+
+El comando `dotnet new console` genera estos archivos:
+
+- `HolaMundo.csproj` — el archivo de proyecto que describe dependencias y destino.
+- `Program.cs` — el punto de entrada donde va tu código.
+
+Abre `Program.cs` y verás que ya trae algo parecido a esto:
+
+```csharp
+// See https://aka.ms/new-console-template for more information
+Console.WriteLine("Hello, World!");
+```
+
+## 🚀 Tu primera clase en C#
+
+C# es un lenguaje **orientado a objetos**: casi todo vive dentro de una clase. La clase especial `Program` contiene al método `Main`, que es donde arranca el programa. Reescribamos `Program.cs` para darle forma de clase explícita:
+
+```csharp
+namespace HolaMundo
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            Console.WriteLine("¡Hola mundo desde C#!");
+        }
+    }
+}
+```
+
+Compila y ejecuta:
+
+```bash
+dotnet run
+```
+
+Verás por pantalla:
+
+```
+¡Hola mundo desde C#!
+```
+
+> **Qué significa cada pieza**: `namespace` agrupa clases; `class Program` define la clase; `static void Main` es el método que el runtime ejecuta al lanzar el programa; `Console.WriteLine` escribe una línea en la consola. Cualquier programa, por complejo que sea, acaba girando alrededor de estos mismos bloques.
+
+## 🚀 Imprimir en consola de dos formas distintas
+
+El módulo original plantea aprender dos técnicas para imprimir un mensaje. La primera es con una cadena literal:
+
+```csharp
+Console.WriteLine("Hola, me llamo Jorge.");
+```
+
+La segunda es **interpolación de cadenas**, escribiendo variables dentro del texto con `$` y llaves:
+
+```csharp
+string nombre = "Jorge";
+int anios = 30;
+Console.WriteLine($"Hola, me llamo {nombre} y tengo {anios} años.");
+```
+
+También puedes **concatenar** con el operador `+` (menos legible cuanto más largo es el texto):
+
+```csharp
+Console.WriteLine("Hola, me llamo " + nombre + " y tengo " + anios + " años.");
+```
+
+Salida (idéntica en interpolación y concatenación):
+
+```
+Hola, me llamo Jorge y tengo 30 años.
+```
+
+## 🚀 Variables y operadores básicos
+
+Antes de seguir, echa un vistazo a los tipos de datos más comunes. C# es **tipado estáticamente**: cuando declaras una variable, indicas su tipo y ese tipo no cambia:
+
+```csharp
+int numero = 42;            // número entero
+double precio = 19.99;      // número decimal
+bool esMayuscula = true;    // verdadero o falso
+string saludo = "¡Hola!";   // texto
+```
+
+Y los operadores aritméticos se comportan como en cualquier lenguaje:
+
+```csharp
+int suma = 10 + 5;          // 15
+int resta = 10 - 5;         // 5
+int producto = 10 * 5;      // 50
+double division = 10.0 / 4; // 2.5
+int resto = 10 % 4;         // 2
+```
+
+Podemos combinarlo todo en un pequeño programa que haga cálculos:
+
+```csharp
+namespace HolaMundo
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            int baseRect = 8;
+            int altura = 5;
+            int area = baseRect * altura;
+
+            Console.WriteLine($"El área del rectángulo es {area}");
+        }
+    }
+}
+```
+
+Salida esperada:
+
+```
+El área del rectángulo es 40
+```
+
+## 🧪 Comprobar que funciona
+
+- `dotnet run` imprime el mensaje exacto y el programa termina sin errores.
+- Si has escrito mal una línea, el compilador te lo dirá: `error CS1002` (falta un `;`), `error CS0103` (nombre no existe), etc. Un programa que compila *siempre* se distingue por no mostrar ningún `error`.
+- Puedes verificar el código de salida en la terminal con `echo $?`; debe devolver `0` si terminó bien.
+
+## ⚠️ Errores comunes
+
+| Error | Causa | Solución |
+|---|---|---|
+| `error CS1002: ; expected` | Falta el punto y coma al final de una instrucción | Añade `;` a la línea indicada por el compilador |
+| `error CS0103: The name 'nombre' does not exist` | Usas una variable que no declaraste o mal escrita | Declara la variable o revisa la ortografía (C# distingue mayúsculas) |
+| `error CS0165: Use of unassigned local variable` | Declaras una variable sin darle valor y la usas | Inicialízala al declararla: `int area = 0;` |
+| `error CS7036: There is no argument given` | Llamas al método con argumentos de más o de menos | Revisa los parámetros declarados en el método |
+| `'dotnet' no se reconoce como comando` | El SDK no está instalado o no está en el PATH | Reinstala el SDK y abre una terminal nueva |
+| El usuario que me actualizó no ejecuta nada | No cerraste la terminal tras instalar | Cierra y vuelve a abrir la terminal para refrescar el PATH |
+
+## 🪜 Siguiente nivel
+
+Esta es solo la puerta de entrada. La escalera de C# sigue así:
+
+1. **La guía completa** — este post es el arranque rápido; el recorrido de cero a cien con tipos, POO, patrones, bases de datos y proyectos reales está en [Guía de C# y .NET: de 0 a 100](/posts/guia-0-100-csharp/).
+2. **Tutorial oficial de Microsoft** — el primer módulo de C# gratuito que siguió este artículo: [C# — Primeros pasos](https://learn.microsoft.com/en-us/dotnet/csharp/tour-of-csharp/).
+3. **Aplicaciones de escritorio** — si te gustó la consola, prueba a construir interfaces con [Windows Forms](https://learn.microsoft.com/en-us/dotnet/desktop/winforms/?view=netdesktop-9.0) o el ejemplo de [Reconocimiento facial en Windows Forms](/posts/face_recognition_windows_forms/).
+4. **Web con ASP.NET Core** — cuando domines el lenguaje, crea tu primera API REST siguiendo la escalera de la guía 0-100.
+
+## 🔗 Enlaces y recursos
+
+- [Documentación oficial de .NET](https://learn.microsoft.com/en-us/dotnet/)
+- [Documentación de C# en Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/csharp/)
+- [Repositorio de .NET en GitHub](https://github.com/dotnet/core)
+- [.NET — descargas del SDK](https://dotnet.microsoft.com/download)
+- [Guía de referencia rápida de C# en W3Schools](https://www.w3schools.com/cs/)
+- [Cheatsheet de sintaxis C#](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/)

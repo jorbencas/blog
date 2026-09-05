@@ -1,40 +1,221 @@
-
 ---
 draft: false
-title: "ESTÁNDARAS HTML5 Y DOM2"
-description: "Descubre las ventajas del html y el DOM 2"
+title: "HTML5 y DOM2: estándares que cambiaron la web"
+description: "Descubre qué aportan los estándares HTML5 y DOM2 a la web moderna: elementos semánticos, formularios avanzados, gráficos con canvas y SVG, multimedia y la API del DOM para manipular la página. Incluye ejemplos prácticos y enlaces para seguir aprendiendo."
 pubDate: "2015/10/15"
-tags: ['web', 'html5']
+tags: ['web', 'html5', 'dom', 'frontend', 'javascript']
 image: "img/entradas_html5_y_dom2/entradas_html5_y_dom2_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 ---
 
-### HTML 5
-HTML5 (HyperText Markup Language, versión 5) es la quinta revisión importante del lenguaje básico de la World Wide Web, HTML. HTML5 especifica dos variantes de sintaxis para HTML: una «clásica», HTML (text/html), conocida como HTML5, y una variante XHTML conocida como sintaxis XHTML5 que deberá servirse con sintaxis XML (application/xhtml+xml)
-### El html 5 incorpora:
-1 - Nuevos semánticas elementos como 
+Si llevas un tiempo picando HTML, seguro que te has encontrado con la pregunta de siempre: ¿qué es exactamente el **HTML5** y por qué todos hablan del **DOM**? Son los dos estándares sobre los que se apoya la web moderna, y entenderlos te cambia la forma de escribir una página. No son conceptos teóricos aburridos: son las etiquetas que ordenan tu contenido y la API que te deja moverlo con JavaScript en tiempo real.
+
+## 🤔 ¿Qué vamos a conseguir?
+
+- Entender **qué es HTML5** y qué novedades trae frente a versiones anteriores.
+- Conocer los **elementos semánticos** (`header`, `article`, `section`, `footer`) que dan sentido al contenido.
+- Ver los **nuevos controles de formulario**, los **gráficos con canvas y SVG** y el **multimedia nativo**.
+- Entender **qué es el DOM** y cómo se puede manipular desde JavaScript.
+- Reproducir con ejemplos reales cada concepto para que puedas probarlo tú mismo.
+
+## 🧰 Prerrequisitos
+
+- Conocimientos básicos de **HTML**: saber qué es una etiqueta y cómo se abre y se cierra.
+- Un navegador moderno (Chrome, Firefox, Edge) y un editor de texto.
+- Nociones mínimas de JavaScript si quieres probar la parte del DOM (opcional pero recomendable).
+
+No hace falta instalar nada: HTML y JavaScript se ejecutan directamente en el navegador. Crea un archivo `ejemplo.html` y ábrelo con doble clic para ir probando los fragmentos de este artículo.
+
+## 🛠️ ¿Qué es HTML5?
+
+**HTML5** (HyperText Markup Language, versión 5) es la quinta revisión importante del lenguaje básico de la *World Wide Web*. Es el estándar que define la estructura de las páginas web actuales. HTML5 (su nombre oficial es **WHATWG HTML Living Standard**) especifica dos variantes de sintaxis:
+
+- La **clásica**, servida como `text/html`, que es la que conocemos como HTML5.
+- La variante **XHTML5**, que debe servirse con sintaxis XML (`application/xhtml+xml`).
+
+La gran diferencia con HTML4 es que HTML5 no solo estructura el contenido, sino que incorpora **multimedia, gráficos y APIs de JavaScript** directamente en el lenguaje, sin necesidad de plugins externos (adiós, Flash).
+
+## 🚀 Novedades de HTML5
+
+### 1. Elementos semánticos
+
+Antes, las páginas se llenaban de `div` sin significado. HTML5 introdujo etiquetas que describen *qué es* cada bloque. Un ejemplo típico de maquetación semántica:
+
+```html
+<header>
+  <h1>Mi blog</h1>
+  <nav>
+    <ul>
+      <li><a href="/">Inicio</a></li>
+      <li><a href="/sobre-mi">Sobre mí</a></li>
+    </ul>
+  </nav>
+</header>
+
+<article>
+  <section>
+    <h2>Primera sección</h2>
+    <p>Contenido de la sección.</p>
+  </section>
+</article>
+
+<footer>
+  <p>© 2025 Jorge Beneyto</p>
+</footer>
 ```
-html
-    <header></header>
-    <article></article>
-    <section></section>
-    <footer></footer>
+
+Cada etiqueta (`header`, `nav`, `article`, `section`, `footer`) aporta **semántica**: los motores de búsqueda, los lectores de pantalla y otros desarrolladores entienden la estructura de un vistazo.
+
+### 2. Nuevos controles de formulario
+
+HTML5 añade tipos de `<input>` que validan y muestran el control adecuado según el dato, sin una línea de JavaScript:
+
+```html
+<form>
+  <label>Número: <input type="number" min="0" max="100" value="10"></label>
+  <label>Fecha: <input type="date"></label>
+  <label>Hora: <input type="time"></label>
+  <label>Rango: <input type="range" min="0" max="100"></label>
+  <label>Email: <input type="email" required></label>
+  <button type="submit">Enviar</button>
+</form>
 ```
-2 - Nueva forma de control de atributos como el número, fecha, hora, calendario y alcance.
 
-3 - Nuevos gráficos elementos: `\<svg>` y `\<canvas>`.
+- `number` muestra flechas de incremento y solo acepta números.
+- `date` y `time` abren un calendario/reloj.
+- `range` dibuja un control deslizante (alcance).
+- `email` valida el formato automáticamente con el atributo `required`.
 
-4 - Nuevos multimedia elementos: `\<audio>` y `\<video>`.
+### 3. Nuevos elementos gráficos: canvas y SVG
 
-5 - Nuevas API’s
-- Geolocalización HTML
-- Arrastrar y soltar HTML
-- HTML Almacenamiento local
-- HTML Aplicación Caché
-- Trabajadores Web HTML
-- HTML SSE
-### DOM
-El Document Object Model o DOM es esencialmente una interfaz de programación de aplicaciones (API) que proporciona un conjunto estándar de objetos para representar documentos HTML y XML, un modelo estándar sobre cómo pueden combinarse dichos objetos, y una interfaz estándar para acceder a ellos y manipularlos. A través del DOM, los programas pueden acceder y modificar el contenido, estructura y estilo de los documentos HTML y XML, que es para lo que se diseñó principalmente.
+Para dibujar en la página hay dos caminos. **`canvas`** dibuja con JavaScript, píxel a píxel, perfecto para gráficos dinámicos y juegos:
 
-El responsable del DOM es (W3C).
+```html
+<canvas id="lienzo" width="200" height="100"></canvas>
 
+<script>
+  const lienzo = document.getElementById("lienzo");
+  const ctx = lienzo.getContext("2d");
+  ctx.fillStyle = "tomato";
+  ctx.fillRect(30, 20, 140, 60);
+</script>
+```
+
+**`svg`** describe el dibujo con etiquetas XML, ideal para iconos y logos que deben escalar sin perder nitidez:
+
+```html
+<svg width="100" height="100">
+  <circle cx="50" cy="50" r="40" fill="steelblue" />
+</svg>
+```
+
+### 4. Multimedia nativo: audio y video
+
+HTML5 incorpora reproducción de audio y vídeo sin plugins con las etiquetas `audio` y `video`:
+
+```html
+<video controls width="640">
+  <source src="intro.mp4" type="video/mp4">
+  Tu navegador no soporta el elemento video.
+</video>
+
+<audio controls>
+  <source src="podcast.mp3" type="audio/mpeg">
+  Tu navegador no soporta el elemento audio.
+</audio>
+```
+
+El atributo `controls` muestra los botones de reproducción integrados del navegador.
+
+### 5. Nuevas APIs de JavaScript
+
+HTML5 trae APIs que permiten a las páginas web comportarse como aplicaciones:
+
+- **Geolocalización**: obtener la posición del usuario.
+- **Drag and drop**: arrastrar y soltar elementos.
+- **Almacenamiento local** (`localStorage`): guardar datos en el navegador.
+- **Application Cache**: funcionar sin conexión.
+- **Web Workers**: ejecutar scripts en segundo plano.
+- **SSE (Server-Sent Events)**: recibir notificaciones del servidor.
+
+## 🛠️ ¿Qué es el DOM?
+
+El **Document Object Model (DOM)** es una interfaz de programación de aplicaciones (**API**) que proporciona un conjunto estándar de objetos para representar documentos HTML y XML. Es, en pocas palabras, una **representación en árbol** de tu página: cada etiqueta se convierte en un nodo que JavaScript puede leer y modificar.
+
+A través del DOM, los programas pueden acceder y modificar el **contenido, la estructura y el estilo** de un documento HTML o XML, que es precisamente para lo que se diseñó. El DOM lo define el **W3C** (World Wide Web Consortium).
+
+### Manipular el DOM desde JavaScript
+
+Con el DOM, cambiar la página en tiempo real es trivial. Por ejemplo, leer un elemento y modificar su texto:
+
+```html
+<p id="mensaje">Hola</p>
+
+<script>
+  const parrafo = document.getElementById("mensaje");
+  console.log(parrafo.textContent); // "Hola"
+  parrafo.textContent = "Hola desde el DOM";
+</script>
+```
+
+Crear y añadir un elemento nuevo:
+
+```html
+<ul id="lista"></ul>
+
+<script>
+  const lista = document.getElementById("lista");
+
+  const nuevoItem = document.createElement("li");
+  nuevoItem.textContent = "Elemento añadido";
+  lista.appendChild(nuevoItem);
+</script>
+```
+
+Y cambiar estilos dinámicamente:
+
+```html
+<button id="boton">Púlsame</button>
+
+<script>
+  const boton = document.getElementById("boton");
+  boton.addEventListener("click", function () {
+    boton.style.backgroundColor = "lime";
+  });
+</script>
+```
+
+## 🧪 Comprobar que funciona
+
+- Abre `ejemplo.html` en el navegador: verás el vídeo/audio (si tienes los archivos) y los controles de formulario renderizados.
+- Con la etiqueta `canvas` dibujas el rectángulo de color `tomato`; con `svg`, el círculo azul.
+- En la parte del DOM, abre la **consola del navegador** (F12 → Console) y verás `"Hola"` impreso, y el elemento li aparecerá en la lista.
+- Haz clic en el botón: su fondo cambiará a verde lima, prueba de que el DOM está manipulando la página en vivo.
+
+## ⚠️ Errores comunes
+
+| Error | Causa | Solución |
+|---|---|---|
+| El vídeo/audio no se ve en Chrome | Formato no soportado o falta de codecs | Usa `mp4`/H.264 y `mp3`; añade varios `source` como respaldo |
+| `document.getElementById` devuelve null | El script se ejecuta antes de que el elemento exista | Coloca el `script` al final del `<body>` o usa `DOMContentLoaded` |
+| El dibujo de canvas no aparece | No se accedió al contexto `2d` | Comprueba `getContext("2d")` y que el `script` va después del canvas |
+| Los `input` no validan el email | Falta el atributo `required` o el `type="email"` | Asegura el tipo correcto y `required` en el formulario |
+| El componente semántico se ve igual que un div | Esa es su idea: `header`, `footer`... se ven como bloques | Verifica el resultado con la *inspectora* (F12) y no visualmente |
+| El navegador interpreta `<` en el texto como HTML | Confundir texto con etiquetas | Escribe `&lt;` para el literal menor que en el texto plano |
+
+## 🪜 Siguiente nivel
+
+1. **Maquetación semántica completa** — practica combinando `header`, `nav`, `main`, `section` y `footer` en una página real.
+2. **Formularios avanzados** — añade validación propia con la API *Constraint Validation* y estilos de estado.
+3. **Animación con canvas** — usa `requestAnimationFrame` para crear juegos y gráficos animados.
+4. **JavaScript a fondo** — el DOM se domina con soltura del lenguaje; sigue una escalera de JS como la [Guía de JavaScript: de 0 a 100](/posts/guia-0-100-javascript/).
+5. **Interacción moderna** — aprende frameworks que gestionan el DOM por ti: prueba la [Guía de TypeScript: de 0 a 100](/posts/guia-0-100-typescript/) antes de saltar a un framework serio.
+
+## 🔗 Enlaces y recursos
+
+- [MDN — HTML: Lenguaje de marcado de hipertexto](https://developer.mozilla.org/es/docs/Web/HTML)
+- [MDN — Document Object Model (DOM)](https://developer.mozilla.org/es/docs/Web/API/Document_Object_Model)
+- [MDN — Referencia de elementos HTML](https://developer.mozilla.org/es/docs/Web/HTML/Element)
+- [W3Schools — HTML5 Tutorial](https://www.w3schools.com/html/html5_intro.asp)
+- [WHATWG — HTML Living Standard](https://html.spec.whatwg.org/)
+- [W3C — DOM Specification](https://www.w3.org/TR/dom/)

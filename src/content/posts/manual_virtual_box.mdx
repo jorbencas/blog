@@ -1,18 +1,158 @@
-
 ---
 draft: false
-title: "Manual de Virtual-Box"
-description: "Guía de instalación y configuración de VirtualBox, herramienta de virtualización gratuita."
+title: "Guía completa de VirtualBox: instalación y configuración de máquinas virtuales"
+description: "Aprende a instalar VirtualBox, crear tu primera máquina virtual y configurar red, audio y carpetas compartidas. Ideal para practicar servidores Linux sin tocar tu sistema principal."
 pubDate: "2015/12/30"
-tags: ['sistemas']
+tags: ['sistemas', 'virtualización', 'virtualbox', 'linux', 'windows']
 image: "img/manual_virtual_box/manual_virtual_box_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 ---
 
-Hoy os ofreceré una sencilla guía de instalación y configuración de Virtual-Box, que es una herramienta o programa de virtualización.
+¿Alguna vez has necesitado probar un sistema operativo o levantar un servidor sin arruinar tu equipo principal? VirtualBox es la herramienta gratuita de virtualización que te permite crear máquinas virtuales completamente aisladas: instalas Linux dentro de Windows, pruebas configuraciones de red o juegas con servidores sin ningún riesgo para tu sistema real. En esta guía te acompaño desde la instalación hasta tener una MV lista para usar.
 
-Si quereix obtener mas información sobre Virtual-Box, aquí os dejo un enlace que puede ser interesante:[Curiosidades de Virutal Box](https://en.wikipedia.org/wiki/VirtualBox)
+## 🤔 ¿Qué vamos a conseguir?
 
-[Manual de Virtual Box](/files/manual-de-virtual-box.odt)
+- Instalar VirtualBox en tu equipo (Windows, macOS o Linux).
+- Crear una máquina virtual desde cero con recursos asignados (RAM, disco, CPU).
+- Configurar los **adaptadores de red** (NAT, Bridge, Host-Only) para que tu MV se comunique con el mundo exterior.
+- Montar **carpetas compartidas** entre el anfitrión y la máquina virtual.
+- Entender cuándo usar una MV frente a una partición dual.
 
-Por si alguien se esta preguntando, después de haber leído este manual que es mejor si instalar-se una MV o hacer una partición, he de decir que personalmente creo que depende de la situación  y del ordenador.
+## 🧰 Prerrequisitos
+
+- Un equipo con al menos **8 GB de RAM** (recomendado para que la MV y el anfitrión funcionen bien).
+- **Espacio en disco**: mínimo 20 GB libres para la MV (más el espacio del SO que vayas a instalar).
+- VirtualBox compatible con tu sistema operativo: Windows 10/11, macOS (Intel o Apple Silicon con la versión correspondiente), o Linux (Debian, Ubuntu, Fedora...).
+- Un imagen ISO del sistema operativo que quieras instalar en la MV (por ejemplo, [Ubuntu Server](https://ubuntu.com/download/server)).
+
+Instala VirtualBox según tu sistema operativo:
+
+```bash
+# Debian/Ubuntu (desde los repos oficiales)
+sudo apt update
+sudo apt install virtualbox virtualbox-ext-pack
+
+# Fedora
+sudo dnf install VirtualBox
+
+# macOS — descarga el .dmg desde la web oficial
+# Windows — ejecuta el instalador .exe descargado desde virtualbox.org
+```
+
+## 🛠️ Instalación de VirtualBox
+
+Descarga VirtualBox desde la [página oficial de VirtualBox](https://www.virtualbox.org/wiki/Downloads). Selecciona el paquete que corresponda a tu sistema operativo:
+
+- **Windows**: ejecuta el `.exe` y sigue el asistente. Acepta las opciones por defecto (incluye drivers de red virtuales).
+- **macOS**: abre el `.dmg` y arrastra VirtualBox a Aplicaciones. Si tu Mac usa Apple Silicon, descarga la versión ARM64.
+- **Linux**: puedes usar el `.deb`/`.rpm` desde la web o instalar desde repositorios como en los comandos anteriores.
+
+Tras la instalación, abre VirtualBox. Verás la ventana principal con un panel a la izquierda donde aparecerán las máquinas virtuales que crees.
+
+> **Curiosidad**: VirtualBox es open source (GPLv3) y pertenece a Oracle desde 2010. Para más detalles, echa un vistazo a la [página de Wikipedia de VirtualBox](https://en.wikipedia.org/wiki/VirtualBox).
+
+## 🚀 Crear tu primera máquina virtual
+
+### Paso 1 — Nueva máquina virtual
+
+1. Pulsa el botón **Nueva** (o `Ctrl + N`).
+2. Escribe un nombre (ej. `UbuntuServer`), selecciona el tipo **Linux** y la versión **Ubuntu (64-bit)**.
+3. Asigna **memoria RAM**: mínimo 1024 MB para un servidor, 2048 MB o más para un escritorio.
+
+### Paso 2 — Disco virtual
+
+1. Selecciona **Crear un disco virtual ahora** y pulsa **Crear**.
+2. Formato: **VDI** (formato nativo de VirtualBox) o VMDK si necesitas compatibilidad con VMware.
+3. Almacenamiento: **Reservado dinámicamente** (crece a medida que lo necesitas) o **Tamaño fijo** (mejor rendimiento pero ocupa el espacio completo desde el inicio).
+4. Tamaño: asigna al menos **20 GB** (para un servidor) o **40 GB** (para escritorio).
+
+### Paso 3 — Configurar la MV
+
+Antes de arrancar, selecciona la MV y pulsa **Configuración**:
+
+- **Sistema → Procesador**: asigna al menos 2 CPUs (en el anfitrión mantén al menos 1 libre).
+- **Pantalla → Aceleración de video**: activa `VBoxSVGA` para Linux.
+- **Almacenamiento**: haz clic en el icono del disco vacío y selecciona tu imagen ISO.
+- **General → Advanced**: activa **Portapapeles compartido** y **Arrastrar y soltar** (drag and drop) para mover texto y archivos entre el anfitrión y la MV.
+
+### Paso 4 — Arrancar
+
+Selecciona la MV y pulsa **Iniciar**. Se lanzará el asistente de instalación del sistema operativo. Sigue los pasos de instalación del SO elegido (Ubuntu Server, Debian, etc.).
+
+## 🔌 Configuración de red
+
+La red es lo más importante en una MV para servidores. VirtualBox ofrece varios modos:
+
+| Modo | Descripción | Cuándo usarlo |
+|---|---|---|
+| **NAT** | La MV comparte la IP del anfitrión; accede a Internet pero no es accesible desde la red local | Para navegar desde la MV sin exponerla |
+| **Adaptador puente (Bridge)** | La MV obtiene una IP propia en la red local, como si fuera un equipo físico | Para acceder a la MV desde otros equipos de la red (servidor real) |
+| **Host-Only** | Red privada solo entre el anfitrión y la MV; sin acceso a Internet | Para pruebas de red completamente aisladas |
+| **NAT Network** | Varias MV en la misma red virtual, con salida a Internet | Laboratorios con varias MV que se comunican entre sí |
+
+Para un servidor que necesite ser accesible desde otros equipos, usa **Adaptador puente (Bridged)**:
+
+1. Selecciona la MV → **Configuración → Red**.
+2. En **Adaptador 1**, selecciona **Adaptador puente**.
+3. En **Nombre**, elige tu interfaz de red física (Wi-Fi o Ethernet).
+
+Para un segundo adaptador (por ejemplo, una red Host-Only para administración interna):
+
+1. Habilita **Adaptador 2** y selecciona **Host-Only**.
+
+## 📁 Carpetas compartidas
+
+Las carpetas compartidas permiten pasar archivos del anfitrión a la MV sin usar la red:
+
+1. En la MV apagada: **Configuración → Carpetas compartidas**.
+2. Pulsa el icono de la carpeta con el signo **+**.
+3. Selecciona la carpeta del anfitrión que quieras compartir.
+4. Marca **Montaje automático** y **Hacer permanente**.
+
+Dentro de la MV, monta la carpeta (Linux):
+
+```bash
+# Añade tu usuario al grupo vboxsf
+sudo usermod -aG vboxsf $(whoami)
+
+# Monta manualmente (si no está montada automáticamente)
+sudo mount -t vboxsf nombre_carpeta_compartida /mnt/compartida
+```
+
+> **Nota**: el usuario de la MV debe pertenecer al grupo `vboxsf` para acceder a las carpetas compartidas. Después del `usermod`, cierra sesión y vuelve a entrar.
+
+## 🧪 Comprobar que funciona
+
+- **Arranque**: la MV arranca sin errores y muestra el escritorio o la terminal del SO instalado.
+- **Red (NAT)**: dentro de la MV ejecuta `ping 8.8.8.8` — debe recibir respuestas.
+- **Red (Bridge)**: desde el anfitrión haz `ping <ip_de_la_mv>` — debe responder.
+- **Carpetas compartidas**: dentro de la MV ejecuta `ls /mnt/compartida` — debes ver los archivos del anfitrión.
+- **Snapshots**: en la MV, haz clic derecho → **Tomar instantánea** y verifica que aparece en la lista de snapshots.
+
+## ⚠️ Errores comunes
+
+| Error | Causa | Solución |
+|---|---|---|
+| `Failed to open session` / `VT-x is not available` | La virtualización está deshabilitada en la BIOS/UEFI | Entra en la BIOS y activa **Intel VT-x** o **AMD-V** |
+| `Unable to load R3 module` | Conflicto con Hyper-V en Windows 10/11 | Desactiva Hyper-V: `bcdedit /set hypervisorlaunchtype off` y reinicia |
+| La MV no tiene Internet | Adaptador de red mal configurado o firewall del anfitrión | Verifica el modo de red y ejecuta `ping` dentro de la MV |
+| No se accede a carpetas compartidas | Usuario no está en el grupo `vboxsf` | `sudo usermod -aG vboxsf $(whoami)` y cierra sesión |
+| Pantalla negra al arrancar | Aceleración de video incompatible | Cambia a **VBoxSVGA** o desactiva la aceleración 3D |
+| `VERR_DISK_FULL` | Disco virtual lleno | Amplía el disco: `VBoxManage modifyhd disco.vdi --resize 40960` |
+
+## 🪜 Siguiente nivel
+
+Una vez domines VirtualBox, la escalera natural de virtualización y servidores es:
+
+1. **Crear un servidor virtual** con Apache para alojar páginas web accesibles desde el cliente: [Cómo crear un servidor virtual](/posts/como_crear_un_servidor_virtual/).
+2. **Instalar un servidor SSH** en la MV y conectarte de forma remota: [Formas de conectarse por SSH](/posts/formas_de_conectarse_por_ssh/).
+3. **Usar Docker** como alternativa ligera a las máquinas virtuales para aislar servicios: [Docker: instalación y primeros pasos](/posts/docker-instalacion-primeros-pasos/).
+4. **Configurar DHCP** en tu red local para que las MV obtengan IP automáticamente: [Instalación y configuración de DHCP](/posts/instalacion_y_configuracion_dhcp/).
+
+## 🔗 Enlaces y recursos
+
+- [VirtualBox — documentación oficial](https://www.virtualbox.org/manual/)
+- [VirtualBox — página de descargas](https://www.virtualbox.org/wiki/Downloads)
+- [DigitalOcean — Introduction to VirtualBox](https://www.digitalocean.com/community/tutorials/an-introduction-to-virtualization-with-virtualbox)
+- [Ubuntu Server — descarga oficial](https://ubuntu.com/download/server)
+- [ArchWiki — VirtualBox](https://wiki.archlinux.org/title/VirtualBox)

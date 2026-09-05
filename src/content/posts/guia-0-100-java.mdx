@@ -3144,6 +3144,26 @@ jlink --module-path $JAVA_HOME/jmods:target/classes \
 
 ---
 
+## ⚠️ Errores comunes
+
+Si algo falla, lo más probable es que esté en esta tabla:
+
+| Error | Causa | Solución |
+|---|---|---|
+| `Cannot find symbol` | Variable, método o clase no declarado, o falta un `import` | Añade el `import` correspondiente; revisa la ortografía y el scope |
+| `Exception in thread "main" java.lang.NullPointerException` | Accedes a un objeto `null` (método, campo, array) | Usa `Optional`, valida con `!= null` o usa el operador `?.` (Java 16+) |
+| `'javac' is not recognized as an internal or external command` | JDK no instalado o `JAVA_HOME` / PATH no configurado | Instala JDK y configura `JAVA_HOME` y `PATH` en variables de entorno |
+| `ClassNotFoundException` | La clase indicada no está en el classpath al ejecutar | Verifica que el JAR está en classpath; en Maven/Gradle ejecuta `clean package` |
+| `package X does not exist` (error de compilación) | Falta una dependencia en `pom.xml` o `build.gradle`, o el `import` es incorrecto | Añade la dependencia en el gestor y ejecuta `mvn install` / `gradle build` |
+| `error: incompatible types: X cannot be converted to Y` | Asignas un tipo a otro sin casting o conversión explícita | Añade el cast adecuado o usa métodos de conversión (`Integer.parseInt`, etc.) |
+| `Error: Could not find or load main class X` | El classpath no incluye la clase principal o el nombre del paquete es incorrecto | Verifica el FQN de la clase y que `bin/` o `target/classes` está en classpath |
+
+## 🔗 Guías relacionadas
+
+- **Kotlin de 0 a 100** — la alternativa moderna sobre la JVM: [Guía de Kotlin: De 0 a 100](/posts/guia-0-100-kotlin/)
+- **C# de 0 a 100** — otro lenguaje de tipado fuerte con POO completa: [Guía de C# y .NET: De 0 a 100](/posts/guia-0-100-csharp/)
+- **Docker** — containeriza tus apps Java: [Docker: instalación y primeros pasos](/posts/docker-instalacion-primeros-pasos/)
+
 ## Referencias y documentación oficial
 
 - **Docs oficiales**: [docs.oracle.com/en/java](https://docs.oracle.com/en/java/)

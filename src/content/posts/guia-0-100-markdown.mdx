@@ -1918,6 +1918,27 @@ docker run --rm -v ${PWD}:/docs md-lint
 
 ---
 
+## ⚠️ Errores comunes
+
+| Error | Causa | Solución |
+|---|---|---|
+| Tabla renderizada como texto plano | Falta la fila de separación con guiones (`\|---\|---\|`) justo después de la cabecera | Añade `\|---\|---\|` como segunda línea de la tabla; sin ella, CommonMark no la reconoce |
+| Listas anidadas no se sangran correctamente | Se usa tabulación o se mezclan espacios con tabs | Sangra con 3 o 4 espacios desde el inicio del item padre; en GFM también funciona con 1 tab por nivel |
+| Bloque de código no se cierra o se renderiza raro | Se usan 3 backticks pero el contenido contiene 3 backticks, o se olvidan los cierre | Si el código contiene triple backtick, usa 4 o más; comprueba que la cantidad de backticks de apertura y cierre sea igual |
+| Imagen no aparece o muestra ruta rota | Se usa ruta relativa (`./img/foto.png`) y el procesador no la resuelve correctamente | Usa rutas relativas desde la raíz del proyecto (`/public/img/foto.png`) o rutas absolutas en MDX; verifica que el archivo exista en `/public` |
+| Espacios faltantes tras `#` en encabezados | Se escribe `#Título` sin espacio, lo cual viola CommonMark | Añade un espacio después del `#`: `# Título` (excepto en ATX closed con `#` al final) |
+| Emojis no se renderizan en el frontmatter | Se usan emojis en `tags` o `title` y el renderer los descarta | Envuelve el valor entre comillas simples o dobles: `title: "Guía 🚀"` |
+| Link interno roto al cambiar de nombre | Se enlaza a `/posts/mi-post/` pero el slug real cambió al renombrar el archivo | Verifica los slugs con `astro build` antes de publicar; usa la herramienta de build para detectar 404s |
+
+## 🔗 Guías relacionadas
+
+Si quieres llevar tu contenido al siguiente nivel, estas guías te van a interesar:
+
+- [Guía de Astro: de 0 a 100](/posts/guia-0-100-astro/) — aplica Markdown y MDX en un proyecto web real con colecciones de contenido
+- [Configurar MDX y remark con IA](/posts/ia-markdown-configuracion/) — personaliza el procesamiento de Markdown con plugins y remark
+
+---
+
 ## Referencias y documentación oficial
 
 - **CommonMark spec**: [spec.commonmark.org](https://spec.commonmark.org/)

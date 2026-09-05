@@ -1,19 +1,172 @@
-
 ---
-draft: true
+draft: false
 title: "Cómo conectarse al servidor FTP de diferentes formas"
-description: "Aprende a conectarte a un servidor FTP mediante Nautilus, FileZilla, navegador web y terminal."
+description: "Aprende a conectarte a un servidor FTP de 4 formas distintas: con el gestor de archivos Nautilus, con FileZilla, desde el navegador web y con la terminal. Incluye configuración de vsftpd y soluciones a errores comunes."
 pubDate: "2016/02/01"
-tags: ['web', "sistemas"]
+tags: ['sistemas', 'ftp', 'linux', 'redes']
 image: "img/como_conectarse_a_un_servidor_ftp/como_conectarse_a_un_servidor_ftp_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 ---
-Hoy vamos ha ver como configurar nuestro servidor FTP, que ayer instalamos.
+import ResponsiveImage from "@components/ResponsiveImage.astro";
 
-Lo que hoy vamos hacer es conectar nos a nuestro servidor ftp por diferentes metodos, nos conectaremos al usuario anonymous y al usuario o usuarios locales de nuestro servidor
+En la guía de instalación anterior dejamos nuestro servidor FTP preparado. Ahora toca lo divertido: **conectarnos** desde un equipo cliente usando usuarios locales y el usuario `anonymous`. Veremos 4 métodos distintos (Nautilus, FileZilla, navegador web y terminal) para que elijas el que más cómodo te resulte.
 
-### Acceder por Nautilus
-### Acceder por Filezilla
-### Acceder por un navegador web
-### Acceder por la terminal
+## 🤔 ¿Qué vamos a conseguir?
 
+- Verificar que el servidor FTP responde correctamente.
+- Conectarnos al servidor por **4 métodos distintos**: Nautilus, FileZilla, navegador y terminal.
+- Conectar tanto con el usuario `anonymous` como con un **usuario local** del servidor.
+- Conocer los errores típicos del protocolo FTP y cómo resolverlos.
+
+## 🧰 Prerrequisitos
+
+- Un servidor FTP funcionando (si lo instalaste con `vsftpd`, perfecto).
+- La **IP del servidor** y un usuario local con su contraseña.
+- Un equipo cliente con los clientes instalados: `nautilus`, `filezilla` y `ftp`/`lftp`.
+
+Instala los clientes en Debian/Ubuntu:
+
+```bash
+sudo apt install nautilus filezilla ftp lftp
+```
+
+## 🛠️ Repaso rápido: servidor FTP con vsftpd
+
+En el servidor, arranca y comprueba el servicio:
+
+```bash
+sudo systemctl enable --now vsftpd
+sudo systemctl status vsftpd
+ss -tlnp | grep :21     # el FTP escucha en el puerto 21
+```
+
+Si quieres activar el **acceso anonymous** (descarga pública de ficheros), edita `/etc/vsftpd.conf`:
+
+```
+anonymous_enable=YES
+anon_root=/srv/ftp
+```
+
+Y reinicia: `sudo systemctl restart vsftpd`.
+
+> **Seguridad**: el FTP tradicional envía la contraseña en claro. Para datos sensibles usa `FTPS` (implicit/explicit) o `SFTP` (sobre SSH). Ver [vsftpd docs](https://security.appspot.com/vsftpd.html).
+
+## 🐳 Opción Docker: servidor FTP de prueba en 1 minuto
+
+Puedes practicar todo el artículo contra un contenedor sin tocar tu sistema:
+
+```bash
+docker run -d --name ftp-lab -p 21:21 -p 21000-21010:21000-21010 \
+  -e FTP_USER=jorge -e FTP_PASS=secreto \
+  -e PASV_MIN_PORT=21000 -e PASV_MAX_PORT=21010 \
+  fauria/vsftpd
+```
+
+- `21` es el puerto de control y `21000-21010` los puertos de datos del modo pasivo.
+- El usuario `jorge` queda creado de fábrica; puedes añadir más en `/home/vsftpd`.
+
+Fuente: [fauria/vsftpd en Docker Hub](https://hub.docker.com/r/fauria/vsftpd).
+
+## 🚀 Acceder por Nautilus
+
+El gestor de archivos de GNOME soporta FTP nativo:
+
+1. Abre **Nautilus** (`nautilus` en la terminal).
+2. Pulsa `Ctrl + L` para mostrar la barra de direcciones.
+3. Escribe `ftp://192.168.101.1/` y pulsa Enter.
+4. Introduce tu usuario y contraseña (o elige **Conectar como usuario anónimo**).
+
+Verás la carpeta remota como una carpeta local más: puedes arrastrar archivos para subirlos y copiar los del servidor para bajarlos.
+
+## 🚀 Acceder por FileZilla
+
+El cliente gráfico más popular y multiplataforma:
+
+1. Abre FileZilla.
+2. En los campos superiores rellena:
+   - **Servidor**: `192.168.101.1`
+   - **Nombre de usuario**: tu usuario local o `anonymous`
+   - **Contraseña**: la del usuario (anónimo la dejas vacía)
+   - **Puerto**: `21`
+3. Pulsa **Conexión rápida**.
+
+El panel izquierdo es tu equipo local y el derecho el servidor FTP. Sube archivos con **clic derecho → Subir** o arrastrándolos. Para conectar siempre igual, guarda el sitio en **Archivo → Administrador de sitios**. Descárgalo en [filezilla-project.org](https://filezilla-project.org/).
+
+## 🚀 Acceder por un navegador web
+
+Cualquier navegador moderno puede leer un FTP (aunque Chrome ya no lo soporta; Firefox y Edge sí). Escribe en la barra de direcciones:
+
+```
+ftp://192.168.101.1
+```
+
+Para conectar con un usuario explícito inclúyelo en la URL:
+
+```
+ftp://jorge@192.168.101.1
+```
+
+El navegador preguntará la contraseña y mostrará el contenido del directorio como un listado clicable para **descargar** archivos. Sirve para consultas rápidas, no tanto para subir.
+
+## 🚀 Acceder por la terminal
+
+Los puristas y los administradores de sistemas usamos `lftp` (muy completo). Conéctalte:
+
+```bash
+lftp jorge@192.168.101.1
+```
+
+O como anónimo:
+
+```bash
+lftp anonymous@192.168.101.1
+```
+
+Dentro de `lftp` puedes navegar con los comandos típicos:
+
+```bash
+ls                    # listar el directorio remoto
+cd public_html        # cambiar de carpeta remota
+lcd ~/Descargas       # cambiar de carpeta local
+put index.html        # subir un archivo
+get informe.pdf       # descargar un archivo
+mirror public_html    # sincronizar una carpeta completa
+exit                  # salir
+```
+
+Con el cliente clásico `ftp` es similar (aunque con menos opciones y sin mirror):
+
+```bash
+ftp jorge@192.168.101.1
+```
+
+## 🧪 Comprobar que todo funciona
+
+- **Modo gráfico**: tras autenticarte ves el listado de archivos y puedes descargar/si tienes permisos, subir.
+- **Terminal**: dentro de `lftp`, `ls` muestra el directorio y `pwd` tu ubicación remota.
+- **Permisos**: si no puedes subir archivos, revisa que el usuario tiene permiso de escritura en el directorio destino (`ls -la` en el servidor).
+
+## ⚠️ Errores comunes
+
+| Error | Causa | Solución |
+|---|---|---|
+| `530 Login incorrect` | Usuario o contraseña incorrectos | Revisa credenciales; con `anonymous` usa el email como contraseña o déjala vacía |
+| `500 OOPS: vsftpd: refusing to run with writable root` | El directorio raíz del usuario es escribible | `chmod 755 /home/jorge` o configura `local_root` en vsftpd |
+| `227 Entering Passive Mode... connection timed out` | Cortafuegos bloqueando puertos de datos | Abre `21000-21010/tcp` en el firewall y configura `pasv_min_port`/`pasv_max_port` |
+| `Connection refused` | El servicio no está corriendo | `sudo systemctl restart vsftpd` y comprueba `ss -tlnp \| grep :21` |
+| El navegador/pc no lista nada | FTP pasivo bloqueado por el proxy | Usa FileZilla o la terminal con modo pasivo forzado |
+
+## 🪜 Siguiente nivel
+
+1. **Activa FTPS/SFTP** para cifrar las conexiones y no mandar contraseñas en claro.
+2. **Limita el acceso** con `chroot_local_user=YES` para que cada usuario solo vea su propia carpeta.
+3. **Automatiza subidas** con `lftp -e "mirror ...; exit"` en un cron o GitHub Action.
+4. Redes relacionadas: conexiones remotas seguras en [Conexión mediante clave pública privada](/posts/conexion_ssh_mediante_clave_publica_privada/) y [Formas de conectarse por SSH](/posts/formas_de_conectarse_por_ssh/).
+
+## 🔗 Enlaces y recursos
+
+- [vsftpd — documentación oficial](https://security.appspot.com/vsftpd.html)
+- [Ubuntu Community — FTP](https://help.ubuntu.com/community/FTP)
+- [FileZilla — documentación](https://wiki.filezilla-project.org/Documentation)
+- [lftp — man page](https://lftp.yar.ru/lftp-man.html)
+- [Guía de FTP pasivo (PASV) en Wikipedia](https://en.wikipedia.org/wiki/File_Transfer_Protocol#FTP_bootstrap)

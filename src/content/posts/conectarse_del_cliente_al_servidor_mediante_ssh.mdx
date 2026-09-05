@@ -1,136 +1,212 @@
 ---
 draft: false
-title: "Conectarse del cliente al servidor mediante ssh"
-description: "Descubre con un ejemplo la forma de conectarse del cliente a un servidor mediante ssh"
+title: "Compartir internet de un servidor al cliente con SSH (proxy SOCKS)"
+description: "Aprende a usar un túnel SSH dinámico (ssh -D) para que un cliente sin internet navegue a través del servidor, con reenvío de puertos, iptables y configuración del navegador."
 pubDate: "2015/12/02"
-tags: ['sistemas']
+tags: ['sistemas', 'ssh', 'redes', 'proxy', 'linux']
 image: "img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 ---
 
 import ResponsiveImage from "@components/ResponsiveImage.astro";
 
-Lo que hoy vamos ha intentar es  tener internet en un odenador cliente, conectando nos  através del servidor, ya que este es el que tiene una tarjeta NAT y por ello es el que tiene internet,gracias a la tarjeta NAT, y nosotros lo que vamos a hacer es que el cliente através de su tarjeta que esta en red interna, que es común en los 2 ordenadores se conecte a el servidor y coja el internet de su tarjeta NAT.
+¿Tienes dos máquinas en red y solo una de ellas tiene internet, la del servidor con su tarjeta NAT? No hace falta mover cables ni cargar el cliente USB de datos: podemos hacer que el cliente **salga a internet a través del servidor** usando un túnel SSH dinámico. Es un clásico de redes que además cifra tu tráfico. En esta guía montamos el reenvío de puertos en el servidor y el túnel SOCKS en el cliente.
 
-Para ello hay que tener en cuenta que hay que tener las 2 maquinas o ordenadores conectados en red y hay que tener instalado el ssh,
+## 🤔 ¿Qué vamos a conseguir?
 
-Lo primero que debemos hacer es iniciar el servidor,una vez iniciado ahora ahy que crear un script para que haga el renviamiento de puertos, abrimos un editor de texto plano (nano, gedit…) y una vez abierto hay que poner lo siguiente:
+- Activar el **reenvío de paquetes IPv4** (`ip_forward`) en el servidor para que haga de pasarela.
+- Configurar el **MASQUERADE con iptables** para compartir la conexión NAT con la red interna.
+- Montar un **túnel SSH dinámico** (`ssh -D`) desde el cliente hacia el servidor.
+- Configurar el **navegador** con un proxy SOCKS en el puerto local para navegar con el cliente.
+- Hacerlo **persistente** para que sobreviva a reinicios (script + `rc.local`).
 
-```
-    echo «1» > /proc/sys/net/ipv4/ip_forward
-    iptables -A FORWARD -j ACCEPT
-    iptables -t nat -A POSTROUTING -s 192.168.101.0/24 -o eth0 -j MASQUERADE
-```
+## 🧰 Prerrequisitos
 
-NOTA: En la dirección  IP debemos adaptarla a la nuestra, para ello hay que abrir una terminal y  poner  ifconfig y ver cual es tu dirección IP.
+- Dos máquinas Linux/WSL conectadas en red (por ejemplo en VirtualBox: una con tarjeta **NAT + Red Interna**, la otra solo **Red Interna**).
+- `ssh` y `openssh-server` instalados y funcionando (ver la guía de instalación abajo).
+- Conocimientos básicos de terminal y un editor de texto plano (`nano`, `gedit`...).
+- La **IP del servidor** en la red interna (uso `192.168.101.1`) y saber la tuya con `ip addr`.
 
-NOTA2: Es importante que el script, que es funchero lo guardemos en sh, ya que si lo guardamos en otro formato no lo ejecutara.
+Instala el cliente y servidor SSH en Debian/Ubuntu:
 
-Ahora hay que abrir una terminal y poner:
-
-`sudo nano  /etc/rc.local`
-
-(donde pone nano da igual que sea el gedit, el caso es que sea un editor de texto plano )
-
-Una vez dentro del fichero rc.local , lo que hay que  hacer ex en la ultima linea comentada antes del exit 0 hay que poner:
-
-`sh /home/jorge/Baixades/iptables.sh`
-
-Osea sh por que es un script, y en linux los scripts se ejecutan con la extensión sh y la ruta donde esta el fichero , logicamente hay que incluir el nombre del fichero para que nos lo ejecute, ersto lo estamos haciendo por que si lo hubie semos hecho en los comando sueltos
-
-```
-    echo «1» > /proc/sys/net/ipv4/ip_forward
-
-    iptables -A FORWARD -j ACCEPT
-
-    iptables -t nat -A POSTROUTING -s 192.168.101.0/24 -o eth0 -j MASQUERADE
+```bash
+sudo apt update
+sudo apt install openssh-client openssh-server
+sudo systemctl enable --now ssh
 ```
 
-Hubiera funcionado pero cuando hubiesemos reiniciado el equipo toda la configuración del iptables se abria borrado, por eso hay que ejecutarlo en un script con extensión sh y luego guardar-lo en `/etc/rc.local`.
+> La topología típica: el **servidor** tiene dos tarjetas, una con NAT (salida a internet) y otra en Red Interna (`192.168.101.x`). El **cliente** solo tiene la tarjeta de Red Interna, así que no llega solo a internet; usará el servidor de puente.
 
-Ya es el momento de cerrrar la terminal y el editor de tecto y abrir el navegador y entrar a el gestor webmin, ir a servidores>servidor dhcp>cliente>editar opciones de cliente
+## 🐳 Opción Docker: laboratorio para practicar
 
-<ResponsiveImage
-  avif="/img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-480.avif 480w, /img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-768.avif 768w, /img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-1200.avif 1200w"
-  webp="/img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-480.webp 480w, /img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-768.webp 768w, /img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-1200.webp 1200w"
-  fallback="/img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-1200.webp"
-  alt="Webmin"
-  blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDApWULjDK30pKB1FWSOCMRkKaK2bZFMK/KKK19mYOtZ7H/2Q=="
-/>
+Si prefieres practicar el lado SSH sin máquinas virtuales, levanta el servidor SSH (el destino del túnel) en un minuto:
 
+```bash
+docker run -d --name ssh-lab -p 2222:22 \
+  -e PASSWORD_ACCESS=true \
+  linuxserver/openssh-server
+```
 
-Ademas de poner de la IP de DNS que hay poner otra por si acaso en esa que hay no esta, que pueda ir a buscar-la ala otra dirección IP de DNS.
+Eso expone el puerto `2222` del contenedor; desde el cliente te conectarías con `ssh -p 2222`. Más información en [linuxserver/openssh-server](https://docs.linuxserver.io/images/docker-openssh-server/).
 
-<ResponsiveImage
-  avif="/img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-480.avif 480w, /img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-768.avif 768w, /img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-1200.avif 1200w"
-  webp="/img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-480.webp 480w, /img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-768.webp 768w, /img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-1200.webp 1200w"
-  fallback="/img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-1200.webp"
-  alt="Webmin"
-  blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDApWULjDK30pKB1FWSOCMRkKaK2bZFMK/KKK19mYOtZ7H/2Q=="
-/>
+> Ojo: para que el túnel SOCKS dé **internet de verdad** al navegador, el host que ejecuta el servidor SSH debe tener salida a internet. El contenedor sirve para practicar la parte del túnel y del proxy.
 
+## 🛠️ Reenvío de puertos e iptables en el servidor
 
-Ahora salvamos y ya podemos iniciar el cliente y hacer un túnel para que se conecta a la tarjeta en red interna que tienen en común el servidor y el cliente, para así luego que se conecte a la NAT y que le devuelva a el cliente la conexión a internet.
+Lo primero es decirle al servidor que **reenvíe** los paquetes entre sus tarjetas, de red interna a NAT. Creamos un script con esas tres líneas:
 
-Para ello hay que abrir una terminal en el cliente y poner el siguente comando:
+```bash
+echo "1" > /proc/sys/net/ipv4/ip_forward
+iptables -A FORWARD -j ACCEPT
+iptables -t nat -A POSTROUTING -s 192.168.101.0/24 -o eth0 -j MASQUERADE
+```
 
-`ssh -D 8080 -p 22 -N jorge@192.168.101.1`
+Guárdalo en un fichero `.sh`. Yo lo llamo `iptables.sh`:
 
-Nos conectamos por ssh .
+```bash
+sudo nano /home/tu_usuario/iptables.sh
+```
 
-- La opción D lo que hace es el redireccionamiento de puertos, lo cual implica que el puerto de entrada sera el 8080 .
+Explico cada línea:
 
-- la opció p lo que hace es decirle que lo haga por el puerto 22, que es el puerto del ssh, portanto un puerto seguro.
+- `echo "1" > /proc/sys/net/ipv4/ip_forward`: activa el reenvío de paquetes IP en el kernel (sin esto el tráfico del cliente no "pasa de largo" por el servidor).
+- `iptables -A FORWARD -j ACCEPT`: permite reenviar paquetes entre interfaces.
+- `iptables -t nat -A POSTROUTING ... -j MASQUERADE`: enmascara (traduce) las IPs de la red interna `192.168.101.0/24` por la IP de salida del servidor (`eth0`), como haría un router doméstico. **Adapta `192.168.101.0/24` a tu red** y `eth0` al nombre de tu tarjeta con salida (míralo con `ip addr`).
 
-- La opción N lo que hace es que sea invisible a el usuario, osea que no abre la terminal del servidor y lo ejecuta, sino que lo ejecuta de forma transparente a los ojos del usuario.
+> **Por qué un script y no los comandos sueltos**: si ejecutas esas tres líneas por terminal funcionan, pero al **reiniciar** el equipo todo el `iptables` y el `ip_forward` se pierden. Guardarlos en un script y ejecutarlo al arrancar los hace **persistentes**.
 
-Luego ponemos el usuario y la dirección IP y se nos quedara así:
+## 🚀 Hacer el reenvío persistente con rc.local
 
-<ResponsiveImage
-  avif="/img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-480.avif 480w, /img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-768.avif 768w, /img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-1200.avif 1200w"
-  webp="/img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-480.webp 480w, /img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-768.webp 768w, /img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-1200.webp 1200w"
-  fallback="/img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-1200.webp"
-  alt="Webmin"
-  blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDApWULjDK30pKB1FWSOCMRkKaK2bZFMK/KKK19mYOtZ7H/2Q=="
-/>
+Para que el script se ejecute en cada arranque, lo referenciamos desde `/etc/rc.local`. Lo abrimos con un editor de texto:
 
+```bash
+sudo nano /etc/rc.local
+```
 
-Como vemos hay que tener cuidado con escribir bien la contraseña del servidor, sino nos la vuelve a preguntar, un máximo de 3 veces
+Dentro, en la última línea **antes de** `exit 0`, añadimos la llamada a nuestro script:
 
-Ahora ya nos esta haciendo el puente a la maquina servidora, pero si queremos que salga a internet, debemos especificar en el navegador web una serie de parametros.
+```bash
+sh /home/tu_usuario/iptables.sh
+```
 
-Para ello abrimos el navegador web, nos vamos a editar>preferencias>avanzado>red>Configuración.
+Quedando algo así:
 
-<ResponsiveImage
-  avif="/img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-480.avif 480w, /img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-768.avif 768w, /img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-1200.avif 1200w"
-  webp="/img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-480.webp 480w, /img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-768.webp 768w, /img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-1200.webp 1200w"
-  fallback="/img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-1200.webp"
-  alt="Webmin"
-  blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDApWULjDK30pKB1FWSOCMRkKaK2bZFMK/KKK19mYOtZ7H/2Q=="
-/>
+```bash
+#!/bin/sh
+sh /home/tu_usuario/iptables.sh
+exit 0
+```
 
-
-Aqui es donde  los datos, hay que marcar la opción «Configuración manual del proxy», ya que por defecto nos pone sin proxy, ahora ya le pondremos que el servidor SOCKS sea el localhost, osea la maquina local que es el servidor y le indicaremos el puerto que es el 8080, ya no hay que tocar nada mas
+> En algunos sistemas modernos debes asegurarte de que `/etc/rc.local` está habilitado y es ejecutable (`sudo chmod +x /etc/rc.local`). Puede que necesites usar `systemctl enable rc-local` según tu versión.
 
 <ResponsiveImage
   avif="/img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-480.avif 480w, /img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-768.avif 768w, /img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-1200.avif 1200w"
   webp="/img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-480.webp 480w, /img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-768.webp 768w, /img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-1200.webp 1200w"
   fallback="/img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-1200.webp"
-  alt="Webmin"
+  alt="Configuración de la red en Webmin"
   blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDApWULjDK30pKB1FWSOCMRkKaK2bZFMK/KKK19mYOtZ7H/2Q=="
 />
 
+> El original hacía este paso por **Webmin** (Servidores → servidor DHCP → cliente → editar opciones) para reservar IPs y configurar el DNS. Ese enfoque sirve si además quieres un servidor DHCP gestionando tu red; aquí nos centramos en el túnel. De todos modos, conviene que el cliente tenga configurado un **DNS** (por ejemplo el del router, `192.168.101.1` o `8.8.8.8`) para resolver nombres al navegar.
 
-Asi es como debe quedar nuestra configuración, luego le damos a aceptar, cerramos y ya podremos navegar con el cliente.
+## 🚀 Montar el túnel SSH dinámico desde el cliente
+
+Ya tenemos el servidor listo para reenviar. Ahora, desde el **cliente**, abrimos una terminal y lanzamos el túnel SSH *dinámico*:
+
+```bash
+ssh -D 8080 -p 22 -N jorge@192.168.101.1
+```
+
+Te pedirá la contraseña del servidor (cuidado: si la escribes mal, te la vuelve a pedir; un máximo de 3 intentos). Cuando la introduzcas bien, el "prompt" se quedará colgado sin devolverte el control: eso **es correcto**, el túnel está activo.
 
 <ResponsiveImage
   avif="/img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-480.avif 480w, /img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-768.avif 768w, /img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-1200.avif 1200w"
   webp="/img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-480.webp 480w, /img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-768.webp 768w, /img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-1200.webp 1200w"
   fallback="/img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-1200.webp"
-  alt="Webmin"
+  alt="Túnel SSH dinámico establecido desde el cliente"
   blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDApWULjDK30pKB1FWSOCMRkKaK2bZFMK/KKK19mYOtZ7H/2Q=="
 />
 
+Desgloso el comando:
 
-Como vemos ya nos podemos conectar a internet con el cliente atraves del servidor, si quisieramos dejarlo como estava, nos vamos otravez a edita >preferencias>avanzado>red>configuración y ponemos «sin proxy»
+- `-D 8080`: activa el **reenvío dinámico de puertos** (SOCKS). El cliente escuchará en su propio puerto local `8080`.
+- `-p 22`: conecta al servidor a través de su puerto `22` (el puerto estándar y seguro de SSH).
+- `-N`: modo "no command"; **no abre la terminal** del servidor ni ejecuta nada en él, ejecuta el túnel de forma transparente al usuario.
+- `jorge@192.168.101.1`: usuario e IP del servidor.
 
+Con esto el cliente ya tiene un "puente" hacia el servidor. Pero para **navegar** hay que decirle al navegador que use ese túnel como proxy.
+
+## 🚀 Configurar el navegador con el proxy SOCKS
+
+Abrimos el navegador (Firefox en el ejemplo) y vamos a preferencias de red:
+
+**Editar → Preferencias → Avanzado → Red → Configuración**
+
+<ResponsiveImage
+  avif="/img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-480.avif 480w, /img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-768.avif 768w, /img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-1200.avif 1200w"
+  webp="/img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-480.webp 480w, /img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-768.webp 768w, /img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-1200.webp 1200w"
+  fallback="/img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-1200.webp"
+  alt="Configuración manual del proxy en el navegador"
+  blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDApWULjDK30pKB1FWSOCMRkKaK2bZFMK/KKK19mYOtZ7H/2Q=="
+/>
+
+Ahora marca la opción **Configuración manual del proxy** (por defecto viene "Sin proxy") y rellena **Servidor SOCKS** con `localhost` (la máquina local, donde vive el túnel) y el **puerto 8080**, el mismo que indicamos con `-D`:
+
+<ResponsiveImage
+  avif="/img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-480.avif 480w, /img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-768.avif 768w, /img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-1200.avif 1200w"
+  webp="/img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-480.webp 480w, /img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-768.webp 768w, /img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-1200.webp 1200w"
+  fallback="/img/conectarse_del_cliente_al_servidor_mediante_ssh/conectarse_del_cliente_al_servidor_mediante_ssh_1-1200.webp"
+  alt="Indicar localhost y el puerto 8080 como SOCKS"
+  blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDApWULjDK30pKB1FWSOCMRkKaK2bZFMK/KKK19mYOtZ7H/2Q=="
+/>
+
+Pulsa **Aceptar** y recarga cualquier página. Ahora el cliente ya navega **a través del servidor** gracias al túnel SSH.
+
+## 🧪 Comprobar que todo funciona
+
+- **El servidor reenvía**: en el servidor, comprueba que está activo el reenvío:
+
+```bash
+cat /proc/sys/net/ipv4/ip_forward   # debe devolver 1
+```
+
+- **El túnel está levantado**: en el cliente, el terminal con `ssh -D 8080` sigue "colgado" sin errores. Puedes ver el puerto local escuchando:
+
+```bash
+ss -tlnp | grep 8080
+```
+
+- **El navegador navega**: abre una web (por ejemplo `https://ifconfig.co` o cualquier IP) y parte del tráfico saldrá con la IP del servidor.
+
+> Para **probar sin navegador**, desde el cliente usa `curl` con el proxy: `curl --socks5 localhost:8080 https://ifconfig.co` y verás la IP del servidor.
+
+## ⚠️ Errores comunes
+
+| Error | Causa | Solución |
+|---|---|---|
+| El navegador no carga nada tras configurar el proxy | El túnel no está activo o el puerto no coincide | Verifica `ss -tlnp \| grep 8080` y que `-D 8080` y el proxy usan el mismo puerto |
+| El cliente navega pero con IP propia (sin pasar por servidor) | No se ha configurado el proxy SOCKS | Marca "Configuración manual del proxy" y usa `localhost:8080` |
+| No hay internet pese al túnel | `ip_forward` desactivado o `MASQUERADE` mal | Comprueba `cat /proc/sys/net/ipv4/ip_forward` y tus reglas `iptables` |
+| `ssh: Connection refused` | El servidor SSH no arranca | `sudo systemctl restart ssh` y `ss -tlnp \| grep :22` |
+| La configuración se pierde al reiniciar | Script no lanzado desde `rc.local` | Revisa que `/etc/rc.local` llaman a tu script antes de `exit 0` y sea ejecutable |
+| El tráfico del cliente no sale por `eth0` | Nombre de tarjeta incorrecto en el `MASQUERADE` | Mira la interfaz con salida real con `ip addr` y cámbiala |
+
+## 🪜 Siguiente nivel
+
+1. **Entiende todas las formas de conexión SSH** (por usuario, comando único, puerto personalizado, `~/.ssh/config`): [Formas de conectarse por SSH](/posts/formas_de_conectarse_por_ssh/).
+2. **Sustituye la contraseña por claves** para dejar el túnel automático y sin prompts: [Conexión SSH mediante clave pública privada](/posts/conexion_ssh_mediante_clave_publica_privada/).
+3. **Cifra también el tráfico FTP** con SFTP y aprende a conectarte a servidores de archivos: [Cómo conectarse a un servidor FTP](/posts/como_conectarse_a_un_servidor_ftp/).
+4. **Monta tu propio servidor DHCP** para que los clientes de la red se configuren solos y reparte IPs en el rango `192.168.101.x`: [Instalación y configuración DHCP](/posts/instalacion_y_configuracion_dhcp/).
+5. **Automatiza la conexión y el reenvío** con `~/.ssh/config`, alias y `autossh` para túneles permanentes.
+
+## 🔗 Enlaces y recursos
+
+- [OpenSSH — documentación oficial](https://www.openssh.com/manual.html)
+- [OpenSSH — man ssh](https://man.openbsd.org/ssh.1)
+- [DigitalOcean — SSH essentials y túneles](https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-tunneling-on-a-vps)
+- [ArchWiki — iptables](https://wiki.archlinux.org/title/Iptables)
+- [OpenSSH — redirección de puertos (SSH tunneling)](https://www.ssh.com/academy/ssh/tunneling-example)
+
+---
+
+Cuando termines de navegar y quieras **deshacer** la configuración, vuelve a **Editar → Preferencias → Avanzado → Red → Configuración** y pon **"Sin proxy"**; cierra el túnel con `Ctrl + C` en el terminal del `ssh -D`. Así dejarás el cliente como estaba.

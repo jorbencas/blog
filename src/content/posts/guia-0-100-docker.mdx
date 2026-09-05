@@ -1374,6 +1374,28 @@ docker logs contenedor --timestamps 2>&1 | jq -R '{timestamp: ., line: input_lin
 
 ---
 
+## ⚠️ Errores comunes
+
+| Error | Causa | Solución |
+|---|---|---|
+| `Got permission denied while trying to connect to the Docker daemon socket` | Tu usuario no está en el grupo `docker` o el daemon no está arrancado | Ejecuta `sudo usermod -aG docker $USER` y vuelve a entrar en la sesión; comprueba con `systemctl status docker` |
+| `port is already allocated` | Otro proceso ya usa el puerto que intentas mapear con `-p` | Usa `sudo lsof -i :<puerto>` para identificar el proceso; matalo o cambia el puerto de host (`-p 8080:80`) |
+| `The container name "<nombre>" is already in use` | Ya existe un contenedor con ese nombre (activo o detenido) | Renómbralo con `--name otro-nombre` o elimina el anterior con `docker rm <nombre>` |
+| `Cannot connect to the Docker daemon at unix:///var/run/docker.sock` | El servicio Docker no está arrancado | `sudo systemctl start docker` y verifica con `docker ps` |
+| `docker: command not found` | Docker no está instalado o no está en el PATH | Instala Docker Engine siguiendo la sección de instalación de esta guía; en WSL instala el paquete `docker.io` |
+| `failed to solve: process ... did not complete successfully` | Error durante el build con BuildKit (fallo en un `RUN`, `COPY` o resolución de imagen base) | Revisa el log completo con `docker build --no-cache .`; comprueba que las rutas en `COPY` existen y que la imagen base es válida |
+| `no matching manifest for linux/arm64 in the manifest list entries` | Intentas tirar una imagen solo disponible para `amd64` en un Mac M1/M2 o ARM | Añade `--platform linux/amd64` o busca una imagen multi-arch; alternativamente usa `docker buildx` para cross-build |
+
+## 🔗 Guías relacionadas
+
+Estas guías te ayudan a complementar lo que aprendiste aquí:
+
+- [Guía de Astro: de 0 a 100](/posts/guia-0-100-astro/) — despliega tu sitio Astro con Docker y aprende a containerizar frontend moderno
+- [Docker: instalación, primeros pasos y containerizar](/posts/docker-instalacion-primeros-pasos/) — repaso guiado si eres nuevo en contenedores
+- [WSL: instalación, configuración y Docker Desktop](/posts/guia-wsl-instalacion-configuracion-docker/) — configura Docker en Windows con WSL2 paso a paso
+
+---
+
 ## Referencias y documentación oficial
 
 - **Docs oficiales**: [docs.docker.com](https://docs.docker.com/)

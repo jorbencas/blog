@@ -1,88 +1,216 @@
 ---
 draft: false
-title: "Como crear un servidor virtual"
-description: "Configura un servidor virtual con Apache para alojar páginas web accesibles desde el cliente."
+title: "Cómo crear un servidor virtual con Apache y Webmin"
+description: "Configura un servidor virtual (VirtualHost) en Apache para alojar páginas web de un usuario específico, accesibles desde el cliente por IP o nombre de dominio. Incluye configuración de Webmin y comprobación."
 pubDate: "2016/01/17"
-tags: ['sistemas', 'web']
+tags: ['sistemas', 'web', 'apache', 'webmin', 'virtualización', 'servidores']
 image: "img/como_crear_un_servidor_virtual/como_crear_un_servidor_virtual_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 ---
 
-
 import ResponsiveImage from "@components/ResponsiveImage.astro";
 
-Hoy vamos ha hacer que podamos acceder a una pagina web alogadaen un usuario en el servidor desde el cliente, para ello debemos de tener instalado el apache.
+¿Necesitas que un usuario específico pueda alojar su propia página web en tu servidor sin que interfiera con el sitio principal? Un servidor virtual (VirtualHost) en Apache permite exactamente eso: que el mismo servidor atienda peticiones para diferentes dominios o IPs, cada uno con su propio contenido. En esta guía vemos cómo configurarlo desde Webmin y desde la terminal, paso a paso.
 
-Primero de todo, lo que vamos ha hacer es ir ha el servidor y abrir una terminal y poner
+## 🤔 ¿Qué vamos a conseguir?
 
-<code>sudo apt-get install apache2</code>
+- Instalar Apache en el servidor si no lo tienes.
+- Crear una **carpeta `www`** para un usuario específico con su `index.html`.
+- Configurar un **VirtualHost** en Apache para que ese usuario tenga su propio sitio web.
+- Crear un **nombre de dominio** en Webmin (DHCP) que apunte al servidor.
+- Verificar que el sitio es accesible desde el cliente por IP y por nombre de dominio.
 
-ahora hay que abrir una terminal, poner
+## 🧰 Prerrequisitos
 
-<code>sudo nautilus</code>
+- Un servidor Linux (Debian/Ubuntu) con acceso root o sudo.
+- **Webmin** instalado y accesible (opcional, pero muy recomendable para la configuración gráfica).
+- Un equipo cliente en la misma red para probar la configuración.
+- Conocimientos básicos de terminal y permisos en Linux.
 
-Una vez hecho esto se nos abrirar el nautilus peor como root, una vez alli hay que ir a el directorio `/var/www` y dentro de este directorio abra un archivo que se llama index.html , ese es el indice de nuestra pagina web, pero no esta donde nosotros que remos que este ja que nosotros queremos que otro usuario sea el que pueda subir esa pagina web.
+## 🛠️ Instalar Apache
 
+Si Apache no está instalado, ejecuta en el servidor:
+
+```bash
+sudo apt update
+sudo apt install apache2
+```
+
+Comprueba que el servicio está activo:
+
+```bash
+sudo systemctl enable --now apache2
+sudo systemctl status apache2
+```
+
+Abre el navegador del cliente y accede a `http://ip_del_servidor`. Deberías ver la página por defecto de Apache.
+
+## 🚀 Configurar la carpeta del usuario
+
+### Paso 1 — Crear la estructura de carpetas
+
+El plan es que cada usuario tenga su propia carpeta `www` con su página web. Usaremos el usuario `client` como ejemplo:
+
+```bash
+# Crear la carpeta www del usuario (si no existe)
+sudo mkdir -p /home/client/www
+
+# Crear un index.html de prueba
+sudo bash -c 'cat > /home/client/www/index.html << EOF
+<!DOCTYPE html>
+<html>
+<head><title>Sitio de client</title></head>
+<body>
+  <h1>Esta es la pagina web de client</h1>
+  <p>Funciona desde el servidor virtual de Apache.</p>
+</body>
+</html>
+EOF'
+```
 
 <ResponsiveImage
   avif="/img/como_crear_un_servidor_virtual/como_crear_un_servidor_virtual_1-480.avif 480w, /img/como_crear_un_servidor_virtual/como_crear_un_servidor_virtual_1-768.avif 768w, /img/como_crear_un_servidor_virtual/como_crear_un_servidor_virtual_1-1200.avif 1200w"
   webp="/img/como_crear_un_servidor_virtual/como_crear_un_servidor_virtual_1-480.webp 480w, /img/como_crear_un_servidor_virtual/como_crear_un_servidor_virtual_1-768.webp 768w, /img/como_crear_un_servidor_virtual/como_crear_un_servidor_virtual_1-1200.webp 1200w"
   fallback="/img/como_crear_un_servidor_virtual/como_crear_un_servidor_virtual_1-1200.webp"
-  alt="carpeta var"
+  alt="Estructura de carpetas var/www en el servidor"
   blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDAHJ64pzKAPvqfpmm0DqKskcEYjIU0Vs2yKYV+UUVr7Mwdaz2P/9k="
 />
 
+### Paso 2 — Ajustar permisos
 
-Para ello hay que ir a `/` y una vez allí hay que ir a `/home/client (Client es nuestro usuario lo que se trata es de ir a la carpeta del usuario)`, una vez allí hay que pegar la carpeta www que hemos copiado de `/var/www` 
+Apache ejecuta el proceso con el usuario `www-data`. Necesita permiso de lectura sobre la carpeta:
 
+```bash
+# Permisos de lectura para Apache
+sudo chmod -R 755 /home/client/www
+
+# Asegurar que el directorio home del usuario también permite el acceso
+sudo chmod 755 /home/client
+```
 
 <ResponsiveImage
   avif="/img/como_crear_un_servidor_virtual/como_crear_un_servidor_virtual_2-480.avif 480w, /img/como_crear_un_servidor_virtual/como_crear_un_servidor_virtual_2-768.avif 768w, /img/como_crear_un_servidor_virtual/como_crear_un_servidor_virtual_2-1200.avif 1200w"
   webp="/img/como_crear_un_servidor_virtual/como_crear_un_servidor_virtual_2-480.webp 480w, /img/como_crear_un_servidor_virtual/como_crear_un_servidor_virtual_2-768.webp 768w, /img/como_crear_un_servidor_virtual/como_crear_un_servidor_virtual_2-1200.webp 1200w"
   fallback="/img/como_crear_un_servidor_virtual/como_crear_un_servidor_virtual_2-1200.webp"
-  alt="archivo index"
+  alt="Archivo index.html en la carpeta del usuario"
   blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDBAycZA9zSlQBnep9hmm0DqKskcEYjIU0Vs2yKYV+UUVr7Mwdaz2P/2Q=="
 />
 
+## 🚀 Crear el nombre de dominio en Webmin (DHCP)
 
-Luego hay que ir a nuestro Webmin y ver si esta instalado el modulo de apache, si esta instalado, es hora poner-se manos a la obra, hay que crear un host virtual, pero primero hay que crear un nombre de dominio que asociaremos a este host virtual, en mi caso el nombre de dominio que he elegido es `beneyto.com` 
+Para que el cliente pueda acceder al sitio por nombre de dominio (por ejemplo, `www.beneyto.com`), necesitas crear un registro DNS que apunte al servidor. En Webmin:
 
-### Recordatorio
-Para crear un nombre de dominio hay que ir en nuestro servidor Webmin a DHCP NIND a donde dice crear zona maestra, una vez allí hay que poner en nombre de domino, laIP asociada a ese nombre de dominio, que siempre sera la del servidor y una dirección de correo, luego aceptar y ja esta creada nuestra nueva zona maestra o lo que es lo mismo nuestro nuevo nombre de dominio
-
-
-<ResponsiveImage
-  avif="/img/como_crear_un_servidor_virtual/como_crear_un_servidor_virtual_3-480.avif 480w, /img/como_crear_un_servidor_virtual/como_crear_un_servidor_virtual_3-768.avif 768w, /img/como_crear_un_servidor_virtual/como_crear_un_servidor_virtual_3-1200.avif 1200w"
-  webp="/img/como_crear_un_servidor_virtual/como_crear_un_servidor_virtual_3-480.webp 480w, /img/como_crear_un_servidor_virtual/como_crear_un_servidor_virtual_3-768.webp 768w, /img/como_crear_un_servidor_virtual/como_crear_un_servidor_virtual_3-1200.webp 1200w"
-  fallback="/img/como_crear_un_servidor_virtual/como_crear_un_servidor_virtual_3-1200.webp"
-  alt="webmin"
-  blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDApWULjDK30pKB1FWSOCMRkKaK2bZFMK/KKK19mYOtZ7H/2Q=="
-/>
-
-
-Es ahora cuando ya podemos crear nuestro host virtual, para ello hay que ir  a Servidor Web apache, a crear virtual hosts, una vez dentro solo hay que completar con la IP del servidor, la ruta donde esta el archivo de nuestra pagina web, osea el index.html, luego hay que poner el nombre de nuestro nuevo dominio que en mi caso es beneyto.com, es muy importante poner antes del dominio `http://www.beneyto.com`, una vez hecho esto ja tenemos nuestro hosts virtual creado.
-
+1. Ve a **Servidores → Servidor DNS BIND** (o **DHCP Server** si usas DNS integrado).
+2. Selecciona **Crear zona maestra**.
+3. Rellena:
+   - **Nombre de dominio**: `beneyto.com`
+   - **IP asociada**: la IP del servidor (ej. `192.168.101.1`)
+   - **Correo de contacto**: un correo válido (formato DNS: `admin.beneyto.com` en lugar de `admin@beneyto.com`).
+4. Pulsa **Crear**.
 
 <ResponsiveImage
   avif="/img/como_crear_un_servidor_virtual/como_crear_un_servidor_virtual_3-480.avif 480w, /img/como_crear_un_servidor_virtual/como_crear_un_servidor_virtual_3-768.avif 768w, /img/como_crear_un_servidor_virtual/como_crear_un_servidor_virtual_3-1200.avif 1200w"
   webp="/img/como_crear_un_servidor_virtual/como_crear_un_servidor_virtual_3-480.webp 480w, /img/como_crear_un_servidor_virtual/como_crear_un_servidor_virtual_3-768.webp 768w, /img/como_crear_un_servidor_virtual/como_crear_un_servidor_virtual_3-1200.webp 1200w"
   fallback="/img/como_crear_un_servidor_virtual/como_crear_un_servidor_virtual_3-1200.webp"
-  alt="webmin"
+  alt="Configuración del VirtualHost en Webmin"
   blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDApWULjDK30pKB1FWSOCMRkKaK2bZFMK/KKK19mYOtZ7H/2Q=="
 />
 
+## 🚀 Crear el VirtualHost en Apache
 
-Ahora ya nuestro usuario client puede subir paginas web, para comprobarlo hay que ir a la maquina cliente, abrir el navegador y poner la dirección IP o el nombre de dominio especificado para ese host virtual, que en mi caso es `http://www.beneyto.com`
+### Opción A — Desde Webmin (recomendado)
 
+1. Ve a **Servidores → Servidor Web Apache**.
+2. Selecciona **Crear virtual hosts**.
+3. Rellena:
+   - **Dirección IP del servidor**: la IP del servidor (ej. `192.168.101.1`).
+   - **Ruta del documento**: la ruta a la carpeta `www` del usuario (ej. `/home/client/www`).
+   - **Nombre del servidor**: el dominio completo, incluyendo `http://` al principio (ej. `http://www.beneyto.com`).
+4. Pulsa **Crear**.
 
 <ResponsiveImage
   avif="/img/como_crear_un_servidor_virtual/como_crear_un_servidor_virtual_3-480.avif 480w, /img/como_crear_un_servidor_virtual/como_crear_un_servidor_virtual_3-768.avif 768w, /img/como_crear_un_servidor_virtual/como_crear_un_servidor_virtual_3-1200.avif 1200w"
   webp="/img/como_crear_un_servidor_virtual/como_crear_un_servidor_virtual_3-480.webp 480w, /img/como_crear_un_servidor_virtual/como_crear_un_servidor_virtual_3-768.webp 768w, /img/como_crear_un_servidor_virtual/como_crear_un_servidor_virtual_3-1200.webp 1200w"
   fallback="/img/como_crear_un_servidor_virtual/como_crear_un_servidor_virtual_3-1200.webp"
-  alt="webmin"
+  alt="VirtualHost creado y funcionando en Webmin"
   blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDApWULjDK30pKB1FWSOCMRkKaK2bZFMK/KKK19mYOtZ7H/2Q=="
 />
 
+### Opción B — Desde la terminal
 
-Es importante que si utilizáis el nombre de domino para verificar que ha funcionado pongáis www si no no estáis escribiendo correctamente el dominio y no funcionara
+Si prefieres tocar la configuración directamente, crea un archivo de VirtualHost:
 
+```bash
+sudo nano /etc/apache2/sites-available/client.conf
+```
+
+Contenido del archivo:
+
+```apache
+<VirtualHost *:80>
+    ServerName www.beneyto.com
+    DocumentRoot /home/client/www
+
+    <Directory /home/client/www>
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ErrorLog ${APACHE_LOG_DIR}/client_error.log
+    CustomLog ${APACHE_LOG_DIR}/client_access.log combined
+</VirtualHost>
+```
+
+Habilita el sitio y reinicia Apache:
+
+```bash
+sudo a2ensite client.conf
+sudo systemctl restart apache2
+```
+
+## 🧪 Comprobar que funciona
+
+- **Por IP desde el cliente**: abre el navegador y escribe `http://192.168.101.1` — deberías ver la página por defecto de Apache (o la del VirtualHost si es el único).
+- **Por nombre de dominio**: escribe `http://www.beneyto.com` — deberías ver la página `index.html` del usuario `client`.
+- **Importante**: si usas nombre de dominio, asegúrate de escribir `www.beneyto.com` (con `www`) si así lo configuraste en el VirtualHost.
+- **Verificar desde la terminal**:
+
+```bash
+# Comprobar que Apache responde
+curl -s -o /dev/null -w "%{http_code}" http://www.beneyto.com
+
+# Ver el contenido del VirtualHost
+sudo apache2ctl -S
+
+# Listar los sitios habilitados
+ls /etc/apache2/sites-enabled/
+```
+
+## ⚠️ Errores comunes
+
+| Error | Causa | Solución |
+|---|---|---|
+| `403 Forbidden` | Permisos de la carpeta `www` no permiten el acceso a Apache | `chmod -R 755 /home/client/www` y `chmod 755 /home/client` |
+| `404 Not Found` | La ruta `DocumentRoot` en el VirtualHost no coincide con la ruta real | Verifica la ruta con `ls -la /home/client/www/` y corrige el VirtualHost |
+| `Could not resolve hostname` (nombre de dominio) | El registro DNS no apunta al servidor correcto | Verifica la zona DNS en Webmin o usa la IP directamente como prueba |
+| Apache no sirve el VirtualHost | El archivo `.conf` no está en `sites-enabled` | Ejecuta `sudo a2ensite client.conf` y `sudo systemctl restart apache2` |
+| Página por defecto en lugar del VirtualHost | El VirtualHost predeterminado tiene prioridad | Añade `ServerName` al VirtualHost de Apache y comprueba el orden de carga |
+| `ERR_CONNECTION_REFUSED` en el cliente | Apache no está corriendo o el firewall bloquea el puerto 80 | `sudo systemctl restart apache2` y `sudo ufw allow 80/tcp` |
+
+## 🪜 Siguiente nivel
+
+Una vez domines los VirtualHosts, la escalera natural es:
+
+1. **Proteger una carpeta con contraseña** para secciones privadas: [Cómo proteger una carpeta con contraseña en Webmin](/posts/como_proteger_una_carpeta_con_contrasenya_en_webmin/).
+2. **Configurar DHCP** para asignar IPs automáticamente en tu red: [Instalación y configuración de DHCP](/posts/instalacion_y_configuracion_dhcp/).
+3. **Obtener un certificado SSL** para que tu sitio funcione con HTTPS: [Cómo obtener un certificado SSL](/posts/como_obtener_un_certificado_ssl/).
+4. **Docker como alternativa** — contenedores ligeros para desplegar servicios web aislados: [Docker: instalación y primeros pasos](/posts/docker-instalacion-primeros-pasos/).
+
+## 🔗 Enlaces y recursos
+
+- [Apache — documentación oficial de VirtualHost](https://httpd.apache.org/docs/2.4/vhosts/)
+- [Apache — tutorial de Virtual Hosts](https://httpd.apache.org/docs/2.4/vhosts/name-based.html)
+- [Webmin — documentación oficial](https://webmin.com/docs.html)
+- [DigitalOcean — How To Set Up Apache Virtual Hosts on Ubuntu](https://www.digitalocean.com/community/tutorials/how-to-set-up-apache-virtual-hosts-on-ubuntu-22-04)
+- [Ubuntu Community — Apache](https://help.ubuntu.com/community/Apache)

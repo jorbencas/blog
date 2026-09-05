@@ -1,17 +1,16 @@
-
 ---
 draft: false
-title: "Reconocimiento facial"
-description: "Reconocimiento facial conwindos forms mediante windows forms"
+title: "Reconocimiento facial en Windows Forms con Emgu CV"
+description: "Aprende a construir una pequeña aplicación en C# con Windows Forms y Emgu CV para hacer un inicio de sesión mediante reconocimiento facial. Cubrimos la captura de la cámara, la detección de rostros con Haar Cascades y el guardado de la plantilla de usuario."
 pubDate: "2023/01/28"
-tags: ['sistemas']
+tags: ['sistemas', 'csharp', 'windows', 'emgucv', 'vision']
 image: "img/face_recognition_windows_forms/face_recognition_windows_forms_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 ---
 
 import ResponsiveImage from "@components/ResponsiveImage.astro";
 
-En el dia de hoy vamos a realizar una pequeña aplicación utilizando windows forms y emgucv para realizar un inicio de sessión mediante reconocimiento facial.
+¿Te imaginas entrar en tu aplicación sin escribir ni una contraseña? El reconocimiento facial dejó de ser cosa de películas: con Windows Forms y la librería Emgu CV (el wrapper de .NET para OpenCV) podemos montar un **inicio de sesión por rostro** en un par de horas. En esta guía construyo una app que captura tu cara con la webcam, la detecta dentro del cuadro y la guarda como plantilla de usuario para que el login sea por cara y no por teclado.
 
 <ResponsiveImage
   avif="/img/face_recognition_windows_forms/face_recognition_windows_forms-480.avif 480w, /img/face_recognition_windows_forms/face_recognition_windows_forms-768.avif 768w, /img/face_recognition_windows_forms/face_recognition_windows_forms-1200.avif 1200w"
@@ -21,3 +20,260 @@ En el dia de hoy vamos a realizar una pequeña aplicación utilizando windows fo
   blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAAKABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwCQxvIdqOUwCSwXPTtT40EkZZnKFVzgY5ptFdjTfU8eM4pLTuFFFFWYn//Z"
 />
 
+## 🤔 ¿Qué vamos a conseguir?
+
+- Una aplicación **Windows Forms** en C# que abre la webcam y muestra el vídeo en un `PictureBox`.
+- La **detección de rostros** en tiempo real usando el clasificador Haar Cascade de OpenCV vía Emgu CV.
+- Un **inicio de sesión por cara**: el botón se habilita cuando se detecta un rostro en pantalla.
+- Guardar de forma local la plantilla del usuario logueado (su "huella" facial).
+
+## 🧰 Prerrequisitos
+
+- **Windows** con **Visual Studio 2022+** y la carga de trabajo "Desarrollo de escritorio con .NET".
+- Un portátil o PC con **cámara web** integrada o USB.
+- Librería **Emgu CV** (mapeo de OpenCV a .NET), que instalaremos con NuGet.
+- Conocimientos básicos de C# y de eventos de Windows Forms.
+
+Desde Visual Studio abre la consola de NuGet (o el *Package Manager Console*) e instala los paquetes:
+
+```powershell
+Install-Package Emgu.CV
+Install-Package Emgu.CV.Bitmap
+```
+
+Emgu CV necesita el runtime de OpenCV; los paquetes anteriores lo traen incluido para que no tengas que instalarlo a mano.
+
+## 🛠️ Crear el proyecto y el formulario
+
+Crea un proyecto nuevo **Windows Forms App (.NET)** llamado `FaceLogin`. En el formulario `Form1` añade:
+
+- Un `PictureBox` llamado `pictureBoxCamara` para mostrar el vídeo.
+- Un botón `btnGuardar` con el texto "Guardar usuario".
+- Un botón `btnLogin` con el texto "Iniciar sesión".
+- Una etiqueta `labelEstado` para mostrar lo que está pasando.
+
+Ahora conectamos los *namespace* de Emgu CV al principio del archivo de código:
+
+```csharp
+using Emgu.CV;
+using Emgu.CV.CvEnum;
+using Emgu.CV.Structure;
+using Emgu.CV.Util;
+```
+
+## 🚀 Capturar la cámara con Emgu CV
+
+La pieza central es el objeto `VideoCapture`, que lee los fotogramas de la cámara. Arrancamos la cámara al cargar el formulario:
+
+```csharp
+private VideoCapture captura;
+
+private void Form1_Load(object sender, EventArgs e)
+{
+    // 0 = cámara por defecto
+    captura = new VideoCapture(0);
+    captura.Set(CapProp.FrameWidth, 640);
+    captura.Set(CapProp.FrameHeight, 480);
+
+    Application.Idle += CapturaNuevoFotograma;
+}
+
+private void CapturaNuevoFotograma(object sender, EventArgs e)
+{
+    using (Mat marco = captura.QueryFrame())
+    {
+        if (marco != null)
+        {
+            pictureBoxCamara.Image = marco.ToBitmap();
+        }
+    }
+}
+```
+
+> **Por qué funciona así**: `VideoCapture.QueryFrame()` devuelve un `Mat` (la estructura de imagen de OpenCV) que luego convertimos a `Bitmap` para poder mostrarlo en el `PictureBox`. El evento `Application.Idle` refresca el fotograma cada vez que la interfaz queda libre, sin necesidad de timers.
+
+## 🚀 Detectar el rostro en tiempo real
+
+Detectar una cara es mucho más fácil de lo que parece gracias a los clasificadores **Haar Cascade**: un modelo ya entrenado que OpenCV incluye para caras, ojos y sonrisas. Cargamos el clasificador y buscamos el rostro dentro de cada fotograma:
+
+```csharp
+private CascadeClassifier detectorCara;
+
+private void Form1_Load(object sender, EventArgs e)
+{
+    // Archivo de modelo que viene con el paquete de Emgu CV
+    string rutaCascade = Path.Combine(
+        AppDomain.CurrentDomain.BaseDirectory,
+        "haarcascade_frontalface_default.xml");
+
+    detectorCara = new CascadeClassifier(rutaCascade);
+
+    captura = new VideoCapture(0);
+    Application.Idle += CapturaNuevoFotograma;
+}
+
+private bool rostroDetectado;
+
+private void CapturaNuevoFotograma(object sender, EventArgs e)
+{
+    using (Mat marco = captura.QueryFrame())
+    {
+        if (marco == null) return;
+
+        // Convertir a escala de grises: el clasificador trabaja mejor así
+        using (Image<Gray, byte> gris = marco.ToImage<Gray, byte>())
+        {
+            Rectangle[] caras = detectorCara.DetectMultiScale(gris, 1.1, 6);
+
+            // Dibujar un rectángulo alrededor del rostro
+            using (Image<Bgr, byte> imagen = marco.ToImage<Bgr, byte>())
+            {
+                foreach (Rectangle cara in caras)
+                {
+                    imagen.Draw(cara, new Bgr(Color.Red), 2);
+                }
+                pictureBoxCamara.Image = imagen.ToBitmap();
+            }
+
+            // Habilitamos el login solo si hay al menos una cara visible
+            rostroDetectado = caras.Length > 0;
+            btnLogin.Enabled = rostroDetectado;
+            labelEstado.Text = rostroDetectado
+                ? "🟢 Rostro detectado, ya puedes iniciar sesión"
+                : "🔴 Colócate frente a la cámara";
+        }
+    }
+}
+```
+
+<ResponsiveImage
+  avif="/img/face_recognition_windows_forms/face_recognition_windows_forms-480.avif 480w, /img/face_recognition_windows_forms/face_recognition_windows_forms-768.avif 768w, /img/face_recognition_windows_forms/face_recognition_windows_forms-1200.avif 1200w"
+  webp="/img/face_recognition_windows_forms/face_recognition_windows_forms-480.webp 480w, /img/face_recognition_windows_forms/face_recognition_windows_forms-768.webp 768w, /img/face_recognition_windows_forms/face_recognition_windows_forms-1200.webp 1200w"
+  fallback="/img/face_recognition_windows_forms/face_recognition_windows_forms-1200.webp"
+  alt="Rectángulo de detección del rostro sobre el vídeo de la cámara"
+  blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAAKABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwCQxvIdqOUwCSwXPTtT40EkZZnKFVzgY5ptFdjTfU8eM4pLTuFFFFWYn//Z"
+/>
+
+## 🚀 Guardar el rostro del usuario
+
+Cuando pulsas "Guardar", recortamos la zona del rostro, la convertimos a escala de grises y unificamos el tamaño a 100x100 píxeles. Así cualquier cara, sin importar la distancia a la cámara, se guarda con las mismas dimensiones:
+
+```csharp
+private void btnGuardar_Click(object sender, EventArgs e)
+{
+    if (!rostroDetectado)
+    {
+        labelEstado.Text = "No hay ningún rostro que guardar";
+        return;
+    }
+
+    using (Mat marco = captura.QueryFrame())
+    using (Mat gris = new Mat())
+    {
+        CvInvoke.CvtColor(marco, gris, ColorConversion.Bgr2Gray);
+
+        Rectangle[] caras = detectorCara.DetectMultiScale(
+            new Image<Gray, byte>(gris.Bitmap), 1.1, 6);
+
+        if (caras.Length == 0) return;
+
+        Rectangle cara = caras[0];
+        using (Mat recorte = new Mat(gris, cara))
+        {
+            CvInvoke.Resize(recorte, recorte, new Size(100, 100));
+            recorte.Save("usuario.png");
+        }
+    }
+
+    labelEstado.Text = "✅ Plantilla facial guardada en usuario.png";
+}
+```
+
+## 🚀 Iniciar sesión por rostro
+
+Para el login sacamos la plantilla guardada y la comparamos con el rostro actual. Medimos la distancia con `CvInvoke.MatchTemplate`; si es suficientemente pequeña, damos por bueno el acceso:
+
+```csharp
+private void btnLogin_Click(object sender, EventArgs e)
+{
+    if (!File.Exists("usuario.png"))
+    {
+        labelEstado.Text = "Guarda primero un usuario";
+        return;
+    }
+
+    using (Mat marco = captura.QueryFrame())
+    using (Mat plantilla = CvInvoke.Imread("usuario.png", ImreadModes.Grayscale))
+    using (Mat gris = new Mat())
+    {
+        CvInvoke.CvtColor(marco, gris, ColorConversion.Bgr2Gray);
+
+        Rectangle[] caras = detectorCara.DetectMultiScale(
+            new Image<Gray, byte>(gris.Bitmap), 1.1, 6);
+
+        if (caras.Length == 0)
+        {
+            labelEstado.Text = "No se detecta ningún rostro";
+            return;
+        }
+
+        using (Mat recorte = new Mat(gris, caras[0]))
+        {
+            CvInvoke.Resize(recorte, recorte, new Size(100, 100));
+            CvInvoke.Resize(plantilla, plantilla, new Size(100, 100));
+
+            using (Mat resultado = new Mat())
+            {
+                CvInvoke.MatchTemplate(recorte, plantilla, resultado,
+                    TemplateMatchingType.CcoeffNormed);
+
+                double[] minValores, maxValores;
+                Point[] minUbicaciones, maxUbicaciones;
+                resultado.MinMax(out minValores, out maxValores,
+                    out minUbicaciones, out maxUbicaciones);
+
+                bool acceso = maxValores[0] > 0.6;
+                labelEstado.Text = acceso
+                    ? "✅ Bienvenido, sesión iniciada"
+                    : "❌ No coincide con el usuario guardado";
+            }
+        }
+    }
+}
+```
+
+## 🧪 Comprobar que funciona
+
+- Al arrancar el programa ves el vídeo de la cámara en el `PictureBox` con un **rectángulo rojo** rodeando tu cara.
+- El botón **Iniciar sesión** se habilita solo cuando hay un rostro delante.
+- Pulsas **Guardar** y verás `usuario.png` en la carpeta de compilación (`bin/Debug`), de 100x100 píxeles.
+- Pulsas **Iniciar sesión** delante de la cámara y la etiqueta cambia a "✅ Bienvenido, sesión iniciada".
+
+## ⚠️ Errores comunes
+
+| Error | Causa | Solución |
+|---|---|---|
+| `DllNotFoundException` al arrancar | Faltan las DLL de OpenCV de Emgu CV | Instala `Emgu.CV.runtime.windows` por NuGet y comprueba que `bin` contiene `opencv_*.dll` |
+| `haarcascade_frontalface_default.xml` no encontrado | El archivo del modelo no se copia a la salida | Marca el XML como `Content` y `Copy to Output Directory = Copy always` |
+| La cámara lanza una excepción | El dispositivo 0 ya está en uso por otra app | Cierra zoom/Teams y usa `new VideoCapture(0)` o `new VideoCapture(1)` para otra cámara |
+| `QueryFrame()` devuelve null | Cámara sin permiso o mal conectada | Comprueba permisos de cámara de Windows y que la webcam funciona en otra app |
+| El login no reconoce nunca mi cara | La plantilla se guardó con otra iluminación | Regraba el usuario con buena luz frontal y sin gafas |
+| `MatchTemplate` no existe | Versión antigua de Emgu CV | Usa `Emgu.CV 4.x` y `TemplateMatchingType.CcoeffNormed` |
+
+## 🪜 Siguiente nivel
+
+Esta demo jecha las bases del reconocimiento facial en C#. La escalera natural para llevarlo más allá:
+
+1. **Verificación real de identidad** — en vez de `MatchTemplate` (que solo sirve para un usuario), usa el reconocedor EigenFace o LBPH de OpenCV que guarda *muchas* muestras por usuario. Ver [OpenCV — Face Recognition](https://docs.opencv.org/4.x/da/d60/tutorial_face_main.html).
+2. **Persistencia con base de datos** — guarda las plantillas en SQLite para tener varios usuarios y no un único `usuario.png`.
+3. **Detectar ojos y sonrisa** con los cascades `haarcascade_eye.xml` y `haarcascade_smile.xml` para refinar la captura.
+4. Si te mola el mundo .NET, repasa la base del lenguaje con la [Guía de C# y .NET: de 0 a 100](/posts/guia-0-100-csharp/) o empieza por el [Arranque rápido de C#](/posts/guia_de_c_sharp/).
+
+## 🔗 Enlaces y recursos
+
+- [Emgu CV — documentación oficial](https://www.emgu.com/wiki/index.php/Main_Page)
+- [Emgu CV en NuGet](https://www.nuget.org/packages/Emgu.CV/)
+- [OpenCV — Cascade Classifier tutorial](https://docs.opencv.org/4.x/db/d28/tutorial_cascade_classifier.html)
+- [Wikipedia — Haar-like features](https://en.wikipedia.org/wiki/Haar-like_feature)
+- [Microsoft Learn — Windows Forms para .NET](https://learn.microsoft.com/en-us/dotnet/desktop/winforms/?view=netdesktop-9.0)
+- [Microsoft Learn — Primeros pasos con C#](https://learn.microsoft.com/en-us/dotnet/csharp/)

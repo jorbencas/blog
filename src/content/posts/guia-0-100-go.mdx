@@ -6231,6 +6231,30 @@ Esta guía se ha elaborado a partir de las siguientes fuentes consultadas durant
 
 ---
 
+## ⚠️ Errores comunes
+
+Estos son los errores que más se repiten al escribir tus primeros programas en Go. Casi todos tienen una causa concreta y una solución rápida.
+
+| Error | Causa | Solución |
+|---|---|---|
+| `undefined: fmt` / `./main.go:7:2: undefined: fmt` | Usas `fmt.Println` pero no lo importaste | Añade `import "fmt"` entre los imports |
+| `undefined: X` | La función o variable `X` no existe en ese ámbito o paquete | Comprueba el nombre y que esté exportada (mayúscula) o disponible |
+| `cannot use X (type string) as type int in argument` | Pasa un `string` a una función que espera un `int` | Convierte el valor: `int(variable)` o `strconv.Atoi()`. Go no hace coerción implícita |
+| `go: go.mod file not found` | Ejecutas `go get`, `go run` o `go build` fuera de un módulo | Crea el módulo con `go mod init <nombre>` en la raíz del proyecto |
+| `command-line-arguments` con `go run` | Ejecutas `go run` sobre un paquete sin `func main` o con varias | Crea o localiza el fichero con `package main` y `func main()` |
+| `dial tcp: lookup ...: no such host` al descargar dependencias | Problema de red o DNS al `go get` / `go mod download` | Revisa la conexión, `go env -w GO111MODULE=on` y prueba `GOPROXY` o el proxy por defecto `proxy.golang.org` |
+| `GO111MODULE` obsoleto después de `go run` | Variables de entorno de versiones antiguas | `go env -w GO111MODULE=on` (o `auto`) y reapunta `GOPATH` |
+| `linker 'cc' not found` en Windows/CGO | Falta un compilador C para enlazar | Instala un compilador C (MinGW/GCC) o desactiva CGO con `CGO_ENABLED=0` |
+
+---
+
+## 🔗 Guías relacionadas
+
+- Para empaquetar tu binario en contenedores y publicarlo: [Guía de Docker: De 0 a 100](/posts/guia-0-100-docker/).
+- Primeros pasos con contenedores: [Instalación de Docker y primeros pasos](/posts/docker-instalacion-primeros-pasos/).
+
+---
+
 ## 🏆 Retos Relacionados
 
 Pon a prueba lo aprendido con estos desafíos:

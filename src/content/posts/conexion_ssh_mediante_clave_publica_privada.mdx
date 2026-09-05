@@ -1,65 +1,138 @@
 ---
 draft: false
 title: "Conexión mediante clave pública privada"
-description: "Practica para crear una conexión ssh mediante clave pública privada"
+description: "Aprende a conectarte por SSH con autenticación por clave pública y privada en vez de contraseña: genera el par de claves, cópialo al servidor, créalo en authorized_keys y prueba el acceso sin contraseña."
 pubDate: "2015/12/09"
-tags: ['sistemas']
+tags: ['sistemas', 'ssh', 'seguridad', 'linux']
 image: "img/conexion_ssh_mediante_clave_publica_privada/conexion_ssh_mediante_clave_publica_privada_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 ---
 import ResponsiveImage from "@components/ResponsiveImage.astro";
 
-Hoy vamos ha ver como conectamos por ssh pero en lugar de usar la contraseña del usuario  servidor usaremos una autentificación de clave publica, o sea que nos pedirá una contraseña de clave pribada
+Escribir la contraseña cada vez que te conectas por SSH es incómodo y poco seguro. Esta vez configuraremos la conexión por **clave pública/privada**: el servidor nos pedirá la contraseña de la clave privada en lugar de la contraseña del usuario, y con `ssh-agent` ni siquiera eso. Es el método que usan GitHub, GitLab y cualquier bastión de producción.
 
-Este ficherto es el que hay que copiar a nuestro servidor, que en este fichero es donde se guardan las claves publi8cas, para ello hay que abrir una terminal y mediante scp compiar este archivo a el servidor
+## 🤔 ¿Qué vamos a conseguir?
 
-<ResponsiveImage
-  avif="/img/conexion_ssh_mediante_clave_publica_privada/conexion_ssh_mediante_clave_publica_privada_1-480.avif 480w, /img/conexion_ssh_mediante_clave_publica_privada/conexion_ssh_mediante_clave_publica_privada_1-768.avif 768w, /img/conexion_ssh_mediante_clave_publica_privada/conexion_ssh_mediante_clave_publica_privada_1-1200.avif 1200w"
-  webp="/img/conexion_ssh_mediante_clave_publica_privada/conexion_ssh_mediante_clave_publica_privada_1-480.webp 480w, /img/conexion_ssh_mediante_clave_publica_privada/conexion_ssh_mediante_clave_publica_privada_1-768.webp 768w, /img/conexion_ssh_mediante_clave_publica_privada/conexion_ssh_mediante_clave_publica_privada_1-1200.webp 1200w"
-  fallback="/img/conexion_ssh_mediante_clave_publica_privada/conexion_ssh_mediante_clave_publica_privada_1-1200.webp"
-  alt="Webmin"
-  blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDApWULjDK30pKB1FWSOCMRkKaK2bZFMK/KKK19mYOtZ7H/2Q=="
-/>
+- Disponer de un **par de claves** (pública y privada) generado en el equipo cliente.
+- Copiar la clave pública al servidor y añadirla a `authorized_keys`.
+- Conectarnos por SSH **sin teclear la contraseña del usuario servidor**.
+- Entender el mecanismo de autenticación de clave pública para no volver a usar contraseñas.
 
+## 🧰 Prerrequisitos
 
-Estos son los 3 archivos que nos genera,
+- Un servidor SSH funcionando (dudas: [Formas de conectarse por SSH](/posts/formas_de_conectarse_por_ssh/)).
+- Ser capaz de conectar por contraseña al menos una vez (aún no tenemos la clave configurada).
+- Conocer tu usuario en el servidor y su IP.
 
-<ResponsiveImage
-  avif="/img/conexion_ssh_mediante_clave_publica_privada/conexion_ssh_mediante_clave_publica_privada_1-480.avif 480w, /img/conexion_ssh_mediante_clave_publica_privada/conexion_ssh_mediante_clave_publica_privada_1-768.avif 768w, /img/conexion_ssh_mediante_clave_publica_privada/conexion_ssh_mediante_clave_publica_privada_1-1200.avif 1200w"
-  webp="/img/conexion_ssh_mediante_clave_publica_privada/conexion_ssh_mediante_clave_publica_privada_1-480.webp 480w, /img/conexion_ssh_mediante_clave_publica_privada/conexion_ssh_mediante_clave_publica_privada_1-768.webp 768w, /img/conexion_ssh_mediante_clave_publica_privada/conexion_ssh_mediante_clave_publica_privada_1-1200.webp 1200w"
-  fallback="/img/conexion_ssh_mediante_clave_publica_privada/conexion_ssh_mediante_clave_publica_privada_1-1200.webp"
-  alt="Webmin"
-  blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDApWULjDK30pKB1FWSOCMRkKaK2bZFMK/KKK19mYOtZ7H/2Q=="
-/>
+## 🔑 Generar el par de claves
 
+En el equipo **cliente** abrimos una terminal y generamos el par de claves. Aceptamos la ubicación por defecto (`~/.ssh/id_rsa`) y elegimos una **passphrase** para proteger la clave privada:
 
-Ahora nos vamos ha la maquina servidora y crear en tu carpeta pesonal un carpeta que se llame .ssh, ahora en la maquina cliente ay que ir a el servidor y copiar el fitxero id_rsa.pub a el servidor.
-`scp ~/.ssh/id_rsa.pub jorge@192.168.101.1:~/.ssh`
-Ahora hay un archivo en la carpeta `.ssh`
+```bash
+ssh-keygen -t rsa -b 4096
+```
 
-<ResponsiveImage
-  avif="/img/conexion_ssh_mediante_clave_publica_privada/conexion_ssh_mediante_clave_publica_privada_1-480.avif 480w, /img/conexion_ssh_mediante_clave_publica_privada/conexion_ssh_mediante_clave_publica_privada_1-768.avif 768w, /img/conexion_ssh_mediante_clave_publica_privada/conexion_ssh_mediante_clave_publica_privada_1-1200.avif 1200w"
-  webp="/img/conexion_ssh_mediante_clave_publica_privada/conexion_ssh_mediante_clave_publica_privada_1-480.webp 480w, /img/conexion_ssh_mediante_clave_publica_privada/conexion_ssh_mediante_clave_publica_privada_1-768.webp 768w, /img/conexion_ssh_mediante_clave_publica_privada/conexion_ssh_mediante_clave_publica_privada_1-1200.webp 1200w"
-  fallback="/img/conexion_ssh_mediante_clave_publica_privada/conexion_ssh_mediante_clave_publica_privada_1-1200.webp"
-  alt="Webmin"
-  blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDApWULjDK30pKB1FWSOCMRkKaK2bZFMK/KKK19mYOtZ7H/2Q=="
-/>
+El comando nos pide dónde guardarlas y una passphrase (puede estar vacía, pero mejor ponerla). El resultado son estos 3 archivos en `~/.ssh/`:
 
-
-Ahora hay que crear un fitchero llamado authorized_krys despues hay que hacer una concatenación a el authorized_krys, para ello hay que abiri una terminal y poner:
-`cat id_rsa.pub >> authorized_keys`
-La clave  de uso de la clave publica peivada
+- `id_rsa` — la **clave privada** (¡nunca sale de tu máquina!).
+- `id_rsa.pub` — la **clave pública**, la que copiamos al servidor.
+- `known_hosts` — las huellas de los servidores a los que te has conectado.
 
 <ResponsiveImage
   avif="/img/conexion_ssh_mediante_clave_publica_privada/conexion_ssh_mediante_clave_publica_privada_1-480.avif 480w, /img/conexion_ssh_mediante_clave_publica_privada/conexion_ssh_mediante_clave_publica_privada_1-768.avif 768w, /img/conexion_ssh_mediante_clave_publica_privada/conexion_ssh_mediante_clave_publica_privada_1-1200.avif 1200w"
   webp="/img/conexion_ssh_mediante_clave_publica_privada/conexion_ssh_mediante_clave_publica_privada_1-480.webp 480w, /img/conexion_ssh_mediante_clave_publica_privada/conexion_ssh_mediante_clave_publica_privada_1-768.webp 768w, /img/conexion_ssh_mediante_clave_publica_privada/conexion_ssh_mediante_clave_publica_privada_1-1200.webp 1200w"
   fallback="/img/conexion_ssh_mediante_clave_publica_privada/conexion_ssh_mediante_clave_publica_privada_1-1200.webp"
-  alt="Webmin"
+  alt="Par de claves generadas con ssh-keygen"
   blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDApWULjDK30pKB1FWSOCMRkKaK2bZFMK/KKK19mYOtZ7H/2Q=="
 />
 
+## 📤 Copiar la clave pública al servidor
 
-Ahora como vemos ia estamos conectados por ssh a la maquina , es igual que la misma forma que si hubieramos conectados por contraseña
+La forma más cómoda es `ssh-copy-id`, que además crea el directorio `.ssh` y el fichero `authorized_keys` si no existen:
 
-Ahora le añadimos los permisos a el archivo authorized_keys para que se vaya actualizanso `chmod +x authorized_keys`.
+```bash
+ssh-copy-id jorge@192.168.101.1
+```
 
+Te pedirá la contraseña del usuario por última vez y, a partir de ahí, la conexión usará la clave pública.
+
+### Variante manual con `scp`
+
+Si tu servidor no tiene `ssh-copy-id` (o para entender qué pasa por debajo), genera el fichero manualmente:
+
+En el servidor creamos la carpeta `.ssh` en casa del usuario (si no existe):
+
+```bash
+mkdir -p ~/.ssh
+```
+
+En el cliente copiamos el fichero `id_rsa.pub` al servidor:
+
+```bash
+scp ~/.ssh/id_rsa.pub jorge@192.168.101.1:~/.ssh
+```
+
+## 📁 Autorizarlas en el servidor
+
+Entra en el servidor y verás que el fichero `id_rsa.pub` ya está dentro de `.ssh`. Ahora hay que **añadirlo** al fichero de claves autorizadas. La concatenación (`>>`, dos veces mayor que) añade sin borrar lo que ya había:
+
+```bash
+cat id_rsa.pub >> authorized_keys
+```
+
+> ⚠️ Cuidado: con `>>` añades; con un solo `> authorize_keys` machacarías el fichero y perderías todas las claves existentes.
+
+Por seguridad, los permisos deben impedir que otros usuarios lean o escriban estos ficheros:
+
+```bash
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/authorized_keys
+```
+
+## ✅ Probar la conexión
+
+Desde el cliente, conéctate como siempre:
+
+```bash
+ssh jorge@192.168.101.1
+```
+
+Si tu clave privada no tiene passphrase, entrarás **directamente** sin contraseña. Si la configuraste, te pedirá la passphrase de la **clave privada** (no la del usuario). Para no repetirla en cada conexión, añádela al agente:
+
+```bash
+ssh-add ~/.ssh/id_rsa
+```
+
+Y si quieres que OpenSSH **solo** acepte claves (nada de contraseñas), en el servidor edita `/etc/ssh/sshd_config`:
+
+```
+PasswordAuthentication no
+PubkeyAuthentication yes
+```
+
+Reinicia con `sudo systemctl restart ssh` (¡asegúrate de tener la clave funcionando antes, o te quedarás fuera!).
+
+## ⚠️ Errores comunes
+
+| Error | Causa | Solución |
+|---|---|---|
+| `Permission denied (publickey,password)` | Clave no autorizada en el servidor | Revisa `authorized_keys` y los permisos (`chmod 600`) |
+| `Permissions too open` | `~/.ssh` o claves con permisos demasiado abiertos | `chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys ~/.ssh/id_rsa` |
+| `No supported authentication methods` | El servidor tiene `PasswordAuthentication no` y la clave no está bien | Vuelve a conectar por consola física y revisa `authorized_keys` |
+| `Load key "id_rsa": bad permissions` | Clave privada legible por otros | `chmod 600 ~/.ssh/id_rsa` |
+| No te conecta SSH remoto por copiar con `sudo cat` | El fichero `authorized_keys` pertenece a root | `chown jorge:jorge ~/.ssh -R` |
+
+## 🪜 Siguiente nivel
+
+1. **Céntrate en la seguridad**: desactiva `PasswordAuthentication no` en `sshd_config` para blindar el acceso.
+2. **Git sin contraseñas**: sube la misma clave pública a GitHub/GitLab y haz push/pull sin credenciales.
+3. **Multiples servidores**: configura `~/.ssh/config` con `IdentityFile` por servidor (mira [Formas de conectarse por SSH](/posts/formas_de_conectarse_por_ssh/)).
+4. **Copia de backups**: usa `scp` y `rsync` con la clave para automatizar copias: [Copiar archivos entre diferentes usuarios y máquinas](/posts/copiar_archivos_entre_diferentes_usuarios_y_archivos/).
+
+## 🔗 Enlaces y recursos
+
+- [OpenSSH — man ssh-keygen](https://man.openbsd.org/ssh-keygen.1)
+- [DigitalOcean — cómo configurar las claves SSH](https://www.digitalocean.com/community/tutorials/how-to-configure-ssh-key-based-authentication-on-a-linux-server)
+- [GitHub — generar y añadir una clave SSH](https://docs.github.com/es/authentication/connecting-to-github-with-ssh)
+- [ssh-agent y la gestión de claves](https://www.ssh.com/academy/ssh/agent)
+- [Lista de comprobación de seguridad SSH de Mozilla](https://infosec.mozilla.org/guidelines/openssh)

@@ -2978,6 +2978,26 @@ Fuente: [Kotlin docs — Idioms](https://kotlinlang.org/docs/idioms.html), [Kotl
 
 ---
 
+## ⚠️ Errores comunes
+
+Si algo falla, lo más probable es que esté en esta tabla:
+
+| Error | Causa | Solución |
+|---|---|---|
+| `Unresolved reference: X` | Variable, función o clase no declarada, o falta un `import` | Añade el `import` necesario; revisa la ortografía y el scope |
+| `Type mismatch: inferred type is X but Y was expected` | Pasas un tipo a un parámetro o variable de tipo incompatible | Usa `.toX()` de conversión, o ajusta el tipo declarado; revisa nullability (`X?`) |
+| `Smart cast to X is impossible, because 'Y' is a mutable property` | Intentas smart cast en una propiedad `var` que puede cambiar entre comprobación y uso | Usa una variable local `val`, sincroniza con `synchronized`, o aplica `as` explícito |
+| `Unresolved reference: println` | Falta el import `kotlin.io.*` o estás en un contexto que no lo incluye automáticamente | Añade `import kotlin.io.println` o usa `println()` que está en el paquete raíz de Kotlin |
+| `Could not resolve all files for configuration ':classpath'` | Gradle no puede resolver las dependencias del plugin (repositorio mal configurado o sin red) | Verifica `repositories { mavenCentral(); google() }` en el bloque `buildscript` |
+| `Unresolved reference to gradle` | El wrapper `gradlew` no existe o el proyecto no fue sincronizado | Ejecuta `gradle wrapper` o sincroniza el proyecto en IntelliJ/Android Studio |
+| `'gradle' is not recognized as an internal or external command` | Gradle no está instalado o no está en el PATH | Instala Gradle desde [gradle.org](https://gradle.org/install/) o usa el wrapper `./gradlew` |
+
+## 🔗 Guías relacionadas
+
+- **Java de 0 a 100** — la base JVM sobre la que corre Kotlin: [Guía de Java: De 0 a 100](/posts/guia-0-100-java/)
+- **C# de 0 a 100** — otro lenguaje con null safety y coroutines equivalentes: [Guía de C# y .NET: De 0 a 100](/posts/guia-0-100-csharp/)
+- **Docker** — containeriza tus apps Ktor/Android: [Docker: instalación y primeros pasos](/posts/docker-instalacion-primeros-pasos/)
+
 ## Referencias y documentación oficial
 
 - **Docs oficiales**: [kotlinlang.org/docs](https://kotlinlang.org/docs/home.html)

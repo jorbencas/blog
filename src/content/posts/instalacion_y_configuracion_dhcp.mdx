@@ -1,141 +1,187 @@
 ---
 draft: false
-title: "Instalación y configuración de un servidor DHCP"
-description: "¿ como se configura un servicio DHCP en ubuntu y Webmin?"
+title: "Instalación y configuración de un servidor DHCP en Ubuntu y Webmin"
+description: "Aprende a montar un servidor DHCP con isc-dhcp-server en Ubuntu y configurarlo de forma gráfica con Webmin. Incluye red interna, asignación dinámica de IPs, reservas fijas y errores comunes."
 pubDate: "2015/11/03"
-tags: ['web', 'sistemas']
+tags: ['web', 'sistemas', 'dhcp', 'redes']
 image: "img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 ---
 
-
 import ResponsiveImage from "@components/ResponsiveImage.astro";
 
-Hoy vamos a instalar y configurar un servidor DHCP con Virtualbox, pero antes debemos saber que es y que hace el servicio DHCP.
-El servicio DHCP permite la configuración de direcciones IP, máscaras, pasarelas por defecto y muchas otras opciones de configuración de manera totalmente dinámica.
-#### ¿Qué hace el DHCP?
-Una forma campechana d’entender el DHCP es imaginar que los equipos de cliente al arrancar hacen un grito por la red y preguntan _«que hay algien?», «quien soy yo?»_. El servidor de DHCP les contesta proporcionándo les toda la información necesaria para que sepan quienes son y como deben configurar su configuración de red.
-#### Instalación y Configuración del Servidor DHCP
-Vamos a proceder a la instal-lacion de un servidor DHCP. lo primero que debemos hacer es crear una maquina que actúe como servidor, en nuestro caso para crear el servidor vamos a utilizar Ubuntu Desktop 12.04 LTS:
-[Pagina para descargar ISO de Ubuntu](https://ubuntu.com/download/alternative-downloads)
-Una vez descargadas las ISO’s  es momento de crear la maquina virtual y instalar las ISO’s. Cuando ya tengamos las 2 maquinas virtuales instaladas la del cliente y la del servidor lo que debemos hacer es apagarlas y ir a configuracion red y habilitar en el servidor 2 adaptadores uno en Red Interna otro con NAT (Network Address Translation), aceptemos y encendemos la maquina Servidor.
+¿Te imaginas tener que ir a cada equipo de tu red a ponerle la IP a mano? Eso es justo lo que te ahorra un servidor **DHCP**: tú defines un rango una vez y todos los clientes se configuran solos al arrancar. En esta guía monto un servidor DHCP con dos máquinas virtuales en VirtualBox, asigno una IP fija a la tarjeta interna del servidor y lo configuro todo desde **Webmin**, incluso con reservas de IP fijas por MAC.
 
-Se debe de asignar una ip fija a el sevidor, concretamente a la tarjeta de red interna,para ello hay que ir a las conexiones y clicar en editar conexiones, luyego en IPV4 y poner manualmente, aqui sera donde pondremos la IP, la mascara y la puerta de enlace
+## 🤔 ¿Qué vamos a conseguir?
+
+- Dos máquinas virtuales en **VirtualBox** comunicándose por una **Red Interna**.
+- Una **IP fija** en la tarjeta interna del servidor para que el DHCP siempre sepa dónde está.
+- El paquete `isc-dhcp-server` instalado y **escuchando** en la red interna.
+- Un **rango de IPs dinámico** (`192.168.101.200 - 192.168.101.205`) asignado automáticamente a los clientes.
+- Configuración gráfica completa desde **Webmin** y reservas de **IP fija por MAC**.
+- Saber verificar con `dhcpd -t`, `echo $?` y el fichero de arrendamientos.
+
+## 🧰 Prerrequisitos
+
+- **VirtualBox** instalado (o cualquier otro hipervisor tipo VirtualBox/VMware).
+- Dos máquinas virtuales con **Ubuntu 12.04 o superior** (yo usé Ubuntu Desktop; sirve cualquier versión moderna).
+- Una **ISO de Ubuntu** descargada: [Descargas alternativas de Ubuntu](https://ubuntu.com/download/alternative-downloads).
+- Instalar **Webmin** en el servidor para la configuración gráfica.
+- Conocimientos básicos de red: qué es una IP, una máscara y una puerta de enlace.
+
+> El flujo es sencillo: creamos la VM **servidor** (con 2 adaptadores: Red Interna + NAT) y la VM **cliente** (solo Red Interna). Como el cliente es "tonto" y no sabe qué IP usar, el servidor DHCP se lo dirá.
+
+## 🤔 ¿Qué hace el DHCP?
+
+Antes de picar comandos, entendamos el papel del servicio. El **DHCP** (Dynamic Host Configuration Protocol) permite configurar direcciones IP, máscaras, pasarelas por defecto y muchas otras opciones de red **de forma totalmente dinámica**.
+
+Una forma campechana de entenderlo: imagina que los equipos cliente, al arrancar, hacen un *grito* por la red y preguntan _"¿hay alguien ahí? ¿quién soy yo?"_. El servidor DHCP les contesta proporcionándoles toda la información necesaria para que sepan quiénes son y cómo configurar su red.
+
+En la práctica es un intercambio de 4 mensajes: **DISCOVER** (el cliente busca un servidor) → **OFFER** (el servidor le ofrece una IP) → **REQUEST** (el cliente la pide) → **ACK** (el servidor la confirma). Todo automático y sin intervención humana.
+
+## 🛠️ Preparar la red en VirtualBox
+
+Lo primero es crear la máquina que actuará como **servidor** e instalar la ISO. Después crea la máquina **cliente**. Cuando ambas estén instaladas, **apágalas** y ve a su configuración de red:
+
+- En el **servidor** necesitamos **2 adaptadores**, ambos habilitados:
+  - **Adaptador 1**: Red NAT (la salida a internet).
+  - **Adaptador 2**: Red Interna (la que comparte con el cliente), p. ej. `intnet`.
+- En el **cliente** solo el adaptador de **Red Interna** (sin NAT, para que dependa del DHCP).
+
+Aceptamos, encendemos la máquina **servidor** y le asignamos una **IP fija** a la tarjeta de red interna (la que hablará con el cliente). Es imprescindible: un servidor DHCP no puede tener IP dinámica, porque entonces nadie sabría dónde buscar los arrendamientos.
+
+En el servidor, ve a **Conexiones → Editar conexiones → IPv4 → Método: Manual** y pon la IP, la máscara y la puerta de enlace:
 
 <ResponsiveImage
   avif="/img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_1-480.avif 480w, /img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_1-768.avif 768w, /img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_1-1200.avif 1200w"
   webp="/img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_1-480.webp 480w, /img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_1-768.webp 768w, /img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_1-1200.webp 1200w"
   fallback="/img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_1-1200.webp"
-  alt="Obtener dirección IP"
+  alt="Asignar una IP fija a la tarjeta de red interna del servidor"
   blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDBUBurBfrS7B/z0X9abQOoqyRwRiMhTRWzbIphX5RRWvszB1rPY//Z"
 />
 
+Yo uso la IP `192.168.101.1` para el servidor, con máscara `255.255.255.0`. En el **cliente**, en esa misma pantalla, pon el método en **Automático (DHCP)** para que espere la IP que le asigne el servidor.
 
-Ahora debemos ir a el cliente i hacer lo mismo pero lo que hay que hacer es enves de manual hay que poner-lo automatico.
-Para comprobar si nos la ha assignado, dedemos de abir una terminal y poner ifconfig
+## 🐳 Opción Docker: servidor DHCP de prueba en 1 minuto
 
-<ResponsiveImage
-  avif="/img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_1-480.avif 480w, /img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_1-768.avif 768w, /img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_1-1200.avif 1200w"
-  webp="/img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_1-480.webp 480w, /img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_1-768.webp 768w, /img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_1-1200.webp 1200w"
-  fallback="/img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_1-1200.webp"
-  alt="Obtener dirección IP"
-  blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDBUBurBfrS7B/z0X9abQOoqyRwRiMhTRWzbIphX5RRWvszB1rPY//Z"
-/>
+No tienes que montar dos VMs para practicar la **configuración** del DHCP. Puedes levantar un servidor DHCP en un contenedor y comprobar la sintaxis de tu configuración sobre la marcha:
 
+```bash
+docker run -d --name dhcp-lab \
+  -v $(pwd)/dhcpd.conf:/etc/dhcp/dhcpd.conf:ro \
+  -p 67:67/udp \
+  networkboot/dhcpd
+```
 
-#### Configuración con Webmin
-Ahora debemos de instalar webmin que es una herramienta para configurar el servidor de forma grafica
-[Para descargar webmin](https://www.webmin.com/download.html)
-Una vez descargado webmin lo que se debe de hacer es instalar el paquete.deb de webmin, para ello debemos de abrir una terminal y poner:
-`cd /ruta_donde_este_el_archivo_y_luego  sudo dpkg -i webmin_1.770_all.deb`
-Una vez instalado webmin lo que se debe de hacer es abirir el navegador chorome, firefox, opera etc y pones https://localhost:10000/
+El contenedor se basa en ISC DHCP y lee tu `dhcpd.conf`. Es perfecto para validar config antes de moverla a tu VM:
 
+```bash
+docker run --rm -v $(pwd)/dhcpd.conf:/etc/dhcp/dhcpd.conf:ro networkboot/dhcpd -t
+```
 
-<ResponsiveImage
-  avif="/img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-480.avif 480w, /img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-768.avif 768w, /img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-1200.avif 1200w"
-  webp="/img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-480.webp 480w, /img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-768.webp 768w, /img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-1200.webp 1200w"
-  fallback="/img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-1200.webp"
-  alt="Configuración Webmin"
-  blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDBVQerBfrTti/89F/X/CmUDqKskcI2PQE0Vs2yKYV+UUVr7Mwdaz2P/9k="
-/>
+> Recuerda: dos servidores DHCP en la misma subred pelearían por responder. Usa el contenedor solo como laboratorio de pruebas aislado, no junto a tu VM.
 
+## 🛠️ Instalar Webmin en el servidor
 
-Luego lo que habra que hacer es entrar con un usuario que tenga permiso de adminitrador y cambiar el idioma ya que por defecto esta en inglés, para ello nos vamos a webmin, y cambiamos el idioma, luego hay que ir a donde dice **refresh modules** para que se apliquen los cambios una vez comprobado que podemos acceder y cambiar el idioma lo que hay que hacer es minimizar el navegador y ir a el centro de Sofware de ubuntu para ver si tenemos instalado un programita que se llama Avahi IPv4LL network address configuration daemon, es importante que el avahi este instalado ja que es necesario para activar el servidor DHCP, luego de instalar-lo se debe de comprobar que funciona el avahi.
-<code>
-    sudo avahi-autoipd eth1 && ping IP 
-</code>
-Cuando este configurado el Avahi para que se autoasigne a el adaptador eth1 que es el adaptador del cliente y por tanto es el adaptador de red interna que es la que debe de  comunicar-se con el cliente, luego se debe de instalar el servidor DHCP en el servidor, para ello se debe de abrir una terminal y poner:
+Para configurar el servidor de forma **gráfica** instalamos **Webmin**. Descarga el paquete `.deb`: [Descargas de Webmin](https://www.webmin.com/download.html). Después lo instalamos desde la terminal:
 
-<code>
-    sudo apt-get install isc-dhcp-server
-</code>
+```bash
+cd /ruta_donde_este_el_archivo
+sudo dpkg -i webmin_*.deb
+```
 
-Después de haber instalado el DHCP server se debe de maximizar el navegador y poner refrescar modulos y ir a servidores y luego debe de aparecer **servidor DHCP**.
+Si da errores de dependencias, ejecuta:
 
+```bash
+sudo apt -f install
+```
+
+Una vez instalado, abre el navegador en `https://localhost:10000/`:
 
 <ResponsiveImage
   avif="/img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-480.avif 480w, /img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-768.avif 768w, /img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-1200.avif 1200w"
   webp="/img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-480.webp 480w, /img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-768.webp 768w, /img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-1200.webp 1200w"
   fallback="/img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-1200.webp"
-  alt="Configuración Webmin"
+  alt="Acceso a Webmin por el puerto 10000"
   blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDBVQerBfrTti/89F/X/CmUDqKskcI2PQE0Vs2yKYV+UUVr7Mwdaz2P/9k="
 />
 
+Entra con un usuario con permisos de administrador y **cambia el idioma** a español (por defecto está en inglés): en **Webmin → Change Language and Theme**. Después pulsa **Refresh modules** para que se apliquen los cambios.
 
-Se pulsa y ya están todas las opciones para configurar un servidor DHCP, si hemos llegado hasta aquí ahora seria prudente cerrar todo y apagar la maquina virtual, luego nos vamos a donde pone archivo y exportar, asi si se nos estropea la maquina ya no hay que reinstalar-lo todo, solo la restauramos desde el archivo OVA que acabamos de exportar.
+> El original menciona instalar el paquete **Avahi (avahi-autoipd)** para la configuración automática por enlace local. Hoy en día con IP fija + servidor DHCP explícito no es imprescindible, pero si quieres que el cliente obtenga una IP por link-local en ausencia de DHCP, puedes instalar `avahi-autoipd`. No es un requisito para que funcione nuestro servidor.
 
-Encendemos la maquina y accedemos a webmin, a servidor DHCP y configuramos una nueva subred, para ello abra que configurar una serie de parametros en añadir una nueva subred como es el nombre de la red, el rango que quieres que abarque la asignación de IPs 192.168.101.200 - 192.168.101.205, la mascara 255.255.255.0 y ja podemos guardar.
+## 🛠️ Instalar el servidor DHCP
 
+Ya podemos instalar el servidor DHCP propiamente dicho. En Debian/Ubuntu el paquete es `isc-dhcp-server`:
+
+```bash
+sudo apt update
+sudo apt install isc-dhcp-server
+```
+
+Cuando termine, vuelve al navegador, pulsa **Refresh modules** y ve a **Servidores**. Debería aparecer **Servidor DHCP (ISC)**: el módulo que Webmin ha detectado al instalar el paquete.
 
 <ResponsiveImage
   avif="/img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-480.avif 480w, /img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-768.avif 768w, /img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-1200.avif 1200w"
   webp="/img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-480.webp 480w, /img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-768.webp 768w, /img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-1200.webp 1200w"
   fallback="/img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-1200.webp"
-  alt="Configuración Webmin"
+  alt="Módulo de servidor DHCP en Webmin"
   blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDBVQerBfrTti/89F/X/CmUDqKskcI2PQE0Vs2yKYV+UUVr7Mwdaz2P/9k="
 />
 
+> **Consejo**: antes de liarte con la VM, este es un buen momento para **exportar** la máquina virtual (Archivo → Exportar, formato OVA). Así, si se estropea, restauras desde el OVA sin reinstalar todo.
 
-Ahora lo que hay que hacer es configurar el cliente, para ello hay que ir a **Editar opciones de el cliente**, dentro hay que poner el nombre del anfitrión, la mascara de subred 255.255.255.0, los enrutadores por defecto que ponemos la broadcast 192.168.202.255, luego ponemos otra vez la broadcast.
+## 🚀 Configurar una nueva subred desde Webmin
 
+Entramos en **Servidores → Servidor DHCP (ISC)** y pulsamos **Añadir una nueva subred**. Configuramos los parámetros de la red interna:
+
+- **Nombre de red**: `red-interna` (lo que quieras).
+- **Rango de IPs**: `192.168.101.200 - 192.168.101.205` (las IPs dinámicas que asignará).
+- **Máscara**: `255.255.255.0`.
+
+Guardamos. Con esto, Webmin escribe la subred en `/etc/dhcp/dhcpd.conf`.
 
 <ResponsiveImage
   avif="/img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-480.avif 480w, /img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-768.avif 768w, /img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-1200.avif 1200w"
   webp="/img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-480.webp 480w, /img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-768.webp 768w, /img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-1200.webp 1200w"
   fallback="/img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-1200.webp"
-  alt="Configuración Webmin"
+  alt="Añadir una nueva subred con su rango de IPs en Webmin"
   blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDBVQerBfrTti/89F/X/CmUDqKskcI2PQE0Vs2yKYV+UUVr7Mwdaz2P/9k="
 />
 
+## 🚀 Configurar las opciones del cliente
 
-Ahora ya esta configurado lo que hay que hacer es salvarlo que significa guardar, una vez echo esto hay que pulsar refresh moduls o abiri una terminal y poner 
-<code>
-    sudo /etc/init.d/dhcp3-server restart && sudo /etc/init.d/dhcp3-server stop 
-</code>
-para el servidor para que actualice la pagina.
-Ahora es el momento de comprobar si el servidor dhcp nos a auto asignado una de las ip del rango que le hemos indicado, para ello hay que es encender la maquina virtual del cliente y nos vamos a editar las conexiones para ver si nos a auto asignado alguna ip, si nos la ha asignado es que ha funcionado, y ya tenemos configurado el cliente y el servidor.Ahora es recomendable comprobar que a ocurrido en los ficheros de configuración, para ello hay que ir ha
-<code> 
-    sudo gedit /etc/network/interfaces 
-</code>
-o otro fichero es el lesses que para acceder a el hay que poner 
-<code> 
-    sudo nano /etc/dhcp3/dhcpd.conf 
-</code>
+Dentro de la subred creada, entra en **Editar opciones de cliente** (o *Edit Client Options*). Rellena los parámetros que recibirán los clientes:
 
-Ahora hay que comprobar que ha cambiado en  estos ficheros y asi entender que es lo quele a pasado en estos ficheros con lo que hemos echos en webmin.
-También se puede hacer que se asigne a el cliente una ip fija, para ello debemos ir ha webmin y ir a servidor DHCP, y a **añadir nueva maquina**
-
+- **Nombre de anfitrión** (`host-name`): un nombre sugerido para los clientes.
+- **Máscara de subred** (`subnet-mask`): `255.255.255.0`.
+- **Enrutadores por defecto** (`routers`): `192.168.101.1`.
+- **Broadcast** (`broadcast-address`): `192.168.101.255`.
+- **Servidor de dominio / DNS**: pon un servidor DNS con el que resolver nombres (por ejemplo el del router o `8.8.8.8`), e idealmente un **segundo DNS** de respaldo por si el primero falla.
 
 <ResponsiveImage
   avif="/img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-480.avif 480w, /img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-768.avif 768w, /img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-1200.avif 1200w"
   webp="/img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-480.webp 480w, /img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-768.webp 768w, /img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-1200.webp 1200w"
   fallback="/img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-1200.webp"
-  alt="Configuración Webmin"
+  alt="Editar las opciones de cliente de la subred en Webmin"
   blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDBVQerBfrTti/89F/X/CmUDqKskcI2PQE0Vs2yKYV+UUVr7Mwdaz2P/9k="
 />
 
+Guarda los cambios. Ahora reiniciamos el servicio para que aplique la nueva configuración. En versiones modernas usamos `systemctl`:
 
-Una vez dentro habra que poner una dirección ip fija que sera la que se asignara a el cliente, una vez puesta la ip le damos a crear, luego hay que ir a editar manualmente, en este fichero abajo del todo y  hay que poner lo siguiente:
+```bash
+sudo systemctl restart isc-dhcp-server
+sudo systemctl status isc-dhcp-server
+```
+
+> En la versión antigua del original se hacía con `sudo /etc/init.d/dhcp3-server restart`. Ese binario ya no existe en sistemas actuales; ahora el servicio se llama `isc-dhcp-server` y se gestiona con `systemctl`.
+
+## 🚀 Asignar una IP fija a un cliente (reserva por MAC)
+
+Si quieres que un cliente concreto reciba siempre la **misma IP** (útil para servidores, impresoras o equipos que necesitan IP estable), usamos una **reserva DHCP** basada en la dirección **MAC**.
+
+En Webmin: **Servidor DHCP → Añadir nueva máquina (host)**. Indica el nombre del host, su dirección MAC (`hardware ethernet`) y la IP fija. Alternativamente, edita manualmente `/etc/dhcp/dhcpd.conf` y añade al final del bloque de la subred:
+
 ```txt
 # internet
 subnet 192.168.101.0 netmask 255.255.255.0 {
@@ -147,12 +193,78 @@ subnet 192.168.101.0 netmask 255.255.255.0 {
 }
 ```
 
+Reinicia el servicio:
+
+```bash
+sudo systemctl restart isc-dhcp-server
+```
+
 <ResponsiveImage
   avif="/img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-480.avif 480w, /img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-768.avif 768w, /img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-1200.avif 1200w"
   webp="/img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-480.webp 480w, /img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-768.webp 768w, /img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-1200.webp 1200w"
   fallback="/img/instalacion_y_configuracion_dhcp/instalacion_y_configuracion_dhcp_3-1200.webp"
-  alt="Configuración Webmin"
+  alt="Reserva de una IP fija por MAC en Webmin"
   blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDBVQerBfrTti/89F/X/CmUDqKskcI2PQE0Vs2yKYV+UUVr7Mwdaz2P/9k="
 />
 
-Ahora salvamos y iniciamos la maquina cliente para ver si nos la a asignado, si nos la ha asignado es que si que ha funcionado.
+## 🧪 Comprobar que funciona
+
+- **Valida la configuración** antes de reiniciar. `dhcpd -t` comprueba la sintaxis de `/etc/dhcp/dhcpd.conf` sin arrancar el servicio:
+
+```bash
+sudo dhcpd -t
+echo $?
+```
+
+  Si imprime errores, salen por pantalla; si no, `echo $?` devuelve `0` (todo correcto).
+
+- **El cliente recibe IP**: enciende la máquina cliente y comprueba en **Conexiones** o con:
+
+```bash
+ip addr show
+```
+
+  Debe aparecer una IP del rango `192.168.101.200 - 205` asignada automáticamente.
+
+- **Los arrendamientos están registrados**: en el servidor, el fichero de leases muestra a quién se asignó cada IP:
+
+```bash
+sudo cat /var/lib/dhcp/dhcpd.leases
+```
+
+- **Revisa qué cambió en los ficheros**: para entender lo que Webmin escribió por nosotros:
+
+```bash
+sudo nano /etc/dhcp/dhcpd.conf
+cat /etc/network/interfaces    # o usa ip addr para ver la IP
+```
+
+> El original usaba `ifconfig` y `sudo gedit /etc/network/interfaces`. En versiones modernas `ifconfig` se sustituye por `ip addr`, y el archivo de leases es `/var/lib/dhcp/dhcpd.leases`.
+
+## ⚠️ Errores comunes
+
+| Error | Causa | Solución |
+|---|---|---|
+| `fail to write pid file` o no arranca | Puertos 67/68 ocupados o config inválida | Comprueba `sudo systemctl status isc-dhcp-server` y `sudo dhcpd -t` |
+| `Not configured to listen on any interfaces!` | El servidor no sabe en qué interfaz escuchar | Configura `INTERFACESv4` en `/etc/default/isc-dhcp-server` con tu tarjeta interna (p. ej. `eth1`) |
+| El cliente no obtiene IP | Cliente y servidor en redes distintas o servidor con IP dinámica | Verifica que ambos estén en Red Interna y que el servidor tenga IP fija `192.168.101.x` |
+| No hay DNS/IP en el cliente | Falta definir `routers`, `subnet-mask` o DNS en las opciones de cliente | Rellena los campos en "Editar opciones de cliente" de Webmin |
+| `dhcpd.conf` con error de sintaxis | Paréntesis o punto y coma mal puestos | Usa `sudo dhcpd -t` para localizar la línea exacta (el `;` siempre va al final de cada línea) |
+| El cliente tiene IP pero no navega | Falta puerta de enlace o DNS correcto | Revisa `routers` (debe ser `192.168.101.1`) y añade un DNS válido |
+
+## 🪜 Siguiente nivel
+
+1. **Asegura el acceso remoto** a tu servidor para gestionarlo sin pantalla: [Formas de conectarse por SSH](/posts/formas_de_conectarse_por_ssh/).
+2. **Comparte internet** entre el cliente y el servidor con un túnel SSH, complementario al DHCP: [Conectarse del cliente al servidor mediante SSH](/posts/conectarse_del_cliente_al_servidor_mediante_ssh/).
+3. **Sirve archivos en red**: monta un servidor FTP para que los clientes compartan ficheros: [Cómo conectarse a un servidor FTP](/posts/como_conectarse_a_un_servidor_ftp/).
+4. **Protege tu panel Webmin** con contraseña para no dejar el servidor abierto: [Cómo proteger una carpeta con contraseña en Webmin](/posts/como_proteger_una_carpeta_con_contrasenya_en_webmin/).
+5. **Da capa de seguridad** con HTTPS en tu web o servicios: [Cómo obtener un certificado SSL](/posts/como_obtener_un_certificado_ssl/).
+
+## 🔗 Enlaces y recursos
+
+- [ISC DHCP — documentación oficial](https://kb.isc.org/docs/isc-dhcp-44-manual-pages)
+- [Ubuntu Community — DHCP Server](https://help.ubuntu.com/community/isc-dhcp-server)
+- [DigitalOcean — Cómo configurar un servidor DHCP](https://www.digitalocean.com/community/tutorials/how-to-configure-dhcp-server-on-ubuntu-22-04)
+- [Webmin — documentación oficial](https://webmin.com/docs/)
+- [Descargas alternativas de Ubuntu (ISOs)](https://ubuntu.com/download/alternative-downloads)
+- [VirtualBox — manual de configuración de red](https://www.virtualbox.org/manual/ch06.html)

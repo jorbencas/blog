@@ -1426,6 +1426,28 @@ const posts = await getCollection('posts');
 
 ---
 
+## ⚠️ Errores comunes
+
+| Error | Causa | Solución |
+|---|---|---|
+| `Hydration completed but contains mismatches` | El HTML renderizado en servidor (SSR) no coincide con el resultado del hydration en cliente | Revisa condicionales que dependan de `import.meta.env` o `window`; usa `client:only` si el componente solo corre en cliente |
+| `[astro] X is not used as a JSX element` | Componente importado pero no se usa con sintaxis JSX (`<X />`) en la plantilla | Asegúrate de usar `<Componente />` en vez de llamarlo como función `Componente()` |
+| `Unable to find the server` | `astro dev` no puede arrancar el servidor de desarrollo | Verifica que el puerto no esté ocupado (`lsof -i :4321`), o cambia el puerto en `astro.config.mjs` con `server: { port: 4322 }` |
+| `Cannot find module ... for 'astro:content'` | La colección de contenido no está definida o el `content/config.ts` falta | Crea `src/content/config.ts` con `defineCollection` y ejecuta `astro sync` para generar tipos |
+| `Error: Invalid option: strategies` | Configuración de `output: 'hybrid'` o `output: 'server'` incompatiblemente mezclada | Revisa que `output` en `astro.config.mjs` sea `'static'`, `'server'` o `'hybrid'`; no combines strategies antiguas |
+| `GET /_astro/... 404` en producción | Assets estáticos no se copiaron al build o la ruta de `base` es incorrecta | Comprueba `base` en `astro.config.mjs` si despliegues en subcarpeta; ejecuta `astro build` y verifica `dist/_astro/` |
+| `ReferenceError: Document is not defined` | Código que usa `document` o `window` ejecutándose en el servidor durante SSR | Envuelve ese código en un `onMount()` de Astro o usa `client:only="vue"` para forzar ejecución en cliente |
+
+## 🔗 Guías relacionadas
+
+Si quieres ampliar tu stack con otras tecnologías, estas guías complementan Astro perfectamente:
+
+- [Guía de Markdown y MDX: de 0 a 100](/posts/guia-0-100-markdown/) — domina el formato que alimenta las colecciones de contenido de Astro
+- [Guía de TypeScript: de 0 a 100](/posts/guia-0-100-typescript/) — tipado estático para componentes y props en Astro
+- [Guía de JavaScript: de 0 a 100](/posts/guia-0-100-javascript/) — la base que soporta Islands, server endpoints y cualquier framework moderno
+
+---
+
 ## Referencias y documentación oficial
 
 - **Docs oficiales**: [docs.astro.build](https://docs.astro.build/)

@@ -1,29 +1,145 @@
 ---
 draft: false
-title: "Copiar archivos entre diferentes usuarios y maquinas"
-description: "Descubre las principales arquitexturas web"
+title: "Copiar archivos entre diferentes usuarios y máquinas con SCP"
+description: "Aprende a copiar archivos entre usuarios y máquinas remotas usando SCP, con ejemplos reales, comprobación de resultados y resolución de errores comunes de permisos y conectividad."
 pubDate: "2015/11/30"
-tags: ['sistemas']
+tags: ['sistemas', 'ssh', 'scp', 'linux', 'redes']
 image: "img/copiar_archivos_entre_diferentes_usuarios_y_archivos/copiar_archivos_entre_diferentes_usuarios_y_archivos_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 ---
 
 import ResponsiveImage from "@components/ResponsiveImage.astro";
 
-Hay que copiar des de el usuario usu1 el archivo hola.txt que se encuentra en el usuario usu2 a la paquina servidora, a la canpeta m’usica con el nombre canço.txt
+¿Te has encontrado alguna vez con que necesitas mover un archivo de un usuario a otro en un servidor remoto y no sabes cómo hacerlo sin perder tiempo con el gestor de archivos? SCP (Secure Copy Protocol) es la herramienta que te permite copiar archivos entre máquinas de forma segura a través de SSH. En esta guía vemos cómo usarlo con ejemplos reales, incluyendo cómo copiar entre diferentes usuarios y cambiar el nombre del archivo en destino.
 
-Para ello demos utilizar el comando scp:
+## 🤔 ¿Qué vamos a conseguir?
 
-`scp /home/usu1/hola.txt jorge@192.168.101.1:/home/jorge/Música/canço.txt`
+- Copiar un archivo local a un servidor remoto con `scp`.
+- Copiar entre **diferentes usuarios** en la misma máquina o en máquinas distintas.
+- Renombrar el archivo en destino durante la copia.
+- Comprobar que la copia se ha realizado correctamente.
+- Resolver los errores típicos de permisos y conectividad.
 
+## 🧰 Prerrequisitos
+
+- SSH instalado y funcionando en el servidor (si no lo tienes, consulta [Formas de conectarse por SSH](/posts/formas_de_conectarse_por_ssh/)).
+- La **dirección IP** del servidor y un usuario con acceso SSH.
+- Conocimientos básicos de terminal.
+- El cliente SSH (`ssh` y `scp` vienen instalados por defecto en Linux y macOS; en Windows con WSL también).
+
+## 🛠️ El comando SCP: sintaxis básica
+
+SCP funciona sobre SSH, así que necesitas las mismas credenciales (usuario, IP o hostname y contraseña). La sintaxis es:
+
+```bash
+scp [opciones] origen usuario@servidor:destino
+```
+
+Veamos los escenarios más comunes:
+
+### Copiar un archivo local al servidor remoto
+
+```bash
+scp archivo.txt jorge@192.168.101.1:/home/jorge/
+```
+
+Esto copia `archivo.txt` del equipo local a la carpeta `/home/jorge/` del servidor `192.168.101.1` con el usuario `jorge`.
+
+### Copiar un archivo entre dos usuarios en el servidor
+
+Imagina que estás en el usuario `usu1` y necesitas copiar un archivo que está en la carpeta de `usu2` a una carpeta del servidor. La clave es indicar el usuario correcto en cada lado:
+
+```bash
+scp /home/usu1/hola.txt jorge@192.168.101.1:/home/jorge/Música/canço.txt
+```
+
+En este ejemplo:
+- `/home/usu1/hola.txt` es el archivo de origen (en el equipo local, bajo el usuario `usu1`).
+- `jorge@192.168.101.1` es el usuario y servidor de destino.
+- `/home/jorge/Música/canço.txt` es la ruta completa de destino **con el nombre renombrado** a `canço.txt`.
 
 <ResponsiveImage
   avif="/img/copiar_archivos_entre_diferentes_usuarios_y_archivos/copiar_archivos_entre_diferentes_usuarios_y_archivos_1-480.avif 480w, /img/copiar_archivos_entre_diferentes_usuarios_y_archivos/copiar_archivos_entre_diferentes_usuarios_y_archivos_1-768.avif 768w, /img/copiar_archivos_entre_diferentes_usuarios_y_archivos/copiar_archivos_entre_diferentes_usuarios_y_archivos_1-1200.avif 1200w"
   webp="/img/copiar_archivos_entre_diferentes_usuarios_y_archivos/copiar_archivos_entre_diferentes_usuarios_y_archivos_1-480.webp 480w, /img/copiar_archivos_entre_diferentes_usuarios_y_archivos/copiar_archivos_entre_diferentes_usuarios_y_archivos_1-768.webp 768w, /img/copiar_archivos_entre_diferentes_usuarios_y_archivos/copiar_archivos_entre_diferentes_usuarios_y_archivos_1-1200.webp 1200w"
   fallback="/img/copiar_archivos_entre_diferentes_usuarios_y_archivos/copiar_archivos_entre_diferentes_usuarios_y_archivos_1-1200.webp"
-  alt="comando"
-  blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDApzKF6MrfSm0DqKskcEYjIU0Vs2yKYV+UUVr7Mwdaz2P/2Q=="
+  alt="Ejecución del comando SCP para copiar archivos entre usuarios"
+  blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDApWULjDK30pKB1FWSOCMRkKaK2bZFMK/KKK19mYOtZ7H/2Q=="
 />
 
-Para comprobar que si que nos lo ha copiado con el nombre indicado, lo que hay que hacer es ir a la cuenta de usuario d3e adminstrador y una vez allí hay que ir ha la carpeta Música, y dentro debeb haber un archivo txt que se llame canço, si nos aparezce es que si que se a ejecutado correctamente.
+## 🚀 Opciones avanzadas de SCP
 
+### Copiar una carpeta completa (recursivo)
+
+Para copiar una carpeta entera con todo su contenido, usa `-r`:
+
+```bash
+scp -r /home/usu1/documentos jorge@192.168.101.1:/home/jorge/Documentos/
+```
+
+### Especificar un puerto SSH distinto
+
+Si el servidor SSH no escucha en el puerto 22 (típico en producción), usa `-P` (mayúscula):
+
+```bash
+scp -P 2222 archivo.txt jorge@192.168.101.1:/home/jorge/
+```
+
+### Preservar permisos y fechas
+
+El flag `-p` conserva los permisos, fechas de modificación y tamaño del archivo original:
+
+```bash
+scp -p archivo.txt jorge@192.168.101.1:/home/jorge/
+```
+
+### Usar una clave SSH en lugar de contraseña
+
+Si ya tienes una clave SSH configurada, SCP la usa automáticamente sin pedir contraseña:
+
+```bash
+scp -i ~/.ssh/mi_clave_privada archivo.txt jorge@192.168.101.1:/home/jorge/
+```
+
+## 🧪 Comprobar que funciona
+
+Una vez ejecutado el comando SCP, verifica que el archivo llegó correctamente:
+
+```bash
+# En el servidor (por SSH)
+ssh jorge@192.168.101.1 'ls -la /home/jorge/Música/canço.txt'
+
+# Verificar el contenido
+ssh jorge@192.168.101.1 'cat /home/jorge/Música/canço.txt'
+
+# Verificar el código de salida del comando scp
+echo $?
+```
+
+Si el comando anterior devolvió un mensaje de error, revisa la tabla de errores comunes más abajo.
+
+## ⚠️ Errores comunes
+
+| Error | Causa | Solución |
+|---|---|---|
+| `Permission denied (publickey,password)` | Contraseña incorrecta o usuario no válido | Revisa el usuario con `whoami` en el servidor y verifica la contraseña |
+| `No such file or directory` | La ruta de destino no existe en el servidor | Crea la carpeta primero: `ssh jorge@192.168.101.1 'mkdir -p /home/jorge/Música'` |
+| `Connection refused` | El servicio SSH no está corriendo en el servidor | En el servidor: `sudo systemctl restart ssh` y comprueba `ss -tlnp \| grep :22` |
+| `Permission denied` al escribir en destino | El usuario no tiene permiso de escritura en la carpeta destino | Cambia permisos: `chmod 755 /home/jorge/Música` o usa una ruta donde tengas escritura |
+| `ssh: Could not resolve hostname` | IP o hostname mal escrito, o el servidor está apagado | Verifica la IP con `ping 192.168.101.1` y que el servidor esté encendido |
+| `Connection timed out` | Firewall bloqueando el puerto SSH | Abre el puerto: `sudo ufw allow 22/tcp` en el servidor |
+
+## 🪜 Siguiente nivel
+
+Una vez domines SCP para copias puntuales, la escalera natural es:
+
+1. **Clave pública/privada** — olvídate de las contraseñas y automatiza las copias: [Conexión mediante clave pública privada](/posts/conexion_ssh_mediante_clave_publica_privada/).
+2. **rsync** — sincroniza carpetas completas de forma eficiente, transfiriendo solo los cambios: una alternativa más potente a SCP para copias repetidas.
+3. **Montar un sistema de archivos remoto** con `sshfs` para trabajar con archivos remotos como si fueran locales.
+4. **Automatizar respaldos** con `scp` o `rsync` en un cron job o script programado.
+
+## 🔗 Enlaces y recursos
+
+- [OpenSSH — documentación oficial](https://www.openssh.com/manual.html)
+- [DigitalOcean — How To Use SCP to Securely Transfer Files](https://www.digitalocean.com/community/tutorials/how-to-use-scp-to-securely-transfer-files-with-a-remote-server)
+- [ArchWiki — SCP](https://wiki.archlinux.org/title/SCP)
+- [SSH — man page de scp](https://man.openbsd.org/scp.1)

@@ -1,11 +1,11 @@
 ---
 draft: false
 title: "Construyendo PDF Ninja: Cómo vencí las restricciones de PDFs con Python y la Terminal"
-description: "La historia del desarrollo de una CLI interactiva en Python para desbloquear, comprimir, unir y dividir archivos PDF de forma masiva sin depender de servicios web de terceros."
+description: "La historia y los fragmentos clave de un CLI interactiva en Python para desbloquear, comprimir, unir y dividir PDFs de forma masiva, sin depender de servicios web de terceros. Incluye el porqué de cada decisión técnica."
 pubDate: "2026-06-13"
 author: "Jorge Beneyto Castelló"
 image: "img/pdf_ninja/pdf_ninja_cover-1200.webp"
-tags: ["python", "cli", "pdf", "backend"]
+tags: ["python", "cli", "pdf", "backend", "automatizacion"]
 audioSrc: "/audio/pdf_ninja.mp3"
 ---
 
@@ -13,52 +13,60 @@ Las herramientas web tradicionales para manipular PDFs son un dolor de cabeza. T
 
 Para resolver esto, decidí construir **PDF Ninja**, una herramienta interactiva para la terminal escrita en Python que permite limpiar restricciones de seguridad, optimizar peso, fusionar mediante una cola visual y transformar imágenes en documentos finales.
 
-A continuación, te cuento cómo nació este proyecto, cómo funciona su arquitectura interna, el porqué de cada decisión técnica y cómo puedes llevarlo al siguiente nivel.
+A continuación te cuento cómo funciona por dentro, el porqué de cada decisión técnica y cómo puedes llevarlo al siguiente nivel. Si prefieres escucharlo, dale al play al principio del artículo.
 
----
+## 🤔 ¿Qué vamos a conseguir?
 
-## 🏢 Para qué es útil esta herramienta
+- Una CLI en Python que **desbloquea restricciones** de copia e impresión de PDFs en segundos.
+- **Compresión** de documentos eliminando objetos redundantes (garbage collection).
+- Una interfaz **interactiva en la terminal** para unir muchos archivos usando una cola visual.
+- **Agrupar imágenes** escaneadas (`.png`, `.jpg`, `.webp`) en un único PDF limpio.
+- Un script **autoinstalable** que aprovisiona sus propias dependencias en tiempo de ejecución.
 
-**PDF Ninja** está diseñado para flujos de trabajo locales y automatizados. Sus principales casos de uso incluyen:
-* **Desbloqueo masivo:** Eliminar restricciones de copia o impresión impuestas por softwares de origen en segundos.
-* **Ahorro de almacenamiento:** Comprimir y reestructurar flujos internos de objetos PDF redundantes mediante recolección de basura (*garbage collection*).
-* **Interactividad en Terminal:** Unir decenas de archivos seleccionándolos visualmente en tiempo real sin usar entornos gráficos pesados.
-* **Digitalización ágil:** Agrupar ráfagas de imágenes escaneadas (`.png`, `.jpg`, `.webp`) directamente en un único documento limpio.
+## 🧰 Prerrequisitos
 
----
+- **Python 3.9+** instalado en tu sistema (Linux, Windows o macOS).
+- Conocimientos básicos de terminal y de `pip`.
+- Tener `pip` disponible, idealmente dentro de un **entorno virtual** (`.venv`).
 
-## 📖 El Viaje del Desarrollo: Inicio, Nudo y Desenlace
+La buena noticia es que `PDF Ninja` se **aprovisona solo**: si le falta una librería, la instala automáticamente. Aun así, para un entorno limpio conviene crear un virtualenv y activarlo:
 
-### El Inicio: La necesidad del control local
-Todo comenzó con la frustración cotidiana de recibir documentos PDF protegidos con contraseñas de propietario que impedían añadir anotaciones o combinar páginas. Los scripts simples de automatización usando la librería clásica `PyPDF2` fallaban constantemente con errores de desencriptación o dañaban la estructura del documento. Necesitaba un sistema robusto que no solo procesara archivos individuales, sino que gestionara lotes enteros de forma limpia y transparente en entornos Linux.
+```bash
+python -m venv .venv
+source .venv/bin/activate   # Linux / macOS
+# .venv\Scripts\activate    # Windows (PowerShell)
+```
 
-### El Nudo: El desafío de la interactividad y dependencias cruzadas
-El verdadero reto técnico apareció al implementar la fusión de archivos. Unir una lista estática es fácil; diseñar una interfaz de usuario interactiva dentro de la propia terminal que permita filtrar en tiempo real, añadir a una cesta de compra o cola de impresión (`🛒 COLA`) y mover un cursor interactivo requirió exprimir el control de eventos de teclado y el refresco de pantalla. 
+## 🛠️ El problema: dependencias cruzadas
 
-Además, ninguna librería de Python por sí sola lograba hacer todo bien: las que abrían archivos protegidos no sabían comprimir de manera eficiente, y las que convertían imágenes no manipulaban los metadatos internos del PDF a bajo nivel. La solución pasó por coordinar de manera quirúrgica un ecosistema de herramientas específicas.
+Ninguna librería de Python por sí sola hacía todo bien. Las que abrían archivos protegidos no sabían comprimir de forma eficiente, y las que convertían imágenes no manipulaban los metadatos internos del PDF a bajo nivel. La solución pasó por coordinar un ecosistema de herramientas específicas:
 
-### El Desenlace: El Dojo completado
-La solución final se materializó en una clase estructurada en Python (`PDFNinjaMaster`) que encapsula la lógica de negocio y separa las responsabilidades de la interfaz de usuario interactiva. Al integrar un bucle de renderizado optimizado con la librería `rich`, se logró una CLI rápida, visualmente atractiva y que respeta el flujo de la terminal sin borrar el histórico de comandos previos, permitiendo inspeccionar errores o registros anteriores al instante.
+- **`pikepdf`** — basada en la arquitectura C++ `qpdf`: para abrir y reescribir la estructura interna, quitando restricciones de propietario sin romper el archivo.
+- **`PyMuPDF` (fitz)** — brutalmente rápida para renderizado y reescritura física: para comprimir con parámetros de garbage collection y deflate.
+- **`rich`** — para dibujar la interfaz y las tablas en la terminal.
+- **`readchar`** — para leer las teclas en crudo (flechas del cursor).
+- **`Pillow`** — para procesar las imágenes antes de convertirlas a PDF.
+- **`tqdm`** — barras de progreso en las operaciones masivas.
 
----
+## 🚀 Autoinstalación de dependencias
 
-## 🔍 Explicación de los Fragmentos de Código Clave
-
-### 1. Inyección Dinámica de Entorno
-Para asegurar que el script funcione inmediatamente en cualquier máquina Linux sin configuraciones manuales previas, se utiliza un cargador automático mediante `subprocess`:
+Para que el script funcione en cualquier máquina Linux sin configuraciones manuales previas, uso un cargador automático mediante `subprocess` que detecta e instala lo que falta:
 
 ```python
+import subprocess
+import sys
+
 def instalar_dependencias():
     """Instala las librerías necesarias antes de importarlas."""
     libs = [
-        ("pymupdf", "fitz"), 
-        ("rich", "rich"), 
-        ("tqdm", "tqdm"), 
-        ("readchar", "readchar"), 
+        ("pymupdf", "fitz"),
+        ("rich", "rich"),
+        ("tqdm", "tqdm"),
+        ("readchar", "readchar"),
         ("pikepdf", "pikepdf"),
-        ("Pillow", "PIL")
+        ("Pillow", "PIL"),
     ]
-    
+
     for lib_pip, lib_import in libs:
         try:
             __import__(lib_import)
@@ -70,70 +78,126 @@ def instalar_dependencias():
                 print(f"[!] Error crítico instalando {lib_pip}: {e}")
                 sys.exit(1)
 ```
-    Por qué se usa esto: Evita obligar al usuario a ejecutar manualmente comandos pesados de instalación. Si una librería falta en el entorno virtual (.venv), el script se encarga de aprovisionarse de forma autónoma utilizando el mismo binario ejecutable que corre el programa principal (sys.executable).
 
-2. El Doble Ataque Ninja (Desbloqueo y Compresión)
+**Por qué esto y no un `requirements.txt` fijo**: evita obligar al usuario (o al pipeline de CI) a ejecutar comandos pesados de instalación a mano. Si una librería falta, el script se aprovisiona de forma autónoma usando el mismo binario que corre el programa (`sys.executable`), de modo que cae dentro del entorno virtual correcto.
 
-La función principal de limpieza combina dos tecnologías de vanguardia para la manipulación de PDFs:
+## 🚀 El doble ataque ninja: desbloquear y comprimir
+
+La función central combina dos pasadas sobre el archivo. Primero `pikepdf` reescribe el documento quitando las restricciones de propietario; luego `fitz` lo optimiza físicamente:
+
 ```python
+import pikepdf
+import fitz
 
-# INTENTO 1: Abrir con pikepdf (quitando restricciones de dueño)
-with pikepdf.open(r_in, password=password) as pdf:
-    pdf.save(r_out)
+def limpiar_pdf(r_in, r_out, password="", comprimir=True):
+    # INTENTO 1: Abrir con pikepdf (quitando restricciones de dueño)
+    with pikepdf.open(r_in, password=password) as pdf:
+        pdf.save(r_out)
 
-# INTENTO 2: Optimizar con fitz (PyMuPDF)
-doc = fitz.open(r_out)
-doc.save(r_out, garbage=4 if comprimir else 3, deflate=comprimir, incremental=False)
-doc.close()
+    # INTENTO 2: Optimizar con fitz (PyMuPDF)
+    doc = fitz.open(r_out)
+    doc.save(
+        r_out,
+        garbage=4 if comprimir else 3,
+        deflate=comprimir,
+        incremental=False,
+    )
+    doc.close()
 ```
-    Por qué se usa esto y no otra cosa: * pikepdf está basada en la potente arquitectura C++ qpdf. Es la mejor librería del mercado para reescribir la estructura interna de un PDF y remover restricciones de edición/impresión sin romper el archivo.
 
-        fitz (PyMuPDF) es brutalmente rápida para operaciones de renderizado y reescritura física. Al usar los parámetros garbage=4 y deflate=True, se fuerza la eliminación de objetos duplicados o huérfanos dentro del flujo binario del archivo (como fuentes no usadas o imágenes repetidas), logrando reducciones de tamaño muy drásticas.
+- **`pikepdf`** reescribe la estructura eliminando los permisos de edición/impresión impuestos por el creador.
+- **`fitz` con `garbage=4` y `deflate=True`** fuerza la eliminación de objetos duplicados u huérfanos dentro del flujo binario (fuentes no usadas, imágenes repetidas), logrando reducciones de tamaño muy drásticas.
 
-3. Renderizado de Interfaz Dinámica
+> **Nota legal**: esto solo funciona con restricciones de *propietario* (que protegen acciones pero no el contenido). Un PDF cifrado con *contraseña de usuario* para impedir la lectura **no** debe desbloquearse si no tienes derecho a ello. Respeta siempre los derechos de autor y las licencias.
 
-Para la UI interactiva, se utiliza el componente Live combinado con tablas estructuradas:
+## 🛠️ La interfaz interactiva en la terminal
+
+Unir una lista estática de PDFs es fácil; lo difícil es diseñar una UI dentro de la propia terminal que permita filtrar en tiempo real, mover un cursor con las flechas y añadir archivos a una cola (`🛒 COLA`). Para el refresco uso `rich.live.Live` con tablas estructuradas:
+
 ```python
+from rich.console import Console
+from rich.live import Live
+from rich.panel import Panel
+from rich.table import Table
 
-grid = Table.grid(expand=True, padding=1)
-grid.add_column(ratio=5); grid.add_column(ratio=5)
-grid.add_row(
-    Panel(render_lista(disp_view, seleccionado, not en_cola), title="📂 DISPONIBLES", border_style="blue"),
-    Panel(render_lista(cola_view, seleccionado, en_cola), title="🛒 COLA", border_style="green")
-)
+console = Console()
+
+def renderizar_tabla(lista_disponibles, seleccionado, lista_cola, en_cola):
+    grid = Table.grid(expand=True, padding=1)
+    grid.add_column(ratio=5)
+    grid.add_column(ratio=5)
+    grid.add_row(
+        Panel(
+            render_lista(lista_disponibles, seleccionado, not en_cola),
+            title="📂 DISPONIBLES",
+            border_style="blue",
+        ),
+        Panel(
+            render_lista(lista_cola, seleccionado, en_cola),
+            title="🛒 COLA",
+            border_style="green",
+        ),
+    )
+    return grid
+
+# En el bucle principal, con readchar lees flechas y refrescas con Live
+with Live(console=console, refresh_per_second=15) as live:
+    # ... procesar teclas y actualizar estado ...
+    live.update(renderizar_tabla(disponibles, idx, cola, en_cola))
 ```
-    Por qué se usa esto: En lugar de limpiar toda la pantalla con comandos del sistema que borran el contexto anterior de la terminal (como clear), rich.live.Live refresca únicamente la región ocupada por la tabla 15 veces por segundo, creando una experiencia interactiva fluida.
 
-⚖️ Decisiones Arquitectónicas: ¿Se puede mejorar?
-¿Por qué Python y no Bash puro?
+**Por qué `rich.live.Live` y no `clear`**: en lugar de borrar toda la pantalla con comandos del sistema (que eliminan el histórico y el contexto), `Live` refresca **únicamente la región ocupada** por la tabla, varias veces por segundo, creando una experiencia fluida y respetando el historial de comandos previos para poder inspeccionar errores anteriores al instante.
 
-Aunque herramientas como pdftk o ghostscript permiten hacer fusiones sencillas en scripts de Bash, gestionar flujos lógicos complejos como excepciones de contraseñas (pikepdf.PasswordError), lecturas de teclas específicas en crudo de la terminal (readchar.readkey()) y transformaciones de imágenes con Pillow se vuelve insostenible en Bash. Python ofrece legibilidad y control absoluto de errores de bajo nivel.
-Alternativas de mejora técnica (A dónde ir después)
+## 🚀 Convertir imágenes a PDF
 
-Si quisiéramos llevar este código a un nivel de rendimiento corporativo, podríamos implementar las siguientes mejoras estructurales:
+La parte de digitalización agrupa ráfagas de imágenes escaneadas en un único documento. Con Pillow abrimos cada imagen y la volcamos como página del PDF final:
 
-    1. Procesamiento Asíncrono / Multihilo: En la función ejecutar_mision, el procesamiento de archivos se realiza de manera estrictamente secuencial (uno detrás de otro). Si procesamos un directorio con 100 archivos PDF, la CPU se infrautiliza. Podríamos implementar un pool de hilos de ejecución utilizando el módulo nativo de Python concurrent.futures.ThreadPoolExecutor:
-    
-    ```python
+```python
+from PIL import Image
+from pathlib import Path
 
-    from concurrent.futures import ThreadPoolExecutor
-    # Permitiría procesar múltiples PDFs en paralelo de forma masiva
-    with ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
-        executor.map(self.procesar_archivo_individual, lista_archivos)
-    ```
+def imagenes_a_pdf(directorio, salida="resultado.pdf"):
+    lista_imgs = []
+    for ruta in sorted(Path(directorio).glob("*.png")):
+        img = Image.open(ruta).convert("RGB")
+        lista_imgs.append(img)
 
-    2. Uso de Memoria en la Conversión de Imágenes:
-    Actualmente, la función imagenes_a_pdf añade todas las instancias abiertas de las imágenes procesadas por Pillow a una lista en memoria volatil (lista_imgs.append(img)). Si un usuario intenta agrupar 500 fotos pesadas en alta resolución, el script podría agotar la memoria asignada (provocando un error OutOfMemory). Una alternativa óptima sería utilizar flujos de guardado incremental guardando directamente a un archivo temporal en el almacenamiento local.
+    if lista_imgs:
+        primera = lista_imgs.pop(0)
+        primera.save(salida, save_all=True, append_images=lista_imgs)
+        print(f"✔️ PDF generado: {salida}")
+```
 
-🛠️ Conclusión
+## 🧪 Comprobar que funciona
 
-PDF Ninja demuestra que con pocas dependencias bien coordinadas se puede crear software interno de escritorio potente, limpio y estético sin salir de la comodidad del ecosistema del terminal.
+- Ejecuta el script contra un PDF protegido y verifica que ya **no hay aviso de "protegido"** al abrirlo en un visor.
+- Compara el tamaño antes y después: `ls -lh original.pdf` frente a `ls -lh resultado.pdf` debe mostrar un archivo menor.
+- En la vista de cola, mueve el cursor con las **flechas**, pulsa una tecla para añadir a `🛒 COLA` y confirma la fusión: el archivo de salida tendrá el número de páginas de los archivos en cola.
+- Comprueba el código de salida tras un lote: `echo $?` debe devolver `0`.
 
-¿Qué funciones añadirías tú al dojo? ¡Déjamelo en los comentarios!
+## ⚠️ Errores comunes
 
-***
+| Error | Causa | Solución |
+|---|---|---|
+| `pikepdf.PasswordError` | El PDF está cifrado con contraseña de usuario | Pásale la contraseña al parámetro `password` o deja el archivo si no tienes permiso |
+| `FileNotFoundError` al guardar | El directorio de salida no existe | Crea la carpeta destino con `Path(dir_out).mkdir(parents=True, exist_ok=True)` |
+| `MemoryError` con muchas imágenes | Se cargan todas las imágenes en RAM a la vez | Procesa de forma incremental guardando a un archivo temporal en disco |
+| La lista no se actualiza en la cola | Falta refrescar el estado en el bucle | Llama a `live.update(...)` tras cada cambio de estado |
+| `subprocess` instaló la librería en otro Python | El entorno virtual no estaba activado | Activa el `.venv` antes de ejecutar el script |
+| El PDF sale "corrupto" después de comprimir | `garbage` demasiado agresivo en algunos PDFs | Prueba con `garbage=3` y `deflate=False` antes de dar el salto a `4` |
 
-### Ventajas de este formato para tu blog en Astro:
-1. **Frontmatter completo:** Incluye variables estándar (`title`, `description`, `pubDate`, `author`, `tags`) listas para ser mapeadas por tus esquemas de *Content Collections* de Astro (`src/content/config.ts`).
-2. **Resaltado de sintaxis nativo:** Utiliza bloques estandarizados de código Markdown (```python) que se integran por defecto con componentes como Shiki o PrismJS, habituales en las plantillas de Astro.
-3. **Semántica Limpia:** No utiliza hacks visuales que rompan la fluidez de lectura ni componentes pesados de JavaScript que penalicen las métricas Core Web Vitals de tu sitio.
+## 🪜 Siguiente nivel
+
+1. **Procesamiento en paralelo** — el lote actual es secuencial. Con `concurrent.futures.ThreadPoolExecutor` puedes procesar cientos de PDFs a la vez aprovechando todos los núcleos de la CPU.
+2. **Uso de memoria en imágenes** — sustituye la lista en RAM por un volcado incremental a disco para no agotar memoria con 500 fotos en alta resolución.
+3. **Automatízalo en un `cron`** o GitHub Action para limpiar un directorio de PDFs cada noche.
+4. **Amplía tu arsenal de automatización** en Python con la [Guía de Python: de 0 a 100](/posts/guia-0-100-python/) y el caso de [generar XML desde Python](/posts/generar_xml_python/).
+
+## 🔗 Enlaces y recursos
+
+- [PyMuPDF (fitz) — documentación](https://pymupdf.readthedocs.io/en/latest/)
+- [pikepdf — documentación](https://pikepdf.readthedocs.io/en/latest/)
+- [Rich — documentación oficial](https://rich.readthedocs.io/en/stable/)
+- [Pillow — documentación](https://pillow.readthedocs.io/en/stable/)
+- [qpdf (motores de pikepdf) — página oficial](https://qpdf.sourceforge.io/)
+- [Python — tutorial oficial](https://docs.python.org/3/tutorial/)

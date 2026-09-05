@@ -5318,6 +5318,28 @@ Esta guía se ha elaborado a partir de las siguientes fuentes consultadas durant
 
 ---
 
+## ⚠️ Errores comunes
+
+Estos son los fallos que más se repiten al empezar con PHP. La mayoría son de sintaxis, variables o conexiones de red.
+
+| Error | Causa | Solución |
+|---|---|---|
+| `syntax error, unexpected token` | Falta un `;`, un `$` o una llave `}` en la línea anterior | Revisa el `;` al final de cada sentencia y que la variable lleve `$` |
+| `Call to undefined function X()` | Llamas a una función que no existe o no incluyes su fichero | Comprueba el nombre y que hayas hecho `require`/`include` del archivo |
+| `Fatal error: Uncaught Error: Call to a member function on null` | Accedes a un método sobre un objeto que es `null` | Verifica que la consulta/función devolvió un resultado antes de llamar al método |
+| `Warning: Undefined array key "x"` (PHP 8) | Accedes a una clave de array que no existe | Usa `isset()` o el operador `??` (null coalescing) antes de acceder |
+| `Connection refused` con `mysqli`/`PDO` | El servidor de base de datos no está activo o el puerto es incorrecto | Comprueba que MySQL/MariaDB esté corriendo y que host, puerto, usuario y contraseña son correctos |
+| `curl: (56) Failure when receiving data from the peer` al descargar Composer | Problema de red, proxy o versión de TLS | Repite el `curl`, revisa proxy y usa HTTPS; prueba con `composer self-update` |
+| `Fatal error: Uncaught PDOException` | Credenciales de BD erróneas o driver ausente | Revisa DSN, usuario y contraseña, y habilita la extensión `pdo_mysql` en `php.ini` |
+
+---
+
+## 🔗 Guías relacionadas
+
+- Para levantar PHP como servidor virtual y practicar: [Cómo crear un servidor virtual](/posts/como_crear_un_servidor_virtual/).
+
+---
+
 ## 🏆 Retos Relacionados
 
 Pon a prueba lo aprendido con estos desafíos:

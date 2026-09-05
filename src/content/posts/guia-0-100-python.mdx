@@ -3752,6 +3752,32 @@ python -m timeit "sum(range(1000))"
 
 ---
 
+## ⚠️ Errores comunes
+
+Estos son los errores que más se repiten al escribir y ejecutar Python. Casi todos tienen que ver con imports, tipos o la indentación.
+
+| Error | Causa | Solución |
+|---|---|---|
+| `ModuleNotFoundError: No module named 'x'` | El paquete no está instalado o estás en otro entorno | `pip install x` o `uv add x`; verifica que lo instalas dentro del mismo venv |
+| `pip: command not found` | No tienes pip en el PATH o usas el Python del sistema | `python -m pip install x` o `python3 -m pip install x` |
+| `NameError: name 'x' is not defined` | Usas una variable o función antes de definirla | Revisa el orden del código y que no haya un typo en el nombre |
+| `IndentationError: unexpected indent` | Bloques con espacios y tabulaciones mezclados | Elige 4 espacios o una tabulación de forma consistente en todo el archivo |
+| `TypeError: unsupported operand type(s) for +: 'int' and 'str'` | Sumas tipos incompatibles (p. ej. int + str) | Convierte explícitamente con `int()` o `str()` según lo que quieras |
+| `ValueError: invalid literal for int() with base 10` | Pasas texto no numérico a `int()` o `float()` | Valida la entrada antes de convertir o controla la excepción con `try/except` |
+| `AttributeError: 'NoneType' object has no attribute 'x'` | Una función devolvió `None` y accedes a un atributo | Comprueba que la llamada devuelve un objeto real y maneja el caso `None` |
+| `uv: Unable to find interpreter` | El proyecto pide una versión de Python que no tienes | Instala la versión indicada (`.python-version`/`pyproject.toml`) con `uv python install <versión>` |
+
+---
+
+## 🔗 Guías relacionadas
+
+- Para explorar el tipado estático en Python desde la óptica de TypeScript: [Guía de TypeScript: De 0 a 100](/posts/guia-0-100-typescript/).
+- Para empaquetar tu aplicación en contenedores: [Guía de Docker: De 0 a 100](/posts/guia-0-100-docker/).
+- Generación de XML en Python: [Generar XML con Python](/posts/generar_xml_python/).
+- Procesamiento de documentos y PDFs: [PDF Ninja](/posts/pdf_ninja/).
+
+---
+
 ## 🎯 Retos y próximos pasos
 
 ### Nivel 1 (0-15)

@@ -1,17 +1,35 @@
 ---
 draft: false
 title: "Docker: ffmpeg y yt-dlp en Windows (WSL) y Ubuntu"
-description: "Guía práctica para usar ffmpeg y yt-dlp con Docker en WSL y Ubuntu. Instalación, configuración y resolución de problemas comunes."
+description: "Guía práctica para descargar, cortar y convertir vídeos con yt-dlp y ffmpeg en Docker dentro de WSL y Ubuntu. Incluye el docker-compose, el script midu.sh, permisos y resolución de problemas reales."
 pubDate: "2026-07-11"
 updatedDate: "2026-08-03"
-tags: ["docker", "devops", "linux", "windows", "ffmpeg", "yt-dlp"]
+tags: ["docker", "devops", "linux", "windows", "ffmpeg", "yt-dlp", "wsl", "multimedia"]
 image: "img/docker_to_yt_ffmpeg_in_wls/docker_to_yt_ffmpeg_in_wls_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 ---
 
-## 1. El docker-compose.yml
+Descargar un vídeo de YouTube y convertirlo para el móvil suele acabar en: "descarga una web random, instala un instalador, acepta 5 cajas de anuncios...". Con **Docker + ffmpeg + yt-dlp** montas un entorno limpio y reproducible que funciona igual en Windows (WSL), Linux o macOS, sin contaminar tu sistema. En esta guía te enseño mi setup con un contenedor Alpine, un script `midu.sh` reutilizable y los errores con los que me enfrenté por el camino.
 
-Guarda los vídeos en tu disco de Windows <code>(C:)</code> para abrirlos con el reproductor de Windows. En WSL, tu disco <code>C:</code> está montado en <code>/mnt/c/</code>.
+## 🤔 ¿Qué vamos a conseguir?
+
+- Un contenedor **Docker con Alpine** que trae `ffmpeg` y `yt-dlp` instalados.
+- Un script `midu.sh` con **menú interactivo** para descargar, cortar y convertir vídeos.
+- Los vídeos guardados en tu **disco de Windows** (`/mnt/c/...`) para abrirlos con el reproductor nativo.
+- Ejecutarlo igual en **WSL** que en **Ubuntu puro** (sin Docker) o con Docker.
+- Soluciones a los problemas reales: saltos de línea CRLF, permisos `root` y paths con caracteres especiales.
+
+## 🧰 Prerrequisitos
+
+- **Windows con WSL** (y una distribución Ubuntu instalada) o **Ubuntu** directo, Linux o macOS.
+- **Docker Desktop** en Windows (activa la integración WSL) o Docker Engine en Linux.
+- Conocimientos básicos de terminal y Docker Compose.
+
+> Si te estás iniciando en Docker, te recomiendo primero [Docker: instalación y primeros pasos](/posts/docker-instalacion-primeros-pasos/) para tener el entorno listo y entender qué es un contenedor antes de lanzarnos al lío.
+
+## 🐳 El docker-compose.yml
+
+Guardamos los vídeos en el disco de Windows para abrirlos con el reproductor nativo. En WSL, tu disco `C:` está montado en `/mnt/c/`. El fichero `docker-compose.yml` monta esa carpeta dentro del contenedor y arranca un contenedor **Alpine** con todo lo necesario:
 
 ```yaml
 services:
@@ -33,13 +51,15 @@ services:
       su-exec jorge bash midu.sh"
 ```
 
-> **Sobre `tty` e `stdin_open`:** Equivalen a `-it` en `docker run`. Sin ellas, no podrías escribir comandos dentro.
+> **Sobre `tty` e `stdin_open`:** equivalen a `-it` en `docker run`. Sin ellas no podrías escribir comandos dentro del contenedor.
 
-> **Sobre los permisos:** `user: root` para instalar paquetes, `su-exec` para ejecutar como tu usuario real. Cambia `jorge` por tu nombre de usuario (`whoami`).
+> **Sobre los permisos:** `user: root` es para poder instalar paquetes; luego con `su-exec` ejecutamos el script como tu usuario real (cambia `jorge` por el tuyo, lo ves con `whoami`).
 
-> **Ojo:** Cambia `TuUsuario` por el nombre real de tu usuario en Windows (`ls /mnt/c/Users/`).
+> **Ojo:** cambia `TuUsuario` por el nombre real de tu usuario de Windows (`ls /mnt/c/Users/`).
 
-## 2. Estructura de carpetas
+## 📁 Estructura de carpetas
+
+Tu carpeta `test_videos` debe quedar así:
 
 ```
 test_videos/
@@ -50,89 +70,100 @@ test_videos/
 └── optimizados/        ← se crea automáticamente
 ```
 
-## 3. Pasos para ejecutarlo en WSL
+## 🚀 Pasos para ejecutarlo en WSL
 
-1. **Docker Desktop abierto** en Windows. En `Settings -> Resources -> WSL Integration`, activa tu distribución.
+### 1. Activa la integración WSL en Docker Desktop
 
-2. **Lanzar el contenedor:**
+Abre **Docker Desktop** en Windows. En `Settings → Resources → WSL Integration`, activa tu distribución.
 
-    ```sh
-    docker compose run --remove-orphans --rm downloader
-    ```
+### 2. Lanza el contenedor
 
-3. **Dentro del contenedor**, el menú interactivo se abre automáticamente. Solo selecciona el modo y sigue los pasos.
+```sh
+docker compose run --remove-orphans --rm downloader
+```
 
-4. **Si prefieres CLI directamente:**
+### 3. Usa el menú interactivo
 
-    ```sh
-    bash midu.sh --convert -s telegram    # Convertir para Telegram
-    bash midu.sh --cut -ss 5 -e 10        # Cortar de 5s a 10s
-    bash midu.sh -d "URL"                  # Descargar vídeo
-    bash midu.sh --info                    # Ver info del vídeo
-    ```
+Dentro del contenedor, el menú de `midu.sh` se abre automáticamente. Solo selecciona el modo y sigue los pasos.
 
-5. **Al acabar**, escribe `exit` en la terminal del contenedor.
+### 4. Usa la CLI directamente (opcional)
 
-## 4. Ejecutar directamente en Ubuntu (sin Docker)
+Si prefieres la terminal sin menú:
 
-Instala las dependencias:
+```sh
+bash midu.sh --convert -s telegram    # Convertir para Telegram
+bash midu.sh --cut -ss 5 -e 10        # Cortar de 5s a 10s
+bash midu.sh -d "URL"                  # Descargar vídeo
+bash midu.sh --info                    # Ver info del vídeo
+```
+
+### 5. Cierra el contenedor
+
+Al acabar, escribe `exit` en la terminal del contenedor.
+
+## 🚀 Ejecutar directamente en Ubuntu (sin Docker)
+
+Si no quieres Docker, instala las dependencias en tu Ubuntu:
 
 ```sh
 sudo apt update && sudo apt install ffmpeg
 sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp && sudo chmod a+rx /usr/local/bin/yt-dlp
 ```
 
-Hazlo ejecutable y ejecútalo:
+Haz ejecutable el script y ejecútalo:
 
 ```sh
 chmod +x midu.sh
 ./midu.sh
 ```
 
-## 5. Ejecutar con Docker en Ubuntu (sin WSL)
+## 🚀 Ejecutar con Docker en Ubuntu (sin WSL)
 
-Ajusta las rutas en `docker-compose.yml`:
+En Ubuntu puro, ajusta las rutas del `docker-compose.yml` (ya no hay `/mnt/c`, la ruta es tu home):
 
 ```yaml
 volumes:
   - /home/TuUsuario/Videos/test_videos:/test_videos
 ```
 
-Lanza el contenedor:
+Y lanza el contenedor igual que en WSL:
 
 ```sh
 docker compose run --remove-orphans --rm downloader
 ```
 
-## 6. Problemas que encontré y cómo los resolví
+## 🧪 Comprobar que funciona
 
-### Saltos de línea CRLF de Windows
+- **Versión de herramientas**: dentro del contenedor, `ffmpeg -version` y `yt-dlp --version` devuelven sus números de versión.
+- **Datos del vídeo**: `bash midu.sh --info "URL"` muestra título, duración y formatos disponibles.
+- **Archivos generados**: tras una descarga, en tu carpeta de Windows `Videos/test_videos/` (o `optimizados/`) aparece el fichero final.
+- **Permisos correctos**: los ficheros creados te pertenecen a ti y no a `root` (comprueba con `ls -l` en la carpeta).
 
-**Errores:** `mkdi: command not found`, `syntax error near unexpected token 'do'`
+> Además puedes verificar que el contenedor habla con tu disco comprobando que la carpeta montada aparece en `working_dir`: dentro del contenedor `pwd` debe mostrar `/test_videos`.
 
-**Causa:** El docker-compose.yml tenía saltos de línea Windows (CRLF).
+## ⚠️ Errores comunes
 
-**Solución:** Cambiar a LF en VS Code (clic en "CRLF" en la barra de estado).
+| Error | Causa | Solución |
+|---|---|---|
+| `mkdi: command not found` o `syntax error near unexpected token 'do'` | El `docker-compose.yml` o `midu.sh` tiene saltos de línea Windows (CRLF) | Cambia a LF en VS Code (clic en "CRLF" en la barra de estado) |
+| Archivos creados como `root` en los volúmenes | El contenedor ejecuta como `root` | Usa `adduser -D -u 1000 tu_usuario` + `su-exec tu_usuario bash midu.sh` |
+| ffmpeg no encontraba subtítulos | El path de los subtítulos tenía caracteres especiales | Escapa el path correctamente en el filtro de ffmpeg |
+| `pip` mostraba warning por ejecutar como `root` | Advertencia de seguridad de pip | Redirige: `pip install --break-system-packages yt-dlp 2>/dev/null; true` |
+| No hay permiso de escritura en la carpeta compartida | El usuario del contenedor no es dueño del volumen | Ajusta `chown -R` al usuario y verifica `ls -l` de la carpeta |
+| Docker no encuentra el contenedor/compose | Docker Desktop sin integración WSL o sin arrancar | Activa la distribución en `Settings → Resources → WSL Integration` y lanza Docker Desktop |
 
-### Archivos creados como root en los volúmenes
+## 🪜 Siguiente nivel
 
-**Solución:** Usar `su-exec` para ejecutar como tu usuario real:
+1. **Aprende Docker desde cero** si este es tu primer contenedor: [Docker: instalación y primeros pasos](/posts/docker-instalacion-primeros-pasos/).
+2. **Domina ffmpeg y yt-dlp** a fondo (formatos, subtítulos, recortes, filtros): [Guía de ffmpeg y yt-dlp](/posts/guia_ffmpeg_y_ÿt_dlp/).
+3. **Automatiza todo con la terminal** (bucles, scripts, cron) para procesar listas de vídeos: [Comandos útiles de terminal](/posts/comandos-utiles-terminal/).
+4. **Crea tu propio reproductor/pipeline**: exporta los vídeos finales por FTP a tu servidor: [Cómo conectarse a un servidor FTP](/posts/como_conectarse_a_un_servidor_ftp/).
 
-```yaml
-adduser -D -u 1000 tu_usuario &&
-su-exec tu_usuario bash midu.sh
-```
+## 🔗 Enlaces y recursos
 
-### ffmpeg no encontraba subtítulos
-
-**Causa:** El path de los subtítulos tenía caracteres especiales.
-
-**Solución:** Escapar el path correctamente en el filtro de ffmpeg.
-
-### pip mostraba warning de root
-
-**Solución:** Redirigir output de pip:
-
-```sh
-pip install --break-system-packages yt-dlp 2>/dev/null; true
-```
+- [Docker — documentación oficial](https://docs.docker.com/)
+- [Docker — WSL Integration (Windows)](https://learn.microsoft.com/es-es/windows/wsl/)
+- [Microsoft Learn — WSL](https://learn.microsoft.com/es-es/windows/wsl/)
+- [yt-dlp — GitHub](https://github.com/yt-dlp/yt-dlp)
+- [FFmpeg — documentación oficial](https://ffmpeg.org/documentation.html)
+- [Alpine Linux — paquetes](https://pkgs.alpinelinux.org/packages)

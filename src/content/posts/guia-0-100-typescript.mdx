@@ -2320,6 +2320,27 @@ type DeepPartial<T> = { [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]>
 
 ---
 
+## ⚠️ Errores comunes
+
+| Error | Causa | Solución |
+|---|---|---|
+| `Type 'string' is not assignable to type 'number'` | Intentas asignar un valor de tipo distinto al declarado en la variable, parámetro o return type | Revisa la fuente del dato; usa `Number()`, `parseInt()` o `+valor` para convertir, o corrige el tipo declarado si es intencionado |
+| `Property 'x' does not exist on type 'Y'` | Accedes a una propiedad que no está definida en la interfaz o tipo | Añade la propiedad a la interfaz, usa un type guard, o comprueba si el objeto tiene esa clave con `in` o `typeof` |
+| `Object is possibly 'null'` | TypeScript detecta que una variable puede ser `null` y accedes a ella sin comprobarlo primero | Usa optional chaining (`obj?.prop`), un `if (obj)` guard, o el non-null assertion operator (`obj!.prop`) si estás seguro |
+| `Cannot find module 'X' or its corresponding type declarations` | Falta instalar `@types/X` o el paquete no tiene tipos integrados | Ejecuta `npm i -D @types/nombre-paquete`; si no existe tipo, crea un archivo `d.ts` con `declare module 'nombre-paquete'` |
+| `Unexpected any. Specify a different type` | Usas `any` y el linter o `strict` lo flaggea como anti-patrón | Sustituye `any` por un tipo concreto, `unknown` (más seguro), o un genérico; reserva `any` solo para migraciones temporales |
+| `TS7006: Parameter 'x' implicitly has an 'any' type` | En `strictNullChecks` o `noImplicitAny`, un parámetro de función no tiene anotación ni se infiere | Añade tipo explícito al parámetro: `(x: string)`, o deja que TypeScript lo infiera con un valor por defecto o return type |
+| `Argument of type 'X' is not assignable to parameter of type 'Y'` | Pasas un objeto con propiedades de más o de menos a una función tipada | Comprueba que la estructura coincida exactamente con el tipo esperado; usa `satisfies` o `as const` para acotar el tipo del objeto literal |
+
+## 🔗 Guías relacionadas
+
+Profundiza en tu stack con estas guías complementarias:
+
+- [Guía de JavaScript: de 0 a 100](/posts/guia-0-100-javascript/) — repasa la base de JS antes de profundizar en tipos avanzados de TypeScript
+- [Guía de Astro: de 0 a 100](/posts/guia-0-100-astro/) — aplica TypeScript en un framework moderno con SSR, Islands y content collections tipadas
+
+---
+
 ## Referencias y documentación oficial
 
 - **TypeScript oficial**: [typescriptlang.org](https://www.typescriptlang.org/)

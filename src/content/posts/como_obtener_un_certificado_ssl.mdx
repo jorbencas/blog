@@ -1,109 +1,220 @@
 ---
 draft: false
-title: "Cómo obtener un certificado SSL"
-description: "Configura un certificado SSL en tu servidor Apache desde Webmin para habilitar HTTPS."
+title: "Cómo obtener un certificado SSL y activar HTTPS en Apache"
+description: "Aprende a generar un certificado SSL autofirmado con OpenSSL y a configurarlo en tu servidor Apache desde Webmin, habilitando HTTPS en el puerto 443. Incluye verificación y errores comunes."
 pubDate: "2016/01/19"
-tags: ['sistemas', 'web']
+tags: ['sistemas', 'web', 'ssl', 'certificados', 'apache', 'webmin']
 image: "img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 ---
 
 import ResponsiveImage from "@components/ResponsiveImage.astro";
 
-Hoy vamos ha ver como configurar un certificado ssl, para ello hay que ir a nuestro servidor Webmin, desde la maquina servidora, hay que iniciar nuestro servidor web, irnos a Servidor web apache, una vez en el servidor  web apache , hay que ir ha Global Configuration, una vez allí ahi que ir a configuración de apache modules, una vez allí hay que ir ha la opción de ssl
+¿Alguna vez has abierto tu web y el navegador te ha avisado de que "la conexión no es privada"? Eso es justo lo que pasa cuando un sitio no tiene un certificado SSL: los datos viajan en claro y nadie se fía. En esta guía te cuento cómo generar unos certificados SSL con OpenSSL y activarlos en tu servidor Apache desde Webmin, para que tu página pase a servirse por **HTTPS en el puerto 443**. Sin mareos, paso a paso.
 
+## 🤔 ¿Qué vamos a conseguir?
+
+- Activar el **módulo SSL** en Apache desde **Webmin**.
+- Generar un par de ficheros: **certificado** y **clave privada** con `openssl`.
+- Configurar la **zona virtual** de Apache para usar esos certificados y escuchar en el **puerto 443**.
+- Verificar que tu página carga con **HTTPS** y un candado en el navegador.
+- Entender los errores típicos de certificados y cómo solucionarlos.
+
+## 🧰 Prerrequisitos
+
+- Un **servidor Linux** (Debian/Ubuntu) con **Apache** instalado y funcionando.
+- **Webmin** instalado y accesible por navegador (`https://localhost:10000/`).
+- Acceso por **terminal** al servidor con permisos de administrador (`sudo`).
+- Un **usuario cliente** desde el que comprobar el resultado.
+
+Instala las herramientas que necesitaremos en el servidor:
+
+```bash
+sudo apt update
+sudo apt install openssl apache2
+```
+
+> Si no tienes Webmin todavía, puedes instalarlo siguiendo la [documentación oficial de Webmin](https://webmin.com/docs/). El resto de la guía asume que ya puedes entrar en `https://localhost:10000/`.
+
+## 🛠️ Activar el módulo SSL en Apache
+
+Lo primero es entrar en **Webmin** desde la máquina servidora y comprobar que Apache está iniciado. La ruta es:
+
+**Servidores → Servidor web Apache → Global Configuration → Configuración de módulos Apache**
 
 <ResponsiveImage
   avif="/img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_1-480.avif 480w, /img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_1-768.avif 768w, /img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_1-1200.avif 1200w"
   webp="/img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_1-480.webp 480w, /img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_1-768.webp 768w, /img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_1-1200.webp 1200w"
   fallback="/img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_1-1200.webp"
-  alt="carpeta var"
+  alt="Activar el módulo SSL en Webmin"
   blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDAHJ64pzKAPvqfpmm0DqKskcEYjIU0Vs2yKYV+UUVr7Mwdaz2P/9k="
 />
 
-
-Una vez activada esta opción hay que ir a enable select para que asi podamos activar, una vez hecho esto hay que abrir una terminal y instalar el ssl, para ello hay que poner
-
-<code>sudo apt-get install openssl</code>
-
-Una vez hecho esto hay que crear una carpeta en la cual se guardaran los 2 certificados, para ello hay que hacer un sudo `mkdir /etc/http`, luego hay que situarse en dicha carpeta para ello hay que hacer un cd /etc/http una vez allí ahí que hacer el comando que nos generara los 2 certificados
-
-<code>sudo openssl req -newkey rsa:512 -x509 -nodes -out cert.pen -keyout key.pen</code>
-
+Dentro de la **Configuración de módulos Apache** localiza la opción **SSL** y actívala. Una vez activada, verás una opción **Enable selected modules** (o similar) para confirmar los cambios.
 
 <ResponsiveImage
   avif="/img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_2-480.avif 480w, /img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_2-768.avif 768w, /img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_2-1200.avif 1200w"
   webp="/img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_2-480.webp 480w, /img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_2-768.webp 768w, /img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_2-1200.webp 1200w"
   fallback="/img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_2-1200.webp"
-  alt="carpeta var"
+  alt="Activar el módulo de Apache desde Webmin"
   blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDAHJ64pzKAPvqfpmm0DqKskcEYjIU0Vs2yKYV+UUVr7Mwdaz2P/9k="
 />
 
+Con el módulo activado, toca generar los certificados. Es hora de abrir una terminal y usar **OpenSSL**.
 
+## 🛠️ Generar el certificado SSL con OpenSSL
+
+Primero comprobamos que `openssl` está instalado (si no, lo instalamos con el comando del bloque de prerrequisitos):
+
+```bash
+openssl version
+```
+
+Ahora creamos una carpeta donde guardar los dos ficheros (certificado y clave). Yo uso la ruta `/etc/http`:
+
+```bash
+sudo mkdir /etc/http
+cd /etc/http
+```
+
+Dentro, ejecutamos el comando que genera la pareja de certificados. Este comando crea un **par de claves RSA** y un certificado **X.509 autofirmado** de forma simultánea:
+
+```bash
+sudo openssl req -newkey rsa:2048 -x509 -nodes -out cert.pem -keyout key.pem
+```
 
 <ResponsiveImage
   avif="/img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_3-480.avif 480w, /img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_3-768.avif 768w, /img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_3-1200.avif 1200w"
   webp="/img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_3-480.webp 480w, /img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_3-768.webp 768w, /img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_3-1200.webp 1200w"
   fallback="/img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_3-1200.webp"
-  alt="carpeta var"
+  alt="Generar los certificados con openssl en la terminal"
   blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDAHJ64pzKAPvqfpmm0DqKskcEYjIU0Vs2yKYV+UUVr7Mwdaz2P/9k="
 />
 
+Te preguntará por una serie de datos (país, provincia, nombre de la organización, etc.). Rellénalos o pulsa Enter para dejarlos en blanco. Para un tutorial de pruebas dan igual; para producción deben ser reales.
 
-Despues ahi que darle permisos a los 2 ficheros para ello hay que hacer el siguiente comando:
+Explico las opciones importantes:
 
-<code>sudo chmod +x key.gen</code>
+- `-newkey rsa:2048`: genera una clave privada RSA de 2048 bits (recomendada; en el ejemplo original era 512, demasiado débil hoy).
+- `-x509`: emite directamente un certificado en lugar de una petición de firma (CSR).
+- `-nodes`: "no DES", es decir, **no protege la clave con contraseña**, así Apache puede leerla sin pedirla en cada reinicio.
+- `-out cert.pem`: el fichero del **certificado público**.
+- `-keyout key.pem`: el fichero de la **clave privada**.
 
-Ahora ya tenemos creados nuestros certificados ssl, para comprovar si se ha hecho hay que hacer un listado de los archivos que hay en esta carpeta, para comprovar que estan los 2 archivos hay que hacer un `ls`.
-Una vez hecho esto ahora es momento de volver al Webmin, ir a servidor web Apache, ir a nuestra zona virtual, y luego clicar a nuestra zona, una vez allí hay que ir a Opciones SSL, debtro hay que ir a archivo de Certificado/clave publica, y archivo de clave privada, aqui hay que poner la ruta de los 2 archivos, como se ve en la imagen:
+Después, damos los permisos correctos para que el servicio web pueda leer los ficheros:
 
+```bash
+sudo chmod 644 cert.pem
+sudo chmod 600 key.pem
+```
+
+> El original usaba `chmod +x` y `rsa:512`. Con 512 bits el cifrado es trivial de romper hoy en día: usa al menos 2048. Y para los ficheros de un certificado lo que importa no es el ejecutable, sino los permisos de **lectura**.
+
+Podemos comprobar que los dos ficheros están creados listando la carpeta:
+
+```bash
+ls -l /etc/http
+```
+
+Deberías ver `cert.pem` y `key.pem`. Con esto, ya tenemos nuestra pareja de certificados.
+
+## 🚀 Configurar la Zona Virtual con SSL en Webmin
+
+Volvemos a Webmin → **Servidor web Apache**. Localiza tu **zona virtual** (Virtual Host) y entra en ella. Dentro, busca la sección **Opciones SSL**:
 
 <ResponsiveImage
   avif="/img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_4-480.avif 480w, /img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_4-768.avif 768w, /img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_4-1200.avif 1200w"
   webp="/img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_4-480.webp 480w, /img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_4-768.webp 768w, /img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_4-1200.webp 1200w"
   fallback="/img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_4-1200.webp"
-  alt="carpeta var"
+  alt="Opciones SSL de la zona virtual en Webmin"
   blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDAHJ64pzKAPvqfpmm0DqKskcEYjIU0Vs2yKYV+UUVr7Mwdaz2P/9k="
 />
 
+En **Opciones SSL** rellena los dos campos con las rutas absolutas de nuestros ficheros:
 
-Ahora hay que hacer que el puerto sea el 443
+- **Archivo de certificado / clave pública**: `/etc/http/cert.pem`
+- **Archivo de clave privada**: `/etc/http/key.pem`
 
+Ahora configuramos el **puerto** para que Apache escuche en el **443** (el puerto estándar de HTTPS):
 
 <ResponsiveImage
   avif="/img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_1-480.avif 480w, /img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_1-768.avif 768w, /img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_1-1200.avif 1200w"
   webp="/img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_1-480.webp 480w, /img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_1-768.webp 768w, /img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_1-1200.webp 1200w"
   fallback="/img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_1-1200.webp"
-  alt="carpeta var"
+  alt="Configurar el puerto 443 en Webmin"
   blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDAHJ64pzKAPvqfpmm0DqKskcEYjIU0Vs2yKYV+UUVr7Mwdaz2P/9k="
 />
 
+Guarda los cambios y aplica/reinicia Apache desde Webmin o desde la terminal:
 
-Una vez hecho esto hay que ir ha el cliente y probar si funciona.
+```bash
+sudo systemctl restart apache2
+sudo systemctl status apache2
+```
 
+## 🧪 Comprobar que funciona
+
+Desde el equipo **cliente** abre el navegador y ve a tu sitio usando **HTTPS**:
+
+```text
+https://192.168.101.1
+```
 
 <ResponsiveImage
   avif="/img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_5-480.avif 480w, /img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_5-768.avif 768w, /img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_5-1200.avif 1200w"
   webp="/img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_5-480.webp 480w, /img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_5-768.webp 768w, /img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_5-1200.webp 1200w"
   fallback="/img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_5-1200.webp"
-  alt="carpeta var"
+  alt="Aviso de conexión no privada al acceder por HTTPS"
   blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDAHJ64pzKAPvqfpmm0DqKskcEYjIU0Vs2yKYV+UUVr7Mwdaz2P/9k="
 />
 
-
-Y ahora como vemos ya nos funciuona y nos apareze, ahora para acceder a la pagina lo que hay que hacer es clicar en `understand`:
-
+Como el certificado es **autofirmado**, el navegador te avisará de que "la conexión no es privada". Esto es esperable y correcto: el navegador no puede verificar que el certificado lo ha firmado una autoridad de confianza (CA). Para acceder en un entorno de pruebas, haz clic en **Avanzado → Continuar / entender los riesgos** (o "make an exception"):
 
 <ResponsiveImage
   avif="/img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_6-480.avif 480w, /img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_6-768.avif 768w, /img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_6-1200.avif 1200w"
   webp="/img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_6-480.webp 480w, /img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_6-768.webp 768w, /img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_6-1200.webp 1200w"
   fallback="/img/como_obtener_un_certificado_ssl/como_obtener_un_certificado_ssl_6-1200.webp"
-  alt="carpeta var"
+  alt="Hacer una excepción para el certificado autofirmado"
   blur="/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wAARCAALABQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDAHJ64pzKAPvqfpmm0DqKskcEYjIU0Vs2yKYV+UUVr7Mwdaz2P/9k="
 />
 
+Al hacer la excepción, ya podrás entrar en la página. Verás el **candado** en la barra de direcciones indicando que la conexión está cifrada.
 
-Y en haz una excepción, al hacer esto nos deja entrar.
+- **Desde terminal** también puedes verificar el certificado con `curl`:
 
-Espero que hos haya servido este tutorial
+```bash
+curl -vk https://192.168.101.1
+```
 
+- Y comprobar que Apache escucha en el 443:
+
+```bash
+ss -tlnp | grep :443
+```
+
+## ⚠️ Errores comunes
+
+| Error | Causa | Solución |
+|---|---|---|
+| `SSL received a record that exceeded the maximum permissible length` | Apache no está escuchando en 443 con SSL | Activa el módulo y configura el puerto 443 en la zona virtual |
+| Aviso "la conexión no es privada" | Certificado autofirmado (sin CA de confianza) | Normal en pruebas: haz la excepción. Para producción usa una CA |
+| Apache no arranca tras configurar SSL | Rutas incorrectas de `cert.pem`/`key.pem` o permisos | Revisa las rutas absolutas en Webmin y los permisos `644`/`600` |
+| Se pide contraseña al reiniciar Apache | La clave privada está cifrada (sin `-nodes`) | Regenera la clave con `-nodes` |
+| Página carga por HTTP pero no por HTTPS | Redirección o puerto mal configurado | Verifica `ss -tlnp \| grep :443` y que el navegador use `https://` |
+| El navegador rechaza la clave (4096/512 bits) | Clave demasiado débil o antigua | Regenera con `rsa:2048` o superior |
+
+## 🪜 Siguiente nivel
+
+1. **Certificado autofirmado no basta para internet real** — para un dominio público usa un certificado gratuito y válido de [Let's Encrypt con certbot](https://certbot.eff.org/), que además se renueva solo.
+2. **Protege carpetas con contraseña** en Apache/Webmin para restringir zonas privadas: [Cómo proteger una carpeta con contraseña en Webmin](/posts/como_proteger_una_carpeta_con_contrasenya_en_webmin/).
+3. **Asegura el acceso remoto** a tu servidor con SSH y claves: [Formas de conectarse por SSH](/posts/formas_de_conectarse_por_ssh/) y [Conexión SSH mediante clave pública privada](/posts/conexion_ssh_mediante_clave_publica_privada/).
+4. **Monta tu propio panel de control** con Webmin para gestionar Apache, certificados y más servicios sin tocar la terminal.
+
+## 🔗 Enlaces y recursos
+
+- [OpenSSL — documentación oficial](https://www.openssl.org/docs/)
+- [Certificados Let's Encrypt](https://letsencrypt.org/es/)
+- [Certbot — oficial EFF](https://certbot.eff.org/)
+- [Documentación de Ubuntu — OpenSSL](https://help.ubuntu.com/community/OpenSSL)
+- [DigitalOcean — Cómo crear un certificado SSL autofirmado](https://www.digitalocean.com/community/tutorials/openssl-essentials-working-with-ssl-certificates-private-keys-and-csrs)
+- [Webmin — documentación oficial](https://webmin.com/docs/)

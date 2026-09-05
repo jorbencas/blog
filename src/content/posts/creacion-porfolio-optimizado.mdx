@@ -1,95 +1,112 @@
 ---
 draft: false
 title: "Cómo construí un porfolio ultra rápido con HTML semántico y optimización avanzada"
-description: "Un recorrido técnico por las decisiones de diseño, SEO, accesibilidad y rendimiento que convirtieron un porfolio estático en una web de alto rendimiento."
+description: "Un recorrido práctico por las decisiones de diseño, SEO, accesibilidad y rendimiento que convirtieron mi porfolio estático en una web de alto rendimiento. Incluye el código real y cómo comprobarlo."
 pubDate: "2026/06/03"
-tags: ["frontend", "seo", "css", "javascript", "html"]
+tags: ["frontend", "seo", "css", "javascript", "html", "rendimiento", "accesibilidad", "open-graph"]
 image: "img/creacion_porfolio_optimizado/creacion_porfolio_optimizado_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 ---
 
-Cuando decides lanzar tu porfolio web, es fácil caer en la tentación de instalar un framework pesado, meter librerías de animaciones complejas en 3D y preocuparte solo de la estética superficial. Sin embargo, el mercado técnico actual y los motores de búsqueda exigen mucho más: **rendimiento real, accesibilidad universal y semántica impecable**.
+Cuando decides lanzar tu porfolio web, es fácil caer en la tentación de instalar un framework pesado, meter librerías de animaciones complejas y preocuparte solo de la estética. Sin embargo, el mercado técnico actual y los motores de búsqueda exigen mucho más: **rendimiento real, accesibilidad universal y semántica impecable**. En este artículo te cuento, paso a paso y con el código real, cómo construí mi porfolio para sacar buena nota en Google Lighthouse sin sacrificar la interactividad.
 
-En este artículo analizo a fondo el desarrollo de mi porfolio personal, detallando cada decisión de ingeniería aplicada para conseguir una puntuación perfecta en Google Lighthouse sin sacrificar la interactividad.
+## 🤔 ¿Qué vamos a conseguir?
 
----
+- Un porfolio **estático ultrarrápido** con una arquitectura de componentes semántica.
+- Optimizaciones de **rendimiento**: aceleración por hardware, imágenes ligeras y carga diferida.
+- Un **SEO técnico** cuidado: etiquetas Open Graph, jerarquía semántica y metadatos correctos.
+- **Accesibilidad** por encima de los estándares WCAG.
+- La integración de los últimos **posts del blog vía API** sin recompilar el porfolio.
+- Saber **cómo comprobar** que todo funciona con Lighthouse.
 
-## 🎨 1. Estrategia de Diseño y Psicología del Color
+## 🧰 Prerrequisitos
 
-La interfaz visual responde a una estrategia clara de accesibilidad y psicología corporativa. Se ha evitado el uso de modos oscuros genéricos o fondos blancos fríos de hospital, optando por una paleta optimizada para largas lecturas:
+- Un editor de código y conocimientos básicos de **HTML, CSS y JavaScript**.
+- Un proyecto estático (yo uso **Astro**, pero los principios aplican a cualquier estático: Vite, Hugo, etc.).
+- Ganas de medir y optimizar; la herramienta clave será **Google Lighthouse** (viene en el panel de DevTools de Chrome).
+- Ojo: este artículo asume Astro como generador, pero los fragmentos de CSS/JS son independientes del framework.
 
-*   **Azul Eléctrico Corporativo (`#0066cc`):** Es el color dominante y de acento. Utilizado estratégicamente para enlaces, roles y títulos principales. Transmite profesionalidad, confianza, seguridad técnica y es el estándar de la industria tecnológica.
-*   **Fondo Crema Orgánico (`#efe0d8d7`):** Actúa como base global de la aplicación. Rompe con la frialdad cromática tradicional, aporta una estética premium y reduce drásticamente la fatiga visual.
-*   **Negro Grafito Puro (`#111111`):** Reservado para la tipografía de lectura principal. Su combinación sobre el fondo crema garantiza un contraste cromático ultra-alto que supera con creces las normativas de accesibilidad **WCAG AAA**.
+## 🎨 Estrategia de Diseño y Psicología del Color
 
----
+La interfaz responde a una estrategia clara de accesibilidad y psicología corporativa. Evité los modos oscuros genéricos y los fondos blancos fríos "de hospital", optando por una paleta pensada para largas lecturas:
 
-## 🏗️ 2. Arquitectura de Componentes e Inyección de HTML Semántico
+- **Azul eléctrico corporativo (`#0066cc`)**: color dominante y de acento. Lo uso en enlaces, roles y títulos. Transmite profesionalidad y es el estándar de la industria tecnológica.
+- **Fondo crema orgánico (`#efe0d8`)**: base global de la aplicación. Rompe con la frialdad cromática, aporta estética premium y reduce la fatiga visual.
+- **Negro grafito puro (`#111111`)**: para la tipografía de lectura. Combinado sobre el crema garantiza un contraste que supera las normativas **WCAG AAA**.
 
-Los rastreadores de los motores de búsqueda no "ven" los colores ni las animaciones; leen la estructura de datos. Para maximizar el SEO nativo, se ha reemplazado por completo la clásica estructura inundada de `<div>` vacíos por etiquetas semánticas nativas:
+> Elegir una paleta no es solo estética: el contraste afecta a la **accesibilidad** y a cómo se percibe tu marca. No escojas colores al azar, escoge una paleta con criterio de contraste.
 
-*   **`<header>` y `<nav>`:** Delimitan la barra de navegación fija. La lista se ha dotado de atributos explicitos de accesibilidad como `aria-label="Navegación principal"` para lectores de pantalla.
-*   **`<main>` y `<section>`:** Estructuran el flujo lineal de la página, permitiendo a los indexadores jerarquizar correctamente secciones clave como Experiencia, Conocimientos, Proyectos o Artículos.
-*   **`<article>`:** Cada tarjeta de trayectoria profesional y post del blog utiliza esta etiqueta, lo que indica a los bots de búsqueda que el bloque de información contiene texto autónomo, independiente y reutilizable.
-*   **Botones e Hipervínculos Enriquecidos:** Elementos interactivos como el botón de "Descargar CV" o los enlaces a repositorios contienen atributos `title` y descripciones nativas de destino, mejorando el presupuesto de rastreo (*Crawl Budget*).
+## 🏗️ Arquitectura de Componentes e Inyección de HTML Semántico
 
----
+Los rastreadores de los motores de búsqueda no "ven" colores ni animaciones: **leen la estructura de datos**. Para maximizar el SEO nativo sustituí la clásica estructura llena de `div` vacíos por etiquetas semánticas. Las escribo dentro de un bloque porque en MDX los corchetes angulares se interpretan como JSX:
 
-## ⚡ 3. Aceleración por Hardware: Forzando la GPU en Elementos de Interfaz
+```html
+<header> y <nav>   → barra de navegación fija con aria-label="Navegación principal"
+<main> y <section> → flujo lineal de la página (Experiencia, Conocimientos, Proyectos...)
+<article>          → cada tarjeta de trayectoria profesional y post del blog
+```
 
-Uno de los mayores retos de rendimiento visual apareció al superponer la cabecera con efecto de desenfoque dinámico (`backdrop-filter: blur`) con una sección de conocimientos que contiene una lista con 20 iconos en formato SVG enriquecidos con animaciones de escalado en `hover`.
+- **`<header>` y `<nav>`**: delimitan la barra de navegación fija. Añadí atributos de accesibilidad como `aria-label` para los lectores de pantalla.
+- **`<main>` y `<section>`**: estructuran el flujo lineal, permitiendo a los indexadores jerarquizar secciones clave como Experiencia, Proyectos o Artículos.
+- **`<article>`**: cada tarjeta de trayectoria y cada post usa esta etiqueta, indicando a los bots que el bloque es texto autónomo e independiente.
+- **Botones e hipervínculos enriquecidos**: el botón de "Descargar CV" y los enlaces a repositorios llevan atributos `title` y descripciones nativas de destino, mejorando el presupuesto de rastreo (*Crawl Budget*).
 
-Durante el desplazamiento (*scroll*), la CPU sufría picos de cálculo para renderizar estas capas vectoriales, generando micro-tirones o parpadeos gráficos. La solución consistió en aplicar **aislamiento de capas y aceleración por hardware** directamente en la hoja de estilos:
+## ⚡ Aceleración por Hardware: Forzando la GPU
+
+Uno de los mayores retos llegó al superponer la cabecera con desenfoque dinámico (`backdrop-filter: blur`) con una sección de conocimientos que tiene una lista con 20 iconos SVG animados en `hover`. Durante el *scroll*, la CPU sufría picos de renderizado generando micro-tirones y parpadeos.
+
+La solución fue aplicar **aislamiento de capas y aceleración por hardware**:
 
 ```css
 .knowledge ul li img {
-  will-change: transform;       /* Avisa proactivamente al navegador del cambio geométrico */
-  transform: translateZ(0);     /* Fuerza al motor de renderizado a procesar el elemento mediante la GPU */
+  will-change: transform;   /* avisa al navegador del cambio geométrico */
+  transform: translateZ(0); /* fuerza que el elemento lo renderice la GPU */
 }
 ```
 
-Con este sutil ajuste de ingeniería CSS, el hilo de renderizado delega el procesamiento gráfico a la GPU, manteniendo una tasa de refresco ultra-fluida de **60 FPS** incluso en dispositivos móviles de gama baja.
+Con este ajuste, el hilo de renderizado delega el procesamiento gráfico a la GPU, manteniendo una tasa fluida de **60 FPS** incluso en móviles de gama baja.
 
----
+> **Por qué funciona**: `will-change` prepara el navegador para el cambio, y `translateZ(0)` sube el elemento a su propia capa (composite layer). Así el navegador no necesita volver a pintar todo el `backdrop-filter` en cada frame.
 
-## 📸 4. Optimización de Imágenes y Metaetiquetas Open Graph (SEO Técnico)
+## 📸 Optimización de Imágenes y Metaetiquetas Open Graph
 
-El uso de formatos modernos como `.webp` es insuficiente si no se acompaña de una estrategia de dimensiones y metadatos correctos:
+Usar formatos modernos como `.webp` no basta si no acompañas la estrategia con las dimensiones y metadatos correctos:
 
-### Dimensionamiento y Carga Pérezosa
-1.  **Avatar de Perfil:** Aunque la imagen original cuenta con alta resolución, el navegador la renderiza a un tamaño máximo de `140x140px`. Se realizó un recorte y compresión exacta para dejarla en apenas **15 KB**.
-2.  **Uso de Layout Shift Prevention:** Se inyectaron dimensiones explícitas (`width` y `height`) en cada etiqueta `<img>` para reservar el espacio en el layout antes de la descarga, reduciendo a cero el *Cumulative Layout Shift (CLS)*.
-3.  **Carga Diferida:** Se aplicó el atributo nativo `loading="lazy"` en toda la parrilla de iconos de tecnologías para posponer su descarga hasta que el usuario se aproxime a la sección.
+### Dimensionamiento y carga perezosa
 
-### Redes Sociales y Visibilidad (Open Graph)
-Para asegurar que los enlaces compartidos en plataformas como LinkedIn, Twitter o WhatsApp se muestren de forma atractiva con su correspondiente tarjeta visual, se ha configurado de manera estricta el bloque de metadatos `og:image`. Un error común en producción es enlazar una imagen local sin la URL absoluta o usar rutas rotas, lo que provoca que las plataformas omitan la vista previa. La configuración se ha diseñado garantizando la concordancia absoluta de las siguientes propiedades:
+1. **Avatar de perfil**: aunque la imagen original es de alta resolución, el navegador la renderiza a `140x140px`. La recorté y comprimí hasta dejarla en apenas **15 KB**.
+2. **Prevención de layout shift**: inyecté dimensiones explícitas (`width` y `height`) en cada `<img>` para reservar el espacio antes de la descarga, reduciendo a cero el *Cumulative Layout Shift (CLS)*.
+3. **Carga diferida**: apliqué `loading="lazy"` en toda la parrilla de iconos para posponer su descarga hasta que el usuario se acerque a la sección.
+
+### Redes sociales y visibilidad (Open Graph)
+
+Para que los enlaces compartidos en LinkedIn, Twitter o WhatsApp se muestren con su tarjeta visual, configuré el bloque de metadatos `og:`. Un error común en producción es enlazar una imagen local sin **URL absoluta** o con rutas rotas, lo que hace que las plataformas omitan la vista previa. La configuración quedaría así:
 
 ```html
 <meta property="og:type" content="website">
 <meta property="og:title" content="Jorge Beneyto Castelló | Full Stack Developer Porfolio">
-<meta property="og:description" content="Explora mis proyectos, experiencia en desarrollo web y artículos técnicos sobre programación.">
-<meta property="og:url" content="https://github.com/jorbencas">
-<!-- El secreto de Open Graph: URL absoluta o ruta perfectamente mapeada en producción -->
+<meta property="og:description" content="Explora mis proyectos, experiencia en desarrollo web y artículos técnicos.">
+<meta property="og:url" content="https://tu-dominio-real.com">
 <meta property="og:image" content="https://tu-dominio-real.com/img/Avatar.webp">
-<meta property="og:image: "img/creacion_porfolio_optimizado/creacion_porfolio_optimizado_cover-1200.webp"
-<meta property="og:image: "img/creacion_porfolio_optimizado/creacion_porfolio_optimizado_cover-1200.webp"
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 ```
 
----
+> El **secreto de Open Graph**: la URL de la imagen debe ser **absoluta** (con dominio) y la imagen debe tener unas dimensiones recomendadas de 1200×630 para verse bien en cualquier plataforma.
 
-## 🔄 5. Integración Dinámica: Consumo de API en el Lado del Cliente
+## 🔄 Integración Dinámica: Consumo de API en el Cliente
 
-Con el objetivo de mantener la sección de artículos actualizada en tiempo real sin necesidad de recompilar el porfolio ante cada nueva publicación, se desarrolló un módulo asíncrono en JavaScript puro (`index.js`). Este script realiza una petición de red (*fetch*) hacia el endpoint del blog de Astro, parsea la respuesta en formato JSON e inyecta las tarjetas dinámicamente en el DOM:
+Para mantener la sección de artículos actualizada sin recompilar el porfolio en cada publicación, desarrollé un módulo asíncrono en JavaScript puro (`index.js`) que hace un `fetch` al endpoint del blog de Astro, parsea el JSON e inyecta las tarjetas en el DOM:
 
 ```javascript
 async function cargarUltimosPosts() {
   const container = document.getElementById('dynamic-posts-container');
   try {
-    const response = await fetch('https://api.tu-blog-ficticio.com/posts?limit=3');
+    const response = await fetch('https://tu-blog-real.com/posts?limit=3');
     if (!response.ok) throw new Error('Error en la respuesta de la API');
-    
+
     const posts = await response.json();
-    
+
     container.innerHTML = posts.map(post => `
       <article class="post-card">
         <h3>${post.title}</h3>
@@ -103,21 +120,62 @@ async function cargarUltimosPosts() {
 }
 ```
 
----
+> **Nota de arquitectura futura**: aunque este sistema del lado del cliente funciona, para mejorar el *Crawl Budget* el siguiente paso sería traer los posts durante la **fase de compilación** en el servidor, aprovechando las bondades nativas de Astro (generación estática).
 
-## 📱 6. Experiencia de Usuario Móvil: Menú Hamburguesa Nativo
+## 📱 Experiencia de Usuario Móvil: Menú Hamburguesa Nativo
 
-El menú de navegación tradicional colapsaba visualmente en pantallas reducidas. Para resolverlo, se diseñó un menú de hamburguesa modular que transforma la barra horizontal en un panel lateral deslizante mediante la combinación de estados CSS (`.is-active`) gestionados de forma eficiente mediante JavaScript, garantizando que el usuario pueda interactuar con una sola mano de forma natural y fluida.
+El menú tradicional colapsaba mal en pantallas reducidas. Lo resolví con un menú de hamburguesa modular que transforma la barra horizontal en un panel lateral deslizante. Se combina un estado CSS (`.is-active`) gestionado por JavaScript:
 
----
+```css
+.nav-panel {
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+}
+.nav-panel.is-active {
+  transform: translateX(0);
+}
+```
 
-### 💡 Nota de arquitectura futura: 
-Aunque este sistema mediante JavaScript del lado del cliente funciona perfectamente, para mejorar el presupuesto de rastreo (Crawl Budget) de Google, el siguiente paso evolutivo será traer estos posts durante la fase de compilación en el servidor aprovechando las bondades nativas de Astro.
+```javascript
+const toggle = document.querySelector('.menu-toggle');
+const panel = document.querySelector('.nav-panel');
+toggle.addEventListener('click', () => panel.classList.toggle('is-active'));
+```
 
+Así el usuario puede interactuar con una sola mano de forma natural y fluida.
 
----
+## 🧪 Comprobar que funciona
 
-## 🚀 Conclusión y Métricas
+- **Lighthouse**: abre DevTools de Chrome (F12) → pestaña **Lighthouse** → genera informe. En **Performance**, **Accessibility**, **Best Practices** y **SEO** deberías acercarte al 100.
+- **Open Graph**: pega tu URL en el documento de validación del [Open Graph Debugger de Facebook](https://developers.facebook.com/tools/debug/) o usa la vista previa de LinkedIn.
+- **CLS**: en Lighthouse busca la métrica *Cumulative Layout Shift*; debe ser 0 si reservaste correctamente el espacio de las imágenes.
+- **Semántica**: inspecciona el HTML con F12 y comprueba que hay etiquetas `header`, `main`, `section` y `article` en lugar de decenas de `div`.
+- **Peso**: en la consola de red (pestaña Network) revisa que las imágenes pesan poco y que las iconografías se descargan con `lazy` solo cuando entran en pantalla.
 
-La optimización de un entorno web profesional no radica en implementar tecnologías complejas innecesarias, sino en exprimir las capacidades nativas del navegador. Al rediseñar la sección de experiencia hacia una arquitectura de cuadrícula ejecutiva, corregir el comportamiento de las imágenes y blindar las metaetiquetas de indexación, el porfolio se convierte en una herramienta técnica impecable, veloz y lista para destacar en cualquier proceso de selección.
+## ⚠️ Errores comunes
 
+| Error | Causa | Solución |
+|---|---|---|
+| Puntuación baja en Performance | Imágenes enormes sin comprimir | Recorta y comprime a `.webp`/`.avif` con las dimensiones exactas |
+| CLS alto (layout shifts) | `<img>` sin `width`/`height` | Añade las dimensiones explícitas a cada imagen |
+| La tarjeta no aparece al compartir en redes | `og:image` local o ruta rota | Usa la **URL absoluta** de la imagen y el formato correcto |
+| El menú hamburguesa "salta" al abrirse | Falta `transform` con transición | Aplica el patrón con `.is-active` y una transición suave |
+| Micro-tirones al hacer scroll | Muchas capas animadas en CPU | Usa `will-change` y `translateZ(0)` para delegar a la GPU |
+| No se cargan los posts | Dominio CORS mal configurado en la API | Habilita CORS en el endpoint o haz el fetch en el servidor (SSG) |
+
+## 🪜 Siguiente nivel
+
+1. **Sube de nivel con el rendimiento real** midiendo con Lighthouse y [PageSpeed Insights](https://pagespeed.web.dev/), y repite el ciclo de medición-mejora.
+2. **Automatiza los posts en compilación**: en vez del fetch en el cliente, genera las tarjetas en tiempo de build con Astro para mejorar el SEO (del patrón de este artículo a SSG).
+3. **Aprende el stack completo** del fondo: instalación y primeros pasos en [Docker: instalación y primeros pasos](/posts/docker-instalacion-primeros-pasos/).
+4. **Optimiza imágenes y vídeos** con las herramientas que uso en [Guía de ffmpeg y yt-dlp](/posts/guia_ffmpeg_y_ÿt_dlp/).
+5. **Domina la terminal** para automatizar el build y el despliegue del porfolio: [Comandos útiles de terminal](/posts/comandos-utiles-terminal/).
+
+## 🔗 Enlaces y recursos
+
+- [Astro — documentación oficial](https://docs.astro.build/es/)
+- [MDN — Semántica HTML](https://developer.mozilla.org/es/docs/Glossary/Semantics)
+- [MDN — Open Graph](https://developer.mozilla.org/es/docs/Learn/HTML/Introduction_to_HTML/The_head_metadata_in_HTML)
+- [Google Lighthouse](https://developer.chrome.com/docs/lighthouse/)
+- [Web.dev — Core Web Vitals](https://web.dev/learn-core-web-vitals/)
+- [WCAG — Pautas de Accesibilidad para el Contenido Web](https://www.w3.org/WAI/standards-guidelines/wcag/)
