@@ -3,7 +3,7 @@ title: "Weekly Tech Recap W36"
 description: "Esta semana hemos seguido de cerca las principales tendencias en tecnología y desarrollo."
 pubDate: "2026-09-05"
 author: "Jorge Beneyto Castelló"
-image: "public/img/arquitectura_web.webp"
+image: "img/2026_w36_tech_recap/2026_w36_tech_recap_cover-1200.webp"
 tags: ["tech", "weekly-recap", "semanal", "dev.to", "hacker-news", "programacion", "desarrollo-web", "open-source", "herramientas", "inteligencia-artificial"]
 slug: "2026-w36-tech-recap"
 draft: true
