@@ -7,21 +7,64 @@ const tocColors = {
     hover: "group-hover:text-cyan-500 dark:group-hover:text-cyan-400",
     underline: "bg-cyan-500/30",
     active: "!text-cyan-500",
+    parent: "!text-cyan-500/60",
   },
   weekly: {
     hover: "group-hover:text-yellow-500 dark:group-hover:text-yellow-400",
     underline: "bg-yellow-500/30",
     active: "!text-yellow-500",
+    parent: "!text-yellow-500/60",
   },
 };
 const tc = tocColors[section] || tocColors.blog;
 
 const tocConfig = {
-  linkClass: `toc-link group block text-sm font-bold text-slate-700 dark:text-slate-300 ${tc.hover} transition-colors line-clamp-2 italic uppercase tracking-tighter`,
-  underlineClass: `h-[1px] w-0 group-hover:w-full ${tc.underline} transition-all duration-500 mt-2`,
+  linkClass: `toc-link group block text-[13px] font-bold text-slate-600 dark:text-slate-400 ${tc.hover} transition-colors line-clamp-2 italic uppercase tracking-tight`,
+  underlineClass: `h-[1px] w-0 group-hover:w-full ${tc.underline} transition-all duration-500 mt-1.5`,
   activeClasses: [tc.active, "!font-black"],
+  parentClass: tc.parent,
 };
 const tocConfigJSON = JSON.stringify(tocConfig);
+
+const escapeHtml = (s) =>
+  String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+
+function buildTree(items) {
+  const tree = [];
+  const stack = [{ level: -1, children: tree }];
+  for (const h of items) {
+    const level = Math.min(h.depth, 4) - 2;
+    if (level < 0 || level > 2) continue;
+    while (stack.length > 1 && stack[stack.length - 1].level >= level) stack.pop();
+    const node = { level, slug: h.slug, text: h.text, children: [] };
+    stack[stack.length - 1].children.push(node);
+    stack.push(node);
+  }
+  return tree;
+}
+
+function tocLink(node) {
+  return `<a href="#${node.slug}" class="${tocConfig.linkClass}" data-level="${node.level}">
+      <p class="toc-text">${escapeHtml(node.text)}</p>
+      <div class="${tocConfig.underlineClass}"></div>
+    </a>`;
+}
+
+function tocItem(node) {
+  const kids = node.children.length
+    ? `<ul class="toc-sublist mt-2 space-y-2 pl-3.5 ml-1.5 border-l border-slate-200 dark:border-slate-700">${node.children
+        .map(tocItem)
+        .join("")}</ul>`
+    : "";
+  return `<li class="toc-item" data-level="${node.level}">${tocLink(node)}${kids}</li>`;
+}
+
+const tocTree = hasServerHeadings ? buildTree(headings) : [];
+const tocHtml = `<ul class="space-y-3">${tocTree.map(tocItem).join("")}</ul>`;
 ---
 
 {
@@ -40,19 +83,7 @@ const tocConfigJSON = JSON.stringify(tocConfig);
         </svg>
       </summary>
       <div class="p-6 pt-4 overflow-y-auto max-h-[50vh]">
-        <nav class="space-y-4">
-          {headings.map((h) => (
-            <a
-              href={`#${h.slug}`}
-              class={tocConfig.linkClass}
-            >
-              <p class={`text-sm font-bold text-slate-700 dark:text-slate-300 ${tc.hover} transition-colors line-clamp-2 italic uppercase tracking-tighter`}>
-                {h.text}
-              </p>
-              <div class={`h-[1px] w-0 group-hover:w-full ${tc.underline} transition-all duration-500 mt-2`} />
-            </a>
-          ))}
-        </nav>
+        <nav class="space-y-3" data-toc-target="true" set:html={tocHtml} />
       </div>
     </details>
   )
@@ -60,34 +91,26 @@ const tocConfigJSON = JSON.stringify(tocConfig);
 
 <aside
   id="toc-desktop"
-  class="lg:col-span-4 space-y-8 hidden lg:block"
+  class="lg:col-span-5 hidden lg:block"
   data-toc-config={tocConfigJSON}
 >
-  <div class="sticky top-24 p-6 bg-slate-100/80 dark:bg-slate-900/50 backdrop-blur-md rounded-lg overflow-y-auto max-h-[calc(100vh-8rem)]">
+  <div class="sticky top-24 p-7 bg-slate-100/80 dark:bg-slate-900/50 backdrop-blur-md rounded-lg overflow-y-auto max-h-[calc(100vh-8rem)]">
     <h2 class="text-xs font-black uppercase tracking-[0.3em] text-slate-600 dark:text-slate-500 mb-6 pb-2">
       Contenido
     </h2>
-    <nav id="toc-list" class="space-y-4">
-      {hasServerHeadings && headings.map((h) => (
-        <a
-          href={`#${h.slug}`}
-          class={tocConfig.linkClass}
-        >
-          <p class={`text-sm font-bold text-slate-700 dark:text-slate-300 ${tc.hover} transition-colors line-clamp-2 italic uppercase tracking-tighter`}>
-            {h.text}
-          </p>
-          <div class={`h-[1px] w-0 group-hover:w-full ${tc.underline} transition-all duration-500 mt-2`} />
-        </a>
-      ))}
-    </nav>
+    <nav id="toc-list" class="space-y-3" data-toc-target="true" set:html={tocHtml} />
   </div>
 </aside>
 
 <style is:global>
   h1[id],
   h2[id],
-  h3[id] {
+  h3[id],
+  h4[id] {
     scroll-margin-top: 120px;
+  }
+  html {
+    scroll-behavior: smooth;
   }
   #toc-mobile summary::-webkit-details-marker {
     display: none;
@@ -95,123 +118,221 @@ const tocConfigJSON = JSON.stringify(tocConfig);
   #toc-mobile summary {
     list-style: none;
   }
-  #toc-mobile .toc-link-wrapper:not(:last-child) {
-    margin-bottom: 1rem;
+  #toc-list .toc-item[data-level="1"] > .toc-link .toc-text,
+  #toc-mobile .toc-item[data-level="1"] > .toc-link .toc-text {
+    letter-spacing: 0.05em;
   }
-  #toc-list .toc-link-wrapper:not(:last-child) {
-    margin-bottom: 1rem;
+  #toc-list .toc-sublist .toc-link .toc-text,
+  #toc-mobile .toc-sublist .toc-link .toc-text {
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 12px;
+  }
+  #toc-list .toc-sublist .toc-sublist .toc-link .toc-text,
+  #toc-mobile .toc-sublist .toc-sublist .toc-link .toc-text {
+    font-size: 11px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
   }
 </style>
 
 <script is:inline>
   (function() {
-    let observer = null;
+    let lastActive = "";
+    let rafId = null;
 
-    function getTOCConfig(el) {
-      const json = el?.closest("[data-toc-config]")?.getAttribute("data-toc-config");
+    function getTOCConfig(container) {
+      const json = container
+        ?.closest("[data-toc-config]")
+        ?.getAttribute("data-toc-config");
       if (json) {
         try { return JSON.parse(json); } catch(e) {}
       }
       return {
-        linkClass: "toc-link group block text-sm font-bold text-slate-700 dark:text-slate-300 group-hover:text-cyan-500 dark:group-hover:text-cyan-400 transition-colors line-clamp-2 italic uppercase tracking-tighter",
-        underlineClass: "h-[1px] w-0 group-hover:w-full bg-cyan-500/30 transition-all duration-500 mt-2",
+        linkClass: "toc-link group block text-[13px] font-bold text-slate-600 dark:text-slate-400 group-hover:text-cyan-500 dark:group-hover:text-cyan-400 transition-colors line-clamp-2 italic uppercase tracking-tight",
+        underlineClass: "h-[1px] w-0 group-hover:w-full bg-cyan-500/30 transition-all duration-500 mt-1.5",
         activeClasses: ["!text-cyan-500", "!font-black"],
+        parentClass: "!text-cyan-500/60",
       };
     }
 
-    function buildTOCFromDOM() {
-      const list = document.getElementById("toc-list");
-      const mobileList = document.querySelector("#toc-mobile nav");
-      if (!list && !mobileList) return;
-      const headingElements = document.querySelectorAll("article h2[id], article h3[id]");
-      if (headingElements.length === 0) {
-        const container = document.getElementById("toc-desktop");
-        if (container) container.style.display = "none";
-        const mobile = document.getElementById("toc-mobile");
-        if (mobile) mobile.style.display = "none";
-        return;
+    function buildTreeFromDOM() {
+      const els = Array.from(
+        document.querySelectorAll("article h2[id], article h3[id], article h4[id]")
+      );
+      const headings = els.map((el) => ({
+        el,
+        level: Math.min(parseInt(el.tagName[1], 10), 4) - 2,
+      })).filter((h) => h.level >= 0 && h.level <= 2);
+      const tree = [];
+      const stack = [{ level: -1, children: tree }];
+      for (const h of headings) {
+        while (stack.length > 1 && stack[stack.length - 1].level >= h.level) stack.pop();
+        const node = { level: h.level, el: h.el, children: [] };
+        stack[stack.length - 1].children.push(node);
+        stack.push(node);
       }
+      return { headings, tree };
+    }
 
-      const config = getTOCConfig(list || mobileList);
+    function makeLink(node, config) {
+      const a = document.createElement("a");
+      a.href = `#${node.el.id}`;
+      a.className = `${config.linkClass} toc-link`;
+      a.dataset.level = node.level;
+      const p = document.createElement("p");
+      p.className = "toc-text";
+      p.textContent = node.el.textContent;
+      const div = document.createElement("div");
+      div.className = config.underlineClass;
+      a.appendChild(p);
+      a.appendChild(div);
+      return a;
+    }
 
-      const renderLinks = (parent) => {
-        headingElements.forEach((h) => {
-          const a = document.createElement("a");
-          a.href = `#${h.id}`;
-          a.className = config.linkClass;
-          a.textContent = h.textContent;
-          const div = document.createElement("div");
-          div.className = config.underlineClass;
-          const wrapper = document.createElement("div");
-          wrapper.className = "toc-link-wrapper";
-          wrapper.appendChild(a);
-          wrapper.appendChild(div);
-          parent.appendChild(wrapper);
-        });
+    function renderSub(items, config) {
+      const ul = document.createElement("ul");
+      ul.className = "toc-sublist mt-2 space-y-2 pl-3.5 ml-1.5 border-l border-slate-200 dark:border-slate-700";
+      for (const node of items) {
+        const li = document.createElement("li");
+        li.className = "toc-item";
+        li.dataset.level = node.level;
+        li.appendChild(makeLink(node, config));
+        if (node.children.length) li.appendChild(renderSub(node.children, config));
+        ul.appendChild(li);
+      }
+      return ul;
+    }
+
+    function renderTreeInto(container, tree, config) {
+      const ul = document.createElement("ul");
+      ul.className = "space-y-3";
+      for (const node of tree) {
+        const li = document.createElement("li");
+        li.className = "toc-item";
+        li.dataset.level = node.level;
+        li.appendChild(makeLink(node, config));
+        if (node.children.length) li.appendChild(renderSub(node.children, config));
+        ul.appendChild(li);
+      }
+      container.replaceChildren(ul);
+    }
+
+    let headings = [];
+    let links = [];
+    let ancestorsMap = {};
+    let containers = [];
+
+    function buildAncestorsMap(tree) {
+      ancestorsMap = {};
+      const walk = (nodes, chain) => {
+        for (const node of nodes) {
+          const href = `#${node.el.id}`;
+          ancestorsMap[href] = chain.slice();
+          walk(node.children, chain.concat(href));
+        }
       };
-      if (list) {
-        list.innerHTML = "";
-        renderLinks(list);
+      walk(tree, []);
+    }
+
+    function renderAll() {
+      containers = [
+        document.getElementById("toc-list"),
+        document.querySelector("#toc-mobile nav[data-toc-target]"),
+      ].filter(Boolean);
+      if (containers.length === 0) return false;
+
+      const { headings: hs, tree } = buildTreeFromDOM();
+      headings = hs.map((h) => h.el);
+
+      if (headings.length === 0) {
+        for (const c of containers) {
+          const box = c.closest("#toc-desktop, #toc-mobile");
+          if (box) box.style.display = "none";
+        }
+        return false;
       }
-      if (mobileList) {
-        mobileList.innerHTML = "";
-        renderLinks(mobileList);
+
+      const config = getTOCConfig(containers[0]);
+      buildAncestorsMap(tree);
+      for (const c of containers) renderTreeInto(c, tree, config);
+      links = containers.flatMap((c) => Array.from(c.querySelectorAll("a.toc-link")));
+      for (const c of containers) {
+        const box = c.closest("#toc-desktop, #toc-mobile");
+        if (box) box.style.display = "";
       }
+      return true;
+    }
+
+    function activate(id) {
+      if (!id) return;
+      const config = getTOCConfig(containers[0] || links[0]);
+      for (const el of links) {
+        el.classList.remove(...config.activeClasses);
+        el.classList.remove(config.parentClass);
+      }
+      const href = `#${id}`;
+      const activeLink = links.find((l) => l.getAttribute("href") === href);
+      if (!activeLink) return;
+      activeLink.classList.add(...config.activeClasses);
+      const ancestors = ancestorsMap[href] || [];
+      for (const ah of ancestors) {
+        const anc = links.find((l) => l.getAttribute("href") === ah);
+        if (anc && anc !== activeLink) anc.classList.add(config.parentClass);
+      }
+      const container = activeLink.closest("#toc-desktop, #toc-mobile");
+      const scroller = container
+        ? container.querySelector(".overflow-y-auto") || container
+        : container;
+      if (scroller) {
+        const cr = scroller.getBoundingClientRect();
+        const lr = activeLink.getBoundingClientRect();
+        if (lr.top < cr.top + 12) scroller.scrollBy({ top: lr.top - cr.top - 12, behavior: "smooth" });
+        else if (lr.bottom > cr.bottom - 12) scroller.scrollBy({ top: lr.bottom - cr.bottom + 12, behavior: "smooth" });
+      }
+    }
+
+    function currentHeadingId() {
+      if (headings.length === 0) return null;
+      const doc = document.documentElement;
+      const atBottom = doc.scrollHeight - (window.scrollY + window.innerHeight) < 60;
+      if (atBottom) return headings[headings.length - 1].id;
+      let id = null;
+      for (const h of headings) {
+        if (h.getBoundingClientRect().top <= 150) id = h.id;
+        else break;
+      }
+      return id || headings[0].id;
+    }
+
+    function onScroll() {
+      if (rafId) return;
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+        const id = currentHeadingId();
+        if (id && id !== lastActive) {
+          lastActive = id;
+          activate(id);
+        }
+      });
     }
 
     function initTOC() {
-      if (observer) observer.disconnect();
-
-      let links = document.querySelectorAll(".toc-link");
-      const headingElements = Array.from(
-        document.querySelectorAll("article h2[id], article h3[id]")
-      );
-
-      if (headingElements.length === 0) return;
-
-      if (links.length === 0) {
-        buildTOCFromDOM();
-        links = document.querySelectorAll(".toc-link");
-        if (links.length === 0) return;
+      lastActive = "";
+      if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+      if (headings.length) {
+        window.removeEventListener("scroll", onScroll, { passive: true });
+        window.removeEventListener("resize", onScroll, { passive: true });
       }
-
-      const firstLink = links[0];
-      const config = getTOCConfig(firstLink);
-      const activeClasses = config.activeClasses;
-
-      const removeAllActive = () => {
-        links.forEach((link) => link.classList.remove(...activeClasses));
-      };
-
-      const activateLink = (id) => {
-        for (const link of links) {
-          if (link.getAttribute("href") === `#${id}`) {
-            removeAllActive();
-            link.classList.add(...activeClasses);
-            return true;
-          }
-        }
-        return false;
-      };
-
-      observer = new IntersectionObserver((entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            activateLink(entry.target.getAttribute("id"));
-          }
-        }
-      }, {
-        root: null,
-        rootMargin: "-120px 0px -60% 0px",
-        threshold: 0,
-      });
-
-      headingElements.forEach((h) => observer.observe(h));
-
-      if (links.length > 0) {
-        removeAllActive();
-        links[0].classList.add(...activeClasses);
-      }
+      if (!renderAll()) return;
+      window.addEventListener("scroll", onScroll, { passive: true });
+      window.addEventListener("resize", onScroll, { passive: true });
+      const first = currentHeadingId();
+      lastActive = first || "";
+      activate(first);
     }
 
     if (document.readyState === "loading") {
