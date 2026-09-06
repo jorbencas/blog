@@ -32,8 +32,10 @@ const tagsEncoded = encodeURIComponent(
 const sectionEncoded = section ? encodeURIComponent(section) : "";
 const descEncoded = description ? encodeURIComponent(cleanDescription) : "";
 
+const versionParam = `v=${new Date(pubDate ?? Date.now()).getTime()}`;
+
 const ogImageURLObj = new URL(
-  `/api/og/og.png?title=${titleEncoded}&tags=${tagsEncoded}${sectionEncoded ? `&section=${sectionEncoded}` : ""}${descEncoded ? `&desc=${descEncoded}` : ""}`,
+  `/api/og/og.png?title=${titleEncoded}&tags=${tagsEncoded}${sectionEncoded ? `&section=${sectionEncoded}` : ""}${descEncoded ? `&desc=${descEncoded}` : ""}&${versionParam}`,
   Astro.site
 );
 const ogImageUrl = ogImageURLObj.toString();
