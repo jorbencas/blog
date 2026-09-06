@@ -40,7 +40,6 @@ Tech Pulse es un pipeline completo de automatización: scraping de 515 fuentes, 
 | **API Key de Gemini** (recomendado) | Resúmenes IA, tips, herramientas | [Google AI Studio](https://aistudio.google.com/) — explicado abajo |
 | **Token de Telegram** (opcional) | Notificaciones | [@BotFather](https://t.me/BotFather) — explicado abajo |
 | **API Key de Mailgun** (opcional) | Newsletter email | [mailgun.com](https://www.mailgun.com/) — explicado abajo |
-| **API Key de Unsplash** (opcional) | Imágenes para posts | [unsplash.com/developers](https://unsplash.com/developers) |
 
 ---
 
@@ -112,23 +111,7 @@ Tech Pulse es un pipeline completo de automatización: scraping de 515 fuentes, 
 
 ---
 
-## 6. Obtener la API Key de Unsplash
-
-**Qué es:** Un servicio de imágenes gratuitas. Se usa para poner imágenes en los posts del blog.
-
-**Cómo obtenerla:**
-
-1. Ve a [unsplash.com/developers](https://unsplash.com/developers)
-2. Crea una cuenta (gratis)
-3. Haz clic en **"New Application"**
-4. Acepta los términos de uso
-5. Copia la **Access Key** (empieza por `...`)
-
-**¿Es indispensable?** No. Sin ella, los posts no tienen imágenes pero el contenido funciona igual.
-
----
-
-## 7. Clonar y configurar
+## 6. Clonar y configurar
 
 ```bash
 # 1. Clonar el repo
@@ -148,7 +131,7 @@ pip install -r requirements.txt
 
 ---
 
-## 8. Configurar variables de entorno
+## 7. Configurar variables de entorno
 
 Crea el archivo `.env` en la raíz del proyecto:
 
@@ -165,9 +148,6 @@ TELEGRAM_CHAT_ID=-1004332325883
 MAILGUN_API_KEY=key-...tu_api_key
 MAILGUN_DOMAIN=tudominio.com
 EMAIL_USER=tu@email.com
-
-# Unsplash (opcional — para imágenes)
-UNSPLASH_ACCESS_KEY=...tu_access_key
 EOF
 ```
 
@@ -181,7 +161,6 @@ EOF
 | `MAILGUN_API_KEY` | Enviar newsletter email | Email deshabilitado |
 | `MAILGUN_DOMAIN` | Dominio de envío | Email deshabilitado |
 | `EMAIL_USER` | Email destino | Email deshabilitado |
-| `UNSPLASH_ACCESS_KEY` | Imágenes en posts | Posts sin imágenes |
 
 ### Dónde va el archivo
 
@@ -197,7 +176,7 @@ test_githubActions/
 
 ---
 
-## 9. Probar el scraping
+## 8. Probar el scraping
 
 ```bash
 # Scraping completo (todas las 515 fuentes — tarda ~30 min)
@@ -220,7 +199,7 @@ python -m scripts.scrapers.scrape_tools
 
 ---
 
-## 10. Generar el dashboard
+## 9. Generar el dashboard
 
 ```bash
 # Generar solo el HTML del dashboard
@@ -235,7 +214,7 @@ python -m http.server -d public
 
 ---
 
-## 11. Probar notificaciones
+## 10. Probar notificaciones
 
 ```bash
 # Telegram (sin enviar — dry-run)
@@ -249,7 +228,7 @@ python -m scripts.publishers.send_email --dry-run --max-items 5
 
 ---
 
-## 12. Generar tips y herramientas
+## 11. Generar tips y herramientas
 
 ```bash
 # Ver categorías de tips disponibles
@@ -268,7 +247,7 @@ python scripts/ai_tools_generator.py --dry-run
 
 ---
 
-## 13. Ejecutar tests
+## 12. Ejecutar tests
 
 ```bash
 # Todos los tests (134 tests)
@@ -282,7 +261,7 @@ python -m pytest tests/test_solutions_db.py -v
 
 ---
 
-## 14. Uso en GitHub Actions (recomendado)
+## 13. Uso en GitHub Actions (recomendado)
 
 El proyecto está diseñado para ejecutarse automáticamente via GitHub Actions. Los workflows ya están configurados:
 
@@ -312,7 +291,7 @@ En tu fork del repo, ve a **Settings** → **Secrets and variables** → **Actio
 
 ---
 
-## 15. Verificación final
+## 14. Verificación final
 
 ```bash
 # Comprobar que el scraping funciona

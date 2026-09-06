@@ -22,8 +22,8 @@ Hoy "IA" casi siempre significa **modelos de lenguaje**, pero es útil tener el 
 
 | Término | Qué es | Ejemplo real |
 |---------|--------|--------------|
-| **Machine Learning** | Programas que "aprenden" patrones a partir de datos en vez de seguir reglas escritas a mano | Detección de spam, recomendadores |
-| **Deep Learning** | Subconjunto del ML que usa redes neuronales con muchas capas | Reconocimiento de imágenes, voz, traducción |
+| [**Machine Learning**](https://www.ibm.com/topics/machine-learning) | Programas que "aprenden" patrones a partir de datos en vez de seguir reglas escritas a mano | Detección de spam, recomendadores |
+| [**Deep Learning**](https://www.ibm.com/topics/deep-learning) | Subconjunto del ML que usa redes neuronales con muchas capas | Reconocimiento de imágenes, voz, traducción |
 | **Modelo generativo** | Un modelo que *genera* contenido nuevo (texto, imagen, audio) | LLMs, Stable Diffusion |
 | **LLM** | *Large Language Model*: modelo generativo de texto entrenado sobre cantidades enormes de texto | GPT, Claude, Llama, Mistral, DeepSeek |
 | **Multimodal** | Modelo que entiende y genera con varios tipos de datos (texto, imagen, audio, vídeo) | GPT-4o, Gemini, Llama 3.2 Vision |
@@ -39,7 +39,7 @@ Antes de los LLMs tuvimos, durante décadas, las **redes neuronales**. Si nunca 
 La idea en tres líneas:
 
 - Una red es un montón de **neuronas** organizadas en **capas**. Cada neurona recibe números, los multiplica por unos **pesos**, los suma y les aplica una función no lineal.
-- Durante el **entrenamiento**, la red produce un resultado, se compara con el esperado mediante una **función de pérdida** y se ajustan los pesos en la dirección que reduce el error (**backpropagation**).
+- Durante el **entrenamiento**, la red produce un resultado, se compara con el esperado mediante una **función de pérdida** y se ajustan los pesos en la dirección que reduce el error ([**backpropagation**](https://www.3blue1brown.com/neural-networks)).
 - Por mucha matemática que leas, esto es el núcleo: **ajustar millones de parámetros para minimizar el error sobre muchos ejemplos**.
 
 Los LLMs no son otra cosa: redes neuronales **muchísimo más grandes** (miles de millones de parámetros) entrenadas con una tarea casi absurda de simple: *predecir la siguiente palabra*.
@@ -124,7 +124,7 @@ La mejor explicación visual de la atención la tienes en [The Illustrated Trans
 
 ### 3.3 Generar texto: logits, temperatura y sampling
 
-Un LLM no "piensa" la respuesta: **genera texto token a token**, de forma *autoregresiva* (cada token nuevo depende de todos los anteriores). Para cada posición, la red devuelve una puntuación por cada posible token del vocabulario (**logits**), que se pasa por una **softmax** para convertirlas en una distribución de probabilidad.
+Un LLM no "piensa" la respuesta: **genera texto token a token**, de forma *autoregresiva* (cada token nuevo depende de todos los anteriores). Para cada posición, la red devuelve una puntuación por cada posible token del vocabulario (**logits**), que se pasa por una [**softmax**](https://es.wikipedia.org/wiki/Funci%C3%B3n_softmax) para convertirlas en una distribución de probabilidad.
 
 Entonces hay que *elegir* un token:
 
@@ -149,9 +149,9 @@ Además, la atención por sí sola **no sabe en qué orden van los tokens** (es 
 
 Attention is all you need proponía un transformer completo con dos mitades, y aún hoy "transformer" es un paraguas:
 
-- **Encoder-only** (ej. **BERT**, que aprendía con *masked language modeling*): lee toda la secuencia de golpe (bidireccional) y produce embeddings ricos. Ideal para clasificar, extraer o crear vectores de búsqueda (¡los de la sección 5!).
+- **Encoder-only** (ej. [**BERT**](https://huggingface.co/docs/transformers/model_doc/bert), que aprendía con *masked language modeling*: ocultar palabras al azar y predecir cuáles son): lee toda la secuencia de golpe (bidireccional) y produce embeddings ricos. Ideal para clasificar, extraer o crear vectores de búsqueda (¡los de la sección 5!).
 - **Decoder-only** (todo el **GPT**: autoregresivo, A *B* C → predice D). Genera texto. Es la familia dominante de LLMs de chat.
-- **Encoder-decoder** (ej. **T5**, **BART**): añade un paso de compresión intermedio; excelente para resumir o traducir.
+- **Encoder-decoder** (ej. [**T5**](https://huggingface.co/docs/transformers/model_doc/t5), [**BART**](https://huggingface.co/docs/transformers/model_doc/bart)): añade un paso de compresión intermedio; excelente para resumir o traducir.
 
 Que un modelo "lea" antes de escribir (encoder) o directamente prediga (decoder) no es un detalle cosmético: decides cuál usar según si quieres *entender* o *generar*. Detalle de la arquitectura en [The Transformer — Papers with Code](https://paperswithcode.com/method/transformer).
 
@@ -180,7 +180,7 @@ Puedes separar la vida de un modelo en tres etapas distintas, cada una con su co
 
 1. **Pre-training** — El modelo aprende lenguaje general prediciendo el siguiente token sobre cientos de miles de millones de tokens de internet. Salen los llamados **base models** (ej. Llama-3-8B, Qwen-2.5-14B). Aquí está el 99% del coste eléctrico y de dinero.
 2. **Fine-tuning supervisado (SFT)** — Se entrena un modelo base con miles de *pares pregunta→respuesta* para que adopte el estilo de asistente. Esto ya es factible en una GPU de consumo.
-3. **Alineación (RLHF / DPO)** — Se refina el comportamiento para que responda "bien" (rechazar peticiones peligrosas, no alucinar tanto, seguir tono). Técnicas como **DPO** simplifican mucho ese paso frente al RLHF clásico (PPO). Explicación clara en [RLHF en 4 pasos (eng)](https://huggingface.co/blog/rlhf) y [DPO, el arma secreta (eng)](https://huggingface.co/blog/dpo-trl).
+3. **Alineación (RLHF / DPO)** — Se refina el comportamiento para que responda "bien" (rechazar peticiones peligrosas, no alucinar tanto, seguir tono). Técnicas como **DPO** simplifican mucho ese paso frente al RLHF clásico ([PPO](https://spinningup.openai.com/en/latest/algorithms/ppo.html)). Explicación clara en [RLHF en 4 pasos (eng)](https://huggingface.co/blog/rlhf) y [DPO, el arma secreta (eng)](https://huggingface.co/blog/dpo-trl).
 
 ### 4.1 Fine-tuning eficiente: LoRA y cuantización
 
@@ -366,8 +366,8 @@ Un LLM puede responder con total seguridad una mentira completa. Eso es una **al
 
 ¿Cómo se mide la calidad de verdad de estos sistemas?
 
-- **Perplexity**: lo bien que un modelo predice un texto. Mide "fluidez", no verdad.
-- **Benchmarks**: MMLU, HumanEval, GSM8K... miden conocimiento o razonamiento en condiciones controladas. Ojo: se saturan rápido y pueden estar "contaminados" (ya vistos en el entrenamiento).
+- **[Perplexity](https://huggingface.co/docs/transformers/perplexity)**: lo bien que un modelo predice un texto. Mide "fluidez", no verdad. Cuanto más bajo, mejor predice el modelo ese texto concreto.
+- **Benchmarks**: [MMLU](https://huggingface.co/datasets/cais/mmlu), [HumanEval](https://huggingface.co/datasets/openai_humaneval), [GSM8K](https://huggingface.co/datasets/openai/gsm8k)… miden conocimiento o razonamiento en condiciones controladas. Ojo: se saturan rápido y pueden estar "contaminados" (ya vistos en el entrenamiento).
 - **LLM-as-judge**: otro LLM puntúa las respuestas. Barato y habitual, pero con sus sesgos ([reflexión sobre límites](https://arxiv.org/abs/2306.05685)).
 - **RAGAS / DeepEval**: evaluación orientada a sistemas RAG (fidelidad, relevancia).
 - **Human eval**: el oro, caro y lento.

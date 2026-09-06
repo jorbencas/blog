@@ -19,7 +19,7 @@ FFmpeg es la navaja suiza del vídeo: puede convertir, cortar, comprimir, poner 
 
 | Herramienta | Qué hace | Por qué esta y no otra |
 |-------------|----------|------------------------|
-| **FFmpeg** | Convertir, cortar, comprimir, editar vídeos | Estándar de facto, soporta todo codec, gratuito, potente. No hay alternativa real comparable |
+| [**FFmpeg**](https://ffmpeg.org/) | Convertir, cortar, comprimir, editar vídeos | Estándar de facto, soporta todo codec, gratuito, potente. No hay alternativa real comparable |
 | **yt-dlp** | Descargar de YouTube y 1000+ sitios | Fork de youtube-dl activo, más rápido, más sitios soportados, mejor mantenido |
 | **midu.sh** | Wrapper de ambos con 33 modos | Simplifica la sintaxis de ffmpeg, añade presets para redes sociales, auto-detección de GPU |
 
@@ -33,9 +33,9 @@ FFmpeg es la navaja suiza del vídeo: puede convertir, cortar, comprimir, poner 
 | Requisito | Para qué | Cómo obtenerlo |
 |-----------|----------|----------------|
 | **Docker** (recomendado) | Ejecutar todo sin instalar nada en el sistema | [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/) |
-| **FFmpeg** (sin Docker) | Motor de conversión de vídeo | `sudo apt install ffmpeg` (Ubuntu/Debian) |
-| **yt-dlp** (sin Docker) | Descarga de vídeos | `pip install yt-dlp` |
-| **Python 3** (sin Docker) | Para scripts auxiliares | `sudo apt install python3` |
+| [**FFmpeg**](https://ffmpeg.org/) (sin Docker) | Motor de conversión de vídeo | `sudo apt install ffmpeg` (Ubuntu/Debian) |
+| [**yt-dlp**](https://github.com/yt-dlp/yt-dlp) (sin Docker) | Descarga de videos | `pip install yt-dlp` |
+| [**Python 3**](https://www.python.org/) (sin Docker) | Para scripts auxiliares | `sudo apt install python3` |
 
 ---
 
@@ -262,7 +262,7 @@ LEER grabaciones/test/*_completed.mp4
 3. DETECCIÓN DE EPISODIOS (solo si no hay descripcion):
    detectar_episodios.py → cada OCR_STEP (180s) extrae la franja superior 20%,
    la escala x2, preprocesa (gris+contraste+sharp+treshold) y la pasa por
-   tesseract (inglés), buscando patrones:
+   [tesseract](https://github.com/tesseract-ocr/tesseract) (inglés), buscando patrones:
      • "Episodio 3" / "Ep 3" / "cap 3"
      • "S02E05" (temporada+episodio)
      • "1x03"   (formato serie)
@@ -300,7 +300,7 @@ El sidecar `_descripcion.json` lo escribe el **TwitchRecorder** cuando la fuente
 
 | Sidecar | Efecto en el monitor |
 |---------|----------------------|
-| `{"descripcion": "...texto..."}` | Usa ese texto como caption de Telegram, sin OCR ni corte (típico de directos de YouTube con descripción propia) |
+| `{"descripcion": "...texto..."}` | Usa ese texto como caption de Telegram, sin [OCR](https://es.wikipedia.org/wiki/Reconocimiento_%C3%B3ptico_de caracteres) ni corte (típico de directos de YouTube con descripción propia) |
 | `{"detectar": false}` | Omite OCR y corte (típico de cutetas sin franjas) |
 | `{"corte": false}` | Hace OCR para generar el caption, pero no corta el vídeo |
 

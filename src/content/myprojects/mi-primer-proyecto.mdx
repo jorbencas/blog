@@ -27,10 +27,10 @@ Así que hice **Mecano**: un entrenador de mecanografía diseñado específicame
 Para resolver esta ineficiencia nace **Mecano**. La plataforma ha sido diseñada bajo una arquitectura Fullstack unificada que prioriza el rendimiento en la interfaz y la estabilidad de las comunicaciones en tiempo real. 
 
 El entorno de ejecución abarca:
-*   **Capa de Presentación (Frontend):** Construida con **React 18** y fuertemente tipada con **TypeScript**, empleando **Tailwind CSS** para un sistema de diseño modular.
-*   **Manejo de Estado Global:** Se delegó el árbol del estado a **Zustand** para minimizar renderizados innecesarios, asegurando que las métricas de rendimiento del usuario operen de manera aislada sin detonar cascadas de re-renders.
-*   **Servicio de Backend y WebSockets:** La API Core está montada sobre **Express 5**. Se integra un canal bidireccional de baja latencia con **Socket.io** responsable de persistir analíticas en vivo y manejar iteraciones de sincronización entre clientes.
-*   **Capa de Persistencia y Gobernanza:** Los esquemas relacionales se ejecutan sobre una instancia de **PostgreSQL 16** contenedorizada con Docker, con volumen persistente para no perder datos entre reinicios. La autenticación es regulada mediante **JWT** con sesiones persistidas en base de datos, autenticación OAuth 2.0 (**Passport.js**) y cifrado con **Bcrypt**. El canal WebSocket (**Socket.IO**) gestiona en tiempo real el foro comunitario (posts, comentarios, likes), el estado online de amigos y la sincronización entre clientes en salas multijugador.
+*   **Capa de Presentación (Frontend):** Construida con [**React 18**](https://react.dev/) y fuertemente tipada con [**TypeScript**](https://www.typescriptlang.org/), empleando [**Tailwind CSS**](https://tailwindcss.com/) para un sistema de diseño modular.
+*   **Manejo de Estado Global:** Se delegó el árbol del estado a [**Zustand**](https://github.com/pmndrs/zustand) para minimizar renderizados innecesarios, asegurando que las métricas de rendimiento del usuario operen de manera aislada sin detonar cascadas de re-renders.
+*   **Servicio de Backend y WebSockets:** La API Core está montada sobre [**Express 5**](https://expressjs.com/). Se integra un canal bidireccional de baja latencia con [**Socket.io**](https://socket.io/) responsable de persistir analíticas en vivo y manejar iteraciones de sincronización entre clientes.
+*   **Capa de Persistencia y Gobernanza:** Los esquemas relacionales se ejecutan sobre una instancia de [**PostgreSQL 16**](https://www.postgresql.org/) contenedorizada con Docker, con volumen persistente para no perder datos entre reinicios. La autenticación es regulada mediante [**JWT**](https://jwt.io/) con sesiones persistidas en base de datos, autenticación OAuth 2.0 ([**Passport.js**](https://www.passportjs.org/)) y cifrado con [**Bcrypt**](https://en.wikipedia.org/wiki/Bcrypt). El canal WebSocket ([**Socket.IO**](https://socket.io/)) gestiona en tiempo real el foro comunitario (posts, comentarios, likes), el estado online de amigos y la sincronización entre clientes en salas multijugador.
 
 ## 3. Retos Técnicos y Cultura DevOps
 
@@ -42,12 +42,12 @@ Capturar de forma interceptada los eventos de I/O (`onKeyDown`) y contrastarlos 
 
 ### Control de Calidad: Testing Suite Activa
 Para garantizar que cualquier refactorización preserve la fidelidad de la experiencia E2E, se inyectó de forma temprana un ecosistema completo de automatización de control de calidad:
-*   **Testing E2E Automatizado:** Los scripts de regresión integrales iteran gracias a los flujos controlados implementados con **Playwright**.
-*   **Componentes a Prueba de Fallos:** Se provee un set de unit testings estrictos utilizando de forma híbrida el runtime de **Jest** junto a React Testing Library.
+*   **Testing E2E Automatizado:** Los scripts de regresión integrales iteran gracias a los flujos controlados implementados con [**Playwright**](https://playwright.dev/).
+*   **Componentes a Prueba de Fallos:** Se provee un set de unit testings estrictos utilizando de forma híbrida el runtime de [**Jest**](https://jestjs.io/) junto a React Testing Library.
 *   **Soporte Ciego de Accesibilidad:** El pipeline se blinda contra integraciones defectuosas o bloqueos de navegación mediante aserciones de estándar a11y, orquestadas y monitoreadas por las dependencias `@axe-core/react` y `jest-axe`.
 
 ### Pipeline CI/CD: Controles en Integración Continua
-Garantizar cero defectos en la rama default (`main`) forzó diseñar flujos estrictamente condicionados en **GitHub Actions**. Ante cualquier `push` o `pull_request`, nodos efímeros de Ubuntu arrancan la copia de trabajo y auditan el software contra los linters. Además, aplicando convenciones de control local, interceden paquetes como **Husky** y `lint-staged` validando formateos semánticos pre-commit. Adicionalmente, el ecosistema transiciona sin riesgo a entornos cloud observando las fugas silenciosas o excepciones runtime con telemetría de **Sentry**.
+Garantizar cero defectos en la rama default (`main`) forzó diseñar flujos estrictamente condicionados en [**GitHub Actions**](https://github.com/features/actions). Ante cualquier `push` o `pull_request`, nodos efímeros de Ubuntu arrancan la copia de trabajo y auditan el software contra los linters. Además, aplicando convenciones de control local, interceden paquetes como **Husky** y `lint-staged` validando formateos semánticos pre-commit. Adicionalmente, el ecosistema transiciona sin riesgo a entornos cloud observando las fugas silenciosas o excepciones runtime con telemetría de [**Sentry**](https://sentry.io/).
 
 ## 4. Desglose del Feature Set
 
@@ -617,7 +617,7 @@ npm run lint         # ESLint (max 10 warnings)
 
 ## 🌐 Servicios Gratuitos Sugeridos
 
-Para desplegar el proyecto sin costes, se pueden usar: **Hugging Face** como hosting (Spaces Docker gratis), **Neon** como base de datos PostgreSQL serverless (capa gratuita generosa) y **GitHub** para el repositorio y CI/CD con Actions.
+Para desplegar el proyecto sin costes, se pueden usar: [**Hugging Face**](https://huggingface.co/) como hosting (Spaces Docker gratis), [**Neon**](https://neon.tech/) como base de datos PostgreSQL serverless (capa gratuita generosa) y [**GitHub**](https://github.com/) para el repositorio y CI/CD con Actions.
 
 ## 6. Live Demo
 

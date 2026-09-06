@@ -23,7 +23,7 @@ Antes de tocar nada, necesitas entender qué vas a necesitar y por qué.
 | Requisito | Para qué lo necesitas | Cómo obtenerlo |
 |-----------|----------------------|----------------|
 | **Docker Desktop** | Todos los servicios corren en contenedores aislados | [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/) — instalar y reiniciar |
-| **WSL2** (Windows) o **Linux** | Entorno de ejecución para Docker | Windows: `wsl --install` en PowerShell (admin) / Linux: ya viene |
+| [**WSL2**](https://learn.microsoft.com/windows/wsl/install) (Windows) o [**Linux**](https://www.linux.org/) | Entorno de ejecución para Docker | Windows: `wsl --install` en PowerShell (admin) / Linux: ya viene |
 | **API ID y Hash de Telegram** | Para que el uploader y el bot se autentiquen con tu cuenta de Telegram | [my.telegram.org/apps](https://my.telegram.org/apps) — explicado abajo |
 | **Token del bot de Telegram** | Para que @jorbencas_bot pueda responder comandos | [@BotFather](https://t.me/BotFather) en Telegram — explicado abajo |
 | **API Key de Gemini** (opcional) | Para que el bot genere tips, conceptos y herramientas con IA | [Google AI Studio](https://aistudio.google.com/) — explicado abajo |
@@ -270,7 +270,7 @@ Si ves los 3 contenedores corriendo (`twitchrecorder-sendo`, `ffmpeg_monitor-sen
 
 ---
 
-## 11. Instalar auto-arranque (systemd)
+## 11. Instalar auto-arranque ([systemd](https://systemd.io/))
 
 Para que el pipeline y el bot se arranquen solos al encender el PC:
 
@@ -358,15 +358,15 @@ Hasta aquí has instalado piezas sueltas. Ahora toca **cómo funciona el ecosist
 
 | Contenedor | Proyecto | Imagen | Para qué | Restart |
 |------------|----------|--------|----------|---------|
-| `twitchrecorder-sendo` | `TwitchRecorder/` | python:3.12-slim + streamlink | Graba directos de Twitch/YouTube/Kick/web | unless-stopped |
-| `ffmpeg_monitor-sendo` | `ffmpeg-yt-dlp/` | Alpine + ffmpeg + tesseract | Comprime automáticamente las grabaciones (con detección de episodios por OCR) | unless-stopped |
-| `telegram-uploader-sendo` | `downloader_telegram/` | python:3.12-slim + telethon | Sube los vídeos comprimidos a Telegram y limpia | unless-stopped |
-| `telegram-downloader` | `downloader_telegram/` | python:3.12-slim + telethon | CLI interactivo: descargas, clonado, gestión de canales/temas (solo cuando lo usas) | on-demand |
-| `telegram-bot` | `downloader_telegram/` (Dockerfile.bot) | python-telegram-bot + yt-dlp + Deno | Bot @jorbencas_bot: `/tip`, `/descarga`, `/concepto`, `/noticias` | unless-stopped |
-| `yt-to-telegram` | `yt-to-telegram/` | python:3.12-slim + yt-dlp + Deno | Pipeline YouTube → Telegram (por cron, 01:00 → 18:00) | unless-stopped |
+| `twitchrecorder-sendo` | `TwitchRecorder/` | python:3.12-slim + [streamlink](https://streamlink.github.io/) | Graba directos de Twitch/YouTube/Kick/web | unless-stopped |
+| `ffmpeg_monitor-sendo` | `ffmpeg-yt-dlp/` | Alpine + [ffmpeg](https://ffmpeg.org/) + [tesseract](https://github.com/tesseract-ocr/tesseract) | Comprime automáticamente las grabaciones (con detección de episodios por OCR) | unless-stopped |
+| `telegram-uploader-sendo` | `downloader_telegram/` | python:3.12-slim + [telethon](https://docs.telethon.dev/) | Sube los vídeos comprimidos a Telegram y limpia | unless-stopped |
+| `telegram-downloader` | `downloader_telegram/` | python:3.12-slim + [telethon](https://docs.telethon.dev/) | CLI interactivo: descargas, clonado, gestión de canales/temas (solo cuando lo usas) | on-demand |
+| `telegram-bot` | `downloader_telegram/` (Dockerfile.bot) | python-telegram-bot + [yt-dlp](https://github.com/yt-dlp/yt-dlp) + [Deno](https://deno.land/) | Bot @jorbencas_bot: `/tip`, `/descarga`, `/concepto`, `/noticias` | unless-stopped |
+| `yt-to-telegram` | `yt-to-telegram/` | python:3.12-slim + [yt-dlp](https://github.com/yt-dlp/yt-dlp) + [Deno](https://deno.land/) | Pipeline YouTube → Telegram (por cron, 01:00 → 18:00) | unless-stopped |
 | `yt-download` / `yt-convert` / `yt-upload` | `yt-to-telegram/` | Uso de pruebas | Ejecuta solo una fase del pipeline de YouTube para depurar | on-demand |
 
-**Dato clave:** ninguno de estos contenedores está conectado por red entre sí. Cada `docker-compose.yml` crea su propia red *bridge* por defecto, así que **no pueden "verse" entre ellos**. La comunicación ocurre **solo a través de las carpetas compartidas** en el host (bind mounts). Es un *pipeline de archivos*, no de sockets.
+**Dato clave:** ninguno de estos contenedores está conectado por red entre sí. Cada `docker-compose.yml` crea su propia red [*bridge*](https://docs.docker.com/network/bridge/) por defecto, así que **no pueden "verse" entre ellos**. La comunicación ocurre **solo a través de las carpetas compartidas** en el host ([*bind mounts*](https://docs.docker.com/engine/storage/bind-mounts/)). Es un *pipeline de archivos*, no de sockets.
 
 ### 13.2. El mapa de carpetas `data/` (el pegamento del sistema)
 

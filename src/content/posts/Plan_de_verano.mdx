@@ -103,7 +103,7 @@ Cuando una empresa te pida *"automatizar albaranes por foto en WhatsApp"*, ya no
 * **Objetivo:** Crear una infraestructura profesional y aislada en tu Ubuntu donde el bot es la interfaz y MongoDB el almacén de memoria.
 * **El Proyecto:** Usando **Docker Compose**, levantas tres contenedores que trabajan en equipo:
   1. **Contenedor A (El Backend del Bot):** Tu servicio de Node.js/Python que mantiene el Bot de Telegram/WhatsApp encendido 24/7 de forma asíncrona.
-  2. **Contenedor B (La Base de Datos):** Un contenedor de **MongoDB**.
+  2. **Contenedor B (La Base de Datos):** Un contenedor de [**MongoDB**](https://www.mongodb.com/).
   3. **Contenedor C (Mensajería interna):** Un Broker MQTT.
   Cada vez que un usuario interactúa con tu Bot (le manda un texto, un comando o un enlace), el Bot ya no solo responde con IA, sino que **registra toda la conversación, los metadatos del usuario y los tokens consumidos en MongoDB** en tiempo real.
 * **Tecnologías clave:** Docker, Docker Compose, MongoDB (Mongoose/PyMongo), API del Bot.
@@ -115,7 +115,7 @@ Cuando una empresa te pida *"automatizar albaranes por foto en WhatsApp"*, ya no
   1. Un transportista le hace una foto a un **Albarán** arrugado y la envía por el **Bot de WhatsApp o Telegram**.
   2. El código de tu Bot (corriendo en su contenedor de Docker) recibe el archivo multimedia y se lo pasa a Gemini Vision de forma asíncrona.
   3. Gemini extrae los datos (Nº Albarán, cliente, productos, cantidades) y devuelve un JSON estructurado.
-  4. Tu backend valida los datos. Si todo cuadra, guarda el JSON en **MongoDB** con el estado `procesado` y **el Bot le responde al usuario automáticamente**: *"✅ Albarán #4502 registrado correctamente. 12 cajas añadidas al inventario"*.
+  4. Tu backend valida los datos. Si todo cuadra, guarda el JSON en [**MongoDB**](https://www.mongodb.com/) con el estado `procesado` y **el Bot le responde al usuario automáticamente**: *"✅ Albarán #4502 registrado correctamente. 12 cajas añadidas al inventario"*.
   5. Si la foto está borrosa o los datos no cuadran, se guarda en Mongo como `pendiente_revision` y el Bot avisa: *"⚠️ No he podido procesar el total correctamente. El albarán ha sido enviado al panel de revisión manual"*.
 * **Tecnologías clave:** Gemini Multimodal (Structured Outputs), Docker, MongoDB, Bot API.
 * **Habilidad ganada:** Desarrollo de flujos de automatización "End-to-End" con interfaces accesibles para operarios reales.
@@ -136,7 +136,7 @@ Cuando una empresa te pida *"automatizar albaranes por foto en WhatsApp"*, ya no
 * **El Proyecto (Gran Plataforma SaaS):** 
   * Los clientes piden citas o envían contratos a través del **Bot**.
   * La IA (con acceso a un **RAG** en una base de datos vectorial para temas legales/médicos) procesa las peticiones desde el contenedor del backend.
-  * Guarda el histórico de los chats y logs en **MongoDB**.
+  * Guarda el histórico de los chats y logs en [**MongoDB**](https://www.mongodb.com/).
   * Si es una cita o una venta, impacta directamente los módulos correspondientes en **Odoo**.
   * Si ocurre una anomalía o una cancelación urgente, el sistema publica un mensaje por **MQTT** que actualiza instantáneamente un Dashboard interactivo (en Svelte) que tiene la secretaria en la recepción de la clínica.
 * **Tecnologías clave:** Todo tu stack unificado en un entorno multi-contenedor de Docker.
