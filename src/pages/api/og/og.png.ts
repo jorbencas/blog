@@ -8,7 +8,7 @@ import { SITE_NAME } from 'src/consts.js';
 export const prerender = false;
 
 const SECTION_STICKERS: Record<string, { header: string; stickers: string[] }> = {
-  home:         { header: "Blog",              stickers: ["blog", "code", "github"] },
+  home:         { header: "Blog",              stickers: ["github", "mail", "python", "docker", "nodejs"] },
   blog:         { header: "Blog",              stickers: ["js", "python", "ts"] },
   posts:        { header: "Blog",              stickers: ["js", "python", "ts"] },
   retos:        { header: "Retos",             stickers: ["python", "js", "java", "ts"] },
