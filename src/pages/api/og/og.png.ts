@@ -15,6 +15,12 @@ const SECTION_STICKERS: Record<string, { header: string; stickers: string[] }> =
   proyectos:    { header: "Proyectos",         stickers: ["github", "docker", "ts"] },
   weekly:       { header: "Weekly",            stickers: ["rss", "github", "email"] },
   tags:         { header: "Etiquetas",         stickers: ["github", "code", "blog"] },
+  about:        { header: "Sobre mí",         stickers: ["blog", "github", "mail"] },
+  herramientas: { header: "Herramientas",      stickers: ["docker", "code", "git"] },
+  uses:         { header: "Uses",              stickers: ["code", "ts", "docker"] },
+  contact:      { header: "Contacto",          stickers: ["email", "mail", "twitter"] },
+  archive:      { header: "Archivo",           stickers: ["blog", "rss", "prev"] },
+  stats:        { header: "Estadísticas",      stickers: ["code", "python", "blog"] },
 };
 
 const SECTION_COLORS: Record<string, { from: string; to: string }> = {
@@ -25,6 +31,12 @@ const SECTION_COLORS: Record<string, { from: string; to: string }> = {
   proyectos:    { from: "#6b21a8", to: "#a855f7" },
   weekly:       { from: "#075985", to: "#06b6d4" },
   tags:         { from: "#075985", to: "#06b6d4" },
+  about:        { from: "#047857", to: "#34d399" },
+  herramientas: { from: "#7c3aed", to: "#a78bfa" },
+  uses:         { from: "#0369a1", to: "#38bdf8" },
+  contact:      { from: "#c2410c", to: "#fb923c" },
+  archive:      { from: "#64748b", to: "#94a3b8" },
+  stats:        { from: "#0d9488", to: "#5eead4" },
 };
 
 const SIZES: Record<string, { width: number; height: number }> = {
