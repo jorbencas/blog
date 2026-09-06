@@ -4,7 +4,7 @@ title: "Instalación del Ecosistema Devjobs: Pipeline Completo desde Cero"
 description: "Guía paso a paso para montar el ecosistema completo de automatización: pipeline de Twitch a Telegram, pipeline de YouTube, bot de IA y scrapers. Todo con Docker, aliases y auto-arranque."
 pubDate: "2026/09/04"
 
-updatedDate: "2026/09/06"
+updatedDate: "2026/09/07"
 tags: ["docker", "instalación", "guía", "pipeline", "linux", "wsl2"]
 image: "img/instalacion_devjobs/instalacion_devjobs_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
@@ -347,6 +347,128 @@ crontab -e
 **¿Por qué a las 01:00?** Para no saturar la red durante el día. El pipeline dura hasta 17 horas (para a las 18:00).
 
 **¿Qué pasa si el PC se apaga antes?** Los vídeos pendientes se guardan en `data/yt-pipeline/logs/pending_videos.log`. La próxima vez que arranque, el pipeline continuará desde donde se quedó.
+
+---
+
+## 13. Arquitectura completa: contenedores, carpetas y flujos
+
+Hasta aquí has instalado piezas sueltas. Ahora toca **cómo funciona el ecosistema por dentro**: cuántos contenedores hay, qué carpetas comparten, cómo se relacionan sin hablarse por red, y qué ocurre en cada paso del flujo de datos.
+
+### 13.1. Los contenedores del ecosistema
+
+| Contenedor | Proyecto | Imagen | Para qué | Restart |
+|------------|----------|--------|----------|---------|
+| `twitchrecorder-sendo` | `TwitchRecorder/` | python:3.12-slim + streamlink | Graba directos de Twitch/YouTube/Kick/web | unless-stopped |
+| `ffmpeg_monitor-sendo` | `ffmpeg-yt-dlp/` | Alpine + ffmpeg + tesseract | Comprime automáticamente las grabaciones (con detección de episodios por OCR) | unless-stopped |
+| `telegram-uploader-sendo` | `downloader_telegram/` | python:3.12-slim + telethon | Sube los vídeos comprimidos a Telegram y limpia | unless-stopped |
+| `telegram-downloader` | `downloader_telegram/` | python:3.12-slim + telethon | CLI interactivo: descargas, clonado, gestión de canales/temas (solo cuando lo usas) | on-demand |
+| `telegram-bot` | `downloader_telegram/` (Dockerfile.bot) | python-telegram-bot + yt-dlp + Deno | Bot @jorbencas_bot: `/tip`, `/descarga`, `/concepto`, `/noticias` | unless-stopped |
+| `yt-to-telegram` | `yt-to-telegram/` | python:3.12-slim + yt-dlp + Deno | Pipeline YouTube → Telegram (por cron, 01:00 → 18:00) | unless-stopped |
+| `yt-download` / `yt-convert` / `yt-upload` | `yt-to-telegram/` | Uso de pruebas | Ejecuta solo una fase del pipeline de YouTube para depurar | on-demand |
+
+**Dato clave:** ninguno de estos contenedores está conectado por red entre sí. Cada `docker-compose.yml` crea su propia red *bridge* por defecto, así que **no pueden "verse" entre ellos**. La comunicación ocurre **solo a través de las carpetas compartidas** en el host (bind mounts). Es un *pipeline de archivos*, no de sockets.
+
+### 13.2. El mapa de carpetas `data/` (el pegamento del sistema)
+
+Esta carpeta es git-ignorada y se crea en el host. Es el **punto de encuentro** de todo el ecosistema:
+
+```
+devjobs/data/
+├── pipeline/                                  ← pipeline DIRECTO → TELEGRAM
+│   ├── grabaciones/
+│   │   ├── 2026/09/...                            ← crudo por año/mes (escribe twitchrecorder)
+│   │   └── test/                                  ← cola de espera *_completed.mp4
+│   │       └── .corruptos/                        ← vídeos ilegibles o <60s (monitor)
+│   ├── comprimidos/                               ← *_compressed.mp4 + *_episodios.json
+│   │   ├── *_episodios.json                      ← metadata OCR para el uploader
+│   │   ├── log_YYYY-MM-DD.txt                     ← log diario del monitor
+│   │   └── .processed/                            ← originales ya comprimidos
+│   ├── partes/                                    ← divisiones >2GB para Telegram
+│   └── backups/                                   ← backups de config del CLI
+├── yt-pipeline/                               ← pipeline YOUTUBE → TELEGRAM
+│   ├── downloads/<canal>/                        ← .mp4 descargados (2/canal)
+│   ├── converted/<canal>/                        ← 720p listos (o pendientes de reintento)
+│   ├── uploaded/<canal>/                         ← histórico ya subido
+│   ├── logs/                                     ← downloads_*.json, cron_*.log, ...
+│   └── downloaded_ids.json                       ← dedup por video_id
+└── jorbencas_bot/                             ← bot (montado como /data/descargas)
+```
+
+**Por qué en el host y no en volúmenes docker:** porque así puedes ver, copiar y depurar lo que hay en cada paso simplemente con `ls`. El disco compartido es el "contrato" entre productor y consumidor.
+
+### 13.3. Flujo del pipeline 1 — Directo → Telegram (sendosama)
+
+Este pipeline lo montan los 3 daemons que levanta `pipe_up`. Cada flecha es **un archivo que cambia de carpeta**:
+
+```
+  twitchrecorder-sendo (grabar)            ffmpeg_monitor-sendo (comprimir)      telegram-uploader-sendo (subir + limpiar)
+  ─────────────────────────────            ─────────────────────────────         ─────────────────────────────────────
+  Detecta el directo a su hora
+  → graba con streamlink/yt-dlp
+                                          │
+  <canal>_..._KW_<keyword>.mp4            │
+  se escribe en grabaciones/"año"/"mes"/  │
+                                          ▼
+                                    LEER grabaciones/test/*_completed.mp4
+                                    (el TwitchRecorder lo mueve aquí al terminar,
+                                     sufijo "_completed" y "_copy_to_test")
+                                          │
+                                    1. ffprobe → integridad (si falla → .corruptos/)
+                                    2. ¿Hay *_descripcion.json? → caption propio sin OCR
+                                       ¿No? → OCR cada 180s → *_episodios.json
+                                    3. Corta extremos (margen 5 min)
+                                    4. Comprime a libx264 CRF 28 (2 pasadas si >1900MB)
+                                          │
+                                          ▼
+                                    <canal>_..._compressed.mp4  →  comprimidos/
+                                    original → comprimidos/.processed/
+                                          │
+                                          ▼
+                                    LEER comprimidos/*_compressed.mp4
+                                    (cada 60s, UPLOADER_INTERVALO)
+                                    1. Extrae canal y keyword del nombre del archivo
+                                    2. Rutea a grupo/tema por keyword (grupos.json)
+                                    3. ¿Pesa >2GB? → divide en partes/ *_partNN.mp4
+                                    4. Envía con send_file (Telethon, usuario real)
+                                    5. Registra en enviados.json y BORRA el residuo
+```
+
+**Quién toca qué:** cada uno solo toca la carpeta donde tiene permiso. El recorder escribe en `grabaciones/`, el monitor lee `grabaciones/test` y escribe `comprimidos/`, el uploader lee `comprimidos/` y escribe en `partes/`. Nadie pisa la carpeta del siguiente.
+
+### 13.4. Flujo del pipeline 2 — YouTube → Telegram
+
+Este es **independiente**: no comparte ni una carpeta ni una línea de config con el pipeline 1.
+
+```
+cron 01:00 → run_pipeline_cron.sh (marca /tmp anti-duplicado)
+  ▼
+docker compose up -d yt-pipeline
+  ▼
+download.py: 158 canales → downloads/<canal>/ (y dedup en downloaded_ids.json)
+  ▼
+convert.py: 720p libx264/AAC → converted/<canal>/ (2 pasadas si >50MB)
+  ▼
+upload.py: sendVideo con topic por canal (topics.json) → uploaded/<canal>/
+  ▼
+18:00 → docker compose down + resumen pending
+```
+
+### 13.5. Relaciones entre contenedores (qué monta cada uno)
+
+La tabla definitiva de volúmenes — memorízala, es el mapa que responde "¿dónde se ve `X` desde dentro?":
+
+| Contenedor | Montaje del host | Punto dentro del contenedor | Quién lo lee/escribe |
+|------------|------------------|----------------------------|---------------------|
+| twitchrecorder | `config.json` | `/app/config.json` :ro | solo él |
+| twitchrecorder | `data/pipeline/grabaciones` | `/recordings` | recorder escribe / monitor lee |
+| ffmpeg_monitor | `data/pipeline/grabaciones/test` | `/watch` | monitor lee (entrada) |
+| ffmpeg_monitor | `data/pipeline/comprimidos` | `/comprimidos` | monitor escribe / uploader lee |
+| telegram-uploader | `data/pipeline/comprimidos` | `/comprimidos` | uploader lee |
+| telegram-uploader | `data/pipeline/partes` | `/app/partes` | uploader divide >2GB |
+| telegram-downloader | `data/pipeline/comprimidos` | `/comprimidos` | CLI opcional |
+| telegram-bot | `data/jorbencas_bot` | `/data/descargas` | descargas del bot |
+| telegram-bot | test_githubActions | `/data/.test_githubActions` | código IA de tips/noticias |
+| yt-to-telegram | `data/yt-pipeline` | `/data/yt-pipeline` | todo el pipeline YT |
 
 ---
 

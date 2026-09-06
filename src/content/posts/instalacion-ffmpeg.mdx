@@ -3,7 +3,7 @@ draft: false
 title: "Instalación de FFmpeg + yt-dlp: Conversor de Vídeo y Pipeline de Compresión"
 description: "Guía completa para instalar y configurar midu.sh, el conversor de vídeo con 33 modos. Docker, sin Docker, monitor de compresión automática y preview watcher para WSL."
 pubDate: "2026/09/04"
-updatedDate: "2026/09/06"
+updatedDate: "2026/09/07"
 tags: ["ffmpeg", "yt-dlp", "docker", "instalación", "vídeo", "linux"]
 image: "img/instalacion_ffmpeg/instalacion_ffmpeg_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
@@ -237,7 +237,88 @@ docker compose run --rm downloader ./midu.sh --convert -s telegram -crf 28
 
 ---
 
-## 9. Estructura de archivos
+## 9. Cómo funciona el monitor por dentro
+
+El monitor (`scripts/monitor_folder.sh`) es el **eslabón compresor** del pipeline "Grabar → Comprimir → Subir". Vigila `grabaciones/test/` cada `POLL_INTERVAL` (30s) y su flujo completo es:
+
+### 9.1. El ciclo de compresión paso a paso
+
+```
+LEER grabaciones/test/*_completed.mp4
+  │
+  ▼
+1. INTEGRIDAD: ffprobe → duración
+   ├─ falla o < MIN_DURACION (60s) → mover a .corruptos/
+   └─ OK → continúa
+  │
+  ▼
+2. SIDECAR: ¿existe <nombre>_descripcion.json al lado?
+   ├─ SÍ con "descripcion"  → caption propio, SIN OCR y SIN corte
+   ├─ SÍ con "detectar":false → SIN OCR (ni corte)
+   ├─ SÍ con "corte":false → hace OCR (para caption) pero SIN cortar
+   └─ NO → sigue al paso 3
+  │
+  ▼
+3. DETECCIÓN DE EPISODIOS (solo si no hay descripcion):
+   detectar_episodios.py → cada OCR_STEP (180s) extrae la franja superior 20%,
+   la escala x2, preprocesa (gris+contraste+sharp+treshold) y la pasa por
+   tesseract (inglés), buscando patrones:
+     • "Episodio 3" / "Ep 3" / "cap 3"
+     • "S02E05" (temporada+episodio)
+     • "1x03"   (formato serie)
+     • "Película · TÍTULO" (≥2 menciones → extrae el título por frecuencia)
+   Genera <nombre>_episodios.json
+  │
+  ▼
+4. CORTE DE EXTREMOS: si se detecta la franja de episodios, el vídeo se corta
+   con margen CORTE_MARGEN (5 min): -ss INICIO -t DURACIÓN
+  │
+  ▼
+5. COMPRESIÓN: libx264, CRF 28, preset fast, AAC 128k, solo 0:v:0 + 0:a:0
+   (descarta subs/otros streams → más compatibilidad con Telegram)
+   resolución opcional -r 720 → scale=Hx720 + pad a 16:9
+   escribe a <salida>.tmp y renombra al terminar (escritura atómica)
+  │
+  ▼
+6. ¿El resultado supera TAMANO_MAX_MB (1900MB)?
+   ├─ NO → listo
+   └─ SÍ → RE-COMPRIME en 2 pasadas:
+            paso 1: -pass 1 -an (solo análisis, sin audio)
+            paso 2: -pass 2 con el bitrate calculado para caber en el límite
+   (borra ffmpeg2pass-* al terminar)
+  │
+  ▼
+7. POST: renombra a <nombre>_compressed.mp4 → comprimidos/
+   mueve el original a comprimidos/.processed/
+   borra el sidecar *_descripcion.json
+   avisa al bot vía pipeline_ipc.sh (escribe en pipeline_status.json)
+```
+
+### 9.2. Los sidecars: el "contrato" con el grabador
+
+El sidecar `_descripcion.json` lo escribe el **TwitchRecorder** cuando la fuente del directo lo requiere, y el monitor lo respeta al pie de la letra:
+
+| Sidecar | Efecto en el monitor |
+|---------|----------------------|
+| `{"descripcion": "...texto..."}` | Usa ese texto como caption de Telegram, sin OCR ni corte (típico de directos de YouTube con descripción propia) |
+| `{"detectar": false}` | Omite OCR y corte (típico de cutetas sin franjas) |
+| `{"corte": false}` | Hace OCR para generar el caption, pero no corta el vídeo |
+
+El sidecar **viaja con el archivo**: al concatenar partes, se copia al archivo final, y al mover a `test/`, va pegado al `*_completed.mp4`.
+
+### 9.3. Dónde deja las cosas y quién las consume
+
+```
+grabaciones/test/*_completed.mp4   → MONITOR (entrada)
+comprimidos/*_compressed.mp4       → UPLOADER de Telegram (lo sube y borra)
+comprimidos/*_episodios.json       → UPLOADER (caption con "Episodio 1-4")
+comprimidos/.processed/            → originales ya comprimidos (el uploader limpia)
+comprimidos/log_YYYY-MM-DD.txt     → log diario del monitor
+```
+
+---
+
+## 10. Estructura de archivos
 
 ```
 ffmpeg-yt-dlp/

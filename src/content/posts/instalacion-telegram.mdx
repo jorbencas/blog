@@ -3,7 +3,7 @@ draft: false
 title: "Instalación de Telegram Toolbox: Bot, Uploader y Descargador Masivo"
 description: "Guía completa para instalar y configurar Telegram Ultimate Toolbox: bot de IA, uploader automático, descargador masivo y clonador con traducción. Credenciales, sesiones, grupos y Docker."
 pubDate: "2026/09/04"
-updatedDate: "2026/09/06"
+updatedDate: "2026/09/07"
 tags: ["telegram", "python", "docker", "instalación", "bot", "telethon"]
 image: "img/instalacion_telegram/instalacion_telegram_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
@@ -275,7 +275,81 @@ docker compose logs -f telegram_bot
 
 ---
 
-## 10. Seguridad: cifrado AES
+## 10. Cómo funciona el uploader por dentro
+
+El uploader (`subir_videos.py`) es el **consumidor final del pipeline de compresión**. No es un bot que espera comandos: es un **daemon que vigila una carpeta** y, cada `UPLOADER_INTERVALO` (60s), hace lo siguiente con cada `*_compressed.mp4` que encuentra en `/comprimidos`:
+
+### 10.1. El ciclo completo de subida
+
+```
+1. LEER archivo en /comprimidos/<nombre>_compressed.mp4
+        │
+        ▼
+2. Extraer canal y keyword del NOMBRE del archivo
+   "sendo_2026-08-13_20-15-00_KW_diario_compressed.mp4"
+        │  canal = primer token ("sendo")
+        │  keyword = lo que sigue a "_KW_" ("diario")
+        ▼
+3. RUTEO: ¿a qué grupo/tema va?
+        ├─ grupos.json → grupos cuyo nombre coincide con la keyword
+        ├─ ¿el grupo tiene foros? → busca tema por canal, por keyword, o el general
+        └─ sin coincidencia → grupo "default"
+        ▼
+4. ¿Tamaño > 2GB? (límite de Bot API / subida estable)
+        ├─ NO → envía el archivo entero
+        └─ SÍ → DIVIDIR: ffmpeg -ss ... -t 5400 → partes de 90 min
+                en /app/partes/<base>_part01.mp4, _part02.mp4, ...
+                (cada parte se envía con sufijo "(n/total)" en el caption)
+        ▼
+5. ENVIAR con send_file (Telethon), thumb generada en el segundo 2,
+   attributes=atributos_video → supports_streaming=true (reproducción en línea)
+        ▼
+6. marcar_enviado(): guarda la ruta absoluta en enviados.json  (dedup)
+7. LIMPIAR: borra el mp4, el *_episodios.json, el original en .processed/
+   y las partes de /app/partes
+```
+
+### 10.2. Qué es la carpeta `partes/`
+
+Montada como `data/pipeline/partes → /app/partes` (y como `../data/pipeline/partes` en el `docker-compose.yml`), es un **área de trabajo temporal**:
+
+- Se usa ÚNICAMENTE cuando un vídeo supera los **2 GB**.
+- `dividir_video()` (`subir_videos.py`) corta el vídeo en trozos de **90 minutos** (`_part01.mp4`, `_part02.mp4`…) **sin re-comprimir** (`-c copy`), para que sea rápido y no pierda calidad.
+- Se descartan partes de menos de 1 MB.
+- Tras subir todas las partes, el uploader **borra la carpeta** (`PARTES_DIR`).
+
+No tienes que crearla manualmente: el componente mkdir la crea solo, y el `bootstrap_instalar.sh` también la crea junto a las demás carpetas de `data/`.
+
+**Ojo, no confundir** con las partes del *TwitchRecorder* (las `__parte2.mp4` que se generan cuando un directo cambia de plataforma a mitad de emisión). Esas las concatena el propio recorder al terminar. La carpeta `partes/` es solo el troceado para Telegram.
+
+### 10.3. El ruteo por keyword (grupos.json)
+
+El uploader **no "sabe" de contenidos**: decide el destino mirando el nombre del archivo.
+
+| Regla | Prioridad |
+|-------|-----------|
+| Coincide un grupo cuyo `nombre` aparece en la keyword o filename | 1º |
+| El archivo contiene la keyword de reenvío (`UPLOADER_FORWARD_KEYWORD`) | reenvío al canal `UPLOADER_FORWARD_CHANNEL` |
+| El grupo tiene foros (`.foros` en grupos.json) → busca tema por canal, keyword o «general» | 2º |
+| Nada coincide → grupo `default` | 3º |
+
+Cada vídeo que se sube queda registrado en `enviados.json` para no enviarlo dos veces aunque el archivo aparezca de nuevo en la carpeta.
+
+### 10.4. Las 3 sesiones (y por qué NO chocan)
+
+El projeto usa **sesiones separadas** para cada rol, porque Telegram solo permite **una conexión activa por sesión**:
+
+| Sesión | Qué la usa | Cuándo |
+|--------|-----------|--------|
+| `tg_menu.session` | CLI interactivo (`telegram-downloader`) | descargas/clonado manual |
+| `uploader.session` | daemon `telegram-uploader-sendo` | subida automática del pipeline |
+| `tg_toolbox.session` | importado como base del CLI | histórico/legacy |
+
+Como cada daemon monta su propia sesión (`docker-compose.yml`), puedes descargar y subir **a la vez** sin que Telegram te desconecte.
+
+---
+
+## 11. Seguridad: cifrado AES
 
 Las credenciales se almacenan cifradas con Fernet (AES-CBC):
 
@@ -291,7 +365,7 @@ Las credenciales se almacenan cifradas con Fernet (AES-CBC):
 
 ---
 
-## 11. Verificación
+## 12. Verificación
 
 ```bash
 # Comprobar que todo está corriendo
@@ -306,7 +380,7 @@ docker compose run --rm uploader python /app/subir_videos.py --help
 
 ---
 
-## 12. Sin Docker
+## 13. Sin Docker
 
 Si prefieres instalar directamente:
 
