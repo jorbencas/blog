@@ -71,12 +71,46 @@ Entonces hay que *elegir* un token:
 - **Greedy**: coge el más probable siempre. Resulta aburrido y repetitivo.
 - **Temperatura**: escala los logits antes de la softmax. `temperature=0` es determinista; valores altos hacen la salida más creativa (pero más dispersa).
 - **Top-k / top-p (nucleus sampling)**: recorta el abanico de tokens candidatos para que las respuestas no salten entre temas.
+- **Beam search**: mantiene en paralelo las K secuencias más probables hasta el final y escoge la mejor. Típico de traducción y ASR; en chat moderno se usa poco porque favorece respuestas genéricas y cortas.
 
 Este es el motivo por el que un mismo prompt devuelve respuestas distintas: **hay ruido deliberado en el muestreo**, no es magia. Karpathy lo resume genial en [Transformers from scratch](https://www.youtube.com/watch?v=kCc8FmEb1nY) si quieres verlo implementado en 500 líneas de código *de verdad*.
 
 ### 3.4 La ventana de contexto y el KV-cache
 
 El contexto es **todo lo que el modelo "ve"**: tu prompt, los mensajes anteriores, y la respuesta que está generando. Los LLMs modernos admiten ventanas enormes (128k, 200k tokens e incluso millones en los más nuevos), pero no es gratis: **toda esa atención se recalcula**, y aquí entra el **KV-cache** (*Key-Value cache*), que guarda las representaciones de los tokens pasados para no repetir el cálculo en cada paso. Cuanto más largo el contexto, más memoria de GPU consume, y por eso "meter el PDF entero" en el prompt es carísimo frente a extraer solo lo relevante (que es, sorpresa, lo que motiva los RAG de la sección 5). Teoría y medidas en [KV cache explained](https://huggingface.co/blog/kv-cache) y [Prompt caching en Anthropic](https://www.anthropic.com/news/prompt-caching).
+
+### 3.5 Anatomía del Transformer: queries, keys, values y posiciones
+
+El mecanismo de atención no es un "focus" abstracto: se monta sobre tres proyecciones lineales por token — **Query** (Q: *qué busco yo*), **Key** (K: *qué ofrezco yo*) y **Value** (V: *qué aporto*). La atención entre dos tokens es un producto escalar Q·K (más softmax) que decide cuánto peso dar al Value de uno frente al otro. Por eso el KV-cache de la sección 3.4 guarda justo esas proyecciones.
+
+Además, la atención por sí sola **no sabe en qué orden van los tokens** (es un conjunto, no una secuencia). Por eso los transformers inyectan **posiciones**: las clásicas sinusoidales del paper original, o las modernas **RoPE** (*Rotary Positional Embeddings*), que codifican la posición rotando Q y K según la distancia. RoPE es clave para las ventanas largas (puede *escalar* hacia arriba a contextos que no vio en entrenamiento). Más en [Understanding QKV](https://www.3blue1brown.com/lessons/attention) (3Blue1Brown, vídeo) y [Rotary Positional Embedding — Elephant Robotics](https://blog.eleuther.ai/rotary-embeddings/).
+
+### 3.6 Encoder vs decoder: no todas las arquitecturas sirven para lo mismo
+
+Attention is all you need proponía un transformer completo con dos mitades, y aún hoy "transformer" es un paraguas:
+
+- **Encoder-only** (ej. **BERT**, que aprendía con *masked language modeling*): lee toda la secuencia de golpe (bidireccional) y produce embeddings ricos. Ideal para clasificar, extraer o crear vectores de búsqueda (¡los de la sección 5!).
+- **Decoder-only** (todo el **GPT**: autoregresivo, A *B* C → predice D). Genera texto. Es la familia dominante de LLMs de chat.
+- **Encoder-decoder** (ej. **T5**, **BART**): añade un paso de compresión intermedio; excelente para resumir o traducir.
+
+Que un modelo "lea" antes de escribir (encoder) o directamente prediga (decoder) no es un detalle cosmético: decides cuál usar según si quieres *entender* o *generar*. Detalle de la arquitectura en [The Transformer — Papers with Code](https://paperswithcode.com/method/transformer).
+
+### 3.7 Eficiencia: GQA, Flash Attention y MoE
+
+La atención es el cuello de botella, y sobre ella hay toda una industria de atajos:
+
+- **GQA** (*Grouped-Query Attention*): reduce el número de cabezas de Key/Value compartiendo V entre cabezas de Query. Menos memoria de KV-cache sin perder casi calidad (lo usa Llama 2 70B y Llama 3). Idea y números en [GQA paper](https://arxiv.org/abs/2305.13245).
+- **Flash Attention**: reimplementa la atención hardware-consciente para no escribir QKᵀ entero en memoria. Resultado: decenas de veces más barata y hasta **2-4x más rápida en entrenamiento**, y es la razón por la que hoy se pueden entrenar modelos con millones de tokens por lote. Paper y charla de Tri Dao: [Flash Attention](https://arxiv.org/abs/2205.14135).
+- **MoE** (*Mixture of Experts*): cada token solo despierta a un subconjunto de "expertos" (lo decide una pequeña red llamada *router*). Con eso se multiplica el número de parámetros totales sin multiplicar el coste por token (*sparsity activa*). Es la arquitectura detrás de Mixtral, DeepSeek-V3 o Qwen-MoE. Miniguía en [Mixture of Experts explained (Hugging Face)](https://huggingface.co/blog/moe).
+
+### 3.8 El modelo aprende del contexto: in-context learning, CoT y salidas estructuradas
+
+El LLM puede "aprender" sin tocar sus pesos: **in-context learning**. Le das ejemplos en el propio prompt y ya sabe seguir el patrón:
+
+- **Zero-shot**: "traduce esto a español" sin ejemplos.
+- **Few-shot**: le muestras 3 ejemplos antes de pedirle el 4º.
+- **Chain-of-thought (CoT)**: pedirle que razone *paso a paso en voz alta* mejora resultados en matemáticas y lógica (paper de [Wei et al., 2022](https://arxiv.org/abs/2201.11903)). Los modelos *o1* y *R1* llevan esto al extremo: esconden el razonamiento en tokens de "pensamiento" y cobran un coste de cómputo extra en tiempo de inferencia (*test-time compute*), ver sección 4.2.
+- **Salidas estructuradas**: para que no te responda con texto libre cuando necesitas un JSON, se fuerza a la generación con gramáticas o *constrained decoding* (el token emitido debe cumplir la gramática del JSON). En local lo hace [llama.cpp](https://github.com/ggml-org/llama.cpp) o [Outlines](https://github.com/dottxt-ai/outlines), en la nube es el famoso *JSON mode*.
 
 ---
 
@@ -93,6 +127,12 @@ Puedes separar la vida de un modelo en tres etapas distintas, cada una con su co
 Ajustar todos los parámetros de un modelo de 7B es inasumible en una máquina normal. La solución estándar es **LoRA** (*Low-Rank Adaptation*): en lugar de tocar los pesos originales, entrena unos *parchecitos* de bajo rango que se añaden a las capas. El modelo original queda congelado y el ajuste ocupa megas en vez de gigas. Variantes como **QLoRA** van un paso más allá y cuantizan el modelo base a 4 bits antes de entrenar, lo que permite fine-tunear modelos grandes en una sola GPU. Por qué funciona y cómo: [LoRA: Low-Rank Adaptation of LLMs (paper)](https://arxiv.org/abs/2106.09685) y [Understanding LoRA — Hugging Face](https://huggingface.co/blog/lora).
 
 Y ya que hemos mencionado la cuantización: consiste en guardar los pesos con menos precisión (32→4-8 bits) para que el modelo **quepa en menos memoria y vaya más rápido a costa de un poco de fidelidad**. Es la razón por la que puedes correr un Llama de 8B en un ordenador de sobremesa. Teoría bien explicada en [Quantization for LLMs](https://huggingface.co/docs/optimum/bnb/overview) y en [Una intro visual a la cuantización](https://towardsdatascience.com/understanding-gptq-quantization-7e92439e7d05).
+
+### 4.2 Modelos de razonamiento: cuando pensar cuesta más cómputo
+
+Desde 2024-2025 hay una nueva familia de modelos (OpenAI **o1/o3**, **DeepSeek-R1**, Qwen-*Reasoning*) que no responden a la primera: generan una "línea de razonamiento" *larga y oculta* (decenas o cientos de tokens de CoT) antes de dar el resultado. Eso se llama **test-time compute** (gastar más cómputo en inferencia, no en entrenamiento): responden mejor cuanto más tiempo de pensamiento se les da.
+
+Se entrenan igual que el resto, pero con una fase extra: **RL sobre recompensas verificables (RLVR)** — la señal es objetiva (¿el resultado matemático es correcto?, ¿el formato se cumple?), no un humano. El paper de [DeepSeek-R1](https://arxiv.org/abs/2501.12948) abrió la vía para que cualquiera pueda destilar este comportamiento en modelos abiertos más pequeños. Consecuencia práctica: estos modelos suelen exigir más VRAM/tokens que un chat normal, y hay que configurarlos adecuadamente en el backend (tiempo y "tokens de pensamiento").
 
 ---
 
@@ -140,12 +180,12 @@ chunks = [
     "Los embeddings ponen textos similares cerca en un espacio vectorial.",
     "La temperatura controla la creatividad del muestreo de tokens.",
 ]
-vectors = model.encode(chunks)
-index = faiss.IndexFlatIP(vectors.shape[1])   # similitud coseno normalizada
+vectors = model.encode(chunks, normalize_embeddings=True)  # normalizado → coseno real
+index = faiss.IndexFlatIP(vectors.shape[1])   # IndexFlatIP = producto escalar = coseno si está normalizado
 index.add(vectors)
 
 # 3. Búsqueda
-query_vec = model.encode(["¿Qué recupera el RAG?"])
+query_vec = model.encode(["¿Qué recupera el RAG?"], normalize_embeddings=True)
 _, idx = index.search(query_vec, k=1)
 print(chunks[idx[0][0]])   # "El RAG recupera los trozos relevantes..."
 ```
@@ -246,6 +286,18 @@ curl http://localhost:11434/v1/chat/completions \
 - **LangChain / LlamaIndex**: frameworks para montar RAG y agentes. Traen mucho hecho (splitters, retrievers, toolkits). Crítica justa: a veces abstraen demasiado y ocultan el detalle. El [LlamaIndex RAG handbook](https://www.llamaindex.ai/blog) está bien para ver patrones, pero el RAG de la sección 5 te enseña el fondo real.
 - **Bases vectoriales**: **FAISS** (local, librería), **Chroma** (simple, embebible), **Qdrant** (servicio en Rust, muy usado), **Milvus** (escala), **pgvector** (si ya usas Postgres, suele ser la opción más pragmática: [uso de pgvector](https://github.com/pgvector/pgvector), y [hablamos de bases en este blog para otros proyectos](/posts)). Para embeddings de frases en español: **sentence-transformers** con modelos `paraphrase-multilingual-*` o `bge-m3`.
 
+### 8.4 ¿Cuánta memoria necesito para correr un modelo?
+
+La regla que se usa a diario en producción:
+
+> **VRAM ≈ pesos + KV-cache + overhead del runtime**
+
+- **Pesos**: parámetros × bytes por parámetro. En FP16 son ~2 bytes: un modelo de **8B ocupa ~16 GB** en FP16, ~8 GB en INT8 y ~4-5 GB en 4 bits (GGUF Q4).
+- **KV-cache**: depende del contexto. Estimación rápida: ~0.5-1 GB por cada 10k tokens (más en modelos grandes) solo para las claves y valores de la conversación.
+- **Overhead**: activaciones y buffers del backend (del 5 al 20% adicional).
+
+Con esa cuenta, un **Llama 3 8B en Q4_K_M (~4.9 GB) + contexto de 32k (~3 GB)** sobre una GPU de 8 GB va justo pero funciona; un **70B FP16 (~140 GB)** no cabe ni en una tarjeta de 48 GB ni en un portátil: ahí aparecen la cuantización, vLLM (*offloading* parcial), o directamente un **servicio en la nube** con GPU. Calculadoras: [llamafile VRAM](https://huggingface.co/spaces/jartine/llamafile-vram-calculator) y [how to choose a model](https://huggingface.co/docs/transformers/llm_opt).
+
 ---
 
 ## 9. Evaluación y alucinaciones: el gran dolor de cabeza
@@ -284,6 +336,16 @@ Nada elimina las alucinaciones al 100%. Quien te diga que su sistema no alucina,
 | **LoRA** | Fine-tuning barato: parches pequeños sobre pesos congelados |
 | **Cuantización** | Guardar los pesos con menos precisión para que quepan en menos memoria |
 | **KV-cache** | Caché que evita recalcular los tokens pasados al generar |
+| **Q/K/V** | Las tres proyecciones de la atención: qué busco, qué ofrezco, qué aporto |
+| **RoPE** | Codifica la posición de los tokens rotando Q/K; habilita contextos largos |
+| **Encoder / Decoder** | Mitades del transformer: *entender* toda la secuencia vs *generar* el siguiente token |
+| **GQA** | Atención con cabezas K/V compartidas; menos memoria de KV-cache |
+| **Flash Attention** | Atención optimizada para GPU; mucho más rápida y con menos memoria |
+| **MoE** | Mezcla de expertos: cada token solo activa una parte de la red |
+| **In-context learning** | Aprender sin entrenar: el prompt trae los ejemplos (few-shot) |
+| **Chain-of-thought (CoT)** | Pedir al modelo que razone paso a paso para mejorar el resultado |
+| **Modelo de razonamiento** | Modelo (o1, R1) que gasta cómputo extra "pensando" antes de responder (test-time compute) |
+| **Salida estructurada** | Forzar JSON válido con gramáticas (constrained decoding) |
 | **RAG** | Recupera trozos relevantes de tu conocimiento y se los da al modelo como contexto |
 | **Function calling** | El modelo pide llamar a una herramienta en vez de responder solo texto |
 | **ReAct** | Bucle razona→actúa→observa hasta completar la tarea |
