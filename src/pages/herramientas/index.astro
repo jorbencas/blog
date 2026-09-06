@@ -1,0 +1,68 @@
+---
+import Layout from "@layouts/Layout.astro";
+import Card from "@components/Card.astro";
+import Information from "@components/Information.astro";
+import { getCollection } from "astro:content";
+import { getSortedPosts } from "src/utils";
+
+const allTools = await getCollection("tools");
+const sortedTools = await getSortedPosts(allTools);
+---
+
+<Layout title="Mini Herramientas | Jorge Beneyto Castelló" description="Utilidades ligeras 100% client-side, sin servidor ni dependencias externas. Privacidad y rendimiento." section="herramientas">
+  <section class="max-w-6xl mx-auto space-y-12 py-8 md:py-16" data-pagefind-ignore>
+      <!-- CABECERA -->
+      <div class="text-center space-y-4 pb-4">
+        <span class="text-xs text-emerald-500 uppercase tracking-[0.3em]">TOOLBOX</span>
+        <h1 class="text-4xl md:text-5xl font-black italic uppercase tracking-tighter text-slate-900 dark:text-white">
+          Mini <span class="text-emerald-500">Herramientas</span>
+        </h1>
+        <div class="h-1 w-24 bg-emerald-500 mx-auto rounded-full"></div>
+        <p class="max-w-2xl mx-auto text-sm sm:text-base text-slate-500 dark:text-slate-400 leading-relaxed">
+          Utilidades ligeras, 100% del lado del cliente, sin dependencias externas ni subida de datos a servidores. Privacidad y rendimiento ante todo.
+        </p>
+      </div>
+
+      <!-- GRID DE HERRAMIENTAS -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+        {
+          sortedTools.length > 0 ? (
+            sortedTools.map((tool) => (
+              <div class="tool-entry">
+                <Card
+                  {...tool.data}
+                  href={`/herramientas/${tool.id.replace(/\.[^/.]+$/, "")}`}
+                  accent="emerald"
+                  aspectRatio="video"
+                  overlay="white"
+                />
+              </div>
+            ))
+          ) : (
+            <Information section="herramientas" />
+          )
+        }
+      </div>
+  </section>
+</Layout>
+
+<style>
+  .tool-entry {
+    animation: fadeInUp 0.5s ease-out both;
+  }
+
+  .tool-entry:nth-child(1) { animation-delay: 0.1s; }
+  .tool-entry:nth-child(2) { animation-delay: 0.2s; }
+  .tool-entry:nth-child(3) { animation-delay: 0.3s; }
+  .tool-entry:nth-child(4) { animation-delay: 0.4s; }
+  .tool-entry:nth-child(5) { animation-delay: 0.5s; }
+  .tool-entry:nth-child(6) { animation-delay: 0.6s; }
+  .tool-entry:nth-child(7) { animation-delay: 0.7s; }
+  .tool-entry:nth-child(8) { animation-delay: 0.8s; }
+  .tool-entry:nth-child(9) { animation-delay: 0.9s; }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>

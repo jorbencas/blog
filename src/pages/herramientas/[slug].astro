@@ -1,0 +1,72 @@
+---
+import { getCollection, render } from "astro:content";
+import ToolLayout from "@layouts/ToolLayout.astro";
+import VideoExtractor from "@components/VideoExtractor.svelte";
+import JuegosLogicos from "@components/JuegosLogicos.svelte";
+import TicTacToe from "@components/TicTacToe.svelte";
+import SimonSays from "@components/SimonSays.svelte";
+
+export async function getStaticPaths() {
+  const allTools = await getCollection("tools");
+  return allTools.map((tool) => ({
+    params: { slug: tool.id.replace(/\.[^/.]+$/, "") },
+    props: { tool },
+  }));
+}
+
+const { tool } = Astro.props;
+const { Content } = await render(tool);
+const { title, description, tags, author, image, pubDate, component } = tool.data;
+const slug = tool.id.replace(/\.[^/.]+$/, "");
+---
+
+<ToolLayout
+  title={title}
+  description={description}
+  tags={tags ?? []}
+  author={author}
+  image={image}
+  pubDate={pubDate}
+>
+  <Content />
+  {
+    component === "VideoExtractor" && (
+      <div class="not-prose max-w-3xl mx-auto mt-12">
+        <h2 class="text-xl sm:text-2xl font-black uppercase italic tracking-tighter text-slate-900 dark:text-white mb-6">
+          Pruébalo ahora
+        </h2>
+        <VideoExtractor client:visible />
+      </div>
+    )
+  }
+  {
+    component === "JuegosLogicos" && (
+      <div class="not-prose max-w-3xl mx-auto mt-12">
+        <h2 class="text-xl sm:text-2xl font-black uppercase italic tracking-tighter text-slate-900 dark:text-white mb-6">
+          Juega ahora
+        </h2>
+        <JuegosLogicos client:visible />
+      </div>
+    )
+  }
+  {
+    component === "TicTacToe" && (
+      <div class="not-prose max-w-3xl mx-auto mt-12">
+        <h2 class="text-xl sm:text-2xl font-black uppercase italic tracking-tighter text-slate-900 dark:text-white mb-6">
+          Juega ahora
+        </h2>
+        <TicTacToe client:visible />
+      </div>
+    )
+  }
+  {
+    component === "SimonSays" && (
+      <div class="not-prose max-w-3xl mx-auto mt-12">
+        <h2 class="text-xl sm:text-2xl font-black uppercase italic tracking-tighter text-slate-900 dark:text-white mb-6">
+          Juega ahora
+        </h2>
+        <SimonSays client:visible />
+      </div>
+    )
+  }
+</ToolLayout>
