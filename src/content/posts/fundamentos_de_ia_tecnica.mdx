@@ -1,0 +1,311 @@
+---
+draft: false
+title: "Inteligencia Artificial a nivel técnico: de los tokens al RAG, pasando por los LLM"
+description: "Los conceptos que de verdad importan en la IA actual, explicados de forma gradual y sin humo: transformers, tokens, embeddings, cuantización, RAG, agentes y el ecosistema real de herramientas."
+pubDate: "2026/09/06"
+tags: ["ia", "llm", "rag", "transformer", "agentes", "guias"]
+image: "img/fundamentos_de_ia_tecnica/fundamentos_de_ia_tecnica_cover-1200.webp"
+author: "Jorge Beneyto Castelló"
+---
+
+# Inteligencia Artificial a nivel técnico: de los tokens al RAG, pasando por los LLM
+
+Cuando se habla de "IA" por ahí, el 90% de lo que lees es humo de marketing: "ChatGPT revoluciona", "la IA te va a quitar el trabajo"... Nada de eso te sirve si lo que quieres es **entender qué hay dentro**. Esta guía es la que me habría gustado tener cuando empecé: empieza desde el componente más pequeño (el *token*, una palabra que vas a escuchar hasta la saciedad) y va subiendo de nivel hasta llegar a sistemas completos como los **RAG** y los **agentes**, pasando por cómo se entrena, cómo se ajusta y qué herramientas usa todo el mundo en el día a día.
+
+La premisa es simple: **no hace falta entender las matemáticas para entender el funcionamiento**. Donde el concepto sea denso (atención, cuantización, indexación), te dejo el enlace para ir más profundo cuando lo necesites.
+
+---
+
+## 1. Antes de nada: de qué hablamos cuando hablamos de IA
+
+Hoy "IA" casi siempre significa **modelos de lenguaje**, pero es útil tener el mapa completo para no liarte:
+
+| Término | Qué es | Ejemplo real |
+|---------|--------|--------------|
+| **Machine Learning** | Programas que "aprenden" patrones a partir de datos en vez de seguir reglas escritas a mano | Detección de spam, recomendadores |
+| **Deep Learning** | Subconjunto del ML que usa redes neuronales con muchas capas | Reconocimiento de imágenes, voz, traducción |
+| **Modelo generativo** | Un modelo que *genera* contenido nuevo (texto, imagen, audio) | LLMs, Stable Diffusion |
+| **LLM** | *Large Language Model*: modelo generativo de texto entrenado sobre cantidades enormes de texto | GPT, Claude, Llama, Mistral, DeepSeek |
+| **Multimodal** | Modelo que entiende y genera con varios tipos de datos (texto, imagen, audio, vídeo) | GPT-4o, Gemini, Llama 3.2 Vision |
+
+Una forma rápida de situarlo: **ChatGPT no es "la IA"**. ChatGPT es una *aplicación* construida sobre un LLM (GPT), al que se le ha añadido una interfaz, un sistema de conversación y un montón de ingeniería alrededor.
+
+---
+
+## 2. La pieza fundamental: las redes neuronales
+
+Antes de los LLMs tuvimos, durante décadas, las **redes neuronales**. Si nunca has visto la intro más clara que existe, párate 30 minutos y mira el primer vídeo de la serie de **3Blue1Brown sobre redes neuronales**: [Neural networks — 3Blue1Brown](https://www.youtube.com/playlist?list=PLZHQObOWTQDNU6R1_67000Dx_ZCJB-3pi). No exagero: tras ese vídeo, el resto de esta guía te resulta mucho más fácil.
+
+La idea en tres líneas:
+
+- Una red es un montón de **neuronas** organizadas en **capas**. Cada neurona recibe números, los multiplica por unos **pesos**, los suma y les aplica una función no lineal.
+- Durante el **entrenamiento**, la red produce un resultado, se compara con el esperado mediante una **función de pérdida** y se ajustan los pesos en la dirección que reduce el error (**backpropagation**).
+- Por mucha matemática que leas, esto es el núcleo: **ajustar millones de parámetros para minimizar el error sobre muchos ejemplos**.
+
+Los LLMs no son otra cosa: redes neuronales **muchísimo más grandes** (miles de millones de parámetros) entrenadas con una tarea casi absurda de simple: *predecir la siguiente palabra*.
+
+---
+
+## 3. El modelo de lenguaje: de tokens a texto
+
+### 3.1 Tokens: la moneda de cambio
+
+Un LLM **no entiende texto**. Entiende números. Y para convertir palabras en números usa **tokens**: el modelo no procesa la frase "me gusta Python", sino algo parecido a `["me", " gusta", " Python"]`. Cada token tiene un **ID** y, más importante, se asocia a un **vector** (una lista de números) que lo representa en un espacio donde las palabras parecidas quedan cerca.
+
+La tokenización no es trivial: las palabras compuestas, las abreviaturas y los idiomas con morfología compleja se parten en trozos (subpalabras) con algoritmos como **BPE** (*Byte Pair Encoding*). Por eso un chat cuenta su coste en "tokens" y por eso `tokenizer` es una librería aparte de `model`. Si quieres el detalle: [How GPT Tokenizers Work — Karpathy](https://www.youtube.com/watch?v=zduSFxRajkE) y [The Tokenizer Playground](https://huggingface.co/spaces/Xenova/the-tokenizer-playground).
+
+Los **embeddings** (esos vectores) son la otra pieza que vas a ver por todas partes. Un embedding es, en pocas palabras, "traducir un texto a un vector de números de forma que cosas parecidas queden cerca". Se miden con **similitud coseno**, y sobre esto se construye todo lo demás que verás más adelante (bases vectoriales, RAG, etc.).
+
+### 3.2 El Transformer y la atención
+
+Desde 2017, prácticamente todos los LLMs son **transformers**, la arquitectura del paper *Attention is all you need* ([enlace al paper](https://arxiv.org/abs/1706.03762)). La pieza clave es el **mecanismo de atención**: le permite al modelo saber, en cada posición de la frase, *a qué otras palabras prestar atención*. En la frase *"el banco abrió la cuenta"*, el modelo aprende a relacionar "banco" con "cuenta" a pesar de que no estén juntas.
+
+La mejor explicación visual de la atención la tienes en [The Illustrated Transformer — Jay Alammar](https://jalammar.github.io/illustrated-transformer/). Es un clásico, léelo cuando quieras bajar una muesca abajo en abstracción.
+
+### 3.3 Generar texto: logits, temperatura y sampling
+
+Un LLM no "piensa" la respuesta: **genera texto token a token**, de forma *autoregresiva* (cada token nuevo depende de todos los anteriores). Para cada posición, la red devuelve una puntuación por cada posible token del vocabulario (**logits**), que se pasa por una **softmax** para convertirlas en una distribución de probabilidad.
+
+Entonces hay que *elegir* un token:
+
+- **Greedy**: coge el más probable siempre. Resulta aburrido y repetitivo.
+- **Temperatura**: escala los logits antes de la softmax. `temperature=0` es determinista; valores altos hacen la salida más creativa (pero más dispersa).
+- **Top-k / top-p (nucleus sampling)**: recorta el abanico de tokens candidatos para que las respuestas no salten entre temas.
+
+Este es el motivo por el que un mismo prompt devuelve respuestas distintas: **hay ruido deliberado en el muestreo**, no es magia. Karpathy lo resume genial en [Transformers from scratch](https://www.youtube.com/watch?v=kCc8FmEb1nY) si quieres verlo implementado en 500 líneas de código *de verdad*.
+
+### 3.4 La ventana de contexto y el KV-cache
+
+El contexto es **todo lo que el modelo "ve"**: tu prompt, los mensajes anteriores, y la respuesta que está generando. Los LLMs modernos admiten ventanas enormes (128k, 200k tokens e incluso millones en los más nuevos), pero no es gratis: **toda esa atención se recalcula**, y aquí entra el **KV-cache** (*Key-Value cache*), que guarda las representaciones de los tokens pasados para no repetir el cálculo en cada paso. Cuanto más largo el contexto, más memoria de GPU consume, y por eso "meter el PDF entero" en el prompt es carísimo frente a extraer solo lo relevante (que es, sorpresa, lo que motiva los RAG de la sección 5). Teoría y medidas en [KV cache explained](https://huggingface.co/blog/kv-cache) y [Prompt caching en Anthropic](https://www.anthropic.com/news/prompt-caching).
+
+---
+
+## 4. Entrenar un LLM: las tres fases
+
+Puedes separar la vida de un modelo en tres etapas distintas, cada una con su coste y su propósito:
+
+1. **Pre-training** — El modelo aprende lenguaje general prediciendo el siguiente token sobre cientos de miles de millones de tokens de internet. Salen los llamados **base models** (ej. Llama-3-8B, Qwen-2.5-14B). Aquí está el 99% del coste eléctrico y de dinero.
+2. **Fine-tuning supervisado (SFT)** — Se entrena un modelo base con miles de *pares pregunta→respuesta* para que adopte el estilo de asistente. Esto ya es factible en una GPU de consumo.
+3. **Alineación (RLHF / DPO)** — Se refina el comportamiento para que responda "bien" (rechazar peticiones peligrosas, no alucinar tanto, seguir tono). Técnicas como **DPO** simplifican mucho ese paso frente al RLHF clásico (PPO). Explicación clara en [RLHF en 4 pasos (eng)](https://huggingface.co/blog/rlhf) y [DPO, el arma secreta (eng)](https://huggingface.co/blog/dpo-trl).
+
+### 4.1 Fine-tuning eficiente: LoRA y cuantización
+
+Ajustar todos los parámetros de un modelo de 7B es inasumible en una máquina normal. La solución estándar es **LoRA** (*Low-Rank Adaptation*): en lugar de tocar los pesos originales, entrena unos *parchecitos* de bajo rango que se añaden a las capas. El modelo original queda congelado y el ajuste ocupa megas en vez de gigas. Variantes como **QLoRA** van un paso más allá y cuantizan el modelo base a 4 bits antes de entrenar, lo que permite fine-tunear modelos grandes en una sola GPU. Por qué funciona y cómo: [LoRA: Low-Rank Adaptation of LLMs (paper)](https://arxiv.org/abs/2106.09685) y [Understanding LoRA — Hugging Face](https://huggingface.co/blog/lora).
+
+Y ya que hemos mencionado la cuantización: consiste en guardar los pesos con menos precisión (32→4-8 bits) para que el modelo **quepa en menos memoria y vaya más rápido a costa de un poco de fidelidad**. Es la razón por la que puedes correr un Llama de 8B en un ordenador de sobremesa. Teoría bien explicada en [Quantization for LLMs](https://huggingface.co/docs/optimum/bnb/overview) y en [Una intro visual a la cuantización](https://towardsdatascience.com/understanding-gptq-quantization-7e92439e7d05).
+
+---
+
+## 5. RAG: el modelo que usa tu base de conocimiento
+
+Aquí llegamos al concepto que más nombre tiene últimamente y que menos bien se explica: **RAG** (*Retrieval-Augmented Generation*).
+
+Piensa en el problema: tu LLM fue entrenado con internet *hasta cierta fecha*. No sabe nada de tu empresa, tu documentación interna o tu último proyecto. Tienes tres opciones:
+
+1. **Fine-tunear el modelo** con tus datos → caro, lento, y el modelo puede "aprender de memoria" cosas equivocadas.
+2. **Pegarle todo en el prompt** → la ventana de contexto se come la memoria y el precio se dispara.
+3. **RAG** → el modelo sale a buscar solo los trozos relevantes de tu base de conocimiento, los mete en el prompt *solo con lo que necesita*, y responde citando la fuente real.
+
+RAG no es una técnica exótica: es un **pipeline** con 4 piezas:
+
+1. **Ingestión**: tu documentación se parte en **chunks** (trozos de N tokens con solape).
+2. **Embeddings**: cada chunk se convierte en un vector con un modelo de embeddings (ej. `text-embedding-3-small`, `bge-m3`, `nomic-embed-text`).
+3. **Búsqueda**: ante una pregunta, se convierte la pregunta al mismo tipo de vector y se buscan los N vecinos más cercanos en una **base vectorial** (similitud coseno). Para millones de vectores se usan índices **ANN** (búsqueda aproximada), de los que el *de facto* es **HNSW**. Cómo funciona HNSW en 5 minutos: [HNSW explained](https://github.com/brurucy/vector_search_notes) y [Pinecone — Algoritmos de búsqueda vectorial](https://www.pinecone.io/learn/vector-indexes/).
+4. **Generación**: los chunks recuperados se meten en el prompt con instrucciones de "responde usando solo este contexto" y el modelo genera.
+
+El flujo, en un diagrama de texto:
+
+```
+Documento  ──chunking──►  chunks  ──embeddings──►  vectores  ──►  Vector DB
+                                                                    ▲
+Pregunta ───────────► embedding ────────────────────────────────────┘
+                                                                    │ top-k
+                                               Prompt = contexto + pregunta
+                                                                    │
+                                                              LLM genera
+```
+
+### 5.1 Ejemplo mínimo en código (FAISS + sentence-transformers)
+
+```python
+from sentence_transformers import SentenceTransformer
+import faiss
+
+# 1. Modelo de embeddings
+model = SentenceTransformer("sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
+
+# 2. "Base de conocimiento" → vectores
+chunks = [
+    "El RAG recupera los trozos relevantes antes de que el modelo genere.",
+    "Los embeddings ponen textos similares cerca en un espacio vectorial.",
+    "La temperatura controla la creatividad del muestreo de tokens.",
+]
+vectors = model.encode(chunks)
+index = faiss.IndexFlatIP(vectors.shape[1])   # similitud coseno normalizada
+index.add(vectors)
+
+# 3. Búsqueda
+query_vec = model.encode(["¿Qué recupera el RAG?"])
+_, idx = index.search(query_vec, k=1)
+print(chunks[idx[0][0]])   # "El RAG recupera los trozos relevantes..."
+```
+
+Con FAISS local y unas pocas líneas ya tienes el 80% del RAG más sencillo. Cuando la base crezca, cambiarás `IndexFlatIP` por un índice HNSW y montarás un servicio (Qdrant, Milvus, Chroma, pgvector) que gestione la indexación.
+
+### 5.2 Dónde suele fallar el RAG
+
+Solo porque lleves semanas viendo "RAG" en tu feed, no pienses que es plug-and-play. Los problemas típicos:
+
+- **Chunking malo**: tropiezas con listas, tablas o fragmentos sin contexto. Se soluciona con *recursive character splitting*, partidos por headings, etc.
+- **Recuperación imperfecta**: el top-k trae basura. Se añade un **reranker** (un modelo pequeño que reordena por relevancia real) con técnicas como *hybrid search* (mezclar búsqueda semántica con texto literal).
+- **Evaluación**: ¿cómo sabes que el pipeline funciona? Herramientas tipo **RAGAS** miden fidelidad, relevancia y cobertura del contexto. Más en [RAGAS (eng)](https://docs.ragas.io/).
+
+Guía de referencia con todo el detalle de chunking y las opciones: [Advanced RAG — Pinecone](https://www.pinecone.io/learn/advanced-rag/).
+
+---
+
+## 6. Agentes: el LLM que decide usar herramientas
+
+Un LLM solo *conversa*. Un **agente** es un LLM metido en un bucle donde puede **llamar herramientas**. Las piezas son:
+
+- **Function calling**: el LLM, en vez de responder textualmente, emite una *estructura* del tipo "quiero llamar a `search_web(query=...)`". El sistema ejecuta esa función y le devuelve el resultado; el modelo continúa.
+- **Loop ReAct** (*Reason + Act*): el modelo alterna razonamiento ("necesito la temperatura actual") y acción ("llamo a la API del tiempo"), en bucle, hasta que puede dar la respuesta final. La idea original: [ReAct paper](https://arxiv.org/abs/2210.03629).
+- **Memoria**: conversación corta, resúmenes largos, y memoria *semántica* (de nuevo: embeddings + búsqueda).
+- **Planning**: modelos que se descomponen el objetivo en subtareas. Los sistemas tipo *tree-of-thoughts* o los "agent orchestration" van por ahí. Un buen desglose del hype: [How to build good agents — Anthropic](https://www.anthropic.com/engineering/building-effective-agents) y [Build a ReAct agent a mano (eng)](https://til.simonwillison.net/gpt3/programming-by-example).
+
+Un agente en 10 líneas conceptuales:
+
+```python
+while not finished:
+    thought = llm(f"Tienes estado: {state}. Razonamiento:")
+    action = parse_tool_call(thought)      # p.ej. tool="search", args=...
+    result = execute_tool(action)
+    state += f"\nResultado: {result}"
+```
+
+Todo el hype de "agentes autónomos" es casi siempre esto: **un bucle, herramientas, y una buena definición del estado**. Nada mágico, y aún menos fiable de lo que parece cuando encadenas 20 pasos.
+
+---
+
+## 7. Modelos multimodales
+
+Un **modelo multimodal** acepta (o emite) varios tipos de datos: texto + imagen + audio + vídeo. Internamente, cada modalidad tiene su *encoder* (una red que convierte píxeles o audio en vectores) y los vectores se proyectan al mismo espacio que los tokens de texto, así el transformer los procesa juntos.
+
+- El clásico para entender vision+texto es **CLIP** ([paper](https://arxiv.org/abs/2103.00020)), que aprende a alinear imágenes y frases en el mismo espacio vectorial.
+- Los LLMs actuales (GPT-4o, Gemini, Llama 3.2 Vision, Qwen2-VL) integran el encoder directamente en el generador.
+
+Un uso práctico que te interesa si vienes de este blog: **búsqueda multimodal**. Puedes indexar capturas de pantalla o memes con embeddings de imagen y buscar por descripción textual. Lo mismo que RAG, pero con imágenes.
+
+---
+
+## 8. IA local y el ecosistema real de herramientas
+
+La parte que más te va a servir en el día a día: **qué modelo usar, dónde descargarlo y cómo ejecutarlo**. Todo esto es gratis y corre en tu máquina.
+
+### 8.1 El ecosistema Hugging Face
+
+HF es el GitHub de la IA. Si vas a *tocar* modelos, te vas a vivir allí:
+
+- **`transformers`**: la librería canónica para cargar y usar modelos (PyTorch/TensorFlow). Ejemplo mínimo:
+
+```python
+from transformers import pipeline
+
+generator = pipeline("text-generation", model="HuggingFaceTB/SmolLM2-135M-Instruct")
+print(generator("La capital de España es", max_new_tokens=30)[0]["generated_text"])
+```
+
+- **`tokenizers`**: la librería de tokenización, rápida y en Rust.
+- **`datasets`**: miles de datasets listos para fine-tuning.
+- **Formatos de pesos**: `safetensors` (seguro y rápido), y **GGUF** para correr en CPU.
+- **Model Hub**: todos los modelos con su ficha de licencia. Muchos LLMs buenos y abiertos: Llama, Mistral, Qwen, Gemma, DeepSeek... Los rangos "pequeños" (1B-8B) se ejecutan en una GPU normal.
+
+Si quieres aprender haciendo, el [Hugging Face NLP Course es gratis y está muy bien](https://huggingface.co/learn/nlp-course).
+
+### 8.2 Ejecutar modelos localmente
+
+| Herramienta | Para qué | Instalación típica |
+|-------------|----------|--------------------|
+| **llama.cpp** | Correr LLMs en **CPU/RAM** en formato GGUF. El *estándar* para local sin GPU | `brew install llama.cpp` / build manual ([repo](https://github.com/ggml-org/llama.cpp)) |
+| **Ollama** | Servidor local con `ollama run <modelo>`. Perfecto para empezar | `curl -fsSL https://ollama.com/install.sh` + `ollama pull` |
+| **vLLM** | Inferencia de alto rendimiento con GPU (servicio + OpenAI-compatible) | `pip install vllm` |
+| **llamafile** | Un ejecutable que corre un modelo con un clic | Bajas un archivo ejecutable ([repo](https://github.com/Mozilla-Ocho/llamafile)) |
+
+Ejemplo con Ollama (tras `ollama pull llama3.2:3b`):
+
+```bash
+ollama run llama3.2:3b "Explica qué es un RAG en dos frases"
+# si quieres OpenAI-compatible para usarlo desde código:
+curl http://localhost:11434/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{"model":"llama3.2:3b","messages":[{"role":"user","content":"Qué es un RAG"}]}'
+```
+
+### 8.3 Orquestadores y librerías
+
+- **LangChain / LlamaIndex**: frameworks para montar RAG y agentes. Traen mucho hecho (splitters, retrievers, toolkits). Crítica justa: a veces abstraen demasiado y ocultan el detalle. El [LlamaIndex RAG handbook](https://www.llamaindex.ai/blog) está bien para ver patrones, pero el RAG de la sección 5 te enseña el fondo real.
+- **Bases vectoriales**: **FAISS** (local, librería), **Chroma** (simple, embebible), **Qdrant** (servicio en Rust, muy usado), **Milvus** (escala), **pgvector** (si ya usas Postgres, suele ser la opción más pragmática: [uso de pgvector](https://github.com/pgvector/pgvector), y [hablamos de bases en este blog para otros proyectos](/posts)). Para embeddings de frases en español: **sentence-transformers** con modelos `paraphrase-multilingual-*` o `bge-m3`.
+
+---
+
+## 9. Evaluación y alucinaciones: el gran dolor de cabeza
+
+Un LLM puede responder con total seguridad una mentira completa. Eso es una **alucinación**, y no es un bug: es consecuencia de que el modelo *predice texto*, no *consulta una base de datos*.
+
+¿Cómo se mide la calidad de verdad de estos sistemas?
+
+- **Perplexity**: lo bien que un modelo predice un texto. Mide "fluidez", no verdad.
+- **Benchmarks**: MMLU, HumanEval, GSM8K... miden conocimiento o razonamiento en condiciones controladas. Ojo: se saturan rápido y pueden estar "contaminados" (ya vistos en el entrenamiento).
+- **LLM-as-judge**: otro LLM puntúa las respuestas. Barato y habitual, pero con sus sesgos ([reflexión sobre límites](https://arxiv.org/abs/2306.05685)).
+- **RAGAS / DeepEval**: evaluación orientada a sistemas RAG (fidelidad, relevancia).
+- **Human eval**: el oro, caro y lento.
+
+Mitigaciones prácticas de alucinación en un sistema tuyo:
+
+1. **Dar contexto** (RAG) y pedir que cite.
+2. **Bajar la temperatura**.
+3. **Pedir "no lo sé"** explícitamente y modelar la incertidumbre en el prompt.
+4. **Validar estructuradamente** (si el modelo devuelve JSON, valídalo con schema) y **verificar de nuevo** (generar → verificar).
+5. **Escape-hatches**: si el sistema no está seguro por debajo de un umbral, no responder.
+
+Nada elimina las alucinaciones al 100%. Quien te diga que su sistema no alucina, te está intentando vender algo.
+
+---
+
+## 10. Mini glosario de supervivencia
+
+| Concepto | En una frase |
+|----------|--------------|
+| **Token** | La unidad que el modelo procesa (subpalabra); el "ladrillo" del texto |
+| **Embedding** | Vector de números que representa un texto; textos parecidos → vectores cercanos |
+| **Contexto** | Todo lo que el modelo ve para generar el siguiente token |
+| **Logits / sampling** | Puntuaciones del modelo por token + el mecanismo de elegir (temperatura, top-p) |
+| **Fine-tuning** | Seguir entrenando un modelo ya entrenado con datos concretos |
+| **LoRA** | Fine-tuning barato: parches pequeños sobre pesos congelados |
+| **Cuantización** | Guardar los pesos con menos precisión para que quepan en menos memoria |
+| **KV-cache** | Caché que evita recalcular los tokens pasados al generar |
+| **RAG** | Recupera trozos relevantes de tu conocimiento y se los da al modelo como contexto |
+| **Function calling** | El modelo pide llamar a una herramienta en vez de responder solo texto |
+| **ReAct** | Bucle razona→actúa→observa hasta completar la tarea |
+| **HNSW** | Índice para búsqueda vectorial rápida (búsqueda aproximada) |
+
+---
+
+## 11. Para seguir aprendiendo (en orden)
+
+Si quieres *de verdad* dominar esto, esta es la ruta que yo seguiría, y cada eslabón dura lo suyo:
+
+1. [3Blue1Brown — Redes neuronales](https://www.youtube.com/playlist?list=PLZHQObOWTQDNU6R1_67000Dx_ZCJB-3pi): la base visual e intuitiva de todo.
+2. [Karpathy — Neural Networks: Zero to Hero](https://www.youtube.com/playlist?list=PLAqhIrjkxbuWI23v9cThsA9GvCAUhRvKZ): del zero a entrenar un mini-GPT realmente. Lo más denso pero lo más formativo de la lista.
+3. [The Illustrated Transformer — Jay Alammar](https://jalammar.github.io/illustrated-transformer/) y su [guía de embeddings](https://jalammar.github.io/illustrating-word2vec/): el puente entre intuición y arquitectura.
+4. [HF NLP Course](https://huggingface.co/learn/nlp-course): haces fine-tuning de verdad con transformers.
+5. [Advanced RAG — Pinecone](https://www.pinecone.io/learn/advanced-rag/): cuando tu primer RAG no recupere bien.
+6. [Building effective agents — Anthropic](https://www.anthropic.com/engineering/building-effective-agents): cuando quieras montar agentes sin que se conviertan en un infierno.
+
+---
+
+## 12. Cierre
+
+La IA actual es menos "cerebro mágico" y más **ingeniería de un predictor de tokens muy grande** al que se le añaden capas cada vez más inteligentes (prompting, RAG, herramientas, evaluación). Una vez que entiendes las piezas —tokens, embeddings, atención, sampling, fine-tuning, recuperación— el "hype" se convierte en vocabulario y puedes ir a por lo divertido: montar sistemas tuyos.
+
+Empieza por lo mínimo: cárgate un modelo pequeño con `transformers` o `ollama`, castea un par de frases a embeddings y compáralas con coseno. Con eso ya tienes más "IA aplicada" que el 90% de los artículos que hablan de ella.
