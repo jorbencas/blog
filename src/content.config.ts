@@ -9,6 +9,7 @@ const posts = defineCollection({
     title: z.string(),
     description: z.string(),
     pubDate: z.string().or(z.date()).transform((v) => new Date(v)),
+    updatedDate: z.string().or(z.date()).transform((v) => new Date(v)).optional(),
     tags: z.array(z.string()).default([]),
     author: z.string().default("Jorge Beneyto Castelló"),
     image: z.string().optional(),
