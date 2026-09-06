@@ -50,11 +50,71 @@ Los LLMs no son otra cosa: redes neuronales **muchísimo más grandes** (miles d
 
 ### 3.1 Tokens: la moneda de cambio
 
-Un LLM **no entiende texto**. Entiende números. Y para convertir palabras en números usa **tokens**: el modelo no procesa la frase "me gusta Python", sino algo parecido a `["me", " gusta", " Python"]`. Cada token tiene un **ID** y, más importante, se asocia a un **vector** (una lista de números) que lo representa en un espacio donde las palabras parecidas quedan cerca.
+Un LLM **no entiende texto**: entiende números. Y para convertir texto en números usa **tokens**. El token es la unidad de procesamiento *y de facturación* del modelo: un chat cuenta su coste en tokens, la ventana de contexto se mide en tokens, y hasta la velocidad de generación depende de ellos. La frase "me gusta Python" no entra entera: se parte en piezas como `["me", " gusta", " Python"]`, cada una con su **ID** de un vocabulario fijo.
 
-La tokenización no es trivial: las palabras compuestas, las abreviaturas y los idiomas con morfología compleja se parten en trozos (subpalabras) con algoritmos como **BPE** (*Byte Pair Encoding*). Por eso un chat cuenta su coste en "tokens" y por eso `tokenizer` es una librería aparte de `model`. Si quieres el detalle: [How GPT Tokenizers Work — Karpathy](https://www.youtube.com/watch?v=zduSFxRajkE) y [The Tokenizer Playground](https://huggingface.co/spaces/Xenova/the-tokenizer-playground).
+Fíjate en un detalle: los tokens no son palabras ni caracteres, son **fragmentos de subpalabra**. Y un mismo texto produce tokens diferentes según la *frecuencia* con la que apareció durante el entrenamiento del tokenizador. Eso tiene consecuencias enormes (coste, idiomas, calidad), así que vamos a por el proceso completo.
 
-Los **embeddings** (esos vectores) son la otra pieza que vas a ver por todas partes. Un embedding es, en pocas palabras, "traducir un texto a un vector de números de forma que cosas parecidas queden cerca". Se miden con **similitud coseno**, y sobre esto se construye todo lo demás que verás más adelante (bases vectoriales, RAG, etc.).
+#### ¿Por qué no un token por palabra (y por qué no por carácter)?
+
+- **Por palabra**: el vocabulario explotaría. "hablar", "hablas", "hablé", "HABLO", "Hablaré"... son formas distintas que además dependen de conjugación, género, mayúsculas y errata. No solo no caben todas: el modelo no podría tener memoria (embedding) para palabras que nunca ha visto (insultos inventados, tecnoargot, nombres de marca). Habría un problema de *out-of-vocabulary* continuo.
+- **Por carácter**: el modelo tendría que dar muchísimos pasos (uno por carácter) y perdería las regularidades de las palabras: "in-", "pre-", "-ción" se comportan igual en muchas palabras, y a nivel de carácter no hay cómo compartirlo.
+
+La **tokenización subpalabra** es el punto medio: un vocabulario fijo y manejable (~32k–200k tokens) con el que **casi cualquier texto se puede cubrir con pocos pasos**. Las piezas se reutilizan: una palabra inventada se descompone en trozos conocidos (*"chatgptano"* → `chat` + `gpt` + `ano`).
+
+#### El proceso completo: así se construye un tokenizador
+
+Los LLMs modernos usan **BPE** (*Byte Pair Encoding*), popularizado por el paper *Neural Machine Translation of Rare Words with Subword Units* ([enlace](https://arxiv.org/abs/1508.07909)). Se construye sobre un *corpus* (documentos en bruto) en cuatro fases:
+
+1. **Normalización**: se deja el texto "limpio" con reglas que elige cada tokenizador: a veces pasar a minúsculas, **unificar Unicode** (NFKC: aplicar *ṣ*→"s", acentos combinables a su forma NFD...), colapsar espacios raros. Esta fase ya destruye información a propósito: por eso el modelo pierde las mayúsculas si el tokenizador las normaliza, y por qué "café" escrito con caracteres raros puede no producir los mismos tokens.
+2. **Pre-tokenización**: se corta el texto en "palabras ± espacios/puntuación" con reglas *por idioma*. Cada tokenizador trae su regex: la inglesa separa bien `don't` en `don` + `'t`, la francesa respeta `l'aube`, la japonesa no asume espacios porque no los hay. Esta es ya una de las razones por las que la tokenización difiere entre idiomas.
+3. **Base de bytes UTF-8**: como "átomo irrompible" se usan los **256 bytes de UTF-8** en vez de palabras. Con eso *cualquier* texto del mundo —incluidos emojis y caracteres chinos— tiene una representación garantizada, sin importar lo raro que sea. Un emoji como 👋 son 4 bytes, así que se convierte en 1-3 tokens.
+4. **El bucle de fusión (el corazón del BPE)**: iterativamente se busca **el par de símbolos adyacentes más frecuente** del corpus y se fusiona en un token nuevo. Se repite hasta alcanzar el tamaño de vocabulario objetivo. Ejemplo ilustrativo con un corpus minúsculo `{low, low, low, lower, lowest, newest, newest, newest, widest}`:
+
+```
+Iteración 1: el par "lo" aparece en low+lower = 5 veces → fusionar: lo|w, lo|w, lo|w, lo|w+er, lo|w+est
+Iteración 2: el par "low" aparece 5 veces → fusionar: low, low, low, low+er, low+est  (así se forma "low")
+Iteración 3: "est" aparece en lowest+newest+widest → fusionar: low+est, new+est, w+d+est...
+...sigue hasta alcanzar el tamaño de vocabulario pedido
+```
+
+Resultado: las secuencias **muy frecuentes acaban siendo 1 token** (`low`, `los`, `the`) y las raras quedan en pedazos (`wides+t`, `id`). El vocabulario aprendido es un reflejo de la lengua *del corpus*, con todo lo que eso implica.
+
+#### De texto a IDs: así "lee" el modelo
+
+Cuando le das un texto al modelo:
+
+1. Pasa por la **misma normalización y pre-tokenización** de antes.
+2. Se le aplican los **merges BPE aprendidos**, eligiendo la pieza más larga del vocabulario que coincida en cada punto (búsqueda *greedy*, no mágica). Por eso el mismo texto siempre produce los mismos tokens.
+3. Cada pieza se traduce a su **ID** con una tabla del vocabulario: `{token: id}`. Lo que entra a la red neuronal es esa lista de IDs (más los **tokens especiales** como `<|endoftext|>` o `[CLS]`, reservados y que jamás deberías escribir literalmente).
+4. Al generar, la red emite un ID del mismo vocabulario (sección 3.3) y se descodifica con la tabla inversa. **Encodear y decodear es solo mirar una tabla** — el "cerebro" empieza una vez que ya tienes los IDs. Por eso `tokenizer` es una librería aparte de `model`.
+
+Si quieres verlo en vivo: el tokenizador de [GPT-4 en The Tokenizer Playground](https://huggingface.co/spaces/Xenova/the-tokenizer-playground) o implementado a mano en [Let's build the GPT Tokenizer — Karpathy](https://www.youtube.com/watch?v=zduSFxRajkE) (te recomiendo este vídeo si quieres la verdad completa).
+
+#### ¿Por qué la tokenización es distinta en cada idioma?
+
+El tokenizador no aprende "lenguaje universal": aprende las frecuencias de **un corpus concreto**, que en la práctica es abrumadoramente inglés. Las consecuencias:
+
+- En inglés, las palabras comunes son **1 token** (`the`, `streets`, `understanding`), porque aparecieron miles de veces como unidad.
+- En idiomas menos representados (español, francés, alemán y mucho peor tailandés, árabe, japonés, hindi...), la misma palabra suele partirse en **2-5 tokens**, a veces piezas byte a byte. "こんにちは" (japonés) → 3-4 tokens; "Haushaltskasse" (alemán) → varios; el tailandés, que no usa espacios, se parte prácticamente a tientas.
+- **Morfología flexiva**: "hablar"/"hablo"/"hablaremos" no comparten token (salvo el lexema "habl"), y el modelo depende de las piezas comunes para generalizar. Por eso los tokens son subpalabras: la semejanza se ve en los fragmentos, no en la palabra entera.
+
+Este desequilibrio es un **impuesto invisible** sobre los idiomas no-inglés:
+
+- **Coste**: las APIs cobran por token. El mismo contenido (en tokens) vale 2-3x más en un idioma minoritario.
+- **Contexto**: llenas la ventana de contexto antes (sección 3.4) — el "espacio" disponible del modelo se fagocita con 4 tokens donde con 1 bastaba.
+- **Rendimiento percibido**: más tokens por frase = más pasos de generación = más lento y más superficie para errores.
+- **Calidad de los embeddings**: una palabra partida en trozos ambiguos puede "sonar" a otra cosa en la capa de atención.
+
+#### Implicaciones prácticas para tu día a día
+
+1. **Números y espacios**: los BPE clásicos tokenizan los dígitos fatal (a veces 1 token por dígito si están mezclados con letras), por eso los modelos modernos dedican trucos específicos a los números.
+2. **Estimación**: como regla grosera, ~1.000 tokens ≈ 750 palabras en inglés; en español parecido; en CJK bastantes más tokens por carácter.
+3. **Herramientas**: `tiktoken` (OpenAI), `tokenizers` (casi todo el mundo), y cualquiera de los playgrounds online para experimentar con el texto antes de mandarlo.
+4. **Detalle fino**: si algún día optimizas coste o latencia de verdad, el tokenizer es el primer sitio donde mirar (p. ej. eligiendo el idioma del contenido, recortando listados que inflan tokens, o usando encodes sin juegos con espacios).
+
+#### Y un apunte sobre los embeddings
+
+Cada token del vocabulario tiene un **ID** para la red *y* un **embedding**: un vector de números (p. ej. 768-4096 dimensiones) que lo representa en un espacio geométrico donde **cosas parecidas quedan cerca**. La cercanía se mide con **similitud coseno** (ángulo entre vectores) y sobre esa idea se construye todo lo demás que verás: bases vectoriales, RAG, búsqueda semántica (secciones 5, 6 y 8). Si quieres verlo despacio: [The Illustrated Word2vec — Jay Alammar](https://jalammar.github.io/illustrating-word2vec/).
 
 ### 3.2 El Transformer y la atención
 
@@ -329,6 +389,9 @@ Nada elimina las alucinaciones al 100%. Quien te diga que su sistema no alucina,
 | Concepto | En una frase |
 |----------|--------------|
 | **Token** | La unidad que el modelo procesa (subpalabra); el "ladrillo" del texto |
+| **BPE** | Algoritmo de tokenización: fusiona los pares de bytes más frecuentes hasta formar un vocabulario |
+| **Pre-tokenización** | Corte previo en palabras ± puntuación con reglas propias de cada idioma |
+| **Normalización** | Limpieza previa del texto (Unicode, minúsculas) que también elimina información a propósito |
 | **Embedding** | Vector de números que representa un texto; textos parecidos → vectores cercanos |
 | **Contexto** | Todo lo que el modelo ve para generar el siguiente token |
 | **Logits / sampling** | Puntuaciones del modelo por token + el mecanismo de elegir (temperatura, top-p) |
