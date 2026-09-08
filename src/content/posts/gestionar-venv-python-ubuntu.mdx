@@ -1,90 +1,148 @@
 ---
 draft: false
 title: "Gestionar entornos virtuales de Python en Ubuntu con aliases"
-description: "Cómo crear y activar entornos virtuales de Python con un solo comando usando aliases en bash o zsh. Explicación completa del proceso."
+description: "Cómo crear y activar entornos virtuales de Python con un solo comando usando aliases en bash o zsh. Guía completa paso a paso."
 pubDate: "2026/09/08"
 tags: ["python", "ubuntu", "linux", "tutorial", "aliases", "bash"]
 image: "img/gestionar_venv_python_ubuntu/gestionar_venv_python_ubuntu_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 ---
 
-Crear y activar entornos virtuales de Python es algo que hacemos constantemente, pero siempre escribiendo los mismos comandos. Con un par de aliases en tu shell, puedes reducir todo a un solo comando.
-
-En este post te explico **qué** son los aliases, **dónde** se guardan, **cómo** se aplican y **por qué** funcionan siempre.
+Crear y activar entornos virtuales de Python es algo que hacemos constantemente, pero siempre escribiendo los mismos comandos. En este post te muestro cómo crear dos aliases para reducir todo a un solo comando, explicando cada paso del proceso.
 
 ---
 
-## 1. ¿Qué es un alias?
+## El problema
 
-Un alias es un **atajo de teclado para la terminal**. En lugar de escribir un comando largo, defines una palabra corta que lo sustituye.
+Cada vez que creas un proyecto en Python, tienes que hacer esto:
 
 ```bash
-# Sin alias: tienes que escribir esto cada vez
+# 1. Crear el entorno virtual
+python3 -m venv .venv
+
+# 2. Activarlo
+source .venv/bin/activate
+
+# 3. Cuando termines, desactivarlo
+deactivate
+```
+
+Son 3 comandos cada vez. Si trabajas con varios proyectos al día, se acumulan.
+
+---
+
+## La solución
+
+Crear dos aliases en tu shell:
+
+| Comando | Qué hace |
+|---------|----------|
+| `mkvenv` | Crea `.venv` y lo activa (2 en 1) |
+| `act` | Activa `.venv` existente |
+
+Con esto, en lugar de escribir 2 comandos, solo escribes uno.
+
+---
+
+## Paso 1: Entender qué es un alias
+
+Un alias es un **atajo de teclado para la terminal**. Defines una palabra corta que sustituye un comando largo.
+
+```bash
+# Sin alias
 python3 -m venv .venv && source .venv/bin/activate
 
-# Con alias: solo escribes esto
+# Con alias
 mkvenv
 ```
 
-Los aliases se guardan en un **archivo de configuración** de tu shell (bash o zsh). Cuando abres una terminal, tu shell lee ese archivo y carga todos los aliases que has definido.
+**¿Dónde se guardan los aliases?** En un archivo de configuración de tu shell. Cada vez que abres una terminal, tu shell lee ese archivo y carga los aliases.
 
 ---
 
-## 2. ¿Dónde se guardan los aliases?
+## Paso 2: Saber qué shell usas
 
-Depende de qué shell uses:
+Depende de qué shell uses, el archivo es diferente:
 
-| Shell | Archivo de configuración | Dónde está |
-|-------|--------------------------|------------|
-| **Bash** (por defecto en Ubuntu) | `~/.bashrc` | En tu carpeta de usuario |
-| **Zsh** (popular en macOS) | `~/.zshrc` | En tu carpeta de usuario |
-
-**Cómo saber qué shell usas:**
 ```bash
+# Ejecuta esto para saber tu shell
 echo $SHELL
-# Si dice /bin/bash → edita ~/.bashrc
-# Si dice /bin/zsh → edita ~/.zshrc
 ```
 
-**Cómo ver el archivo:**
-```bash
-cat ~/.bashrc  # Ver todo el contenido
-nano ~/.bashrc  # Abrirlo para editarlo
-```
+| Resultado | Shell | Archivo de configuración |
+|-----------|-------|--------------------------|
+| `/bin/bash` | Bash | `~/.bashrc` |
+| `/bin/zsh` | Zsh | `~/.zshrc` |
 
-El archivo `~/.bashrc` es un archivo de texto normal. Contiene configuraciones que se cargan cada vez que abres una terminal.
+**En Ubuntu, por defecto es bash.** Si no sabes, usa `~/.bashrc`.
 
 ---
 
-## 3. Crear el alias `mkvenv`
-
-### Paso 1: Abrir el archivo de configuración
+## Paso 3: Abrir el archivo de configuración
 
 ```bash
-nano ~/.bashrc  # o ~/.zshrc si usas Zsh
+# Abrir con nano (editor de terminal)
+nano ~/.bashrc
 ```
 
-### Paso 2: Añadir la función al final del archivo
+Esto abre el archivo en nano. Verás muchas líneas de configuración. No te preocupes por lo que hay — solo tienes que ir al final.
 
-Ve al final del archivo (Ctrl+End) y pega esto:
+---
+
+## Paso 4: Añadir la función `mkvenv`
+
+Ve al final del archivo:
+- Pulsa **Ctrl+End** (o **Ctrl+Shift+End**) para ir al final
+
+Añade esto al final del archivo:
 
 ```bash
-# Crea y activa un entorno virtual llamado .venv en el directorio actual
+# ============================================
+# Aliases de Python
+# ============================================
+
+# Crea y activa un entorno virtual llamado .venv
 mkvenv() {
     python3 -m venv .venv
     source .venv/bin/activate
 }
 ```
 
-**¿Por qué es una función y no un alias?** Porque queremos ejecutar **dos comandos** en secuencia: crear el entorno Y activarlo. Un alias solo puede ejecutar un comando, pero una función puede ejecutar varios.
+**¿Por qué es una función y no un alias?**
 
-### Paso 3: Guardar y salir
+| Tipo | Cuándo usarlo |
+|------|---------------|
+| **Alias** | Cuando ejecutas **un solo comando** |
+| **Función** | Cuando ejecutas **varios comandos** en secuencia |
+
+`mkvenv` necesita ejecutar **dos comandos**: crear el entorno Y activarlo. Por eso es una función.
+
+---
+
+## Paso 5: Añadir el alias `act`
+
+Justo debajo de la función anterior, añade:
+
+```bash
+# Activa el entorno virtual .venv del directorio actual
+alias act='source .venv/bin/activate'
+```
+
+**¿Por qué un alias y no una función?** Porque solo necesitamos ejecutar **un solo comando** (`source`).
+
+---
+
+## Paso 6: Guardar el archivo
 
 En nano:
-1. **Ctrl+O** → Guardar (te pregunta el nombre, pulsa Enter)
-2. **Ctrl+X** → Salir
+1. Pulsa **Ctrl+O** → Te pregunta "File Name to Write". Pulsa **Enter**
+2. Pulsa **Ctrl+X** → Salir
 
-### Paso 4: Aplicar los cambios
+**No cierres la terminal.** Aún no se han aplicado los cambios.
+
+---
+
+## Paso 7: Aplicar los cambios
 
 Para que los cambios surtan efecto **sin cerrar la terminal**:
 
@@ -92,73 +150,56 @@ Para que los cambios surtan efecto **sin cerrar la terminal**:
 source ~/.bashrc
 ```
 
-**¿Qué hace `source`?** Relee el archivo de configuración y aplica los cambios en la terminal actual. Sin esto, tendrías que cerrar y abrir la terminal de nuevo.
+**¿Qué hace `source`?** Relee el archivo de configuración y aplica los cambios en la terminal actual.
+
+**¿Qué pasa si no ejecuto `source`?** Tendrías que cerrar y abrir la terminal de nuevo. Los cambios se aplican automáticamente al abrir una terminal nueva.
 
 ---
 
-## 4. Crear el alias `act`
-
-Si ya tienes el entorno creado y solo quieres activarlo:
-
-### Paso 1: Abrir el archivo de configuración
-
-```bash
-nano ~/.bashrc
-```
-
-### Paso 2: Añadir el alias al final
-
-```bash
-# Activa el entorno virtual .venv del directorio actual
-alias act='source .venv/bin/activate'
-```
-
-**¿Por qué un alias y no una función?** Porque solo necesitamos ejecutar un solo comando (`source`).
-
-### Paso 3: Guardar y aplicar
-
-```bash
-# Guardar en nano: Ctrl+O, Enter, Ctrl+X
-# Aplicar cambios:
-source ~/.bashrc
-```
-
----
-
-## 5. Verificar que funciona
+## Paso 8: Verificar que funciona
 
 ### Comprobar que el alias está cargado
 
 ```bash
-alias | grep mkvenv
-# Debería decir: mkvenv () { ... }
-
+# Ver si mkvenv existe
 type mkvenv
-# Debería decir: mkvenv is a function
+# Salida esperada: mkvenv is a function
+
+# Ver si act existe
+type act
+# Salida esperada: act is aliased to 'source .venv/bin/activate'
 ```
 
-### Probarlo
+### Probarlo en la práctica
 
 ```bash
-# Crear una carpeta de prueba
-mkdir ~/test_venv && cd ~/test_venv
+# 1. Crear una carpeta de prueba
+mkdir ~/test_venv
+cd ~/test_venv
 
-# Crear y activar el entorno
+# 2. Crear y activar el entorno
 mkvenv
+# Deberías ver: (.venv) usuario@ubuntu:~/test_venv$
 
-# Verificar que está activo (debería decir (.venv) al principio)
-# Ejemplo: (.venv) usuario@ubuntu:~/test_venv$
+# 3. Verificar que Python funciona dentro del entorno
+python --version
+# Debería funcionar sin errores
 
-# Desactivar
+# 4. Desactivar
 deactivate
 
-# Activar de nuevo
+# 5. Activar de nuevo
 act
+# Deberías ver: (.venv) usuario@ubuntu:~/test_venv$
+
+# 6. Limpiar (opcional)
+cd ~
+rm -rf ~/test_venv
 ```
 
 ---
 
-## 6. ¿Por qué funciona siempre?
+## Paso 9: Entender por qué funciona siempre
 
 El archivo `~/.bashrc` se carga **automáticamente** cada vez que:
 
@@ -170,40 +211,39 @@ El archivo `~/.bashrc` se carga **automáticamente** cada vez que:
 
 ---
 
-## 7. Resumen
+## Resumen final
 
-| Comando | Qué hace | Tipo |
-|---------|----------|------|
-| `mkvenv` | Crea `.venv` y lo activa | Función |
-| `act` | Activa `.venv` existente | Alias |
+| Comando | Qué hace | Tipo | Dónde está |
+|---------|----------|------|------------|
+| `mkvenv` | Crea `.venv` y lo activa | Función | `~/.bashrc` |
+| `act` | Activa `.venv` existente | Alias | `~/.bashrc` |
 
 **Archivos importantes:**
 - `~/.bashrc` → Configuración de bash (donde guardas los aliases)
-- `~/.zshrc` → Configuración de zsh (si usas zsh)
 - `.venv/` → El entorno virtual creado (en cada proyecto)
 
 **Comandos útiles:**
 ```bash
 source ~/.bashrc    # Aplicar cambios sin cerrar terminal
-alias | grep nombre # Verificar si un alias existe
-type nombre         # Verificar si es alias o función
-unset mkvenv        # Eliminar un alias/función temporalmente
+type mkvenv         # Verificar si es función
+type act            # Verificar si es alias
+alias               # Ver todos los aliases definidos
 ```
 
 ---
 
-## 8. Troubleshooting
+## Troubleshooting
 
 | Problema | Causa | Solución |
 |----------|-------|----------|
 | `mkvenv: command not found` | No guardaste el alias o no hiciste `source` | Ejecutar `source ~/.bashrc` |
 | `bash: .venv/bin/activate: No such file` | El entorno no existe en esa carpeta | Ejecutar `mkvenv` primero |
-| `Permission denied` | Problemas de permisos | `chmod +x ~/.bashrc` |
-| `No funciona al cerrar terminal` | Guardaste en el archivo equivocado | Verificar que editaste `~/.bashrc` (no `~/.profile`) |
+| `function not found` | Guardaste en el archivo equivocado | Verificar que editaste `~/.bashrc` |
+| `No funciona al cerrar terminal` | No guardaste el archivo | Repetir pasos 6-7 |
 
 ---
 
-## 9. Tips adicionales
+## Tips adicionales
 
 ### Ver todos tus aliases
 
@@ -215,17 +255,26 @@ alias
 ### Eliminar un alias temporalmente
 
 ```bash
-unalias mkvenv
-# O para funciones:
-unfunction mkvenv
+unalias act        # Para aliases
+unfunction mkvenv  # Para funciones
 ```
 
 ### Hacer un alias más visible
 
+Añadir color al prompt cuando el venv está activado:
+
 ```bash
-# Añadir color al prompt cuando el venv está activado
-# Añadir esto en ~/.bashrc después del alias:
+# Añadir esto en ~/.bashrc después de los aliases:
 if [[ -n "$VIRTUAL_ENV" ]]; then
     PS1="\[\e[32m\](.venv)\[\e[0m\] $PS1"
 fi
+```
+
+### Crear un alias para ver qué entornos tienes
+
+```bash
+# Añadir en ~/.bashrc:
+alias venvs='find . -name "pyvenv.cfg" -exec dirname {} \;'
+# Uso: venvs
+# Lista todos los directorios .venv del directorio actual
 ```
