@@ -17,13 +17,8 @@ Crear y activar entornos virtuales de Python es algo que hacemos constantemente,
 Cada vez que creas un proyecto en Python, tienes que hacer esto:
 
 ```bash
-# 1. Crear el entorno virtual
 python3 -m venv .venv
-
-# 2. Activarlo
 source .venv/bin/activate
-
-# 3. Cuando termines, desactivarlo
 deactivate
 ```
 
@@ -40,11 +35,9 @@ Crear dos aliases en tu shell:
 | `mkvenv` | Crea `.venv` y lo activa (2 en 1) |
 | `act` | Activa `.venv` existente |
 
-Con esto, en lugar de escribir 2 comandos, solo escribes uno.
-
 ---
 
-## Paso 1: Entender qué es un alias
+## Paso 1 — Entender qué es un alias
 
 Un alias es un **atajo de teclado para la terminal**. Defines una palabra corta que sustituye un comando largo.
 
@@ -60,12 +53,11 @@ mkvenv
 
 ---
 
-## Paso 2: Saber qué shell usas
+## Paso 2 — Saber qué shell usas
 
 Depende de qué shell uses, el archivo es diferente:
 
 ```bash
-# Ejecuta esto para saber tu shell
 echo $SHELL
 ```
 
@@ -78,10 +70,9 @@ echo $SHELL
 
 ---
 
-## Paso 3: Abrir el archivo de configuración
+## Paso 3 — Abrir el archivo de configuración
 
 ```bash
-# Abrir con nano (editor de terminal)
 nano ~/.bashrc
 ```
 
@@ -89,12 +80,9 @@ Esto abre el archivo en nano. Verás muchas líneas de configuración. No te pre
 
 ---
 
-## Paso 4: Añadir la función `mkvenv`
+## Paso 4 — Añadir la función `mkvenv`
 
-Ve al final del archivo:
-- Pulsa **Ctrl+End** (o **Ctrl+Shift+End**) para ir al final
-
-Añade esto al final del archivo:
+Ve al final del archivo y añade esto:
 
 ```bash
 # ============================================
@@ -108,7 +96,7 @@ mkvenv() {
 }
 ```
 
-**¿Por qué es una función y no un alias?**
+### ¿Por qué es una función y no un alias?
 
 | Tipo | Cuándo usarlo |
 |------|---------------|
@@ -119,7 +107,7 @@ mkvenv() {
 
 ---
 
-## Paso 5: Añadir el alias `act`
+## Paso 5 — Añadir el alias `act`
 
 Justo debajo de la función anterior, añade:
 
@@ -128,13 +116,16 @@ Justo debajo de la función anterior, añade:
 alias act='source .venv/bin/activate'
 ```
 
-**¿Por qué un alias y no una función?** Porque solo necesitamos ejecutar **un solo comando** (`source`).
+### ¿Por qué un alias y no una función?
+
+Porque solo necesitamos ejecutar **un solo comando** (`source`).
 
 ---
 
-## Paso 6: Guardar el archivo
+## Paso 6 — Guardar el archivo
 
 En nano:
+
 1. Pulsa **Ctrl+O** → Te pregunta "File Name to Write". Pulsa **Enter**
 2. Pulsa **Ctrl+X** → Salir
 
@@ -142,21 +133,23 @@ En nano:
 
 ---
 
-## Paso 7: Aplicar los cambios
-
-Para que los cambios surtan efecto **sin cerrar la terminal**:
+## Paso 7 — Aplicar los cambios
 
 ```bash
 source ~/.bashrc
 ```
 
-**¿Qué hace `source`?** Relee el archivo de configuración y aplica los cambios en la terminal actual.
+### ¿Qué hace `source`?
 
-**¿Qué pasa si no ejecuto `source`?** Tendrías que cerrar y abrir la terminal de nuevo. Los cambios se aplican automáticamente al abrir una terminal nueva.
+Relee el archivo de configuración y aplica los cambios en la terminal actual.
+
+### ¿Qué pasa si no ejecuto `source`?
+
+Tendrías que cerrar y abrir la terminal de nuevo. Los cambios se aplican automáticamente al abrir una terminal nueva.
 
 ---
 
-## Paso 8: Verificar que funciona
+## Paso 8 — Verificar que funciona
 
 ### Comprobar que el alias está cargado
 
@@ -199,7 +192,7 @@ rm -rf ~/test_venv
 
 ---
 
-## Paso 9: Entender por qué funciona siempre
+## Paso 9 — Entender por qué funciona siempre
 
 El archivo `~/.bashrc` se carga **automáticamente** cada vez que:
 
@@ -211,18 +204,20 @@ El archivo `~/.bashrc` se carga **automáticamente** cada vez que:
 
 ---
 
-## Resumen final
+## Resumen
 
 | Comando | Qué hace | Tipo | Dónde está |
 |---------|----------|------|------------|
 | `mkvenv` | Crea `.venv` y lo activa | Función | `~/.bashrc` |
 | `act` | Activa `.venv` existente | Alias | `~/.bashrc` |
 
-**Archivos importantes:**
+### Archivos importantes
+
 - `~/.bashrc` → Configuración de bash (donde guardas los aliases)
 - `.venv/` → El entorno virtual creado (en cada proyecto)
 
-**Comandos útiles:**
+### Comandos útiles
+
 ```bash
 source ~/.bashrc    # Aplicar cambios sin cerrar terminal
 type mkvenv         # Verificar si es función
@@ -259,9 +254,7 @@ unalias act        # Para aliases
 unfunction mkvenv  # Para funciones
 ```
 
-### Hacer un alias más visible
-
-Añadir color al prompt cuando el venv está activado:
+### Añadir color al prompt cuando el venv está activado
 
 ```bash
 # Añadir esto en ~/.bashrc después de los aliases:
