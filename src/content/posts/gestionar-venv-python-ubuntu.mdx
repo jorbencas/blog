@@ -1,0 +1,68 @@
+---
+draft: false
+title: "Gestionar entornos virtuales de Python en Ubuntu con aliases"
+description: "Cómo crear y activar entornos virtuales de Python con un solo comando usando aliases en bash o zsh."
+pubDate: "2026/09/08"
+tags: ["python", "ubuntu", "linux", "tutorial", "aliases"]
+image: "img/venv_python/venv_python_cover-1200.webp"
+author: "Jorge Beneyto Castelló"
+---
+
+Crear y activar entornos virtuales de Python es algo que hacemos constantly, pero siempre escribiendo los mismos comandos. Con un par de aliases en tu shell, puedes reducir todo a un solo comando.
+
+---
+
+## 1. Alias para crear y activar
+
+Abre tu terminal y edita tu archivo de configuración:
+
+```bash
+nano ~/.bashrc  # o ~/.zshrc si usas Zsh
+```
+
+Añade esto al final:
+
+```bash
+# Crea y activa un entorno virtual llamado .venv en el directorio actual
+mkvenv() {
+    python3 -m venv .venv
+    source .venv/bin/activate
+}
+```
+
+Guarda (Ctrl+O, Enter) y sal (Ctrl+X). Aplica los cambios:
+
+```bash
+source ~/.bashrc
+```
+
+Ahora, en cualquier carpeta, simplemente escribe:
+
+```bash
+mkvenv
+```
+
+Se creará el entorno `.venv` y se activará automáticamente.
+
+---
+
+## 2. Alias para activar uno existente
+
+Si ya tienes el entorno creado y solo quieres activarlo:
+
+```bash
+alias act='source .venv/bin/activate'
+```
+
+Con esto, solo escribes `act` y listo.
+
+---
+
+## Resumen
+
+| Comando | Qué hace |
+|---------|----------|
+| `mkvenv` | Crea `.venv` y lo activa |
+| `act` | Activa `.venv` existente |
+
+Ambos comandos funcionan en cualquier directorio. Solo asegúrate de tener Python 3 instalado (`python3 --version`).
