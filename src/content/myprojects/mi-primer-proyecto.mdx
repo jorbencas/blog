@@ -309,7 +309,9 @@ Componentes reutilizables que aparecen en múltiples partes de la aplicación.
 
 ---
 
-## 🪝 Hooks Custom (`src/hooks/`)
+## Arquitectura del Código
+
+### 🪝 Hooks Custom (`src/hooks/`)
 
 Los hooks son la lógica reutilizable que alimenta los componentes. Cada hook encapsula una responsabilidad específica.
 
@@ -339,7 +341,7 @@ Los hooks son la lógica reutilizable que alimenta los componentes. Cada hook en
 
 ---
 
-## 🗃️ Stores (Zustand) (`src/store/`)
+### 🗃️ Stores (Zustand) (`src/store/`)
 
 El estado global se gestiona con Zustand, que ofrece una alternativa más ligera y performante a Redux.
 
@@ -351,7 +353,7 @@ El estado global se gestiona con Zustand, que ofrece una alternativa más ligera
 
 ---
 
-## 📡 API Client (`src/api/`)
+### 📡 API Client (`src/api/`)
 
 La capa de comunicación con el backend está encapsulada en módulos especializados.
 
@@ -371,7 +373,7 @@ La capa de comunicación con el backend está encapsulada en módulos especializ
 
 ---
 
-## 🛠️ Utilidades (`src/utils/`)
+### 🛠️ Utilidades (`src/utils/`)
 
 Módulos puros de lógica que no dependen de React.
 
@@ -399,7 +401,7 @@ Módulos puros de lógica que no dependen de React.
 
 ---
 
-## 📝 Enums (`src/types/enums.ts`)
+### 📝 Enums (`src/types/enums.ts`)
 
 Los enums centralizan los valores constantes de la aplicación.
 
@@ -441,7 +443,7 @@ Los enums centralizan los valores constantes de la aplicación.
 
 ---
 
-## 📱 Responsive Design
+### 📱 Responsive Design
 
 ### Layout Mobile-First
 
@@ -470,7 +472,7 @@ Mecano fue diseñado con mobile-first. Cada componente fue auditado para funcion
 
 ---
 
-## 🔒 Cambios Recientes (Auditoría Completa)
+### 🔒 Cambios Recientes (Auditoría Completa)
 
 ### Seguridad
 
@@ -529,7 +531,7 @@ npm run dev          # Frontend en :3000
 npm run server       # Backend en :3001
 ```
 
-## 🐳 Despliegue con Docker
+### 🐳 Despliegue con Docker
 
 La arquitectura Docker usa 3 servicios aislados. El frontend corre sobre nginx:alpine en el puerto 80, sirviendo el build estático de React y haciendo proxy de `/api` y `/ws` al backend. El backend corre sobre node:20-alpine en el puerto 3001 (interno, no expuesto directamente). La base de datos es PostgreSQL 16 con un volumen persistente `pgdata` para no perder datos entre reinicios.
 
@@ -591,7 +593,7 @@ docker-compose exec db /scripts/db-restore.sh /data/mi_backup.sql
 | Ver todos los contenedores | `docker-compose ps -a` |
 | Limpiar imágenes sin usar | `docker image prune -f` |
 
-## 🛠️ Desarrollo Tradicional
+### 🛠️ Desarrollo Tradicional
 
 Si prefieres no usar Docker para el desarrollo diario:
 
@@ -615,7 +617,7 @@ npx playwright test  # E2E tests
 npm run lint         # ESLint (max 10 warnings)
 ```
 
-## 🌐 Servicios Gratuitos Sugeridos
+### 🌐 Servicios Gratuitos Sugeridos
 
 Para desplegar el proyecto sin costes, se pueden usar: [**Hugging Face**](https://huggingface.co/) como hosting (Spaces Docker gratis), [**Neon**](https://neon.tech/) como base de datos PostgreSQL serverless (capa gratuita generosa) y [**GitHub**](https://github.com/) para el repositorio y CI/CD con Actions.
 
