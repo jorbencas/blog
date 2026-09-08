@@ -35,9 +35,7 @@ Crear dos aliases en tu shell:
 | `mkvenv` | Crea `.venv` y lo activa (2 en 1) |
 | `act` | Activa `.venv` existente |
 
----
-
-## Paso 1 — Entender qué es un alias
+### Paso 1 — Entender qué es un alias
 
 Un alias es un **atajo de teclado para la terminal**. Defines una palabra corta que sustituye un comando largo.
 
@@ -51,9 +49,7 @@ mkvenv
 
 **¿Dónde se guardan los aliases?** En un archivo de configuración de tu shell. Cada vez que abres una terminal, tu shell lee ese archivo y carga los aliases.
 
----
-
-## Paso 2 — Saber qué shell usas
+### Paso 2 — Saber qué shell usas
 
 Depende de qué shell uses, el archivo es diferente:
 
@@ -68,9 +64,7 @@ echo $SHELL
 
 **En Ubuntu, por defecto es bash.** Si no sabes, usa `~/.bashrc`.
 
----
-
-## Paso 3 — Abrir el archivo de configuración
+### Paso 3 — Abrir el archivo de configuración
 
 ```bash
 nano ~/.bashrc
@@ -78,9 +72,7 @@ nano ~/.bashrc
 
 Esto abre el archivo en nano. Verás muchas líneas de configuración. No te preocupes por lo que hay — solo tienes que ir al final.
 
----
-
-## Paso 4 — Añadir la función `mkvenv`
+### Paso 4 — Añadir la función `mkvenv`
 
 Ve al final del archivo y añade esto:
 
@@ -96,7 +88,7 @@ mkvenv() {
 }
 ```
 
-### ¿Por qué es una función y no un alias?
+#### ¿Por qué es una función y no un alias?
 
 | Tipo | Cuándo usarlo |
 |------|---------------|
@@ -105,9 +97,7 @@ mkvenv() {
 
 `mkvenv` necesita ejecutar **dos comandos**: crear el entorno Y activarlo. Por eso es una función.
 
----
-
-## Paso 5 — Añadir el alias `act`
+### Paso 5 — Añadir el alias `act`
 
 Justo debajo de la función anterior, añade:
 
@@ -116,13 +106,11 @@ Justo debajo de la función anterior, añade:
 alias act='source .venv/bin/activate'
 ```
 
-### ¿Por qué un alias y no una función?
+#### ¿Por qué un alias y no una función?
 
 Porque solo necesitamos ejecutar **un solo comando** (`source`).
 
----
-
-## Paso 6 — Guardar el archivo
+### Paso 6 — Guardar el archivo
 
 En nano:
 
@@ -131,27 +119,23 @@ En nano:
 
 **No cierres la terminal.** Aún no se han aplicado los cambios.
 
----
-
-## Paso 7 — Aplicar los cambios
+### Paso 7 — Aplicar los cambios
 
 ```bash
 source ~/.bashrc
 ```
 
-### ¿Qué hace `source`?
+#### ¿Qué hace `source`?
 
 Relee el archivo de configuración y aplica los cambios en la terminal actual.
 
-### ¿Qué pasa si no ejecuto `source`?
+#### ¿Qué pasa si no ejecuto `source`?
 
 Tendrías que cerrar y abrir la terminal de nuevo. Los cambios se aplican automáticamente al abrir una terminal nueva.
 
----
+### Paso 8 — Verificar que funciona
 
-## Paso 8 — Verificar que funciona
-
-### Comprobar que el alias está cargado
+#### Comprobar que el alias está cargado
 
 ```bash
 # Ver si mkvenv existe
@@ -163,7 +147,7 @@ type act
 # Salida esperada: act is aliased to 'source .venv/bin/activate'
 ```
 
-### Probarlo en la práctica
+#### Probarlo en la práctica
 
 ```bash
 # 1. Crear una carpeta de prueba
@@ -190,9 +174,7 @@ cd ~
 rm -rf ~/test_venv
 ```
 
----
-
-## Paso 9 — Entender por qué funciona siempre
+### Paso 9 — Entender por qué funciona siempre
 
 El archivo `~/.bashrc` se carga **automáticamente** cada vez que:
 
