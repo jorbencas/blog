@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "Instalación de FFmpeg + yt-dlp: Conversor de Vídeo y Pipeline de Compresión"
-description: "Guía completa para instalar y configurar midu.sh, el conversor de vídeo con 33 modos. Docker, sin Docker, monitor de compresión automática y preview watcher para WSL."
+description: "Guía completa para instalar y configurar midu.sh, el conversor de vídeo con 33 modos. Docker, sin Docker, monitor de compresión automática y preview watcher para WSL y Linux nativo."
 pubDate: "2026/09/04"
 updatedDate: "2026/09/08"
 tags: ["ffmpeg", "yt-dlp", "docker", "instalación", "vídeo", "linux"]
@@ -156,14 +156,14 @@ volumes:
 
 ---
 
-## 6. Configurar el Preview Watcher (WSL)
+## 6. Configurar el Preview Watcher (WSL / Linux nativo)
 
-Si usas Windows con WSL, el watcher abre automáticamente los vídeos en VLC cuando midu.sh los genera. Es como tener un preview en tiempo real.
+El watcher abre automáticamente los vídeos en VLC, mpv o xdg-open cuando midu.sh los genera. Funciona tanto en WSL como en Linux nativo.
 
 ### 6.1. Arrancar el watcher
 
 ```bash
-# En una terminal de WSL (no en Docker)
+# En una terminal (no en Docker)
 cd devjobs/ffmpeg-yt-dlp
 bash preview_watcher.sh --daemon
 ```
@@ -325,7 +325,7 @@ comprimidos/log_YYYY-MM-DD.txt     → log diario del monitor
 ffmpeg-yt-dlp/
 ├── docker-compose.yml     # Servicios: downloader + monitor
 ├── .env                   # Configuración (ntfy.sh, opcional)
-├── preview_watcher.sh     # Abre vídeos en VLC (WSL)
+├── preview_watcher.sh     # Abre vídeos en VLC/mpv (WSL + Linux nativo)
 ├── scripts/
 │   ├── backup_youtube.sh  # Backup de canales de YouTube
 │   └── monitor_folder.sh  # Monitor de compresión (usado por Docker)
