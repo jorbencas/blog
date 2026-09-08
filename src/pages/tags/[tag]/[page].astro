@@ -17,7 +17,7 @@ export async function getStaticPaths({ paginate }) {
     ]),
   ];
 
-  const sortedPosts = await getSortedPosts(allPosts);
+  const sortedPosts = getSortedPosts(allPosts);
 
   return uniqueTags.flatMap((tag) => {
     const filteredPosts = sortedPosts.filter((post) =>
@@ -25,7 +25,7 @@ export async function getStaticPaths({ paginate }) {
     );
 
     const filteredChallenges = allChallenges
-      .filter((c) => c.data.tags.includes(tag))
+      .filter((c) => !c.data.draft && c.data.tags.includes(tag))
       .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 
     return paginate(filteredPosts, {
@@ -42,7 +42,7 @@ const { data, url } = page;
 const { prev, next } = url;
 ---
 
-<Layout title={"Contenido sobre " + tag} description={`Artículos y retos etiquetados con #${tag}`} section="tags">
+<Layout title={"Contenido sobre " + tag} description={`Artículos y retos etiquetados con #${tag}`} section="tags" prevPage={prev || undefined} nextPage={next || undefined}>
   <section class="max-w-6xl mx-auto space-y-12 py-8 md:py-16" data-pagefind-ignore>
       <!-- CABECERA -->
       <div class="text-center space-y-4 pb-4">

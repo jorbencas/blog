@@ -23,11 +23,19 @@ export const formatDatePost = (date) => {
 
 export const getSortedPosts = (allPosts) => {
   return allPosts
-    .filter((post) => !post.data.draft && post.data.draft === false)
+    .filter((post) => !post.data.draft)
     .sort(
       (a, b) =>
         new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime()
     );
+};
+
+export const getPostsByPage = (allPosts, currentPage, pageSize = 12) => {
+  const sorted = getSortedPosts(allPosts);
+  const totalPages = Math.ceil(sorted.length / pageSize);
+  const start = (currentPage - 1) * pageSize;
+  const items = sorted.slice(start, start + pageSize);
+  return { items, totalPages, currentPage, total: sorted.length };
 };
 
 export const getRelatedPosts = (currentPost, allPosts, limit = 3) => {

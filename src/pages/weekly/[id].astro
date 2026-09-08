@@ -1,17 +1,16 @@
 ---
 import { getCollection, render } from "astro:content";
-import PostLayout from "@layouts/PostLayout.astro"; // Reutilizamos tu Layout pro
+import PostLayout from "@layouts/PostLayout.astro";
 
 export async function getStaticPaths() {
   const weeklyEntries = await getCollection("weeklyPosts");
   return weeklyEntries.map((entry) => ({
     params: { id: entry.id },
-    props: { entry },
+    props: { entry, allWeekly: weeklyEntries },
   }));
 }
 
-const { entry } = Astro.props;
-// Usamos render(entry) para el nuevo Content Layer de Astro
+const { entry, allWeekly } = Astro.props;
 const { Content, headings, remarkPluginFrontmatter, audioSrc } =
   await render(entry);
 ---
@@ -28,6 +27,7 @@ const { Content, headings, remarkPluginFrontmatter, audioSrc } =
   remarkPluginFrontmatter={remarkPluginFrontmatter}
   audioSrc={audioSrc}
   section="weekly"
+  allPosts={allWeekly}
 >
   <Content />
 </PostLayout>

@@ -65,8 +65,40 @@ if (section === "posts") {
 }
 breadcrumbItems.push({ name: title, url: canonicalURL });
 
+const isHome = section === "home";
+
 let jsonLD;
-if (pageType === "tool") {
+if (isHome) {
+  jsonLD = [
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: SITE_NAME,
+      url: Astro.site?.toString(),
+      description: description,
+      inLanguage: "es",
+      potentialAction: {
+        "@type": "SearchAction",
+        target: {
+          "@type": "EntryPoint",
+          urlTemplate: `${Astro.site}posts?search={search_term_string}`,
+        },
+        "query-input": "required name=search_term_string",
+      },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      name: AUTHOR_NAME,
+      url: Astro.site?.toString(),
+      sameAs: [
+        "https://twitter.com/jorbencas",
+        "https://github.com/jorbencas",
+        "https://gitlab.com/jorbencas",
+      ],
+    },
+  ];
+} else if (pageType === "tool") {
   jsonLD = [
     {
       "@context": "https://schema.org",
@@ -117,7 +149,8 @@ if (pageType === "tool") {
       url: canonicalURL.toString(),
       mainEntityOfPage: canonicalURL.toString(),
       image: ogImageUrl,
-      ...(pubDateISO && { datePublished: pubDateISO, dateModified: modDateISO }),
+      datePublished: pubDateISO,
+      dateModified: modDateISO,
       ...(author && {
         author: {
           "@type": "Person",
@@ -147,6 +180,8 @@ if (pageType === "tool") {
 <title>{cleanTitle}</title>
 <meta name="description" content={cleanDescription} />
 <link rel="canonical" href={canonicalURL.toString()} />
+<link rel="alternate" hreflang="es" href={canonicalURL.toString()} />
+<link rel="alternate" hreflang="x-default" href={canonicalURL.toString()} />
 {
   pubDate && (
     <meta
@@ -155,13 +190,14 @@ if (pageType === "tool") {
     />
   )
 }
+{modDateISO && <meta property="article:modified_time" content={modDateISO} />}
 {author && <meta property="article:author" content={author} />}
 
 <!-- [TIP] Metas de personalización móvil y branding añadidos -->
 <meta name="theme-color" content="#06b6d4" />
 
 <!-- Open Graph / Facebook / LinkedIn -->
-<meta property="og:type" content={pageType === "tool" ? "website" : "article"} />
+<meta property="og:type" content={isHome ? "website" : pageType === "tool" ? "website" : "article"} />
 <meta property="og:url" content={canonicalURL.toString()} />
 <meta property="og:title" content={cleanTitle} />
 <meta property="og:description" content={cleanDescription} />

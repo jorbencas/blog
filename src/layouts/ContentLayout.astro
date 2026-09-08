@@ -40,6 +40,7 @@ interface Props {
   rawContent?: string;
   repository?: string;
   url?: string;
+  allPosts?: any[];
 }
 
 const {
@@ -59,6 +60,7 @@ const {
   rawContent = "",
   repository,
   url,
+  allPosts: providedPosts,
 } = Astro.props;
 
 const isPost = mode === "posts";
@@ -84,8 +86,8 @@ const tagsArray = Array.isArray(tags)
   : [];
 
 const collectionName = isPost ? "posts" : "myprojects";
-const allItems = await getCollection(collectionName);
-const sortedItems = await getSortedPosts(allItems);
+const allItems = providedPosts ?? await getCollection(collectionName);
+const sortedItems = getSortedPosts(allItems);
 
 const accentColor = isPost ? "cyan" : "purple";
 const relatedHrefPrefix = isPost ? "/posts/" : "/proyectos/";

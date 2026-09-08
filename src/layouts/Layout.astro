@@ -17,6 +17,8 @@ export interface Props {
   dateModified?: string | Date;
   author?: string;
   pageType?: "blog" | "tool";
+  prevPage?: string;
+  nextPage?: string;
 }
 const {
   title,
@@ -27,6 +29,8 @@ const {
   dateModified,
   author = AUTHOR_NAME,
   pageType = "blog",
+  prevPage,
+  nextPage,
 } = Astro.props as Props;
 
 const finalTitle = title || `Blog | ${SITE_NAME}`;
@@ -73,6 +77,8 @@ const finalDescription = description || SITE_DESCRIPTION;
       author={author}
       pageType={pageType}
     />
+    {prevPage && <link rel="prev" href={prevPage} />}
+    {nextPage && <link rel="next" href={nextPage} />}
     <ClientRouter />
   </head>
   <body

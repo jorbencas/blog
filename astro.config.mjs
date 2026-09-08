@@ -13,12 +13,24 @@ export default defineConfig({
   adapter: vercel(),
   integrations: [mdx({ remarkPlugins: [remarkGfm], rehypePlugins: [rehypeTableWrapper] }), sitemap({
     serialize(item) {
-      if (item.url.includes("/herramientas/")) {
+      if (item.url === "https://blog-jorbencas.vercel.app/") {
+        item.priority = 1.0;
+        item.changefreq = "daily";
+      } else if (item.url.includes("/herramientas/")) {
         item.priority = 0.8;
         item.changefreq = "monthly";
       } else if (item.url.includes("/posts/")) {
         item.priority = 0.7;
         item.changefreq = "weekly";
+      } else if (item.url.includes("/retos/")) {
+        item.priority = 0.6;
+        item.changefreq = "monthly";
+      } else if (item.url.includes("/tags/")) {
+        item.priority = 0.5;
+        item.changefreq = "weekly";
+      } else if (item.url.includes("/proyectos/")) {
+        item.priority = 0.8;
+        item.changefreq = "monthly";
       }
       return item;
     },
