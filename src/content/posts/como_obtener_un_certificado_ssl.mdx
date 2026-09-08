@@ -13,7 +13,9 @@ import ResponsiveImage from "@components/ResponsiveImage.astro";
 
 ¿Alguna vez has abierto tu web y el navegador te ha avisado de que "la conexión no es privada"? Eso es justo lo que pasa cuando un sitio no tiene un certificado SSL: los datos viajan en claro y nadie se fía. En esta guía te cuento cómo generar unos certificados SSL con OpenSSL y activarlos en tu servidor Apache desde Webmin, para que tu página pase a servirse por **HTTPS en el puerto 443**. Sin mareos, paso a paso.
 
-## 🤔 ¿Qué vamos a conseguir?
+---
+
+## ¿Qué vamos a conseguir?
 
 - Activar el **módulo SSL** en Apache desde **Webmin**.
 - Generar un par de ficheros: **certificado** y **clave privada** con `openssl`.
@@ -21,7 +23,9 @@ import ResponsiveImage from "@components/ResponsiveImage.astro";
 - Verificar que tu página carga con [**HTTPS**](https://en.wikipedia.org/wiki/HTTPS) y un candado en el navegador.
 - Entender los errores típicos de certificados y cómo solucionarlos.
 
-## 🧰 Prerrequisitos
+---
+
+## Prerrequisitos
 
 - Un **servidor Linux** (Debian/Ubuntu) con [**Apache**](https://httpd.apache.org/) instalado y funcionando.
 - **Webmin** instalado y accesible por navegador (`https://localhost:10000/`).
@@ -37,7 +41,9 @@ sudo apt install openssl apache2
 
 > Si no tienes Webmin todavía, puedes instalarlo siguiendo la [documentación oficial de Webmin](https://webmin.com/docs/). El resto de la guía asume que ya puedes entrar en `https://localhost:10000/`.
 
-## 🛠️ Activar el módulo SSL en Apache
+---
+
+## Paso 1 — Activar el módulo SSL en Apache
 
 Lo primero es entrar en **Webmin** desde la máquina servidora y comprobar que Apache está iniciado. La ruta es:
 
@@ -63,7 +69,9 @@ Dentro de la **Configuración de módulos Apache** localiza la opción **SSL** y
 
 Con el módulo activado, toca generar los certificados. Es hora de abrir una terminal y usar **OpenSSL**.
 
-## 🛠️ Generar el certificado SSL con OpenSSL
+---
+
+## Paso 2 — Generar el certificado SSL con OpenSSL
 
 Primero comprobamos que `openssl` está instalado (si no, lo instalamos con el comando del bloque de prerrequisitos):
 
@@ -94,13 +102,15 @@ sudo openssl req -newkey rsa:2048 -x509 -nodes -out cert.pem -keyout key.pem
 
 Te preguntará por una serie de datos (país, provincia, nombre de la organización, etc.). Rellénalos o pulsa Enter para dejarlos en blanco. Para un tutorial de pruebas dan igual; para producción deben ser reales.
 
-Explico las opciones importantes:
+### Explicación de las opciones importantes
 
 - `-newkey rsa:2048`: genera una clave privada RSA de 2048 bits (recomendada; en el ejemplo original era 512, demasiado débil hoy).
 - `-x509`: emite directamente un certificado en lugar de una petición de firma (CSR).
 - `-nodes`: "no DES", es decir, **no protege la clave con contraseña**, así Apache puede leerla sin pedirla en cada reinicio.
 - `-out cert.pem`: el fichero del **certificado público**.
 - `-keyout key.pem`: el fichero de la **clave privada**.
+
+### Dar permisos a los ficheros
 
 Después, damos los permisos correctos para que el servicio web pueda leer los ficheros:
 
@@ -111,6 +121,8 @@ sudo chmod 600 key.pem
 
 > El original usaba `chmod +x` y `rsa:512`. Con 512 bits el cifrado es trivial de romper hoy en día: usa al menos 2048. Y para los ficheros de un certificado lo que importa no es el ejecutable, sino los permisos de **lectura**.
 
+### Verificar que se crearon
+
 Podemos comprobar que los dos ficheros están creados listando la carpeta:
 
 ```bash
@@ -119,7 +131,9 @@ ls -l /etc/http
 
 Deberías ver `cert.pem` y `key.pem`. Con esto, ya tenemos nuestra pareja de certificados.
 
-## 🚀 Configurar la Zona Virtual con SSL en Webmin
+---
+
+## Paso 3 — Configurar la Zona Virtual con SSL en Webmin
 
 Volvemos a Webmin → **Servidor web Apache**. Localiza tu **zona virtual** (Virtual Host) y entra en ella. Dentro, busca la sección **Opciones SSL**:
 
@@ -135,6 +149,8 @@ En **Opciones SSL** rellena los dos campos con las rutas absolutas de nuestros f
 
 - **Archivo de certificado / clave pública**: `/etc/http/cert.pem`
 - **Archivo de clave privada**: `/etc/http/key.pem`
+
+### Configurar el puerto 443
 
 Ahora configuramos el **puerto** para que Apache escuche en el **443** (el puerto estándar de HTTPS):
 
@@ -153,7 +169,9 @@ sudo systemctl restart apache2
 sudo systemctl status apache2
 ```
 
-## 🧪 Comprobar que funciona
+---
+
+## Paso 4 — Comprobar que funciona
 
 Desde el equipo **cliente** abre el navegador y ve a tu sitio usando [**HTTPS**](https://en.wikipedia.org/wiki/HTTPS):
 
@@ -181,19 +199,23 @@ Como el certificado es **autofirmado**, el navegador te avisará de que "la cone
 
 Al hacer la excepción, ya podrás entrar en la página. Verás el **candado** en la barra de direcciones indicando que la conexión está cifrada.
 
-- **Desde terminal** también puedes verificar el certificado con `curl`:
+### Verificar desde terminal
+
+También puedes verificar el certificado con `curl`:
 
 ```bash
 curl -vk https://192.168.101.1
 ```
 
-- Y comprobar que Apache escucha en el 443:
+Y comprobar que Apache escucha en el 443:
 
 ```bash
 ss -tlnp | grep :443
 ```
 
-## ⚠️ Errores comunes
+---
+
+## Errores comunes
 
 | Error | Causa | Solución |
 |---|---|---|
@@ -204,14 +226,18 @@ ss -tlnp | grep :443
 | Página carga por HTTP pero no por HTTPS | Redirección o puerto mal configurado | Verifica `ss -tlnp \| grep :443` y que el navegador use `https://` |
 | El navegador rechaza la clave (4096/512 bits) | Clave demasiado débil o antigua | Regenera con `rsa:2048` o superior |
 
-## 🪜 Siguiente nivel
+---
+
+## Siguiente nivel
 
 1. **Certificado autofirmado no basta para internet real** — para un dominio público usa un certificado gratuito y válido de [Let's Encrypt con certbot](https://certbot.eff.org/), que además se renueva solo.
 2. **Protege carpetas con contraseña** en Apache/Webmin para restringir zonas privadas: [Cómo proteger una carpeta con contraseña en Webmin](/posts/como_proteger_una_carpeta_con_contrasenya_en_webmin/).
 3. **Asegura el acceso remoto** a tu servidor con SSH y claves: [Formas de conectarse por SSH](/posts/formas_de_conectarse_por_ssh/) y [Conexión SSH mediante clave pública privada](/posts/conexion_ssh_mediante_clave_publica_privada/).
 4. **Monta tu propio panel de control** con Webmin para gestionar Apache, certificados y más servicios sin tocar la terminal.
 
-## 🔗 Enlaces y recursos
+---
+
+## Enlaces y recursos
 
 - [OpenSSL — documentación oficial](https://www.openssl.org/docs/)
 - [Certificados Let's Encrypt](https://letsencrypt.org/es/)
