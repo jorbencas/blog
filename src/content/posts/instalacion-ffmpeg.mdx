@@ -296,11 +296,12 @@ LEER grabaciones/test/*_completed.mp4
 
 ### 9.2. Los sidecars: el "contrato" con el grabador
 
-El sidecar `_descripcion.json` lo escribe el **TwitchRecorder** cuando la fuente del directo lo requiere, y el monitor lo respeta al pie de la letra:
+El sidecar `_descripcion.json` lo escribe el **TwitchRecorder** siempre que graba, y el monitor lo respeta al pie de la letra:
 
 | Sidecar | Efecto en el monitor |
 |---------|----------------------|
-| `{"descripcion": "...texto..."}` | Usa ese texto como caption de Telegram, sin [OCR](https://es.wikipedia.org/wiki/Reconocimiento_%C3%B3ptico_de caracteres) ni corte (típico de directos de YouTube con descripción propia) |
+| `{"titulo": "..."}` | Usa el título como caption de Telegram (se guarda siempre) |
+| `{"titulo": "...", "descripcion": "..."}` | Usa el título como caption, guarda la descripción completa |
 | `{"detectar": false}` | Omite OCR y corte (típico de cutetas sin franjas) |
 | `{"corte": false}` | Hace OCR para generar el caption, pero no corta el vídeo |
 
