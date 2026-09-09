@@ -17,7 +17,31 @@ import CodeTabs from '@components/CodeTabs.svelte';
 # 🎯 Desafío: Reto Intermedio 03: Simulador de Pila (Stack)
 
 ### 📝 Descripción del Reto
-Implementa una pila (stack) con operaciones push, pop, peek y isEmpty. Estructura LIFO fundamental en informática.
+Implementa una pila (stack) con operaciones push, pop, peek y isEmpty.
+
+Una pila es una de las estructuras de datos más fundamentales de la informática. El navegador usa una pila para el historial de "atrás", el compilador usa una pila para validar paréntesis balanceados, y el sistema operativo usa una pila para gestionar las llamadas a funciones. Entender cómo funciona una pila no es solo un ejercicio académico — es entender cómo funciona el software que usas a diario.
+
+| Operación | Qué hace | Ejemplo |
+|-----------|----------|---------|
+| `push(v)` | Añade `v` al tope de la pila | push(1) → [1] |
+| `pop()` | Elimina y devuelve el tope | pop() → 1, pila queda [] |
+| `peek()` | Devuelve el tope sin eliminar | peek() → 1, pila sigue [1] |
+| `isEmpty()` | Devuelve `true` si la pila está vacía | isEmpty() → true |
+
+### 💡 Posibles enfoques
+
+| Enfoque | Cómo funciona | Ventaja |
+|---------|---------------|---------|
+| **Array/lista** | Usar una lista dinámica como almacenamiento | Simple, operaciones O(1) amortizado |
+| **Nodos enlazados** | Cada nodo apunta al siguiente (tope) | Inserción/eliminación O(1) garantizado |
+| **Con capacidad fija** | Array estático con índice tope | Eficiente en memoria, sin realloc |
+
+### 🌍 Dónde se usa en la vida real
+
+- **Historial del navegador**: Cada página que visitas se hace push a una pila. "Atrás" es un pop.
+- **Llamadas a funciones**: El call stack del intérprete de JavaScript es una pila. Cuando llamas a una función, se hace push; cuando termina, pop.
+- **Validación de paréntesis**: `({[]})` se valida con una pila: push de abiertos, pop de cerrados.
+- **Deshacer (Undo)**: Cada acción se guarda en una pila. Ctrl+Z es un pop.
 
 <Challenge 
   nivel="Intermedio" 
@@ -28,12 +52,12 @@ Implementa una pila (stack) con operaciones push, pop, peek y isEmpty. Estructur
 
 ### 🧪 Casos de Prueba
 
-| Entrada | Salida esperada |
-|---------|-----------------|
-| `push(1),push(2),pop()` | `2` |
-| `push(5),peek()` | `5` |
-| `isEmpty()` | `true` |
-| `push(3),pop(),pop()` | `error` |
+| Operaciones | Salida esperada |
+|-------------|-----------------|
+| `push(1), push(2), pop()` | `2` |
+| `push(5), peek()` | `5` |
+| `isEmpty()` (pila vacía) | `true` |
+| `push(3), pop(), pop()` | `null` (error controlado) |
 
 ---
 
@@ -44,17 +68,50 @@ Implementa una pila (stack) con operaciones push, pop, peek y isEmpty. Estructur
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-**Análisis del problema:** Una pila sigue el principio LIFO (Last In, First Out). Las operaciones básicas son: push (insertar), pop (eliminar y devolver el tope), peek (ver el tope sin eliminar), isEmpty. **Ejemplo concreto:** push(1), push(2), push(3), pop() → 3, peek() → 2. **Edge cases:** pop en pila vacía, push de null/None, capacidad máxima.
+
+**Análisis del problema:** Una pila sigue el principio LIFO (Last In, First Out) — el último elemento en entrar es el primero en salir. Las operaciones que necesitamos son: `push` (añadir al tope), `pop` (sacar del tope), `peek` (mirar el tope sin sacar), y `isEmpty` (saber si está vacía).
+
+**Ejemplo concreto:** 
+```
+push(1) → [1]
+push(2) → [1, 2]
+push(3) → [1, 2, 3]
+pop()   → devuelve 3, queda [1, 2]
+peek()  → devuelve 2, sigue [1, 2]
+```
+
+**Edge cases:** pop en pila vacía (¿lanzar error o devolver null?), pila con un solo elemento, capacidad máxima si se usa array fijo.
 
 ### ⚙️ Paso 2: Implementación
-**Implementación:** Usar una lista/array como almacenamiento subyacente. push → append, pop → pop, peek → [-1], isEmpty → len==0. Versión orientada a objetos con una clase Stack.
+
+**Implementación paso a paso:**
+1. Crear una clase `Pila` con un array interno como almacenamiento
+2. `push(v)`: Añadir `v` al final del array (esto es el tope)
+3. `pop()`: Sacar y devolver el último elemento del array. Si está vacía, devolver null
+4. `peek()`: Devolver el último elemento sin eliminarlo
+5. `isEmpty()`: Verificar si el array tiene longitud 0
+
+**Nota:** En Python se puede usar una lista con `append()` y `pop()`. En JavaScript, `push()` y `pop()` del array. En Java, `java.util.Stack` o `ArrayDeque` (recomendado). En TypeScript, se añade tipado genérico.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-**Complejidad temporal:** O(1)  
-**Complejidad espacial:** O(n)  
+**Complejidad temporal:** O(1) para todas las operaciones (push, pop, peek, isEmpty)  
+**Complejidad espacial:** O(n) donde n es el número de elementos en la pila
 
-**Complejidad:** Todas las operaciones: O(1) tiempo amortizado (con lista dinámica). O(n) espacio. **Aplicaciones:** historial de navegador, llamado de funciones (call stack), parseo de expresiones, algoritmo de retroceso (backtracking).
+**Comparación de implementaciones:**
+
+| Implementación | push | pop | peek | Notas |
+|----------------|------|-----|------|-------|
+| Array/lista | O(1) amortizado | O(1) | O(1) | Más simple,realloc ocasional |
+| Nodos enlazados | O(1) | O(1) | O(1) | Sin realloc, más memoria por nodo |
+| Array fijo | O(1) | O(1) | O(1) | Sin realloc, capacidad limitada |
+
+**Aplicaciones reales:**
+- Historial de navegador (pila de páginas visitadas)
+- Call stack de funciones (JavaScript, Python, Java)
+- Validación de paréntesis balanceados
+- Sistema de undo/redo en editores
+- Algoritmos de backtracking (DFS en grafos)
 
 ### 💻 Código de la Solución
 
@@ -69,43 +126,54 @@ class Pila:
 ```
 
 ```javascript
-// Reto Intermedio 03: Simulador de Pila (Stack)
-// Implementa una solución para: Reto Intermedio 03: Simulador de Pila (Stack)
-
-function resolver(entrada) {
-  return entrada;
+class Pila {
+  constructor() { this.items = []; }
+  push(v) { this.items.push(v); }
+  pop() { return this.items.length ? this.items.pop() : null; }
+  peek() { return this.items.length ? this.items[this.items.length - 1] : null; }
+  isEmpty() { return this.items.length === 0; }
 }
 
-console.log(resolver('ejemplo'));
-
+const pila = new Pila();
+pila.push(1); pila.push(2); pila.push(3);
+console.log(pila.pop());   // 3
+console.log(pila.peek());  // 2
+console.log(pila.isEmpty()); // false
 ```
 
 ```java
-// Reto Intermedio 03: Simulador de Pila (Stack)
-// Implementa una solución para: Reto Intermedio 03: Simulador de Pila (Stack)
+public class Pila {
+    private java.util.Stack<Integer> stack = new java.util.Stack<>();
 
-public class Reto {
-    public static String resolver(String entrada) {
-        return entrada;
-    }
+    public void push(int v) { stack.push(v); }
+    public Integer pop() { return stack.isEmpty() ? null : stack.pop(); }
+    public Integer peek() { return stack.isEmpty() ? null : stack.peek(); }
+    public boolean isEmpty() { return stack.isEmpty(); }
 
     public static void main(String[] args) {
-        System.out.println(resolver("ejemplo"));
+        Pila p = new Pila();
+        p.push(1); p.push(2); p.push(3);
+        System.out.println(p.pop());    // 3
+        System.out.println(p.peek());   // 2
+        System.out.println(p.isEmpty()); // false
     }
 }
-
 ```
 
 ```typescript
-// Reto Intermedio 03: Simulador de Pila (Stack)
-// Implementa una solución para: Reto Intermedio 03: Simulador de Pila (Stack)
-
-function resolver<T>(entrada: T): T {
-  return entrada;
+class Pila<T> {
+  private items: T[] = [];
+  push(v: T): void { this.items.push(v); }
+  pop(): T | null { return this.items.length ? this.items.pop()! : null; }
+  peek(): T | null { return this.items.length ? this.items[this.items.length - 1] : null; }
+  isEmpty(): boolean { return this.items.length === 0; }
 }
 
-console.log(resolver('ejemplo'));
-
+const pila = new Pila<number>();
+pila.push(1); pila.push(2); pila.push(3);
+console.log(pila.pop());    // 3
+console.log(pila.peek());   // 2
+console.log(pila.isEmpty()); // false
 ```
 
 </CodeTabs>

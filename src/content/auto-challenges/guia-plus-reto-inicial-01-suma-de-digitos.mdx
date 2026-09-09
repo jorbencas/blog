@@ -17,7 +17,25 @@ import CodeTabs from '@components/CodeTabs.svelte';
 # 🎯 Desafío: Reto Inicial 01: Suma de Dígitos
 
 ### 📝 Descripción del Reto
-Dado un número entero positivo, suma todos sus dígitos individuales. Por ejemplo, si el número es 1234 el resultado sería 1 + 2 + 3 + 4 = 10. Este ejercicio clásico de manipulación numérica te ayudará a practicar la conversión entre tipos de datos y el uso de operaciones aritméticas básicas. Es un problema fundamental que aparece en pruebas técnicas y entrevistas de nivel inicial, y sienta las bases para entender cómo descomponer números en sus componentes.
+Dado un número entero positivo, suma todos sus dígitos individuales. Por ejemplo, si el número es 1234 el resultado sería 1 + 2 + 3 + 4 = 10.
+
+Este es un problema clásico que aparece en casi toda prueba técnica de nivel inicial. No es difícil, pero te obliga a pensar en cómo descomponer un número en sus partes — algo que usas constantemente cuando procesas datos: validar un NIF, calcular un dígito de control, o procesar números de tarjeta de crédito (algoritmo de Luhn). Es el tipo de ejercicio donde el que sabe resolverlo rápido se diferencia del que se atasca con la lógica.
+
+| Regla | Detalle |
+|-------|---------|
+| Entrada | Un número entero (positivo o negativo) |
+| Salida | Suma de todos sus dígitos individuales |
+| Negativos | Usar valor absoluto (el signo no afecta) |
+| Cero | El resultado es 0 |
+| Ejemplo | 1234 → 1+2+3+4 = 10 |
+
+### 💡 Posibles enfoques
+
+| Enfoque | Cómo funciona | Ventaja |
+|---------|---------------|---------|
+| **Cadenas** | Convertir a string, iterar caracteres, convertir cada uno a entero | Legible, directo |
+| **Aritmético** | Usar módulo 10 para extraer el último dígito, dividir entre 10, repetir | Más eficiente en memoria |
+| **Recursión** | Caso base: n < 10 → n. Recursive: n%10 + suma(n//10) | Educativo, elegante |
 
 <Challenge 
   nivel="Iniciación" 
@@ -30,11 +48,11 @@ Dado un número entero positivo, suma todos sus dígitos individuales. Por ejemp
 
 | Entrada | Salida esperada |
 |---------|-----------------|
-| ``````````1234`````````` | ``````````10`````````` |
-| ``````````9999`````````` | ``````````36`````````` |
-| ``````````0`````````` | ``````````0`````````` |
-| ``````````-1234`````````` | ``````````10`````````` |
-| ``````````100000`````````` | ``````````1`````````` |
+| `1234` | `10` |
+| `9999` | `36` |
+| `0` | `0` |
+| `-1234` | `10` |
+| `100000` | `1` |
 
 ---
 
@@ -48,60 +66,24 @@ Dado un número entero positivo, suma todos sus dígitos individuales. Por ejemp
 **Análisis del problema:** Lo primero es entender cómo extraer dígitos individuales de un número entero. Tenemos dos enfoques principales: el enfoque aritmético (usando división y módulo entre 10 para extraer dígitos de derecha a izquierda) y el enfoque de cadenas (convertir el número a string e iterar sobre cada carácter). Para este problema, el enfoque de cadenas resulta más legible y directo. **Ejemplo concreto:** Con entrada 1234 → lo convertimos a &quot;1234&quot; → iteramos: 1+2+3+4 = 10. **Edge cases:** números negativos (usar valor absoluto), número 0 (resultado 0), números muy grandes (considerar límites de representación).
 
 ### ⚙️ Paso 2: Implementación
-Implementación
-**Implementación paso a paso:** 1) Tomamos el valor absoluto del número para manejar entradas negativas con `abs(n)`. 2) Convertimos a string con `str()` para poder iterar dígito a dígito. 3) Usamos una expresión generadora con `int(d)` para convertir cada carácter a entero. 4) Sumamos todo con `sum()`. En otros lenguajes como JavaScript, el enfoque es similar: convertimos a string, dividimos en array con `split('')`, transformamos cada elemento a número con `map(Number)` y reducimos con `reduce()`. La clave es que todos los lenguajes modernos ofrecen herramientas para trabajar con colecciones que hacen este código conciso y expresivo.
+
+**Implementación paso a paso:** 1) Tomamos el valor absoluto del número para manejar entradas negativas con `abs(n)`. 2) Convertimos a string con `str()` para poder iterar dígito a dígito. 3) Usamos una expresión generadora con `int(d)` para convertir cada carácter a entero. 4) Sumamos todo con `sum()`. En otros lenguajes como JavaScript, el enfoque es similar: convertimos a string, dividimos en array con `split('')`, transformamos cada elemento a número con `map(Number)` y reducimos con `reduce()`.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-**Complejidad temporal:** O(log n)  
-**Complejidad espacial:** O(1)  
+**Complejidad temporal:** O(log n) — o equivalentemente O(d) donde d es el número de dígitos
+**Complejidad espacial:** O(1) con enfoque aritmético, O(d) con cadenas
 
-Complejidad y Optimización
+**Variantes del problema:**
+1. **Raíz digital**: Sumar dígitos repetidamente hasta obtener un solo dígito (ej: 1234 → 10 → 1)
+2. **Producto de dígitos**: Multiplicar en vez de sumar
+3. **Dígito de control**: Usado en validación de números de tarjeta (algoritmo de Luhn)
 
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-**Complejidad:** O(log n) tiempo (o O(d) donde d es el número de dígitos, que es aproximadamente log₁₀(n)). O(1) espacio adicional si usamos el enfoque aritmético, O(d) si usamos cadenas. **Variantes:** 1) Versión aritmética pura con bucle `while n &gt; 0: suma += n % 10; n //= 10` — más eficiente en memoria. 2) Suma recursiva de dígitos hasta obtener un solo dígito (raíz digital). 3) Producto de dígitos en vez de suma. **Aplicaciones reales:** checksums simples, validación de números de tarjeta (Luhn), procesamiento de datos numéricos en ETL.
+**Aplicaciones reales:**
+- Validación de NIF/NIE (dígito de control)
+- Algoritmo de Luhn para tarjetas de crédito
+- Checksums simples en protocolos de comunicación
+- Procesamiento de datos numéricos en pipelines ETL
 
 ### 💻 Código de la Solución
 
