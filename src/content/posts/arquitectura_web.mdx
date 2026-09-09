@@ -9,11 +9,9 @@ image: "img/arquitectura_web/arquitectura_web_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 ---
 
-## Introducción
+Cuando empecé a desarrollar, me daba igual la arquitectura: abría un editor, escribía código y lo subía al servidor. Pero cuando el proyecto crece — cuando tienes múltiples usuarios, cuando necesitas desplegar sin parar la app, cuando un error en una función tumba toda la web — te das cuenta de que **cómo organizas tu código importa tanto como el código en sí**. Elegir mal la arquitectura te condena a reescribir todo desde cero en seis meses.
 
-La arquitectura web define cómo se estructuran, organizan y comunican los componentes de una aplicación web. Elegir la arquitectura correcta impacta directamente en la escalabilidad, mantenibilidad y rendimiento del proyecto.
-
-En 2017, el panorama web presenta múltiples opciones tanto en frontend como en backend, con una tendencia clara hacia la separación de capas y la comunicación mediante APIs.
+Este post no es un tutorial de una tecnología concreta. Es un **mapa del territorio**: las principales arquitecturas web, cuándo usar cada una, qué tecnologías las acompañan, y qué patrones de diseño te ayudarán a tomar mejores decisiones. Lo escribí originalmente en 2017 cuando estaba aprendiendo estas cosas, y lo he ido actualizando con la perspectiva que me ha dado el tiempo y la experiencia. Si estás empezando o quieres afianzar conceptos, esto te dará la base para entender por qué los proyectos se estructuran como se estructuran.
 
 ## Modelos de arquitectura
 
@@ -30,6 +28,8 @@ La arquitectura monolítica concentra toda la aplicación — frontend, backend 
 
 **Tecnologías típicas en 2017**: Laravel (PHP), Django (Python), Ruby on Rails, Spring MVC (Java), ASP.NET MVC.
 
+El monolito funciona bien hasta que no funciona. Cuando tu equipo crece, cuando necesitas desplegar solo un cambio pequeño sin arriesgarte a romper todo, cuando quieres que un servicio caído no tumbe la web entera... ahí es donde necesitas otra cosa. La siguiente evolución natural es separar la aplicación en servicios independientes.
+
 ### Microservicios
 
 La arquitectura de microservicios divide la aplicación en servicios pequeños e independientes, cada uno con su propia base de datos y lógica de negocio. Se comunican entre sí mediante APIs REST o mensajería asíncrona.
@@ -42,6 +42,8 @@ La arquitectura de microservicios divide la aplicación en servicios pequeños e
 | **Desventajas** | Complejidad operativa, latencia en comunicaciones entre servicios, debugging distribuido |
 
 **Tecnologías clave**: Docker (contenedores), Kubernetes (orquestación), Docker Compose, Netflix OSS (Eureka, Zuul).
+
+Pero los microservicios resuelven el backend. ¿Y el frontend? Si tu usuario tiene que esperar a que el servidor genere el HTML completo en cada clic, la experiencia se siente lenta comparada con lo que están acostumbrados en apps nativas. Aquí es donde entran las SPA.
 
 ### SPA (Single Page Application)
 
@@ -56,6 +58,8 @@ El frontend se carga una única vez y toda la interacción se gestiona desde Jav
 
 **Ejemplo típico**: Una aplicación construida con Angular 4 + TypeScript que consume una API REST de Laravel o Node.js.
 
+Las SPA resuelven la experiencia de usuario, pero crean un nuevo problema: el SEO. Google indexa el HTML que recibe, y si tu app solo devuelve un `<div id="app"></div>` vacío con un montón de JavaScript, los buscadores no ven nada. Para contenido que necesita aparecer en Google — blogs, tiendas, portafolios — necesitas que el HTML venga renderizado desde el servidor. Eso es SSR.
+
 ### Server-Side Rendering (SSR)
 
 Modelo donde el HTML se genera en el servidor para cada petición. Es el enfoque clásico que siguen PHP, Python/Django, Ruby on Rails y Java/Spring.
@@ -68,6 +72,8 @@ Modelo donde el HTML se genera en el servidor para cada petición. Es el enfoque
 
 **Tendencia en 2017**: Next.js (React SSR, lanzado en 2016) está ganando tracción para combinar lo mejor de SPA y SSR.
 
+El problema es que ni SSR ni SPA son perfectos por separado. SSR te da SEO pero pierdes la experiencia fluida de navegar sin recargas. SPA te da la experiencia pero pierdes el SEO. La solución que ha ganado terreno es combinar ambos: SSR para las primeras páginas que necesita Google, y SPA para la navegación posterior. Next.js popularizó este enfoque y hoy es el estándar.
+
 ### Arquitectura híbrida (SSR + SPA)
 
 Muchas aplicaciones modernas combinan ambos enfoques: SSR para las primeras páginas (SEO y rendimiento) y SPA para la navegación posterior (experiencia de usuario).
@@ -77,6 +83,8 @@ Muchas aplicaciones modernas combinan ambos enfoques: SSR para las primeras pág
 | **Herramienta estrella** | Next.js (React), Nuxt.js (Vue.js, en desarrollo activo) |
 | **Ventajas** | SEO + experiencia de usuario, primer cargado rápido, navegación fluida |
 | **Desventajas** | Complejidad de configuración, requiere conocimiento tanto de backend como de frontend |
+
+Ahora que entiendes los modelos de arquitectura, vamos a ver cómo se organizan las capas en una aplicación real. Porque da igual que elijas monolito o microservicios: siempre tendrás una capa que se comunica con el usuario, una que procesa la lógica, y una que guarda datos.
 
 ## Capas de una arquitectura web típica en 2017
 
@@ -104,6 +112,8 @@ Muchas aplicaciones modernas combinan ambos enfoques: SSR para las primeras pág
 ```
 
 ## Tecnologías dominantes en 2017
+
+Estas son las herramientas que estaban definiendo el panorama en 2017. Algunas siguen siendo relevantes, otras han sido reemplazadas, pero entender qué había te ayuda a entender por qué las cosas son como son hoy.
 
 ### Frontend
 
@@ -180,6 +190,8 @@ Abstrae el acceso a datos. La lógica de negocio no accede directamente a la bas
 
 Separa las operaciones de lectura (query) de las de escritura (command). Cada una puede tener su propio modelo optimizado. Gana popularidad en 2017 para sistemas complejos.
 
+Estos patrones resuelven problemas de organización del código. Pero hay otra tendencia en 2017 que ataca un problema diferente: acercar las web apps al rendimiento de las apps nativas.
+
 ## Progressive Web Apps (PWA)
 
 Una de las tendencias más fuertes de 2017. Las PWA combinan lo mejor de las web apps y las apps nativas:
@@ -190,6 +202,8 @@ Una de las tendencias más fuertes de 2017. Las PWA combinan lo mejor de las web
 - **Push Notifications**: Notificaciones nativas desde el navegador
 
 **Ejemplos reales en 2017**: Twitter Lite, Pinterest, Flipboard, OLX.
+
+Las PWA mejoran la experiencia en el navegador, pero el problema de comunicación entre frontend y backend sigue ahí. REST funciona bien, pero cuando tu app necesita datos de 10 fuentes diferentes en una sola pantalla, terminas haciendo 10 peticiones. GraphQL propone una alternativa.
 
 ## GraphQL vs REST
 
@@ -205,6 +219,8 @@ En 2017, GraphQL (creado por Facebook en 2012 y open-sourceado en 2015) empieza 
 
 **Herramientas clave en 2017**: Apollo (cliente GraphQL para React), GraphiQL (IDE para probar queries), Prisma (capa de acceso a BD para GraphQL).
 
+Con todas estas opciones — arquitecturas, patrones, tendencias — la pregunta inevitable es: ¿cuál uso? La respuesta corta es "depende", pero hay buenas prácticas que se aplican casi siempre.
+
 ## Buenas prácticas en 2017
 
 1. **Separar frontend y backend** mediante APIs REST claras
@@ -217,7 +233,9 @@ En 2017, GraphQL (creado por Facebook en 2012 y open-sourceado en 2015) empieza 
 
 ## Conclusión
 
-La arquitectura web en 2017 está en un momento de transición. El modelo monolítico sigue siendo válido para proyectos pequeños y medianos, pero la tendencia clara es hacia la separación en microservicios y APIs REST. En frontend, Angular, React y Vue.js dominan el panorama, mientras que las PWAs prometen acercar las web apps al rendimiento de las nativas. La contenedORIZACIÓN con Docker y la orquestación con Kubernetes están cambiando radicalmente la forma de desplegar y gestionar aplicaciones. Elegir la arquitectura adecuada depende del tamaño del proyecto, el equipo disponible y los requisitos de escalabilidad — no existe una solución única para todos los casos.
+Si tuviera que resumir todo esto en una frase, sería: **no hay arquitectura perfecta, hay arquitectura adecuada para cada momento**. Un proyecto personal no necesita microservicios. Una app con millones de usuarios no puede ser un monolito simple. Y la mayoría de proyectos reales terminan híbridos, usando lo mejor de cada enfoque.
+
+Lo que sí puedo decirte es que entender estas opciones — y saber cuándo usar cada una — es lo que separa a alguien que escribe código de alguien que construye sistemas. Y eso es algo que solo se aprende construyendo, equivocándose, y volviendo a leer sobre arquitectura cuando el proyecto se complica.
 
 ## 🧪 Comprobar que lo has entendido
 
