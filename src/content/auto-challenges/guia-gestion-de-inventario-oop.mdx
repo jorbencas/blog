@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "🏆 RETO: Gestión de Inventario (OOP)"
-description: "Resuelve el desafío 'Gestión de Inventario (OOP)'. Implementa una solución completa siguiendo las mejores prácticas de programación."
+description: "Implementa un sistema de inventario con POO: clase Producto con stock, y clase Inventario con operaciones de agregar, vender, buscar y reportar."
 pubDate: "2026-06-28"
 tags: ["retos", "intermedio", "multilenguaje"]
 slug: "reto-gestion-de-inventario-oop"
@@ -17,11 +17,25 @@ import CodeTabs from '@components/CodeTabs.svelte';
 # 🎯 Desafío: Gestión de Inventario (OOP)
 
 ### 📝 Descripción del Reto
-Resuelve el desafío 'Gestión de Inventario (OOP)'. Implementa una solución completa siguiendo las mejores prácticas de programación.
+Implementa un sistema de gestión de inventario usando POO. Necesitas una clase `Producto` (id, nombre, precio, cantidad) y una clase `Inventario` que permita: agregar productos, vender (reducir stock), buscar por nombre, obtener el valor total del inventario y listar productos con stock bajo.
+
+### 📊 Posibles enfoques
+
+| Enfoque | Descripción | Complejidad |
+|---------|-------------|-------------|
+| HashMap + Clases | Map de productos por ID, clases con métodos | O(1) por operación |
+| Lista ordenada | Array ordenado, búsqueda binaria | O(log n) búsqueda |
+| Árbol BST | Árbol binario de búsqueda por nombre | O(log n) búsqueda |
+
+### 🌍 Dónde se usa
+- **E-commerce**: control de stock de tiendas online
+- **Logística**: gestión de almacenes y centros de distribución
+- **Retail**: sistemas POS y control de mercancía
+- **Industria**: inventario de materias primas y componentes
 
 <Challenge 
   nivel="Intermedio" 
-  mision="Resuelve el desafío 'Gestión de Inventario (OOP)'. Implementa una solución completa siguiendo las mejores prácticas de..." 
+  mision="Implementa un sistema de inventario con clases Producto e Inventario." 
 />
 
 ---
@@ -30,8 +44,12 @@ Resuelve el desafío 'Gestión de Inventario (OOP)'. Implementa una solución co
 
 | Entrada | Salida esperada |
 |---------|-----------------|
-| ``````````ejemplo_entrada`````````` | ``````````resultado_esperado`````````` |
-| ``````````caso_limite`````````` | ``````````manejo_correcto`````````` |
+| `inventario.agregar("A1", "Laptop", 999.99, 10)` | `True` |
+| `inventario.vender("A1", 3)` | `True` (queda 7) |
+| `inventario.vender("A1", 10)` | `False` (stock insuficiente) |
+| `inventario.buscar("Laptop")` | `{id:"A1", nombre:"Laptop", ...}` |
+| `inventario.valor_total()` | `6999.93` (7 × 999.99) |
+| `inventario.stock_bajo(5)` | `[{id:"A1", cantidad:7}]` |
 
 ---
 
@@ -42,165 +60,217 @@ Resuelve el desafío 'Gestión de Inventario (OOP)'. Implementa una solución co
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-**Análisis del problema:** Gestión de Inventario (OOP). Identifica la entrada, la salida esperada, y los casos límite. Diseña una estrategia de solución eficiente.
+**Análisis del problema:** Crear dos clases. `Producto` almacena datos y validaciones. `Inventario` gestiona una colección de productos con operaciones CRUD básicas. **Caso límite:** vender más de lo disponible, producto duplicado, buscar inexistente.
 
 ### ⚙️ Paso 2: Implementación
-Implementación
-**Implementación en JavaScript**
-
-Ahora traducimos el análisis a código. La estructura general de la solución es:
-
-**1. Validación de entrada:**
-Verificamos que los datos recibidos son válidos antes de procesarlos. Si la entrada no es válida, devolvemos un valor por defecto o lanzamos un error.
-
-**2. Procesamiento principal:**
-Aplicamos la lógica central del algoritmo usando las estructuras de datos más adecuadas:
-- Listas/arrays para colecciones ordenadas
-- Diccionarios/hash maps para búsquedas rápidas (O(1))
-- Conjuntos/sets para operaciones de pertenencia
-- Pilas/colas para procesamiento FIFO/LIFO
-
-**3. Generación de salida:**
-Formateamos el resultado según lo esperado por el problema.
-
-**Buenas prácticas en JavaScript:**
-- Usa nombres de variables descriptivos y significativos
-- Mantén las funciones pequeñas y con una única responsabilidad
-- Sigue las convenciones de estilo del lenguaje (PEP 8, etc.)
-- Comenta las partes no obvias, no cada línea
-- Incluye type hints / anotaciones de tipo cuando sea posible
+1. `Producto`: constructor con validación de precio/cantidad positivos.
+2. `Inventario`: HashMap por ID, métodos agregar/vender/buscar/valor_total/stock_bajo.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-**Complejidad temporal:** O(n)  
-**Complejidad espacial:** O(n)  
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-**Análisis de complejidad y optimización**
-
-**Complejidad temporal:**
-Evalúa cómo crece el tiempo de ejecución al aumentar el tamaño de la entrada. Para la mayoría de soluciones, una complejidad O(n) es aceptable, donde n es el tamaño de la entrada. Si tu solución es O(n²), considera si se puede optimizar.
-
-**Complejidad espacial:**
-¿Cuánta memoria adicional utiliza tu algoritmo? ¿Creas copias de los datos o trabajas in-place? En general, O(n) adicional es aceptable para la mayoría de aplicaciones.
-
-**Posibles optimizaciones:**
-- ¿Se puede reducir la complejidad con una estructura de datos diferente?
-- ¿Conviene usar iteración en vez de recursión para ahorrar pila de llamadas?
-- ¿Existe alguna función de la librería estándar que ya resuelva parte del problema?
-- ¿Se puede aplicar early exit para evitar trabajo innecesario?
-
-**Aplicaciones en el mundo real:**
-Este patrón de solución aparece frecuentemente en:
-- Procesamiento de datos y pipelines ETL
-- APIs REST y servicios web
-- Análisis de logs y métricas
-- Automatización de tareas y scripting
-- Validación y transformación de datos en sistemas de información
+**Complejidad temporal:** O(1) para agregar/vender/buscar (HashMap), O(n) para valor_total y stock_bajo.
+**Complejidad espacial:** O(n) — para almacenar los productos.
 
 ### 💻 Código de la Solución
 
 <CodeTabs client:load>
 
 ```python
-# Gestión de Inventario (OOP)
-# Implementa una solución para: Gestión de Inventario (OOP)
+class Producto:
+    def __init__(self, id, nombre, precio, cantidad):
+        self.id = id
+        self.nombre = nombre
+        self.precio = precio
+        self.cantidad = cantidad
 
-def resolver(entrada):
-    """
-    Gestión de Inventario (OOP)
-    """
-    resultado = entrada
-    return resultado
+    def __repr__(self):
+        return f"Producto({self.id}, {self.nombre}, {self.precio}, {self.cantidad})"
 
+class Inventario:
+    def __init__(self):
+        self.productos = {}
 
-if __name__ == '__main__':
-    print(resolver("ejemplo"))
+    def agregar(self, id, nombre, precio, cantidad):
+        if id in self.productos:
+            return False
+        self.productos[id] = Producto(id, nombre, precio, cantidad)
+        return True
 
+    def vender(self, id, cantidad):
+        if id not in self.productos or self.productos[id].cantidad < cantidad:
+            return False
+        self.productos[id].cantidad -= cantidad
+        return True
+
+    def buscar(self, nombre):
+        for p in self.productos.values():
+            if p.nombre == nombre:
+                return p
+        return None
+
+    def valor_total(self):
+        return sum(p.precio * p.cantidad for p in self.productos.values())
+
+    def stock_bajo(self, umbral):
+        return [p for p in self.productos.values() if p.cantidad < umbral]
+
+inv = Inventario()
+inv.agregar("A1", "Laptop", 999.99, 10)
+print(inv.vender("A1", 3))       # True
+print(inv.vender("A1", 10))      # False
+print(inv.buscar("Laptop"))       # Producto(A1, Laptop, 999.99, 7)
+print(inv.valor_total())          # 6999.93
 ```
 
 ```javascript
-// Gestión de Inventario (OOP)
-// Implementa una solución para: Gestión de Inventario (OOP)
-
-function resolver(entrada) {
-  return entrada;
+class Producto {
+  constructor(id, nombre, precio, cantidad) {
+    this.id = id;
+    this.nombre = nombre;
+    this.precio = precio;
+    this.cantidad = cantidad;
+  }
 }
 
-console.log(resolver('ejemplo'));
+class Inventario {
+  constructor() { this.productos = new Map(); }
 
+  agregar(id, nombre, precio, cantidad) {
+    if (this.productos.has(id)) return false;
+    this.productos.set(id, new Producto(id, nombre, precio, cantidad));
+    return true;
+  }
+
+  vender(id, cantidad) {
+    const p = this.productos.get(id);
+    if (!p || p.cantidad < cantidad) return false;
+    p.cantidad -= cantidad;
+    return true;
+  }
+
+  buscar(nombre) {
+    for (const p of this.productos.values()) {
+      if (p.nombre === nombre) return p;
+    }
+    return null;
+  }
+
+  valorTotal() {
+    let total = 0;
+    for (const p of this.productos.values()) total += p.precio * p.cantidad;
+    return total;
+  }
+
+  stockBajo(umbral) {
+    return [...this.productos.values()].filter(p => p.cantidad < umbral);
+  }
+}
+
+const inv = new Inventario();
+inv.agregar("A1", "Laptop", 999.99, 10);
+console.log(inv.vender("A1", 3));       // true
+console.log(inv.vender("A1", 10));      // false
+console.log(inv.buscar("Laptop"));      // Producto {id:"A1",...}
+console.log(inv.valorTotal());          // 6999.93
 ```
 
 ```java
-// Gestión de Inventario (OOP)
-// Implementa una solución para: Gestión de Inventario (OOP)
+import java.util.*;
 
-public class Reto {
-    public static String resolver(String entrada) {
-        return entrada;
+class Producto {
+    String id, nombre;
+    double precio;
+    int cantidad;
+    Producto(String id, String nombre, double precio, int cantidad) {
+        this.id = id; this.nombre = nombre; this.precio = precio; this.cantidad = cantidad;
     }
+    public String toString() { return "Producto(" + id + ", " + nombre + ", " + precio + ", " + cantidad + ")"; }
+}
 
-    public static void main(String[] args) {
-        System.out.println(resolver("ejemplo"));
+class Inventario {
+    Map<String, Producto> productos = new HashMap<>();
+    boolean agregar(String id, String nombre, double precio, int cantidad) {
+        if (productos.containsKey(id)) return false;
+        productos.put(id, new Producto(id, nombre, precio, cantidad));
+        return true;
+    }
+    boolean vender(String id, int cantidad) {
+        Producto p = productos.get(id);
+        if (p == null || p.cantidad < cantidad) return false;
+        p.cantidad -= cantidad;
+        return true;
+    }
+    Producto buscar(String nombre) {
+        for (Producto p : productos.values()) if (p.nombre.equals(nombre)) return p;
+        return null;
+    }
+    double valorTotal() {
+        return productos.values().stream().mapToDouble(p -> p.precio * p.cantidad).sum();
     }
 }
 
+public class GestionInventario {
+    public static void main(String[] args) {
+        Inventario inv = new Inventario();
+        inv.agregar("A1", "Laptop", 999.99, 10);
+        System.out.println(inv.vender("A1", 3));       // true
+        System.out.println(inv.vender("A1", 10));      // false
+        System.out.println(inv.buscar("Laptop"));       // Producto(A1, Laptop, ...)
+        System.out.println(inv.valorTotal());           // 6999.93
+    }
+}
 ```
 
 ```typescript
-// Gestión de Inventario (OOP)
-// Implementa una solución para: Gestión de Inventario (OOP)
-
-function resolver<T>(entrada: T): T {
-  return entrada;
+class Producto {
+  constructor(
+    public id: string,
+    public nombre: string,
+    public precio: number,
+    public cantidad: number
+  ) {}
 }
 
-console.log(resolver('ejemplo'));
+class Inventario {
+  private productos = new Map<string, Producto>();
 
+  agregar(id: string, nombre: string, precio: number, cantidad: number): boolean {
+    if (this.productos.has(id)) return false;
+    this.productos.set(id, new Producto(id, nombre, precio, cantidad));
+    return true;
+  }
+
+  vender(id: string, cantidad: number): boolean {
+    const p = this.productos.get(id);
+    if (!p || p.cantidad < cantidad) return false;
+    p.cantidad -= cantidad;
+    return true;
+  }
+
+  buscar(nombre: string): Producto | null {
+    for (const p of this.productos.values()) {
+      if (p.nombre === nombre) return p;
+    }
+    return null;
+  }
+
+  valorTotal(): number {
+    let total = 0;
+    for (const p of this.productos.values()) total += p.precio * p.cantidad;
+    return total;
+  }
+
+  stockBajo(umbral: number): Producto[] {
+    return [...this.productos.values()].filter(p => p.cantidad < umbral);
+  }
+}
+
+const inv = new Inventario();
+inv.agregar("A1", "Laptop", 999.99, 10);
+console.log(inv.vender("A1", 3));       // true
+console.log(inv.vender("A1", 10));      // false
+console.log(inv.buscar("Laptop"));      // Producto {id:"A1",...}
+console.log(inv.valorTotal());          // 6999.93
 ```
 
 </CodeTabs>
@@ -212,4 +282,3 @@ console.log(resolver('ejemplo'));
 
 - [RETO: Lista de Compras](/retos/reto-lista-de-compras/)
 - [RETO: Patrón Singleton (Logger)](/retos/reto-patron-singleton-logger/)
-

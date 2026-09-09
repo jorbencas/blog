@@ -1,9 +1,9 @@
 ---
 draft: false
 title: "🏆 RETO: El Reclutador de la Banda"
-description: "Resuelve el desafío 'El Reclutador de la Banda'. Implementa una solución completa siguiendo las mejores prácticas de programación."
+description: "Filtra y selecciona miembros de una banda según criterios: instrumento, nivel de experiencia y disponibilidad para tocar en un evento."
 pubDate: "2026-06-28"
-tags: ["retos", "iniciaci\u00f3n", "multilenguaje"]
+tags: ["retos", "iniciación", "multilenguaje"]
 slug: "reto-el-reclutador-de-la-banda"
 image: "img/guia_el_reclutador_de_la_banda/guia_el_reclutador_de_la_banda_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
@@ -17,11 +17,25 @@ import CodeTabs from '@components/CodeTabs.svelte';
 # 🎯 Desafío: El Reclutador de la Banda
 
 ### 📝 Descripción del Reto
-Resuelve el desafío 'El Reclutador de la Banda'. Implementa una solución completa siguiendo las mejores prácticas de programación.
+Dada una lista de músicos con sus atributos (nombre, instrumento, nivel de experiencia y disponibilidad), filtra y retorna solo aquellos que cumplan con los criterios del evento: instrumento requerido, nivel mínimo de experiencia y que estén disponibles. Ordena el resultado por experiencia (mayor primero).
+
+### 📊 Posibles enfoques
+
+| Enfoque | Descripción | Complejidad |
+|---------|-------------|-------------|
+| Filter + Sort | Filtrar con condiciones múltiples, luego ordenar | O(n log n) |
+| Two-pass | Primera pasada filtra, segunda pasada ordena | O(n log n) |
+| Divide and conquer | Separar por instrumento, luego filtrar nivel | O(n log n) |
+
+### 🌍 Dónde se usa
+- **Recruiting**: filtrar candidatos por skills y disponibilidad
+- **Eventos**: seleccionar proveedores que cumplan requisitos
+- **Gaming**: componer equipos según stats de personajes
+- **RRHH**: matching de empleados a proyectos
 
 <Challenge 
   nivel="Iniciación" 
-  mision="Resuelve el desafío 'El Reclutador de la Banda'. Implementa una solución completa siguiendo las mejores prácticas de..." 
+  mision="Filtra músicos por instrumento, nivel de experiencia y disponibilidad." 
 />
 
 ---
@@ -30,8 +44,10 @@ Resuelve el desafío 'El Reclutador de la Banda'. Implementa una solución compl
 
 | Entrada | Salida esperada |
 |---------|-----------------|
-| ``````````ejemplo_entrada`````````` | ``````````resultado_esperado`````````` |
-| ``````````caso_limite`````````` | ``````````manejo_correcto`````````` |
+| Músicos: `[{name:"Ana",inst:"guitarra",exp:5,disp:true},{name:"Luis",inst:"bajo",exp:3,disp:true}]`, Crit: guitarra, min_exp:2 | `[{name:"Ana",...}]` |
+| Músicos: `[{name:"Ana",inst:"guitarra",exp:5,disp:false}]`, Crit: guitarra, min_exp:2 | `[]` (no disponible) |
+| Músicos: `[]`, Crit: guitarra, min_exp:2 | `[]` |
+| Músicos: `[{name:"A",inst:"guitarra",exp:1,disp:true},{name:"B",inst:"guitarra",exp:3,disp:true}]`, Crit: guitarra, min_exp:2 | `[{name:"B",...}]` |
 
 ---
 
@@ -42,165 +58,97 @@ Resuelve el desafío 'El Reclutador de la Banda'. Implementa una solución compl
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-**Análisis del problema:** El Reclutador de la Banda. Identifica la entrada, la salida esperada, y los casos límite. Diseña una estrategia de solución eficiente.
+**Análisis del problema:** Recorrer la lista y aplicar tres filtros: instrumento igual al requerido, experiencia >= mínimo, y disponibilidad == true. Luego ordenar por experiencia descendente. **Caso límite:** lista vacía, nadie cumple criterios.
 
 ### ⚙️ Paso 2: Implementación
-Implementación
-**Implementación en Kotlin**
-
-Ahora traducimos el análisis a código. La estructura general de la solución es:
-
-**1. Validación de entrada:**
-Verificamos que los datos recibidos son válidos antes de procesarlos. Si la entrada no es válida, devolvemos un valor por defecto o lanzamos un error.
-
-**2. Procesamiento principal:**
-Aplicamos la lógica central del algoritmo usando las estructuras de datos más adecuadas:
-- Listas/arrays para colecciones ordenadas
-- Diccionarios/hash maps para búsquedas rápidas (O(1))
-- Conjuntos/sets para operaciones de pertenencia
-- Pilas/colas para procesamiento FIFO/LIFO
-
-**3. Generación de salida:**
-Formateamos el resultado según lo esperado por el problema.
-
-**Buenas prácticas en Kotlin:**
-- Usa nombres de variables descriptivos y significativos
-- Mantén las funciones pequeñas y con una única responsabilidad
-- Sigue las convenciones de estilo del lenguaje (PEP 8, etc.)
-- Comenta las partes no obvias, no cada línea
-- Incluye type hints / anotaciones de tipo cuando sea posible
+1. Filtrar por instrumento, nivel y disponibilidad.
+2. Ordenar por experiencia descendente.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-**Complejidad temporal:** O(n)  
-**Complejidad espacial:** O(n)  
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-**Análisis de complejidad y optimización**
-
-**Complejidad temporal:**
-Evalúa cómo crece el tiempo de ejecución al aumentar el tamaño de la entrada. Para la mayoría de soluciones, una complejidad O(n) es aceptable, donde n es el tamaño de la entrada. Si tu solución es O(n²), considera si se puede optimizar.
-
-**Complejidad espacial:**
-¿Cuánta memoria adicional utiliza tu algoritmo? ¿Creas copias de los datos o trabajas in-place? En general, O(n) adicional es aceptable para la mayoría de aplicaciones.
-
-**Posibles optimizaciones:**
-- ¿Se puede reducir la complejidad con una estructura de datos diferente?
-- ¿Conviene usar iteración en vez de recursión para ahorrar pila de llamadas?
-- ¿Existe alguna función de la librería estándar que ya resuelva parte del problema?
-- ¿Se puede aplicar early exit para evitar trabajo innecesario?
-
-**Aplicaciones en el mundo real:**
-Este patrón de solución aparece frecuentemente en:
-- Procesamiento de datos y pipelines ETL
-- APIs REST y servicios web
-- Análisis de logs y métricas
-- Automatización de tareas y scripting
-- Validación y transformación de datos en sistemas de información
+**Complejidad temporal:** O(n log n) — dominada por la ordenación.
+**Complejidad espacial:** O(n) — para la lista filtrada.
 
 ### 💻 Código de la Solución
 
 <CodeTabs client:load>
 
 ```python
-# El Reclutador de la Banda
-# Implementa una solución para: El Reclutador de la Banda
+def reclutar(musicos, instrumento, nivel_min):
+    filtrados = [m for m in musicos
+                 if m["inst"] == instrumento
+                 and m["exp"] >= nivel_min
+                 and m["disp"]]
+    return sorted(filtrados, key=lambda m: m["exp"], reverse=True)
 
-def resolver(entrada):
-    """
-    El Reclutador de la Banda
-    """
-    resultado = entrada
-    return resultado
-
-
-if __name__ == '__main__':
-    print(resolver("ejemplo"))
-
+banda = [
+    {"name": "Ana", "inst": "guitarra", "exp": 5, "disp": True},
+    {"name": "Luis", "inst": "bajo", "exp": 3, "disp": True},
+    {"name": "Marta", "inst": "guitarra", "exp": 2, "disp": True},
+    {"name": "Pedro", "inst": "guitarra", "exp": 7, "disp": False},
+]
+print(reclutar(banda, "guitarra", 2))
+# [{'name': 'Ana', ...}, {'name': 'Marta', ...}]
 ```
 
 ```javascript
-// El Reclutador de la Banda
-// Implementa una solución para: El Reclutador de la Banda
-
-function resolver(entrada) {
-  return entrada;
+function reclutar(musicos, instrumento, nivelMin) {
+  return musicos
+    .filter(m => m.inst === instrumento && m.exp >= nivelMin && m.disp)
+    .sort((a, b) => b.exp - a.exp);
 }
-
-console.log(resolver('ejemplo'));
-
+const banda = [
+  {name:"Ana",inst:"guitarra",exp:5,disp:true},
+  {name:"Luis",inst:"bajo",exp:3,disp:true},
+  {name:"Marta",inst:"guitarra",exp:2,disp:true},
+  {name:"Pedro",inst:"guitarra",exp:7,disp:false},
+];
+console.log(reclutar(banda, "guitarra", 2));
+// [{name:'Ana',...}, {name:'Marta',...}]
 ```
 
 ```java
-// El Reclutador de la Banda
-// Implementa una solución para: El Reclutador de la Banda
+import java.util.*;
+import java.util.stream.*;
 
-public class Reto {
-    public static String resolver(String entrada) {
-        return entrada;
+public class ReclutadorBanda {
+    public static List<Map<String,Object>> reclutar(
+            List<Map<String,Object>> musicos, String instrumento, int nivelMin) {
+        return musicos.stream()
+            .filter(m -> m.get("inst").equals(instrumento)
+                      && (int)m.get("exp") >= nivelMin
+                      && (boolean)m.get("disp"))
+            .sorted((a, b) -> (int)b.get("exp") - (int)a.get("exp"))
+            .collect(Collectors.toList());
     }
 
     public static void main(String[] args) {
-        System.out.println(resolver("ejemplo"));
+        var banda = List.of(
+            Map.of("name","Ana","inst","guitarra","exp",5,"disp",true),
+            Map.of("name","Luis","inst","bajo","exp",3,"disp",true),
+            Map.of("name","Marta","inst","guitarra","exp",2,"disp",true)
+        );
+        System.out.println(reclutar(banda, "guitarra", 2));
     }
 }
-
 ```
 
 ```typescript
-// El Reclutador de la Banda
-// Implementa una solución para: El Reclutador de la Banda
+interface Musico { name: string; inst: string; exp: number; disp: boolean; }
 
-function resolver<T>(entrada: T): T {
-  return entrada;
+function reclutar(musicos: Musico[], instrumento: string, nivelMin: number): Musico[] {
+  return musicos
+    .filter(m => m.inst === instrumento && m.exp >= nivelMin && m.disp)
+    .sort((a, b) => b.exp - a.exp);
 }
-
-console.log(resolver('ejemplo'));
-
+const banda: Musico[] = [
+  {name:"Ana",inst:"guitarra",exp:5,disp:true},
+  {name:"Luis",inst:"bajo",exp:3,disp:true},
+  {name:"Marta",inst:"guitarra",exp:2,disp:true},
+  {name:"Pedro",inst:"guitarra",exp:7,disp:false},
+];
+console.log(reclutar(banda, "guitarra", 2));
+// [{name:'Ana',...}, {name:'Marta',...}]
 ```
 
 </CodeTabs>
@@ -212,4 +160,3 @@ console.log(resolver('ejemplo'));
 
 - [RETO: Generador de Nicknames](/retos/reto-generador-de-nicknames/)
 - [RETO: Lista de Compras](/retos/reto-lista-de-compras/)
-

@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "🏆 RETO: Motor de Búsqueda Binaria"
-description: "Resuelve el desafío 'Motor de Búsqueda Binaria'. Implementa una solución completa siguiendo las mejores prácticas de programación."
+description: "Implementa el algoritmo de búsqueda binaria: dado un array ordenado y un objetivo, encuentra su índice en O(log n) o indica que no existe."
 pubDate: "2026-06-28"
 tags: ["retos", "avanzado", "multilenguaje"]
 slug: "reto-motor-de-busqueda-binaria"
@@ -17,11 +17,25 @@ import CodeTabs from '@components/CodeTabs.svelte';
 # 🎯 Desafío: Motor de Búsqueda Binaria
 
 ### 📝 Descripción del Reto
-Resuelve el desafío 'Motor de Búsqueda Binaria'. Implementa una solución completa siguiendo las mejores prácticas de programación.
+Implementa búsqueda binaria: dado un array ordenado de números y un valor objetivo, encuentra el índice del objetivo o retorna -1 si no existe. La búsqueda debe ser iterativa con complejidad O(log n). También implementa una variante recursiva.
+
+### 📊 Posibles enfoques
+
+| Enfoque | Descripción | Complejidad |
+|---------|-------------|-------------|
+| Iterativo | Dividir el array a la mitad en cada paso | O(log n) |
+| Recursivo | Llamada recursiva con mitades del array | O(log n) |
+| Búsqueda con duplicados | Encontrar primera/última aparición | O(log n) |
+
+### 🌍 Dónde se usa
+- **Bases de datos**: índices B-Tree para búsquedas en disco
+- **Sistemas de archivos**: localización de archivos en directorios
+- **Compiladores**: búsqueda de tokens en tablas de símbolos
+- **Juegos**: detección de colisiones con spatial partitioning
 
 <Challenge 
   nivel="Avanzado" 
-  mision="Resuelve el desafío 'Motor de Búsqueda Binaria'. Implementa una solución completa siguiendo las mejores prácticas de..." 
+  mision="Implementa búsqueda binaria iterativa y recursiva en arrays ordenados." 
 />
 
 ---
@@ -30,8 +44,11 @@ Resuelve el desafío 'Motor de Búsqueda Binaria'. Implementa una solución comp
 
 | Entrada | Salida esperada |
 |---------|-----------------|
-| ``````````ejemplo_entrada`````````` | ``````````resultado_esperado`````````` |
-| ``````````caso_limite`````````` | ``````````manejo_correcto`````````` |
+| `[1,3,5,7,9,11]`, objetivo `7` | `3` |
+| `[1,3,5,7,9,11]`, objetivo `6` | `-1` |
+| `[2]`, objetivo `2` | `0` |
+| `[]`, objetivo `1` | `-1` |
+| `[1,2,3,4,5]`, objetivo `1` | `0` |
 
 ---
 
@@ -42,165 +59,137 @@ Resuelve el desafío 'Motor de Búsqueda Binaria'. Implementa una solución comp
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-**Análisis del problema:** Motor de Búsqueda Binaria. Identifica la entrada, la salida esperada, y los casos límite. Diseña una estrategia de solución eficiente.
+**Análisis del problema:** El array está ordenado. Comparar el objetivo con el elemento central: si es igual, retornar el índice; si es menor, buscar en la mitad izquierda; si es mayor, buscar en la mitad derecha. Repetir hasta encontrar o agotar el rango. **Caso límite:** array vacío, un solo elemento, objetivo en los extremos.
 
 ### ⚙️ Paso 2: Implementación
-Implementación
-**Implementación en Swift**
-
-Ahora traducimos el análisis a código. La estructura general de la solución es:
-
-**1. Validación de entrada:**
-Verificamos que los datos recibidos son válidos antes de procesarlos. Si la entrada no es válida, devolvemos un valor por defecto o lanzamos un error.
-
-**2. Procesamiento principal:**
-Aplicamos la lógica central del algoritmo usando las estructuras de datos más adecuadas:
-- Listas/arrays para colecciones ordenadas
-- Diccionarios/hash maps para búsquedas rápidas (O(1))
-- Conjuntos/sets para operaciones de pertenencia
-- Pilas/colas para procesamiento FIFO/LIFO
-
-**3. Generación de salida:**
-Formateamos el resultado según lo esperado por el problema.
-
-**Buenas prácticas en Swift:**
-- Usa nombres de variables descriptivos y significativos
-- Mantén las funciones pequeñas y con una única responsabilidad
-- Sigue las convenciones de estilo del lenguaje (PEP 8, etc.)
-- Comenta las partes no obvias, no cada línea
-- Incluye type hints / anotaciones de tipo cuando sea posible
+1. Inicializar `izq = 0`, `der = n - 1`.
+2. Calcular `mid = (izq + der) / 2`.
+3. Comparar y ajustar izq/der.
+4. Si `izq > der`, retornar -1.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-**Complejidad temporal:** O(n)  
-**Complejidad espacial:** O(n)  
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-**Análisis de complejidad y optimización**
-
-**Complejidad temporal:**
-Evalúa cómo crece el tiempo de ejecución al aumentar el tamaño de la entrada. Para la mayoría de soluciones, una complejidad O(n) es aceptable, donde n es el tamaño de la entrada. Si tu solución es O(n²), considera si se puede optimizar.
-
-**Complejidad espacial:**
-¿Cuánta memoria adicional utiliza tu algoritmo? ¿Creas copias de los datos o trabajas in-place? En general, O(n) adicional es aceptable para la mayoría de aplicaciones.
-
-**Posibles optimizaciones:**
-- ¿Se puede reducir la complejidad con una estructura de datos diferente?
-- ¿Conviene usar iteración en vez de recursión para ahorrar pila de llamadas?
-- ¿Existe alguna función de la librería estándar que ya resuelva parte del problema?
-- ¿Se puede aplicar early exit para evitar trabajo innecesario?
-
-**Aplicaciones en el mundo real:**
-Este patrón de solución aparece frecuentemente en:
-- Procesamiento de datos y pipelines ETL
-- APIs REST y servicios web
-- Análisis de logs y métricas
-- Automatización de tareas y scripting
-- Validación y transformación de datos en sistemas de información
+**Complejidad temporal:** O(log n) — el espacio de búsqueda se reduce a la mitad en cada paso.
+**Complejidad espacial:** O(1) iterativo, O(log n) recursivo (pila de llamadas).
 
 ### 💻 Código de la Solución
 
 <CodeTabs client:load>
 
 ```python
-# Motor de Búsqueda Binaria
-# Implementa una solución para: Motor de Búsqueda Binaria
+def busqueda_binaria(arr, objetivo):
+    izq, der = 0, len(arr) - 1
+    while izq <= der:
+        mid = (izq + der) // 2
+        if arr[mid] == objetivo:
+            return mid
+        elif arr[mid] < objetivo:
+            izq = mid + 1
+        else:
+            der = mid - 1
+    return -1
 
-def resolver(entrada):
-    """
-    Motor de Búsqueda Binaria
-    """
-    resultado = entrada
-    return resultado
+def busqueda_binaria_rec(arr, objetivo, izq=0, der=None):
+    if der is None:
+        der = len(arr) - 1
+    if izq > der:
+        return -1
+    mid = (izq + der) // 2
+    if arr[mid] == objetivo:
+        return mid
+    elif arr[mid] < objetivo:
+        return busqueda_binaria_rec(arr, objetivo, mid + 1, der)
+    else:
+        return busqueda_binaria_rec(arr, objetivo, izq, mid - 1)
 
-
-if __name__ == '__main__':
-    print(resolver("ejemplo"))
-
+print(busqueda_binaria([1,3,5,7,9,11], 7))   # 3
+print(busqueda_binaria([1,3,5,7,9,11], 6))   # -1
+print(busqueda_binaria([2], 2))               # 0
+print(busqueda_binaria([], 1))                # -1
+print(busqueda_binaria_rec([1,3,5,7,9,11], 7))  # 3
 ```
 
 ```javascript
-// Motor de Búsqueda Binaria
-// Implementa una solución para: Motor de Búsqueda Binaria
-
-function resolver(entrada) {
-  return entrada;
+function busquedaBinaria(arr, objetivo) {
+  let izq = 0, der = arr.length - 1;
+  while (izq <= der) {
+    const mid = Math.floor((izq + der) / 2);
+    if (arr[mid] === objetivo) return mid;
+    else if (arr[mid] < objetivo) izq = mid + 1;
+    else der = mid - 1;
+  }
+  return -1;
 }
 
-console.log(resolver('ejemplo'));
+function busquedaBinariaRec(arr, objetivo, izq = 0, der = arr.length - 1) {
+  if (izq > der) return -1;
+  const mid = Math.floor((izq + der) / 2);
+  if (arr[mid] === objetivo) return mid;
+  else if (arr[mid] < objetivo) return busquedaBinariaRec(arr, objetivo, mid + 1, der);
+  else return busquedaBinariaRec(arr, objetivo, izq, mid - 1);
+}
 
+console.log(busquedaBinaria([1,3,5,7,9,11], 7));  // 3
+console.log(busquedaBinaria([1,3,5,7,9,11], 6));  // -1
+console.log(busquedaBinaria([2], 2));              // 0
+console.log(busquedaBinaria([], 1));               // -1
+console.log(busquedaBinariaRec([1,3,5,7,9,11], 7)); // 3
 ```
 
 ```java
-// Motor de Búsqueda Binaria
-// Implementa una solución para: Motor de Búsqueda Binaria
+public class BusquedaBinaria {
+    public static int busquedaBinaria(int[] arr, int objetivo) {
+        int izq = 0, der = arr.length - 1;
+        while (izq <= der) {
+            int mid = izq + (der - izq) / 2;
+            if (arr[mid] == objetivo) return mid;
+            else if (arr[mid] < objetivo) izq = mid + 1;
+            else der = mid - 1;
+        }
+        return -1;
+    }
 
-public class Reto {
-    public static String resolver(String entrada) {
-        return entrada;
+    public static int busquedaBinariaRec(int[] arr, int objetivo, int izq, int der) {
+        if (izq > der) return -1;
+        int mid = izq + (der - izq) / 2;
+        if (arr[mid] == objetivo) return mid;
+        else if (arr[mid] < objetivo) return busquedaBinariaRec(arr, objetivo, mid + 1, der);
+        else return busquedaBinariaRec(arr, objetivo, izq, mid - 1);
     }
 
     public static void main(String[] args) {
-        System.out.println(resolver("ejemplo"));
+        System.out.println(busquedaBinaria(new int[]{1,3,5,7,9,11}, 7));  // 3
+        System.out.println(busquedaBinaria(new int[]{1,3,5,7,9,11}, 6));  // -1
+        System.out.println(busquedaBinaria(new int[]{2}, 2));              // 0
+        System.out.println(busquedaBinariaRec(new int[]{1,3,5,7,9,11}, 7, 0, 5)); // 3
     }
 }
-
 ```
 
 ```typescript
-// Motor de Búsqueda Binaria
-// Implementa una solución para: Motor de Búsqueda Binaria
-
-function resolver<T>(entrada: T): T {
-  return entrada;
+function busquedaBinaria(arr: number[], objetivo: number): number {
+  let izq = 0, der = arr.length - 1;
+  while (izq <= der) {
+    const mid = Math.floor((izq + der) / 2);
+    if (arr[mid] === objetivo) return mid;
+    else if (arr[mid] < objetivo) izq = mid + 1;
+    else der = mid - 1;
+  }
+  return -1;
 }
 
-console.log(resolver('ejemplo'));
+function busquedaBinariaRec(arr: number[], objetivo: number, izq = 0, der = arr.length - 1): number {
+  if (izq > der) return -1;
+  const mid = Math.floor((izq + der) / 2);
+  if (arr[mid] === objetivo) return mid;
+  else if (arr[mid] < objetivo) return busquedaBinariaRec(arr, objetivo, mid + 1, der);
+  else return busquedaBinariaRec(arr, objetivo, izq, mid - 1);
+}
 
+console.log(busquedaBinaria([1,3,5,7,9,11], 7));  // 3
+console.log(busquedaBinaria([1,3,5,7,9,11], 6));  // -1
+console.log(busquedaBinaria([2], 2));              // 0
+console.log(busquedaBinariaRec([1,3,5,7,9,11], 7)); // 3
 ```
 
 </CodeTabs>
@@ -212,4 +201,3 @@ console.log(resolver('ejemplo'));
 
 - [RETO: Ordenamiento por Burbuja](/retos/reto-ordenamiento-por-burbuja/)
 - [RETO: Reto Avanzado 01: Árboles Binarios de Búsqueda](/retos/reto-avanzado-01-arboles-binarios-de-busqueda/)
-

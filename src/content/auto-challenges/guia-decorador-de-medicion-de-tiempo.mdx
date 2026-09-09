@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "🏆 RETO: Decorador de Medición de Tiempo"
-description: "Resuelve el desafío 'Decorador de Medición de Tiempo'. Implementa una solución completa siguiendo las mejores prácticas de programación."
+description: "Implementa un decorador que mida el tiempo de ejecución de funciones: mide y reporta cuánto tarda cada función en ejecutarse."
 pubDate: "2026-06-28"
 tags: ["retos", "avanzado", "multilenguaje"]
 slug: "reto-decorador-de-medicion-de-tiempo"
@@ -17,11 +17,25 @@ import CodeTabs from '@components/CodeTabs.svelte';
 # 🎯 Desafío: Decorador de Medición de Tiempo
 
 ### 📝 Descripción del Reto
-Resuelve el desafío 'Decorador de Medición de Tiempo'. Implementa una solución completa siguiendo las mejores prácticas de programación.
+Implementa un decorador que envuelva cualquier función y mida su tiempo de ejecución. El decorador debe: (1) ejecutar la función original, (2) medir el tiempo con nanosegundos de precisión, (3) retornar el resultado original, (4) registrar el tiempo transcurrido. En Python usa `@decorator`, en JS/TS usa Higher-Order Functions, en Java usa Wrapper pattern.
+
+### 📊 Posibles enfoques
+
+| Enfoque | Descripción | Complejidad |
+|---------|-------------|-------------|
+| Decorator pattern (wrapper) | Envolver la función con medición antes/después | O(1) overhead |
+| Proxy object | Usar Proxy para interceptar llamadas | O(1) overhead |
+| AOP (Aspect-Oriented) | Aplicar con aspectos en tiempo de compilación | O(1) overhead |
+
+### 🌍 Dónde se usa
+- **Performance profiling**: medir bottlenecks en producción
+- **Monitoring**: Datadog, New Relic miden tiempo de funciones automáticamente
+- **Rate limiting**: medir tiempo entre llamadas para throttling
+- **Benchmarking**: comparar rendimiento de algoritmos
 
 <Challenge 
   nivel="Avanzado" 
-  mision="Resuelve el desafío 'Decorador de Medición de Tiempo'. Implementa una solución completa siguiendo las mejores prácticas..." 
+  mision="Implementa un decorador que mida el tiempo de ejecución de funciones." 
 />
 
 ---
@@ -30,8 +44,9 @@ Resuelve el desafío 'Decorador de Medición de Tiempo'. Implementa una solució
 
 | Entrada | Salida esperada |
 |---------|-----------------|
-| ``````````ejemplo_entrada`````````` | ``````````resultado_esperado`````````` |
-| ``````````caso_limite`````````` | ``````````manejo_correcto`````````` |
+| `decorar_suma(1,2)` | `3` (con side-effect: imprime tiempo) |
+| `decorar_sleep(0.01)` | `None` (con tiempo ~10ms) |
+| `decorar_upper("hola")` | `"HOLA"` (con tiempo registrado) |
 
 ---
 
@@ -42,165 +57,108 @@ Resuelve el desafío 'Decorador de Medición de Tiempo'. Implementa una solució
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-**Análisis del problema:** Decorador de Medición de Tiempo. Identifica la entrada, la salida esperada, y los casos límite. Diseña una estrategia de solución eficiente.
+**Análisis del problema:** El decorador debe interceptar la llamada a la función, registrar el timestamp antes y después, calcular la diferencia, y retornar el resultado original sin modificarlo. **Caso límite:** función que lanza excepción (el decorador debe propagarla tras medir), funciones con 0 argumentos.
 
 ### ⚙️ Paso 2: Implementación
-Implementación
-**Implementación en Go**
-
-Ahora traducimos el análisis a código. La estructura general de la solución es:
-
-**1. Validación de entrada:**
-Verificamos que los datos recibidos son válidos antes de procesarlos. Si la entrada no es válida, devolvemos un valor por defecto o lanzamos un error.
-
-**2. Procesamiento principal:**
-Aplicamos la lógica central del algoritmo usando las estructuras de datos más adecuadas:
-- Listas/arrays para colecciones ordenadas
-- Diccionarios/hash maps para búsquedas rápidas (O(1))
-- Conjuntos/sets para operaciones de pertenencia
-- Pilas/colas para procesamiento FIFO/LIFO
-
-**3. Generación de salida:**
-Formateamos el resultado según lo esperado por el problema.
-
-**Buenas prácticas en Go:**
-- Usa nombres de variables descriptivos y significativos
-- Mantén las funciones pequeñas y con una única responsabilidad
-- Sigue las convenciones de estilo del lenguaje (PEP 8, etc.)
-- Comenta las partes no obvias, no cada línea
-- Incluye type hints / anotaciones de tipo cuando sea posible
+1. Medir tiempo antes de la llamada.
+2. Ejecutar la función con los argumentos originales.
+3. Medir tiempo después.
+4. Imprimir la diferencia.
+5. Retornar el resultado.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-**Complejidad temporal:** O(n)  
-**Complejidad espacial:** O(n)  
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-**Análisis de complejidad y optimización**
-
-**Complejidad temporal:**
-Evalúa cómo crece el tiempo de ejecución al aumentar el tamaño de la entrada. Para la mayoría de soluciones, una complejidad O(n) es aceptable, donde n es el tamaño de la entrada. Si tu solución es O(n²), considera si se puede optimizar.
-
-**Complejidad espacial:**
-¿Cuánta memoria adicional utiliza tu algoritmo? ¿Creas copias de los datos o trabajas in-place? En general, O(n) adicional es aceptable para la mayoría de aplicaciones.
-
-**Posibles optimizaciones:**
-- ¿Se puede reducir la complejidad con una estructura de datos diferente?
-- ¿Conviene usar iteración en vez de recursión para ahorrar pila de llamadas?
-- ¿Existe alguna función de la librería estándar que ya resuelva parte del problema?
-- ¿Se puede aplicar early exit para evitar trabajo innecesario?
-
-**Aplicaciones en el mundo real:**
-Este patrón de solución aparece frecuentemente en:
-- Procesamiento de datos y pipelines ETL
-- APIs REST y servicios web
-- Análisis de logs y métricas
-- Automatización de tareas y scripting
-- Validación y transformación de datos en sistemas de información
+**Complejidad temporal:** O(1) de overhead (solo mediciones de tiempo).
+**Complejidad espacial:** O(1) adicional.
 
 ### 💻 Código de la Solución
 
 <CodeTabs client:load>
 
 ```python
-# Decorador de Medición de Tiempo
-# Implementa una solución para: Decorador de Medición de Tiempo
+import time
+import functools
 
-def resolver(entrada):
-    """
-    Decorador de Medición de Tiempo
-    """
-    resultado = entrada
-    return resultado
+def medir_tiempo(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        inicio = time.perf_counter()
+        resultado = func(*args, **kwargs)
+        fin = time.perf_counter()
+        print(f"[{func.__name__}] {fin - inicio:.6f}s")
+        return resultado
+    return wrapper
 
+@medir_tiempo
+def suma(a, b):
+    return a + b
 
-if __name__ == '__main__':
-    print(resolver("ejemplo"))
+@medir_tiempo
+def upper(texto):
+    return texto.upper()
 
+print(suma(1, 2))       # 3 (imprime tiempo)
+print(upper("hola"))    # HOLA (imprime tiempo)
 ```
 
 ```javascript
-// Decorador de Medición de Tiempo
-// Implementa una solución para: Decorador de Medición de Tiempo
-
-function resolver(entrada) {
-  return entrada;
+function medirTiempo(func) {
+  return function(...args) {
+    const inicio = performance.now();
+    const resultado = func.apply(this, args);
+    const fin = performance.now();
+    console.log(`[${func.name}] ${(fin - inicio).toFixed(6)}ms`);
+    return resultado;
+  };
 }
 
-console.log(resolver('ejemplo'));
+function suma(a, b) { return a + b; }
+const sumaMedida = medirTiempo(suma);
+console.log(sumaMedida(1, 2));  // 3 (imprime tiempo)
 
+const upperMedida = medirTiempo(t => t.toUpperCase());
+console.log(upperMedida("hola"));  // HOLA (imprime tiempo)
 ```
 
 ```java
-// Decorador de Medición de Tiempo
-// Implementa una solución para: Decorador de Medición de Tiempo
+public class DecoradorTiempo {
+    @FunctionalInterface
+    interface Funcion<T, R> {
+        R ejecutar(T... args);
+    }
 
-public class Reto {
-    public static String resolver(String entrada) {
-        return entrada;
+    public static <R> R medirTiempo(Funcion<Object, R> func, Object... args) {
+        long inicio = System.nanoTime();
+        R resultado = func.ejecutar(args);
+        long fin = System.nanoTime();
+        System.out.printf("[función] %.6fs%n", (fin - inicio) / 1_000_000_000.0);
+        return resultado;
     }
 
     public static void main(String[] args) {
-        System.out.println(resolver("ejemplo"));
+        var resultado = medirTiempo(a -> (int)a[0] + (int)a[1], 1, 2);
+        System.out.println(resultado); // 3
     }
 }
-
 ```
 
 ```typescript
-// Decorador de Medición de Tiempo
-// Implementa una solución para: Decorador de Medición de Tiempo
-
-function resolver<T>(entrada: T): T {
-  return entrada;
+function medirTiempo<T extends (...args: any[]) => any>(func: T): T {
+  return ((...args: any[]) => {
+    const inicio = performance.now();
+    const resultado = func(...args);
+    const fin = performance.now();
+    console.log(`[${func.name}] ${(fin - inicio).toFixed(6)}ms`);
+    return resultado;
+  }) as T;
 }
 
-console.log(resolver('ejemplo'));
+function suma(a: number, b: number): number { return a + b; }
+const sumaMedida = medirTiempo(suma);
+console.log(sumaMedida(1, 2));  // 3
 
+const upperMedida = medirTiempo((t: string) => t.toUpperCase());
+console.log(upperMedida("hola"));  // HOLA
 ```
 
 </CodeTabs>
@@ -212,4 +170,3 @@ console.log(resolver('ejemplo'));
 
 - [RETO: Reto Avanzado 09: Cache Decorator (Memoization)](/retos/reto-avanzado-09-cache-decorator-memoization/)
 - [RETO: Reto Avanzado 07: Inyector de Dependencias](/retos/reto-avanzado-07-inyector-de-dependencias/)
-

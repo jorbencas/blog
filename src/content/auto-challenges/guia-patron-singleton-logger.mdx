@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "🏆 RETO: Patrón Singleton (Logger)"
-description: "Resuelve el desafío 'Patrón Singleton (Logger)'. Implementa una solución completa siguiendo las mejores prácticas de programación."
+description: "Implementa el patrón Singleton para una clase Logger: garantiza que solo exista una instancia global del logger y que todas las llamadas usen la misma."
 pubDate: "2026-06-28"
 tags: ["retos", "avanzado", "multilenguaje"]
 slug: "reto-patron-singleton-logger"
@@ -17,11 +17,25 @@ import CodeTabs from '@components/CodeTabs.svelte';
 # 🎯 Desafío: Patrón Singleton (Logger)
 
 ### 📝 Descripción del Reto
-Resuelve el desafío 'Patrón Singleton (Logger)'. Implementa una solución completa siguiendo las mejores prácticas de programación.
+Implementa el patrón Singleton para un Logger: garantiza que solo exista una instancia global del logger en toda la aplicación. El logger debe: mantener un historial de mensajes, tener métodos `info()`, `warn()`, `error()`, y retornar siempre la misma instancia al crear múltiples objetos.
+
+### 📊 Posibles enfoques
+
+| Enfoque | Descripción | Complejidad |
+|---------|-------------|-------------|
+| Clase estática con instancia | Variable estática privada + getInstance() | O(1) |
+| Decorador/módulo level | Singleton a nivel de módulo (JS) | O(1) |
+| Metaclass (Python) | Controlar creación de instancias vía metaclass | O(1) |
+
+### 🌍 Dónde se usa
+- **Logging**: un solo logger que escribe a archivo/stdout
+- **Connection pools**: pool de conexiones compartido
+- **Configuración**: config global de la aplicación
+- **Cache**: cache compartido entre módulos
 
 <Challenge 
   nivel="Avanzado" 
-  mision="Resuelve el desafío 'Patrón Singleton (Logger)'. Implementa una solución completa siguiendo las mejores prácticas de..." 
+  mision="Implementa el patrón Singleton para una clase Logger con historial de mensajes." 
 />
 
 ---
@@ -30,8 +44,11 @@ Resuelve el desafío 'Patrón Singleton (Logger)'. Implementa una solución comp
 
 | Entrada | Salida esperada |
 |---------|-----------------|
-| ``````````ejemplo_entrada`````````` | ``````````resultado_esperado`````````` |
-| ``````````caso_limite`````````` | ``````````manejo_correcto`````````` |
+| `Logger()` × 2 | Misma instancia (`a === b`) |
+| `logger.info("hola")` | `"[INFO] hola"` en historial |
+| `logger.warn("cuidado")` | `"[WARN] cuidado"` en historial |
+| `logger.error("fallo")` | `"[ERROR] fallo"` en historial |
+| `logger.getHistorial()` | Array con todos los mensajes registrados |
 
 ---
 
@@ -42,165 +59,178 @@ Resuelve el desafío 'Patrón Singleton (Logger)'. Implementa una solución comp
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-**Análisis del problema:** Patrón Singleton (Logger). Identifica la entrada, la salida esperada, y los casos límite. Diseña una estrategia de solución eficiente.
+**Análisis del problema:** El Singleton controla la creación de instancias: si ya existe una, la retorna; si no, la crea. El Logger almacena un array de mensajes con timestamp y nivel. **Caso límite:** múltiples hilos (thread safety en Java), primer acceso vs. posteriores.
 
 ### ⚙️ Paso 2: Implementación
-Implementación
-**Implementación en Dart**
-
-Ahora traducimos el análisis a código. La estructura general de la solución es:
-
-**1. Validación de entrada:**
-Verificamos que los datos recibidos son válidos antes de procesarlos. Si la entrada no es válida, devolvemos un valor por defecto o lanzamos un error.
-
-**2. Procesamiento principal:**
-Aplicamos la lógica central del algoritmo usando las estructuras de datos más adecuadas:
-- Listas/arrays para colecciones ordenadas
-- Diccionarios/hash maps para búsquedas rápidas (O(1))
-- Conjuntos/sets para operaciones de pertenencia
-- Pilas/colas para procesamiento FIFO/LIFO
-
-**3. Generación de salida:**
-Formateamos el resultado según lo esperado por el problema.
-
-**Buenas prácticas en Dart:**
-- Usa nombres de variables descriptivos y significativos
-- Mantén las funciones pequeñas y con una única responsabilidad
-- Sigue las convenciones de estilo del lenguaje (PEP 8, etc.)
-- Comenta las partes no obvias, no cada línea
-- Incluye type hints / anotaciones de tipo cuando sea posible
+1. Variable estática/privada para la instancia.
+2. Método `getInstance()` que retorna la instancia existente o crea una nueva.
+3. Métodos `info()`, `warn()`, `error()` que agregan al historial.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-**Complejidad temporal:** O(n)  
-**Complejidad espacial:** O(n)  
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-**Análisis de complejidad y optimización**
-
-**Complejidad temporal:**
-Evalúa cómo crece el tiempo de ejecución al aumentar el tamaño de la entrada. Para la mayoría de soluciones, una complejidad O(n) es aceptable, donde n es el tamaño de la entrada. Si tu solución es O(n²), considera si se puede optimizar.
-
-**Complejidad espacial:**
-¿Cuánta memoria adicional utiliza tu algoritmo? ¿Creas copias de los datos o trabajas in-place? En general, O(n) adicional es aceptable para la mayoría de aplicaciones.
-
-**Posibles optimizaciones:**
-- ¿Se puede reducir la complejidad con una estructura de datos diferente?
-- ¿Conviene usar iteración en vez de recursión para ahorrar pila de llamadas?
-- ¿Existe alguna función de la librería estándar que ya resuelva parte del problema?
-- ¿Se puede aplicar early exit para evitar trabajo innecesario?
-
-**Aplicaciones en el mundo real:**
-Este patrón de solución aparece frecuentemente en:
-- Procesamiento de datos y pipelines ETL
-- APIs REST y servicios web
-- Análisis de logs y métricas
-- Automatización de tareas y scripting
-- Validación y transformación de datos en sistemas de información
+**Complejidad temporal:** O(1) por cada operación de logging.
+**Complejidad espacial:** O(n) — n es el número de mensajes en el historial.
 
 ### 💻 Código de la Solución
 
 <CodeTabs client:load>
 
 ```python
-# Patrón Singleton (Logger)
-# Implementa una solución para: Patrón Singleton (Logger)
+from datetime import datetime
 
-def resolver(entrada):
-    """
-    Patrón Singleton (Logger)
-    """
-    resultado = entrada
-    return resultado
+class Logger:
+    _instancia = None
+    _historial = []
 
+    def __new__(cls):
+        if cls._instancia is None:
+            cls._instancia = super().__new__(cls)
+            cls._historial = []
+        return cls._instancia
 
-if __name__ == '__main__':
-    print(resolver("ejemplo"))
+    def _log(self, nivel, mensaje):
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        entry = f"[{nivel}] {mensaje}"
+        self._historial.append(entry)
+        print(f"{timestamp} {entry}")
 
+    def info(self, mensaje): self._log("INFO", mensaje)
+    def warn(self, mensaje): self._log("WARN", mensaje)
+    def error(self, mensaje): self._log("ERROR", mensaje)
+    def get_historial(self): return list(self._historial)
+
+a = Logger()
+b = Logger()
+print(a is b)  # True
+
+a.info("hola")
+a.warn("cuidado")
+a.error("fallo")
+print(a.get_historial())  # ['[INFO] hola', '[WARN] cuidado', '[ERROR] fallo']
 ```
 
 ```javascript
-// Patrón Singleton (Logger)
-// Implementa una solución para: Patrón Singleton (Logger)
+class Logger {
+  static #instancia = null;
+  #historial = [];
 
-function resolver(entrada) {
-  return entrada;
+  constructor() {
+    if (Logger.#instancia) return Logger.#instancia;
+    Logger.#instancia = this;
+  }
+
+  static getInstance() {
+    if (!Logger.#instancia) Logger.#instancia = new Logger();
+    return Logger.#instancia;
+  }
+
+  #log(nivel, mensaje) {
+    const timestamp = new Date().toISOString();
+    const entry = `[${nivel}] ${mensaje}`;
+    this.#historial.push(entry);
+    console.log(`${timestamp} ${entry}`);
+  }
+
+  info(mensaje) { this.#log("INFO", mensaje); }
+  warn(mensaje) { this.#log("WARN", mensaje); }
+  error(mensaje) { this.#log("ERROR", mensaje); }
+  getHistorial() { return [...this.#historial]; }
 }
 
-console.log(resolver('ejemplo'));
+const a = Logger.getInstance();
+const b = Logger.getInstance();
+console.log(a === b);  // true
 
+a.info("hola");
+a.warn("cuidado");
+a.error("fallo");
+console.log(a.getHistorial());
+// ['[INFO] hola', '[WARN] cuidado', '[ERROR] fallo']
 ```
 
 ```java
-// Patrón Singleton (Logger)
-// Implementa una solución para: Patrón Singleton (Logger)
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
-public class Reto {
-    public static String resolver(String entrada) {
-        return entrada;
+public class Logger {
+    private static volatile Logger instancia;
+    private final List<String> historial = new ArrayList<>();
+    private final DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    private Logger() {}
+
+    public static Logger getInstance() {
+        if (instancia == null) {
+            synchronized (Logger.class) {
+                if (instancia == null) {
+                    instancia = new Logger();
+                }
+            }
+        }
+        return instancia;
     }
+
+    private void log(String nivel, String mensaje) {
+        String timestamp = LocalDateTime.now().format(fmt);
+        String entry = "[" + nivel + "] " + mensaje;
+        historial.add(entry);
+        System.out.println(timestamp + " " + entry);
+    }
+
+    public void info(String mensaje) { log("INFO", mensaje); }
+    public void warn(String mensaje) { log("WARN", mensaje); }
+    public void error(String mensaje) { log("ERROR", mensaje); }
+    public List<String> getHistorial() { return List.copyOf(historial); }
 
     public static void main(String[] args) {
-        System.out.println(resolver("ejemplo"));
+        Logger a = Logger.getInstance();
+        Logger b = Logger.getInstance();
+        System.out.println(a == b);  // true
+
+        a.info("hola");
+        a.warn("cuidado");
+        a.error("fallo");
+        System.out.println(a.getHistorial());
     }
 }
-
 ```
 
 ```typescript
-// Patrón Singleton (Logger)
-// Implementa una solución para: Patrón Singleton (Logger)
+class Logger {
+  private static instancia: Logger;
+  private historial: string[] = [];
 
-function resolver<T>(entrada: T): T {
-  return entrada;
+  private constructor() {}
+
+  static getInstance(): Logger {
+    if (!Logger.instancia) Logger.instancia = new Logger();
+    return Logger.instancia;
+  }
+
+  private log(nivel: string, mensaje: string): void {
+    const timestamp = new Date().toISOString();
+    const entry = `[${nivel}] ${mensaje}`;
+    this.historial.push(entry);
+    console.log(`${timestamp} ${entry}`);
+  }
+
+  info(mensaje: string): void { this.log("INFO", mensaje); }
+  warn(mensaje: string): void { this.log("WARN", mensaje); }
+  error(mensaje: string): void { this.log("ERROR", mensaje); }
+  getHistorial(): string[] { return [...this.historial]; }
 }
 
-console.log(resolver('ejemplo'));
+const a = Logger.getInstance();
+const b = Logger.getInstance();
+console.log(a === b);  // true
 
+a.info("hola");
+a.warn("cuidado");
+a.error("fallo");
+console.log(a.getHistorial());
+// ['[INFO] hola', '[WARN] cuidado', '[ERROR] fallo']
 ```
 
 </CodeTabs>
@@ -213,4 +243,3 @@ console.log(resolver('ejemplo'));
 - [RETO: Reto Avanzado 07: Inyector de Dependencias](/retos/reto-avanzado-07-inyector-de-dependencias/)
 - [RETO: Reto Avanzado 08: Patrón Strategy en APIs](/retos/reto-avanzado-08-patron-strategy-en-apis/)
 - [RETO: Reto Avanzado 09: Cache Decorator (Memoization)](/retos/reto-avanzado-09-cache-decorator-memoization/)
-

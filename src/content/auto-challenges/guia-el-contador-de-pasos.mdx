@@ -1,9 +1,9 @@
 ---
 draft: false
 title: "🏆 RETO: El Contador de Pasos"
-description: "Resuelve el desafío 'El Contador de Pasos'. Implementa una solución completa siguiendo las mejores prácticas de programación."
+description: "Dado un número entero n, calcula el mínimo número de pasos para reducirlo a 0: en cada paso puedes restar 1 o dividir entre 2 si es par."
 pubDate: "2026-06-28"
-tags: ["retos", "iniciaci\u00f3n", "multilenguaje"]
+tags: ["retos", "iniciación", "multilenguaje"]
 slug: "reto-el-contador-de-pasos"
 image: "img/guia_el_contador_de_pasos/guia_el_contador_de_pasos_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
@@ -17,11 +17,25 @@ import CodeTabs from '@components/CodeTabs.svelte';
 # 🎯 Desafío: El Contador de Pasos
 
 ### 📝 Descripción del Reto
-Resuelve el desafío 'El Contador de Pasos'. Implementa una solución completa siguiendo las mejores prácticas de programación.
+Dado un número entero `n`, calcula el mínimo número de pasos para reducirlo a 0. En cada paso puedes: (1) restar 1 si el número es impar, o (2) dividir entre 2 si es par. Implementa la solución de forma eficiente sin usar recursión excesiva.
+
+### 📊 Posibles enfoques
+
+| Enfoque | Descripción | Complejidad |
+|---------|-------------|-------------|
+| Iterativo greedy | Si es par dividir, si es par restar, contar pasos | O(log n) |
+| Recursivo | Llamada recursiva con memoización | O(log n) |
+| Bitwise | Contar bits: pasos = número de bits 1 + posición del bit más alto | O(log n) |
+
+### 🌍 Dónde se usa
+- **Optimización de procesos**: minimizar operaciones en pipelines
+- **Juegos**: mecánicas de reducción de recursos
+- **Criptografía**: análisis de complejidad de operaciones en anillos
+- **Educación**: introducción a greedy algorithms
 
 <Challenge 
   nivel="Iniciación" 
-  mision="Resuelve el desafío 'El Contador de Pasos'. Implementa una solución completa siguiendo las mejores prácticas de..." 
+  mision="Calcula el mínimo número de pasos para reducir n a 0 dividiendo entre 2 o restando 1." 
 />
 
 ---
@@ -30,8 +44,11 @@ Resuelve el desafío 'El Contador de Pasos'. Implementa una solución completa s
 
 | Entrada | Salida esperada |
 |---------|-----------------|
-| ``````````ejemplo_entrada`````````` | ``````````resultado_esperado`````````` |
-| ``````````caso_limite`````````` | ``````````manejo_correcto`````````` |
+| `8` | `3` (8→4→2→1→0, 3 pasos: dividir 3 veces) |
+| `7` | `4` (7→6→3→2→1→0: -1,/2,-1,/2,-1) |
+| `1` | `1` |
+| `0` | `0` |
+| `15` | `5` (15→14→7→6→3→2→1→0: 5 pasos) |
 
 ---
 
@@ -42,165 +59,92 @@ Resuelve el desafío 'El Contador de Pasos'. Implementa una solución completa s
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-**Análisis del problema:** El Contador de Pasos. Identifica la entrada, la salida esperada, y los casos límite. Diseña una estrategia de solución eficiente.
+**Análisis del problema:** Es un problema greedy. Si `n` es par, dividir entre 2 siempre es mejor (reduce más rápido). Si es impar, restar 1 para hacerlo par. **Caso límite:** n=0 (0 pasos), n=1 (1 paso).
 
 ### ⚙️ Paso 2: Implementación
-Implementación#
-**Implementación en C#**
-
-Ahora traducimos el análisis a código. La estructura general de la solución es:
-
-**1. Validación de entrada:**
-Verificamos que los datos recibidos son válidos antes de procesarlos. Si la entrada no es válida, devolvemos un valor por defecto o lanzamos un error.
-
-**2. Procesamiento principal:**
-Aplicamos la lógica central del algoritmo usando las estructuras de datos más adecuadas:
-- Listas/arrays para colecciones ordenadas
-- Diccionarios/hash maps para búsquedas rápidas (O(1))
-- Conjuntos/sets para operaciones de pertenencia
-- Pilas/colas para procesamiento FIFO/LIFO
-
-**3. Generación de salida:**
-Formateamos el resultado según lo esperado por el problema.
-
-**Buenas prácticas en C#:**
-- Usa nombres de variables descriptivos y significativos
-- Mantén las funciones pequeñas y con una única responsabilidad
-- Sigue las convenciones de estilo del lenguaje (PEP 8, etc.)
-- Comenta las partes no obvias, no cada línea
-- Incluye type hints / anotaciones de tipo cuando sea posible
+Iterar mientras `n > 0`: si es par, dividir entre 2; si es impar, restar 1. Contar cada operación.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-**Complejidad temporal:** O(n)  
-**Complejidad espacial:** O(n)  
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-**Análisis de complejidad y optimización**
-
-**Complejidad temporal:**
-Evalúa cómo crece el tiempo de ejecución al aumentar el tamaño de la entrada. Para la mayoría de soluciones, una complejidad O(n) es aceptable, donde n es el tamaño de la entrada. Si tu solución es O(n²), considera si se puede optimizar.
-
-**Complejidad espacial:**
-¿Cuánta memoria adicional utiliza tu algoritmo? ¿Creas copias de los datos o trabajas in-place? En general, O(n) adicional es aceptable para la mayoría de aplicaciones.
-
-**Posibles optimizaciones:**
-- ¿Se puede reducir la complejidad con una estructura de datos diferente?
-- ¿Conviene usar iteración en vez de recursión para ahorrar pila de llamadas?
-- ¿Existe alguna función de la librería estándar que ya resuelva parte del problema?
-- ¿Se puede aplicar early exit para evitar trabajo innecesario?
-
-**Aplicaciones en el mundo real:**
-Este patrón de solución aparece frecuentemente en:
-- Procesamiento de datos y pipelines ETL
-- APIs REST y servicios web
-- Análisis de logs y métricas
-- Automatización de tareas y scripting
-- Validación y transformación de datos en sistemas de información
+**Complejidad temporal:** O(log n) — cada división reduce el número a la mitad.
+**Complejidad espacial:** O(1) — solo contadores.
 
 ### 💻 Código de la Solución
 
 <CodeTabs client:load>
 
 ```python
-# El Contador de Pasos
-# Implementa una solución para: El Contador de Pasos
+def contar_pasos(n):
+    pasos = 0
+    while n > 0:
+        if n % 2 == 0:
+            n //= 2
+        else:
+            n -= 1
+        pasos += 1
+    return pasos
 
-def resolver(entrada):
-    """
-    El Contador de Pasos
-    """
-    resultado = entrada
-    return resultado
-
-
-if __name__ == '__main__':
-    print(resolver("ejemplo"))
-
+print(contar_pasos(8))   # 3
+print(contar_pasos(7))   # 4
+print(contar_pasos(1))   # 1
+print(contar_pasos(0))   # 0
+print(contar_pasos(15))  # 5
 ```
 
 ```javascript
-// El Contador de Pasos
-// Implementa una solución para: El Contador de Pasos
-
-function resolver(entrada) {
-  return entrada;
+function contarPasos(n) {
+  let pasos = 0;
+  while (n > 0) {
+    if (n % 2 === 0) n = Math.floor(n / 2);
+    else n -= 1;
+    pasos++;
+  }
+  return pasos;
 }
-
-console.log(resolver('ejemplo'));
-
+console.log(contarPasos(8));   // 3
+console.log(contarPasos(7));   // 4
+console.log(contarPasos(1));   // 1
+console.log(contarPasos(0));   // 0
+console.log(contarPasos(15));  // 5
 ```
 
 ```java
-// El Contador de Pasos
-// Implementa una solución para: El Contador de Pasos
-
-public class Reto {
-    public static String resolver(String entrada) {
-        return entrada;
+public class ContadorPasos {
+    public static int contarPasos(int n) {
+        int pasos = 0;
+        while (n > 0) {
+            if (n % 2 == 0) n /= 2;
+            else n -= 1;
+            pasos++;
+        }
+        return pasos;
     }
 
     public static void main(String[] args) {
-        System.out.println(resolver("ejemplo"));
+        System.out.println(contarPasos(8));   // 3
+        System.out.println(contarPasos(7));   // 4
+        System.out.println(contarPasos(1));   // 1
+        System.out.println(contarPasos(0));   // 0
+        System.out.println(contarPasos(15));  // 5
     }
 }
-
 ```
 
 ```typescript
-// El Contador de Pasos
-// Implementa una solución para: El Contador de Pasos
-
-function resolver<T>(entrada: T): T {
-  return entrada;
+function contarPasos(n: number): number {
+  let pasos = 0;
+  while (n > 0) {
+    if (n % 2 === 0) n = Math.floor(n / 2);
+    else n -= 1;
+    pasos++;
+  }
+  return pasos;
 }
-
-console.log(resolver('ejemplo'));
-
+console.log(contarPasos(8));   // 3
+console.log(contarPasos(7));   // 4
+console.log(contarPasos(1));   // 1
+console.log(contarPasos(0));   // 0
+console.log(contarPasos(15));  // 5
 ```
 
 </CodeTabs>
@@ -212,4 +156,3 @@ console.log(resolver('ejemplo'));
 
 - [RETO: Juego de Adivinar Número](/retos/reto-juego-de-adivinar-numero/)
 - [RETO: Lista de Compras](/retos/reto-lista-de-compras/)
-

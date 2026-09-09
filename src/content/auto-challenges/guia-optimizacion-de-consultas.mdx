@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "🏆 RETO: Optimización de Consultas"
-description: "Resuelve el desafío 'Optimización de Consultas'. Implementa una solución completa siguiendo las mejores prácticas de programación."
+description: "Implementa un optimizador de consultas SQL simplificadas: reescribe consultas con filtros redundantes, orden innecesario o subconsultas optimizables."
 pubDate: "2026-06-28"
 tags: ["retos", "avanzado", "multilenguaje"]
 slug: "reto-optimizacion-de-consultas"
@@ -17,11 +17,25 @@ import CodeTabs from '@components/CodeTabs.svelte';
 # 🎯 Desafío: Optimización de Consultas
 
 ### 📝 Descripción del Reto
-Resuelve el desafío 'Optimización de Consultas'. Implementa una solución completa siguiendo las mejores prácticas de programación.
+Implementa un optimizador de consultas SQL simplificadas. Dada una consulta representada como un objeto con `select`, `from`, `where`, `order_by` y `limit`, aplica reglas de optimización: eliminar columnas no usadas en select, eliminar ORDER BY sin necesidad, fusionar filtros WHERE, y detectar subconsultas que pueden ser aplanadas.
+
+### 📊 Posibles enfoques
+
+| Enfoque | Descripción | Complejidad |
+|---------|-------------|-------------|
+| Reglas de reescritura | Aplicar reglas DAG (Directed Acyclic Graph) | O(n) por regla |
+| Plan de ejecución | Construir y optimizar un plan de ejecución | O(n log n) |
+| Cost-based optimizer | Evaluar costo de cada plan candidato | O(2^n) peor caso |
+
+### 🌍 Dónde se usa
+- **PostgreSQL/MySQL**: el optimizador de consultas interno
+- **Data warehouses**: BigQuery, Snowflake optimizan consultas masivas
+- **ORMs**: SQLAlchemy, Sequelize generan SQL optimizado
+- **Data lakes**: Spark Catalyst optimizer reescribe planes
 
 <Challenge 
   nivel="Avanzado" 
-  mision="Resuelve el desafío 'Optimización de Consultas'. Implementa una solución completa siguiendo las mejores prácticas de..." 
+  mision="Implementa un optimizador de consultas SQL con reglas de reescritura." 
 />
 
 ---
@@ -30,8 +44,9 @@ Resuelve el desafío 'Optimización de Consultas'. Implementa una solución comp
 
 | Entrada | Salida esperada |
 |---------|-----------------|
-| ``````````ejemplo_entrada`````````` | ``````````resultado_esperado`````````` |
-| ``````````caso_limite`````````` | ``````````manejo_correcto`````````` |
+| `{select:["*"], from:"users", where:["age>18"], order_by:["name"]}` | Eliminar order_by si select no lo necesita |
+| `{select:["name","age"], from:"users", where:["age>18","age<60"]}` | Fusionar where: `"age>18 AND age<60"` |
+| `{select:["id"], from:"users", where:["active=true"]}` | Mantener (ya optimizado) |
 
 ---
 
@@ -42,165 +57,146 @@ Resuelve el desafío 'Optimización de Consultas'. Implementa una solución comp
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-**Análisis del problema:** Optimización de Consultas. Identifica la entrada, la salida esperada, y los casos límite. Diseña una estrategia de solución eficiente.
+**Análisis del problema:** Las consultas SQL se pueden representar como objetos estructurados. Un optimizador aplica reglas de reescritura para mejorar el rendimiento sin cambiar el resultado semántico. **Reglas típicas:** (1) eliminar ORDER BY si LIMIT no está presente y no hay dependencias, (2) fusionar filtros AND, (3) eliminar columnas no referenciadas.
 
 ### ⚙️ Paso 2: Implementación
-Implementación
-**Implementación en Python**
-
-Ahora traducimos el análisis a código. La estructura general de la solución es:
-
-**1. Validación de entrada:**
-Verificamos que los datos recibidos son válidos antes de procesarlos. Si la entrada no es válida, devolvemos un valor por defecto o lanzamos un error.
-
-**2. Procesamiento principal:**
-Aplicamos la lógica central del algoritmo usando las estructuras de datos más adecuadas:
-- Listas/arrays para colecciones ordenadas
-- Diccionarios/hash maps para búsquedas rápidas (O(1))
-- Conjuntos/sets para operaciones de pertenencia
-- Pilas/colas para procesamiento FIFO/LIFO
-
-**3. Generación de salida:**
-Formateamos el resultado según lo esperado por el problema.
-
-**Buenas prácticas en Python:**
-- Usa nombres de variables descriptivos y significativos
-- Mantén las funciones pequeñas y con una única responsabilidad
-- Sigue las convenciones de estilo del lenguaje (PEP 8, etc.)
-- Comenta las partes no obvias, no cada línea
-- Incluye type hints / anotaciones de tipo cuando sea posible
+1. Parsear la consulta en estructura de datos.
+2. Aplicar reglas de optimización secuencialmente.
+3. Reconstruir la consulta optimizada.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-**Complejidad temporal:** O(n)  
-**Complejidad espacial:** O(n)  
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-**Análisis de complejidad y optimización**
-
-**Complejidad temporal:**
-Evalúa cómo crece el tiempo de ejecución al aumentar el tamaño de la entrada. Para la mayoría de soluciones, una complejidad O(n) es aceptable, donde n es el tamaño de la entrada. Si tu solución es O(n²), considera si se puede optimizar.
-
-**Complejidad espacial:**
-¿Cuánta memoria adicional utiliza tu algoritmo? ¿Creas copias de los datos o trabajas in-place? En general, O(n) adicional es aceptable para la mayoría de aplicaciones.
-
-**Posibles optimizaciones:**
-- ¿Se puede reducir la complejidad con una estructura de datos diferente?
-- ¿Conviene usar iteración en vez de recursión para ahorrar pila de llamadas?
-- ¿Existe alguna función de la librería estándar que ya resuelva parte del problema?
-- ¿Se puede aplicar early exit para evitar trabajo innecesario?
-
-**Aplicaciones en el mundo real:**
-Este patrón de solución aparece frecuentemente en:
-- Procesamiento de datos y pipelines ETL
-- APIs REST y servicios web
-- Análisis de logs y métricas
-- Automatización de tareas y scripting
-- Validación y transformación de datos en sistemas de información
+**Complejidad temporal:** O(n) — cada regla recorre las partes de la consulta una vez.
+**Complejidad espacial:** O(n) — para la consulta resultante.
 
 ### 💻 Código de la Solución
 
 <CodeTabs client:load>
 
 ```python
-# Optimización de Consultas
-# Implementa una solución para: Optimización de Consultas
+def optimizar_consulta(consulta):
+    opt = dict(consulta)
 
-def resolver(entrada):
-    """
-    Optimización de Consultas
-    """
-    resultado = entrada
-    return resultado
+    # Regla 1: Fusionar filtros WHERE
+    if "where" in opt and len(opt["where"]) > 1:
+        opt["where"] = [" AND ".join(opt["where"])]
 
+    # Regla 2: Eliminar ORDER BY si SELECT no tiene columnas específicas
+    if "order_by" in opt and opt.get("select") == ["*"]:
+        del opt["order_by"]
 
-if __name__ == '__main__':
-    print(resolver("ejemplo"))
+    # Regla 3: Eliminar SELECT duplicados
+    if "select" in opt:
+        seen = []
+        for col in opt["select"]:
+            if col not in seen:
+                seen.append(col)
+        opt["select"] = seen
 
+    return opt
+
+q1 = {"select": ["*"], "from": "users", "where": ["age>18"], "order_by": ["name"]}
+print(optimizar_consulta(q1))  # Sin order_by
+
+q2 = {"select": ["name","age"], "from": "users", "where": ["age>18","age<60"]}
+print(optimizar_consulta(q2))  # where fusionado
 ```
 
 ```javascript
-// Optimización de Consultas
-// Implementa una solución para: Optimización de Consultas
+function optimizarConsulta(consulta) {
+  const opt = { ...consulta };
 
-function resolver(entrada) {
-  return entrada;
+  // Regla 1: Fusionar filtros WHERE
+  if (opt.where && opt.where.length > 1) {
+    opt.where = [opt.where.join(" AND ")];
+  }
+
+  // Regla 2: Eliminar ORDER BY si SELECT es *
+  if (opt.order_by && JSON.stringify(opt.select) === JSON.stringify(["*"])) {
+    delete opt.order_by;
+  }
+
+  // Regla 3: Eliminar SELECT duplicados
+  if (opt.select) {
+    opt.select = [...new Set(opt.select)];
+  }
+
+  return opt;
 }
 
-console.log(resolver('ejemplo'));
+console.log(optimizarConsulta({select:["*"],from:"users",where:["age>18"],order_by:["name"]}));
+// {select:["*"],from:"users",where:["age>18"]}
 
+console.log(optimizarConsulta({select:["name","age"],from:"users",where:["age>18","age<60"]}));
+// {select:["name","age"],from:"users",where:["age>18 AND age<60"]}
 ```
 
 ```java
-// Optimización de Consultas
-// Implementa una solución para: Optimización de Consultas
+import java.util.*;
+import java.util.stream.*;
 
-public class Reto {
-    public static String resolver(String entrada) {
-        return entrada;
+public class OptimizadorConsultas {
+    public static Map<String, Object> optimizar(Map<String, Object> consulta) {
+        Map<String, Object> opt = new LinkedHashMap<>(consulta);
+
+        // Regla 1: Fusionar filtros WHERE
+        if (opt.containsKey("where")) {
+            List<String> where = (List<String>) opt.get("where");
+            if (where.size() > 1) {
+                opt.put("where", List.of(String.join(" AND ", where)));
+            }
+        }
+
+        // Regla 2: Eliminar ORDER BY si SELECT es *
+        if (opt.containsKey("order_by") && opt.get("select").equals(List.of("*"))) {
+            opt.remove("order_by");
+        }
+
+        return opt;
     }
 
     public static void main(String[] args) {
-        System.out.println(resolver("ejemplo"));
+        var q1 = new LinkedHashMap<>(Map.of(
+            "select", List.of("*"), "from", "users",
+            "where", List.of("age>18"), "order_by", List.of("name")
+        ));
+        System.out.println(optimizar(q1));
     }
 }
-
 ```
 
 ```typescript
-// Optimización de Consultas
-// Implementa una solución para: Optimización de Consultas
-
-function resolver<T>(entrada: T): T {
-  return entrada;
+interface Consulta {
+  select: string[];
+  from: string;
+  where?: string[];
+  order_by?: string[];
+  limit?: number;
 }
 
-console.log(resolver('ejemplo'));
+function optimizarConsulta(consulta: Consulta): Consulta {
+  const opt: any = { ...consulta };
 
+  // Regla 1: Fusionar filtros WHERE
+  if (opt.where && opt.where.length > 1) {
+    opt.where = [opt.where.join(" AND ")];
+  }
+
+  // Regla 2: Eliminar ORDER BY si SELECT es *
+  if (opt.order_by && JSON.stringify(opt.select) === JSON.stringify(["*"])) {
+    delete opt.order_by;
+  }
+
+  // Regla 3: Eliminar SELECT duplicados
+  if (opt.select) {
+    opt.select = [...new Set(opt.select)];
+  }
+
+  return opt;
+}
+
+console.log(optimizarConsulta({select:["*"],from:"users",where:["age>18"],order_by:["name"]}));
+console.log(optimizarConsulta({select:["name","age"],from:"users",where:["age>18","age<60"]}));
 ```
 
 </CodeTabs>
@@ -212,4 +208,3 @@ console.log(resolver('ejemplo'));
 
 - [RETO: Reto Avanzado 03: Optimización de Rutas (Greedy)](/retos/reto-avanzado-03-optimizacion-de-rutas-greedy/)
 - [RETO: Consistencia de Base de Datos](/retos/reto-consistencia-de-base-de-datos/)
-

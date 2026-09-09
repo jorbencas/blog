@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "🏆 RETO: Conversión de Monedas"
-description: "Resuelve el desafío 'Conversión de Monedas'. Implementa una solución completa siguiendo las mejores prácticas de programación."
+description: "Implementa un convertidor de monedas: dado un monto y las tasas de cambio entre monedas, calcula el equivalente en otra moneda."
 pubDate: "2026-06-28"
 tags: ["retos", "intermedio", "multilenguaje"]
 slug: "reto-conversion-de-monedas"
@@ -17,11 +17,25 @@ import CodeTabs from '@components/CodeTabs.svelte';
 # 🎯 Desafío: Conversión de Monedas
 
 ### 📝 Descripción del Reto
-Resuelve el desafío 'Conversión de Monedas'. Implementa una solución completa siguiendo las mejores prácticas de programación.
+Implementa un convertidor de monedas: dado un monto, una moneda origen, una moneda destino y un diccionario de tasas de cambio, calcula el monto convertido. Las tasas se dan como `{"EUR_USD": 1.08, "EUR_GBP": 0.86, ...}`. Si falta una tasa directa, intenta usar una ruta indirecta (ej. EUR→USD→GBP).
+
+### 📊 Posibles enfoques
+
+| Enfoque | Descripción | Complejidad |
+|---------|-------------|-------------|
+| Tasa directa | Buscar la tasa exacta en el diccionario | O(1) |
+| Ruta indirecta BFS | Buscar camino de conversión como grafo no dirigido | O(V + E) |
+| Matriz de tasas | Construir matriz completa con Floyd-Warshall | O(n³) |
+
+### 🌍 Dónde se usa
+- **Fintech**: apps como Wise, Revolut para transferencias internacionales
+- **E-commerce**: precios en múltiples monedas para tiendas globales
+- **Trading**: plataformas de forex y criptomonedas
+- **Contabilidad**: consolidación de estados financieros multi-moneda
 
 <Challenge 
   nivel="Intermedio" 
-  mision="Resuelve el desafío 'Conversión de Monedas'. Implementa una solución completa siguiendo las mejores prácticas de..." 
+  mision="Implementa un convertidor de monedas con tasas de cambio directas e indirectas." 
 />
 
 ---
@@ -30,8 +44,11 @@ Resuelve el desafío 'Conversión de Monedas'. Implementa una solución completa
 
 | Entrada | Salida esperada |
 |---------|-----------------|
-| ``````````ejemplo_entrada`````````` | ``````````resultado_esperado`````````` |
-| ``````````caso_limite`````````` | ``````````manejo_correcto`````````` |
+| `100, 'EUR', 'USD', {EUR_USD:1.08}` | `108.0` |
+| `100, 'EUR', 'GBP', {EUR_USD:1.08, USD_GBP:0.79}` | `85.32` |
+| `100, 'EUR', 'EUR', {}` | `100.0` |
+| `0, 'EUR', 'USD', {EUR_USD:1.08}` | `0.0` |
+| `100, 'EUR', 'JPY', {}` | `null` (sin ruta) |
 
 ---
 
@@ -42,165 +59,147 @@ Resuelve el desafío 'Conversión de Monedas'. Implementa una solución completa
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-**Análisis del problema:** Conversión de Monedas. Identifica la entrada, la salida esperada, y los casos límite. Diseña una estrategia de solución eficiente.
+**Análisis del problema:** Las tasas se modelan como un grafo no dirigido donde cada moneda es un nodo y cada tasa es una arista bidireccional (EUR→USD con tasa 1.08 implica USD→EUR con tasa 1/1.08). Para buscar una conversión, usar BFS desde la moneda origen hasta la destino, multiplicando tasas en el camino. **Caso límite:** moneda origen == destino (retornar monto), sin ruta posible (retornar null).
 
 ### ⚙️ Paso 2: Implementación
-Implementación
-**Implementación en Dart**
-
-Ahora traducimos el análisis a código. La estructura general de la solución es:
-
-**1. Validación de entrada:**
-Verificamos que los datos recibidos son válidos antes de procesarlos. Si la entrada no es válida, devolvemos un valor por defecto o lanzamos un error.
-
-**2. Procesamiento principal:**
-Aplicamos la lógica central del algoritmo usando las estructuras de datos más adecuadas:
-- Listas/arrays para colecciones ordenadas
-- Diccionarios/hash maps para búsquedas rápidas (O(1))
-- Conjuntos/sets para operaciones de pertenencia
-- Pilas/colas para procesamiento FIFO/LIFO
-
-**3. Generación de salida:**
-Formateamos el resultado según lo esperado por el problema.
-
-**Buenas prácticas en Dart:**
-- Usa nombres de variables descriptivos y significativos
-- Mantén las funciones pequeñas y con una única responsabilidad
-- Sigue las convenciones de estilo del lenguaje (PEP 8, etc.)
-- Comenta las partes no obvias, no cada línea
-- Incluye type hints / anotaciones de tipo cuando sea posible
+1. Construir grafo de adyacencia desde las tasas.
+2. BFS desde origen, acumulando el producto de tasas.
+3. Al llegar al destino, multiplicar por el monto original.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-**Complejidad temporal:** O(n)  
-**Complejidad espacial:** O(n)  
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-**Análisis de complejidad y optimización**
-
-**Complejidad temporal:**
-Evalúa cómo crece el tiempo de ejecución al aumentar el tamaño de la entrada. Para la mayoría de soluciones, una complejidad O(n) es aceptable, donde n es el tamaño de la entrada. Si tu solución es O(n²), considera si se puede optimizar.
-
-**Complejidad espacial:**
-¿Cuánta memoria adicional utiliza tu algoritmo? ¿Creas copias de los datos o trabajas in-place? En general, O(n) adicional es aceptable para la mayoría de aplicaciones.
-
-**Posibles optimizaciones:**
-- ¿Se puede reducir la complejidad con una estructura de datos diferente?
-- ¿Conviene usar iteración en vez de recursión para ahorrar pila de llamadas?
-- ¿Existe alguna función de la librería estándar que ya resuelva parte del problema?
-- ¿Se puede aplicar early exit para evitar trabajo innecesario?
-
-**Aplicaciones en el mundo real:**
-Este patrón de solución aparece frecuentemente en:
-- Procesamiento de datos y pipelines ETL
-- APIs REST y servicios web
-- Análisis de logs y métricas
-- Automatización de tareas y scripting
-- Validación y transformación de datos en sistemas de información
+**Complejidad temporal:** O(V + E) — BFS en el grafo de monedas.
+**Complejidad espacial:** O(V + E) — para la lista de adyacencia.
 
 ### 💻 Código de la Solución
 
 <CodeTabs client:load>
 
 ```python
-# Conversión de Monedas
-# Implementa una solución para: Conversión de Monedas
+from collections import defaultdict, deque
 
-def resolver(entrada):
-    """
-    Conversión de Monedas
-    """
-    resultado = entrada
-    return resultado
+def convertir(monto, origen, destino, tasas):
+    if origen == destino:
+        return float(monto)
+    grafo = defaultdict(dict)
+    for par, tasa in tasas.items():
+        de, a = par.split("_")
+        grafo[de][a] = tasa
+        grafo[a][de] = 1.0 / tasa
 
+    cola = deque([(origen, 1.0)])
+    visitado = {origen}
+    while cola:
+        nodo, tasa_acum = cola.popleft()
+        if nodo == destino:
+                return round(monto * tasa_acum, 2)
+            for vecino, t in grafo[nodo].items():
+                if vecino not in visitado:
+                    visitado.add(vecino)
+                    cola.append((vecino, tasa_acum * t))
+    return None
 
-if __name__ == '__main__':
-    print(resolver("ejemplo"))
-
+print(convertir(100, "EUR", "USD", {"EUR_USD": 1.08}))       # 108.0
+print(convertir(100, "EUR", "GBP", {"EUR_USD": 1.08, "USD_GBP": 0.79}))  # 85.32
+print(convertir(100, "EUR", "EUR", {}))                       # 100.0
+print(convertir(100, "EUR", "JPY", {}))                       # None
 ```
 
 ```javascript
-// Conversión de Monedas
-// Implementa una solución para: Conversión de Monedas
-
-function resolver(entrada) {
-  return entrada;
+function convertir(monto, origen, destino, tasas) {
+  if (origen === destino) return monto;
+  const grafo = {};
+  for (const [par, tasa] of Object.entries(tasas)) {
+    const [de, a] = par.split("_");
+    if (!grafo[de]) grafo[de] = {};
+    if (!grafo[a]) grafo[a] = {};
+    grafo[de][a] = tasa;
+    grafo[a][de] = 1 / tasa;
+  }
+  const cola = [[origen, 1]];
+  const visitado = new Set([origen]);
+  while (cola.length) {
+    const [nodo, tasaAcum] = cola.shift();
+    if (nodo === destino) return Math.round(monto * tasaAcum * 100) / 100;
+    for (const [vecino, t] of Object.entries(grafo[nodo] || {})) {
+      if (!visitado.has(vecino)) {
+        visitado.add(vecino);
+        cola.push([vecino, tasaAcum * t]);
+      }
+    }
+  }
+  return null;
 }
-
-console.log(resolver('ejemplo'));
-
+console.log(convertir(100, "EUR", "USD", {"EUR_USD": 1.08}));  // 108
+console.log(convertir(100, "EUR", "GBP", {"EUR_USD":1.08,"USD_GBP":0.79})); // 85.32
+console.log(convertir(100, "EUR", "JPY", {}));  // null
 ```
 
 ```java
-// Conversión de Monedas
-// Implementa una solución para: Conversión de Monedas
+import java.util.*;
 
-public class Reto {
-    public static String resolver(String entrada) {
-        return entrada;
+public class ConversionMonedas {
+    public static Double convertir(double monto, String origen, String destino, Map<String,Double> tasas) {
+        if (origen.equals(destino)) return monto;
+        Map<String, Map<String,Double>> grafo = new HashMap<>();
+        for (var entry : tasas.entrySet()) {
+            String[] partes = entry.getKey().split("_");
+            grafo.computeIfAbsent(partes[0], k -> new HashMap<>()).put(partes[1], entry.getValue());
+            grafo.computeIfAbsent(partes[1], k -> new HashMap<>()).put(partes[0], 1 / entry.getValue());
+        }
+        Queue<Object[]> cola = new LinkedList<>();
+        cola.add(new Object[]{origen, 1.0});
+        Set<String> visitado = new HashSet<>(Set.of(origen));
+        while (!cola.isEmpty()) {
+            var actual = cola.poll();
+            String nodo = (String) actual[0];
+            double tasaAcum = (double) actual[1];
+            if (nodo.equals(destino)) return Math.round(monto * tasaAcum * 100.0) / 100.0;
+            for (var vecino : grafo.getOrDefault(nodo, Map.of()).entrySet()) {
+                if (!visitado.contains(vecino.getKey())) {
+                    visitado.add(vecino.getKey());
+                    cola.add(new Object[]{vecino.getKey(), tasaAcum * vecino.getValue()});
+                }
+            }
+        }
+        return null;
     }
 
     public static void main(String[] args) {
-        System.out.println(resolver("ejemplo"));
+        System.out.println(convertir(100, "EUR", "USD", Map.of("EUR_USD", 1.08))); // 108.0
+        System.out.println(convertir(100, "EUR", "GBP", Map.of("EUR_USD", 1.08, "USD_GBP", 0.79))); // 85.32
     }
 }
-
 ```
 
 ```typescript
-// Conversión de Monedas
-// Implementa una solución para: Conversión de Monedas
-
-function resolver<T>(entrada: T): T {
-  return entrada;
+function convertir(monto: number, origen: string, destino: string, tasas: Record<string, number>): number | null {
+  if (origen === destino) return monto;
+  const grafo: Record<string, Record<string, number>> = {};
+  for (const [par, tasa] of Object.entries(tasas)) {
+    const [de, a] = par.split("_");
+    if (!grafo[de]) grafo[de] = {};
+    if (!grafo[a]) grafo[a] = {};
+    grafo[de][a] = tasa;
+    grafo[a][de] = 1 / tasa;
+  }
+  const cola: [string, number][] = [[origen, 1]];
+  const visitado = new Set([origen]);
+  while (cola.length) {
+    const [nodo, tasaAcum] = cola.shift()!;
+    if (nodo === destino) return Math.round(monto * tasaAcum * 100) / 100;
+    for (const [vecino, t] of Object.entries(grafo[nodo] || {})) {
+      if (!visitado.has(vecino)) {
+        visitado.add(vecino);
+        cola.push([vecino, tasaAcum * t]);
+      }
+    }
+  }
+  return null;
 }
-
-console.log(resolver('ejemplo'));
-
+console.log(convertir(100, "EUR", "USD", {"EUR_USD": 1.08}));  // 108
+console.log(convertir(100, "EUR", "GBP", {"EUR_USD":1.08,"USD_GBP":0.79})); // 85.32
+console.log(convertir(100, "EUR", "JPY", {}));  // null
 ```
 
 </CodeTabs>
@@ -212,4 +211,3 @@ console.log(resolver('ejemplo'));
 
 - [RETO: Reto Inicial 18: Precio con IVA](/retos/reto-inicial-18-precio-con-iva/)
 - [RETO: Reto Inicial 19: Descuento Simple](/retos/reto-inicial-19-descuento-simple/)
-

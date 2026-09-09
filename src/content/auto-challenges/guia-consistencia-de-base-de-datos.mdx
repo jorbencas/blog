@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "🏆 RETO: Consistencia de Base de Datos"
-description: "Resuelve el desafío 'Consistencia de Base de Datos'. Implementa una solución completa siguiendo las mejores prácticas de programación."
+description: "Valida la integridad referencial de una base de datos: verifica que todas las foreign keys apunten a registros existentes en la tabla padre."
 pubDate: "2026-06-28"
 tags: ["retos", "avanzado", "multilenguaje"]
 slug: "reto-consistencia-de-base-de-datos"
@@ -17,11 +17,25 @@ import CodeTabs from '@components/CodeTabs.svelte';
 # 🎯 Desafío: Consistencia de Base de Datos
 
 ### 📝 Descripción del Reto
-Resuelve el desafío 'Consistencia de Base de Datos'. Implementa una solución completa siguiendo las mejores prácticas de programación.
+Implementa un validador de integridad referencial: dado un conjunto de tablas con registros y definiciones de foreign keys, verifica que cada valor de foreign key en la tabla hija exista como primary key en la tabla padre. Devuelve una lista de registros inconsistentes.
+
+### 📊 Posibles enfoques
+
+| Enfoque | Descripción | Complejidad |
+|---------|-------------|-------------|
+| HashSet de PKs | Construir sets de primary keys padres y verificar cada FK | O(P + H) |
+| Merge sort por ID | Ordenar tablas y hacer merge para detectar inconsistencias | O(n log n) |
+| JOIN relational | Simular un LEFT JOIN y filtrar los NULL | O(P × H) |
+
+### 🌍 Dónde se usa
+- **Migraciones de BD**: verificar integridad antes/después de migrar datos
+- **ETL pipelines**: validar referencias cruzadas entre sistemas
+- **Testing de APIs**: comprobar que CRUD no rompe relaciones
+- **Auditorías de datos**: detectar huérfanos en producción
 
 <Challenge 
   nivel="Avanzado" 
-  mision="Resuelve el desafío 'Consistencia de Base de Datos'. Implementa una solución completa siguiendo las mejores prácticas..." 
+  mision="Valida la integridad referencial verificando que cada foreign key apunte a un registro existente." 
 />
 
 ---
@@ -30,8 +44,10 @@ Resuelve el desafío 'Consistencia de Base de Datos'. Implementa una solución c
 
 | Entrada | Salida esperada |
 |---------|-----------------|
-| ``````````ejemplo_entrada`````````` | ``````````resultado_esperado`````````` |
-| ``````````caso_limite`````````` | ``````````manejo_correcto`````````` |
+| Padres: `[{id:1},{id:2}]`, Hijos: `[{id:1,parent_id:1},{id:2,parent_id:3}]` | `[{id:2,parent_id:3}]` (FK 3 no existe) |
+| Padres: `[{id:1}]`, Hijos: `[{id:1,parent_id:1}]` | `[]` (sin inconsistencias) |
+| Padres: `[]`, Hijos: `[]` | `[]` |
+| Padres: `[{id:1}]`, Hijos: `[{id:1,parent_id:2}]` | `[{id:1,parent_id:2}]` |
 
 ---
 
@@ -42,165 +58,95 @@ Resuelve el desafío 'Consistencia de Base de Datos'. Implementa una solución c
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-**Análisis del problema:** Consistencia de Base de Datos. Identifica la entrada, la salida esperada, y los casos límite. Diseña una estrategia de solución eficiente.
+**Análisis del problema:** Extraer todos los IDs de la tabla padre en un Set. Luego recorrer la tabla hija y verificar que cada `parent_id` exista en el Set. Si no existe, ese registro es inconsistente. **Caso límite:** tablas vacías, FK nula.
 
 ### ⚙️ Paso 2: Implementación
-Implementación
-**Implementación en Swift**
-
-Ahora traducimos el análisis a código. La estructura general de la solución es:
-
-**1. Validación de entrada:**
-Verificamos que los datos recibidos son válidos antes de procesarlos. Si la entrada no es válida, devolvemos un valor por defecto o lanzamos un error.
-
-**2. Procesamiento principal:**
-Aplicamos la lógica central del algoritmo usando las estructuras de datos más adecuadas:
-- Listas/arrays para colecciones ordenadas
-- Diccionarios/hash maps para búsquedas rápidas (O(1))
-- Conjuntos/sets para operaciones de pertenencia
-- Pilas/colas para procesamiento FIFO/LIFO
-
-**3. Generación de salida:**
-Formateamos el resultado según lo esperado por el problema.
-
-**Buenas prácticas en Swift:**
-- Usa nombres de variables descriptivos y significativos
-- Mantén las funciones pequeñas y con una única responsabilidad
-- Sigue las convenciones de estilo del lenguaje (PEP 8, etc.)
-- Comenta las partes no obvias, no cada línea
-- Incluye type hints / anotaciones de tipo cuando sea posible
+1. Construir un `HashSet` con los IDs de la tabla padre.
+2. Filtrar la tabla hija: quedarse solo con registros cuyo `parent_id` NO esté en el Set.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-**Complejidad temporal:** O(n)  
-**Complejidad espacial:** O(n)  
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-**Análisis de complejidad y optimización**
-
-**Complejidad temporal:**
-Evalúa cómo crece el tiempo de ejecución al aumentar el tamaño de la entrada. Para la mayoría de soluciones, una complejidad O(n) es aceptable, donde n es el tamaño de la entrada. Si tu solución es O(n²), considera si se puede optimizar.
-
-**Complejidad espacial:**
-¿Cuánta memoria adicional utiliza tu algoritmo? ¿Creas copias de los datos o trabajas in-place? En general, O(n) adicional es aceptable para la mayoría de aplicaciones.
-
-**Posibles optimizaciones:**
-- ¿Se puede reducir la complejidad con una estructura de datos diferente?
-- ¿Conviene usar iteración en vez de recursión para ahorrar pila de llamadas?
-- ¿Existe alguna función de la librería estándar que ya resuelva parte del problema?
-- ¿Se puede aplicar early exit para evitar trabajo innecesario?
-
-**Aplicaciones en el mundo real:**
-Este patrón de solución aparece frecuentemente en:
-- Procesamiento de datos y pipelines ETL
-- APIs REST y servicios web
-- Análisis de logs y métricas
-- Automatización de tareas y scripting
-- Validación y transformación de datos en sistemas de información
+**Complejidad temporal:** O(P + H) — crear el set es O(P), verificar cada hija es O(H) con búsqueda O(1).
+**Complejidad espacial:** O(P) — para el HashSet de primary keys.
 
 ### 💻 Código de la Solución
 
 <CodeTabs client:load>
 
 ```python
-# Consistencia de Base de Datos
-# Implementa una solución para: Consistencia de Base de Datos
+def validar_integridad(padres, hijos, fk="parent_id"):
+    pk_set = {p["id"] for p in padres}
+    return [h for h in hijos if h.get(fk) not in pk_set]
 
-def resolver(entrada):
-    """
-    Consistencia de Base de Datos
-    """
-    resultado = entrada
-    return resultado
+print(validar_integridad(
+    [{"id": 1}, {"id": 2}],
+    [{"id": 1, "parent_id": 1}, {"id": 2, "parent_id": 3}]
+))
+# [{'id': 2, 'parent_id': 3}]
 
-
-if __name__ == '__main__':
-    print(resolver("ejemplo"))
-
+print(validar_integridad([{"id": 1}], [{"id": 1, "parent_id": 1}]))
+# []
 ```
 
 ```javascript
-// Consistencia de Base de Datos
-// Implementa una solución para: Consistencia de Base de Datos
-
-function resolver(entrada) {
-  return entrada;
+function validarIntegridad(padres, hijos, fk = "parent_id") {
+  const pkSet = new Set(padres.map(p => p.id));
+  return hijos.filter(h => !pkSet.has(h[fk]));
 }
+console.log(validarIntegridad(
+  [{id:1},{id:2}],
+  [{id:1,parent_id:1},{id:2,parent_id:3}]
+));
+// [{id:2,parent_id:3}]
 
-console.log(resolver('ejemplo'));
-
+console.log(validarIntegridad([{id:1}], [{id:1,parent_id:1}]));
+// []
 ```
 
 ```java
-// Consistencia de Base de Datos
-// Implementa una solución para: Consistencia de Base de Datos
+import java.util.*;
+import java.util.stream.*;
 
-public class Reto {
-    public static String resolver(String entrada) {
-        return entrada;
+public class ConsistenciaBD {
+    public static List<Map<String,Object>> validarIntegridad(
+            List<Map<String,Object>> padres,
+            List<Map<String,Object>> hijos,
+            String fk) {
+        Set<Object> pkSet = padres.stream()
+            .map(p -> p.get("id"))
+            .collect(Collectors.toSet());
+        return hijos.stream()
+            .filter(h -> !pkSet.contains(h.get(fk)))
+            .collect(Collectors.toList());
     }
 
     public static void main(String[] args) {
-        System.out.println(resolver("ejemplo"));
+        var padres = List.of(Map.of("id",1), Map.of("id",2));
+        var hijos = List.of(
+            Map.of("id",1,"parent_id",1),
+            Map.of("id",2,"parent_id",3)
+        );
+        System.out.println(validarIntegridad(padres, hijos, "parent_id"));
+        // [{id=2, parent_id=3}]
     }
 }
-
 ```
 
 ```typescript
-// Consistencia de Base de Datos
-// Implementa una solución para: Consistencia de Base de Datos
+interface Record { id: number; [key: string]: any; }
 
-function resolver<T>(entrada: T): T {
-  return entrada;
+function validarIntegridad(padres: Record[], hijos: Record[], fk = "parent_id"): Record[] {
+  const pkSet = new Set(padres.map(p => p.id));
+  return hijos.filter(h => !pkSet.has(h[fk]));
 }
+console.log(validarIntegridad(
+  [{id:1},{id:2}],
+  [{id:1,parent_id:1},{id:2,parent_id:3}]
+));
+// [{id:2,parent_id:3}]
 
-console.log(resolver('ejemplo'));
-
+console.log(validarIntegridad([{id:1}], [{id:1,parent_id:1}]));
+// []
 ```
 
 </CodeTabs>
@@ -212,4 +158,3 @@ console.log(resolver('ejemplo'));
 
 - [RETO: Optimización de Consultas](/retos/reto-optimizacion-de-consultas/)
 - [RETO: Reto Intermedio 12: Procesador de JSON](/retos/reto-intermedio-12-procesador-de-json/)
-

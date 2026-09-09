@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "🏆 RETO: Manejador de Contexto (Files)"
-description: "Resuelve el desafío 'Manejador de Contexto (Files)'. Implementa una solución completa siguiendo las mejores prácticas de programación."
+description: "Implementa un manejador de contexto para archivos que abra, lea, escriba y cierre archivos de forma segura, incluso si ocurren errores."
 pubDate: "2026-06-28"
 tags: ["retos", "intermedio", "multilenguaje"]
 slug: "reto-manejador-de-contexto-files"
@@ -17,11 +17,25 @@ import CodeTabs from '@components/CodeTabs.svelte';
 # 🎯 Desafío: Manejador de Contexto (Files)
 
 ### 📝 Descripción del Reto
-Resuelve el desafío 'Manejador de Contexto (Files)'. Implementa una solución completa siguiendo las mejores prácticas de programación.
+Implementa un manejador de contexto para archivos que garantice la apertura y cierre seguro de archivos. Debe soportar: leer contenido completo, escribir contenido, y asegurar que el archivo se cierre correctamente incluso si ocurre una excepción durante la operación.
+
+### 📊 Posibles enfoques
+
+| Enfoque | Descripción | Complejidad |
+|---------|-------------|-------------|
+| Context Manager (with) | `with open()` en Python, try-finally en otros | O(n) |
+| RAII pattern | Resource Acquisition Is Initialization (C++/Java) | O(n) |
+| Disposable pattern | IDisposable en C#, AutoCloseable en Java | O(n) |
+
+### 🌍 Dónde se usa
+- **ETL pipelines**: lectura/escritura segura de archivos de datos
+- **Logging**: escribir logs sin perder datos por crashes
+- **Configuración**: leer/escribir archivos de config de forma segura
+- **Backup**: copiar archivos con manejo de errores
 
 <Challenge 
   nivel="Intermedio" 
-  mision="Resuelve el desafío 'Manejador de Contexto (Files)'. Implementa una solución completa siguiendo las mejores prácticas..." 
+  mision="Implementa un manejador de contexto para archivos con apertura y cierre seguro." 
 />
 
 ---
@@ -30,8 +44,10 @@ Resuelve el desafío 'Manejador de Contexto (Files)'. Implementa una solución c
 
 | Entrada | Salida esperada |
 |---------|-----------------|
-| ``````````ejemplo_entrada`````````` | ``````````resultado_esperado`````````` |
-| ``````````caso_limite`````````` | ``````````manejo_correcto`````````` |
+| Escribir "hola" en archivo, leerlo | `"hola"` |
+| Leer archivo inexistente | Error controlado (mensaje o null) |
+| Escribir sin cierre previo | El archivo se cierra automáticamente |
+| Archivo vacío | `""` |
 
 ---
 
@@ -42,165 +58,170 @@ Resuelve el desafío 'Manejador de Contexto (Files)'. Implementa una solución c
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-**Análisis del problema:** Manejador de Contexto (Files). Identifica la entrada, la salida esperada, y los casos límite. Diseña una estrategia de solución eficiente.
+**Análisis del problema:** El patrón Context Manager asegura que los recursos (archivos) se liberen correctamente. En Python se usa `with`, en Java try-with-resources, en JS/TS se usa `try/finally`. **Caso límite:** archivo no existe, permisos denegados, disco lleno.
 
 ### ⚙️ Paso 2: Implementación
-Implementación#
-**Implementación en C#**
-
-Ahora traducimos el análisis a código. La estructura general de la solución es:
-
-**1. Validación de entrada:**
-Verificamos que los datos recibidos son válidos antes de procesarlos. Si la entrada no es válida, devolvemos un valor por defecto o lanzamos un error.
-
-**2. Procesamiento principal:**
-Aplicamos la lógica central del algoritmo usando las estructuras de datos más adecuadas:
-- Listas/arrays para colecciones ordenadas
-- Diccionarios/hash maps para búsquedas rápidas (O(1))
-- Conjuntos/sets para operaciones de pertenencia
-- Pilas/colas para procesamiento FIFO/LIFO
-
-**3. Generación de salida:**
-Formateamos el resultado según lo esperado por el problema.
-
-**Buenas prácticas en C#:**
-- Usa nombres de variables descriptivos y significativos
-- Mantén las funciones pequeñas y con una única responsabilidad
-- Sigue las convenciones de estilo del lenguaje (PEP 8, etc.)
-- Comenta las partes no obvias, no cada línea
-- Incluye type hints / anotaciones de tipo cuando sea posible
+1. Definir una clase/método que maneje apertura y cierre.
+2. Implementar leer y escribir como operaciones internas.
+3. Garantizar cierre en el bloque `finally` o equivalente.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-**Complejidad temporal:** O(n)  
-**Complejidad espacial:** O(n)  
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-**Análisis de complejidad y optimización**
-
-**Complejidad temporal:**
-Evalúa cómo crece el tiempo de ejecución al aumentar el tamaño de la entrada. Para la mayoría de soluciones, una complejidad O(n) es aceptable, donde n es el tamaño de la entrada. Si tu solución es O(n²), considera si se puede optimizar.
-
-**Complejidad espacial:**
-¿Cuánta memoria adicional utiliza tu algoritmo? ¿Creas copias de los datos o trabajas in-place? En general, O(n) adicional es aceptable para la mayoría de aplicaciones.
-
-**Posibles optimizaciones:**
-- ¿Se puede reducir la complejidad con una estructura de datos diferente?
-- ¿Conviene usar iteración en vez de recursión para ahorrar pila de llamadas?
-- ¿Existe alguna función de la librería estándar que ya resuelva parte del problema?
-- ¿Se puede aplicar early exit para evitar trabajo innecesario?
-
-**Aplicaciones en el mundo real:**
-Este patrón de solución aparece frecuentemente en:
-- Procesamiento de datos y pipelines ETL
-- APIs REST y servicios web
-- Análisis de logs y métricas
-- Automatización de tareas y scripting
-- Validación y transformación de datos en sistemas de información
+**Complejidad temporal:** O(n) — n es el tamaño del archivo leído/escrito.
+**Complejidad espacial:** O(n) — para el contenido del archivo.
 
 ### 💻 Código de la Solución
 
 <CodeTabs client:load>
 
 ```python
-# Manejador de Contexto (Files)
-# Implementa una solución para: Manejador de Contexto (Files)
+import os
 
-def resolver(entrada):
-    """
-    Manejador de Contexto (Files)
-    """
-    resultado = entrada
-    return resultado
+class ManejadorArchivos:
+    def __init__(self, ruta):
+        self.ruta = ruta
+        self.archivo = None
 
+    def __enter__(self):
+        return self
 
-if __name__ == '__main__':
-    print(resolver("ejemplo"))
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.archivo and not self.archivo.closed:
+            self.archivo.close()
+        return False
 
+    def leer(self):
+        with open(self.ruta, 'r') as f:
+            return f.read()
+
+    def escribir(self, contenido):
+        with open(self.ruta, 'w') as f:
+            f.write(contenido)
+
+# Uso con context manager
+with ManejadorArchivos("test.txt") as m:
+    m.escribir("hola mundo")
+    print(m.leer())  # "hola mundo"
+
+# Lectura segura con manejo de error
+try:
+    with ManejadorArchivos("no_existe.txt") as m:
+        print(m.leer())
+except FileNotFoundError:
+    print("Archivo no encontrado")
 ```
 
 ```javascript
-// Manejador de Contexto (Files)
-// Implementa una solución para: Manejador de Contexto (Files)
+const fs = require('fs').promises;
 
-function resolver(entrada) {
-  return entrada;
+class ManejadorArchivos {
+  constructor(ruta) { this.ruta = ruta; }
+
+  async usar(callback) {
+    try {
+      const resultado = await callback(this);
+      return resultado;
+    } finally {
+      // En JS/TS no hay cierre explícito para promesas de archivo
+      // pero garantizamos limpieza con finally
+    }
+  }
+
+  async leer() {
+    return await fs.readFile(this.ruta, 'utf-8');
+  }
+
+  async escribir(contenido) {
+    await fs.writeFile(this.ruta, contenido, 'utf-8');
+  }
 }
 
-console.log(resolver('ejemplo'));
+// Uso
+async function main() {
+  const m = new ManejadorArchivos("test.txt");
+  await m.escribir("hola mundo");
+  console.log(await m.leer());  // "hola mundo"
 
+  try {
+    const m2 = new ManejadorArchivos("no_existe.txt");
+    console.log(await m2.leer());
+  } catch (e) {
+    console.log("Archivo no encontrado");
+  }
+}
+main();
 ```
 
 ```java
-// Manejador de Contexto (Files)
-// Implementa una solución para: Manejador de Contexto (Files)
+import java.io.*;
+import java.nio.file.*;
 
-public class Reto {
-    public static String resolver(String entrada) {
-        return entrada;
+public class ManejadorArchivos implements AutoCloseable {
+    private String ruta;
+    private BufferedWriter writer;
+
+    public ManejadorArchivos(String ruta) { this.ruta = ruta; }
+
+    public String leer() throws IOException {
+        return Files.readString(Path.of(ruta));
+    }
+
+    public void escribir(String contenido) throws IOException {
+        Files.writeString(Path.of(ruta), contenido);
+    }
+
+    @Override
+    public void close() throws Exception {
+        if (writer != null) writer.close();
     }
 
     public static void main(String[] args) {
-        System.out.println(resolver("ejemplo"));
+        try (ManejadorArchivos m = new ManejadorArchivos("test.txt")) {
+            m.escribir("hola mundo");
+            System.out.println(m.leer());  // hola mundo
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+        }
     }
 }
-
 ```
 
 ```typescript
-// Manejador de Contexto (Files)
-// Implementa una solución para: Manejador de Contexto (Files)
+import * as fs from 'fs/promises';
 
-function resolver<T>(entrada: T): T {
-  return entrada;
+class ManejadorArchivos {
+  constructor(private ruta: string) {}
+
+  async usar<T>(callback: (m: ManejadorArchivos) => Promise<T>): Promise<T> {
+    try {
+      return await callback(this);
+    } finally {
+      // Garantiza limpieza
+    }
+  }
+
+  async leer(): Promise<string> {
+    return await fs.readFile(this.ruta, 'utf-8');
+  }
+
+  async escribir(contenido: string): Promise<void> {
+    await fs.writeFile(this.ruta, contenido, 'utf-8');
+  }
 }
 
-console.log(resolver('ejemplo'));
+async function main() {
+  const m = new ManejadorArchivos("test.txt");
+  await m.escribir("hola mundo");
+  console.log(await m.leer());  // "hola mundo"
 
+  try {
+    const m2 = new ManejadorArchivos("no_existe.txt");
+    console.log(await m2.leer());
+  } catch (e) {
+    console.log("Archivo no encontrado");
+  }
+}
+main();
 ```
 
 </CodeTabs>
@@ -212,4 +233,3 @@ console.log(resolver('ejemplo'));
 
 - [RETO: Consumo de API Mock](/retos/reto-consumo-de-api-mock/)
 - [RETO: Reto Intermedio 12: Procesador de JSON](/retos/reto-intermedio-12-procesador-de-json/)
-

@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "🏆 RETO: Ordenamiento por Burbuja"
-description: "Resuelve el desafío 'Ordenamiento por Burbuja'. Implementa una solución completa siguiendo las mejores prácticas de programación."
+description: "Implementa el algoritmo de ordenamiento por burbuja: ordena un array comparando e intercambiando elementos adyacentes hasta que no haya más intercambios."
 pubDate: "2026-06-28"
 tags: ["retos", "intermedio", "multilenguaje"]
 slug: "reto-ordenamiento-por-burbuja"
@@ -17,11 +17,25 @@ import CodeTabs from '@components/CodeTabs.svelte';
 # 🎯 Desafío: Ordenamiento por Burbuja
 
 ### 📝 Descripción del Reto
-Resuelve el desafío 'Ordenamiento por Burbuja'. Implementa una solución completa siguiendo las mejores prácticas de programación.
+Implementa el algoritmo de ordenamiento por burbuja (Bubble Sort): dado un array de números, ordénalo de menor a mayor comparando e intercambiando elementos adyacentes. Optimiza para detenerse cuando no haya intercambios en una pasada (array ya ordenado).
+
+### 📊 Posibles enfoques
+
+| Enfoque | Descripción | Complejidad |
+|---------|-------------|-------------|
+| Básico | Dos bucles anidados, intercambiar adyacentes | O(n²) |
+| Optimizado | Flag de intercambio, early exit si no hay swaps | O(n²) peor, O(n) mejor |
+| Cocktail sort | Bidireccional (mejora menor) | O(n²) |
+
+### 🌍 Dónde se usa
+- **Educación**: primer algoritmo de ordenación que se enseña
+- **Datos pequeños**: para arrays de <20 elementos es suficiente
+- **Estabilidad**: mantiene el orden relativo de elementos iguales
+- **DEBUGGING**: útil para visualizar cómo funciona un sort
 
 <Challenge 
   nivel="Intermedio" 
-  mision="Resuelve el desafío 'Ordenamiento por Burbuja'. Implementa una solución completa siguiendo las mejores prácticas de..." 
+  mision="Implementa ordenamiento por burbuja con early exit optimizado." 
 />
 
 ---
@@ -30,8 +44,11 @@ Resuelve el desafío 'Ordenamiento por Burbuja'. Implementa una solución comple
 
 | Entrada | Salida esperada |
 |---------|-----------------|
-| ``````````ejemplo_entrada`````````` | ``````````resultado_esperado`````````` |
-| ``````````caso_limite`````````` | ``````````manejo_correcto`````````` |
+| `[64,34,25,12,22,11,90]` | `[11,12,22,25,34,64,90]` |
+| `[5,1,4,2,8]` | `[1,2,4,5,8]` |
+| `[1,2,3,4,5]` | `[1,2,3,4,5]` (ya ordenado) |
+| `[3]` | `[3]` |
+| `[]` | `[]` |
 
 ---
 
@@ -42,165 +59,109 @@ Resuelve el desafío 'Ordenamiento por Burbuja'. Implementa una solución comple
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-**Análisis del problema:** Ordenamiento por Burbuja. Identifica la entrada, la salida esperada, y los casos límite. Diseña una estrategia de solución eficiente.
+**Análisis del problema:** Recorrer el array comparando cada par de elementos adyacentes. Si el primero es mayor que el segundo, intercambiarlos. Repetir hasta que no haya intercambios en una pasada completa (array ordenado). **Caso límite:** array vacío, un solo elemento, ya ordenado.
 
 ### ⚙️ Paso 2: Implementación
-Implementación
-**Implementación en Ruby**
-
-Ahora traducimos el análisis a código. La estructura general de la solución es:
-
-**1. Validación de entrada:**
-Verificamos que los datos recibidos son válidos antes de procesarlos. Si la entrada no es válida, devolvemos un valor por defecto o lanzamos un error.
-
-**2. Procesamiento principal:**
-Aplicamos la lógica central del algoritmo usando las estructuras de datos más adecuadas:
-- Listas/arrays para colecciones ordenadas
-- Diccionarios/hash maps para búsquedas rápidas (O(1))
-- Conjuntos/sets para operaciones de pertenencia
-- Pilas/colas para procesamiento FIFO/LIFO
-
-**3. Generación de salida:**
-Formateamos el resultado según lo esperado por el problema.
-
-**Buenas prácticas en Ruby:**
-- Usa nombres de variables descriptivos y significativos
-- Mantén las funciones pequeñas y con una única responsabilidad
-- Sigue las convenciones de estilo del lenguaje (PEP 8, etc.)
-- Comenta las partes no obvias, no cada línea
-- Incluye type hints / anotaciones de tipo cuando sea posible
+1. Bucle externo: n-1 pasadas máximo.
+2. Bucle interno: comparar arr[j] con arr[j+1].
+3. Flag `swapped`: si no hay intercambio en una pasada, terminar.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-**Complejidad temporal:** O(n)  
-**Complejidad espacial:** O(n)  
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-**Análisis de complejidad y optimización**
-
-**Complejidad temporal:**
-Evalúa cómo crece el tiempo de ejecución al aumentar el tamaño de la entrada. Para la mayoría de soluciones, una complejidad O(n) es aceptable, donde n es el tamaño de la entrada. Si tu solución es O(n²), considera si se puede optimizar.
-
-**Complejidad espacial:**
-¿Cuánta memoria adicional utiliza tu algoritmo? ¿Creas copias de los datos o trabajas in-place? En general, O(n) adicional es aceptable para la mayoría de aplicaciones.
-
-**Posibles optimizaciones:**
-- ¿Se puede reducir la complejidad con una estructura de datos diferente?
-- ¿Conviene usar iteración en vez de recursión para ahorrar pila de llamadas?
-- ¿Existe alguna función de la librería estándar que ya resuelva parte del problema?
-- ¿Se puede aplicar early exit para evitar trabajo innecesario?
-
-**Aplicaciones en el mundo real:**
-Este patrón de solución aparece frecuentemente en:
-- Procesamiento de datos y pipelines ETL
-- APIs REST y servicios web
-- Análisis de logs y métricas
-- Automatización de tareas y scripting
-- Validación y transformación de datos en sistemas de información
+**Complejidad temporal:** O(n²) peor caso, O(n) mejor caso (array ya ordenado).
+**Complejidad espacial:** O(1) — ordena in-place.
 
 ### 💻 Código de la Solución
 
 <CodeTabs client:load>
 
 ```python
-# Ordenamiento por Burbuja
-# Implementa una solución para: Ordenamiento por Burbuja
+def burbuja(arr):
+    n = len(arr)
+    for i in range(n):
+        swapped = False
+        for j in range(0, n - i - 1):
+            if arr[j] > arr[j + 1]:
+                arr[j], arr[j + 1] = arr[j + 1], arr[j]
+                swapped = True
+        if not swapped:
+            break
+    return arr
 
-def resolver(entrada):
-    """
-    Ordenamiento por Burbuja
-    """
-    resultado = entrada
-    return resultado
-
-
-if __name__ == '__main__':
-    print(resolver("ejemplo"))
-
+print(burbuja([64,34,25,12,22,11,90]))  # [11,12,22,25,34,64,90]
+print(burbuja([5,1,4,2,8]))             # [1,2,4,5,8]
+print(burbuja([1,2,3,4,5]))             # [1,2,3,4,5]
+print(burbuja([]))                       # []
 ```
 
 ```javascript
-// Ordenamiento por Burbuja
-// Implementa una solución para: Ordenamiento por Burbuja
-
-function resolver(entrada) {
-  return entrada;
+function burbuja(arr) {
+  const n = arr.length;
+  for (let i = 0; i < n; i++) {
+    let swapped = false;
+    for (let j = 0; j < n - i - 1; j++) {
+      if (arr[j] > arr[j + 1]) {
+        [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+        swapped = true;
+      }
+    }
+    if (!swapped) break;
+  }
+  return arr;
 }
-
-console.log(resolver('ejemplo'));
-
+console.log(burbuja([64,34,25,12,22,11,90])); // [11,12,22,25,34,64,90]
+console.log(burbuja([5,1,4,2,8]));             // [1,2,4,5,8]
+console.log(burbuja([1,2,3,4,5]));             // [1,2,3,4,5]
 ```
 
 ```java
-// Ordenamiento por Burbuja
-// Implementa una solución para: Ordenamiento por Burbuja
+import java.util.Arrays;
 
-public class Reto {
-    public static String resolver(String entrada) {
-        return entrada;
+public class OrdenamientoBurbuja {
+    public static int[] burbuja(int[] arr) {
+        int n = arr.length;
+        for (int i = 0; i < n; i++) {
+            boolean swapped = false;
+            for (int j = 0; j < n - i - 1; j++) {
+                if (arr[j] > arr[j + 1]) {
+                    int temp = arr[j];
+                    arr[j] = arr[j + 1];
+                    arr[j + 1] = temp;
+                    swapped = true;
+                }
+            }
+            if (!swapped) break;
+        }
+        return arr;
     }
 
     public static void main(String[] args) {
-        System.out.println(resolver("ejemplo"));
+        System.out.println(Arrays.toString(burbuja(new int[]{64,34,25,12,22,11,90})));
+        // [11, 12, 22, 25, 34, 64, 90]
+        System.out.println(Arrays.toString(burbuja(new int[]{5,1,4,2,8})));
+        // [1, 2, 4, 5, 8]
     }
 }
-
 ```
 
 ```typescript
-// Ordenamiento por Burbuja
-// Implementa una solución para: Ordenamiento por Burbuja
-
-function resolver<T>(entrada: T): T {
-  return entrada;
+function burbuja(arr: number[]): number[] {
+  const n = arr.length;
+  for (let i = 0; i < n; i++) {
+    let swapped = false;
+    for (let j = 0; j < n - i - 1; j++) {
+      if (arr[j] > arr[j + 1]) {
+        [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+        swapped = true;
+      }
+    }
+    if (!swapped) break;
+  }
+  return arr;
 }
-
-console.log(resolver('ejemplo'));
-
+console.log(burbuja([64,34,25,12,22,11,90])); // [11,12,22,25,34,64,90]
+console.log(burbuja([5,1,4,2,8]));             // [1,2,4,5,8]
+console.log(burbuja([1,2,3,4,5]));             // [1,2,3,4,5]
 ```
 
 </CodeTabs>
@@ -212,4 +173,3 @@ console.log(resolver('ejemplo'));
 
 - [RETO: Motor de Búsqueda Binaria](/retos/reto-motor-de-busqueda-binaria/)
 - [RETO: Fibonacci Recursivo](/retos/reto-fibonacci-recursivo/)
-

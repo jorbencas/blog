@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "🏆 RETO: Buscador de Minas (Lógica)"
-description: "Resuelve el desafío 'Buscador de Minas (Lógica)'. Implementa una solución completa siguiendo las mejores prácticas de programación."
+description: "Implementa la lógica de un buscaminas: dado un tablero con minas, calcula el número de minas adyacentes para cada celda vacía."
 pubDate: "2026-06-28"
 tags: ["retos", "intermedio", "multilenguaje"]
 slug: "reto-buscador-de-minas-logica"
@@ -17,11 +17,25 @@ import CodeTabs from '@components/CodeTabs.svelte';
 # 🎯 Desafío: Buscador de Minas (Lógica)
 
 ### 📝 Descripción del Reto
-Resuelve el desafío 'Buscador de Minas (Lógica)'. Implementa una solución completa siguiendo las mejores prácticas de programación.
+Implementa la lógica de un buscaminas: dado un tablero 2D donde `'M'` representa una mina y `'.'` representa una celda vacía, calcula para cada celda vacía el número de minas adyacentes (horizontal, vertical y diagonal). Devuelve el tablero resultante donde las celtas vacías se reemplazan por el conteo como string.
+
+### 📊 Posibles enfoques
+
+| Enfoque | Descripción | Complejidad |
+|---------|-------------|-------------|
+| Recorrido 8 direcciones | Para cada celda vacía, contar minas en las 8 direcciones vecinas | O(m×n) |
+| Propagación desde minas | Desde cada mina, incrementar contadores en vecinos | O(m×n) |
+| Búsqueda por offsets | Usar array de offsets `[(-1,-1), (-1,0), ...]` para los 8 vecinos | O(m×n) |
+
+### 🌍 Dónde se usa
+- **Juegos**: el clásico Minesweeper de Windows
+- **Simulaciones militares**: detección de zonas peligrosas
+- **Análisis espacial**: mapas de densidad de riesgo en GIS
+- **Robótica**: navegación con obstáculos en grids
 
 <Challenge 
   nivel="Intermedio" 
-  mision="Resuelve el desafío 'Buscador de Minas (Lógica)'. Implementa una solución completa siguiendo las mejores prácticas de..." 
+  mision="Implementa la lógica de un buscaminas calculando minas adyacentes para cada celda." 
 />
 
 ---
@@ -30,8 +44,11 @@ Resuelve el desafío 'Buscador de Minas (Lógica)'. Implementa una solución com
 
 | Entrada | Salida esperada |
 |---------|-----------------|
-| ``````````ejemplo_entrada`````````` | ``````````resultado_esperado`````````` |
-| ``````````caso_limite`````````` | ``````````manejo_correcto`````````` |
+| `[['M','.','.'],['.','.','.'],['.','.','M']]` | `[['M','1','1'],['1','2','1'],['1','1','M']]` |
+| `[['M','M'],['M','M']]` | `[['M','M'],['M','M']]` |
+| `[['.','.','.'],['.','.','.'],['.','.','.']]` | `[['0','0','0'],['0','0','0'],['0','0','0']]` |
+| `[['M']]` | `[['M']]` |
+| `[['.','M'],['M','.']]` | `[['2','M'],['M','2']]` |
 
 ---
 
@@ -42,142 +59,133 @@ Resuelve el desafío 'Buscador de Minas (Lógica)'. Implementa una solución com
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-**Análisis del problema:** Buscador de Minas (Lógica). Identifica la entrada, la salida esperada, y los casos límite. Diseña una estrategia de solución eficiente.
+**Análisis del problema:** Recorrer cada celda del tablero. Si es mina (`'M'`), dejarla igual. Si es vacía (`'.'`), contar cuántas minas hay en las 8 celdas vecinas (arriba, abajo, izquierda, derecha y 4 diagonales). **Caso límite:** tablero 1×1, bordes del tablero (no acceder fuera de límites).
 
 ### ⚙️ Paso 2: Implementación
-**Implementación:** Traduce el análisis a código. Sigue la estructura definida en el análisis y maneja correctamente los casos límite.
+Usar un array de offsets para las 8 direcciones. Para cada celda vacía, iterar los offsets y contar vecinos que sean `'M'`. Reemplazar `'.'` por el conteo como string.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-**Complejidad temporal:** O(n)  
-**Complejidad espacial:** O(n)  
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-**Análisis de complejidad y optimización**
-
-**Complejidad temporal:**
-Evalúa cómo crece el tiempo de ejecución al aumentar el tamaño de la entrada. Para la mayoría de soluciones, una complejidad O(n) es aceptable, donde n es el tamaño de la entrada. Si tu solución es O(n²), considera si se puede optimizar.
-
-**Complejidad espacial:**
-¿Cuánta memoria adicional utiliza tu algoritmo? ¿Creas copias de los datos o trabajas in-place? En general, O(n) adicional es aceptable para la mayoría de aplicaciones.
-
-**Posibles optimizaciones:**
-- ¿Se puede reducir la complejidad con una estructura de datos diferente?
-- ¿Conviene usar iteración en vez de recursión para ahorrar pila de llamadas?
-- ¿Existe alguna función de la librería estándar que ya resuelva parte del problema?
-- ¿Se puede aplicar early exit para evitar trabajo innecesario?
-
-**Aplicaciones en el mundo real:**
-Este patrón de solución aparece frecuentemente en:
-- Procesamiento de datos y pipelines ETL
-- APIs REST y servicios web
-- Análisis de logs y métricas
-- Automatización de tareas y scripting
-- Validación y transformación de datos en sistemas de información
+**Complejidad temporal:** O(m×n) — se recorre cada celda y se miran 8 vecinos constantes.
+**Complejidad espacial:** O(m×n) — para el tablero resultante.
 
 ### 💻 Código de la Solución
 
 <CodeTabs client:load>
 
 ```python
-# Buscador de Minas (Lógica)
-# Implementa una solución para: Buscador de Minas (Lógica)
+def buscar_minas(tablero):
+    filas = len(tablero)
+    cols = len(tablero[0])
+    resultado = [fila[:] for fila in tablero]
+    offsets = [(-1,-1),(-1,0),(-1,1),(0,-1),(0,1),(1,-1),(1,0),(1,1)]
 
-def resolver(entrada):
-    """
-    Buscador de Minas (Lógica)
-    """
-    resultado = entrada
+    for i in range(filas):
+        for j in range(cols):
+            if tablero[i][j] == '.':
+                count = 0
+                for di, dj in offsets:
+                    ni, nj = i + di, j + dj
+                    if 0 <= ni < filas and 0 <= nj < cols and tablero[ni][nj] == 'M':
+                        count += 1
+                resultado[i][j] = str(count)
     return resultado
 
-
-if __name__ == '__main__':
-    print(resolver("ejemplo"))
-
+print(buscar_minas([['M','.','.'],['.','.','.'],['.','.','M']]))
+# [['M','1','1'],['1','2','1'],['1','1','M']]
+print(buscar_minas([['M','M'],['M','M']]))
+# [['M','M'],['M','M']]
+print(buscar_minas([['.','M'],['M','.']]))
+# [['2','M'],['M','2']]
 ```
 
 ```javascript
-// Buscador de Minas (Lógica)
-// Implementa una solución para: Buscador de Minas (Lógica)
+function buscarMinas(tablero) {
+  const filas = tablero.length;
+  const cols = tablero[0].length;
+  const resultado = tablero.map(f => [...f]);
+  const offsets = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
 
-function resolver(entrada) {
-  return entrada;
+  for (let i = 0; i < filas; i++) {
+    for (let j = 0; j < cols; j++) {
+      if (tablero[i][j] === '.') {
+        let count = 0;
+        for (const [di, dj] of offsets) {
+          const ni = i + di, nj = j + dj;
+          if (ni >= 0 && ni < filas && nj >= 0 && nj < cols && tablero[ni][nj] === 'M') count++;
+        }
+        resultado[i][j] = String(count);
+      }
+    }
+  }
+  return resultado;
 }
-
-console.log(resolver('ejemplo'));
-
+console.log(buscarMinas([['M','.','.'],['.','.','.'],['.','.','M']]));
+// [['M','1','1'],['1','2','1'],['1','1','M']]
+console.log(buscarMinas([['.','M'],['M','.']]));
+// [['2','M'],['M','2']]
 ```
 
 ```java
-// Buscador de Minas (Lógica)
-// Implementa una solución para: Buscador de Minas (Lógica)
+public class BuscadorMinas {
+    public static String[][] buscarMinas(char[][] tablero) {
+        int filas = tablero.length, cols = tablero[0].length;
+        String[][] resultado = new String[filas][cols];
+        int[][] offsets = {{-1,-1},{-1,0},{-1,1},{0,-1},{0,1},{1,-1},{1,0},{1,1}};
 
-public class Reto {
-    public static String resolver(String entrada) {
-        return entrada;
+        for (int i = 0; i < filas; i++) {
+            for (int j = 0; j < cols; j++) {
+                if (tablero[i][j] == 'M') {
+                    resultado[i][j] = "M";
+                } else {
+                    int count = 0;
+                    for (int[] off : offsets) {
+                        int ni = i + off[0], nj = j + off[1];
+                        if (ni >= 0 && ni < filas && nj >= 0 && nj < cols && tablero[ni][nj] == 'M') count++;
+                    }
+                    resultado[i][j] = String.valueOf(count);
+                }
+            }
+        }
+        return resultado;
     }
 
     public static void main(String[] args) {
-        System.out.println(resolver("ejemplo"));
+        char[][] tablero = {{'M','.','.'},{'.','.','.'},{'.','.','M'}};
+        String[][] res = buscarMinas(tablero);
+        for (String[] row : res) System.out.println(java.util.Arrays.toString(row));
+        // [M, 1, 1]
+        // [1, 2, 1]
+        // [1, 1, M]
     }
 }
-
 ```
 
 ```typescript
-// Buscador de Minas (Lógica)
-// Implementa una solución para: Buscador de Minas (Lógica)
+function buscarMinas(tablero: string[][]): string[][] {
+  const filas = tablero.length;
+  const cols = tablero[0].length;
+  const resultado = tablero.map(f => [...f]);
+  const offsets = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
 
-function resolver<T>(entrada: T): T {
-  return entrada;
+  for (let i = 0; i < filas; i++) {
+    for (let j = 0; j < cols; j++) {
+      if (tablero[i][j] === '.') {
+        let count = 0;
+        for (const [di, dj] of offsets) {
+          const ni = i + di, nj = j + dj;
+          if (ni >= 0 && ni < filas && nj >= 0 && nj < cols && tablero[ni][nj] === 'M') count++;
+        }
+        resultado[i][j] = String(count);
+      }
+    }
+  }
+  return resultado;
 }
-
-console.log(resolver('ejemplo'));
-
+console.log(buscarMinas([['M','.','.'],['.','.','.'],['.','.','M']]));
+// [['M','1','1'],['1','2','1'],['1','1','M']]
+console.log(buscarMinas([['.','M'],['M','.']]));
+// [['2','M'],['M','2']]
 ```
 
 </CodeTabs>
@@ -189,4 +197,3 @@ console.log(resolver('ejemplo'));
 
 - [RETO: Juego de Adivinar Número](/retos/reto-juego-de-adivinar-numero/)
 - [RETO: Reto Intermedio 15: Juego de Palabras (Anagramas)](/retos/reto-intermedio-15-juego-de-palabras-anagramas/)
-
