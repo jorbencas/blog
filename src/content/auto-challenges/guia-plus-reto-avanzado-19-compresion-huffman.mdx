@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "🏆 RETO: Reto Avanzado 19: Compresión Huffman"
-description: "Implementa el algoritmo de compresión de Huffman: construye un árbol de frecuencias, asigna códigos binarios y comprime/descomprime texto."
+description: "Implementa el algoritmo de compresión de Huffman: construye un árbol de frecuencias desde el texto, asigna códigos binarios variables (más cortos para caracteres frecuentes) y comprime/descomprime."
 pubDate: "2026-06-28"
 tags: ["retos", "avanzado", "multilenguaje"]
 slug: "reto-avanzado-19-compresion-huffman"
@@ -17,11 +17,34 @@ import CodeTabs from '@components/CodeTabs.svelte';
 # 🎯 Desafío: Reto Avanzado 19: Compresión Huffman
 
 ### 📝 Descripción del Reto
-Implementa el algoritmo de compresión de Huffman: construye un árbol de frecuencias, asigna códigos binarios y comprime/descomprime texto.
+Implementa el algoritmo de compresión de Huffman:
+1. **Contar frecuencias**: analizar el texto y contar apariciones de cada carácter
+2. **Construir árbol**: crear un árbol binario donde las hojas son caracteres y los nodos internos son frecuencias combinadas
+3. **Asignar códigos**: recorrer el árbol (izquierda=0, derecha=1) para generar códigos binarios
+4. **Comprimir**: reemplazar cada carácter por su código Huffman
+5. **Descomprimir**: recorrer el árbol desde la raíz con los bits para reconstruir el texto
+
+**¿Por qué importa?** Huffman es la base de compresión en ZIP, gzip, JPEG y MP3. Asigna códigos más cortos a caracteres más frecuentes, logrando compresión sin pérdida.
+
+**Habilidades que practica:** Árboles binarios, colas de prioridad (heap), codificación, compresión.
+
+### 📊 Posibles enfoques
+
+| Enfoque | Descripción | Complejidad Temporal | Complejidad Espacial |
+|---------|-------------|---------------------|---------------------|
+| Heap + merging | Heap de nodos, fusionar los dos menores | O(n log n) | O(n) |
+| Frecuencias + greedy | Construir árbol greedymente | O(n log n) | O(n) |
+| Diccionario de códigos | Generar tabla de códigos desde el árbol | O(n) compresión | O(n) |
+
+### 🌍 Dónde se usa
+1. **ZIP/gzip**: compresión de archivos usa Huffman como paso intermedio
+2. **JPEG**: códec de imagen usa Huffman para codificar datos transformados
+3. **MP3**: compresión de audio con tablas Huffman
+4. **Transmisión**: optimizar ancho de banda enviando datos comprimidos
 
 <Challenge 
   nivel="Avanzado" 
-  mision="Implementa el algoritmo de compresión de Huffman: construye un árbol de frecuencias, asigna códigos binarios y..." 
+  mision="Implementa el algoritmo de compresión de Huffman: construye un árbol de frecuencias, asigna códigos binarios y comprime/descomprime texto." 
 />
 
 ---
@@ -30,10 +53,11 @@ Implementa el algoritmo de compresión de Huffman: construye un árbol de frecue
 
 | Entrada | Salida esperada |
 |---------|-----------------|
-| `'aaabbc'` | `comprimido` |
-| `'aaaa'` | `comprimido` |
+| `'aaabbc'` | `comprimido: '000111110', descomprimido: 'aaabbc'` |
+| `'aaaa'` | `comprimido: '0000'` |
 | `''` | `''` |
 | `'a'` | `codigo='0'` |
+| `'abcdef'` | `comprimido (códigos iguales)` |
 
 ---
 
@@ -44,17 +68,15 @@ Implementa el algoritmo de compresión de Huffman: construye un árbol de frecue
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-**Análisis del problema:** Huffman asigna códigos más cortos a caracteres más frecuentes. Se construye un árbol binario donde las hojas son caracteres con su frecuencia, y los caminos izquierda=0, derecha=1 forman el código. **Ejemplo concreto:** 'aaabbc' → frecuencias: a:3, b:2, c:1 → árbol con a='0', b='11', c='10' → comprimido: '000111110'. **Edge cases:** texto con un solo carácter repetido, caracteres con misma frecuencia, texto vacío, Unicode.
+**Análisis del problema:** Huffman asigna códigos más cortos a caracteres más frecuentes. Se construye un árbol binario donde las hojas son caracteres con su frecuencia, y los caminos izquierda=0, derecha=1 forman el código. **Ejemplo concreto:** 'aaabbc' → frecuencias: a:3, b:2, c:1 → árbol con a='0', b='11', c='10' → comprimido: '000111110'. **Edge cases:** texto con un solo carácter, caracteres con misma frecuencia, texto vacío.
 
 ### ⚙️ Paso 2: Implementación
-**Implementación:** 1) Contar frecuencias. 2) Construir cola de prioridad con nodos. 3) Fusionar los dos de menor frecuencia hasta que quede uno (el árbol). 4) Recorrer el árbol generando códigos. 5) Codificar el texto original con los códigos. 6) Decodificar recorriendo el árbol.
+**Implementación:** 1) Contar frecuencias con Counter/diccionario. 2) Construir cola de prioridad con nodos. 3) Fusionar los dos de menor frecuencia hasta que quede uno (el árbol). 4) Recorrer el árbol generando códigos. 5) Codificar el texto. 6) Decodificar recorriendo el árbol.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-**Complejidad temporal:** O(n log n)  
+**Complejidad temporal:** O(n log n) para construir el árbol  
 **Complejidad espacial:** O(n)  
-
-**Complejidad:** O(n log n) para construir el árbol (usando heap). O(n) para codificar/decodificar. **Aplicaciones:** compresión de archivos (ZIP, gzip), códecs de imagen (JPEG), transmisión de datos.
 
 ### 💻 Código de la Solución
 
@@ -62,56 +84,192 @@ Implementa el algoritmo de compresión de Huffman: construye un árbol de frecue
 
 ```python
 import heapq
-def sol(txt):
- from collections import Counter
- f = Counter(txt); pq = [[v, [k, '']] for k,v in f.items()]
- heapq.heapify(pq)
- while len(pq) > 1:
-  lo = heapq.heappop(pq); hi = heapq.heappop(pq)
-  for p in lo[1:]: p[1] = '0' + p[1]
-  for p in hi[1:]: p[1] = '1' + p[1]
-  heapq.heappush(pq, [lo[0] + hi[0]] + lo[1:] + hi[1:])
- return sorted(heapq.heappop(pq)[1:], key=lambda p: (len(p[-1]), p))
+from collections import Counter
+
+class NodoHuffman:
+    def __init__(self, char, freq):
+        self.char = char
+        self.freq = freq
+        self.izq = None
+        self.der = None
+    def __lt__(self, other):
+        return self.freq < other.freq
+
+def comprimir_huffman(texto):
+    if not texto:
+        return "", {}
+    freq = Counter(texto)
+    pq = [NodoHuffman(c, f) for c, f in freq.items()]
+    heapq.heapify(pq)
+    while len(pq) > 1:
+        izq = heapq.heappop(pq)
+        der = heapq.heappop(pq)
+        nodo = NodoHuffman(None, izq.freq + der.freq)
+        nodo.izq = izq
+        nodo.der = der
+        heapq.heappush(pq, nodo)
+    raiz = pq[0]
+    codigos = {}
+    def _generar(nodo, codigo=""):
+        if nodo is None: return
+        if nodo.char is not None:
+            codigos[nodo.char] = codigo or "0"
+            return
+        _generar(nodo.izq, codigo + "0")
+        _generar(nodo.der, codigo + "1")
+    _generar(raiz)
+    comprimido = "".join(codigos[c] for c in texto)
+    return comprimido, codigos
+
+def descomprimir_huffman(comprimido, codigos):
+    if not comprimido:
+        return ""
+    invertido = {v: k for k, v in codigos.items()}
+    resultado = []
+    actual = ""
+    for bit in comprimido:
+        actual += bit
+        if actual in invertido:
+            resultado.append(invertido[actual])
+            actual = ""
+    return "".join(resultado)
 ```
 
 ```javascript
-// Reto Avanzado 19: Compresión Huffman
-// Implementa una solución para: Reto Avanzado 19: Compresión Huffman
-
-function resolver(entrada) {
-  return entrada;
+class NodoHuffman {
+  constructor(char, freq) {
+    this.char = char;
+    this.freq = freq;
+    this.izq = null;
+    this.der = null;
+  }
 }
 
-console.log(resolver('ejemplo'));
+function comprimirHuffman(texto) {
+  if (!texto) return { comprimido: "", codigos: {} };
+  const freq = {};
+  for (const c of texto) freq[c] = (freq[c] || 0) + 1;
+  let pq = Object.entries(freq).map(([c, f]) => new NodoHuffman(c, f));
+  pq.sort((a, b) => a.freq - b.freq);
+  while (pq.length > 1) {
+    const izq = pq.shift();
+    const der = pq.shift();
+    const nodo = new NodoHuffman(null, izq.freq + der.freq);
+    nodo.izq = izq;
+    nodo.der = der;
+    pq.push(nodo);
+    pq.sort((a, b) => a.freq - b.freq);
+  }
+  const codigos = {};
+  function generar(nodo, codigo = "") {
+    if (!nodo) return;
+    if (nodo.char !== null) { codigos[nodo.char] = codigo || "0"; return; }
+    generar(nodo.izq, codigo + "0");
+    generar(nodo.der, codigo + "1");
+  }
+  generar(pq[0]);
+  const comprimido = texto.split("").map(c => codigos[c]).join("");
+  return { comprimido, codigos };
+}
 
+function descomprimirHuffman(comprimido, codigos) {
+  if (!comprimido) return "";
+  const invertido = {};
+  for (const [k, v] of Object.entries(codigos)) invertido[v] = k;
+  let resultado = "", actual = "";
+  for (const bit of comprimido) {
+    actual += bit;
+    if (invertido[actual]) { resultado += invertido[actual]; actual = ""; }
+  }
+  return resultado;
+}
 ```
 
 ```java
-// Reto Avanzado 19: Compresión Huffman
-// Implementa una solución para: Reto Avanzado 19: Compresión Huffman
+import java.util.*;
 
-public class Reto {
-    public static String resolver(String entrada) {
-        return entrada;
+public class Huffman {
+    static class Nodo implements Comparable<Nodo> {
+        Character car; Integer freq;
+        Nodo izq, der;
+        Nodo(Character c, Integer f) { car = c; freq = f; }
+        public int compareTo(Nodo o) { return this.freq - o.freq; }
     }
 
-    public static void main(String[] args) {
-        System.out.println(resolver("ejemplo"));
+    public static Map<Character, String> comprimir(String texto) {
+        Map<Character, Integer> freq = new HashMap<>();
+        for (char c : texto.toCharArray()) freq.merge(c, 1, Integer::sum);
+        PriorityQueue<Nodo> pq = new PriorityQueue<>();
+        for (var e : freq.entrySet()) pq.add(new Nodo(e.getKey(), e.getValue()));
+        while (pq.size() > 1) {
+            Nodo izq = pq.poll(), der = pq.poll();
+            Nodo nodo = new Nodo(null, izq.freq + der.freq);
+            nodo.izq = izq; nodo.der = der;
+            pq.add(nodo);
+        }
+        Map<Character, String> codigos = new HashMap<>();
+        generarCodigos(pq.peek(), "", codigos);
+        return codigos;
+    }
+
+    private static void generarCodigos(Nodo nodo, String codigo, Map<Character, String> codigos) {
+        if (nodo == null) return;
+        if (nodo.car != null) { codigos.put(nodo.car, codigo.isEmpty() ? "0" : codigo); return; }
+        generarCodigos(nodo.izq, codigo + "0", codigos);
+        generarCodigos(nodo.der, codigo + "1", codigos);
     }
 }
-
 ```
 
 ```typescript
-// Reto Avanzado 19: Compresión Huffman
-// Implementa una solución para: Reto Avanzado 19: Compresión Huffman
-
-function resolver<T>(entrada: T): T {
-  return entrada;
+class NodoHuffman {
+  char: string | null;
+  freq: number;
+  izq: NodoHuffman | null = null;
+  der: NodoHuffman | null = null;
+  constructor(char: string | null, freq: number) {
+    this.char = char;
+    this.freq = freq;
+  }
 }
 
-console.log(resolver('ejemplo'));
+function comprimirHuffman(texto: string): { comprimido: string; codigos: Record<string, string> } {
+  if (!texto) return { comprimido: "", codigos: {} };
+  const freq: Record<string, number> = {};
+  for (const c of texto) freq[c] = (freq[c] || 0) + 1;
+  let pq = Object.entries(freq).map(([c, f]) => new NodoHuffman(c, f));
+  pq.sort((a, b) => a.freq - b.freq);
+  while (pq.length > 1) {
+    const izq = pq.shift()!;
+    const der = pq.shift()!;
+    const nodo = new NodoHuffman(null, izq.freq + der.freq);
+    nodo.izq = izq; nodo.der = der;
+    pq.push(nodo);
+    pq.sort((a, b) => a.freq - b.freq);
+  }
+  const codigos: Record<string, string> = {};
+  function generar(nodo: NodoHuffman | null, codigo: string = ""): void {
+    if (!nodo) return;
+    if (nodo.char !== null) { codigos[nodo.char] = codigo || "0"; return; }
+    generar(nodo.izq, codigo + "0");
+    generar(nodo.der, codigo + "1");
+  }
+  generar(pq[0]);
+  const comprimido = texto.split("").map(c => codigos[c]).join("");
+  return { comprimido, codigos };
+}
 
+function descomprimirHuffman(comprimido: string, codigos: Record<string, string>): string {
+  if (!comprimido) return "";
+  const invertido: Record<string, string> = {};
+  for (const [k, v] of Object.entries(codigos)) invertido[v] = k;
+  let resultado = "", actual = "";
+  for (const bit of comprimido) {
+    actual += bit;
+    if (invertido[actual]) { resultado += invertido[actual]; actual = ""; }
+  }
+  return resultado;
+}
 ```
 
 </CodeTabs>
@@ -123,4 +281,3 @@ console.log(resolver('ejemplo'));
 
 - [RETO: Compresor de Cadenas (RLE)](/retos/reto-compresor-de-cadenas-rle/)
 - [RETO: Reto Avanzado 20: Diff de Archivos (Levenshtein)](/retos/reto-avanzado-20-diff-de-archivos-levenshtein/)
-

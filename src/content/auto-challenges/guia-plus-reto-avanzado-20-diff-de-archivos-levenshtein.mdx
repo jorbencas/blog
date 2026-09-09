@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "🏆 RETO: Reto Avanzado 20: Diff de Archivos (Levenshtein)"
-description: "Calcula la distancia de Levenshtein (edit distance) entre dos cadenas: mínimo número de inserciones, eliminaciones y sustituciones para transformar una en otra."
+description: "Calcula la distancia de Levenshtein (edit distance) entre dos cadenas: el número mínimo de inserciones, eliminaciones y sustituciones para transformar una cadena en otra."
 pubDate: "2026-06-28"
 tags: ["retos", "avanzado", "multilenguaje"]
 slug: "reto-avanzado-20-diff-de-archivos-levenshtein"
@@ -17,11 +17,34 @@ import CodeTabs from '@components/CodeTabs.svelte';
 # 🎯 Desafío: Reto Avanzado 20: Diff de Archivos (Levenshtein)
 
 ### 📝 Descripción del Reto
-Calcula la distancia de Levenshtein (edit distance) entre dos cadenas: mínimo número de inserciones, eliminaciones y sustituciones para transformar una en otra.
+Calcula la **distancia de Levenshtein** entre dos cadenas: el número mínimo de operaciones (inserción, eliminación, sustitución) necesarias para transformar una cadena en otra.
+
+Se usa programación dinámica con una matriz de (m+1)×(n+1):
+- `dp[i][j]` = costo mínimo para transformar los primeros i caracteres de s1 en los primeros j de s2
+- Si s1[i]==s2[j]: `dp[i][j] = dp[i-1][j-1]` (no cuesta nada)
+- Si no: `dp[i][j] = 1 + min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1])`
+
+**¿Por qué importa?** Levenshtein se usa en correctores ortográficos (autocorrect), detección de plagio, alineamiento de secuencias de ADN, sistemas de control de versiones (git diff), y deduplicación de datos.
+
+**Habilidades que practica:** Programación dinámica, matrices 2D, optimización de espacio.
+
+### 📊 Posibles enfoques
+
+| Enfoque | Descripción | Complejidad Temporal | Complejidad Espacial |
+|---------|-------------|---------------------|---------------------|
+| DP matriz completa | Matriz (m+1)×(n+1) con todos los valores | O(m×n) | O(m×n) |
+| DP dos filas | Solo guardar fila actual y anterior | O(m×n) | O(min(m,n)) |
+| Recursión + memo | Top-down con memoización | O(m×n) | O(m×n) |
+
+### 🌍 Dónde se usa
+1. **Correctores ortográficos**: medir similitud entre palabras (autocorrect, autocomplete)
+2. **Git diff**: comparar versiones de archivos y mostrar cambios
+3. **Bioinformática**: alinear secuencias de ADN/proteínas
+4. **Deduplicación**: encontrar registros duplicados con nombres similares
 
 <Challenge 
   nivel="Avanzado" 
-  mision="Calcula la distancia de Levenshtein (edit distance) entre dos cadenas: mínimo número de inserciones, eliminaciones y..." 
+  mision="Calcula la distancia de Levenshtein (edit distance) entre dos cadenas: mínimo número de inserciones, eliminaciones y sustituciones para transformar una en otra." 
 />
 
 ---
@@ -35,6 +58,7 @@ Calcula la distancia de Levenshtein (edit distance) entre dos cadenas: mínimo n
 | `'hola', 'hola'` | `0` |
 | `'abc', ''` | `3` |
 | `'gato', 'pato'` | `1` |
+| `'kitten', 'sitting'` | `3` |
 
 ---
 
@@ -45,73 +69,94 @@ Calcula la distancia de Levenshtein (edit distance) entre dos cadenas: mínimo n
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-**Análisis del problema:** Se usa programación dinámica con una matriz de (m+1)×(n+1). Cada celda dp[i][j] representa el costo mínimo para transformar los primeros i caracteres de s1 en los primeros j de s2. **Ejemplo concreto:** 'casa' → 'calle' = 3 (c→c:0, a→a:0, s→l:1, a→l:1, e:1). **Edge cases:** cadenas vacías, una cadena vacía (distancia = longitud de la otra), cadenas iguales (distancia 0), cadenas de longitudes muy diferentes.
+**Análisis del problema:** Se usa programación dinámica con una matriz de (m+1)×(n+1). Cada celda dp[i][j] representa el costo mínimo para transformar los primeros i caracteres de s1 en los primeros j de s2. **Ejemplo concreto:** 'casa' → 'calle' = 3 (s→l:1, a→l:1, e:1). **Edge cases:** cadenas vacías (distancia = longitud de la otra), cadenas iguales (distancia 0).
 
 ### ⚙️ Paso 2: Implementación
-**Implementación:** Matriz dp con dimensiones len(s1)+1 × len(s2)+1. Inicializar primera fila y columna con índices. Para cada celda: si s1[i]==s2[j], dp[i][j]=dp[i-1][j-1]; si no, 1+min(insertar, eliminar, sustituir). Devolver dp[m][n]. Optimización: solo dos filas en vez de la matriz completa para O(min(m,n)) espacio.
+**Implementación:** Matriz dp con dimensiones len(s1)+1 × len(s2)+1. Inicializar primera fila y columna con índices. Para cada celda: si s1[i]==s2[j], dp[i][j]=dp[i-1][j-1]; si no, 1+min(insertar, eliminar, sustituir). Devolver dp[m][n]. Optimización: solo dos filas en vez de la matriz completa.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
 **Complejidad temporal:** O(m×n)  
-**Complejidad espacial:** O(min(m,n))  
-
-**Complejidad:** O(m×n) tiempo, O(min(m,n)) espacio con optimización. **Aplicaciones:** correctores ortográficos, detección de plagio, alineamiento de secuencias de ADN, sistemas de control de versiones, deduplicación de registros.
+**Complejidad espacial:** O(min(m,n)) con optimización  
 
 ### 💻 Código de la Solución
 
 <CodeTabs client:load>
 
 ```python
-def sol(a, b):
- m, n = len(a), len(b)
- d = [[0]*(n+1) for _ in range(m+1)]
- for i in range(m+1): d[i][0]=i
- for j in range(n+1): d[0][j]=j
- for i in range(1,m+1):
-  for j in range(1,n+1):
-   cost = 0 if a[i-1] == b[j-1] else 1
-   d[i][j] = min(d[i-1][j]+1, d[i][j-1]+1, d[i-1][j-1]+cost)
- return d[m][n]
+def levenshtein(a, b):
+    m, n = len(a), len(b)
+    if m == 0: return n
+    if n == 0: return m
+    prev = list(range(n + 1))
+    for i in range(1, m + 1):
+        curr = [i] + [0] * n
+        for j in range(1, n + 1):
+            costo = 0 if a[i - 1] == b[j - 1] else 1
+            curr[j] = min(prev[j] + 1, curr[j - 1] + 1, prev[j - 1] + costo)
+        prev = curr
+    return prev[n]
 ```
 
 ```javascript
-// Reto Avanzado 20: Diff de Archivos (Levenshtein)
-// Implementa una solución para: Reto Avanzado 20: Diff de Archivos (Levenshtein)
-
-function resolver(entrada) {
-  return entrada;
+function levenshtein(a, b) {
+  const m = a.length, n = b.length;
+  if (m === 0) return n;
+  if (n === 0) return m;
+  let prev = Array.from({ length: n + 1 }, (_, i) => i);
+  for (let i = 1; i <= m; i++) {
+    const curr = [i, ...new Array(n).fill(0)];
+    for (let j = 1; j <= n; j++) {
+      const costo = a[i - 1] === b[j - 1] ? 0 : 1;
+      curr[j] = Math.min(prev[j] + 1, curr[j - 1] + 1, prev[j - 1] + costo);
+    }
+    prev = curr;
+  }
+  return prev[n];
 }
-
-console.log(resolver('ejemplo'));
-
 ```
 
 ```java
-// Reto Avanzado 20: Diff de Archivos (Levenshtein)
-// Implementa una solución para: Reto Avanzado 20: Diff de Archivos (Levenshtein)
-
-public class Reto {
-    public static String resolver(String entrada) {
-        return entrada;
-    }
-
-    public static void main(String[] args) {
-        System.out.println(resolver("ejemplo"));
+public class Levenshtein {
+    public static int distancia(String a, String b) {
+        int m = a.length(), n = b.length();
+        if (m == 0) return n;
+        if (n == 0) return m;
+        int[] prev = new int[n + 1];
+        for (int j = 0; j <= n; j++) prev[j] = j;
+        for (int i = 1; i <= m; i++) {
+            int[] curr = new int[n + 1];
+            curr[0] = i;
+            for (int j = 1; j <= n; j++) {
+                int costo = a.charAt(i - 1) == b.charAt(j - 1) ? 0 : 1;
+                curr[j] = Math.min(
+                    Math.min(prev[j] + 1, curr[j - 1] + 1),
+                    prev[j - 1] + costo
+                );
+            }
+            prev = curr;
+        }
+        return prev[n];
     }
 }
-
 ```
 
 ```typescript
-// Reto Avanzado 20: Diff de Archivos (Levenshtein)
-// Implementa una solución para: Reto Avanzado 20: Diff de Archivos (Levenshtein)
-
-function resolver<T>(entrada: T): T {
-  return entrada;
+function levenshtein(a: string, b: string): number {
+  const m = a.length, n = b.length;
+  if (m === 0) return n;
+  if (n === 0) return m;
+  let prev: number[] = Array.from({ length: n + 1 }, (_, i) => i);
+  for (let i = 1; i <= m; i++) {
+    const curr: number[] = [i, ...new Array(n).fill(0)];
+    for (let j = 1; j <= n; j++) {
+      const costo = a[i - 1] === b[j - 1] ? 0 : 1;
+      curr[j] = Math.min(prev[j] + 1, curr[j - 1] + 1, prev[j - 1] + costo);
+    }
+    prev = curr;
+  }
+  return prev[n];
 }
-
-console.log(resolver('ejemplo'));
-
 ```
 
 </CodeTabs>
@@ -123,4 +168,3 @@ console.log(resolver('ejemplo'));
 
 - [RETO: Compresor de Cadenas (RLE)](/retos/reto-compresor-de-cadenas-rle/)
 - [RETO: Reto Avanzado 19: Compresión Huffman](/retos/reto-avanzado-19-compresion-huffman/)
-

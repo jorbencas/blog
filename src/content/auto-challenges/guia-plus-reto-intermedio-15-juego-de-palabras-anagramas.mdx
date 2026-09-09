@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "🏆 RETO: Reto Intermedio 15: Juego de Palabras (Anagramas)"
-description: "Determina si dos palabras son anagramas (contienen las mismas letras en diferente orden). Ejemplo: 'listen' y 'silent' son anagramas."
+description: "Determina si dos palabras son anagramas: contienen exactamente los mismos caracteres con las mismas frecuencias pero en diferente orden. 'listen' y 'silent' son anagramas."
 pubDate: "2026-06-28"
 tags: ["retos", "intermedio", "multilenguaje"]
 slug: "reto-intermedio-15-juego-de-palabras-anagramas"
@@ -17,11 +17,31 @@ import CodeTabs from '@components/CodeTabs.svelte';
 # 🎯 Desafío: Reto Intermedio 15: Juego de Palabras (Anagramas)
 
 ### 📝 Descripción del Reto
-Determina si dos palabras son anagramas (contienen las mismas letras en diferente orden). Ejemplo: 'listen' y 'silent' son anagramas.
+Dos palabras son anagramas si tienen exactamente los mismos caracteres con las mismas frecuencias. Por ejemplo, "listen" y "silent" contienen {l:1, i:1, s:1, t:1, e:1, n:1}.
+
+Debes implementar una función que reciba dos cadenas y devuelva `true` si son anagramas, `false` en caso contrario. Se debe ignorar mayúsculas/minúsculas.
+
+**¿Por qué importa?** Los anagramas aparecen en juegos de palabras, correctores ortográficos, criptografía (ataques por frecuencia), y en algoritmos de agrupamiento de palabras (clustering).
+
+**Habilidades que practica:** Conteo de frecuencias, uso de hashmaps/diccionarios, ordenamiento, normalización de strings.
+
+### 📊 Posibles enfoques
+
+| Enfoque | Descripción | Complejidad Temporal | Complejidad Espacial |
+|---------|-------------|---------------------|---------------------|
+| Ordenar y comparar | sorted(s1) == sorted(s2) | O(n log n) | O(n) |
+| Mapa de frecuencias | Incrementar para s1, decrementar para s2, verificar ceros | O(n) | O(1) si alfabeto fijo |
+| Array de conteo | Vector de 26 posiciones para cada letra | O(n) | O(1) |
+
+### 🌍 Dónde se usa
+1. **Juegos de palabras**: detectar anagramas en Crucigramas, Scrabble, juegos de letras
+2. **Criptografía**: análisis de frecuencia para romper cifrados por sustitución
+3. **Correctores ortográficos**: sugerir palabras relacionadas con las mismas letras
+4. **Clustering de texto**: agrupar documentos con vocabulario similar
 
 <Challenge 
   nivel="Intermedio" 
-  mision="Determina si dos palabras son anagramas (contienen las mismas letras en diferente orden). Ejemplo: 'listen' y 'silent'..." 
+  mision="Determina si dos palabras son anagramas: contienen exactamente los mismos caracteres con las mismas frecuencias pero en diferente orden." 
 />
 
 ---
@@ -34,6 +54,9 @@ Determina si dos palabras son anagramas (contienen las mismas letras en diferent
 | `hola, adios` | `false` |
 | `'', ''` | `true` |
 | `abc, cab` | `true` |
+| `Listen, Silent` | `true` |
+| `aab, aba` | `true` |
+| `abc, abd` | `false` |
 
 ---
 
@@ -44,64 +67,51 @@ Determina si dos palabras son anagramas (contienen las mismas letras en diferent
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-**Análisis del problema:** Dos palabras son anagramas si tienen exactamente los mismos caracteres con las mismas frecuencias. **Ejemplo concreto:** 'listen' → &#123;l:1,i:1,s:1,t:1,e:1,n:1&#125;, 'silent' → misma frecuencia → true. **Edge cases:** cadenas vacías (son anagramas), diferente longitud (false), mayúsculas (normalizar), caracteres acentuados.
+**Análisis del problema:** Dos palabras son anagramas si tienen los mismos caracteres con las mismas frecuencias. Primero normalizar (minúsculas), luego comparar frecuencias. **Edge cases:** cadenas vacías (son anagramas), diferente longitud (false), mayúsculas (normalizar), caracteres especiales.
 
 ### ⚙️ Paso 2: Implementación
 **Implementación:** Dos enfoques: 1) Ordenar las cadenas y comparar: `sorted(s1) == sorted(s2)`. 2) Contar frecuencias con un diccionario/hashmap: incrementar para s1, decrementar para s2, verificar que todos sean 0.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-**Complejidad temporal:** O(n)  
-**Complejidad espacial:** O(1)  
-
-**Complejidad:** Ordenar: O(n log n) tiempo, O(n) espacio. Con mapa de frecuencias: O(n) tiempo, O(1) espacio (solo 26 letras si son alfabéticas). **Aplicaciones:** juegos de palabras, correctores ortográficos, criptografía.
+**Complejidad temporal:** O(n) con mapa de frecuencias, O(n log n) ordenando  
+**Complejidad espacial:** O(1) con array de 26 letras, O(n) con hashmap  
 
 ### 💻 Código de la Solución
 
 <CodeTabs client:load>
 
 ```python
-def sol(a, b): return sorted(a.lower()) == sorted(b.lower())
+def son_anagramas(a, b):
+    return sorted(a.lower()) == sorted(b.lower())
 ```
 
 ```javascript
-// Reto Intermedio 15: Juego de Palabras (Anagramas)
-// Implementa una solución para: Reto Intermedio 15: Juego de Palabras (Anagramas)
-
-function resolver(entrada) {
-  return entrada;
+function sonAnagramas(a, b) {
+  const normalizar = s => s.toLowerCase().split('').sort().join('');
+  return normalizar(a) === normalizar(b);
 }
-
-console.log(resolver('ejemplo'));
-
 ```
 
 ```java
-// Reto Intermedio 15: Juego de Palabras (Anagramas)
-// Implementa una solución para: Reto Intermedio 15: Juego de Palabras (Anagramas)
+import java.util.*;
 
-public class Reto {
-    public static String resolver(String entrada) {
-        return entrada;
-    }
-
-    public static void main(String[] args) {
-        System.out.println(resolver("ejemplo"));
+public class Anagramas {
+    public static boolean sonAnagramas(String a, String b) {
+        char[] ca = a.toLowerCase().toCharArray();
+        char[] cb = b.toLowerCase().toCharArray();
+        Arrays.sort(ca);
+        Arrays.sort(cb);
+        return Arrays.equals(ca, cb);
     }
 }
-
 ```
 
 ```typescript
-// Reto Intermedio 15: Juego de Palabras (Anagramas)
-// Implementa una solución para: Reto Intermedio 15: Juego de Palabras (Anagramas)
-
-function resolver<T>(entrada: T): T {
-  return entrada;
+function sonAnagramas(a: string, b: string): boolean {
+  const normalizar = (s: string) => s.toLowerCase().split('').sort().join('');
+  return normalizar(a) === normalizar(b);
 }
-
-console.log(resolver('ejemplo'));
-
 ```
 
 </CodeTabs>
@@ -113,4 +123,3 @@ console.log(resolver('ejemplo'));
 
 - [RETO: Detector de Palíndromos](/retos/reto-detector-de-palindromos/)
 - [RETO: Cifrado César Básico](/retos/reto-cifrado-cesar-basico/)
-
