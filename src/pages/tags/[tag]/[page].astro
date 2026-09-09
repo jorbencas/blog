@@ -8,12 +8,11 @@ import { getCollection } from "astro:content";
 
 export async function getStaticPaths({ paginate }) {
   const allPosts = await getCollection("posts");
-  const allChallenges = await getCollection("auto-challenges");
+
 
   const uniqueTags = [
     ...new Set([
       ...allPosts.flatMap((p) => p.data.tags),
-      ...allChallenges.flatMap((c) => c.data.tags),
     ]),
   ];
 
@@ -24,25 +23,22 @@ export async function getStaticPaths({ paginate }) {
       post.data.tags.includes(tag)
     );
 
-    const filteredChallenges = allChallenges
-      .filter((c) => !c.data.draft && c.data.tags.includes(tag))
-      .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 
     return paginate(filteredPosts, {
       params: { tag },
-      props: { tag, challenges: filteredChallenges },
+      props: { tag },
       pageSize: 24,
     });
   });
 }
 
 const { tag } = Astro.params;
-const { page, challenges } = Astro.props;
+const { page } = Astro.props;
 const { data, url } = page;
 const { prev, next } = url;
 ---
 
-<Layout title={"Contenido sobre " + tag} description={`Artículos y retos etiquetados con #${tag}`} section="tags" prevPage={prev || undefined} nextPage={next || undefined}>
+<Layout title={"Contenido sobre " + tag} description={`Artículos etiquetados con #${tag}`} section="tags" prevPage={prev || undefined} nextPage={next || undefined}>
   <section class="max-w-6xl mx-auto space-y-12 py-8 md:py-16" data-pagefind-ignore>
       <!-- CABECERA -->
       <div class="text-center space-y-4 pb-4">
@@ -53,31 +49,7 @@ const { prev, next } = url;
         <div class="h-1 w-24 bg-cyan-500 mx-auto rounded-full"></div>
       </div>
 
-      <!-- RETOS ASOCIADOS -->
-      {
-        challenges.length > 0 && (
-          <div class="space-y-6">
-            <div class="flex items-center gap-4">
-              <h2 class="text-sm font-black uppercase tracking-[0.3em] text-amber-600 dark:text-amber-400">
-                Retos_Disponibles
-              </h2>
-              <div class="h-[1px] flex-1 bg-amber-500/20" />
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-              {challenges.slice(0, 3).map((ch) => (
-                <Card
-                  href={`/retos/${ch.id}`}
-                  title={ch.data.title}
-                  description={ch.data.description}
-                  image={ch.data.image}
-                  difficulty={ch.data.difficulty}
-                  accent="amber"
-                />
-              ))}
-            </div>
-          </div>
-        )
-      }
+
 
       <!-- ARTÍCULOS -->
       <div class="space-y-6">

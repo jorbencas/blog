@@ -8,9 +8,6 @@ export const GET: APIRoute = async () => {
   const allPosts = await getCollection('posts');
   const sortedPosts = await getSortedPosts(allPosts);
 
-  const allChallenges = await getCollection('auto-challenges');
-  const sortedChallenges = await getSortedPosts(allChallenges);
-
   const allTools = await getCollection('tools');
   const sortedTools = await getSortedPosts(allTools);
 
@@ -19,15 +16,13 @@ export const GET: APIRoute = async () => {
 
   const allTags = new Set<string>();
   sortedPosts.forEach(p => (p.data.tags || []).forEach(t => allTags.add(t)));
-  sortedChallenges.forEach(p => (p.data.tags || []).forEach(t => allTags.add(t)));
   sortedTools.forEach(p => (p.data.tags || []).forEach(t => allTags.add(t)));
 
   const stats = {
     posts: sortedPosts.length,
-    retos: sortedChallenges.length,
     herramientas: sortedTools.length,
     weekly: sortedWeekly.length,
-    total: sortedPosts.length + sortedChallenges.length + sortedTools.length + sortedWeekly.length,
+    total: sortedPosts.length + sortedTools.length + sortedWeekly.length,
     tags: allTags.size,
     lastUpdated: new Date().toISOString(),
   };

@@ -25,8 +25,7 @@ export const GET: APIRoute = async () => {
   const allPosts = (await getCollection('posts'));
   const sortedPosts = await getSortedPosts(allPosts);
 
-  const allChallenges = await getCollection('auto-challenges');
-  const sortedChallenges = await getSortedPosts(allChallenges);
+
 
   const allTools = await getCollection('tools');
   const sortedTools = await getSortedPosts(allTools);
@@ -36,7 +35,6 @@ export const GET: APIRoute = async () => {
 
   const allItems = [
     ...sortedPosts.map(p => ({ ...p, _section: 'posts', _link: `/posts/${p.id}` })),
-    ...sortedChallenges.map(p => ({ ...p, _section: 'retos', _link: `/retos/${p.id.replace(/\.[^/.]+$/, '')}` })),
     ...sortedTools.map(p => ({ ...p, _section: 'herramientas', _link: `/herramientas/${p.id.replace(/\.[^/.]+$/, '')}` })),
     ...sortedWeekly.map(p => ({ ...p, _section: 'weekly', _link: `/weekly/${p.id}` })),
   ].sort((a, b) => new Date(b.data.pubDate || b.data.date || 0).getTime() - new Date(a.data.pubDate || a.data.date || 0).getTime());

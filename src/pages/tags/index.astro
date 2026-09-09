@@ -3,20 +3,18 @@ import Layout from "@layouts/Layout.astro";
 import { getCollection } from "astro:content";
 
 const allPosts = await getCollection("posts");
-const allChallenges = await getCollection("auto-challenges");
+
 
 const allTags = [
   ...new Set([
     ...allPosts.flatMap((p) => p.data.tags),
-    ...allChallenges.flatMap((c) => c.data.tags),
   ]),
 ].sort();
 
 const tagCounts = {};
 for (const tag of allTags) {
   const posts = allPosts.filter((p) => p.data.tags.includes(tag)).length;
-  const challenges = allChallenges.filter((c) => c.data.tags.includes(tag)).length;
-  tagCounts[tag] = { posts, challenges };
+  tagCounts[tag] = { posts };
 }
 ---
 
@@ -37,7 +35,7 @@ for (const tag of allTags) {
       <!-- NUBE DE ETIQUETAS -->
       <div class="flex flex-wrap gap-4 justify-center">
         {allTags.map((tag) => {
-          const total = tagCounts[tag].posts + tagCounts[tag].challenges;
+          const total = tagCounts[tag].posts;
           return (
             <a
               href={`/tags/${encodeURIComponent(tag)}/1`}

@@ -17,9 +17,7 @@ const latestPosts = sortedPosts.slice(0, 7);
 const featuredPost = sortedPosts.length > 0 ? sortedPosts[0] : null;
 const remainingPosts = latestPosts.slice(1);
 
-const allChallenges = await getCollection("auto-challenges");
-const challengesPosts = await getSortedPosts(allChallenges);
-const latestChallenges = challengesPosts.slice(0, 6);
+
 
 const firstPostDate =
   sortedPosts.length > 0
@@ -63,13 +61,7 @@ const tickerItems = [
     icon: "🛠️",
     color: "emerald",
   })),
-  ...latestChallenges.slice(0, 2).map((c) => ({
-    type: "challenge" as const,
-    title: c.data.title,
-    href: `/retos/${c.id.replace(/\.[^/.]+$/, "")}`,
-    icon: "🏆",
-    color: "amber",
-  })),
+
 ]
   .sort((a, b) => 0)
   .slice(0, 12);
@@ -86,16 +78,13 @@ const badgeProyectos =
 const badgeHerramientas =
   "inline-flex items-center gap-2 bg-gradient-to-r from-emerald-800 to-emerald-500 dark:from-emerald-600 dark:to-emerald-400 px-5 py-2.5 text-xs sm:text-sm font-black uppercase tracking-[0.25em] text-white dark:text-slate-900 shadow-[4px_4px_0px_0px_rgba(16,185,129,0.3)]";
 
-const badgeAmber =
-  "inline-flex items-center gap-2 bg-gradient-to-r from-amber-800 to-amber-500 dark:from-amber-600 dark:to-amber-400 px-5 py-2.5 text-xs sm:text-sm font-black uppercase tracking-[0.25em] text-white dark:text-slate-900 shadow-[4px_4px_0px_0px_rgba(245,158,11,0.3)]";
-
 const badgeYellow =
   "inline-flex items-center gap-2 bg-gradient-to-r from-yellow-600 to-yellow-400 dark:from-yellow-600 dark:to-yellow-400 px-5 py-2.5 text-xs sm:text-sm font-black uppercase tracking-[0.25em] text-white dark:text-slate-900 shadow-[4px_4px_0px_0px_rgba(234,179,8,0.3)]";
 
 const stats = [
   { label: "Proyectos", count: listProjects.length, accent: "text-purple-600 dark:text-purple-500" },
   { label: "Artículos", count: sortedPosts.length, accent: "text-cyan-600 dark:text-cyan-500" },
-  { label: "Retos", count: challengesPosts.length, accent: "text-amber-600 dark:text-amber-500" },
+
   { label: "Herramientas", count: listTools.length, accent: "text-emerald-600 dark:text-emerald-400" },
   { label: "Semanales", count: listWeeklyPosts.length, accent: "text-yellow-600 dark:text-yellow-500" },
 ];
@@ -149,25 +138,6 @@ const stats = [
         )}
       </section>
 
-      <!-- RETOS -->
-      <section class="space-y-10">
-        <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0">
-          <h2 class={badgeAmber}>🏆 Retos</h2>
-          <a href="/retos" class={`${linkBase} text-slate-400 hover:text-amber-500`}>
-            Ver retos <span class="inline-block transition-transform group-hover:translate-x-1">→</span>
-            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-amber-500 transition-all duration-300 group-hover:w-full"></span>
-          </a>
-        </div>
-        {latestChallenges.length > 0 ? (
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {latestChallenges.map((ch) => (
-              <Card {...ch.data} href={`/retos/${ch.id.replace(/\.[^/.]+$/, "")}`} accent="amber" />
-            ))}
-          </div>
-        ) : (
-          <Information section="retos" hideButtons />
-        )}
-      </section>
 
       <!-- BLOG -->
       <section class="space-y-10">

@@ -6,8 +6,7 @@ import { getSortedPosts } from "src/utils";
 const allPosts = await getCollection("posts");
 const sortedPosts = await getSortedPosts(allPosts);
 
-const allChallenges = await getCollection("auto-challenges");
-const sortedChallenges = await getSortedPosts(allChallenges);
+
 
 const allTools = await getCollection("tools");
 const sortedTools = await getSortedPosts(allTools);
@@ -37,17 +36,12 @@ sortedPosts.forEach((p) => {
 const sortedMonths = Object.entries(monthCounts).sort(([a], [b]) => a.localeCompare(b));
 const maxMonthCount = sortedMonths.length > 0 ? Math.max(...sortedMonths.map(([, c]) => c)) : 1;
 
-// Challenges by difficulty
-const difficultyCounts: Record<string, number> = {};
-sortedChallenges.forEach((c) => {
-  const d = c.data.difficulty || "Sin dificultad";
-  difficultyCounts[d] = (difficultyCounts[d] || 0) + 1;
-});
 
-const totalContent = sortedPosts.length + sortedChallenges.length + sortedTools.length + sortedWeekly.length;
+
+const totalContent = sortedPosts.length + sortedTools.length + sortedWeekly.length;
 ---
 
-<Layout title="Estadísticas | Jorge Beneyto Castelló" description="Estadísticas del blog: posts por tag, posts por mes, retos por dificultad." section="stats">
+<Layout title="Estadísticas | Jorge Beneyto Castelló" description="Estadísticas del blog: posts por tag, posts por mes." section="stats">
   <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-20 space-y-16">
 
     <!-- HEADER -->
@@ -60,10 +54,9 @@ const totalContent = sortedPosts.length + sortedChallenges.length + sortedTools.
     </div>
 
     <!-- STATS GENERALES -->
-    <section class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+    <section class="grid grid-cols-2 sm:grid-cols-3 gap-4">
       {[
         { label: "Artículos", count: sortedPosts.length, color: "text-cyan-600 dark:text-cyan-400" },
-        { label: "Retos", count: sortedChallenges.length, color: "text-amber-600 dark:text-amber-400" },
         { label: "Herramientas", count: sortedTools.length, color: "text-emerald-600 dark:text-emerald-400" },
         { label: "Semanales", count: sortedWeekly.length, color: "text-yellow-600 dark:text-yellow-400" },
       ].map((stat) => (
@@ -118,25 +111,6 @@ const totalContent = sortedPosts.length + sortedChallenges.length + sortedTools.
             </div>
           );
         })}
-      </div>
-    </section>
-
-    <!-- RETOS POR DIFICULTAD -->
-    <section class="space-y-6">
-      <h2 class="inline-flex items-center gap-2 bg-gradient-to-r from-amber-800 to-amber-500 dark:from-amber-600 dark:to-amber-400 px-5 py-2.5 text-xs sm:text-sm font-black uppercase tracking-[0.25em] text-white dark:text-slate-900 shadow-[4px_4px_0px_0px_rgba(245,158,11,0.3)]">
-        🏆 Retos por dificultad
-      </h2>
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {[
-          { label: "Iniciación", count: difficultyCounts["Iniciación"] || 0, color: "emerald" },
-          { label: "Intermedio", count: difficultyCounts["Intermedio"] || 0, color: "amber" },
-          { label: "Avanzado", count: difficultyCounts["Avanzado"] || 0, color: "rose" },
-        ].map((d) => (
-          <div class="flex flex-col items-center justify-center p-6 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-            <span class={`text-3xl font-black text-${d.color}-600 dark:text-${d.color}-400`}>{d.count}</span>
-            <span class="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mt-1">{d.label}</span>
-          </div>
-        ))}
       </div>
     </section>
 

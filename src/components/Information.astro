@@ -1,20 +1,18 @@
 ---
 import { getCollection } from "astro:content";
 
-type Section = "posts" | "retos" | "proyectos" | "weekly";
+type Section = "posts" | "proyectos" | "weekly";
 
 const { section = "posts" as Section, hideButtons = false } = Astro.props;
 
 const config: Record<Section, { icon: string; title: string; subtitle: string }> = {
   posts: { icon: "📡", title: "Señal perdida", subtitle: "No hay más artículos en esta frecuencia" },
-  retos: { icon: "⚡", title: "Misión completada", subtitle: "Todos los desafíos han sido superados" },
   proyectos: { icon: "🚀", title: "Órbita despejada", subtitle: "No hay más proyectos en el horizonte" },
   weekly: { icon: "📻", title: "Transmisión finalizada", subtitle: "No hay más resúmenes semanales" },
 };
 
 const collectionMap: Record<Section, string> = {
   posts: "posts",
-  retos: "auto-challenges",
   proyectos: "myprojects",
   weekly: "weeklyPosts",
 };

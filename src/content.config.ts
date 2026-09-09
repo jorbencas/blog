@@ -43,22 +43,6 @@ const weeklyPosts = defineCollection({
   }),
 });
 
-const autoChallenges = defineCollection({
-  loader: glob({ pattern: "**/*.mdx", base: "./src/content/auto-challenges" }),
-  schema: z.object({
-    draft: z.boolean().optional().default(false),
-    title: z.string(),
-    description: z.string(),
-    pubDate: z.string().or(z.date()).transform((v) => new Date(v)),
-    tags: z.array(z.string()).default([]),
-    slug: z.string().optional(),
-    image: z.string().optional(),
-    author: z.string().default("Jorge Beneyto Castelló"),
-    difficulty: z.string().optional(),
-    languages: z.array(z.string()).optional(),
-  }),
-});
-
 const myprojects = defineCollection({
   loader: glob({ pattern: "**/*.mdx", base: "./src/content/myprojects" }),
   schema: z.object({
@@ -89,4 +73,4 @@ const tools = defineCollection({
   }),
 });
 
-export const collections = { posts, "auto-news": autoNews, "weeklyPosts": weeklyPosts, "auto-challenges": autoChallenges, myprojects, tools };
+export const collections = { posts, "auto-news": autoNews, "weeklyPosts": weeklyPosts, myprojects, tools };
