@@ -1,5 +1,6 @@
 <script>
   import { onMount } from 'svelte';
+  import RunPanel from './RunPanel.svelte';
 
   let { children } = $props();
   let container;
@@ -7,6 +8,9 @@
   let activeIndex = $state(0);
   let ready = $state(false);
   let copied = $state(false);
+  let showRun = $state(false);
+  let runCode = $state('');
+  let runLang = $state('');
 
   const languageMap = {
     python: 'Python',
@@ -18,6 +22,15 @@
   function getDisplayName(raw) {
     const lower = raw.toLowerCase();
     return languageMap[lower] || raw.charAt(0).toUpperCase() + raw.slice(1);
+  }
+
+  function getLangKey(raw) {
+    return (raw || '').toLowerCase();
+  }
+
+  function canRun(lang) {
+    const key = getLangKey(lang);
+    return key === 'python' || key === 'py' || key === 'javascript' || key === 'js' || key === 'typescript' || key === 'ts';
   }
 
   function initTabs() {
@@ -41,7 +54,7 @@
       const rawLang = pre.getAttribute('data-language') || '';
       let lang = rawLang ? getDisplayName(rawLang) : 'Code';
       if (i !== 0) pre.style.display = 'none';
-      return { name: lang };
+      return { name: lang, raw: rawLang };
     });
     ready = true;
   }
@@ -69,12 +82,25 @@
     if (!container) return;
     activeIndex = index;
     copied = false;
+    showRun = false;
     const codePanels = container.querySelector('.code-panels');
     if (!codePanels) return;
     const preElements = Array.from(codePanels.querySelectorAll('pre'));
     preElements.forEach((pre, i) => {
       pre.style.display = i === index ? '' : 'none';
     });
+  }
+
+  function startRun() {
+    if (!container) return;
+    const codePanels = container.querySelector('.code-panels');
+    if (!codePanels) return;
+    const preElements = Array.from(codePanels.querySelectorAll('pre'));
+    const active = preElements[activeIndex];
+    if (!active) return;
+    runCode = active.innerText;
+    runLang = tabs[activeIndex]?.raw || 'javascript';
+    showRun = true;
   }
 
   async function copyCode() {
@@ -124,11 +150,27 @@
           <span>COPIAR</span>
         {/if}
       </button>
+      {#if canRun(tabs[activeIndex]?.raw)}
+        <button
+          type="button"
+          class="run-btn"
+          onclick={startRun}
+          title="Ejecutar código"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+          <span>EJECUTAR</span>
+        </button>
+      {/if}
     </div>
   {/if}
   <div class="code-panels">
     {@render children()}
   </div>
+  {#if showRun}
+    <RunPanel code={runCode} language={runLang} />
+  {/if}
 </div>
 
 <style>
@@ -212,6 +254,40 @@
   :global(.dark) .copy-btn:hover {
     color: rgb(34 211 238);
     background: rgb(148 163 184 / 0.1);
+  }
+
+  .run-btn {
+    margin-left: 0.25rem;
+    padding: 0.35rem 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.65rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: rgb(34 197 94);
+    background: transparent;
+    border: none;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: color 0.15s ease, background 0.15s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .run-btn:hover {
+    color: rgb(22 163 74);
+    background: rgb(34 197 94 / 0.1);
+  }
+
+  :global(.dark) .run-btn {
+    color: rgb(74 222 128);
+  }
+
+  :global(.dark) .run-btn:hover {
+    color: rgb(34 197 94);
+    background: rgb(74 222 128 / 0.1);
   }
 
   .code-panels {
