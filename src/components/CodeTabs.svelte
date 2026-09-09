@@ -20,7 +20,7 @@
     return languageMap[lower] || raw.charAt(0).toUpperCase() + raw.slice(1);
   }
 
-  onMount(() => {
+  function initTabs() {
     if (!container) return;
     const codePanels = container.querySelector('.code-panels');
     if (!codePanels) return;
@@ -44,6 +44,25 @@
       return { name: lang };
     });
     ready = true;
+  }
+
+  onMount(() => {
+    if (!container) return;
+
+    // If inside a <details>, wait for it to open
+    const details = container.closest('details');
+    if (details && !details.open) {
+      const onToggle = () => {
+        if (details.open) {
+          initTabs();
+          details.removeEventListener('toggle', onToggle);
+        }
+      };
+      details.addEventListener('toggle', onToggle);
+      return;
+    }
+
+    initTabs();
   });
 
   function switchTab(index) {
