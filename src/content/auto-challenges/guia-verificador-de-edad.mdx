@@ -1,9 +1,9 @@
 ---
 draft: false
 title: "🏆 RETO: Verificador de Edad"
-description: "Resuelve el desafío 'Verificador de Edad'. Implementa una solución completa siguiendo las mejores prácticas de programación."
+description: "Dada una edad, verifica si la persona es mayor de edad (>=18), menor de edad (<18) o exactamente 18 años. Ejercicio de lógica condicional con múltiples ramificaciones."
 pubDate: "2026-06-28"
-tags: ["retos", "iniciaci\u00f3n", "multilenguaje"]
+tags: ["retos", "iniciación", "multilenguaje"]
 slug: "reto-verificador-de-edad"
 image: "img/guia_verificador_de_edad/guia_verificador_de_edad_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
@@ -17,11 +17,25 @@ import CodeTabs from '@components/CodeTabs.svelte';
 # 🎯 Desafío: Verificador de Edad
 
 ### 📝 Descripción del Reto
-Resuelve el desafío 'Verificador de Edad'. Implementa una solución completa siguiendo las mejores prácticas de programación.
+Dada una edad, clasifica en: "Menor de edad" (<18), "Mayor de edad" (>=18) o "Exactamente 18" (igual a 18). Ejercicio de lógica condicional con múltiples ramificaciones que practica la toma de decisiones en código.
+
+### 📊 Posibles enfoques
+
+| Enfoque | Descripción | Complejidad |
+|---------|-------------|-------------|
+| if/else if/else | Clasificación directa con tres ramas | O(1) |
+| Match/switch | Usar expresión match en Python o switch en otros | O(1) |
+| Diccionario de rangos | Mapear rangos a clasificaciones | O(1) |
+
+### 🌍 Dónde se usa
+- **Sitios web**: verificar edad para contenido restringido (alcohol, juegos)
+- **Formularios de registro**: validar requisitos de edad para servicios
+- **Sistemas de seguridad**: control de acceso según categoría de edad
+- **Legislación**: aplicar leyes diferentes según tramos de edad
 
 <Challenge 
   nivel="Iniciación" 
-  mision="Resuelve el desafío 'Verificador de Edad'. Implementa una solución completa siguiendo las mejores prácticas de..." 
+  mision="Clasifica una edad en menor de edad, mayor de edad o exactamente 18 años." 
 />
 
 ---
@@ -30,8 +44,11 @@ Resuelve el desafío 'Verificador de Edad'. Implementa una solución completa si
 
 | Entrada | Salida esperada |
 |---------|-----------------|
-| ``````````ejemplo_entrada`````````` | ``````````resultado_esperado`````````` |
-| ``````````caso_limite`````````` | ``````````manejo_correcto`````````` |
+| `15` | `Menor de edad` |
+| `18` | `Exactamente 18` |
+| `25` | `Mayor de edad` |
+| `0` | `Menor de edad` |
+| `65` | `Mayor de edad` |
 
 ---
 
@@ -42,142 +59,69 @@ Resuelve el desafío 'Verificador de Edad'. Implementa una solución completa si
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-**Análisis del problema:** Verificador de Edad. Identifica la entrada, la salida esperada, y los casos límite. Diseña una estrategia de solución eficiente.
+**Análisis del problema:** Tres ramas condicionales: si edad < 18 → menor; si edad == 18 → exactamente 18; si edad > 18 → mayor. **Edge cases:** edad 0 (menor), edad negativa (inválido), edad muy alta.
 
 ### ⚙️ Paso 2: Implementación
-**Implementación:** Traduce el análisis a código. Sigue la estructura definida en el análisis y maneja correctamente los casos límite.
+Usar if/else if/else para las tres condiciones. Validar que la edad sea positiva.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-**Complejidad temporal:** O(n)  
-**Complejidad espacial:** O(n)  
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-**Análisis de complejidad y optimización**
-
-**Complejidad temporal:**
-Evalúa cómo crece el tiempo de ejecución al aumentar el tamaño de la entrada. Para la mayoría de soluciones, una complejidad O(n) es aceptable, donde n es el tamaño de la entrada. Si tu solución es O(n²), considera si se puede optimizar.
-
-**Complejidad espacial:**
-¿Cuánta memoria adicional utiliza tu algoritmo? ¿Creas copias de los datos o trabajas in-place? En general, O(n) adicional es aceptable para la mayoría de aplicaciones.
-
-**Posibles optimizaciones:**
-- ¿Se puede reducir la complejidad con una estructura de datos diferente?
-- ¿Conviene usar iteración en vez de recursión para ahorrar pila de llamadas?
-- ¿Existe alguna función de la librería estándar que ya resuelva parte del problema?
-- ¿Se puede aplicar early exit para evitar trabajo innecesario?
-
-**Aplicaciones en el mundo real:**
-Este patrón de solución aparece frecuentemente en:
-- Procesamiento de datos y pipelines ETL
-- APIs REST y servicios web
-- Análisis de logs y métricas
-- Automatización de tareas y scripting
-- Validación y transformación de datos en sistemas de información
+**Complejidad temporal:** O(1)
+**Complejidad espacial:** O(1)
 
 ### 💻 Código de la Solución
 
 <CodeTabs client:load>
 
 ```python
-# Verificador de Edad
-# Implementa una solución para: Verificador de Edad
+def verificar_edad(edad):
+    if edad < 18:
+        return 'Menor de edad'
+    elif edad == 18:
+        return 'Exactamente 18'
+    else:
+        return 'Mayor de edad'
 
-def resolver(entrada):
-    """
-    Verificador de Edad
-    """
-    resultado = entrada
-    return resultado
-
-
-if __name__ == '__main__':
-    print(resolver("ejemplo"))
-
+print(verificar_edad(15))  # Menor de edad
+print(verificar_edad(18))  # Exactamente 18
+print(verificar_edad(25))  # Mayor de edad
 ```
 
 ```javascript
-// Verificador de Edad
-// Implementa una solución para: Verificador de Edad
-
-function resolver(entrada) {
-  return entrada;
+function verificarEdad(edad) {
+  if (edad < 18) return 'Menor de edad';
+  if (edad === 18) return 'Exactamente 18';
+  return 'Mayor de edad';
 }
-
-console.log(resolver('ejemplo'));
-
+console.log(verificarEdad(15)); // Menor de edad
+console.log(verificarEdad(18)); // Exactamente 18
+console.log(verificarEdad(25)); // Mayor de edad
 ```
 
 ```java
-// Verificador de Edad
-// Implementa una solución para: Verificador de Edad
-
-public class Reto {
-    public static String resolver(String entrada) {
-        return entrada;
+public class VerificadorEdad {
+    public static String verificarEdad(int edad) {
+        if (edad < 18) return "Menor de edad";
+        if (edad == 18) return "Exactamente 18";
+        return "Mayor de edad";
     }
-
     public static void main(String[] args) {
-        System.out.println(resolver("ejemplo"));
+        System.out.println(verificarEdad(15)); // Menor de edad
+        System.out.println(verificarEdad(18)); // Exactamente 18
+        System.out.println(verificarEdad(25)); // Mayor de edad
     }
 }
-
 ```
 
 ```typescript
-// Verificador de Edad
-// Implementa una solución para: Verificador de Edad
-
-function resolver<T>(entrada: T): T {
-  return entrada;
+function verificarEdad(edad: number): string {
+  if (edad < 18) return 'Menor de edad';
+  if (edad === 18) return 'Exactamente 18';
+  return 'Mayor de edad';
 }
-
-console.log(resolver('ejemplo'));
-
+console.log(verificarEdad(15)); // Menor de edad
+console.log(verificarEdad(18)); // Exactamente 18
+console.log(verificarEdad(25)); // Mayor de edad
 ```
 
 </CodeTabs>
@@ -189,4 +133,3 @@ console.log(resolver('ejemplo'));
 
 - [RETO: Reto Inicial 15: Año Bisiesto](/retos/reto-inicial-15-ano-bisiesto/)
 - [RETO: Reto Inicial 18: Precio con IVA](/retos/reto-inicial-18-precio-con-iva/)
-

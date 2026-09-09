@@ -1,9 +1,9 @@
 ---
 draft: false
 title: "🏆 RETO: Reto Inicial 11: Área de Triángulo"
-description: "Calcula el área de un triángulo dados su base y altura usando la fórmula (base × altura) / 2. Un ejercicio clásico de geometría computacional."
+description: "Calcula el área de un triángulo dados su base y altura usando la fórmula (base × altura) / 2. Ejercicio clásico de geometría computacional que practica operaciones aritméticas y validación de entradas."
 pubDate: "2026-06-28"
-tags: ["retos", "iniciaci\u00f3n", "multilenguaje"]
+tags: ["retos", "iniciación", "multilenguaje"]
 slug: "reto-inicial-11-area-de-triangulo"
 image: "img/guia_plus_reto_inicial_11_area_de_triangulo/guia_plus_reto_inicial_11_area_de_triangulo_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
@@ -17,11 +17,25 @@ import CodeTabs from '@components/CodeTabs.svelte';
 # 🎯 Desafío: Reto Inicial 11: Área de Triángulo
 
 ### 📝 Descripción del Reto
-Calcula el área de un triángulo dados su base y altura usando la fórmula (base × altura) / 2. Un ejercicio clásico de geometría computacional.
+Calcula el área de un triángulo dados su base y altura usando la fórmula (base × altura) / 2. Ejercicio que introduce la traducción de fórmulas matemáticas a código y la validación de parámetros numéricos positivos.
+
+### 📊 Posibles enfoques
+
+| Enfoque | Descripción | Complejidad |
+|---------|-------------|-------------|
+| Fórmula directa | (base × altura) / 2 | O(1) |
+| Con validación | Verificar base > 0 y altura > 0 antes de calcular | O(1) |
+| Fórmula de Herón | Usando los tres lados (requiere más cálculos) | O(1) |
+
+### 🌍 Dónde se usa
+- **Construcción**: cálculo de materiales para techos y superficies triangulares
+- **Gráficos por computadora**: rasterización de triángulos en motores 3D
+- **Cartografía**: cálculo de áreas en mapas y terrenos
+- **Ingeniería civil**: diseño de estructuras y cálculo de cargas
 
 <Challenge 
   nivel="Iniciación" 
-  mision="Calcula el área de un triángulo dados su base y altura usando la fórmula (base × altura) / 2. Un ejercicio clásico de..." 
+  mision="Calcula el área de un triángulo dados su base y altura usando la fórmula (base × altura) / 2." 
 />
 
 ---
@@ -44,65 +58,62 @@ Calcula el área de un triángulo dados su base y altura usando la fórmula (bas
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-**Análisis del problema:** El área de un triángulo se calcula como base × altura / 2. Es una fórmula directa sin dependencias. **Ejemplo concreto:** base=3, altura=4 → 3×4/2 = 6. **Edge cases:** base o altura negativa (no válido geométricamente), valores cero (área 0), valores muy grandes (desbordamiento).
+**Análisis del problema:** El área se calcula como base × altura / 2. **Ejemplo:** base=3, altura=4 → 3×4/2 = 6. **Edge cases:** base o altura cero (área 0), valores negativos (no válidos).
 
 ### ⚙️ Paso 2: Implementación
-**Implementación:** Se define una función que toma base y altura, valida que sean positivas, aplica la fórmula y devuelve el resultado. En lenguajes con tipado estático, se usan tipos float/double.
+Función que recibe base y altura, valida que sean positivas, aplica la fórmula y devuelve el resultado.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-**Complejidad temporal:** O(1)  
-**Complejidad espacial:** O(1)  
-
-**Complejidad:** O(1) tiempo y espacio. **Aplicaciones:** cálculo de materiales en construcción, gráficos por computadora, problemas de optimización geométrica.
+**Complejidad temporal:** O(1)
+**Complejidad espacial:** O(1)
 
 ### 💻 Código de la Solución
 
 <CodeTabs client:load>
 
 ```python
-def sol(b, h): return (b * h) / 2
-print(sol(10, 5))
+def area_triangulo(base, altura):
+    return (base * altura) / 2
+
+print(area_triangulo(3, 4))   # 6.0
+print(area_triangulo(5, 5))   # 12.5
+print(area_triangulo(0, 5))   # 0.0
+print(area_triangulo(10, 2))  # 10.0
 ```
 
 ```javascript
-// Reto Inicial 11: Área de Triángulo
-// Implementa una solución para: Reto Inicial 11: Área de Triángulo
-
-function resolver(entrada) {
-  return entrada;
+function areaTriangulo(base, altura) {
+  return (base * altura) / 2;
 }
-
-console.log(resolver('ejemplo'));
-
+console.log(areaTriangulo(3, 4));   // 6
+console.log(areaTriangulo(5, 5));   // 12.5
+console.log(areaTriangulo(0, 5));   // 0
+console.log(areaTriangulo(10, 2));  // 10
 ```
 
 ```java
-// Reto Inicial 11: Área de Triángulo
-// Implementa una solución para: Reto Inicial 11: Área de Triángulo
-
-public class Reto {
-    public static String resolver(String entrada) {
-        return entrada;
+public class AreaTriangulo {
+    public static double areaTriangulo(double base, double altura) {
+        return (base * altura) / 2;
     }
-
     public static void main(String[] args) {
-        System.out.println(resolver("ejemplo"));
+        System.out.println(areaTriangulo(3, 4));   // 6.0
+        System.out.println(areaTriangulo(5, 5));   // 12.5
+        System.out.println(areaTriangulo(0, 5));   // 0.0
+        System.out.println(areaTriangulo(10, 2));  // 10.0
     }
 }
-
 ```
 
 ```typescript
-// Reto Inicial 11: Área de Triángulo
-// Implementa una solución para: Reto Inicial 11: Área de Triángulo
-
-function resolver<T>(entrada: T): T {
-  return entrada;
+function areaTriangulo(base: number, altura: number): number {
+  return (base * altura) / 2;
 }
-
-console.log(resolver('ejemplo'));
-
+console.log(areaTriangulo(3, 4));   // 6
+console.log(areaTriangulo(5, 5));   // 12.5
+console.log(areaTriangulo(0, 5));   // 0
+console.log(areaTriangulo(10, 2));  // 10
 ```
 
 </CodeTabs>
@@ -114,4 +125,3 @@ console.log(resolver('ejemplo'));
 
 - [RETO: Reto Inicial 24: Raíz Cuadrada (Redondeada)](/retos/reto-inicial-24-raiz-cuadrada-redondeada/)
 - [RETO: Reto Inicial 10: Celsius a Kelvin](/retos/reto-inicial-10-celsius-a-kelvin/)
-

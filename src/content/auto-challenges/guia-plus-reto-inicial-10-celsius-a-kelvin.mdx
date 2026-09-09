@@ -1,9 +1,9 @@
 ---
 draft: false
 title: "🏆 RETO: Reto Inicial 10: Celsius a Kelvin"
-description: "Convierte grados Celsius a Kelvin usando la fórmula K = C + 273.15. Es la conversión más básica entre escalas de temperatura y un excelente punto de partida..."
+description: "Convierte grados Celsius a Kelvin usando la fórmula K = C + 273.15. Ejercicio de transformación directa que introducirte a funciones matemáticas y manejo de punto flotante."
 pubDate: "2026-06-28"
-tags: ["retos", "iniciaci\u00f3n", "multilenguaje"]
+tags: ["retos", "iniciación", "multilenguaje"]
 slug: "reto-inicial-10-celsius-a-kelvin"
 image: "img/guia_plus_reto_inicial_10_celsius_a_kelvin/guia_plus_reto_inicial_10_celsius_a_kelvin_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
@@ -17,11 +17,25 @@ import CodeTabs from '@components/CodeTabs.svelte';
 # 🎯 Desafío: Reto Inicial 10: Celsius a Kelvin
 
 ### 📝 Descripción del Reto
-Convierte grados Celsius a Kelvin usando la fórmula K = C + 273.15. Es la conversión más básica entre escalas de temperatura y un excelente punto de partida para entender funciones de transformación directa.
+Convierte grados Celsius a Kelvin usando la fórmula K = C + 273.15. Kelvin es la escala absoluta de temperatura donde 0 K es el cero absoluto (-273.15°C). Conversión directa que practica operaciones aritméticas con decimales y el uso de constantes matemáticas.
+
+### 📊 Posibles enfoques
+
+| Enfoque | Descripción | Complejidad |
+|---------|-------------|-------------|
+| Suma directa | K = C + 273.15 — una línea | O(1) |
+| Función con validación | Verificar que C >= -273.15 antes de convertir | O(1) |
+| Redondeo | Redondear resultado a 2 decimales para precisión | O(1) |
+
+### 🌍 Dónde se usa
+- **Meteorología**: estaciones de monitoreo que reportan en Kelvin
+- **Ciencia**: experimentos de laboratorio que requieren escala absoluta
+- **Industria**: procesos de manufacturing controlados por temperatura
+- **APIs de clima**: conversión entre unidades para usuarios internacionales
 
 <Challenge 
   nivel="Iniciación" 
-  mision="Convierte grados Celsius a Kelvin usando la fórmula K = C + 273.15. Es la conversión más básica entre escalas de..." 
+  mision="Convierte grados Celsius a Kelvin usando la fórmula K = C + 273.15." 
 />
 
 ---
@@ -44,65 +58,62 @@ Convierte grados Celsius a Kelvin usando la fórmula K = C + 273.15. Es la conve
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-**Análisis del problema:** La conversión de Celsius a Kelvin es directa: suma 273.15 al valor en Celsius. Matemáticamente: K = C + 273.15. Es una función pura y determinista. **Ejemplo concreto:** 0°C → 273.15 K, 100°C → 373.15 K. **Edge cases:** cero absoluto (-273.15°C da 0 K), valores negativos, entrada no numérica.
+**Análisis del problema:** La conversión es directa: K = C + 273.15. **Ejemplo:** 0°C → 273.15 K, 100°C → 373.15 K. **Edge cases:** cero absoluto (-273.15°C = 0 K), valores negativos.
 
 ### ⚙️ Paso 2: Implementación
-**Implementación:** La solución es una línea. En todos los lenguajes, se define una función que recibe un número y devuelve el resultado de sumarle 273.15. Se debe validar que la entrada sea numérica y, en lenguajes tipados, definir el tipo correcto.
+Función que suma 273.15 al valor de entrada. Validar que la entrada sea numérica.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-**Complejidad temporal:** O(1)  
-**Complejidad espacial:** O(1)  
-
-**Complejidad:** O(1) tiempo y O(1) espacio. Es una operación aritmética simple sin iteraciones ni estructuras auxiliares. **Aplicaciones:** sistemas de monitoreo de temperatura, APIs meteorológicas, conversión de unidades en datos científicos.
+**Complejidad temporal:** O(1)
+**Complejidad espacial:** O(1)
 
 ### 💻 Código de la Solución
 
 <CodeTabs client:load>
 
 ```python
-def sol(c): return c + 273.15
-print(sol(25))
+def celsius_a_kelvin(c):
+    return c + 273.15
+
+print(celsius_a_kelvin(0))      # 273.15
+print(celsius_a_kelvin(100))    # 373.15
+print(celsius_a_kelvin(-273.15)) # 0.0
+print(celsius_a_kelvin(25))     # 298.15
 ```
 
 ```javascript
-// Reto Inicial 10: Celsius a Kelvin
-// Implementa una solución para: Reto Inicial 10: Celsius a Kelvin
-
-function resolver(entrada) {
-  return entrada;
+function celsiusAKelvin(c) {
+  return c + 273.15;
 }
-
-console.log(resolver('ejemplo'));
-
+console.log(celsiusAKelvin(0));       // 273.15
+console.log(celsiusAKelvin(100));     // 373.15
+console.log(celsiusAKelvin(-273.15)); // 0
+console.log(celsiusAKelvin(25));      // 298.15
 ```
 
 ```java
-// Reto Inicial 10: Celsius a Kelvin
-// Implementa una solución para: Reto Inicial 10: Celsius a Kelvin
-
-public class Reto {
-    public static String resolver(String entrada) {
-        return entrada;
+public class CelsiusAKelvin {
+    public static double celsiusAKelvin(double c) {
+        return c + 273.15;
     }
-
     public static void main(String[] args) {
-        System.out.println(resolver("ejemplo"));
+        System.out.println(celsiusAKelvin(0));       // 273.15
+        System.out.println(celsiusAKelvin(100));     // 373.15
+        System.out.println(celsiusAKelvin(-273.15)); // 0.0
+        System.out.println(celsiusAKelvin(25));      // 298.15
     }
 }
-
 ```
 
 ```typescript
-// Reto Inicial 10: Celsius a Kelvin
-// Implementa una solución para: Reto Inicial 10: Celsius a Kelvin
-
-function resolver<T>(entrada: T): T {
-  return entrada;
+function celsiusAKelvin(c: number): number {
+  return c + 273.15;
 }
-
-console.log(resolver('ejemplo'));
-
+console.log(celsiusAKelvin(0));       // 273.15
+console.log(celsiusAKelvin(100));     // 373.15
+console.log(celsiusAKelvin(-273.15)); // 0
+console.log(celsiusAKelvin(25));      // 298.15
 ```
 
 </CodeTabs>
@@ -114,4 +125,3 @@ console.log(resolver('ejemplo'));
 
 - [RETO: Reto Inicial 18: Precio con IVA](/retos/reto-inicial-18-precio-con-iva/)
 - [RETO: Reto Inicial 19: Descuento Simple](/retos/reto-inicial-19-descuento-simple/)
-

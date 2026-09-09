@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "🏆 RETO: Filtro de Spam por Keywords"
-description: "Resuelve el desafío 'Filtro de Spam por Keywords'. Implementa una solución completa siguiendo las mejores prácticas de programación."
+description: "Implementa un filtro que detecta si un mensaje contiene palabras clave de spam. Dada una lista de keywords prohibidas, retorna true si alguna aparece en el texto (case-insensitive)."
 pubDate: "2026-06-28"
 tags: ["retos", "intermedio", "multilenguaje"]
 slug: "reto-filtro-de-spam-por-keywords"
@@ -17,11 +17,25 @@ import CodeTabs from '@components/CodeTabs.svelte';
 # 🎯 Desafío: Filtro de Spam por Keywords
 
 ### 📝 Descripción del Reto
-Resuelve el desafío 'Filtro de Spam por Keywords'. Implementa una solución completa siguiendo las mejores prácticas de programación.
+Implementa un filtro de spam: dado un mensaje y una lista de keywords prohibidas, retorna true si alguna keyword aparece en el texto (ignorando mayúsculas/minúsculas). Ejercicio que practica búsqueda en strings, normalización de texto y lógica de filtrado.
+
+### 📊 Posibles enfoques
+
+| Enfoque | Descripción | Complejidad |
+|---------|-------------|-------------|
+| Búsqueda lineal | Para cada keyword, verificar si está en el texto | O(k × n) |
+| Set de palabras | Tokenizar texto y verificar intersección con keywords | O(n + k) |
+| Regex | Construir patrón alternado de keywords | O(n × k) |
+
+### 🌍 Dónde se usa
+- **Moderación de contenido**: filtrar comentarios ofensivos en redes sociales
+- **Email**: detectar spam en bandejas de entrada
+- **Chatbots**: evitar respuestas con contenido no deseado
+- **Juegos**: filtrar lenguaje inapropiado en chat multijugador
 
 <Challenge 
   nivel="Intermedio" 
-  mision="Resuelve el desafío 'Filtro de Spam por Keywords'. Implementa una solución completa siguiendo las mejores prácticas de..." 
+  mision="Implementa un filtro que detecte keywords de spam en un mensaje." 
 />
 
 ---
@@ -30,8 +44,10 @@ Resuelve el desafío 'Filtro de Spam por Keywords'. Implementa una solución com
 
 | Entrada | Salida esperada |
 |---------|-----------------|
-| ``````````ejemplo_entrada`````````` | ``````````resultado_esperado`````````` |
-| ``````````caso_limite`````````` | ``````````manejo_correcto`````````` |
+| `'Compra ahora!!!', ['comprar', 'gratis']` | `true` |
+| `'Hola que tal', ['comprar', 'gratis']` | `false` |
+| `'GRATIS para ti', ['gratis']` | `true` |
+| `'Hola mundo', []` | `false` |
 
 ---
 
@@ -42,165 +58,69 @@ Resuelve el desafío 'Filtro de Spam por Keywords'. Implementa una solución com
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-**Análisis del problema:** Filtro de Spam por Keywords. Identifica la entrada, la salida esperada, y los casos límite. Diseña una estrategia de solución eficiente.
+**Análisis del problema:** Convertir tanto el mensaje como las keywords a minúsculas. Verificar si alguna keyword aparece como substring en el mensaje. **Ejemplo:** 'Compra ahora!!!' + ['comprar'] → 'compra ahora!!!'.includes('comprar') → true. **Edge cases:** lista vacía (false), keyword vacía (cuidado), mensajes con puntuación.
 
 ### ⚙️ Paso 2: Implementación
-Implementación
-**Implementación en Ruby**
-
-Ahora traducimos el análisis a código. La estructura general de la solución es:
-
-**1. Validación de entrada:**
-Verificamos que los datos recibidos son válidos antes de procesarlos. Si la entrada no es válida, devolvemos un valor por defecto o lanzamos un error.
-
-**2. Procesamiento principal:**
-Aplicamos la lógica central del algoritmo usando las estructuras de datos más adecuadas:
-- Listas/arrays para colecciones ordenadas
-- Diccionarios/hash maps para búsquedas rápidas (O(1))
-- Conjuntos/sets para operaciones de pertenencia
-- Pilas/colas para procesamiento FIFO/LIFO
-
-**3. Generación de salida:**
-Formateamos el resultado según lo esperado por el problema.
-
-**Buenas prácticas en Ruby:**
-- Usa nombres de variables descriptivos y significativos
-- Mantén las funciones pequeñas y con una única responsabilidad
-- Sigue las convenciones de estilo del lenguaje (PEP 8, etc.)
-- Comenta las partes no obvias, no cada línea
-- Incluye type hints / anotaciones de tipo cuando sea posible
+Normalizar a minúsculas. Para cada keyword, verificar si está contenida en el texto normalizado.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-**Complejidad temporal:** O(n)  
-**Complejidad espacial:** O(n)  
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-**Análisis de complejidad y optimización**
-
-**Complejidad temporal:**
-Evalúa cómo crece el tiempo de ejecución al aumentar el tamaño de la entrada. Para la mayoría de soluciones, una complejidad O(n) es aceptable, donde n es el tamaño de la entrada. Si tu solución es O(n²), considera si se puede optimizar.
-
-**Complejidad espacial:**
-¿Cuánta memoria adicional utiliza tu algoritmo? ¿Creas copias de los datos o trabajas in-place? En general, O(n) adicional es aceptable para la mayoría de aplicaciones.
-
-**Posibles optimizaciones:**
-- ¿Se puede reducir la complejidad con una estructura de datos diferente?
-- ¿Conviene usar iteración en vez de recursión para ahorrar pila de llamadas?
-- ¿Existe alguna función de la librería estándar que ya resuelva parte del problema?
-- ¿Se puede aplicar early exit para evitar trabajo innecesario?
-
-**Aplicaciones en el mundo real:**
-Este patrón de solución aparece frecuentemente en:
-- Procesamiento de datos y pipelines ETL
-- APIs REST y servicios web
-- Análisis de logs y métricas
-- Automatización de tareas y scripting
-- Validación y transformación de datos en sistemas de información
+**Complejidad temporal:** O(k × n) donde k = número de keywords, n = longitud del texto
+**Complejidad espacial:** O(n)
 
 ### 💻 Código de la Solución
 
 <CodeTabs client:load>
 
 ```python
-# Filtro de Spam por Keywords
-# Implementa una solución para: Filtro de Spam por Keywords
+def es_spam(mensaje, keywords):
+    mensaje_lower = mensaje.lower()
+    return any(kw.lower() in mensaje_lower for kw in keywords)
 
-def resolver(entrada):
-    """
-    Filtro de Spam por Keywords
-    """
-    resultado = entrada
-    return resultado
-
-
-if __name__ == '__main__':
-    print(resolver("ejemplo"))
-
+print(es_spam('Compra ahora!!!', ['comprar', 'gratis']))   # True
+print(es_spam('Hola que tal', ['comprar', 'gratis']))       # False
+print(es_spam('GRATIS para ti', ['gratis']))                 # True
+print(es_spam('Hola mundo', []))                              # False
 ```
 
 ```javascript
-// Filtro de Spam por Keywords
-// Implementa una solución para: Filtro de Spam por Keywords
-
-function resolver(entrada) {
-  return entrada;
+function esSpam(mensaje, keywords) {
+  const mensajeLower = mensaje.toLowerCase();
+  return keywords.some(kw => mensajeLower.includes(kw.toLowerCase()));
 }
-
-console.log(resolver('ejemplo'));
-
+console.log(esSpam('Compra ahora!!!', ['comprar', 'gratis'])); // true
+console.log(esSpam('Hola que tal', ['comprar', 'gratis']));    // false
+console.log(esSpam('GRATIS para ti', ['gratis']));              // true
+console.log(esSpam('Hola mundo', []));                          // false
 ```
 
 ```java
-// Filtro de Spam por Keywords
-// Implementa una solución para: Filtro de Spam por Keywords
-
-public class Reto {
-    public static String resolver(String entrada) {
-        return entrada;
+public class FiltroSpam {
+    public static boolean esSpam(String mensaje, String[] keywords) {
+        String mensajeLower = mensaje.toLowerCase();
+        for (String kw : keywords) {
+            if (mensajeLower.contains(kw.toLowerCase())) return true;
+        }
+        return false;
     }
-
     public static void main(String[] args) {
-        System.out.println(resolver("ejemplo"));
+        System.out.println(esSpam("Compra ahora!!!", new String[]{"comprar", "gratis"})); // true
+        System.out.println(esSpam("Hola que tal", new String[]{"comprar", "gratis"}));    // false
+        System.out.println(esSpam("GRATIS para ti", new String[]{"gratis"}));              // true
+        System.out.println(esSpam("Hola mundo", new String[]{}));                          // false
     }
 }
-
 ```
 
 ```typescript
-// Filtro de Spam por Keywords
-// Implementa una solución para: Filtro de Spam por Keywords
-
-function resolver<T>(entrada: T): T {
-  return entrada;
+function esSpam(mensaje: string, keywords: string[]): boolean {
+  const mensajeLower = mensaje.toLowerCase();
+  return keywords.some(kw => mensajeLower.includes(kw.toLowerCase()));
 }
-
-console.log(resolver('ejemplo'));
-
+console.log(esSpam('Compra ahora!!!', ['comprar', 'gratis'])); // true
+console.log(esSpam('Hola que tal', ['comprar', 'gratis']));    // false
+console.log(esSpam('GRATIS para ti', ['gratis']));              // true
+console.log(esSpam('Hola mundo', []));                          // false
 ```
 
 </CodeTabs>
@@ -212,4 +132,3 @@ console.log(resolver('ejemplo'));
 
 - [RETO: Reto Intermedio 38: Validador de ISBN](/retos/reto-intermedio-38-validador-de-isbn/)
 - [RETO: Reto Inicial 30: Limpieza de Texto](/retos/reto-inicial-30-limpieza-de-texto/)
-

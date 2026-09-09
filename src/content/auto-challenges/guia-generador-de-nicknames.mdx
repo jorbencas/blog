@@ -1,9 +1,9 @@
 ---
 draft: false
 title: "🏆 RETO: Generador de Nicknames"
-description: "Resuelve el desafío 'Generador de Nicknames'. Implementa una solución completa siguiendo las mejores prácticas de programación."
+description: "Genera un nickname a partir de un nombre completo tomando las primeras letras de cada palabra. Ejercicio de manipulación de strings que practica split, join y formateo de texto."
 pubDate: "2026-06-28"
-tags: ["retos", "iniciaci\u00f3n", "multilenguaje"]
+tags: ["retos", "iniciación", "multilenguaje"]
 slug: "reto-generador-de-nicknames"
 image: "img/guia_generador_de_nicknames/guia_generador_de_nicknames_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
@@ -17,11 +17,25 @@ import CodeTabs from '@components/CodeTabs.svelte';
 # 🎯 Desafío: Generador de Nicknames
 
 ### 📝 Descripción del Reto
-Resuelve el desafío 'Generador de Nicknames'. Implementa una solución completa siguiendo las mejores prácticas de programación.
+Genera un nickname a partir de un nombre completo tomando las primeras letras de cada palabra. Ejemplo: "Juan Carlos García" → "JCG". Práctica de split de cadenas, filtrado y formateo de salida.
+
+### 📊 Posibles enfoques
+
+| Enfoque | Descripción | Complejidad |
+|---------|-------------|-------------|
+| Split + map | Separar palabras, tomar primera letra de cada una | O(n) |
+| Bucle | Recorrer caracteres, detectar inicio de palabras | O(n) |
+| Regex | `r'\b(\w)'` para capturar primera letra de cada palabra | O(n) |
+
+### 🌍 Dónde se usa
+- **Redes sociales**: generar usernames a partir de nombres reales
+- **Sistemas corporativos**: crear identificadores de empleado
+- **Juegos**: generar tags cortos para jugadores
+- **Bases de datos**: crear códigos abreviados de entidades
 
 <Challenge 
   nivel="Iniciación" 
-  mision="Resuelve el desafío 'Generador de Nicknames'. Implementa una solución completa siguiendo las mejores prácticas de..." 
+  mision="Genera un nickname tomando las primeras letras de cada palabra del nombre." 
 />
 
 ---
@@ -30,8 +44,10 @@ Resuelve el desafío 'Generador de Nicknames'. Implementa una solución completa
 
 | Entrada | Salida esperada |
 |---------|-----------------|
-| ``````````ejemplo_entrada`````````` | ``````````resultado_esperado`````````` |
-| ``````````caso_limite`````````` | ``````````manejo_correcto`````````` |
+| `'Juan Carlos García'` | `'JCG'` |
+| `'Ana María'` | `'AM'` |
+| `'Pedro'` | `'P'` |
+| `'maría jose torres'` | `'MJT'` |
 
 ---
 
@@ -42,165 +58,66 @@ Resuelve el desafío 'Generador de Nicknames'. Implementa una solución completa
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-**Análisis del problema:** Generador de Nicknames. Identifica la entrada, la salida esperada, y los casos límite. Diseña una estrategia de solución eficiente.
+**Análisis del problema:** Separar el nombre en palabras, tomar la primera letra de cada una y unirlas. **Ejemplo:** "Juan Carlos García" → ["Juan", "Carlos", "García"] → ["J", "C", "G"] → "JCG".
 
 ### ⚙️ Paso 2: Implementación
-Implementación
-**Implementación en Dart**
-
-Ahora traducimos el análisis a código. La estructura general de la solución es:
-
-**1. Validación de entrada:**
-Verificamos que los datos recibidos son válidos antes de procesarlos. Si la entrada no es válida, devolvemos un valor por defecto o lanzamos un error.
-
-**2. Procesamiento principal:**
-Aplicamos la lógica central del algoritmo usando las estructuras de datos más adecuadas:
-- Listas/arrays para colecciones ordenadas
-- Diccionarios/hash maps para búsquedas rápidas (O(1))
-- Conjuntos/sets para operaciones de pertenencia
-- Pilas/colas para procesamiento FIFO/LIFO
-
-**3. Generación de salida:**
-Formateamos el resultado según lo esperado por el problema.
-
-**Buenas prácticas en Dart:**
-- Usa nombres de variables descriptivos y significativos
-- Mantén las funciones pequeñas y con una única responsabilidad
-- Sigue las convenciones de estilo del lenguaje (PEP 8, etc.)
-- Comenta las partes no obvias, no cada línea
-- Incluye type hints / anotaciones de tipo cuando sea posible
+Usar `split(' ')` para separar, `map` o list comprehension para tomar la primera letra, `join` para unir.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-**Complejidad temporal:** O(n)  
-**Complejidad espacial:** O(n)  
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-**Análisis de complejidad y optimización**
-
-**Complejidad temporal:**
-Evalúa cómo crece el tiempo de ejecución al aumentar el tamaño de la entrada. Para la mayoría de soluciones, una complejidad O(n) es aceptable, donde n es el tamaño de la entrada. Si tu solución es O(n²), considera si se puede optimizar.
-
-**Complejidad espacial:**
-¿Cuánta memoria adicional utiliza tu algoritmo? ¿Creas copias de los datos o trabajas in-place? En general, O(n) adicional es aceptable para la mayoría de aplicaciones.
-
-**Posibles optimizaciones:**
-- ¿Se puede reducir la complejidad con una estructura de datos diferente?
-- ¿Conviene usar iteración en vez de recursión para ahorrar pila de llamadas?
-- ¿Existe alguna función de la librería estándar que ya resuelva parte del problema?
-- ¿Se puede aplicar early exit para evitar trabajo innecesario?
-
-**Aplicaciones en el mundo real:**
-Este patrón de solución aparece frecuentemente en:
-- Procesamiento de datos y pipelines ETL
-- APIs REST y servicios web
-- Análisis de logs y métricas
-- Automatización de tareas y scripting
-- Validación y transformación de datos en sistemas de información
+**Complejidad temporal:** O(n)
+**Complejidad espacial:** O(n)
 
 ### 💻 Código de la Solución
 
 <CodeTabs client:load>
 
 ```python
-# Generador de Nicknames
-# Implementa una solución para: Generador de Nicknames
+def generar_nickname(nombre):
+    return ''.join(palabra[0].upper() for palabra in nombre.split())
 
-def resolver(entrada):
-    """
-    Generador de Nicknames
-    """
-    resultado = entrada
-    return resultado
-
-
-if __name__ == '__main__':
-    print(resolver("ejemplo"))
-
+print(generar_nickname('Juan Carlos García'))  # JCG
+print(generar_nickname('Ana María'))            # AM
+print(generar_nickname('Pedro'))                # P
+print(generar_nickname('maría jose torres'))    # MJT
 ```
 
 ```javascript
-// Generador de Nicknames
-// Implementa una solución para: Generador de Nicknames
-
-function resolver(entrada) {
-  return entrada;
+function generarNickname(nombre) {
+  return nombre.split(' ').map(p => p[0].toUpperCase()).join('');
 }
-
-console.log(resolver('ejemplo'));
-
+console.log(generarNickname('Juan Carlos García'));  // JCG
+console.log(generarNickname('Ana María'));            // AM
+console.log(generarNickname('Pedro'));                // P
+console.log(generarNickname('maría jose torres'));    // MJT
 ```
 
 ```java
-// Generador de Nicknames
-// Implementa una solución para: Generador de Nicknames
-
-public class Reto {
-    public static String resolver(String entrada) {
-        return entrada;
+public class GeneradorNicknames {
+    public static String generarNickname(String nombre) {
+        StringBuilder sb = new StringBuilder();
+        for (String palabra : nombre.split(" ")) {
+            sb.append(Character.toUpperCase(palabra.charAt(0)));
+        }
+        return sb.toString();
     }
-
     public static void main(String[] args) {
-        System.out.println(resolver("ejemplo"));
+        System.out.println(generarNickname("Juan Carlos García")); // JCG
+        System.out.println(generarNickname("Ana María"));           // AM
+        System.out.println(generarNickname("Pedro"));               // P
+        System.out.println(generarNickname("maría jose torres"));   // MJT
     }
 }
-
 ```
 
 ```typescript
-// Generador de Nicknames
-// Implementa una solución para: Generador de Nicknames
-
-function resolver<T>(entrada: T): T {
-  return entrada;
+function generarNickname(nombre: string): string {
+  return nombre.split(' ').map(p => p[0].toUpperCase()).join('');
 }
-
-console.log(resolver('ejemplo'));
-
+console.log(generarNickname('Juan Carlos García')); // JCG
+console.log(generarNickname('Ana María'));           // AM
+console.log(generarNickname('Pedro'));               // P
+console.log(generarNickname('maría jose torres'));   // MJT
 ```
 
 </CodeTabs>
@@ -212,4 +129,3 @@ console.log(resolver('ejemplo'));
 
 - [RETO: Contador de Vocales](/retos/reto-contador-de-vocales/)
 - [RETO: El Reclutador de la Banda](/retos/reto-el-reclutador-de-la-banda/)
-

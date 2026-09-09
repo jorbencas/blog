@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "🏆 RETO: Consumo de API Mock"
-description: "Resuelve el desafío 'Consumo de API Mock'. Implementa una solución completa siguiendo las mejores prácticas de programación."
+description: "Simula el consumo de una API REST usando datos mock. Practica manejo de objetos JSON, funciones asíncronas y estructuras de datos anidadas."
 pubDate: "2026-06-28"
 tags: ["retos", "intermedio", "multilenguaje"]
 slug: "reto-consumo-de-api-mock"
@@ -17,21 +17,37 @@ import CodeTabs from '@components/CodeTabs.svelte';
 # 🎯 Desafío: Consumo de API Mock
 
 ### 📝 Descripción del Reto
-Resuelve el desafío 'Consumo de API Mock'. Implementa una solución completa siguiendo las mejores prácticas de programación.
+Simula el consumo de una API REST de usuarios usando datos mock. Implementa operaciones GET (obtener todos), GET por ID, y filtrado por campos. Practica manejo de objetos JSON, estructuras de datos anidadas y diseño de interfaces de API.
+
+### 📊 Posibles enfoques
+
+| Enfoque | Descripción | Complejidad |
+|---------|-------------|-------------|
+| Array de objetos | Buscar con filter/find en array mock | O(n) por consulta |
+| Diccionario por ID | Indexar por ID para acceso O(1) | O(1) por ID, O(n) por filtro |
+| Simulación async | Usar Promises/async para simular latencia | O(n) |
+
+### 🌍 Dónde se usa
+- **Frontend**: consumo de APIs durante desarrollo antes de tener backend
+- **Testing**: mockear respuestas de API en pruebas unitarias
+- **Prototipado**: crear MVP sin backend real
+- **Demostraciones**: mostrar funcionalidad con datos ficticios
 
 <Challenge 
   nivel="Intermedio" 
-  mision="Resuelve el desafío 'Consumo de API Mock'. Implementa una solución completa siguiendo las mejores prácticas de..." 
+  mision="Simula consumo de API REST con operaciones GET y filtrado sobre datos mock." 
 />
 
 ---
 
 ### 🧪 Casos de Prueba
 
-| Entrada | Salida esperada |
-|---------|-----------------|
-| ``````````ejemplo_entrada`````````` | ``````````resultado_esperado`````````` |
-| ``````````caso_limite`````````` | ``````````manejo_correcto`````````` |
+| Operación | Entrada | Salida esperada |
+|---------|---------|-----------------|
+| GET all | - | `[{id:1, nombre:'Ana'}, ...]` |
+| GET by ID | `1` | `{id:1, nombre:'Ana'}` |
+| GET by ID | `99` | `null` |
+| Filter | `{'ciudad':'Madrid'}` | `[{id:1, ...}, {id:3, ...}]` |
 
 ---
 
@@ -42,165 +58,114 @@ Resuelve el desafío 'Consumo de API Mock'. Implementa una solución completa si
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-**Análisis del problema:** Consumo de API Mock. Identifica la entrada, la salida esperada, y los casos límite. Diseña una estrategia de solución eficiente.
+**Análisis del problema:** Crear un array de objetos mock con campos id, nombre, email, ciudad. Implementar métodos: getAll(), getById(id), filterBy(field, value). **Edge cases:** ID no existe (null), filtro sin resultados (array vacío).
 
 ### ⚙️ Paso 2: Implementación
-Implementación
-**Implementación en Python**
-
-Ahora traducimos el análisis a código. La estructura general de la solución es:
-
-**1. Validación de entrada:**
-Verificamos que los datos recibidos son válidos antes de procesarlos. Si la entrada no es válida, devolvemos un valor por defecto o lanzamos un error.
-
-**2. Procesamiento principal:**
-Aplicamos la lógica central del algoritmo usando las estructuras de datos más adecuadas:
-- Listas/arrays para colecciones ordenadas
-- Diccionarios/hash maps para búsquedas rápidas (O(1))
-- Conjuntos/sets para operaciones de pertenencia
-- Pilas/colas para procesamiento FIFO/LIFO
-
-**3. Generación de salida:**
-Formateamos el resultado según lo esperado por el problema.
-
-**Buenas prácticas en Python:**
-- Usa nombres de variables descriptivos y significativos
-- Mantén las funciones pequeñas y con una única responsabilidad
-- Sigue las convenciones de estilo del lenguaje (PEP 8, etc.)
-- Comenta las partes no obvias, no cada línea
-- Incluye type hints / anotaciones de tipo cuando sea posible
+Crear clase/conjunto de funciones que encapsulen el array mock. Usar find, filter para consultas.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-**Complejidad temporal:** O(n)  
-**Complejidad espacial:** O(n)  
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-**Análisis de complejidad y optimización**
-
-**Complejidad temporal:**
-Evalúa cómo crece el tiempo de ejecución al aumentar el tamaño de la entrada. Para la mayoría de soluciones, una complejidad O(n) es aceptable, donde n es el tamaño de la entrada. Si tu solución es O(n²), considera si se puede optimizar.
-
-**Complejidad espacial:**
-¿Cuánta memoria adicional utiliza tu algoritmo? ¿Creas copias de los datos o trabajas in-place? En general, O(n) adicional es aceptable para la mayoría de aplicaciones.
-
-**Posibles optimizaciones:**
-- ¿Se puede reducir la complejidad con una estructura de datos diferente?
-- ¿Conviene usar iteración en vez de recursión para ahorrar pila de llamadas?
-- ¿Existe alguna función de la librería estándar que ya resuelva parte del problema?
-- ¿Se puede aplicar early exit para evitar trabajo innecesario?
-
-**Aplicaciones en el mundo real:**
-Este patrón de solución aparece frecuentemente en:
-- Procesamiento de datos y pipelines ETL
-- APIs REST y servicios web
-- Análisis de logs y métricas
-- Automatización de tareas y scripting
-- Validación y transformación de datos en sistemas de información
+**Complejidad temporal:** O(n) por filtro, O(1) por ID (si indexado)
+**Complejidad espacial:** O(n)
 
 ### 💻 Código de la Solución
 
 <CodeTabs client:load>
 
 ```python
-# Consumo de API Mock
-# Implementa una solución para: Consumo de API Mock
+class APIMock:
+    def __init__(self):
+        self.usuarios = [
+            {"id": 1, "nombre": "Ana", "ciudad": "Madrid"},
+            {"id": 2, "nombre": "Luis", "ciudad": "Barcelona"},
+            {"id": 3, "nombre": "María", "ciudad": "Madrid"},
+        ]
+    
+    def get_all(self):
+        return self.usuarios
+    
+    def get_by_id(self, id):
+        return next((u for u in self.usuarios if u["id"] == id), None)
+    
+    def filter_by(self, campo, valor):
+        return [u for u in self.usuarios if u.get(campo) == valor]
 
-def resolver(entrada):
-    """
-    Consumo de API Mock
-    """
-    resultado = entrada
-    return resultado
-
-
-if __name__ == '__main__':
-    print(resolver("ejemplo"))
-
+api = APIMock()
+print(api.get_all())
+print(api.get_by_id(1))              # {'id': 1, 'nombre': 'Ana', 'ciudad': 'Madrid'}
+print(api.get_by_id(99))             # None
+print(api.filter_by("ciudad", "Madrid"))  # Ana, María
 ```
 
 ```javascript
-// Consumo de API Mock
-// Implementa una solución para: Consumo de API Mock
-
-function resolver(entrada) {
-  return entrada;
+class APIMock {
+  constructor() {
+    this.usuarios = [
+      { id: 1, nombre: "Ana", ciudad: "Madrid" },
+      { id: 2, nombre: "Luis", ciudad: "Barcelona" },
+      { id: 3, nombre: "María", ciudad: "Madrid" },
+    ];
+  }
+  getAll() { return this.usuarios; }
+  getById(id) { return this.usuarios.find(u => u.id === id) || null; }
+  filterBy(campo, valor) { return this.usuarios.filter(u => u[campo] === valor); }
 }
 
-console.log(resolver('ejemplo'));
-
+const api = new APIMock();
+console.log(api.getAll());
+console.log(api.getById(1));           // { id: 1, nombre: 'Ana', ciudad: 'Madrid' }
+console.log(api.getById(99));          // null
+console.log(api.filterBy("ciudad", "Madrid")); // Ana, María
 ```
 
 ```java
-// Consumo de API Mock
-// Implementa una solución para: Consumo de API Mock
+import java.util.*;
+import java.util.stream.*;
 
-public class Reto {
-    public static String resolver(String entrada) {
-        return entrada;
+public class APIMock {
+    private List<Map<String, Object>> usuarios = List.of(
+        Map.of("id", 1, "nombre", "Ana", "ciudad", "Madrid"),
+        Map.of("id", 2, "nombre", "Luis", "ciudad", "Barcelona"),
+        Map.of("id", 3, "nombre", "María", "ciudad", "Madrid")
+    );
+    
+    public List<Map<String, Object>> getAll() { return usuarios; }
+    
+    public Map<String, Object> getById(int id) {
+        return usuarios.stream().filter(u -> (int)u.get("id") == id).findFirst().orElse(null);
     }
-
+    
+    public List<Map<String, Object>> filterBy(String campo, Object valor) {
+        return usuarios.stream().filter(u -> u.get(campo).equals(valor)).collect(Collectors.toList());
+    }
+    
     public static void main(String[] args) {
-        System.out.println(resolver("ejemplo"));
+        APIMock api = new APIMock();
+        System.out.println(api.getAll());
+        System.out.println(api.getById(1));
+        System.out.println(api.filterBy("ciudad", "Madrid"));
     }
 }
-
 ```
 
 ```typescript
-// Consumo de API Mock
-// Implementa una solución para: Consumo de API Mock
+interface Usuario { id: number; nombre: string; ciudad: string; }
 
-function resolver<T>(entrada: T): T {
-  return entrada;
+class APIMock {
+  private usuarios: Usuario[] = [
+    { id: 1, nombre: "Ana", ciudad: "Madrid" },
+    { id: 2, nombre: "Luis", ciudad: "Barcelona" },
+    { id: 3, nombre: "María", ciudad: "Madrid" },
+  ];
+  getAll(): Usuario[] { return this.usuarios; }
+  getById(id: number): Usuario | null { return this.usuarios.find(u => u.id === id) || null; }
+  filterBy(campo: keyof Usuario, valor: string): Usuario[] { return this.usuarios.filter(u => u[campo] === valor); }
 }
 
-console.log(resolver('ejemplo'));
-
+const api = new APIMock();
+console.log(api.getAll());
+console.log(api.getById(1));
+console.log(api.filterBy("ciudad", "Madrid"));
 ```
 
 </CodeTabs>
@@ -212,4 +177,3 @@ console.log(resolver('ejemplo'));
 
 - [RETO: Manejador de Contexto (Files)](/retos/reto-manejador-de-contexto-files/)
 - [RETO: Reto Intermedio 12: Procesador de JSON](/retos/reto-intermedio-12-procesador-de-json/)
-

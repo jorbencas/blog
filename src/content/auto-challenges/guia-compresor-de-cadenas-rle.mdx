@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "🏆 RETO: Compresor de Cadenas (RLE)"
-description: "Resuelve el desafío 'Compresor de Cadenas (RLE)'. Implementa una solución completa siguiendo las mejores prácticas de programación."
+description: "Implementa la compresión Run-Length Encoding: reemplaza secuencias de caracteres repetidos por el carácter seguido del conteo. 'AABBBCC' → 'A2B3C2'. Algoritmo clásico de compresión de datos."
 pubDate: "2026-06-28"
 tags: ["retos", "avanzado", "multilenguaje"]
 slug: "reto-compresor-de-cadenas-rle"
@@ -17,11 +17,25 @@ import CodeTabs from '@components/CodeTabs.svelte';
 # 🎯 Desafío: Compresor de Cadenas (RLE)
 
 ### 📝 Descripción del Reto
-Resuelve el desafío 'Compresor de Cadenas (RLE)'. Implementa una solución completa siguiendo las mejores prácticas de programación.
+Implementa Run-Length Encoding (RLE): comprime una cadena reemplazando secuencias de caracteres repetidos por el carácter seguido de su conteo. 'AABBBCC' → 'A2B3C2'. Si un carácter aparece una vez, solo se escribe sin número. Algoritmo clásico de compresión usado en imágenes BMP y fax.
+
+### 📊 Posibles enfoques
+
+| Enfoque | Descripción | Complejidad |
+|---------|-------------|-------------|
+| Bucle con contador | Recorrer, contar repeticiones consecutivas | O(n) |
+| GroupBy funcional | Agrupar caracteres consecutivos iguales | O(n) |
+| Dos punteros | Uno lee, otro cuenta repeticiones | O(n) |
+
+### 🌍 Dónde se usa
+- **Compresión de imágenes**: formato BMP usa RLE internamente
+- **Transmisión de datos**: comprimir datos antes de enviar por red
+- **Almacenamiento**: reducir tamaño de archivos con datos repetitivos
+- **Bioinformática**: comprimir secuencias de ADN repetitivas
 
 <Challenge 
   nivel="Avanzado" 
-  mision="Resuelve el desafío 'Compresor de Cadenas (RLE)'. Implementa una solución completa siguiendo las mejores prácticas de..." 
+  mision="Implementa Run-Length Encoding para comprimir cadenas con caracteres repetidos." 
 />
 
 ---
@@ -30,8 +44,11 @@ Resuelve el desafío 'Compresor de Cadenas (RLE)'. Implementa una solución comp
 
 | Entrada | Salida esperada |
 |---------|-----------------|
-| ``````````ejemplo_entrada`````````` | ``````````resultado_esperado`````````` |
-| ``````````caso_limite`````````` | ``````````manejo_correcto`````````` |
+| `'AABBBCC'` | `'A2B3C2'` |
+| `'ABC'` | `'A1B1C1'` o `'ABC'` |
+| `'AAaaBB'` | `'A2a2B2'` |
+| `''` | `''` |
+| `'A'` | `'A'` |
 
 ---
 
@@ -42,165 +59,110 @@ Resuelve el desafío 'Compresor de Cadenas (RLE)'. Implementa una solución comp
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-**Análisis del problema:** Compresor de Cadenas (RLE). Identifica la entrada, la salida esperada, y los casos límite. Diseña una estrategia de solución eficiente.
+**Análisis del problema:** Recorrer la cadena contando caracteres consecutivos iguales. **Ejemplo:** 'AABBBCC' → A:2, B:3, C:2 → "A2B3C2". **Edge cases:** cadena vacía, un solo carácter, sin repeticiones.
 
 ### ⚙️ Paso 2: Implementación
-Implementación
-**Implementación en Kotlin**
-
-Ahora traducimos el análisis a código. La estructura general de la solución es:
-
-**1. Validación de entrada:**
-Verificamos que los datos recibidos son válidos antes de procesarlos. Si la entrada no es válida, devolvemos un valor por defecto o lanzamos un error.
-
-**2. Procesamiento principal:**
-Aplicamos la lógica central del algoritmo usando las estructuras de datos más adecuadas:
-- Listas/arrays para colecciones ordenadas
-- Diccionarios/hash maps para búsquedas rápidas (O(1))
-- Conjuntos/sets para operaciones de pertenencia
-- Pilas/colas para procesamiento FIFO/LIFO
-
-**3. Generación de salida:**
-Formateamos el resultado según lo esperado por el problema.
-
-**Buenas prácticas en Kotlin:**
-- Usa nombres de variables descriptivos y significativos
-- Mantén las funciones pequeñas y con una única responsabilidad
-- Sigue las convenciones de estilo del lenguaje (PEP 8, etc.)
-- Comenta las partes no obvias, no cada línea
-- Incluye type hints / anotaciones de tipo cuando sea posible
+Bucle que cuenta repeticiones del carácter actual. Cuando cambia, guardar carácter + conteo.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-**Complejidad temporal:** O(n)  
-**Complejidad espacial:** O(n)  
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-**Análisis de complejidad y optimización**
-
-**Complejidad temporal:**
-Evalúa cómo crece el tiempo de ejecución al aumentar el tamaño de la entrada. Para la mayoría de soluciones, una complejidad O(n) es aceptable, donde n es el tamaño de la entrada. Si tu solución es O(n²), considera si se puede optimizar.
-
-**Complejidad espacial:**
-¿Cuánta memoria adicional utiliza tu algoritmo? ¿Creas copias de los datos o trabajas in-place? En general, O(n) adicional es aceptable para la mayoría de aplicaciones.
-
-**Posibles optimizaciones:**
-- ¿Se puede reducir la complejidad con una estructura de datos diferente?
-- ¿Conviene usar iteración en vez de recursión para ahorrar pila de llamadas?
-- ¿Existe alguna función de la librería estándar que ya resuelva parte del problema?
-- ¿Se puede aplicar early exit para evitar trabajo innecesario?
-
-**Aplicaciones en el mundo real:**
-Este patrón de solución aparece frecuentemente en:
-- Procesamiento de datos y pipelines ETL
-- APIs REST y servicios web
-- Análisis de logs y métricas
-- Automatización de tareas y scripting
-- Validación y transformación de datos en sistemas de información
+**Complejidad temporal:** O(n)
+**Complejidad espacial:** O(n)
 
 ### 💻 Código de la Solución
 
 <CodeTabs client:load>
 
 ```python
-# Compresor de Cadenas (RLE)
-# Implementa una solución para: Compresor de Cadenas (RLE)
+def rle_comprimir(s):
+    if not s:
+        return ''
+    resultado = []
+    count = 1
+    for i in range(1, len(s)):
+        if s[i] == s[i-1]:
+            count += 1
+        else:
+            resultado.append(s[i-1] + str(count))
+            count = 1
+    resultado.append(s[-1] + str(count))
+    return ''.join(resultado)
 
-def resolver(entrada):
-    """
-    Compresor de Cadenas (RLE)
-    """
-    resultado = entrada
-    return resultado
-
-
-if __name__ == '__main__':
-    print(resolver("ejemplo"))
-
+print(rle_comprimir('AABBBCC'))  # A2B3C2
+print(rle_comprimir('ABC'))      # A1B1C1
+print(rle_comprimir('AAaaBB'))   # A2a2B2
+print(rle_comprimir(''))         # 
+print(rle_comprimir('A'))        # A1
 ```
 
 ```javascript
-// Compresor de Cadenas (RLE)
-// Implementa una solución para: Compresor de Cadenas (RLE)
-
-function resolver(entrada) {
-  return entrada;
+function rleComprimir(s) {
+  if (!s) return '';
+  let resultado = '';
+  let count = 1;
+  for (let i = 1; i <= s.length; i++) {
+    if (i < s.length && s[i] === s[i-1]) {
+      count++;
+    } else {
+      resultado += s[i-1] + count;
+      count = 1;
+    }
+  }
+  return resultado;
 }
-
-console.log(resolver('ejemplo'));
-
+console.log(rleComprimir('AABBBCC')); // A2B3C2
+console.log(rleComprimir('ABC'));     // A1B1C1
+console.log(rleComprimir('AAaaBB'));  // A2a2B2
+console.log(rleComprimir(''));        // 
+console.log(rleComprimir('A'));       // A1
 ```
 
 ```java
-// Compresor de Cadenas (RLE)
-// Implementa una solución para: Compresor de Cadenas (RLE)
-
-public class Reto {
-    public static String resolver(String entrada) {
-        return entrada;
+public class RLE {
+    public static String rleComprimir(String s) {
+        if (s.isEmpty()) return '';
+        StringBuilder sb = new StringBuilder();
+        int count = 1;
+        for (int i = 1; i <= s.length(); i++) {
+            if (i < s.length() && s.charAt(i) == s.charAt(i-1)) {
+                count++;
+            } else {
+                sb.append(s.charAt(i-1)).append(count);
+                count = 1;
+            }
+        }
+        return sb.toString();
     }
-
     public static void main(String[] args) {
-        System.out.println(resolver("ejemplo"));
+        System.out.println(rleComprimir("AABBBCC")); // A2B3C2
+        System.out.println(rleComprimir("ABC"));     // A1B1C1
+        System.out.println(rleComprimir("AAaaBB"));  // A2a2B2
+        System.out.println(rleComprimir(""));        // 
+        System.out.println(rleComprimir("A"));       // A1
     }
 }
-
 ```
 
 ```typescript
-// Compresor de Cadenas (RLE)
-// Implementa una solución para: Compresor de Cadenas (RLE)
-
-function resolver<T>(entrada: T): T {
-  return entrada;
+function rleComprimir(s: string): string {
+  if (!s) return '';
+  let resultado = '';
+  let count = 1;
+  for (let i = 1; i <= s.length; i++) {
+    if (i < s.length && s[i] === s[i-1]) {
+      count++;
+    } else {
+      resultado += s[i-1] + count;
+      count = 1;
+    }
+  }
+  return resultado;
 }
-
-console.log(resolver('ejemplo'));
-
+console.log(rleComprimir('AABBBCC')); // A2B3C2
+console.log(rleComprimir('ABC'));     // A1B1C1
+console.log(rleComprimir('AAaaBB'));  // A2a2B2
+console.log(rleComprimir(''));        // 
+console.log(rleComprimir('A'));       // A1
 ```
 
 </CodeTabs>
@@ -212,4 +174,3 @@ console.log(resolver('ejemplo'));
 
 - [RETO: Reto Avanzado 19: Compresión Huffman](/retos/reto-avanzado-19-compresion-huffman/)
 - [RETO: Reto Avanzado 20: Diff de Archivos (Levenshtein)](/retos/reto-avanzado-20-diff-de-archivos-levenshtein/)
-

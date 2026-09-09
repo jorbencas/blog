@@ -1,9 +1,9 @@
 ---
 draft: false
 title: "🏆 RETO: Reto Inicial 15: Año Bisiesto"
-description: "Determina si un año es bisiesto según las reglas del calendario gregoriano: divisible entre 4, excepto si es divisible entre 100, a menos que sea divisible..."
+description: "Determina si un año es bisiesto según el calendario gregoriano: divisible entre 4, excepto si es divisible entre 100, a menos que sea divisible entre 400. Ejercicio clásico de lógica condicional compuesta."
 pubDate: "2026-06-28"
-tags: ["retos", "iniciaci\u00f3n", "multilenguaje"]
+tags: ["retos", "iniciación", "multilenguaje"]
 slug: "reto-inicial-15-ano-bisiesto"
 image: "img/guia_plus_reto_inicial_15_ano_bisiesto/guia_plus_reto_inicial_15_ano_bisiesto_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
@@ -17,11 +17,25 @@ import CodeTabs from '@components/CodeTabs.svelte';
 # 🎯 Desafío: Reto Inicial 15: Año Bisiesto
 
 ### 📝 Descripción del Reto
-Determina si un año es bisiesto según las reglas del calendario gregoriano: divisible entre 4, excepto si es divisible entre 100, a menos que sea divisible entre 400.
+Determina si un año es bisiesto según las reglas del calendario gregoriano: un año es bisiesto si es divisible entre 4, excepto los años de siglo (divisibles entre 100) que no son bisiestos, a menos que sean divisibles entre 400. Ejercicio perfecto para practicar operadores lógicos AND, OR y precedencia.
+
+### 📊 Posibles enfoques
+
+| Enfoque | Descripción | Complejidad |
+|---------|-------------|-------------|
+| Condición compuesta | `(y%4==0 and y%100!=0) or (y%400==0)` | O(1) |
+| Negaciones encadenadas | `y%4!=0 ? false : (y%100!=0 ? true : y%400==0)` | O(1) |
+| Librería estándar | `calendar.isleap(y)` en Python | O(1) |
+
+### 🌍 Dónde se usa
+- **Sistemas de calendario**: planificación de eventos y recordatorios anuales
+- **Cálculo de días entre fechas**: contratos, suscripciones, intereses
+- **Base de datos**: campos de tipo fecha que necesitan validación
+- **Hojas de cálculo**: fórmulas deExcel/Sheets para planificación
 
 <Challenge 
   nivel="Iniciación" 
-  mision="Determina si un año es bisiesto según las reglas del calendario gregoriano: divisible entre 4, excepto si es divisible..." 
+  mision="Determina si un año es bisiesto según las reglas del calendario gregoriano." 
 />
 
 ---
@@ -45,65 +59,66 @@ Determina si un año es bisiesto según las reglas del calendario gregoriano: di
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-**Análisis del problema:** Un año es bisiesto si cumple: (divisible entre 4 Y no entre 100) O (divisible entre 400). Es una lógica booleana con tres condiciones. **Ejemplo concreto:** 2024 → sí (divisible entre 4, no entre 100), 1900 → no (divisible entre 100, no entre 400), 2000 → sí (divisible entre 400). **Edge cases:** años negativos (según convención), año 0, años muy grandes.
+**Análisis del problema:** Un año es bisiesto si: (divisible entre 4 Y NO entre 100) O (divisible entre 400). **Ejemplo:** 2024 → sí (divisible entre 4, no entre 100). 1900 → no (divisible entre 100, no entre 400). 2000 → sí (divisible entre 400).
 
 ### ⚙️ Paso 2: Implementación
-**Implementación:** Se evalúa la condición compuesta: `(año % 4 == 0 and año % 100 != 0) or (año % 400 == 0)`. Es un clásico para practicar operadores lógicos y precedencia.
+Evaluar la condición compuesta: `(año % 4 == 0 and año % 100 != 0) or (año % 400 == 0)`.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-**Complejidad temporal:** O(1)  
-**Complejidad espacial:** O(1)  
-
-**Complejidad:** O(1) tiempo y espacio. **Aplicaciones:** sistemas de calendario, cálculo de días entre fechas, planificación de eventos recurrentes.
+**Complejidad temporal:** O(1)
+**Complejidad espacial:** O(1)
 
 ### 💻 Código de la Solución
 
 <CodeTabs client:load>
 
 ```python
-def sol(y): return (y % 4 == 0 and y % 100 != 0) or (y % 400 == 0)
-print(sol(2024))
+def es_bisiesto(año):
+    return (año % 4 == 0 and año % 100 != 0) or (año % 400 == 0)
+
+print(es_bisiesto(2024))  # True
+print(es_bisiesto(2023))  # False
+print(es_bisiesto(1900))  # False
+print(es_bisiesto(2000))  # True
+print(es_bisiesto(2400))  # True
 ```
 
 ```javascript
-// Reto Inicial 15: Año Bisiesto
-// Implementa una solución para: Reto Inicial 15: Año Bisiesto
-
-function resolver(entrada) {
-  return entrada;
+function esBisiesto(año) {
+  return (año % 4 === 0 && año % 100 !== 0) || (año % 400 === 0);
 }
-
-console.log(resolver('ejemplo'));
-
+console.log(esBisiesto(2024)); // true
+console.log(esBisiesto(2023)); // false
+console.log(esBisiesto(1900)); // false
+console.log(esBisiesto(2000)); // true
+console.log(esBisiesto(2400)); // true
 ```
 
 ```java
-// Reto Inicial 15: Año Bisiesto
-// Implementa una solución para: Reto Inicial 15: Año Bisiesto
-
-public class Reto {
-    public static String resolver(String entrada) {
-        return entrada;
+public class AnoBisiesto {
+    public static boolean esBisiesto(int año) {
+        return (año % 4 == 0 && año % 100 != 0) || (año % 400 == 0);
     }
-
     public static void main(String[] args) {
-        System.out.println(resolver("ejemplo"));
+        System.out.println(esBisiesto(2024)); // true
+        System.out.println(esBisiesto(2023)); // false
+        System.out.println(esBisiesto(1900)); // false
+        System.out.println(esBisiesto(2000)); // true
+        System.out.println(esBisiesto(2400)); // true
     }
 }
-
 ```
 
 ```typescript
-// Reto Inicial 15: Año Bisiesto
-// Implementa una solución para: Reto Inicial 15: Año Bisiesto
-
-function resolver<T>(entrada: T): T {
-  return entrada;
+function esBisiesto(año: number): boolean {
+  return (año % 4 === 0 && año % 100 !== 0) || (año % 400 === 0);
 }
-
-console.log(resolver('ejemplo'));
-
+console.log(esBisiesto(2024)); // true
+console.log(esBisiesto(2023)); // false
+console.log(esBisiesto(1900)); // false
+console.log(esBisiesto(2000)); // true
+console.log(esBisiesto(2400)); // true
 ```
 
 </CodeTabs>
@@ -115,4 +130,3 @@ console.log(resolver('ejemplo'));
 
 - [RETO: Reto Inicial 06: Par o Impar](/retos/reto-inicial-06-par-o-impar/)
 - [RETO: Reto Inicial 01: Suma de Dígitos](/retos/reto-inicial-01-suma-de-digitos/)
-

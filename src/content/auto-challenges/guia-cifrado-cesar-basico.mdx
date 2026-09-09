@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "🏆 RETO: Cifrado César Básico"
-description: "Resuelve el desafío 'Cifrado César Básico'. Implementa una solución completa siguiendo las mejores prácticas de programación."
+description: "Implementa el cifrado César: desplaza cada letra del alfabeto N posiciones. Ejercicio clásico de criptografía que practica aritmética modular y manipulación de caracteres."
 pubDate: "2026-06-28"
 tags: ["retos", "intermedio", "multilenguaje"]
 slug: "reto-cifrado-cesar-basico"
@@ -17,11 +17,25 @@ import CodeTabs from '@components/CodeTabs.svelte';
 # 🎯 Desafío: Cifrado César Básico
 
 ### 📝 Descripción del Reto
-Resuelve el desafío 'Cifrado César Básico'. Implementa una solución completa siguiendo las mejores prácticas de programación.
+Implementa el cifrado César: dado un texto y un desplazamiento N, desplaza cada letra N posiciones en el alfabeto (circular). 'A' con N=3 → 'D'. 'Z' con N=1 → 'A'. Las letras se mantienen en su caso (mayúsculas/minúsculas). Los no-alfanuméricos no se modifican.
+
+### 📊 Posibles enfoques
+
+| Enfoque | Descripción | Complejidad |
+|---------|-------------|-------------|
+| Aritmética modular | `(ord(c) - base + n) % 26 + base` | O(n) |
+| Tabla de mapeo | Crear diccionario de desplazamiento previamente | O(n) |
+| Dos alfabetos | Indexar en alfabeto original, mapear al desplazado | O(n) |
+
+### 🌍 Dónde se usa
+- **Criptografía histórica**: el cifrado más antiguo conocido (Julio César)
+- **Educación**: introducir conceptos de seguridad de la información
+- **Juegos**: puzzles y escape rooms con pistas codificadas
+- **Ciberseguridad**: base para entender cifrados más complejos
 
 <Challenge 
   nivel="Intermedio" 
-  mision="Resuelve el desafío 'Cifrado César Básico'. Implementa una solución completa siguiendo las mejores prácticas de..." 
+  mision="Implementa el cifrado César desplazando cada letra N posiciones." 
 />
 
 ---
@@ -30,8 +44,11 @@ Resuelve el desafío 'Cifrado César Básico'. Implementa una solución completa
 
 | Entrada | Salida esperada |
 |---------|-----------------|
-| ``````````ejemplo_entrada`````````` | ``````````resultado_esperado`````````` |
-| ``````````caso_limite`````````` | ``````````manejo_correcto`````````` |
+| `'ABC', 3` | `'DEF'` |
+| `'xyz', 3` | `'abc'` |
+| `'Hello, World!', 5` | `'Mjqqt, Btwqi!'` |
+| `'ABC', 26` | `'ABC'` |
+| `'abc', 0` | `'abc'` |
 
 ---
 
@@ -42,165 +59,96 @@ Resuelve el desafío 'Cifrado César Básico'. Implementa una solución completa
 <div class="details-content">
 
 ### 🏗️ Paso 1: Análisis de la lógica
-**Análisis del problema:** Cifrado César Básico. Identifica la entrada, la salida esperada, y los casos límite. Diseña una estrategia de solución eficiente.
+**Análisis del problema:** Cada letra se desplaza N posiciones circularmente dentro de su rango (a-z o A-Z). **Ejemplo:** 'H' (72) + 5 = 'M' (77). 'z' (122) + 1 → 'a' (97) por circularidad. **Fórmula:** `nueva_pos = (posición_actual - base + desplazamiento) % 26 + base`.
 
 ### ⚙️ Paso 2: Implementación
-Implementación#
-**Implementación en C#**
-
-Ahora traducimos el análisis a código. La estructura general de la solución es:
-
-**1. Validación de entrada:**
-Verificamos que los datos recibidos son válidos antes de procesarlos. Si la entrada no es válida, devolvemos un valor por defecto o lanzamos un error.
-
-**2. Procesamiento principal:**
-Aplicamos la lógica central del algoritmo usando las estructuras de datos más adecuadas:
-- Listas/arrays para colecciones ordenadas
-- Diccionarios/hash maps para búsquedas rápidas (O(1))
-- Conjuntos/sets para operaciones de pertenencia
-- Pilas/colas para procesamiento FIFO/LIFO
-
-**3. Generación de salida:**
-Formateamos el resultado según lo esperado por el problema.
-
-**Buenas prácticas en C#:**
-- Usa nombres de variables descriptivos y significativos
-- Mantén las funciones pequeñas y con una única responsabilidad
-- Sigue las convenciones de estilo del lenguaje (PEP 8, etc.)
-- Comenta las partes no obvias, no cada línea
-- Incluye type hints / anotaciones de tipo cuando sea posible
+Para cada carácter: si es letra, calcular nueva posición con módulo 26. Si no es letra, dejarlo igual.
 
 ### 🚀 Paso 3: Complejidad y Optimización
 
-**Complejidad temporal:** O(n)  
-**Complejidad espacial:** O(n)  
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-Complejidad y Optimización
-
-
-
-
-**Análisis de complejidad y optimización**
-
-**Complejidad temporal:**
-Evalúa cómo crece el tiempo de ejecución al aumentar el tamaño de la entrada. Para la mayoría de soluciones, una complejidad O(n) es aceptable, donde n es el tamaño de la entrada. Si tu solución es O(n²), considera si se puede optimizar.
-
-**Complejidad espacial:**
-¿Cuánta memoria adicional utiliza tu algoritmo? ¿Creas copias de los datos o trabajas in-place? En general, O(n) adicional es aceptable para la mayoría de aplicaciones.
-
-**Posibles optimizaciones:**
-- ¿Se puede reducir la complejidad con una estructura de datos diferente?
-- ¿Conviene usar iteración en vez de recursión para ahorrar pila de llamadas?
-- ¿Existe alguna función de la librería estándar que ya resuelva parte del problema?
-- ¿Se puede aplicar early exit para evitar trabajo innecesario?
-
-**Aplicaciones en el mundo real:**
-Este patrón de solución aparece frecuentemente en:
-- Procesamiento de datos y pipelines ETL
-- APIs REST y servicios web
-- Análisis de logs y métricas
-- Automatización de tareas y scripting
-- Validación y transformación de datos en sistemas de información
+**Complejidad temporal:** O(n)
+**Complejidad espacial:** O(n)
 
 ### 💻 Código de la Solución
 
 <CodeTabs client:load>
 
 ```python
-# Cifrado César Básico
-# Implementa una solución para: Cifrado César Básico
+def cifrado_cesar(texto, n):
+    resultado = []
+    for c in texto:
+        if c.isalpha():
+            base = ord('A') if c.isupper() else ord('a')
+            nueva_pos = (ord(c) - base + n) % 26
+            resultado.append(chr(base + nueva_pos))
+        else:
+            resultado.append(c)
+    return ''.join(resultado)
 
-def resolver(entrada):
-    """
-    Cifrado César Básico
-    """
-    resultado = entrada
-    return resultado
-
-
-if __name__ == '__main__':
-    print(resolver("ejemplo"))
-
+print(cifrado_cesar('ABC', 3))             # DEF
+print(cifrado_cesar('xyz', 3))             # abc
+print(cifrado_cesar('Hello, World!', 5))   # Mjqqt, Btwqi!
+print(cifrado_cesar('ABC', 26))            # ABC
+print(cifrado_cesar('abc', 0))             # abc
 ```
 
 ```javascript
-// Cifrado César Básico
-// Implementa una solución para: Cifrado César Básico
-
-function resolver(entrada) {
-  return entrada;
+function cifradoCesar(texto, n) {
+  return texto.split('').map(c => {
+    if (/[a-zA-Z]/.test(c)) {
+      const base = c === c.toUpperCase() ? 65 : 97;
+      return String.fromCharCode(((c.charCodeAt(0) - base + n) % 26) + base);
+    }
+    return c;
+  }).join('');
 }
-
-console.log(resolver('ejemplo'));
-
+console.log(cifradoCesar('ABC', 3));           // DEF
+console.log(cifradoCesar('xyz', 3));           // abc
+console.log(cifradoCesar('Hello, World!', 5)); // Mjqqt, Btwqi!
+console.log(cifradoCesar('ABC', 26));          // ABC
+console.log(cifradoCesar('abc', 0));           // abc
 ```
 
 ```java
-// Cifrado César Básico
-// Implementa una solución para: Cifrado César Básico
-
-public class Reto {
-    public static String resolver(String entrada) {
-        return entrada;
+public class CifradoCesar {
+    public static String cifradoCesar(String texto, int n) {
+        StringBuilder sb = new StringBuilder();
+        for (char c : texto.toCharArray()) {
+            if (Character.isLetter(c)) {
+                char base = Character.isUpperCase(c) ? 'A' : 'a';
+                char nuevo = (char) ((c - base + n) % 26 + base);
+                sb.append(nuevo);
+            } else {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
     }
-
     public static void main(String[] args) {
-        System.out.println(resolver("ejemplo"));
+        System.out.println(cifradoCesar("ABC", 3));             // DEF
+        System.out.println(cifradoCesar("xyz", 3));             // abc
+        System.out.println(cifradoCesar("Hello, World!", 5));   // Mjqqt, Btwqi!
+        System.out.println(cifradoCesar("ABC", 26));            // ABC
+        System.out.println(cifradoCesar("abc", 0));             // abc
     }
 }
-
 ```
 
 ```typescript
-// Cifrado César Básico
-// Implementa una solución para: Cifrado César Básico
-
-function resolver<T>(entrada: T): T {
-  return entrada;
+function cifradoCesar(texto: string, n: number): string {
+  return texto.split('').map(c => {
+    if (/[a-zA-Z]/.test(c)) {
+      const base = c === c.toUpperCase() ? 65 : 97;
+      return String.fromCharCode(((c.charCodeAt(0) - base + n) % 26) + base);
+    }
+    return c;
+  }).join('');
 }
-
-console.log(resolver('ejemplo'));
-
+console.log(cifradoCesar('ABC', 3));           // DEF
+console.log(cifradoCesar('xyz', 3));           // abc
+console.log(cifradoCesar('Hello, World!', 5)); // Mjqqt, Btwqi!
+console.log(cifradoCesar('ABC', 26));          // ABC
+console.log(cifradoCesar('abc', 0));           // abc
 ```
 
 </CodeTabs>
@@ -212,4 +160,3 @@ console.log(resolver('ejemplo'));
 
 - [RETO: JWT Generator Manual](/retos/reto-jwt-generator-manual/)
 - [RETO: Filtro de Spam por Keywords](/retos/reto-filtro-de-spam-por-keywords/)
-
