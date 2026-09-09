@@ -13,6 +13,8 @@ languages: ["python", "javascript", "java", "typescript"]
 
 import Challenge from '@components/Challenge.astro';
 import CodeTabs from '@components/CodeTabs.svelte';
+import RelatedRetos from '@components/RelatedRetos.svelte';
+
 
 # 🎯 Desafío: Reto Avanzado 06: Middleware de Seguridad
 
@@ -47,7 +49,7 @@ Los middlewares se encadenan: si alguno falla, la petición se rechaza con el er
   mision="Implementa un sistema de middlewares para filtrar peticiones HTTP por IP, headers de autenticación y rate limiting." 
 />
 
----
+<hr />
 
 ### 🧪 Casos de Prueba
 
@@ -58,7 +60,7 @@ Los middlewares se encadenan: si alguno falla, la petición se rechaza con el er
 | `req={ip:'1.2.3.4'}, middlewares=[rateLimiter(max=2)]` | `ok` (1ra y 2da), `rate limited` (3ra) |
 | `req={ip:'1.2.3.4',headers:{}}, middlewares=[auth]` | `unauthorized` |
 
----
+<hr />
 
 ## 💡 Guía de Solución Paso a Paso
 
@@ -173,7 +175,6 @@ function rateLimiter(maxRequests, window = 60) {
 ```java
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import RelatedRetos from '@components/RelatedRetos.svelte';
 
 public class MiddlewareChain {
     private List<Middleware> middlewares = new ArrayList<>();
@@ -275,7 +276,7 @@ function rateLimiter(maxRequests: number, window = 60): Middleware {
 
 </div>
 </details>
----
+<hr />
 <RelatedRetos items={[
     { title: "JWT Generator Manual", href: "/retos/reto-jwt-generator-manual/" },
     { title: "Reto Avanzado 08: Patrón Strategy en APIs", href: "/retos/reto-avanzado-08-patron-strategy-en-apis/" },
