@@ -1,0 +1,450 @@
+---
+draft: false
+title: "Cosas de Anime: Plataforma de Streaming con Next.js, Express y PostgreSQL"
+description: "Cómo construí una plataforma de anime estilo Netflix desde cero: Next.js + React en el frontend, Express + TypeScript + Prisma en el backend, PostgreSQL como base de datos, y Socket.IO para chat en tiempo real. Arquitectura completa, schema de la BD, endpoints, y cómo arrancarlo."
+pubDate: "2026/09/09"
+tags: ["nextjs", "react", "typescript", "postgresql", "prisma", "socketio", "proyectos"]
+image: "img/netflix_anime/netflix_anime_cover-1200.webp"
+author: "Jorge Beneyto Castelló"
+---
+
+Cosas de Anime es una plataforma de catálogo y streaming de anime que construí para gestionar anime con metadatos completos: títulos, sinopsis, fechas, géneros, temporadas, episodios, openings, endings, y streaming de vídeo. El frontend está en Next.js, el backend en Express + TypeScript, la base de datos en PostgreSQL con Prisma, y el chat en tiempo real con Socket.IO.
+
+En este post explico **cómo funciona por dentro**: la arquitectura, el schema de la base de datos, los endpoints de la API, el sistema de chat, el theme system, y cómo arrancarlo desde cero.
+
+---
+
+## ¿Qué es Cosas de Anime?
+
+Es una plataforma de streaming de anime inspirada en Netflix. Permite:
+
+- **Catálogo de anime**: título, abreviatura (siglas), saga, sinopsis, fechas de publicación/finalización, idioma, estado (pendiente/en emisión/finalizado), tipo (serie/película/OVA), géneros y temporadas
+- **Gestión de episodios**: CRUD con soporte de subtítulos y archivos de vídeo
+- **Openings y Endings**: gestión de themes musicales por anime
+- **Streaming de media**: subida y reproducción de imágenes (jpg/png/gif/bmp) y vídeos (mp4)
+- **Chat en tiempo real**: WebSocket con Socket.IO, indicadores de escritura, notificaciones de sonido
+- **Multi-perfil**: perfiles estilo Netflix con configuración individual (tema, autoplay, volumen, etc.)
+- **Dark/Light mode**: toggle de tema con CSS Custom Properties
+- **Internacionalización**: español e inglés
+
+---
+
+## Arquitectura del sistema
+
+El proyecto se divide en dos aplicaciones independientes que se comunican por HTTP y WebSocket:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                  FRONTEND (Next.js)                      │
+│                  Puerto: 3000                            │
+│                                                          │
+│  Pages → Components → Context → Hooks → Services         │
+│                                                          │
+│  Context Providers:                                      │
+│  ├── ThemeContext (dark/light)                           │
+│  ├── LangContext (es/en)                                 │
+│  ├── SiglasContext (slug del anime)                      │
+│  ├── SeasionContext (temporada seleccionada)             │
+│  ├── MediaContext (archivos media)                       │
+│  └── ModalContext (estado del modal)                     │
+└──────────────────────┬──────────────────────────────────┘
+                       │ HTTP (fetch) + Socket.IO (chat)
+                       ▼
+┌─────────────────────────────────────────────────────────┐
+│                BACKEND (Express + TypeScript)             │
+│                Puerto: 3001                              │
+│                                                          │
+│  Middleware: CORS → Helmet → JSON → API Token → Routes   │
+│                                                          │
+│  API Routes (/api):                                      │
+│  ├── /animes (CRUD)                                      │
+│  ├── /episodes (CRUD)                                    │
+│  ├── /openings (CRUD)                                    │
+│  ├── /endings (CRUD)                                     │
+│  ├── /filters ( géneros, temporadas, idiomas)            │
+│  └── /seasions                                          │
+│                                                          │
+│  Static Routes:                                          │
+│  ├── /media/:type/:id (streaming de vídeo/imágenes)     │
+│  └── /chat (HTML del chat + sonidos)                     │
+│                                                          │
+│  Socket.IO: chat messages, typing indicators             │
+└──────────────────────┬──────────────────────────────────┘
+                       │
+                       ▼
+┌─────────────────────────────────────────────────────────┐
+│              PostgreSQL 13.5 (Docker)                    │
+│              Puerto: 5432                                │
+│              23 modelos en Prisma Schema                 │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Tech Stack
+
+| Categoría | Frontend | Backend |
+|-----------|----------|---------|
+| Framework | Next.js 12 | Express.js |
+| UI | React 18 | — |
+| Lenguaje | JavaScript + TypeScript | TypeScript (strict) |
+| ORM | — | Prisma 4 |
+| Database | — | PostgreSQL 13 |
+| Realtime | Socket.IO (cliente) | Socket.IO (servidor) |
+| State | React Context (useReducer) | — |
+| Estilos | CSS Modules + CSS Variables | — |
+| Auth | — | JWT (jsonwebtoken) |
+| Seguridad | — | Helmet, CORS |
+| Media | — | express-fileupload |
+| Logging | — | Pino |
+
+---
+
+## Schema de la Base de Datos (23 modelos)
+
+La base de datos tiene 23 modelos organizados en 4 grupos:
+
+### Contenido principal
+
+| Tabla | Descripción | Campos clave |
+|-------|-------------|--------------|
+| `animes` | Registro principal de anime | `siglas` (PK), tittle, sinopsis, state, kind, idiomas, saga |
+| `episodes` | Episodios por anime | id (PK), tittle, sinopsis, anime (FK), num |
+| `openings` | Themes de opening | id (PK), tittle, sinopsis, anime (FK), num |
+| `endings` | Themes de ending | id (PK), tittle, sinopsis, anime (FK), num |
+| `seasions` | Temporadas | id (PK), tittle, anime (FK) |
+
+### Media
+
+| Tabla | Descripción |
+|-------|-------------|
+| `media_animes` | Imágenes de portada/banner del anime |
+| `media_episodes` | Archivos de vídeo de episodios |
+| `media_openings` | Archivos de vídeo de openings |
+| `media_endings` | Archivos de vídeo de endings |
+
+### Usuarios y perfiles
+
+| Tabla | Descripción |
+|-------|-------------|
+| `users` | Cuentas de usuario (username, email, password, tokens) |
+| `profiles` | Perfiles estilo Netflix (1 usuario → N perfiles) |
+| `config_profile` | Configuración por perfil (tema, autoplay, volumen, etc.) |
+| `config_user` | Configuración de usuario (límite de perfiles) |
+
+### Social y actividad
+
+| Tabla | Descripción |
+|-------|-------------|
+| `comments` | Comentarios polimórficos (kind + id_external) con replies |
+| `clips` | Fragmentos de vídeo guardados (inicio, fin, perfil) |
+| `collections` | Colecciones de episodios |
+| `history` | Historial de visualización (episodio, perfil, posición) |
+| `notifications` | Notificaciones push |
+| `filters` | Taxonomía genérica (géneros, temporadas, idiomas) |
+
+### Relaciones principales
+
+```
+users ──1:N──▶ profiles ──1:N──▶ config_profile
+                  │
+                  ├──1:N──▶ clips ──────────▶ episodes
+                  ├──1:N──▶ collections ──M:N──▶ episodes
+                  ├──1:N──▶ history ────────▶ episodes
+                  └──1:N──▶ notifications
+
+animes ──1:N──▶ episodes ──1:N──▶ media_episodes
+         │
+         ├──1:N──▶ openings ──1:N──▶ media_openings
+         ├──1:N──▶ endings ──1:N──▶ media_endings
+         ├──1:N──▶ seasions
+         ├──1:N──▶ media_animes (banner/portada)
+         ├──1:N──▶ anime_generes ──M:N──▶ filters
+         └──1:N──▶ anime_temporadas ──M:N──▶ filters
+```
+
+### Decisión de diseño: Siglas como PK
+
+En lugar de usar un `id` numérico autoincremental, el anime usa `siglas` (una abreviatura como `NARUTO`, `OP`) como clave primaria. Esto hace que las URLs sean legibles: `/anime/NARUTO` en lugar de `/anime/42`. Los episodios, openings y endings también usan IDs de tipo VARCHAR que combinan la sigla + número.
+
+---
+
+## Endpoints de la API
+
+### Anime
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/animes/` | Listar todos los anime con portadas |
+| POST | `/api/animes/` | Crear/editar anime (upsert) |
+| GET | `/api/animes/:first/:last` | Lista paginada |
+| GET | `/api/animes/:siglas/:edit?` | Obtener uno por siglas |
+| GET | `/api/animes/lastanimes/:siglas` | Anime con géneros joined |
+| GET | `/api/animes/favorites` | Obtener favoritos |
+| POST | `/api/animes/favorites` | Añadir favorito |
+| DELETE | `/api/animes/favorites` | Eliminar favorito |
+
+### Episodios
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/episodes/:lang/:siglas` | Episodios de un anime |
+| GET | `/api/episodes/:lang/:id` | Obtener uno |
+| PUT | `/api/episodes/:lang/:id` | Crear episodio |
+| POST | `/api/episodes/:lang/:id` | Editar episodio |
+| DELETE | `/api/episodes/:lang/:id` | Eliminar episodio |
+
+### Openings y Endings
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/openings/:lang/:siglas` | Openings de un anime |
+| PUT | `/api/openings/:lang/:id` | Crear/editar opening |
+| GET | `/api/endings/:lang/:siglas` | Endings de un anime |
+| PUT | `/api/endings/:lang/:id` | Crear/editar ending |
+
+### Filtros
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/filters/:kind` | Obtener filtros (generes, temporadas, languajes) |
+| PUT | `/api/filters/` | Insertar filtro |
+
+### Media y Streaming
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/media/:type/:id?` | Streaming de archivos (vídeo/imágenes) |
+
+---
+
+## El sistema de chat en tiempo real
+
+El chat usa Socket.IO 4 y sirve como una página HTML estática desde el backend:
+
+### Eventos
+
+| Evento | Dirección | Descripción |
+|--------|-----------|-------------|
+| `connection` | Cliente→Servidor | Nuevo usuario se conecta |
+| `user joined` | Servidor→Todos | Notifica conexión + sonido |
+| `chat message` | Cliente→Servidor | Enviar mensaje |
+| `chat message` | Servidor→Todos | Broadcast mensaje + sonido |
+| `user typing` | Cliente→Servidor | Indicador de escritura |
+| `stopped typing` | Cliente→Servidor | Deja de escribir |
+| `disconnect` | Cliente→Servidor | Usuario se desconecta |
+| `adios` | Servidor→Otros | Notifica desconexión + sonido |
+
+### Sonidos
+
+El sistema incluye 3 efectos de sonido streaming:
+- `chat-leat.mp3` — Al recibir mensaje
+- `notify.mp3` — Al conectarse alguien
+- `notify-send.mp3` — Al enviar mensaje
+
+---
+
+## El sistema de temas (Dark/Light)
+
+### State Management
+
+```jsx
+// context/ThemeContext.jsx
+const initialState = { darkMode: false };
+// useReducer con acciones LIGHTMODE/DARKMODE
+```
+
+### CSS Variables
+
+```css
+/* styles/colors/dark.css */
+:root {
+  --main-green: #23a7ff;
+  --color-text: #fff;
+  --main-grey: #3d3d3d;
+  --background: white;
+  --text-primary: black;
+}
+
+[data-theme='dark'] {
+  --background: black;
+  --text-primary: white;
+  --text-secondary: grey;
+}
+```
+
+### Persistencia
+
+El tema se guarda en `config_profile.theme` en la base de datos, permitiendo que cada perfil tenga su propio tema.
+
+---
+
+## El sistema de media
+
+### Flujo de subida
+
+```
+1. Admin rellena formulario en EditAnime
+2. useMediaFile hook procesa el archivo:
+   - Si es File object: crea Object URL
+   - Si es string path: fetch via getMedia()
+   - Si es URL HTTP: usa directamente
+3. POST a /api/animes/ con body conteniendo media[]
+4. Backend:
+   a. Upsert del registro de anime
+   b. Procesa géneros (anime_generes)
+   c. Procesa temporadas (anime_temporadas)
+   d. Guarda archivo en disco: {saga}/{anime}/{type}/{name}.{ext}
+   e. Upsert del registro media_animes
+```
+
+### Flujo de streaming
+
+```
+1. Frontend solicita /media/:type/:id
+2. Backend:
+   a. Determina tipo de archivo (banner/portada/openings/episodes)
+   b. Consulta el modelo correspondiente
+   c. Obtiene la ruta del archivo
+   d. Crea read stream con content-type correcto
+   e. Pipe a la respuesta (video/mp4 o audio/mp3)
+3. Browser reproduce via <video> o <audio>
+```
+
+### Video Player personalizado
+
+El componente `VideoTest` es un reproductor HTML5 personalizado sin dependencias externas:
+- Play/pause
+- Skip forward/backward 5 segundos
+- Barra de progreso con tiempo (actual/total)
+- Auto-pause cuando la pestaña no es visible (Visibility API)
+- Intervalo de 1 segundo para actualizar progreso
+
+---
+
+## Cómo arrancarlo desde cero
+
+### Requisitos
+
+- [Node.js](https://nodejs.org/) 16+
+- [Docker](https://www.docker.com/) (para PostgreSQL)
+- npm
+
+### 1. Arrancar la base de datos
+
+```bash
+cd Netflix_Anime_Api/docker
+docker-compose up -d
+
+# Verificar que PostgreSQL está corriendo
+docker-compose ps
+```
+
+Esto levanta PostgreSQL 13.5 en el puerto 5432.
+
+### 2. Configurar el backend
+
+```bash
+cd Netflix_Anime_Api
+
+# Instalar dependencias
+npm install
+
+# Crear archivo .env
+cat > .env << EOF
+PORT=3001
+POSTGRES_URL=postgresql://user:password@localhost:5432/netflix_anime
+JWT_SECRET=tu_secreto
+MEDIA_PATH=media/animes/
+EOF
+
+# Generar cliente de Prisma
+npx prisma generate
+
+# Ejecutar migraciones
+npx prisma migrate dev
+
+# Arrancar en desarrollo
+npm run dev
+```
+
+El backend arranca en `http://localhost:3001`.
+
+### 3. Configurar el frontend
+
+```bash
+cd Netflix_Anime
+
+# Instalar dependencias
+npm install
+
+# Arrancar en desarrollo
+npm run dev
+```
+
+El frontend arranca en `http://localhost:3000`.
+
+### 4. Verificar que funciona
+
+1. Abrir `http://localhost:3000`
+2. Navegar a `/edit`
+3. Rellenar el formulario de anime
+4. Subir una imagen de portada
+5. Crear episodios con vídeos
+6. Verificar que el streaming funciona en `/media/`
+
+---
+
+## Decisiones técnicas interesantes
+
+### Dual ORM
+
+El backend usa una estrategia híbrida: Prisma para el schema y migraciones, pero queries raw con el cliente `pg` para las operaciones. Esto permite queries complejas que Prisma no expone fácilmente, manteniendo la ventaja de las migraciones de Prisma.
+
+### IDs de tipo VARCHAR
+
+Los episodios, openings y endings usan IDs de tipo VARCHAR(250) en lugar de autoincrementales. El patrón es `siglas + num` (ej: `NARUTO_EP_01`), lo que hace que los IDs sean legibles y únicos sin necesidad de joins.
+
+### Comentarios polimórficos
+
+La tabla `comments` usa `kind` + `id_external` para ser genérica: puede评论ar anime, episodios, openings, o cualquier otra entidad sin crear tablas separadas.
+
+### Backup JSON
+
+Cada operación de escritura guarda un backup JSON en disco además de escribir en la base de datos. Es una capa de recuperación manual de desastres.
+
+### Auth bypass en localhost
+
+El middleware de API token salta la autenticación completamente para requests desde localhost, facilitando el desarrollo local.
+
+---
+
+## Estado del proyecto
+
+El proyecto está en **desarrollo activo**. El backend es más maduro que el frontend. Funcionalidades implementadas:
+
+- ✅ CRUD completo de anime, episodios, openings, endings
+- ✅ Streaming de media (vídeo/imágenes)
+- ✅ Chat en tiempo real con Socket.IO
+- ✅ Dark/Light mode
+- ✅ Sistema de perfiles estilo Netflix
+- ✅ Internacionalización (es/en)
+- ✅ Filtros por géneros y temporadas
+
+Funcionalidades pendientes (en `pages/TODO/`):
+- 🔲 Autenticación de usuarios (login/signup)
+- 🔲 Página de catálogo (browse anime)
+- 🔲 Detalle de anime
+- 🔲 Colecciones
+- 🔲 Historial de visualización
+- 🔲 Búsqueda
+
+---
+
+## Enlaces
+
+- [Frontend — Netflix_Anime](https://github.com/jorbencas/Netflix_Anime)
+- [Backend API — Netflix_Anime_Api](https://github.com/jorbencas/Netflix_Anime_Api)
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Prisma Docs](https://www.prisma.io/docs)
+- [Socket.IO Docs](https://socket.io/docs/v4/)
