@@ -6,6 +6,7 @@
   let tabs = $state([]);
   let activeIndex = $state(0);
   let ready = $state(false);
+  let copied = $state(false);
 
   const languageMap = {
     python: 'Python',
@@ -26,6 +27,16 @@
     const preElements = Array.from(codePanels.querySelectorAll('pre'));
     if (preElements.length === 0) return;
 
+    // Hide individual CodeEnhancer wrappers inside tabs
+    codePanels.querySelectorAll('.bloque-codigo-wrapper').forEach(wrapper => {
+      const pre = wrapper.querySelector('pre');
+      if (pre) {
+        pre.style.display = '';
+        wrapper.parentNode.insertBefore(pre, wrapper);
+        wrapper.remove();
+      }
+    });
+
     tabs = preElements.map((pre, i) => {
       const rawLang = pre.getAttribute('data-language') || '';
       let lang = rawLang ? getDisplayName(rawLang) : 'Code';
@@ -38,12 +49,25 @@
   function switchTab(index) {
     if (!container) return;
     activeIndex = index;
+    copied = false;
     const codePanels = container.querySelector('.code-panels');
     if (!codePanels) return;
     const preElements = Array.from(codePanels.querySelectorAll('pre'));
     preElements.forEach((pre, i) => {
       pre.style.display = i === index ? '' : 'none';
     });
+  }
+
+  async function copyCode() {
+    if (!container) return;
+    const codePanels = container.querySelector('.code-panels');
+    if (!codePanels) return;
+    const preElements = Array.from(codePanels.querySelectorAll('pre'));
+    const active = preElements[activeIndex];
+    if (!active) return;
+    await navigator.clipboard.writeText(active.innerText);
+    copied = true;
+    setTimeout(() => { copied = false; }, 2000);
   }
 </script>
 
@@ -62,6 +86,25 @@
           {tab.name}
         </button>
       {/each}
+      <button
+        type="button"
+        class="copy-btn"
+        onclick={copyCode}
+        title="Copiar código"
+      >
+        {#if copied}
+          <svg class="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          <span class="text-cyan-600 dark:text-cyan-400">LISTO</span>
+        {:else}
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
+          <span>COPIAR</span>
+        {/if}
+      </button>
     </div>
   {/if}
   <div class="code-panels">
@@ -76,8 +119,14 @@
 
   .tab-bar {
     display: flex;
+    align-items: center;
     border-bottom: 1px solid rgb(148 163 184 / 0.2);
     overflow-x: auto;
+    background: rgb(248 250 252);
+  }
+
+  :global(.dark) .tab-bar {
+    background: rgb(15 23 42 / 0.4);
   }
 
   .tab-btn {
@@ -114,6 +163,36 @@
 
   :global(.dark) .tab-btn.active {
     color: rgb(34 211 238);
+  }
+
+  .copy-btn {
+    margin-left: auto;
+    padding: 0.35rem 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.65rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: rgb(148 163 184);
+    background: transparent;
+    border: none;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: color 0.15s ease, background 0.15s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .copy-btn:hover {
+    color: rgb(8 145 178);
+    background: rgb(148 163 184 / 0.1);
+  }
+
+  :global(.dark) .copy-btn:hover {
+    color: rgb(34 211 238);
+    background: rgb(148 163 184 / 0.1);
   }
 
   .code-panels {
