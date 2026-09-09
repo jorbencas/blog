@@ -51,7 +51,14 @@
     });
 
     tabs = preElements.map((pre, i) => {
-      const rawLang = pre.getAttribute('data-language') || '';
+      let rawLang = pre.getAttribute('data-language') || pre.getAttribute('data-lang') || '';
+      if (!rawLang) {
+        const codeEl = pre.querySelector('code');
+        if (codeEl) {
+          const cls = Array.from(codeEl.classList).find(c => c.startsWith('language-'));
+          if (cls) rawLang = cls.replace('language-', '');
+        }
+      }
       let lang = rawLang ? getDisplayName(rawLang) : 'Code';
       if (i !== 0) pre.style.display = 'none';
       return { name: lang, raw: rawLang };
@@ -61,20 +68,6 @@
 
   onMount(() => {
     if (!container) return;
-
-    // If inside a <details>, wait for it to open
-    const details = container.closest('details');
-    if (details && !details.open) {
-      const onToggle = () => {
-        if (details.open) {
-          initTabs();
-          details.removeEventListener('toggle', onToggle);
-        }
-      };
-      details.addEventListener('toggle', onToggle);
-      return;
-    }
-
     initTabs();
   });
 
