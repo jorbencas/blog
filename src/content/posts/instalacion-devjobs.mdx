@@ -4,7 +4,7 @@ title: "Instalación del Ecosistema Devjobs: Pipeline Completo desde Cero"
 description: "Guía paso a paso para montar el ecosistema completo de automatización: pipeline de Twitch a Telegram, pipeline de YouTube, bot de IA y scrapers. Todo con Docker, aliases y auto-arranque."
 pubDate: "2026/09/04"
 
-updatedDate: "2026/09/08"
+updatedDate: "2026/09/09"
 tags: ["docker", "instalación", "guía", "pipeline", "linux", "wsl2"]
 image: "img/instalacion_devjobs/instalacion_devjobs_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
@@ -312,49 +312,11 @@ pipe_sys_stop
 
 ---
 
-## 12. Configurar el pipeline de YouTube (opcional)
-
-Si quieres que el pipeline descargue vídeos de YouTube automáticamente:
-
-```bash
-# Editar canales (añade los que quieras)
-nano yt-to-telegram/config/channels.json
-
-# Estructura de cada canal:
-# {
-#   "name": "Midudev",
-#   "url": "https://www.youtube.com/@midudev/videos",
-#   "enabled": true,
-#   "max_videos": 2
-# }
-
-# Probar el pipeline
-cd yt-to-telegram
-docker compose up -d
-docker compose logs -f
-```
-
-### Configurar el cron (automático cada día)
-
-```bash
-# Abrir crontab
-crontab -e
-
-# Añadir esta línea (pipeline a las 01:00)
-0 1 * * * /home/tu_usuario/devjobs/yt-to-telegram/scripts/run_pipeline_cron.sh >> /home/tu_usuario/devjobs/data/yt-pipeline/logs/cron_$(date +\%Y\%m\%d).log 2>&1
-```
-
-**¿Por qué a las 01:00?** Para no saturar la red durante el día. El pipeline dura hasta 17 horas (para a las 18:00).
-
-**¿Qué pasa si el PC se apaga antes?** Los vídeos pendientes se guardan en `data/yt-pipeline/logs/pending_videos.log`. La próxima vez que arranque, el pipeline continuará desde donde se quedó.
-
----
-
-## 13. Arquitectura completa: contenedores, carpetas y flujos
+## 12. Arquitectura completa: contenedores, carpetas y flujos
 
 Hasta aquí has instalado piezas sueltas. Ahora toca **cómo funciona el ecosistema por dentro**: cuántos contenedores hay, qué carpetas comparten, cómo se relacionan sin hablarse por red, y qué ocurre en cada paso del flujo de datos.
 
-### 13.1. Los contenedores del ecosistema
+### 12.1. Los contenedores del ecosistema
 
 | Contenedor | Proyecto | Imagen | Para qué | Restart |
 |------------|----------|--------|----------|---------|
@@ -368,35 +330,95 @@ Hasta aquí has instalado piezas sueltas. Ahora toca **cómo funciona el ecosist
 
 **Dato clave:** ninguno de estos contenedores está conectado por red entre sí. Cada `docker-compose.yml` crea su propia red [*bridge*](https://docs.docker.com/network/bridge/) por defecto, así que **no pueden "verse" entre ellos**. La comunicación ocurre **solo a través de las carpetas compartidas** en el host ([*bind mounts*](https://docs.docker.com/engine/storage/bind-mounts/)). Es un *pipeline de archivos*, no de sockets.
 
-### 13.2. El mapa de carpetas `data/` (el pegamento del sistema)
+### 12.2. El mapa de carpetas `data/` (el pegamento del sistema)
 
-Esta carpeta es git-ignorada y se crea en el host. Es el **punto de encuentro** de todo el ecosistema:
+Esta carpeta es git-ignorada y se crea en el host. Es el **punto de encuentro** de todo el ecosistema. Cada subcarpeta tiene un único dueño que la escribe — nadie pisa la del siguiente.
 
 ```
 devjobs/data/
-├── pipeline/                                  ← pipeline DIRECTO → TELEGRAM
+├── pipeline/                                      ← pipeline DIRECTO → TELEGRAM
 │   ├── grabaciones/
-│   │   ├── 2026/09/...                            ← crudo por año/mes (escribe twitchrecorder)
-│   │   └── test/                                  ← cola de espera *_completed.mp4
-│   │       └── .corruptos/                        ← vídeos ilegibles o <60s (monitor)
-│   ├── comprimidos/                               ← *_compressed.mp4 + *_episodios.json
-│   │   ├── *_episodios.json                      ← metadata OCR para el uploader
-│   │   ├── log_YYYY-MM-DD.txt                     ← log diario del monitor
-│   │   └── .processed/                            ← originales ya comprimidos
-│   ├── partes/                                    ← divisiones >2GB para Telegram
-│   └── backups/                                   ← backups de config del CLI
-├── yt-pipeline/                               ← pipeline YOUTUBE → TELEGRAM
-│   ├── downloads/<canal>/                        ← .mp4 descargados (2/canal)
-│   ├── converted/<canal>/                        ← 720p listos (o pendientes de reintento)
-│   ├── uploaded/<canal>/                         ← histórico ya subido
-│   ├── logs/                                     ← downloads_*.json, cron_*.log, ...
-│   └── downloaded_ids.json                       ← dedup por video_id
-└── jorbencas_bot/                             ← bot (montado como /data/descargas)
+│   │   ├── 2026/08/                               ← crudo por año/mes (escribe twitchrecorder)
+│   │   ├── 2026/09/
+│   │   └── test/                                  ← cola de espera: *_completed.mp4
+│   │       └── .corruptos/                        ← vídeos ilegibles o <60s (los mueve el monitor)
+│   ├── comprimidos/
+│   │   ├── *_compressed.mp4                       ← salida comprimida del monitor (CRF 28)
+│   │   ├── *_episodios.json                       ← metadata OCR: lista de episodios detectados
+│   │   ├── log_YYYY-MM-DD.txt                     ← log diario del monitor (una línea por archivo)
+│   │   ├── .processed/                            ← originales ya comprimidos (el monitor los mueve aquí)
+│   │   └── .pipeline/                             ← comunicación IPC monitor ↔ bot
+│   │       ├── pipeline_status.json               ← {"monitor":{"status":"idle","last_run":"..."}}
+│   │       └── pipeline_logs.json                 ← [{ts, src, msg}, ...] — eventos recientes
+│   ├── partes/                                    ← divisiones >2GB para Telegram (*_partNN.mp4)
+│   └── backups/                                   ← backups de config del CLI (config.bin.bak)
+├── yt-pipeline/                                   ← pipeline YOUTUBE → TELEGRAM
+│   ├── downloads/<canal>/                         ← descargas crudas: *.f298.mp4 (vídeo) + *.f140.m4a (audio)
+│   ├── converted/<canal>/                         ← mp4 muxed 720p listos para Telegram
+│   ├── uploaded/<canal>/                          ← moved aquí después de subir (histórico)
+│   ├── logs/
+│   │   ├── cron_YYYYMMDD.log                      ← log del runner (inicios, paradas, resumen)
+│   │   ├── pipeline_YYYYMMDD_HHMMSS.json          ← stats por ejecución: {downloaded, converted, uploaded, errors}
+│   │   └── pending_videos.log                     vídeos pendientes si el PC se apagó antes de subir
+│   ├── downloaded_ids.json                        ← array de IDs ya descargados (dedup, ~99 entries)
+│   └── message_ids.json                           ← mapa {canal: [{message_id, title, saved_at}]}
+└── jorbencas_bot/                                 ← bot (montado como /data/descargas)
+    └── .test_githubActions/                       ← output de GitHub Actions (tips, noticias, retos)
 ```
+
+#### Archivos auxiliares explicados
+
+| Archivo | Quién lo escribe | Qué guarda | Por qué importa |
+|---------|-------------------|------------|-----------------|
+| `.pipeline/pipeline_status.json` | ffmpeg_monitor | Estado actual: `idle`, `compressing`, `error` | El bot de Telegram lo lee para saber si hay actividad en el pipeline |
+| `.pipeline/pipeline_logs.json` | ffmpeg_monitor | Últimos 100 eventos con timestamp | Log en tiempo real para el bot sin parsesear logs de texto |
+| `.processed/` | ffmpeg_monitor | Archivos `*_completed.mp4` ya comprimidos | Evita re-comprimir: el monitor comprueba si ya existe en `.processed/` antes de procesar |
+| `.corruptos/` | ffmpeg_monitor | Vídeos que ffprobe no puede leer o duran \<60s | Los mueve de `test/` a `.corruptos/` para que no bloqueen la cola |
+| `*_episodios.json` | ffmpeg_monitor | Lista de episodios detectados por OCR cada 180s | El uploader los usa para generar el caption del mensaje de Telegram |
+| `log_YYYY-MM-DD.txt` | ffmpeg_monitor | Una línea por archivo procesado: nombre, duración, tamaño | Auditoría rápida con `tail -f` |
+| `backups/` | telegram CLI | Copia de `config.bin` antes de cada operación | Restaurar si algo sale mal con `pipe_restore` |
+| `downloaded_ids.json` | download.py | Array de IDs de YouTube ya descargados | Evita re-descargar vídeos que ya tenemos |
+| `message_ids.json` | upload.py | Mapa canal → [{message_id, title}] | Para futuras operaciones (edición, borrado, referencia cruzada) |
+| `pending_videos.log` | run_pipeline_cron.sh | IDs de vídeos que quedaron pendientes al parar | El próximo día retoma desde donde se quedó |
 
 **Por qué en el host y no en volúmenes docker:** porque así puedes ver, copiar y depurar lo que hay en cada paso simplemente con `ls`. El disco compartido es el "contrato" entre productor y consumidor.
 
-### 13.3. Flujo del pipeline 1 — Directo → Telegram (sendosama)
+#### ¿Qué es el IPC y por qué existe?
+
+**IPC** significa *Inter-Process Communication* (comunicación entre procesos). En este ecosistema, el `ffmpeg_monitor` y el `bot de Telegram` están en contenedores Docker **separados** con redes diferentes: no pueden hablarse por HTTP ni por sockets. Se comunican a través de **archivos JSON en una carpeta compartida**.
+
+```
+ffmpeg_monitor-sendo                    @jorbencas_bot
+       │                                     │
+       │  escribe                            │  lee
+       ▼                                     ▼
+comprimidos/.pipeline/pipeline_status.json
+```
+
+**Cómo funciona:**
+
+1. El monitor detecta un vídeo → escribe `"status": "compressing"` en `pipeline_status.json`
+2. Cuando termina → escribe `"status": "idle"`
+3. Si falla → escribe `"status": "error"`
+4. El bot lee ese JSON cada pocos segundos para saber qué mostrar cuando alguien pregunta por el estado del pipeline
+
+**`pipeline_status.json`** contiene el estado actual:
+
+```json
+{
+  "monitor": {
+    "status": "compressing",
+    "last_run": "2026-09-09T12:00:00",
+    "file": "midudev_..._compressed.mp4"
+  }
+}
+```
+
+**`pipeline_logs.json`** contiene historial: los últimos 100 eventos con timestamp (qué archivo se comprimió, cuándo, si hubo error).
+
+**¿Por qué no un simple `docker network`?** Porque el bot necesita leer el estado *desde el host* (cuando un usuario pregunta por Telegram), y el monitor necesita escribirlo *desde su contenedor*. Un JSON compartido es la forma más simple y fiable de hacerlo sin dependencias externas como Redis o bases de datos.
+
+### 12.3. Flujo del pipeline 1 — Directo → Telegram (sendosama)
 
 Este pipeline lo montan los 3 daemons que levanta `pipe_up`. Cada flecha es **un archivo que cambia de carpeta**:
 
@@ -437,25 +459,60 @@ Este pipeline lo montan los 3 daemons que levanta `pipe_up`. Cada flecha es **un
 
 > 🧩 Para el detalle de cada eslabón: el **monitor** que comprime está explicado en [«Cómo funciona el monitor por dentro»](/posts/instalacion-ffmpeg#91-el-ciclo-de-compresión-paso-a-paso) y el **uploader** que sube, en [«Cómo funciona el uploader por dentro»](/posts/instalacion-telegram#101-el-ciclo-completo-de-subida).
 
-### 13.4. Flujo del pipeline 2 — YouTube → Telegram
+### 12.4. Flujo del pipeline 2 — YouTube → Telegram
 
 Este es **independiente**: no comparte ni una carpeta ni una línea de config con el pipeline 1.
 
 ```
-cron 01:00 → run_pipeline_cron.sh (marca /tmp anti-duplicado)
+cron 01:00 → run_pipeline_cron.sh (marca /tmp/yt-pipeline.lock anti-duplicado)
   ▼
 docker compose up -d yt-pipeline
   ▼
-download.py: 158 canales → downloads/<canal>/ (y dedup en downloaded_ids.json)
+download.py: lee config/channels.json (160 canales, 4 habilitados)
+  → skips IDs en downloaded_ids.json
+  → yt-dlp descarga a downloads/<canal>/*.f298.mp4 + *.f140.m4a
   ▼
-convert.py: 720p libx264/AAC → converted/<canal>/ (2 pasadas si >50MB)
+convert.py: lee downloads/<canal>/
+  → muxea video+audio con ffmpeg (720p, H.264/AAC, CRF 28)
+  → 2 pasadas si >50MB para optimizar tamaño
+  → salida a converted/<canal>/<videoId>_<fecha>_video_<titulo>.mp4
   ▼
-upload.py: sendVideo con topic por canal (topics.json) → uploaded/<canal>/
+upload.py: lee converted/<canal>/
+  → sendVideo a Telegram con topic por canal (topics.json)
+  → registra message_id en message_ids.json
+  → mueve archivo a uploaded/<canal>/
   ▼
-18:00 → docker compose down + resumen pending
+18:00 → docker compose down + resumen de pendientes
 ```
 
-### 13.5. Relaciones entre contenedores (qué monta cada uno)
+#### Archivos de configuración del pipeline YT
+
+| Archivo | Qué contiene | Ejemplo |
+|---------|--------------|---------|
+| `config/channels.json` | Lista de canales: `name`, `url`, `enabled`, `max_videos` | `{"name": "Midudev", "url": "...", "enabled": true, "max_videos": 2}` |
+| `config/topics.json` | Mapa canal → topic_id de Telegram | `{"Midudev": 26, "MoureDev": 27}` |
+| `downloaded_ids.json` | Array de IDs ya descargados (dedup global) | `["dQw4w9WgXcQ", "jNQXAC9IVRw", ...]` |
+| `message_ids.json` | Mapa canal → mensajes enviados | `{"Midudev": [{"message_id": 123, "title": "...", "saved_at": "..."}]}` |
+
+**Flujo de dedup:** `download.py` compara el ID de cada vídeo contra `downloaded_ids.json`. Si ya está, lo salta. Solo descarga los `max_videos` más recientes de cada canal habilitado. Al finalizar, añade los IDs procesados al JSON.
+
+**Flujo de topics:** Cada canal tiene un topic (tema) asignado en el grupo de Telegram. `upload.py` lee `topics.json` para saber a qué topic enviar cada vídeo. Si un canal no tiene topic asignado, se envía al topic general del grupo.
+
+#### Configurar el cron (automático cada día)
+
+```bash
+# Abrir crontab
+crontab -e
+
+# Añadir esta línea (pipeline a las 01:00)
+0 1 * * * /home/tu_usuario/devjobs/yt-to-telegram/scripts/run_pipeline_cron.sh >> /home/tu_usuario/devjobs/data/yt-pipeline/logs/cron_$(date +\%Y\%m\%d).log 2>&1
+```
+
+**¿Por qué a las 01:00?** Para no saturar la red durante el día. El pipeline dura hasta 17 horas (para a las 18:00).
+
+**¿Qué pasa si el PC se apaga antes?** Los vídeos pendientes se guardan en `data/yt-pipeline/logs/pending_videos.log`. La próxima vez que arranque, el pipeline continuará desde donde se quedó.
+
+### 12.5. Relaciones entre contenedores (qué monta cada uno)
 
 La tabla definitiva de volúmenes — memorízala, es el mapa que responde "¿dónde se ve `X` desde dentro?":
 
