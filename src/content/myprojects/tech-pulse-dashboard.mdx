@@ -3,7 +3,7 @@ draft: false
 title: "Tech Pulse: Dashboard Automatizado de Noticias Tech con IA"
 description: "Pipeline automatizado que monitoriza 515 fuentes tech (YouTube, RSS, GitHub Topics, Product Hunt), genera resúmenes con IA, filtra por categoría y despliega un dashboard interactivo + Telegram + email newsletter + tips + herramientas IA."
 pubDate: "2026/06/25"
-updatedDate: "2026/09/03"
+updatedDate: "2026/09/10"
 tags: ['python', 'ia', 'web-scraping', 'devops', 'automation', 'github-actions', 'rss']
 image: "img/tech_pulse_dashboard/tech_pulse_dashboard_cover-1200.webp"
 repository: "https://github.com/jorbencas/test_githubActions"
@@ -250,7 +250,7 @@ Python genera un `index.html` completo con todo el contenido pre-renderizado (no
 - **Badges con clases CSS unificadas:** `.badge-tech`, `.badge-rss`, `.badge-cat`
 - **Config externalizada:** canales, tabs, opciones de filtro se inyectan directamente en el HTML desde Python
 
-> **Actualizado septiembre 2026:** 515 fuentes con 89 GitHub Topics y 4 fuentes duales. Markdown Tools (PDF, Slides, Table, Snippets, Cheatsheet) integradas en el dashboard. Tips de IT con 283 conceptos. Herramientas IA con 150 categorías y auto-detección. AI Agent Skills de GitHub. Blog resources migrados (2108). 134 tests pytest.
+> **Actualizado septiembre 2026:** 515 fuentes con 89 GitHub Topics y 4 fuentes duales. Markdown Tools (PDF, Slides, Table, Snippets, Cheatsheet) integradas en el dashboard. Tips de IT con 283 conceptos. Herramientas IA con 150 categorías y auto-detección. AI Agent Skills: 68 skills (GitHub + mattpocock/skills ★258k). Blog resources migrados (2108). 134 tests pytest.
 
 ## 4. Desglose del Feature Set
 
@@ -273,7 +273,7 @@ Python genera un `index.html` completo con todo el contenido pre-renderizado (no
 - **CI/CD completo:** 15 workflows de GitHub Actions con badges en vivo en el README
 - **Tips de IT:** 283 conceptos con preguntas de entrevista, Gemini + Wikipedia + fallback local
 - **Herramientas IA:** 150 categorías, auto-detección de herramientas (HF + GitHub + Product Hunt)
-- **AI Agent Skills:** 37 skills de GitHub para mejorar respuestas del bot
+- **AI Agent Skills:** 68 skills de GitHub + mattpocock/skills (★258k) para mejorar respuestas del bot
 - **Blog resources migrados:** 2108 recursos del blog disponibles en el bot de Telegram
 
 ## 5. Instalación
@@ -300,7 +300,53 @@ Desde el dashboard se accede a una sección de **Markdown Tools** — 5 herramie
 - **Deploy compartido:** mdtools se genera en `public/mdtools/` y se despliega junto con el dashboard en el mismo dominio Surge.sh
 - **Nav integrada:** enlace "← Dashboard" en mdtools, enlace "Markdown Tools" en el dashboard
 
-## 7. Live Demo
+## 7. AI Agent Skills (Septiembre 2026)
+
+Scraper de habilidades de agentes IA desde múltiples fuentes. Las skills se usan para mejorar las respuestas del bot de Telegram con conocimiento específico de agentes IA.
+
+### Fuentes
+
+| Fuente | Skills | Descripción |
+|--------|--------|-------------|
+| GitHub repos | 39 | Repos de skills de agentes IA (búsqueda por queries) |
+| mattpocock/skills | 29 | El repo de skills más famoso (★258k) — code-review, triage, tdd, domain-modeling, etc. |
+| **Total** | **68** | Combina y deduplica por URL |
+
+### Categorías de mattpocock
+
+- **engineering:** code-review, triage, tdd, diagnosing-bugs, domain-modeling, codebase-design, improve-codebase-architecture, research, implement, prototype, wayfinder, resolving-merge-conflicts, to-spec, to-tickets, grill-with-docs, ask-matt, setup-matt-pocock-skills, wizard
+- **productivity:** (habilidades de productividad personal)
+- **misc:** (habilidades varias)
+
+### Distribución
+
+Las skills se envían al canal de Telegram **Report herramientas** (`-1004380905505`) con el mismo formato que las herramientas IA:
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 AI AGENT SKILLS (Matt Pocock ★258k)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. 🎯 mattpocock/code-review
+   Realiza revisiones de código enfocadas en...
+   🔗 https://github.com/mattpocock/skills/...
+   📂 engineering
+```
+
+### Scraping
+
+```bash
+# Ejecutar scraper de skills
+python -m scripts.scrapers.scrape_agent_skills
+```
+
+El scraper consulta:
+1. **skills.sh** — Índice JSON del directorio oficial
+2. **agentskills.io** — API + fallback web scraping
+3. **GitHub Search** — Queries: `agent-skills SKILL.md`, `claude-skills SKILL.md`, `opencode-skills`, `ai-agent-skills`
+4. **mattpocock/skills** — Explora `skills/engineering/`, `skills/productivity/`, `skills/misc/` y lee `SKILL.md` de cada una
+
+## 8. Live Demo
 
 El dashboard está desplegado y accesible públicamente, con actualización automática cada hora y notificaciones cada 30 minutos.
 
