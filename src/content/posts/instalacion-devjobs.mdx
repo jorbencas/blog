@@ -422,6 +422,20 @@ comprimidos/.pipeline/pipeline_status.json
 
 `TwitchRecorder/config.json` controla todo el comportamiento del grabador. Cada canal define sus propias plataformas, horarios y opciones de detección. Este archivo se monta como volumen de solo lectura dentro del contenedor.
 
+**Dónde está:** `devjobs/TwitchRecorder/config.json` en el host. Docker lo monta en `/app/config.json` dentro del contenedor (solo lectura).
+
+**Cómo editarlo:**
+
+```bash
+# Editar
+nano ~/dev/devjobs/TwitchRecorder/config.json
+
+# Aplicar cambios (recrear el contenedor)
+docker compose -f TwitchRecorder/docker-compose.yml up -d --force-recreate
+```
+
+> **Importante:** los cambios **no se aplican en caliente**. El contenedor lee `config.json` al arrancar. Si editas el archivo, necesitas recrear el contenedor para que coja los cambios.
+
 ```json
 {
     "channels": {
@@ -488,6 +502,24 @@ comprimidos/.pipeline/pipeline_status.json
     "*": ["web", "twitch", "kick"]
 }
 ```
+
+**Ejemplo práctico — añadir un canal nuevo:**
+
+```json
+"channels": {
+    "sendosama": { ... },
+    "midudev": {
+        "platform": [
+            { "platform": "youtube" },
+            { "platform": "twitch", "detectar": false, "corte": false }
+        ],
+        "days": ["Monday"],
+        "start_time": "18:00"
+    }
+}
+```
+
+Con esto, midudev solo se comprueba los lunes a las 18:00. Primero intenta YouTube, si no está → Twitch (sin detección de episodios ni corte). Si no pones `days`, se graba todos los días. Si no pones `start_time`, usa `19:55`.
 
 ### 12.4. Flujo del pipeline 1 — Directo → Telegram (sendosama)
 
