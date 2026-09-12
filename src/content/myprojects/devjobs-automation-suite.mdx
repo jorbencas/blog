@@ -3,7 +3,7 @@ draft: false
 title: "Devjobs Automation Suite: Pipelines de Video, Bots IA y Scrapers Automatizados"
 description: "Suite completa de automatización con Docker: pipeline de Twitch a Telegram, pipeline de YouTube a Telegram, bot de Telegram con IA, scrapers de noticias y herramientas de productividad. Todo self-hosted y sin intervención manual."
 pubDate: "2026/09/03"
-updatedDate: "2026/09/03"
+updatedDate: "2026/09/12"
 tags: ["docker", "python", "automatización", "telegram", "ia", "scraping", "pipeline"]
 image: "img/devjobs_automation_suite/devjobs_automation_suite_cover-1200.webp"
 repository: "https://github.com/jorbencas/devjobs"
@@ -114,6 +114,8 @@ Cada canal tiene su propia configuración de horarios, plataformas y comportamie
 - **`start_time`**: Hora mínima para empezar a comprobar (str o dict por día)
 - **`detectar`/`corte`**: Control de detección de episodios y corte de extremos por fuente
 - **`descripcion`**: Usar descripción del directo como caption (para YouTube)
+- **Detección HLS sin navegador**: `is_live()` consulta el `m3u8` de la web directamente (API `/api/playback-domain`) en vez de yt-dlp, más rápido y fiable
+- **Playlist congelada**: `_hls_estado()` detecta la web que sigue sirviendo el stream pero "congelada" (sin avance) y la marca como offline
 
 ### Flujo paso a paso
 
@@ -149,6 +151,27 @@ plogs
 
 # Parar todo
 pipe_down
+```
+
+### Detección de directo y playlist congelada (web)
+
+La web de Sendo es una SPA de React sin `m3u8` en el HTML. Se obtiene el dominio del servidor HLS con la API interna `/api/playback-domain` y se construye la URL `ts:abr.m3u8`. `is_live()` comprueba ese `m3u8` directamente (mucho más barato que lanzar yt-dlp) y solo cae al extractor como seguridad cuando el estado es indeterminado.
+
+El caso más tramposo es la **playlist congelada**: Sendo apaga el *visualizador* pero el servidor HLS sigue sirviendo un `m3u8` que ya no avanza. Con yt-dlp eso parecería un directo "para siempre". `_hls_estado()` (`utils/web.py`) lo resuelve con dos umbrales:
+
+```python
+_PDT_FUERA = 90   # el último segmento lleva >90s de antigüedad → fuera
+_COLA_FUERA = 60  # la cola de segmentos no avanza durante 60s → fuera
+```
+
+- `#EXT-X-ENDLIST` o 404/410 → final limpio → fuera
+- Último `#EXT-X-PROGRAM-DATE-TIME` con más de 90s → congelado → fuera
+- Sin timestamps: se firma la cola (`#EXT-X-MEDIA-SEQUENCE` + último segmento) y si no cambia durante 60s → congelado → fuera
+
+Así el pipeline no se queda grabando un stream fantasma: cuando la web se cae de verdad, detecta offline y puede cambiar de plataforma (Twitch/Kick) o parar. Al terminar, el log lo confirma:
+
+```
+17:35:28 [sendosama] Grabación finalizada (6.2 GB, 01:28:15)
 ```
 
 ---
