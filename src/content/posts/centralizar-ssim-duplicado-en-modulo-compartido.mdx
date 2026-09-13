@@ -134,7 +134,9 @@ Localicé el límite exacto del bloque con un script de transformación determin
 
 Eliminé el bloque completo (que arrastraba también su cabecera de comentario de sección) y en su lugar puse el mismo `import` compartido, conservando el comentario de sección siguiente (`OPERACIONES COMPLEMENTARIAS GIF / SVG`) para no romper la estructura del archivo.
 
-Resultado: `fix_images.py` pasó de 507 líneas a **446 líneas** (61 líneas menos), con el import compartido en la línea 92.
+Resultado: `fix_images.py` pasó de 507 líneas a **449 líneas** (61 líneas de duplicación menos), con el import compartido en la línea 95.
+
+Un matiz importante: el import compartido (`from utils.image_ops import ...`) solo funciona si `scripts/` está en `sys.path`. Como `fix_images.py` se ejecuta como `python -m scripts.tools.fix_images`, tuve que añadir el mismo `sys.path.insert(0, str(Path(__file__).resolve().parent.parent))` que ya usaban el resto de scripts del repo — si no, el módulo común no se encuentra al lanzarlo desde la raíz.
 
 ---
 
@@ -198,7 +200,7 @@ refactor: centralizar algoritmo SSIM en utils/image_ops.py
 | Copias del algoritmo SSIM | 2 (`optimize.py` + `fix_images.py`) | 1 (`utils/image_ops.py`) |
 | Líneas duplicadas | ~130 | 0 |
 | `optimize.py` | 251 líneas | 208 líneas (−43) |
-| `fix_images.py` | 507 líneas | 446 líneas (−61) |
+| `fix_images.py` | 507 líneas | 449 líneas (−61 de duplicación) |
 | Fuente de verdad del umbral SSIM | 2, divergentes en silencio | 1, canónica |
 | `IndentationError` en `optimize.py` | ✅ presente (no ejecutaba) | ✅ arreglado |
 | Tests | 168 pasando | 168 pasando |
