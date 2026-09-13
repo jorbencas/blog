@@ -28,7 +28,7 @@ Mis dos herramientas de imágenes vivían en `scripts/tools/`:
 
 Vivían en el mismo directorio, hacían cosas complementarias, y **compartían el mismo motor**: el algoritmo SSIM (Structural Similarity Index), con sus funciones auxiliares y sus constantes de calibración.
 
-¿Cómo lo detecté? No fue glamuroso: estaba añadiendo una función nueva a `optimize.py`, y al guardar, mi editor me mostró "simbols already defined" para `compute_ssim`. Ahí me paré. No es que hubiera dos `compute_ssim` en el mismo archivo — es que **dos archivos definían el mismo símbolo**, y no me había dado cuenta porque cada uno se usaba de forma independiente.
+¿Cómo lo detecté? No fue glamuroso: estaba añadiendo una función nueva a `optimize.py`, y al guardar, mi editor me marcó `compute_ssim` como símbolo ya definido. Ahí me paré. No es que hubiera dos `compute_ssim` en el mismo archivo — es que **dos archivos definían el mismo símbolo**, y no me había dado cuenta porque cada uno se usaba de forma independiente.
 
 Hice un `grep` y confirmé lo que sospechaba:
 
@@ -79,7 +79,7 @@ Comparé las dos copias y saqué la intersección exacta — ni más ni menos �
 | `find_optimal_quality` | El bucle que baja la calidad mientras el SSIM aguante el umbral. |
 | `strip_metadata` + `constrain_size` | Preparación de imagen (limpiar metadatos, limitar ancho). |
 
-El resultado fue `scripts/utils/image_ops.py` — un módulo de 111 líneas, focused en *una única responsabilidad*: el algoritmo SSIM y la preparación de imagen. Lo dejé separado de `utils/common.py` (que ya existía y mezcla helpers generales) precisamente para mantenerlo testeable y de un solo tema.
+El resultado fue `scripts/utils/image_ops.py` — un módulo de 111 líneas, centrado en *una única responsabilidad*: el algoritmo SSIM y la preparación de imagen. Lo dejé separado de `utils/common.py` (que ya existía y mezcla helpers generales) precisamente para mantenerlo testeable y de un solo tema.
 
 Cada script tool quedaría ahora con **su orquestación**: qué archivos, qué formatos, qué rutas de salida. Y nada de la teoría del SSIM.
 
@@ -91,7 +91,7 @@ Empecé por `optimize.py`. El plan era simple: borrar las 5 funciones + 6 consta
 
 ```
 # ANTES
-# /──── duplicated ~130 líneas: SSIM + constantes ────/
+# /──── duplicado ~130 líneas: SSIM + constantes ────/
 
 # DESPUÉS
 from utils.image_ops import (
@@ -105,8 +105,8 @@ Y aquí vino **el susto que me demostró que el refactor ya tenía valor antes d
 ```python
 def optimize_svg(path, out_dir, filename):
     # ...
-    import re      # ← indentation incorrecta dentro de la función
-    import sys     # ← aquí dentro
+    import re      # indentation incorrecta: import dentro de la función
+    import sys     # aquí dentro
 ```
 
 Los imports redundantes **rompían el script en tiempo de importación**: `optimize.py` no se ejecutaba en absoluto. Llevaba tiempo ahí, escondido, porque ese script no se probaba en los tests. No tenía nada que ver con mi refactor, pero al estar tocando ese archivo me lo topé, así que lo arreglé de paso:
@@ -119,7 +119,7 @@ import sys
 
 > Lección: cuando refactorizas, a veces te tropiezas con bugs preexistentes que el refactor expone. No son "daño colateral": **son bugs que ya estaban**, ahora visibles. Conviene arreglarlos en el mismo commit (quedan documentados juntos).
 
-Después de esto, `optimize.py` pasaba de 196 a ~143 líneas: **~61 líneas menos**.
+Después de esto, `optimize.py` pasaba de 251 a 208 líneas: **43 líneas menos**.
 
 ---
 
@@ -134,7 +134,7 @@ Localicé el límite exacto del bloque con un script de transformación determin
 
 Eliminé el bloque completo (que arrastraba también su cabecera de comentario de sección) y en su lugar puse el mismo `import` compartido, conservando el comentario de sección siguiente (`OPERACIONES COMPLEMENTARIAS GIF / SVG`) para no romper la estructura del archivo.
 
-Resultado: `fix_images.py` pasó de 500+ líneas a **446 líneas** (~69 líneas menos), con el import compartido en la línea 92.
+Resultado: `fix_images.py` pasó de 507 líneas a **446 líneas** (61 líneas menos), con el import compartido en la línea 92.
 
 ---
 
@@ -197,8 +197,8 @@ refactor: centralizar algoritmo SSIM en utils/image_ops.py
 | --- | --- | --- |
 | Copias del algoritmo SSIM | 2 (`optimize.py` + `fix_images.py`) | 1 (`utils/image_ops.py`) |
 | Líneas duplicadas | ~130 | 0 |
-| `optimize.py` | 196 líneas | ~143 líneas (−61) |
-| `fix_images.py` | 515+ líneas | 446 líneas (−69) |
+| `optimize.py` | 251 líneas | 208 líneas (−43) |
+| `fix_images.py` | 507 líneas | 446 líneas (−61) |
 | Fuente de verdad del umbral SSIM | 2, divergentes en silencio | 1, canónica |
 | `IndentationError` en `optimize.py` | ✅ presente (no ejecutaba) | ✅ arreglado |
 | Tests | 168 pasando | 168 pasando |
