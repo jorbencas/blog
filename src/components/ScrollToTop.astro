@@ -18,33 +18,34 @@
 </button>
 
 <script is:inline>
-  function initScrollToTop() {
-    const btn = document.getElementById("scroll-top");
-    if (!btn) return;
-    let ticking = false;
-    function onScroll() {
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          const visible = window.scrollY > 400;
-          btn.classList.toggle("opacity-100", visible);
-          btn.classList.toggle("translate-y-0", visible);
-          btn.classList.toggle("pointer-events-auto", visible);
-          btn.classList.toggle("opacity-0", !visible);
-          btn.classList.toggle("translate-y-4", !visible);
-          btn.classList.toggle("pointer-events-none", !visible);
-          ticking = false;
-        });
-        ticking = true;
-      }
-    }
-    window.addEventListener("scroll", onScroll, { passive: true });
-    btn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
-  }
+  (function() {
+    let prevOnScroll = null;
 
-  document.addEventListener("astro:page-load", initScrollToTop);
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initScrollToTop);
-  } else {
-    initScrollToTop();
-  }
+    function initScrollToTop() {
+      const btn = document.getElementById("scroll-top");
+      if (!btn) return;
+      if (prevOnScroll) window.removeEventListener("scroll", prevOnScroll);
+      let ticking = false;
+      function onScroll() {
+        if (!ticking) {
+          requestAnimationFrame(() => {
+            const visible = window.scrollY > 400;
+            btn.classList.toggle("opacity-100", visible);
+            btn.classList.toggle("translate-y-0", visible);
+            btn.classList.toggle("pointer-events-auto", visible);
+            btn.classList.toggle("opacity-0", !visible);
+            btn.classList.toggle("translate-y-4", !visible);
+            btn.classList.toggle("pointer-events-none", !visible);
+            ticking = false;
+          });
+          ticking = true;
+        }
+      }
+      prevOnScroll = onScroll;
+      window.addEventListener("scroll", onScroll, { passive: true });
+      btn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    document.addEventListener("astro:page-load", initScrollToTop);
+  })();
 </script>

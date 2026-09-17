@@ -7,18 +7,28 @@
 </div>
 
 <script>
-  const updateProgressBar = () => {
-    const progressBar = document.getElementById('progress-bar');
-    if (!progressBar) return;
+  let rafId = null;
+  let lastScrolled = -1;
 
-    const winScroll = document.documentElement.scrollTop || document.body.scrollTop;
-    const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-    const scrolled = Math.round((winScroll / height) * 100);
-    
-    progressBar.style.width = scrolled + "%";
-    progressBar.setAttribute("aria-valuenow", scrolled.toString());
+  const updateProgressBar = () => {
+    if (rafId) return;
+    rafId = requestAnimationFrame(() => {
+      rafId = null;
+      const progressBar = document.getElementById('progress-bar');
+      if (!progressBar) return;
+
+      const winScroll = document.documentElement.scrollTop || document.body.scrollTop;
+      const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      const scrolled = Math.round((winScroll / height) * 100);
+
+      if (scrolled !== lastScrolled) {
+        lastScrolled = scrolled;
+        progressBar.style.width = scrolled + "%";
+        progressBar.setAttribute("aria-valuenow", scrolled.toString());
+      }
+    });
   };
 
   window.addEventListener('scroll', updateProgressBar, { passive: true });
-  document.addEventListener('astro:page-load', updateProgressBar);
+  document.addEventListener('astro:page-load', () => { lastScrolled = -1; updateProgressBar(); });
 </script>

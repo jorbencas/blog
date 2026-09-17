@@ -141,8 +141,10 @@ const tocHtml = `<ul class="space-y-3">${tocTree.map(tocItem).join("")}</ul>`;
 
 <script is:inline>
   (function() {
-    let lastActive = "";
-    let rafId = null;
+    if (!window._tocState) {
+      window._tocState = { lastActive: "", rafId: null, onScroll: null, onResize: null };
+    }
+    const S = window._tocState;
 
     function getTOCConfig(container) {
       const json = container
@@ -309,37 +311,33 @@ const tocHtml = `<ul class="space-y-3">${tocTree.map(tocItem).join("")}</ul>`;
     }
 
     function onScroll() {
-      if (rafId) return;
-      rafId = requestAnimationFrame(() => {
-        rafId = null;
+      if (S.rafId) return;
+      S.rafId = requestAnimationFrame(() => {
+        S.rafId = null;
         const id = currentHeadingId();
-        if (id && id !== lastActive) {
-          lastActive = id;
+        if (id && id !== S.lastActive) {
+          S.lastActive = id;
           activate(id);
         }
       });
     }
 
     function initTOC() {
-      lastActive = "";
-      if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
-      if (headings.length) {
-        window.removeEventListener("scroll", onScroll, { passive: true });
-        window.removeEventListener("resize", onScroll, { passive: true });
+      S.lastActive = "";
+      if (S.rafId) { cancelAnimationFrame(S.rafId); S.rafId = null; }
+      if (S.onScroll) {
+        window.removeEventListener("scroll", S.onScroll);
+        window.removeEventListener("resize", S.onScroll);
       }
       if (!renderAll()) return;
+      S.onScroll = onScroll;
       window.addEventListener("scroll", onScroll, { passive: true });
       window.addEventListener("resize", onScroll, { passive: true });
       const first = currentHeadingId();
-      lastActive = first || "";
+      S.lastActive = first || "";
       activate(first);
     }
 
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", initTOC);
-    } else {
-      initTOC();
-    }
     document.addEventListener("astro:page-load", initTOC);
   })();
 </script>
