@@ -206,8 +206,6 @@ Los feeds RSS y los sitios de web scraping marcados con `quick: True` se actuali
 El correo electrónico se rediseñó completamente:
 
 - **Agrupación por fuente:** las noticias se organizan por sitio web de origen (TechCrunch, The Verge, Xataka, etc.)
-- **Traducción inteligente:** solo se traducen los elementos nuevos mediante el flag `traducido`, omitiendo los ya procesados
-- **Resúmenes persistidos:** se almacenan en `noticias_historico.json` para evitar re-summarización en cada ejecución
 - **Sección de vídeos:** muestra los vídeos de YouTube con miniatura, canal y duración
 - **Botón "Leer noticia":** enlace estilizado en lugar de una URL en texto plano
 - **Estilos por fuente:** cada sitio tiene un color e icono personalizados
@@ -217,8 +215,6 @@ El correo electrónico se rediseñó completamente:
 - **Solo noticias:** los vídeos se excluyen del envío mediante el flag `id_video`
 - **Audio a las 21:00 UTC:** resumen de voz con todas las noticias del día, no solo las del run actual
 - **Caché en GitHub Actions:** `actions/cache@v4` con TTL de 7 días para noticias y 24 horas para audio
-- **Traducción inteligente:** reutiliza el título traducido si existe, traduce únicamente los nuevos
-- **Resúmenes persistidos:** el campo `n['resumen']` se guarda para no re-summarizar
 
 ### Resumen Semanal Agrupado por Fuente (Julio 2026)
 
@@ -254,39 +250,13 @@ Python genera un archivo `index.html` completo con todo el contenido pre-renderi
 - **Badges con clases CSS unificadas:** `.badge-tech`, `.badge-rss`, `.badge-cat`
 - **Configuración externalizada:** canales, pestañas y opciones de filtro se inyectan directamente en el HTML desde Python
 
-> **Actualizado en septiembre de 2026:** 515 fuentes con 89 GitHub Topics y 4 fuentes duales. Markdown Tools (PDF, Slides, Table, Snippets, Cheatsheet) integradas en el dashboard. Tips de IT con 283 conceptos. Herramientas IA con 150 categorías y auto-detección. AI Agent Skills: 68 skills (GitHub + mattpocock/skills ★258k). Blog resources migrados (2108). 134 tests con pytest.
-
-## 4. Desglose del Feature Set
-
-- **515 fuentes monitorizadas:** 158 canales de YouTube, 151 feeds RSS, 43 sitios de web scraping, 64 sitios de HTML scraping, 4 fuentes duales, 89 GitHub Topics, 8 repositorios y 1 Product Hunt
-- **Clasificación inteligente:** 6 categorías temáticas (IA, Programación, DevOps, Ciberseguridad, Hardware, Negocios) con badges Tech/RSS
-- **Dashboard SSR:** Python genera el HTML completo del servidor; JavaScript gestiona únicamente la interactividad (~135 líneas)
-- **Configuración externalizada:** prompts de IA, plantillas de Telegram y email, canales YouTube, opciones de filtro — todo centralizado en `constants_sources.py` y `constants_templates.py`
-- **Constantes con nombre descriptivo:** todas las claves de acceso a diccionarios del esquema son constantes, lo que permite modificar un campo editando una única línea
-- **Sección de Referencia Tech:** panel colapsable con Skills, LLMs, Lenguajes, Frameworks y Librerías
-- **Newsletter diaria:** agrupada por fuente, con resúmenes individuales por noticia generados por Gemini y sección de vídeos
-- **Telegram solo noticias:** sin vídeos, con audio TTS a las 21:00 UTC que incluye todas las noticias del día
-- **Traducción inteligente:** el flag `traducido` se persiste para evitar re-traducción de elementos ya procesados
-- **Resúmenes persistidos:** el campo `n['resumen']` se almacena en el JSON para no re-summarizar
-- **Fuentes duales:** extracción simultánea de YouTube y web scraping (MoureDev, Midudev, Carlos Azaustre, Xataka)
-- **Ranking GitHub Stars:** top 20 repositorios ordenados por estrellas, extraídos de 89 GitHub Topics y Collections
-- **Deduplicación:** por URL normalizada y título similar durante el scraping, la generación del dashboard y la deduplicación entre archivos de resources
-- **Estructura modular reorganizada:** scripts en subdirectorios (`scrapers/`, `publishers/`, `tools/`, `utils/`, `solutions/`)
-- **Constantes reorganizadas:** `constants_sources.py` (fuentes), `constants_templates.py` (HTML, email, prompts), `constants_mdtools.py` (plantillas de Markdown Tools)
-- **134 tests con pytest:** cobertura completa de utilidades, caché, constantes (incluyendo plantillas de email), imágenes, recursos y soluciones
-- **CI/CD completo:** 15 workflows de GitHub Actions con badges en vivo en el README
-- **Tips de IT:** 283 conceptos con preguntas de entrevista, generados con Gemini y verificados con Wikipedia y fallback local
-- **Herramientas IA:** 150 categorías con auto-detección de herramientas (HuggingFace + GitHub + Product Hunt)
-- **AI Agent Skills:** 68 skills de GitHub y mattpocock/skills (★258k) para mejorar las respuestas del bot
-- **Blog resources migrados:** 2108 recursos del blog disponibles en el bot de Telegram
-
-## 5. Instalación
+## 4. Instalación
 
 ¿Cómo instalar Tech Pulse con scraping, IA, Telegram y newsletter? Consulta la [guía de instalación completa](/posts/instalacion-tech-pulse) — API keys, Gemini, Mailgun, GitHub Actions y troubleshooting.
 
 ---
 
-## 6. Markdown Tools (Agosto 2026)
+## 5. Markdown Tools (Agosto 2026)
 
 Desde el dashboard se accede a una sección de **Markdown Tools**: cinco herramientas offline que funcionan completamente en el navegador sin necesidad de servidor:
 
@@ -304,7 +274,7 @@ Desde el dashboard se accede a una sección de **Markdown Tools**: cinco herrami
 - **Despliegue compartido:** mdtools se genera en `public/mdtools/` y se despliega junto con el dashboard en el mismo dominio de Surge.sh
 - **Navegación integrada:** enlace "← Dashboard" en mdtools y enlace "Markdown Tools" en el dashboard
 
-## 7. Arquitectura CSS del Frontend (Septiembre 2026)
+## 6. Arquitectura CSS del Frontend (Septiembre 2026)
 
 El frontend de Tech Pulse se compone de tres páginas independientes, cada una con su propia estrategia de estilos. La landing page integra el CSS directamente en el HTML, el timeline carga un archivo externo de 688 líneas, y el dashboard junto con Markdown Tools utilizan una arquitectura modular dividida en seis archivos. Todas comparten un enfoque dark-first, variables CSS para la personalización del tema y un diseño responsive progresivo.
 
@@ -804,7 +774,7 @@ Para preservar la legibilidad del contenido de las presentaciones, la vista prev
 | **Parallax** | No | Sí — 3 capas + canvas | No | No |
 | **Fuentes** | Inter + JetBrains Mono | Inter + JetBrains Mono | System font stack | Inter + Fira Code |
 
-## 8. AI Agent Skills
+## 7. AI Agent Skills
 
 Módulo de scraping de habilidades de agentes IA desde múltiples fuentes. Las skills se utilizan para enriquecer las respuestas del bot de Telegram con conocimiento específico sobre agentes IA.
 
@@ -851,7 +821,7 @@ El scraper consulta las siguientes fuentes en orden:
 3. **GitHub Search** — Consultas: `agent-skills SKILL.md`, `claude-skills SKILL.md`, `opencode-skills`, `ai-agent-skills`
 4. **mattpocock/skills** — Explora los directorios `skills/engineering/`, `skills/productivity/` y `skills/misc/`, y lee el archivo `SKILL.md` de cada skill
 
-## 9. Conclusiones
+## 8. Conclusiones
 
 Tech Pulse es el motor de contenido automatizado detrás de las secciones de noticias del blog. El dashboard está desplegado y accesible públicamente, con actualización automática cada hora y notificaciones cada 30 minutos.
 
