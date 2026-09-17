@@ -3,221 +3,210 @@
 ---
 
 <script>
-  function mejorarBloquesCodigo() {
-    const bloques = document.querySelectorAll("pre:not(.mejorado)");
-    const filtered = Array.from(bloques).filter(pre => !pre.closest("th, td") && !pre.closest(".code-tabs-wrapper"));
+  const configLang = {
+    js: { initials: "JS", color: "F7DF1E" },
+    javascript: { initials: "JS", color: "F7DF1E" },
+    ts: { initials: "TS", color: "3178C6" },
+    typescript: { initials: "TS", color: "3178C6" },
+    astro: { initials: "AS", color: "FF5D01" },
+    vue: { initials: "VU", color: "4FC08D" },
+    svelte: { initials: "SV", color: "FF3E00" },
+    angular: { initials: "NG", color: "DD0031" },
+    react: { initials: "RC", color: "61DAFB" },
+    jsx: { initials: "JX", color: "61DAFB" },
+    tsx: { initials: "TX", color: "3178C6" },
+    html: { initials: "H5", color: "E34F26" },
+    html5: { initials: "H5", color: "E34F26" },
+    css: { initials: "CS", color: "1572B6" },
+    py: { initials: "PY", color: "3776AB" },
+    python: { initials: "PY", color: "3776AB" },
+    java: { initials: "JV", color: "007396" },
+    csharp: { initials: "CS", color: "239120" },
+    "c#": { initials: "CS", color: "239120" },
+    cpp: { initials: "CP", color: "00599C" },
+    "c++": { initials: "CP", color: "00599C" },
+    c: { initials: "C", color: "A8B9CC" },
+    rust: { initials: "RS", color: "000000" },
+    php: { initials: "PH", color: "777BB4" },
+    go: { initials: "GO", color: "00ADD8" },
+    kotlin: { initials: "KT", color: "7F52FF" },
+    swift: { initials: "SW", color: "F05138" },
+    visualbasic: { initials: "VB", color: "512BD4" },
+    vb: { initials: "VB", color: "512BD4" },
+    dart: { initials: "DA", color: "0175C2" },
+    ruby: { initials: "RB", color: "CC342D" },
+    sql: { initials: "SQ", color: "003B57" },
+    sqlite: { initials: "SQ", color: "003B57" },
+    mysql: { initials: "MY", color: "4479A1" },
+    postgresql: { initials: "PG", color: "4169E1" },
+    postgres: { initials: "PG", color: "4169E1" },
+    mongodb: { initials: "MG", color: "47A248" },
+    redis: { initials: "RD", color: "DC382D" },
+    prisma: { initials: "PR", color: "2D3748" },
+    bash: { initials: "SH", color: "4EAA25" },
+    sh: { initials: "SH", color: "4EAA25" },
+    shell: { initials: "SH", color: "4EAA25" },
+    powershell: { initials: "PS", color: "5391FE" },
+    docker: { initials: "DK", color: "2496ED" },
+    dockerfile: { initials: "DF", color: "2496ED" },
+    dockerignore: { initials: "DF", color: "2496ED" },
+    yaml: { initials: "YM", color: "CB171E" },
+    yml: { initials: "YM", color: "CB171E" },
+    toml: { initials: "TL", color: "9C4221" },
+    json: { initials: "JN", color: "000000" },
+    markdown: { initials: "MD", color: "000000" },
+    md: { initials: "MD", color: "000000" },
+    git: { initials: "GT", color: "F05032" },
+    npm: { initials: "NP", color: "CB3837" },
+    terminal: { initials: "TM", color: "4EAA25" },
+  };
 
-    // Iniciales reconocibles + colores oficiales
-    const configLang = {
-      js: { initials: "JS", color: "F7DF1E" },
-      javascript: { initials: "JS", color: "F7DF1E" },
-      ts: { initials: "TS", color: "3178C6" },
-      typescript: { initials: "TS", color: "3178C6" },
-      astro: { initials: "AS", color: "FF5D01" },
-      vue: { initials: "VU", color: "4FC08D" },
-      svelte: { initials: "SV", color: "FF3E00" },
-      angular: { initials: "NG", color: "DD0031" },
-      react: { initials: "RC", color: "61DAFB" },
-      jsx: { initials: "JX", color: "61DAFB" },
-      tsx: { initials: "TX", color: "3178C6" },
-      html: { initials: "H5", color: "E34F26" },
-      html5: { initials: "H5", color: "E34F26" },
-      css: { initials: "CS", color: "1572B6" },
+  const cacheLang = {};
+  function getLangInfo(raw) {
+    const key = raw.toLowerCase();
+    if (cacheLang[key]) return cacheLang[key];
+    cacheLang[key] = configLang[key] || { initials: "~", color: "64748b" };
+    return cacheLang[key];
+  }
 
-      // Programación General
-      py: { initials: "PY", color: "3776AB" },
-      python: { initials: "PY", color: "3776AB" },
-      java: { initials: "JV", color: "007396" },
-      csharp: { initials: "CS", color: "239120" },
-      "c#": { initials: "CS", color: "239120" },
-      cpp: { initials: "CP", color: "00599C" },
-      "c++": { initials: "CP", color: "00599C" },
-      c: { initials: "C", color: "A8B9CC" },
-      rust: { initials: "RS", color: "000000" },
-      php: { initials: "PH", color: "777BB4" },
-      go: { initials: "GO", color: "00ADD8" },
-      kotlin: { initials: "KT", color: "7F52FF" },
-      swift: { initials: "SW", color: "F05138" },
-      visualbasic: { initials: "VB", color: "512BD4" },
-      vb: { initials: "VB", color: "512BD4" },
-      dart: { initials: "DA", color: "0175C2" },
-      ruby: { initials: "RB", color: "CC342D" },
+  function isLight(hex) {
+    const r = parseInt(hex.slice(0, 2), 16);
+    const g = parseInt(hex.slice(2, 4), 16);
+    const b = parseInt(hex.slice(4, 6), 16);
+    return (r * 299 + g * 587 + b * 114) / 1000 > 150;
+  }
 
-      // Bases de Datos (SQL & NoSQL)
-      sql: { initials: "SQ", color: "003B57" },
-      sqlite: { initials: "SQ", color: "003B57" },
-      mysql: { initials: "MY", color: "4479A1" },
-      postgresql: { initials: "PG", color: "4169E1" },
-      postgres: { initials: "PG", color: "4169E1" },
-      mongodb: { initials: "MG", color: "47A248" },
-      redis: { initials: "RD", color: "DC382D" },
-      prisma: { initials: "PR", color: "2D3748" },
+  function badgeSVG(initials, color) {
+    const fg = isLight(color) ? "#111" : "#fff";
+    const size = initials.length > 1 ? 9 : 12;
+    return `<svg viewBox="0 0 20 20" class="w-4 h-4 shrink-0"><rect width="20" height="20" rx="4" fill="#${color}"/><text x="10" y="13.5" text-anchor="middle" font-size="${size}" font-weight="800" font-family="sans-serif" fill="${fg}">${initials}</text></svg>`;
+  }
 
-      // Configuración, Devops & Terminal
-      bash: { initials: "SH", color: "4EAA25" },
-      sh: { initials: "SH", color: "4EAA25" },
-      shell: { initials: "SH", color: "4EAA25" },
-      powershell: { initials: "PS", color: "5391FE" },
-      docker: { initials: "DK", color: "2496ED" },
-      dockerfile: { initials: "DF", color: "2496ED" },
-      dockerignore: { initials: "DF", color: "2496ED" },
-      yaml: { initials: "YM", color: "CB171E" },
-      yml: { initials: "YM", color: "CB171E" },
-      toml: { initials: "TL", color: "9C4221" },
-      json: { initials: "JN", color: "000000" },
-      markdown: { initials: "MD", color: "000000" },
-      md: { initials: "MD", color: "000000" },
-      git: { initials: "GT", color: "F05032" },
-      npm: { initials: "NP", color: "CB3837" },
-      terminal: { initials: "TM", color: "4EAA25" },
-    };
+  function detectLang(pre) {
+    const code = pre.querySelector("code");
+    const classes = [
+      ...pre.classList,
+      ...(code ? code.classList : []),
+    ];
+    const cls = classes.find((c) => c.startsWith("language-"));
+    const data =
+      pre.getAttribute("data-language") || pre.getAttribute("data-lang");
+    return data || (cls ? cls.replace("language-", "") : "terminal");
+  }
 
-    filtered.forEach((pre) => {
-      pre.classList.add("mejorado");
+  function enhancePre(pre) {
+    if (pre.classList.contains("mejorado")) return;
+    pre.classList.add("mejorado");
 
-      const codeElement = pre.querySelector("code");
-      const clasesCombinadas = [
-        ...Array.from(pre.classList),
-        ...(codeElement ? Array.from(codeElement.classList) : []),
-      ];
+    const lang = detectLang(pre);
+    const info = getLangInfo(lang);
 
-      const claseLang = clasesCombinadas.find((c) => c.startsWith("language-"));
-      const dataLang =
-        pre.getAttribute("data-language") || pre.getAttribute("data-lang");
+    const wrapper = document.createElement("div");
+    wrapper.className =
+      "bloque-codigo-wrapper my-6 bg-white dark:bg-slate-900 shadow-sm border-2 border-slate-200 dark:border-slate-800 overflow-hidden transition-all rounded-xl contain-content";
 
-      let rawLang =
-        dataLang ||
-        (claseLang ? claseLang.replace("language-", "") : "terminal");
-      const langKey = rawLang.toLowerCase();
-
-      const info = configLang[langKey] || { initials: "~", color: "64748b" };
-
-      const isLight = (hex) => {
-        const r = parseInt(hex.slice(0, 2), 16);
-        const g = parseInt(hex.slice(2, 4), 16);
-        const b = parseInt(hex.slice(4, 6), 16);
-        return (r * 299 + g * 587 + b * 114) / 1000 > 150;
-      };
-
-      const crearBadge = (texto, color) => {
-        const svg = document.createElementNS(
-          "http://www.w3.org/2000/svg",
-          "svg"
-        );
-        svg.setAttribute("viewBox", "0 0 20 20");
-        svg.classList.add("w-4", "h-4", "shrink-0");
-        const bg = document.createElementNS(
-          "http://www.w3.org/2000/svg",
-          "rect"
-        );
-        bg.setAttribute("width", "20");
-        bg.setAttribute("height", "20");
-        bg.setAttribute("rx", "4");
-        bg.setAttribute("fill", `#${color}`);
-        svg.appendChild(bg);
-        const tx = document.createElementNS(
-          "http://www.w3.org/2000/svg",
-          "text"
-        );
-        tx.setAttribute("x", "10");
-        tx.setAttribute("y", "13.5");
-        tx.setAttribute("text-anchor", "middle");
-        tx.setAttribute("font-size", texto.length > 1 ? "9" : "12");
-        tx.setAttribute("font-weight", "800");
-        tx.setAttribute("font-family", "sans-serif");
-        tx.setAttribute("fill", isLight(color) ? "#111" : "#fff");
-        tx.textContent = texto;
-        svg.appendChild(tx);
-        return svg;
-      };
-
-      // 1. Crear el Wrapper
-      const wrapper = document.createElement("div");
-      wrapper.className =
-        "bloque-codigo-wrapper my-6 bg-white dark:bg-slate-900 shadow-sm border-2 border-slate-200 dark:border-slate-800 overflow-hidden transition-all rounded-xl";
-
-      // 2. Cabecera con Badge de Iniciales
-      const header = document.createElement("div");
-      header.className =
-        "flex justify-between items-center px-3 py-1.5 bg-slate-50 dark:bg-slate-800/40 border-b-2 border-slate-200 dark:border-slate-800";
-
-      header.innerHTML = `
+    wrapper.innerHTML = `
+      <div class="flex justify-between items-center px-3 py-1.5 bg-slate-50 dark:bg-slate-800/40 border-b-2 border-slate-200 dark:border-slate-800">
         <div class="flex items-center gap-1.5 icon-area">
-          <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">${langKey}</span>
+          ${badgeSVG(info.initials, info.color)}
+          <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">${lang}</span>
         </div>
         <button class="boton-copiar flex items-center gap-1 text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 transition-all text-[11px] font-bold uppercase tracking-wider">
           <span class="copy-text">[ COPIAR ]</span>
         </button>
-      `;
+      </div>
+      <div class="overflow-x-auto selection:bg-cyan-500/30 text-sm leading-[1.7] p-4 bg-slate-50/50 dark:bg-slate-950"></div>
+    `;
 
-      const badge = crearBadge(info.initials, info.color);
-      const iconArea = header.querySelector(".icon-area");
-      iconArea.insertBefore(badge, iconArea.firstChild);
+    pre.classList.add("!m-0", "!text-sm", "!leading-[1.7]", "selection:bg-cyan-500/30");
+    const codeEl = pre.querySelector("code");
+    if (codeEl) {
+      codeEl.classList.add("!m-0", "!text-sm", "!leading-[1.7]", "selection:bg-cyan-500/30");
+    }
 
-      // 3. Estructura de contenido
-      const divContenido = document.createElement("div");
-      divContenido.className =
-        "overflow-x-auto selection:bg-cyan-500/30 text-sm leading-[1.7] p-4 bg-slate-50/50 dark:bg-slate-950";
-
-      pre.classList.add(
-        "!m-0",
-        "!text-sm",
-        "!leading-[1.7]",
-        "selection:bg-cyan-500/30"
-      );
-      const codeEl = pre.querySelector("code");
-      if (codeEl) {
-        codeEl.classList.add(
-          "!m-0",
-          "!text-sm",
-          "!leading-[1.7]",
-          "selection:bg-cyan-500/30"
-        );
-      }
-
-      pre.querySelectorAll(".comment").forEach((el) => {
-        el.classList.add("italic", "opacity-70");
-      });
-
-      // Eliminar estilos del .astro-code original (los provee el wrapper)
-      if (pre.classList.contains("astro-code")) {
-        pre.style.setProperty("border", "none", "important");
-        pre.style.setProperty("padding", "0", "important");
-        pre.style.setProperty("margin", "0", "important");
-        pre.style.setProperty("background", "transparent", "important");
-        pre.style.setProperty("background-color", "transparent", "important");
-        pre.style.setProperty("border-radius", "0", "important");
-        pre.style.removeProperty("box-shadow");
-      }
-
-      pre.parentNode.insertBefore(wrapper, pre);
-      wrapper.appendChild(header);
-      wrapper.appendChild(divContenido);
-      divContenido.appendChild(pre);
-
-      // 4. Lógica de copia
-      const btn = header.querySelector(".boton-copiar");
-      btn.addEventListener("click", async () => {
-        await navigator.clipboard.writeText(pre.innerText);
-        btn.innerHTML = `
-          <svg class="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
-          <span class="text-cyan-600 dark:text-cyan-400 font-bold">LISTO</span>
-        `;
-        btn.classList.add("scale-105");
-        setTimeout(() => {
-          btn.innerHTML = `<span class="copy-text">[ COPIAR ]</span>`;
-          btn.classList.remove(
-            "scale-105",
-            "text-cyan-600",
-            "dark:text-cyan-400"
-          );
-        }, 2000);
-      });
+    pre.querySelectorAll(".comment").forEach((el) => {
+      el.classList.add("italic", "opacity-70");
     });
+
+    if (pre.classList.contains("astro-code")) {
+      const s = pre.style;
+      s.setProperty("border", "none", "important");
+      s.setProperty("padding", "0", "important");
+      s.setProperty("margin", "0", "important");
+      s.setProperty("background", "transparent", "important");
+      s.setProperty("background-color", "transparent", "important");
+      s.setProperty("border-radius", "0", "important");
+      s.removeProperty("box-shadow");
+    }
+
+    const content = wrapper.querySelector(".overflow-x-auto");
+    pre.parentNode.insertBefore(wrapper, pre);
+    content.appendChild(pre);
   }
 
-  document.addEventListener("astro:page-load", mejorarBloquesCodigo);
-  document.addEventListener("DOMContentLoaded", mejorarBloquesCodigo);
+  function enhanceVisible(pres) {
+    const fragment = document.createDocumentFragment();
+    const toProcess = [];
+    pres.forEach((pre) => {
+      if (!pre.classList.contains("mejorado")) {
+        toProcess.push(pre);
+      }
+    });
+    toProcess.forEach((pre) => enhancePre(pre));
+  }
+
+  function processAll() {
+    const pres = document.querySelectorAll("pre:not(.mejorado)");
+    const filtered = Array.from(pres).filter(
+      (pre) => !pre.closest("th, td") && !pre.closest(".code-tabs-wrapper")
+    );
+
+    if ("IntersectionObserver" in window) {
+      const pending = new Set(filtered);
+      const observer = new IntersectionObserver(
+        (entries) => {
+          const batch = [];
+          entries.forEach((entry) => {
+            if (entry.isIntersecting && pending.has(entry.target)) {
+              pending.delete(entry.target);
+              observer.unobserve(entry.target);
+              batch.push(entry.target);
+            }
+          });
+          if (batch.length) {
+            if ("requestIdleCallback" in window) {
+              requestIdleCallback(() => enhanceVisible(batch), {
+                timeout: 200,
+              });
+            } else {
+              enhanceVisible(batch);
+            }
+          }
+        },
+        { rootMargin: "300px" }
+      );
+      filtered.forEach((pre) => observer.observe(pre));
+    } else {
+      enhanceVisible(filtered);
+    }
+  }
+
+  document.addEventListener("astro:page-load", processAll);
+  document.addEventListener("DOMContentLoaded", processAll);
+
+  // Delegated copy handler
+  document.addEventListener("click", async (e) => {
+    const btn = e.target.closest(".boton-copiar");
+    if (!btn) return;
+    const wrapper = btn.closest(".bloque-codigo-wrapper");
+    const pre = wrapper?.querySelector("pre");
+    if (!pre) return;
+    await navigator.clipboard.writeText(pre.innerText);
+    btn.innerHTML = `<svg class="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span class="text-cyan-600 dark:text-cyan-400 font-bold">LISTO</span>`;
+    btn.classList.add("scale-105");
+    setTimeout(() => {
+      btn.innerHTML = `<span class="copy-text">[ COPIAR ]</span>`;
+      btn.classList.remove("scale-105");
+    }, 2000);
+  });
 </script>
