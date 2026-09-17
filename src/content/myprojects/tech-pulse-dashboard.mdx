@@ -394,6 +394,18 @@ body
 
 En pantallas menores a 768 px, el grid de tres columnas se convierte en una sola columna con un ancho máximo de 400 px. El logo permite saltos de línea para adaptarse al espacio disponible.
 
+**Carga de fuentes sin bloqueo:** La carga de Google Fonts con `<link rel="stylesheet">` bloquea el render hasta que la hoja de estilos se descarga completamente. Se cambió a `<link rel="preload" as="style" onload="this.rel='stylesheet'">` para que el navegador empiece a descargar las fuentes en segundo plano sin detener el pintado de la página. Se incluye un `<noscript>` como fallback para usuarios con JavaScript desactivado.
+
+**Aislamiento de repintado por card:** Cada tarjeta de la landing aplica `contain: layout style paint`, una propiedad CSS que le dice al navegador que el contenido de ese elemento es independiente del resto del documento. Si algo cambia dentro de una card (hover, transición), el navegador no necesita recalcular el layout del resto de la página. Esto reduce el trabajo de repintado significativamente en dispositivos móviles.
+
+**Preparación GPU para animaciones:** Los rombos flotantes y la scan-line utilizan `will-change: transform` para indicar al navegador que van a ser animados. Esto permite que el browser los promueva a su propia capa de composición antes de que empiece la animación, evitando un salto visual en el primer frame y reduciendo el coste de repintado durante la animación.
+
+**Omisión de pintado off-screen:** El grid de fondo (.grid-bg) utiliza `content-visibility: auto` para que el navegador omita pintar ese elemento si no está en el viewport. Junto con `contain-intrinsic-size`, esto permite al browser saltarse el trabajo de layout y pintado de elementos que el usuario no puede ver, mejorando el tiempo de carga inicial.
+
+**Respeto al movimiento reducido:** Se añadió un `@media (prefers-reduced-motion: reduce)` que desactiva las animaciones de los rombos y la scan-line para usuarios que tienen configurada esta preferencia en su sistema operativo. Es una mejora de accesibilidad que también reduce el consumo de batería en dispositivos móviles.
+
+**SEO individual por página:** Cada una de las tres páginas (landing, timeline, dashboard) dispone de sus propios metatags Open Graph, Twitter Cards, JSON-LD estructurado, canonical y theme-color. Esto permite que cada página se identifique de forma independiente en buscadores y redes sociales, en lugar de competir entre sí por las mismas palabras clave.
+
 ### Tech Timeline — Estructura CSS (688 líneas, 14 breakpoints)
 
 El timeline carga `css/style.css`, que organiza los elementos mediante una arquitectura de capas apiladas con `z-index`. Cada capa cumple una función visual específica:
