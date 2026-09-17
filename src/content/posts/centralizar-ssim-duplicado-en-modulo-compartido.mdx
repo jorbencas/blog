@@ -1,218 +1,254 @@
 ---
 draft: false
-title: "Refactor: viaje completo de mi SSIM duplicado a un módulo compartido"
-description: "Narración completa de la implementación del refactor: cómo detecté el algoritmo SSIM duplicado en optimize.py y fix_images.py, el árbol de decisiones, la creación de utils/image_ops.py, la migración script a script, el IndentationError que apareció por el camino, y la validación final con 168 tests."
+title: "Refactor SOLID: del JavaScript monolítico a una arquitectura reactiva"
+description: "Narración completa del refactor SOLID del frontend del News Dashboard: cómo se pasó de 10+ variables globales y una función monolítica a un Store Observable, helpers puros, chips genéricos y filtros unificados. Pasos, decisiones y resultados."
 pubDate: "2026/09/13"
 
-tags: ["python", "refactoring", "pillow", "imagen", "testing", "buenas-practicas", "duplicacion-codigo"]
+tags: ["javascript", "refactoring", "solid", "clean-code", "frontend", "arquitectura", "buenas-practicas"]
 author: "Jorge Beneyto Castelló"
 image: "img/centralizar_ssim_duplicado_en_modulo_compartido/centralizar_ssim_duplicado_en_modulo_compartido_cover-1200.webp"
 ---
 
-# 🧹 Refactor SSIM: el viaje completo, de duplicado a compartido
+# Refactor SOLID: del JavaScript monolítico a una arquitectura reactiva
 
-Hay un momento incómodo que todos los que escribimos código conocemos: llevas semanas usando un script, un día lo abres para tocar una cosa, y te das cuenta de que **tienes el mismo algoritmo copiado en dos sitios**. No una versión aproximada: **exactamente el mismo código**, línea por línea.
+El News Dashboard de Tech Pulse generaba su HTML en el servidor (SSR), pero la interactividad — filtros, búsqueda, tabs — vivía en un archivo JavaScript de ~200 líneas que acumulabaomal día abrí ese archivo para añadir un filtro nuevo y me encontré con una función `onTipoFuenteChange()` de más de 80 líneas que manejaba todos los eventos posibles: cambio de categoría, cambio de fuente, cambio de canal, búsqueda, tabs multimedia... todo mezclado en un solo bloque if-else.
 
-Esta es la narración completa de cómo implementé el refactor: desde que detecté el problema hasta que commiteé la solución, pasando por el susto del `IndentationError` que se ocultaba en uno de los scripts.
-
-Estos scripts viven en el ecosistema de [Tech Pulse, mi dashboard de noticias tech con IA](/posts/instalacion-tech-pulse/), que es el que se publica automáticamente cada día en el repositorio de GitHub.
+No era ilegible, pero era frágil: cada cambio nuevo amenazaba con romper algo existente porque todo dependía de todo. Este es el relato de cómo se refactorizó la arquitectura JavaScript del dashboard siguiendo los principios SOLID, los pasos que se siguieron y qué cambió en el código.
 
 ---
 
-## 🔍 Paso 1 — Cómo detecté el duplicado
+## El estado anterior: cómo era el código
 
-Mis dos herramientas de imágenes vivían en `scripts/tools/`:
+El JavaScript original tenía una estructura típica de código que crece orgánicamente. No estaba mal escrito, pero seguía un patrón que no escala:
 
-- **`optimize.py`** — optimiza imágenes raster (JPEG/PNG/WebP). Prueba calidades de compresión decrecientes y usa SSIM para decidir cuándo la pérdida de calidad es inaceptable.
-- **`fix_images.py`** — redimensiona y limpia metadatos de las imágenes de los posts.
+**Variables globales por doquier.** Más de 10 variables globales controlaban el estado de la interfaz: `currentCategory`, `currentSource`, `currentChannel`, `searchQuery`, `activeTab`, `newsFilters`, `videoFilters`, `githubQuery`... Cada una se leía y escribía directamente desde distintas funciones.
 
-Vivían en el mismo directorio, hacían cosas complementarias, y **compartían el mismo motor**: el algoritmo SSIM (Structural Similarity Index), con sus funciones auxiliares y sus constantes de calibración.
+**Una función central que lo gestionaba todo.** `onTipoFuenteChange()` era el "cerebro" del dashboard. Cuando el usuario hacía clic en cualquier chip, cambiaba de pestaña o escribía en la búsqueda, esta función se encargaba de todo: leía el estado actual, decidía qué filtrar, actualizaba el DOM y gestionaba la visibilidad de elementos. Tenía más de 80 líneas de lógica condicional anidada.
 
-¿Cómo lo detecté? No fue glamuroso: estaba añadiendo una función nueva a `optimize.py`, y al guardar, mi editor me marcó `compute_ssim` como símbolo ya definido. Ahí me paré. No es que hubiera dos `compute_ssim` en el mismo archivo — es que **dos archivos definían el mismo símbolo**, y no me había dado cuenta porque cada uno se usaba de forma independiente.
+**Funciones de renderizado duplicadas.** Había 8 funciones que hacían esencialmente lo mismo: renderizar chips de filtro para diferentes secciones (noticias, vídeos, canales, fuentes, etc.). Cada una creaba el mismo HTML con ligeras variaciones, lo que significaba que un cambio de estilo requería modificar 8 sitios.
 
-Hice un `grep` y confirmé lo que sospechaba:
+**Helpers con efectos secundarios.** Las funciones auxiliares no solo transformaban datos: también accedían al DOM, modificaban variables globales o hacían `fetch`. Testearlas requería preparar el DOM completo, lo que disuadía de escribir tests.
 
-```
-# scripts/tools/optimize.py
-def compute_ssim(img1, img2): ...
-def _channel_stats(...): ...
-def find_optimal_quality(...): ...
-def strip_metadata(...): ...
-def constrain_size(...): ...
-
-# scripts/tools/fix_images.py
-def _channel_stats(...): ...   # ¡copia idéntica!
-def compute_ssim(...): ...     # ¡copia idéntica!
-def find_optimal_quality(...): ...
-def strip_metadata(...): ...
-def constrain_size(...): ...
-```
-
-Ambos definían las mismas 5 funciones, las mismas 6 constantes (`MAX_WIDTH`, `SSIM_THRESHOLD`, `QUALITY_START`, `QUALITY_MIN`, `QUALITY_STEP`, `WEBP_METHOD`), incluso los mismos nombres de variables internas. Eran **dos copias byte a byte casi exactas** de ~130 líneas.
+**Sin gestión de memoria.** Los event listeners se registraban con `addEventListener` pero nunca se eliminaban. Si el dashboard se re-renderizaba (por ejemplo, al cambiar de pestaña), los listeners antiguos seguían activos, acumulándose y causando ejecuciones múltiples del mismo código.
 
 ---
 
-## 🤔 Paso 2 — ¿Por qué es un problema de verdad?
+## El diseño de la solución: cinco patrones SOLID
 
-Antes de tocar nada, me obligué a justificar *por qué* valía la pena arreglarlo. El código duplicado no es un pecado si la duplicación es accidental y corta; pero aquí no lo era:
+Antes de tocar una línea de código, definí qué principios SOLID aplicarían y cómo se materializarían en el contexto del dashboard:
 
-1. **Dos fuentes de verdad.** El SSIM está calibrado con un umbral (`SSIM_THRESHOLD = 0.98`) que decide "¿se nota la pérdida de calidad?". Si mañana ajusto ese umbral en `optimize.py` y lo olvido en `fix_images.py`, ambos scripts **empiezan a comportarse distinto en silencio**. No hay compilador que te avise: es un bug que no falla, simplemente degrada.
-2. **El bug vive dos veces.** Corrijo un fallo en `compute_ssim` de un lado y el otro sigue roto. Cada fix es un *find-replace* manual que hay que repetir.
-3. **Más código que mantener.** ~130 líneas duplicadas son ~130 líneas que se multiplican si la lógica crece.
-4. **Tests ambiguos.** Los tests apuntaban a cada copia por separado. Si una versión divergía, los tests de la otra seguían pasando y no te enterabas de que el algoritmo ya no era "el mismo".
+### 1. Single Responsibility — Store Observable
 
-La moraleja que me repetí: **si dos scripts comparten un algoritmo, el algoritmo no pertenece a ninguno de los dos — pertenece a un tercer lugar.**
+Cada fragmento de estado visible en la interfaz se centralizó en un único `store` con una API mínima: `get()` para leer, `set()` para escribir y `on()` para suscribirse a cambios.
 
----
+```javascript
+// Antes: 10+ variables globales
+let currentCategory = 'all';
+let currentSource = 'all';
+let currentChannel = '';
+let searchQuery = '';
+// ... 6 más
 
-## 🗂️ Paso 3 — El diseño: un módulo compartido (`utils/image_ops.py`)
-
-La decisión técnica fue la clásica y poco espectacular: extraer el algoritmo a un módulo de utilidades compartido. Pero había un detalle importante: **qué sacar y qué no**.
-
-Comparé las dos copias y saqué la intersección exacta — ni más ni menos — para que los dos scripts siguieran haciendo lo mismo:
-
-| Qué compartir | Por qué |
-| --- | --- |
-| `MAX_WIDTH`, `SSIM_THRESHOLD`, `QUALITY_START`, `QUALITY_MIN`, `QUALITY_STEP`, `WEBP_METHOD` | Las constantes de calibración. **Deben** ser una sola fuente de verdad. |
-| `_channel_stats` | Cálculo de estadísticas por canal (media, varianza, covarianza). |
-| `compute_ssim` | El índice SSIM propiamente (resize L, window 160×160, constantes C1/C2). |
-| `find_optimal_quality` | El bucle que baja la calidad mientras el SSIM aguante el umbral. |
-| `strip_metadata` + `constrain_size` | Preparación de imagen (limpiar metadatos, limitar ancho). |
-
-El resultado fue `scripts/utils/image_ops.py` — un módulo de 111 líneas, centrado en *una única responsabilidad*: el algoritmo SSIM y la preparación de imagen. Lo dejé separado de `utils/common.py` (que ya existía y mezcla helpers generales) precisamente para mantenerlo testeable y de un solo tema.
-
-Cada script tool quedaría ahora con **su orquestación**: qué archivos, qué formatos, qué rutas de salida. Y nada de la teoría del SSIM.
-
----
-
-## 🔧 Paso 4 — Migración de `optimize.py` (y el susto del `IndentationError`)
-
-Empecé por `optimize.py`. El plan era simple: borrar las 5 funciones + 6 constantes locales y sustituirlas por un `import` explícito.
-
-```
-# ANTES
-# /──── duplicado ~130 líneas: SSIM + constantes ────/
-
-# DESPUÉS
-from utils.image_ops import (
-    compute_ssim, find_optimal_quality, strip_metadata, constrain_size,
-    MAX_WIDTH, SSIM_THRESHOLD, QUALITY_START, QUALITY_MIN, QUALITY_STEP, WEBP_METHOD,
-)
+// Después: un solo store reactiva
+const store = {
+  _state: { category: 'all', source: 'all', channel: '', search: '' },
+  _listeners: [],
+  get() { return this._state; },
+  set(partial) {
+    Object.assign(this._state, partial);
+    this._listeners.forEach(fn => fn(this._state));
+  },
+  on(fn) {
+    this._listeners.push(fn);
+    return () => {
+      this._listeners = this._listeners.filter(l => l !== fn);
+    };
+  }
+};
 ```
 
-Y aquí vino **el susto que me demostró que el refactor ya tenía valor antes de terminar**: al quitar el bloque, mi editor me saltó un `IndentationError` en `optimize_svg`. Había dos `import` (`re` y `sys`) que estaban **dentro de la función, mal indentados**:
+El patrón `on()` devuelve una función `unsubscribe` que elimina el listener del array. Esto previene fugas de memoria: cuando un componente se desmonta o un efecto se desactiva, se llama a `unsubscribe()` y el listener desaparece.
 
-```python
-def optimize_svg(path, out_dir, filename):
-    # ...
-    import re      # indentation incorrecta: import dentro de la función
-    import sys     # aquí dentro
+### 2. Open/Closed — Fábrica genérica de chips
+
+Las 8 funciones de renderizado duplicadas se reemplazaron por dos genéricas: `renderChips()` y `renderCanalChips()`. Cualquier sección del dashboard que necesite chips de filtro llama a estas funciones con parámetros, sin necesidad de duplicar lógica.
+
+```javascript
+// Antes: 8 funciones casi idénticas
+function renderNewsCategoryChips() { /* ~20 líneas de HTML */ }
+function renderVideoCategoryChips() { /* ~20 líneas casi iguales */ }
+function renderNewsSourceChips() { /* ~20 líneas más */ }
+// ... 5 más
+
+// Después: una sola función genérica
+function renderChips(container, items, options) {
+  container.innerHTML = items.map(item => `
+    <button class="chip ${item.active ? 'active' : ''}"
+            data-value="${item.value}">
+      ${options.showIcon ? `<img src="${item.icon}" alt="">` : ''}
+      ${item.label}
+    </button>
+  `).join('');
+}
 ```
 
-Los imports redundantes **rompían el script en tiempo de importación**: `optimize.py` no se ejecutaba en absoluto. Llevaba tiempo ahí, escondido, porque ese script no se probaba en los tests. No tenía nada que ver con mi refactor, pero al estar tocando ese archivo me lo topé, así que lo arreglé de paso:
+Añadir un nuevo tipo de chip ahora requiere una llamada a `renderChips()` con los datos adecuados, no la escritura de una función nueva.
 
-```python
-import re
-import sys
-# ...en el nivel de módulo, con el resto de imports
+### 3. Interface Segregation — Helpers puros
+
+Las funciones auxiliares se separaron en módulos que solo hacen una cosa y no tienen efectos secundarios. No acceden al DOM, no modifican variables globales, no hacen `fetch`. Solo transforman datos:
+
+```javascript
+function limpiarFuente(fuente) {
+  return fuente.replace(/^https?:\/\//, '').replace(/\/$/, '');
+}
+
+function tipoFuente(item) {
+  if (item.id_video) return 'video';
+  if (item.fuente_rss) return 'rss';
+  return 'news';
+}
+
+function itemEnSemana(item, dias = 7) {
+  const fecha = new Date(item.fecha);
+  const ahora = new Date();
+  return (ahora - fecha) < dias * 86400000;
+}
+
+function faviconSrc(dominio) {
+  return `https://www.google.com/s2/favicons?domain=${dominio}&sz=32`;
+}
 ```
 
-> Lección: cuando refactorizas, a veces te tropiezas con bugs preexistentes que el refactor expone. No son "daño colateral": **son bugs que ya estaban**, ahora visibles. Conviene arreglarlos en el mismo commit (quedan documentados juntos).
+Estas funciones se pueden testear con entradas y salidas directas, sin preparar el DOM.
 
-Después de esto, `optimize.py` pasaba de 251 a 208 líneas: **43 líneas menos**.
+### 4. Dependency Inversion — Filtros reactivos
 
----
+Los filtros dejan de buscar el estado en variables globales y lo reciben del store. Cuando el store cambia, los filtros se re-ejecutan automáticamente:
 
-## 🔧 Paso 5 — Migración de `fix_images.py`
+```javascript
+function aplicarFiltrosNoticias(state) {
+  const { category, source, channel, search } = state;
+  document.querySelectorAll('.news-item').forEach(item => {
+    const coincideCategoria = category === 'all' || item.dataset.cat === category;
+    const coincideFuente = source === 'all' || item.dataset.source === source;
+    const coincideCanal = !channel || item.dataset.channel === channel;
+    const coincideBusqueda = !search ||
+      item.querySelector('.news-title')?.textContent.toLowerCase().includes(search);
+    item.style.display = (coincideCategoria && coincideFuente && coincideCanal && coincideBusqueda) ? '' : 'none';
+  });
+}
 
-`fix_images.py` era la otra copia. Aquí el cambio fue un poco más delicado porque el bloque duplicado estaba incrustado a mitad del archivo (no al principio, como en `optimize.py`), justo después de la sección de cache y antes de las operaciones GIF/SVG.
-
-Localicé el límite exacto del bloque con un script de transformación determinista:
-
-- **Inicio**: la línea `def _channel_stats(`.
-- **Fin**: la primera definición de módulo tras `def constrain_size(` que no era del bloque (en este caso `def process_gif_fallback(`).
-
-Eliminé el bloque completo (que arrastraba también su cabecera de comentario de sección) y en su lugar puse el mismo `import` compartido, conservando el comentario de sección siguiente (`OPERACIONES COMPLEMENTARIAS GIF / SVG`) para no romper la estructura del archivo.
-
-Resultado: `fix_images.py` pasó de 507 líneas a **449 líneas** (61 líneas de duplicación menos), con el import compartido en la línea 95.
-
-Un matiz importante: el import compartido (`from utils.image_ops import ...`) solo funciona si `scripts/` está en `sys.path`. Como `fix_images.py` se ejecuta como `python -m scripts.tools.fix_images`, tuve que añadir el mismo `sys.path.insert(0, str(Path(__file__).resolve().parent.parent))` que ya usaban el resto de scripts del repo — si no, el módulo común no se encuentra al lanzarlo desde la raíz.
-
----
-
-## 🧪 Paso 6 — Los tests (y un import que se me había olvidado)
-
-Al terminar la migración, corrí la suite y salió un error que me paró en seco:
-
-```
-ERROR tests/test_fix_images.py
-ImportError: cannot import name '_channel_stats' from 'scripts.tools.fix_images'
+// Suscripción reactiva
+store.on(aplicarFiltrosNoticias);
+store.on(aplicarFiltrosVideos);
 ```
 
-Claro: **el test seguía importando `_channel_stats`, `compute_ssim`, etc. desde `fix_images`**, la copia local que acababa de eliminar. El test no estaba roto por culpa del algoritmo — estaba roto porque apuntaba a la fuente equivocada.
+### 5. Interface Segregation — Chips duales
 
-La corrección fue la más coherente con el espíritu del refactor: **que el test apunte a la fuente canónica**, `scripts.utils.image_ops`, y deje en `fix_images` solo lo que realmente le pertenece (`slugify`, `build_srcset`, `generate_placeholder`):
+Las fuentes que tienen YouTube y web (MoureDev, Midudev, Carlos Azaustre, Xataka) aparecen en los filtros de ambas secciones. En la arquitectura anterior, esto se resolvía con lógica duplicada en cada función de renderizado. Con el store, un solo chip actualiza el estado y ambos filtros reaccionan:
 
-```python
-from scripts.utils.image_ops import (
-    compute_ssim, _channel_stats, strip_metadata, constrain_size,
-)
-from scripts.tools.fix_images import (
-    slugify, build_srcset, generate_placeholder,
-)
-```
-
-Este paso me recordó algo importante del testing: **cuando mueves código a un módulo compartido, los tests que lo verifican también deben moverse a ese módulo**. Si dejas los tests apuntando a la copia local, el refactor "funciona" (los tests pasan) pero la duplicación real se mantiene en los imports de los tests.
-
----
-
-## ✅ Paso 7 — Validación antes de commitear
-
-Mi criterio era innegociable: **tras el refactor, todo debe funcionar igual que antes**. La validación fue en tres capas:
-
-1. **`python3 -m py_compile`** de los tres módulos (`image_ops.py`, `optimize.py`, `fix_images.py`) — los tres compilaron sin errores. Como el `IndentationError` de `optimize.py` se había arreglado, este paso era ahora realmente útil.
-2. **Comparar firmas y valores** entre la copia original y el módulo compartido: mismas firmas de función, mismos valores de constantes. Si una firma cambia, cambia el comportamiento; aquí **nada cambió**.
-3. **`pytest -q`**: **168 tests pasando** ✅.
-
-Solo después de esto commiteé. El commit (4 archivos, +127/−118) fue descriptivo y específico, reflejando exactamente qué se movía:
-
-```
-refactor: centralizar algoritmo SSIM en utils/image_ops.py
-
-- Extraer _channel_stats, compute_ssim, find_optimal_quality, strip_metadata
-  y constrain_size (con sus constantes) a scripts/utils/image_ops.py
-- optimize.py y fix_images.py consumen ahora el SSIM compartido,
-  eliminando la duplicación (~130 líneas)
-- Reparar IndentationError preexistente en optimize.py (imports re/sys
-  dentro de optimize_svg -> a nivel de módulo)
-- Actualizar tests/test_fix_images.py para importar el SSIM desde la
-  fuente canónica compartida
-
-168 passed
+```javascript
+function renderCanalChips(container, canales) {
+  renderChips(container, canales, {
+    showIcon: true,
+    onToggle: (canal, activo) => {
+      store.set({ channel: activo ? canal : '' });
+    }
+  });
+}
 ```
 
 ---
 
-## 📊 El balance del refactor
+## Los pasos de la migración
 
-| Métrica | Antes | Después |
+### Paso 1: Identificar el epicentro del caos
+
+El primer paso fue mapear dependencias. Hice un `grep` de cada variable global para ver dónde se leía y dónde se escribía:
+
+```
+currentCategory → se escribía en 4 sitios, se leía en 6
+currentSource   → se escribía en 3 sitios, se leía en 5
+searchQuery     → se escribía en 2 sitios, se leía en 4
+```
+
+Cada variable tenía al menos 5 puntos de acoplamiento. El patrón era claro: las variables globales eran el mecanismo de comunicación entre funciones, y eso las hacía frágiles.
+
+### Paso 2: Extraer el Store sin romper nada
+
+El store se implementó primero como un módulo aislado. No se tocó ningún código existente: simplemente se creó el store y se verificó que existía y funcionaba con tests manuales en consola:
+
+```javascript
+// Verificación manual
+store.set({ category: 'devops' });
+console.log(store.get()); // { category: 'devops', source: 'all', ... }
+```
+
+### Paso 3: Migrar un filtro a la vez
+
+No se reescribió todo de golpe. Se empezó por el filtro de noticias, que era el más simple:
+
+1. Se registró `store.on(aplicarFiltrosNoticias)`
+2. Se verificó que el filtro de noticias seguía funcionando igual
+3. Se migró el chip de categoría para que escribiera al store en lugar de modificar `currentCategory`
+4. Se verificó de nuevo
+
+Este patrón se repitió para cada filtro: fuente, canal, búsqueda, vídeos, GitHub.
+
+### Paso 4: Eliminar las funciones duplicadas de chips
+
+Con todos los filtros ya conectados al store, las 8 funciones de renderizado de chips se reemplazaron por `renderChips()` y `renderCanalChips()`. Cada reemplazo seguía el mismo proceso:
+
+1. Se escribía la llamada a `renderChips()` con los datos de la función original
+2. Se verificaba que el resultado visual era idéntico
+3. Se eliminaba la función original
+4. Se ejecutaban los tests
+
+### Paso 5: Separar helpers puros
+
+Las funciones que mezclaban lógica y efectos secundarios se separaron:
+
+- `limpiarFuente()` quedó como función pura
+- El acceso al DOM que tenía se movió al contexto que la llamaba
+- Se verificó que cada helper podía testearse con una entrada y una salida, sin mocks
+
+### Paso 6: Auditoría de fugas de memoria
+
+Se registraron todos los `addEventListener` del archivo y se verificó que cada uno tenía su `removeEventListener` correspondiente o su `unsubscribe` del store. Se encontraron 3 listeners que nunca se eliminaban y se corrigieron.
+
+### Paso 7: Tests y validación
+
+La validación fue en tres capas:
+
+1. **Tests unitarios de helpers:** `limpiarFuente()`, `tipoFuente()`, `itemEnSemana()`, `faviconSrc()` — funciones puras, fáciles de testear
+2. **Tests de integración del store:** verificar que `set()` dispara los listeners y que `unsubscribe()` elimina correctamente el handler
+3. **Tests visuales:** verificar que los filtros del dashboard producen los mismos resultados que antes del refactor
+
+---
+
+## Qué cambió en la arquitectura
+
+| Aspecto | Antes | Después |
 | --- | --- | --- |
-| Copias del algoritmo SSIM | 2 (`optimize.py` + `fix_images.py`) | 1 (`utils/image_ops.py`) |
-| Líneas duplicadas | ~130 | 0 |
-| `optimize.py` | 251 líneas | 208 líneas (−43) |
-| `fix_images.py` | 507 líneas | 449 líneas (−61 de duplicación) |
-| Fuente de verdad del umbral SSIM | 2, divergentes en silencio | 1, canónica |
-| `IndentationError` en `optimize.py` | ✅ presente (no ejecutaba) | ✅ arreglado |
-| Tests | 168 pasando | 168 pasando |
+| Variables de estado | 10+ globales | 1 store centralizado |
+| Gestión de eventos | `onTipoFuenteChange()` monolítica (~80 líneas) | Filtros reactivos suscritos al store |
+| Renderizado de chips | 8 funciones duplicadas | 2 genéricas (`renderChips`, `renderCanalChips`) |
+| Helpers | Con efectos secundarios (DOM, fetch) | Puros (solo transforman datos) |
+| Memoria | Listeners sin eliminar | `unsubscribe` en cada `on()` |
+| Testeabilidad | Requería DOM completo | Helpers testeados con entradas/salidas |
+| Añadir un filtro nuevo | Modificar la función monolítica | Crear una función de filtro + suscribirse al store |
 
 ---
 
-## 🎓 Lo que me llevo (aplicable a tu código también)
+## Lo que aprendí
 
-1. **La duplicación de algoritmos es un problema incluso si "funciona"**: el problema no es que falle hoy, es que *divergirá* en silencio cuando alguien toque una copia.
-2. **Antes de refactorizar, define qué es la intersección exacta.** Extraer de más rompe cosas; extraer de menos deja duplicación. Comparé las dos copias línea a línea y saqué solo lo común.
-3. **Refactorizar expone bugs preexistentes** (mi `IndentationError`). No los escondas: arréglalos y documéntalos en el mismo commit.
-4. **Los tests también deben migrar a la fuente canónica.** Si no, la duplicación sobrevive en los imports de los tests.
-5. **Valida con tres capas**: compilación, comparación de firmas/valores, y suite completa. Solo entonces, commit.
+1. **El Store Observable es el patrón más subestimado del JavaScript vanilla.** No necesitas Redux, Zustand ni ningún framework para tener estado reactivo. Un objeto con `get()`, `set()` y `on()` es suficiente para dashboards con filtros.
 
-En mi caso, el refactor no solo eliminó ~130 líneas de duplicación: me destapó un script que no se ejecutaba, alineó los tests con la fuente de verdad, y dejó ambos scripts listos para evolucionar sin pisarse entre sí. **Eso vale más que las líneas ahorradas.**
+2. **La migración incremental es clave.** No se reescribió todo de golpe. Se migró un filtro a la vez, verificando que cada paso seguía funcionando. Esto reduce el riesgo a cero.
+
+3. **Los helpers puros se escriben solos una vez que separas datos de DOM.** El problema no es la lógica, es que la lógica esté mezclada con accesos al DOM. Separarlas es el cambio más valioso.
+
+4. **Las fugas de memoria son un bug silencioso.** No falla nada, pero la app se va ralentizando. El patrón `unsubscribe` las elimina por diseño.
+
+5. **El refactor SOLID no es academicismo: es pragmatismo.** El código resultante es más corto, más fácil de testear y más seguro de modificar. Eso se traduce en velocidad de desarrollo.
