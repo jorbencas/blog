@@ -14,105 +14,109 @@ featured: true
 
 ## 1. El Planteamiento del Problema
 
-Cada día aparecen decenas de noticias, vídeos y recursos nuevos en el mundo de la tecnología. Sigue el ritmo manualmente es imposible: tienes que revisar YouTube, RSS, blogs, GitHub, Product Hunt... y al final te pierdes lo más importante.
+Cada día se publican decenas de noticias, vídeos y recursos nuevos en el ámbito tecnológico. Seguir el ritmo de forma manual resulta prácticamente imposible: hay que revisar YouTube, feeds RSS, blogs especializados, GitHub, Product Hunt... y al final siempre se escapa lo más relevante.
 
-**Mi motivación:** Empecé a hacer un blog de tecnología y me di cuenta de que necesitaba contenido fresco constantemente. Pero no quería copiar y pegar de otros sitios: quería curar, filtrar y resumir lo mejor. El problema es que revisar 400+ fuentes cada día a mano era un trabajo de tiempo completo.
+**Mi motivación:** Empecé a escribir un blog de tecnología y me di cuenta de que necesitaba contenido fresco de forma constante. Pero no quería copiar y pegar de otros sitios: quería curar, filtrar y resumir lo mejor de cada fuente. El problema era que revisar más de 400 fuentes cada día a mano se convertía en un trabajo de tiempo completo.
 
-Así que hice **Tech Pulse**: un sistema que hace todo automáticamente. Recolecta contenido de más de 400 fuentes, lo clasifica con inteligencia artificial, genera resúmenes y lo manda por Telegram y email. Yo solo tengo que leer lo que me interesa.
+Así que construí **Tech Pulse**: un sistema que hace todo automáticamente. Recopila contenido de más de 400 fuentes, lo clasifica con inteligencia artificial, genera resúmenes y lo distribuye por Telegram y correo electrónico. Yo solo tengo que leer lo que me interesa.
 
-El ecosistema tecnológico publica decenas de noticias, vídeos y recursos cada día. Seguir el ritmo manualmente es imposible. Herramientas como Feedly o Google News son genéricas, no filtran por relevancia técnica real ni ofrecen resúmenes inteligentes.
+Las herramientas existentes como Feedly o Google News son demasiado genéricas: no filtran por relevancia técnica real ni ofrecen resúmenes inteligentes. Se necesitaba una solución que:
 
-Se necesitaba un sistema que:
-- Recolectara automáticamente contenido de 400+ fuentes (YouTube, blogs tech, RSS, GitHub Topics, Product Hunt)
+- Recolectara automáticamente contenido de más de 400 fuentes (YouTube, blogs tech, RSS, GitHub Topics, Product Hunt)
 - Clasificara y deduplicara el contenido en tiempo real
-- Generara resúmenes por noticia y un recap semanal con IA
+- Generara resúmenes individuales por noticia y un resumen semanal con IA
 - Desplegara un dashboard SSR interactivo con filtros combinables
-- Enviara notificaciones por Telegram cada 30 minutos con audio TTS a las 21:00 UTC
-- Enviara una newsletter diaria con resúmenes curados y videos
+- Enviara notificaciones por Telegram cada 30 minutos, con audio TTS a las 21:00 UTC
+- Enviara una newsletter diaria con resúmenes curados y vídeos
 - Incluyera herramientas Markdown offline (PDF, diapositivas, tablas, snippets, cheatsheet)
 
 ---
 
 ## 2. La Solución
 
-**Tech Pulse** nace como un pipeline completo de automatización orquestado por GitHub Actions, construido en Python asíncrono con scripts modulares independientes.
+**Tech Pulse** es un pipeline completo de automatización orquestado por GitHub Actions, construido en Python asíncrono con scripts modulares e independientes.
 
 ### Capas del Sistema
 
-- **Capa de Extracción (Scraping):** Arquitectura de extractores especializados:
-  - `YouTubeExtractor` — parsea JSON `ytInitialData` directamente (vídeos, shorts, livestreams)
-  - `WebExtractor` — BeautifulSoup con selectores CSS personalizados por fuente + `extraer_rss()` para feeds XML (RSS 2.0 y Atom) + `extraer_herramientas()` para GitHub Topics, Collections, Repos y Product Hunt
-  - `ScraperPro` facade con semáforo de concurrencia (5 peticiones simultáneas) + soporte para **fuentes duales** (YouTube + web scraping simultáneo)
-  - `AvatarRepository` — caché de avatares de canales YouTube con Google Favicons
+**Capa de Extracción (Scraping):** Arquitectura de extractores especializados para cada tipo de fuente:
 
-- **Capa de Procesamiento IA:** Integración con Gemini API para:
-  - Resumen semanal con análisis de tendencias (modelo `gemini-2.5-pro`)
-  - Resumen individual por noticia (vía `extraer_texto_articulo()` + `resumir_noticia()`)
-  - Traducción de títulos al español en lote (**solo items nuevos** — flag `traducido` persiste en JSON)
-  - Generación de imágenes para posts con Imagen
-  - **Resúmenes persistidos** en `noticias_historico.json` para evitar re-procesamiento
+- `YouTubeExtractor` — Analiza directamente el JSON de `ytInitialData` para extraer vídeos, shorts y livestreams sin depender de APIs externas.
+- `WebExtractor` — Emplea BeautifulSoup con selectores CSS personalizados por fuente. Incluye `extraer_rss()` para feeds XML (RSS 2.0 y Atom) y `extraer_herramientas()` para GitHub Topics, Collections, Repos y Product Hunt.
+- `ScraperPro` — Fachada unificada con semáforo de concurrencia (5 peticiones simultáneas) y soporte para **fuentes duales**, que combinan YouTube y web scraping en una sola ejecución.
+- `AvatarRepository` — Caché de avatares de canales YouTube con resolución de Google Favicons.
 
-- **Capa de Persistencia:** Historial JSON con deduplicación automática por URL normalizada y título similar. Sin límite de entradas. Caché de Telegram con TTL de 7 días.
+**Capa de Procesamiento IA:** Integración con la API de Gemini para:
 
-- **Capa de Distribución:**
-  - Dashboard HTML SSR desplegado en Surge.sh (Python genera el HTML completo)
-  - Newsletter HTML agrupada por fuente con sección de videos vía Mailgun
-  - Notificaciones Telegram cada 30 min (**solo noticias, sin vídeos**) + **audio TTS a las 21:00 UTC con TODAS las noticias del día**
-  - Posts en markdown para blog Astro vía PR automático
+- Resumen semanal con análisis de tendencias (modelo `gemini-2.5-pro`)
+- Resumen individual por noticia mediante `extraer_texto_articulo()` y `resumir_noticia()`
+- Traducción de títulos al español en lote, aplicándose **únicamente a elementos nuevos** (el flag `traducido` se persiste en el JSON)
+- Generación de imágenes para publicaciones con Imagen
+- Resúmenes persistidos en `noticias_historico.json` para evitar procesamiento redundante
+
+**Capa de Persistencia:** Historial en formato JSON con deduplicación automática por URL normalizada y similitud de título. Sin límite de entradas. Caché de Telegram con TTL de 7 días.
+
+**Capa de Distribución:**
+
+- Dashboard HTML renderizado en el servidor (SSR), desplegado en Surge.sh — Python genera el HTML completo
+- Newsletter HTML agrupada por fuente con sección de vídeos, enviada vía Mailgun
+- Notificaciones Telegram cada 30 minutos (**solo noticias, sin vídeos**) + **audio TTS a las 21:00 UTC con todas las noticias del día**
+- Publicaciones en markdown para el blog Astro mediante PR automático
 
 ### Pipeline de Contenido
 
-Cada script es independiente y orquestable por separado. La estructura se reorganizó en subdirectorios modulares:
+Cada script es independiente y puede orquestarse por separado. La estructura se organizó en subdirectorios modulares:
 
 ```
 scripts/
-├── scrapers/           # Scraping de noticias y tools
-│   ├── scraper_base.py       # Extractores compartidos (YouTube, Web, ScraperPro + fuentes duales)
-│   ├── scrape_news.py        # Noticias (RSS + web + YouTube)
-│   └── scrape_tools.py       # GitHub Trending + Product Hunt + 52 GitHub Topics
-├── publishers/         # Generación y distribución de contenido
-│   ├── generate_weekly.py    # Recap semanal + dashboard HTML (SSR)
-│   ├── manage_resources.py   # Paginación, limpieza, dedup cross-file, fix de cards
-│   ├── merge_freefordev.py   # Merge de free-for-dev resources
-│   ├── send_email.py         # Newsletter Mailgun (agrupada por fuente + videos, smart translation)
-│   └── send_telegram.py      # Notificaciones Telegram (solo noticias + audio 21:00 UTC)
-├── tools/              # Utilidades de mantenimiento
-│   ├── fix_images.py         # Pipeline de imágenes (WebP/AVIF + portadas locales)
-│   ├── hunt_challenges.py    # Generación IA de retos de programación
-│   ├── make_cover_collage.py # Collages de portada
-│   ├── optimize.py           # Optimización de imágenes (dashboard)
-│   ├── update_resource_format.py  # Batch update ResourceCard al nuevo formato
-│   └── clean_news.py         # Verificación de enlaces
-├── utils/              # Módulos compartidos
-│   ├── common.py             # Utilidades (JSON, URLs, dedup, IA — soporte traducido flag)
-│   ├── constants_sources.py      # FUENTES dict con 400+ fuentes
-│   ├── constants_templates.py    # HTML, Email, MD, prompts de IA
-│   ├── constants_mdtools.py      # Plantillas HTML de Markdown Tools
-│   └── cache.py              # Caché pluggable (FileCache + CacheManager)
-├── backfill_traducido.py    # Migración: marca items existentes como traducidos
-└── solutions/          # Base de datos de soluciones de retos
-    ├── solutions_db.py       # Lookup + generación de soluciones
-    └── solutions_data.py     # 105+ soluciones curadas en 12 lenguajes
+├── scrapers/                    # Scraping de noticias y herramientas
+│   ├── scraper_base.py          # Extractores compartidos (YouTube, Web, ScraperPro + fuentes duales)
+│   ├── scrape_news.py           # Noticias (RSS + web + YouTube)
+│   └── scrape_tools.py          # GitHub Trending + Product Hunt + 52 GitHub Topics
+├── publishers/                  # Generación y distribución de contenido
+│   ├── generate_weekly.py       # Resumen semanal + dashboard HTML (SSR)
+│   ├── manage_resources.py      # Paginación, limpieza, dedup entre archivos, corrección de cards
+│   ├── merge_freefordev.py      # Fusión de recursos free-for-dev
+│   ├── send_email.py            # Newsletter vía Mailgun (agrupada por fuente + vídeos, traducción inteligente)
+│   └── send_telegram.py         # Notificaciones Telegram (solo noticias + audio 21:00 UTC)
+├── tools/                       # Utilidades de mantenimiento
+│   ├── fix_images.py            # Pipeline de imágenes (WebP/AVIF + portadas locales)
+│   ├── hunt_challenges.py       # Generación IA de retos de programación
+│   ├── make_cover_collage.py    # Collages de portada
+│   ├── optimize.py              # Optimización de imágenes (dashboard)
+│   ├── update_resource_format.py # Actualización por lotes del formato ResourceCard
+│   └── clean_news.py            # Verificación de enlaces rotos
+├── utils/                       # Módulos compartidos
+│   ├── common.py                # Utilidades (JSON, URLs, dedup, IA — soporte del flag traducido)
+│   ├── constants_sources.py     # Diccionario FUENTES con más de 400 fuentes
+│   ├── constants_templates.py   # Plantillas HTML, email, markdown y prompts de IA
+│   ├── constants_mdtools.py     # Plantillas HTML de Markdown Tools
+│   └── cache.py                 # Caché configurable (FileCache + CacheManager)
+├── backfill_traducido.py        # Migración: marca elementos existentes como traducidos
+└── solutions/                   # Base de datos de soluciones de retos
+    ├── solutions_db.py          # Búsqueda y generación de soluciones
+    └── solutions_data.py        # Más de 105 soluciones curadas en 12 lenguajes
 ```
 
 Todos los scripts se ejecutan con `python -m` desde la raíz del proyecto:
 
 1. `python -m scripts.scrapers.scrape_news --tier full` → `files/noticias_historico.json` (web + YouTube + RSS)
 2. `python -m scripts.scrapers.scrape_tools` → `files/herramientas.json` (GitHub Trending + Product Hunt + 52 Topics)
-3. `python -m scripts.publishers.generate_weekly --blog-path blog` → `auto-news/` (recap MD) + `public/` (dashboard HTML)
-4. `python -m scripts.publishers.send_email` → Mailgun (diario 09:00 UTC)
-5. `python -m scripts.publishers.send_telegram` → Telegram solo noticias + audio TTS (cada 30 min, audio 21:00 UTC)
-6. `python scripts/backfill_traducido.py` → Marca items existentes como traducidos (una vez)
+3. `python -m scripts.publishers.generate_weekly --blog-path blog` → `auto-news/` (resumen en markdown) + `public/` (dashboard HTML)
+4. `python -m scripts.publishers.send_email` → Mailgun (diario a las 09:00 UTC)
+5. `python -m scripts.publishers.send_telegram` → Telegram solo noticias + audio TTS (cada 30 min, audio a las 21:00 UTC)
+6. `python scripts/backfill_traducido.py` → Marca los elementos existentes como traducidos (ejecución única)
 
 ## 3. Retos Técnicos y Decisiones de Diseño
 
-### Arquitectura Modular vs Monolito
+### Arquitectura Modular vs. Monolito
 
-Originalmente todo el scraping vivía en un único `downloadFile.py`. Se refactorizó a scripts independientes agrupados en subdirectorios (`scrapers/`, `publishers/`, `tools/`, `utils/`) para permitir ejecución selectiva por workflow y facilitar el mantenimiento. Cada script tiene sus propias dependencias y puede ejecutarse en solitario con `python -m scripts.subdir.script`.
+En su versión inicial, todo el código de scraping residía en un único archivo `downloadFile.py`. Esta estructura monolítica dificultaba la ejecución selectiva de procesos y complicaba el mantenimiento a medida que crecía el número de fuentes.
+
+Se refactorizó a scripts independientes agrupados en subdirectorios (`scrapers/`, `publishers/`, `tools/`, `utils/`), lo que permite ejecutar selectivamente cada workflow y aislar las dependencias de cada script. Cada módulo puede ejecutarse de forma independiente con `python -m scripts.subdir.script`.
 
 ### Fuentes Duales: YouTube + Web Scraping
 
-Cuando una fuente tiene tanto `url` como `yt` (como MoureDev, Midudev, Carlos Azaustre, Xataka), `ScraperPro.extraer()` ahora extrae de **ambas fuentes simultáneamente** usando `asyncio.gather()`. Los items de YouTube van a la sección Multimedia, los de web scraping a Noticias, y ambos muestran chips de filtro en ambas secciones.
+Algunas fuentes como MoureDev, Midudev, Carlos Azaustre o Xataka disponen tanto de un canal YouTube como de un sitio web. En lugar de tratarlas como dos fuentes separadas, `ScraperPro.extraer()` ejecuta ambas extracciones de forma simultánea mediante `asyncio.gather()`. Los resultados de YouTube se clasifican en la sección de Multimedia, los del sitio web en la sección de Noticias, y ambos aparecen en los filtros de ambas secciones:
 
 ```python
 elif YT_KEY in info and URL_KEY in info:
@@ -125,21 +129,22 @@ elif YT_KEY in info and URL_KEY in info:
     results = yt_results + web_results
 ```
 
-### Traducción Inteligente — Solo Items Nuevos
+### Traducción Inteligente: Solo Elementos Nuevos
 
-Se eliminó la re-traducción masiva. Ahora cada item tiene un flag `traducido=True` que persiste en `noticias_historico.json`. Solo se traducen items nuevos:
+La primera versión traducía todos los títulos en cada ejecución, lo que suponía un consumo innecesario de la API de IA. Se implementó un flag `traducido=True` que se persiste en `noticias_historico.json`, de modo que únicamente se traducen los elementos nuevos:
 
-- `traducir_titulos_ia()` en `common.py` — salta items con `traducido=True`
-- `send_telegram.py` — usa título ya traducido si existe
-- `send_email.py` — salta traducción si ya está traducido
-- Resúmenes se persisten en `n['resumen']` para evitar re-summarización
-- `backfill_traducido.py` — migración una vez para marcar 6,612 items existentes
+- `traducir_titulos_ia()` en `common.py` omite los elementos con `traducido=True`
+- `send_telegram.py` reutiliza el título ya traducido si existe
+- `send_email.py` salta la traducción si el elemento ya fue procesado
+- Los resúmenes se almacenan en `n['resumen']` para evitar re-summarización
+- `backfill_traducido.py` ejecutó una migración inicial para marcar los 6.612 elementos existentes
 
 ### Deduplicación Inteligente
 
 La función `deduplicar_items()` en `common.py` elimina duplicados en dos niveles:
-- **URL normalizada:** quita `?utm_*`, `#fragment`, trailing `/`, normaliza `http` → `https`
-- **Título similar:** compara el prefijo al 85% del título más corto para detectar la misma noticia con variaciones
+
+- **Por URL normalizada:** se eliminan parámetros de tracking (`?utm_*`), fragmentos (`#fragment`), barras finales y se normaliza `http` a `https`
+- **Por título similar:** se compara el prefijo al 85% del título más corto para detectar la misma noticia con ligeras variaciones en el encabezado
 
 ```python
 def normalizar_url(url: str) -> str:
@@ -147,47 +152,46 @@ def normalizar_url(url: str) -> str:
     return url.replace("http://", "https://").lower()
 ```
 
-### Deduplicación Cross-File en Resources
+### Deduplicación Entre Archivos en Resources
 
-`manage_resources.py` implementa `deduplicate_all_files()` con un `global_seen_urls` que deduplica no solo dentro de cada archivo, sino **entre todos los archivos** del blog. Si una URL aparece en `resources.mdx` y también en `resources3.mdx`, se elimina la duplicada manteniendo la primera aparición.
+`manage_resources.py` implementa `deduplicate_all_files()` con un conjunto `global_seen_urls` que deduplica no solo dentro de cada archivo individual, sino entre todos los archivos del blog. Si una URL aparece tanto en `resources.mdx` como en `resources3.mdx`, se elimina la entrada duplicada conservando únicamente la primera aparición.
 
-### Fix de Cards Malformados
+### Corrección de Cards Malformados
 
-Nueva función `fix_malformed_cards()` detecta y repara ResourceCard tags con `/` en lugar de `/>`:
+La función `fix_malformed_cards()` detecta y repara etiquetas ResourceCard que utilizan `/` en lugar de `/>` como cierre de etiqueta auto-cerrada. Esta corrección se integra en `fix_all_files()` y se ejecuta automáticamente junto con `--fix-spacing`:
 
 ```python
-# Malformed: <ResourceCard ... />
-# Fixed:    <ResourceCard ... />
+# Antes (malformado): <ResourceCard ... />
+# Después (corregido): <ResourceCard ... />
 ```
-
-Se integra en `fix_all_files()` y se ejecuta automáticamente con `--fix-spacing`.
 
 ### Refactor SOLID del Frontend JavaScript
 
-El dashboard client-side se reescribió siguiendo principios SOLID:
+El código client-side del dashboard se reescribió siguiendo los principios SOLID:
 
-- **Store Observable:** Un `store` con `get()`/`set()`/`on()` elimina 10+ variables globales y el monolítico `onTipoFuenteChange()` que manejaba todos los eventos juntos.
-- **Fábrica genérica de chips:** `renderChips()` + `renderCanalChips()` reemplazan 8 funciones de renderizado duplicadas.
-- **Helpers puros:** `limpiarFuente()`, `tipoFuente()`, `itemEnSemana()`, `faviconSrc()` — cero efectos secundarios, fáciles de testear.
-- **Filtros unificados:** `aplicarFiltrosNoticias()` / `aplicarFiltrosVideos()` operan sobre el DOM reaccionando a cambios del store mediante suscripciones.
-- **Sin memory leaks:** `on()` devuelve una función `unsubscribe` que elimina el handler del array de listeners.
+- **Store Observable:** Un almacén con métodos `get()`, `set()` y `on()` reemplaza más de 10 variables globales y la función monolítica `onTipoFuenteChange()` que centralizaba todos los eventos.
+- **Fábrica genérica de chips:** `renderChips()` y `renderCanalChips()` unifican 8 funciones de renderizado duplicadas en dos funciones reutilizables.
+- **Helpers puros:** `limpiarFuente()`, `tipoFuente()`, `itemEnSemana()`, `faviconSrc()` — funciones sin efectos secundarios, fáciles de testear y reutilizar.
+- **Filtros unificados:** `aplicarFiltrosNoticias()` y `aplicarFiltrosVideos()` operan sobre el DOM reaccionando a los cambios del store mediante suscripciones.
+- **Sin fugas de memoria:** la función `on()` devuelve una función `unsubscribe` que elimina el listener del array de callbacks.
 
 ### Externalización de Configuración
 
-Todo el JSON embebido, prompts de IA, plantillas HTML y valores por defecto se movieron a módulos especializados:
-- **Prompts de IA:** `PROMPT_RESUMIR_LOTE`, `PROMPT_RESUMIR_NOTICIA`, `PROMPT_RECAP_SEMANAL`, `PROMPT_TRADUCIR_TITULOS` como templates `.format()` en `constants_templates.py`.
-- **Config JS:** canales YouTube, tabs multimedia, opciones de filtro, URL del dashboard — se inyectan vía `data.json`.
-- **Plantillas:** Telegram (`TELEGRAM_MENSAJE_TEMPLATE`), email (`EMAIL_ROW_TEMPLATE`, `EMAIL_SOURCE_HEADER`, `EMAIL_VIDEO_ROW`), fallbacks — todo en `constants_templates.py`.
-- **Constantes de dict keys:** Todos los strings de acceso a diccionarios (`"enlace"`, `"fuente"`, `"titulo"`, `"yt"`, etc.) son constantes con nombre. Si en el futuro cambia un key del schema, se edita una sola línea.
-- **Fuentes:** `constants_sources.py` contiene el dict `FUENTES` con 400+ fuentes, separado del resto de configuración.
+Todo el JSON embebido, los prompts de IA, las plantillas HTML y los valores por defecto se trasladaron a módulos especializados:
 
-### 400+ Fuentes de Contenido
+- **Prompts de IA:** `PROMPT_RESUMIR_LOTE`, `PROMPT_RESUMIR_NOTICIA`, `PROMPT_RECAP_SEMANAL`, `PROMPT_TRADUCIR_TITULOS` como templates con `.format()` en `constants_templates.py`
+- **Configuración JavaScript:** canales YouTube, pestañas multimedia, opciones de filtro y URL del dashboard se inyectan directamente en el HTML desde Python
+- **Plantillas:** Telegram (`TELEGRAM_MENSAJE_TEMPLATE`), email (`EMAIL_ROW_TEMPLATE`, `EMAIL_SOURCE_HEADER`, `EMAIL_VIDEO_ROW`) y valores por defecto — todo centralizado en `constants_templates.py`
+- **Constantes de claves:** todas las claves de acceso a diccionarios (`"enlace"`, `"fuente"`, `"titulo"`, `"yt"`, etc.) son constantes con nombre descriptivo. Si en el futuro cambia algún campo del esquema, se modifica una única línea
+- **Fuentes:** `constants_sources.py` contiene el diccionario `FUENTES` con más de 400 fuentes, separado del resto de configuración
+
+### Más de 400 Fuentes de Contenido
 
 | Tipo | Cantidad | Ejemplos |
 |------|----------|----------|
 | YouTube | 158 canales | MoureDev, Midudev, Pelado Nerd, Ringa Tech, Nethermind |
-| RSS XML (quick) | 151 feeds | TechCrunch, The Verge, Wired, Google Blog, Vercel, Docker, Krebs |
-| Web scraping (quick) | 43 sitios | Anthropic, Ollama, Mistral, LangChain, HuggingFace Papers, Mozilla Hacks |
+| RSS XML (actualización horaria) | 151 feeds | TechCrunch, The Verge, Wired, Google Blog, Vercel, Docker, Krebs |
+| Web scraping (actualización horaria) | 43 sitios | Anthropic, Ollama, Mistral, LangChain, HuggingFace Papers, Mozilla Hacks |
 | HTML scraping | 64 sitios | Xataka, Genbeta, Slashdot, Applesfera, El País Tecnología |
 | **Fuentes duales (YT + Web)** | **4 fuentes** | **MoureDev, Midudev, Carlos Azaustre, Xataka** |
 | GitHub Topics | 89 topics | AI, LLM, Docker, Kubernetes, CSS, HTML, algorithms, ui-ux, design-tools, machine-learning, ai-writing... |
@@ -195,85 +199,85 @@ Todo el JSON embebido, prompts de IA, plantillas HTML y valores por defecto se m
 | GitHub Repos | 8 | OpenWiki, Meetily, AutoPR, PR-Agent, Code-to-Docs |
 | Product Hunt | 1 | Top products daily |
 
-Los feeds RSS y web scraping con `quick: True` se scrapean cada hora con `scrape_hourly_workflow.yml`. Los GitHub Topics se scrapean diariamente con `daily_resources.yml`.
+Los feeds RSS y los sitios de web scraping marcados con `quick: True` se actualizan cada hora mediante el workflow `scrape_hourly_workflow.yml`. Los GitHub Topics se procesan diariamente con `daily_resources.yml`.
 
 ### Newsletter Agrupada por Fuente (Julio 2026)
 
-El email se reestructuró completamente:
+El correo electrónico se rediseñó completamente:
 
-- **Agrupación por fuente:** noticias organizadas por sitio web (TechCrunch, The Verge, Xataka, etc.)
-- **Smart translation:** solo traduce items nuevos (`traducido` flag), salta los ya traducidos
-- **Resúmenes persistidos:** se guardan en `noticias_historico.json` para evitar re-summarización
-- **Sección de videos:** YouTube videos con thumbnail, canal y duración
-- **Botón "Leer noticia":** enlace atractivo en lugar de URL cruda
-- **Estilos por fuente:** cada sitio tiene color e icono personalizado
+- **Agrupación por fuente:** las noticias se organizan por sitio web de origen (TechCrunch, The Verge, Xataka, etc.)
+- **Traducción inteligente:** solo se traducen los elementos nuevos mediante el flag `traducido`, omitiendo los ya procesados
+- **Resúmenes persistidos:** se almacenan en `noticias_historico.json` para evitar re-summarización en cada ejecución
+- **Sección de vídeos:** muestra los vídeos de YouTube con miniatura, canal y duración
+- **Botón "Leer noticia":** enlace estilizado en lugar de una URL en texto plano
+- **Estilos por fuente:** cada sitio tiene un color e icono personalizados
 
-### Telegram: Solo Noticias + Audio a las 21:00 UTC
+### Telegram: Solo Noticias y Audio a las 21:00 UTC
 
-- **Solo noticias:** se filtraron los vídeos del envío (flag `id_video`)
-- **Audio a las 21:00 UTC:** resumen de voz con TODAS las noticias del día (no solo las 5 del run actual)
-- **Caché GitHub Actions:** `actions/cache@v4` con TTL 7 días (noticias) / 24h (audio)
-- **Traducción inteligente:** usa título ya traducido si existe, solo traduce nuevos
-- **Resúmenes persistidos:** `n['resumen']` se guarda para no re-summarizar
+- **Solo noticias:** los vídeos se excluyen del envío mediante el flag `id_video`
+- **Audio a las 21:00 UTC:** resumen de voz con todas las noticias del día, no solo las del run actual
+- **Caché en GitHub Actions:** `actions/cache@v4` con TTL de 7 días para noticias y 24 horas para audio
+- **Traducción inteligente:** reutiliza el título traducido si existe, traduce únicamente los nuevos
+- **Resúmenes persistidos:** el campo `n['resumen']` se guarda para no re-summarizar
 
-### Weekly Recap Agrupado por Fuente (Julio 2026)
+### Resumen Semanal Agrupado por Fuente (Julio 2026)
 
-El blog post semanal se mejoró:
+La publicación semanal del blog se mejoró con las siguientes novedades:
 
-- **Deduplicación** por título antes de renderizar
-- **Agrupación por fuente** con `OrderedDict` (mantiene orden)
-- **Sección de videos** con canal y enlace
-- **Sin tabla de estadísticas** — eliminada la sección "El panel en datos"
+- **Deduplicación por título** antes de renderizar el contenido
+- **Agrupación por fuente** utilizando `OrderedDict` para preservar el orden de aparición
+- **Sección de vídeos** con información del canal y enlace directo
+- **Eliminación de la tabla de estadísticas** — la sección "El panel en datos" fue retirada
 
 ### Reorganización de Scripts (Julio 2026)
 
-Los scripts se reorganizaron de la raíz del proyecto a subdirectorios modulares:
+Los scripts se migraron de la raíz del proyecto a subdirectorios modulares:
 
-- **`utils.py` → `scripts/utils/common.py`**: Renombrado para evitar sombreado de módulos con `utils/` del sistema
-- **`solutions_db.py` y `solutions_data.py`**: Migrados desde el blog a `scripts/solutions/` (105+ soluciones curadas en 12 lenguajes)
-- **`tests/`**: Migrados desde `blog/tests/python/` (117 tests pytest)
-- **Todos los workflows actualizados** para usar `python -m scripts.subdir.script` en lugar de `python script.py`
-- **Nuevo workflow `tests.yml`**: Ejecuta pytest en cada push/PR a master
-- **Eliminados `scrape_social.py` y `scrape_trends.py`**: Redes sociales (Instagram, X/Twitter, Threads, TikTok) y Google Trends removidos del ecosistema
-- **Dashboard migrado a SSR**: Python genera `index.html` completo, JavaScript solo maneja interactividad (~135 líneas)
-- **Markdown Tools**: Sección de herramientas Markdown offline (PDF, Slides, Table, Snippets, Cheatsheet) integrada en el dashboard, generada por `mdtools/build.py` con templates en `constants_mdtools.py`
+- **`utils.py` → `scripts/utils/common.py`:** renombrado para evitar conflictos de sombreado con el directorio `utils/` del sistema
+- **`solutions_db.py` y `solutions_data.py`:** trasladados desde el blog a `scripts/solutions/` (más de 105 soluciones curadas en 12 lenguajes)
+- **`tests/`:** migrados desde `blog/tests/python/` (117 tests con pytest)
+- **Todos los workflows actualizados** para ejecutarse con `python -m scripts.subdir.script` en lugar de `python script.py`
+- **Nuevo workflow `tests.yml`:** ejecuta pytest en cada push o pull request a master
+- **Eliminación de `scrape_social.py` y `scrape_trends.py`:** las redes sociales (Instagram, X/Twitter, Threads, TikTok) y Google Trends se retiraron del ecosistema
+- **Dashboard migrado a SSR:** Python genera el `index.html` completo; JavaScript se limita a gestionar la interactividad (~135 líneas)
+- **Markdown Tools:** herramientas offline para Markdown (PDF, Slides, Table, Snippets, Cheatsheet) integradas en el dashboard, generadas por `mdtools/build.py` con plantillas en `constants_mdtools.py`
 
 ### Renderizado SSR del Dashboard
 
-Python genera un `index.html` completo con todo el contenido pre-renderizado (noticias, vídeos YouTube, ranking GitHub). JavaScript (`script.js`) es mínimo (~135 líneas) y solo maneja:
+Python genera un archivo `index.html` completo con todo el contenido pre-renderizado (noticias, vídeos de YouTube, ranking de GitHub). El JavaScript (`script.js`) es mínimo (~135 líneas) y se limita a gestionar:
 
-- **Filtros combinables:** categoría (IA, Programación, DevOps, etc.), tipo (Tech/RSS), fuente RSS específica, canal, semana
-- **Chips con favicon:** cada chip de canal/fuente muestra avatar o favicon via Google S2
-- **Chips duales:** fuentes con YouTube + web (MoureDev, Midudev, Carlos Azaustre, Xataka) muestran chips en ambas secciones
-- **Ranking GitHub Stars:** top 20 repos ordenados por estrellas extraídos de GitHub Topics/Collections, con filtro por nombre/lenguaje
-- **Sección de Referencia Tech:** panel colapsable con Skills, LLMs, Lenguajes, Frameworks y Librerías ordenados por categoría — datos inyectados desde Python, sin hardcode en JS
+- **Filtros combinables:** categoría (IA, Programación, DevOps, etc.), tipo (Tech/RSS), fuente RSS específica, canal y semana
+- **Chips con favicon:** cada chip de canal o fuente muestra el avatar o favicon del sitio mediante Google S2
+- **Chips duales:** las fuentes con YouTube y web (MoureDev, Midudev, Carlos Azaustre, Xataka) aparecen en los filtros de ambas secciones
+- **Ranking GitHub Stars:** top 20 repositorios ordenados por estrellas, extraídos de GitHub Topics y Collections, con filtro por nombre o lenguaje
+- **Sección de Referencia Tech:** panel colapsable con Skills, LLMs, Lenguajes, Frameworks y Librerías organizados por categoría — los datos se inyectan desde Python, sin hardcode en JavaScript
 - **Badges con clases CSS unificadas:** `.badge-tech`, `.badge-rss`, `.badge-cat`
-- **Config externalizada:** canales, tabs, opciones de filtro se inyectan directamente en el HTML desde Python
+- **Configuración externalizada:** canales, pestañas y opciones de filtro se inyectan directamente en el HTML desde Python
 
-> **Actualizado septiembre 2026:** 515 fuentes con 89 GitHub Topics y 4 fuentes duales. Markdown Tools (PDF, Slides, Table, Snippets, Cheatsheet) integradas en el dashboard. Tips de IT con 283 conceptos. Herramientas IA con 150 categorías y auto-detección. AI Agent Skills: 68 skills (GitHub + mattpocock/skills ★258k). Blog resources migrados (2108). 134 tests pytest.
+> **Actualizado en septiembre de 2026:** 515 fuentes con 89 GitHub Topics y 4 fuentes duales. Markdown Tools (PDF, Slides, Table, Snippets, Cheatsheet) integradas en el dashboard. Tips de IT con 283 conceptos. Herramientas IA con 150 categorías y auto-detección. AI Agent Skills: 68 skills (GitHub + mattpocock/skills ★258k). Blog resources migrados (2108). 134 tests con pytest.
 
 ## 4. Desglose del Feature Set
 
-- **515 fuentes monitorizadas:** 158 YouTube, 151 RSS, 43 web scraping, 64 HTML, 4 fuentes duales, 89 GitHub Topics, 8 repos, 1 Product Hunt
-- **Clasificación inteligente:** 6 categorías (IA, Programación, DevOps, Ciberseguridad, Hardware, Negocios) + badges Tech/RSS
-- **Dashboard SSR:** Python genera HTML completo, JS solo interactividad (~135 líneas)
-- **Config externalizada:** prompts IA, plantillas Telegram/email, canales YouTube, opciones de filtro — todo en `constants_sources.py` y `constants_templates.py`
-- **Constantes con nombre:** todos los dict keys del schema son constantes (cambio en un solo sitio)
+- **515 fuentes monitorizadas:** 158 canales de YouTube, 151 feeds RSS, 43 sitios de web scraping, 64 sitios de HTML scraping, 4 fuentes duales, 89 GitHub Topics, 8 repositorios y 1 Product Hunt
+- **Clasificación inteligente:** 6 categorías temáticas (IA, Programación, DevOps, Ciberseguridad, Hardware, Negocios) con badges Tech/RSS
+- **Dashboard SSR:** Python genera el HTML completo del servidor; JavaScript gestiona únicamente la interactividad (~135 líneas)
+- **Configuración externalizada:** prompts de IA, plantillas de Telegram y email, canales YouTube, opciones de filtro — todo centralizado en `constants_sources.py` y `constants_templates.py`
+- **Constantes con nombre descriptivo:** todas las claves de acceso a diccionarios del esquema son constantes, lo que permite modificar un campo editando una única línea
 - **Sección de Referencia Tech:** panel colapsable con Skills, LLMs, Lenguajes, Frameworks y Librerías
-- **Newsletter diaria:** agrupada por fuente, resúmenes individuales por noticia con Gemini, sección de videos
-- **Telegram solo noticias:** sin vídeos, audio TTS a las 21:00 UTC con todas las noticias del día
-- **Smart translation:** flag `traducido` persiste, solo traduce items nuevos
-- **Resúmenes persistidos:** `n['resumen']` se guarda en JSON para evitar re-summarización
-- **Fuentes duales:** YouTube + web scraping simultáneo (MoureDev, Midudev, Carlos Azaustre, Xataka)
-- **Ranking GitHub Stars:** top 20 repos ordenados por estrellas desde 89 GitHub Topics + Collections
-- **Deduplicación:** por URL normalizada y título similar en scrape, generación de dashboard, y cross-file en resources
+- **Newsletter diaria:** agrupada por fuente, con resúmenes individuales por noticia generados por Gemini y sección de vídeos
+- **Telegram solo noticias:** sin vídeos, con audio TTS a las 21:00 UTC que incluye todas las noticias del día
+- **Traducción inteligente:** el flag `traducido` se persiste para evitar re-traducción de elementos ya procesados
+- **Resúmenes persistidos:** el campo `n['resumen']` se almacena en el JSON para no re-summarizar
+- **Fuentes duales:** extracción simultánea de YouTube y web scraping (MoureDev, Midudev, Carlos Azaustre, Xataka)
+- **Ranking GitHub Stars:** top 20 repositorios ordenados por estrellas, extraídos de 89 GitHub Topics y Collections
+- **Deduplicación:** por URL normalizada y título similar durante el scraping, la generación del dashboard y la deduplicación entre archivos de resources
 - **Estructura modular reorganizada:** scripts en subdirectorios (`scrapers/`, `publishers/`, `tools/`, `utils/`, `solutions/`)
-- **Constants reorganizadas:** `constants_sources.py` (fuentes), `constants_templates.py` (HTML/email/prompts), `constants_mdtools.py` (plantillas Markdown Tools)
-- **134 tests pytest:** cobertura completa de utilidades, caché, constantes (incluyendo templates email), imágenes, recursos y soluciones
+- **Constantes reorganizadas:** `constants_sources.py` (fuentes), `constants_templates.py` (HTML, email, prompts), `constants_mdtools.py` (plantillas de Markdown Tools)
+- **134 tests con pytest:** cobertura completa de utilidades, caché, constantes (incluyendo plantillas de email), imágenes, recursos y soluciones
 - **CI/CD completo:** 15 workflows de GitHub Actions con badges en vivo en el README
-- **Tips de IT:** 283 conceptos con preguntas de entrevista, Gemini + Wikipedia + fallback local
-- **Herramientas IA:** 150 categorías, auto-detección de herramientas (HF + GitHub + Product Hunt)
-- **AI Agent Skills:** 68 skills de GitHub + mattpocock/skills (★258k) para mejorar respuestas del bot
+- **Tips de IT:** 283 conceptos con preguntas de entrevista, generados con Gemini y verificados con Wikipedia y fallback local
+- **Herramientas IA:** 150 categorías con auto-detección de herramientas (HuggingFace + GitHub + Product Hunt)
+- **AI Agent Skills:** 68 skills de GitHub y mattpocock/skills (★258k) para mejorar las respuestas del bot
 - **Blog resources migrados:** 2108 recursos del blog disponibles en el bot de Telegram
 
 ## 5. Instalación
@@ -284,39 +288,539 @@ Python genera un `index.html` completo con todo el contenido pre-renderizado (no
 
 ## 6. Markdown Tools (Agosto 2026)
 
-Desde el dashboard se accede a una sección de **Markdown Tools** — 5 herramientas offline que funcionan 100% en el navegador:
+Desde el dashboard se accede a una sección de **Markdown Tools**: cinco herramientas offline que funcionan completamente en el navegador sin necesidad de servidor:
 
-- **Markdown a PDF** — Convierte Markdown a PDF con tablas, listas, bloques de código y encabezados estilizados (pdfmake). Limitaciones documentadas en la UI: máx. 50 páginas, máx. 500 filas por tabla, sin syntax highlighting en PDF.
-- **Diapositivas** — Crea presentaciones estilo Reveal.js desde Markdown, separando slides con `---`. Navegación con flechas y modo fullscreen.
-- **Tabla Markdown** — Genera tablas Markdown a partir de datos tabulares (TSV, CSV, JSON) con alineación configurable.
-- **Snippets de Código** — Extrae y formatea fragmentos de código con numeración de líneas.
-- **Cheatsheet** — Referencia rápida de Markdown: encabezados, texto, listas, tablas, emojis, shortcodes.
+- **Markdown a PDF** — Convierte Markdown a PDF con tablas, listas, bloques de código y encabezados estilizados utilizando pdfmake. Limitaciones documentadas en la interfaz: máximo 50 páginas, máximo 500 filas por tabla y sin resaltado de sintaxis en el PDF resultante.
+- **Diapositivas** — Genera presentaciones estilo Reveal.js a partir de Markdown, separando diapositivas con `---`. Incluye navegación con flechas del teclado y modo pantalla completa.
+- **Tabla Markdown** — Genera tablas en formato Markdown a partir de datos tabulares (TSV, CSV, JSON) con alineación configurable por columna.
+- **Snippets de Código** — Extrae y formatea fragmentos de código con numeración de líneas y resaltado de sintaxis.
+- **Cheatsheet** — Referencia rápida de sintaxis Markdown: encabezados, formato de texto, listas, tablas, emojis y shortcodes.
 
 ### Arquitectura
 
-- **Python generator:** `mdtools/build.py` genera 6 páginas HTML usando `constants_mdtools.py` (string templates con `{placeholders}`, mismo patrón que `HTML_TEMPLATE`)
-- **CSS modular:** 6 archivos (base, nav, editor, tools, dark-theme, responsive) con variables CSS y soporte `prefers-color-scheme`
-- **JS client-side:** markdown-it (Web Worker), pdfmake (Web Worker), navegación, generación de tablas y snippets
-- **Deploy compartido:** mdtools se genera en `public/mdtools/` y se despliega junto con el dashboard en el mismo dominio Surge.sh
-- **Nav integrada:** enlace "← Dashboard" en mdtools, enlace "Markdown Tools" en el dashboard
+- **Generador Python:** `mdtools/build.py` genera 6 páginas HTML utilizando `constants_mdtools.py` (plantillas de cadena con `{placeholders}`, el mismo patrón que `HTML_TEMPLATE`)
+- **CSS modular:** 6 archivos (base, nav, editor, tools, dark-theme, responsive) con variables CSS y soporte para `prefers-color-scheme`
+- **JavaScript client-side:** markdown-it (Web Worker), pdfmake (Web Worker), navegación entre herramientas, generación de tablas y snippets
+- **Despliegue compartido:** mdtools se genera en `public/mdtools/` y se despliega junto con el dashboard en el mismo dominio de Surge.sh
+- **Navegación integrada:** enlace "← Dashboard" en mdtools y enlace "Markdown Tools" en el dashboard
 
-## 7. AI Agent Skills (Septiembre 2026)
+## 7. Arquitectura CSS del Frontend (Septiembre 2026)
 
-Scraper de habilidades de agentes IA desde múltiples fuentes. Las skills se usan para mejorar las respuestas del bot de Telegram con conocimiento específico de agentes IA.
+El frontend de Tech Pulse se compone de tres páginas independientes, cada una con su propia estrategia de estilos. La landing page integra el CSS directamente en el HTML, el timeline carga un archivo externo de 688 líneas, y el dashboard junto con Markdown Tools utilizan una arquitectura modular dividida en seis archivos. Todas comparten un enfoque dark-first, variables CSS para la personalización del tema y un diseño responsive progresivo.
+
+### Variables CSS y Paleta de Colores
+
+Cada página declara su propio bloque `:root` con variables CSS personalizadas. Este patrón permite modificar toda la apariencia de la interfaz editando únicamente los valores de las variables, sin tocar las reglas de estilo.
+
+**Landing page** (`index.html` — CSS inline):
+```css
+:root {
+  --bg: #0e0e18;                      /* Fondo azul oscuro */
+  --text: #e8e6f0;                    /* Texto principal claro */
+  --text-dim: #8a88a0;                /* Texto secundario apagado */
+  --accent: #6c5ce7;                  /* Púrpura — color principal */
+  --accent2: #00cec9;                 /* Cian — color secundario */
+  --accent3: #fd79a8;                 /* Rosa — color terciario */
+  --border: rgba(255, 255, 255, 0.06); /* Bordes casi transparentes */
+}
+```
+
+**Timeline** (`css/style.css`):
+```css
+:root {
+  --bg: #0a0604;                              /* Fondo cálido oscuro */
+  --bg-card: rgba(15, 10, 5, 0.92);           /* Tarjetas semitransparentes */
+  --text: #f5e6d0;                            /* Texto ámbar claro */
+  --accent: #e67e22;                          /* Naranja fuego */
+  --border: rgba(255, 180, 100, 0.08);        /* Bordes con tono cálido */
+}
+```
+
+**Dashboard** (`css/dashboard.css`):
+```css
+:root {
+  --bg: #f8fafc;          /* Fondo claro — valor por defecto (light mode) */
+  --accent: #3b82f6;      /* Azul principal */
+}
+
+/* El tema oscuro se activa automáticamente según la preferencia del sistema */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f172a;        /* Fondo slate oscuro */
+    --accent: #60a5fa;    /* Azul claro */
+  }
+}
+```
+
+**Markdown Tools** (`mdtools/css/base.css`):
+```css
+:root {
+  --bg: #0f172a;          /* Dark mode — valor por defecto */
+  --accent: #3b82f6;      /* Azul principal */
+}
+
+/* Se invierte el esquema: el light mode se aplica como media query */
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f8fafc;        /* Override a fondo claro */
+  }
+}
+```
+
+### Landing Page — Estructura HTML y CSS
+
+La landing page se integra en un único archivo `index.html` con todo el CSS embebido inline (~356 líneas). La estructura del árbol DOM es la siguiente:
+
+```
+body
+├── .grid-bg                         ← Fijo en pantalla, cubre todo el viewport
+├── .rhombus-field                   ← Contenedor de los rombos decorativos
+│   └── .rhombus × 6                ← Rombos flotantes con animación "drift"
+├── .connections                     ← Líneas SVG decorativas
+│   └── svg > line.conn-line × 4    ← Líneas punteadas entre puntos
+├── .content                         ← Contenido centrado (z-index: 10)
+│   ├── .logo-wrapper                ← Logo con rombos animados a ambos lados
+│   │   ├── .logo-rhombus-small × 2
+│   │   ├── .logo-rhombus × 2
+│   │   └── h1.logo                  ← "Tech" en texto plano + "Pulse" con gradiente
+│   ├── p.tagline                    ← Lema descriptivo
+│   └── .cards                       ← Grid de 3 columnas
+│       ├── a.card (Timeline)        ← Tarjeta con clip-path romboide
+│       │   ├── .card-icon-wrap
+│       │   │   ├── .card-icon-rhombus  ← Rombo rotado 45° como marco del icono
+│       │   │   └── .card-icon          ← Emoji centrado sobre el rombo
+│       │   ├── .card-title
+│       │   ├── .card-desc
+│       │   └── .card-stats
+│       │       └── .card-stat × 3     ← Estadísticas con valor + etiqueta
+│       ├── a.card (Dashboard)
+│       └── a.card (Markdown Tools)
+├── .footer                          ← Pie de página con rombos decorativos
+│   └── .footer-rhombus × 2
+└── .scan-line                       ← Línea animada en la parte inferior
+```
+
+**Efectos visuales principales:**
+
+- **Grid de fondo:** Se genera mediante dos `linear-gradient` superpuestos de 60×60 px que crean una cuadrícula sutil. Un `mask-image: radial-gradient` en forma de elipse desvanece los bordes para que la cuadrícula solo sea visible en el centro de la pantalla.
+
+- **Rombos flotantes:** Seis elementos `.rhombus` posicionados aleatoriamente. Cada uno aplica `transform: rotate(45deg)` para girar el cuadrado 45 grados y formar un rombo. La animación `drift` mueve cada rombo siguiendo una trayectoria cuadrada de cuatro puntos en ciclos de 15 a 30 segundos.
+
+- **Tarjetas romboides:** El `clip-path: polygon()` recorta las esquinas de cada tarjeta en diagonal, creando el efecto de esquinas cortadas en romboide. El polígono define ocho puntos que conectan los bordes con diagonales de 12 píxeles.
+
+- **Iconos romboides:** El elemento `.card-icon-rhombus` es un div cuadrado girado 45° con un borde semitransparente. El emoji se superpone encima mediante posicionamiento absoluto, creando un icono dentro de un marco romboide.
+
+- **Scan line:** Una línea de un píxel de alto con un `linear-gradient` horizontal que combina los tres colores de acento. La animación `scan` la desplaza de izquierda a derecha en un ciclo de 4 segundos.
+
+- **Efecto hover en tarjetas:** Un pseudo-elemento `::before` muestra una línea de gradiente en la parte superior de la tarjeta que aparece al pasar el cursor. La tarjeta asciende 4 píxeles con `translateY(-4px)` y aumenta ligeramente su opacidad de fondo.
+
+**Diseño responsive — un único breakpoint:**
+```css
+@media (max-width: 768px) {
+  .cards { grid-template-columns: 1fr; max-width: 400px; }
+  .logo-wrapper { flex-wrap: wrap; }
+}
+```
+
+En pantallas menores a 768 px, el grid de tres columnas se convierte en una sola columna con un ancho máximo de 400 px. El logo permite saltos de línea para adaptarse al espacio disponible.
+
+### Tech Timeline — Estructura CSS (688 líneas, 14 breakpoints)
+
+El timeline carga `css/style.css`, que organiza los elementos mediante una arquitectura de capas apiladas con `z-index`. Cada capa cumple una función visual específica:
+
+```
+z-index 0:    .era-bg, .era-overlay       ← Imágenes de fondo a pantalla completa
+z-index 2:    .parallax-layer              ← Capas de parallax (trasera, media)
+z-index 3:    #fx-canvas                   ← Canvas de partículas (humo, brasas)
+z-index 4:    #parallax-front              ← Capa frontal de parallax
+z-index 5:    .vignette                    ← Viñeta radial oscura que enmarca la escena
+z-index 10:   .timeline-container          ← Contenedor de scroll horizontal
+z-index 50:   #header, .year-bar           ← Cabecera fija y barra de navegación de años
+z-index 1000: #loading                     ← Pantalla de carga inicial
+```
+
+**Estructura del timeline-track:**
+
+El contenido del timeline se organiza en un contenedor de scroll horizontal que contiene un track flex de ancho dinámico:
+
+```
+.timeline-container (overflow-x: auto, scrollbar oculto)
+└── .timeline-track (display: flex, width: max-content)
+    ├── .timeline-line                   ← Línea horizontal continua con gradiente naranja
+    │   └── .timeline-line-inner         ← Glow difuso mediante ::after + filter: blur(6px)
+    └── .year-group × N                 ← Un grupo por cada año con eventos
+        ├── .year-dot                    ← Punto luminoso centrado en la línea
+        ├── .year-label                  ← Año en texto grande semi-transparente (opacity: 0.07)
+        └── .year-cards                  ← Fila flex de tarjetas del año
+            └── .card × N               ← Tarjetas individuales de eventos históricos
+                ├── .card-img / .card-img-placeholder
+                ├── .card-body
+                │   ├── .card-category  ← Etiqueta de categoría
+                │   ├── .card-title     ← Título del evento
+                │   ├── .card-desc      ← Descripción corta
+                │   └── .card-link      ← Enlace que aparece solo en hover
+```
+
+**Animaciones de entrada progresiva:**
+
+Los elementos aparecen gradualmente a medida que el usuario hace scroll horizontal. El mecanismo utiliza `IntersectionObserver` para detectar qué elementos son visibles en el viewport:
+
+- Los `.year-group` comienzan con `opacity: 0; transform: translateY(30px)`. Cuando el observer detecta que son visibles, añade la clase `.visible` que transiciona a `opacity: 1; transform: translateY(0)`.
+
+- Las `.card` inician con `opacity: 0; transform: translateY(40px) scale(0.95)`. La clase `.visible` las anima a su posición final con un efecto de escala suave.
+
+- Los `.era-bg` cambian su `background-image` con una transición de 1.5 segundos para crear una transición fluida entre las diferentes eras históricas.
+
+**Year Bar — Navegación de años en dos niveles:**
+
+La barra de navegación inferior se divide en dos zonas visuales claramente diferenciadas:
+
+```
+.year-bar (position: fixed, bottom: 0, height: 80px)
+├── .year-bar-indicator (mitad superior, height: 36px)
+│   ├── .year-bar-track                   ← Línea de fondo con segmentos de color por era
+│   │   └── ::after                       ← Gradiente de 6 colores (uno por era)
+│   ├── .year-bar-tick-marks              ← Marcas de graduación en la línea
+│   ├── .year-bar-needle                  ← Aguja indicadora de la posición actual
+│   │   ├── .year-bar-needle-line         ← Línea vertical con gradiente descendente
+│   │   ├── .year-bar-needle-dot          ← Punto naranja con efecto glow
+│   │   │   ├── ::before                  ← Primer anillo pulsante (inset: -5px)
+│   │   │   └── ::after                   ← Segundo anillo pulsante (inset: -10px)
+│   │   └── .year-bar-label              ← Año actual en badge flotante sobre la aguja
+│   └── .year-bar-dot                     ← Elemento obsoleto, oculto con display: none
+├── .year-bar-line                        ← Separador decorativo entre zonas
+└── .year-bar-inner                       ← Ticks de años clickeables (scroll horizontal)
+    └── .year-tick × N                    ← Años disponibles para navegación directa
+        └── ::before                      ← Marca visual superior del tick
+```
+
+Los colores de cada era se representan en el track mediante un `linear-gradient` segmentado:
+
+```css
+.year-bar-track::after {
+  background: linear-gradient(90deg,
+    #d97706 0%, #d97706 16.3%,       /* Era Mainframes — ámbar */
+    #c2410c 16.3%, #c2410c 32.7%,     /* Era PC — rojo oscuro */
+    #38bdf8 32.7%, #38bdf8 49%,       /* Era Internet — azul cielo */
+    #f59e0b 49%, #f59e0b 65.3%,       /* Era Móvil — dorado */
+    #8b5cf6 65.3%, #8b5cf6 81.6%,     /* Era Cloud — púrpura */
+    #ec4899 81.6%, #ec4899 100%       /* Era IA — rosa */
+  );
+  opacity: 0.15;
+}
+```
+
+**Breakpoints responsive — 14 puntos de ruptura:**
+
+| Breakpoint | Rango | Cambios principales |
+|------------|-------|---------------------|
+| Teléfonos pequeños | 320–374 px | Cards 150 px, year-bar 50 px, elementos de parallax ocultos, etiqueta de era oculta |
+| Teléfonos estándar | 375–479 px | Cards 170 px, year-bar 52 px, ticks de año a 9 px |
+| Teléfonos grandes | 480–639 px | Cards 190 px, year-bar 56 px, indicador de scroll oculto |
+| Tablets en retrato | 640–768 px | Cards 210 px, year-bar 60 px, indicador de scroll visible |
+| Tablets en paisaje | 769–1024 px | Cards 220 px, year-bar 62 px |
+| Portátiles estándar | 1025–1280 px | Cards 230 px (valor por defecto) |
+| Pantallas grandes | 1281–1536 px | Cards 250 px, separación entre cards 16 px |
+| Ultra-anchas | 1537 px o más | Cards 270 px, year-bar 72 px, etiqueta de año 16 px |
+| Teléfonos en paisaje | altura máx. 500 px | Cards 160 px, year-bar 42 px, indicador oculto, parallax con opacidad 0.03 |
+| Retrato alargado | altura mín. 900 px | Etiqueta de año 90 px, padding extra en el track |
+| Dispositivos táctiles | hover: none | Efectos hover deshabilitados, feedback con estado active |
+| Movimiento reducido | prefers-reduced-motion | Animaciones a 0.01 ms, parallax oculto |
+| Pantallas de alta densidad | min-resolution: 192dpi | backdrop-filter blur(20 px) |
+| Impresión | print | Todo oculto excepto timeline-track, fondo blanco |
+
+**Efecto hover en las tarjetas del timeline:**
+```css
+.card:hover {
+  background: var(--bg-card-hover);
+  border-color: rgba(230, 126, 34, 0.2);
+  transform: translateY(-6px) scale(1.02) !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), 0 0 30px rgba(230, 126, 34, 0.1);
+}
+.card:hover .card-link { opacity: 1; }
+```
+
+Al pasar el cursor, la tarjeta asciende 6 píxeles, se escala un 2%, cambia el color del borde a un tono naranja semitransparente y proyecta una sombra extendida con un resplandor naranja. El enlace interno aparece con una transición de opacidad.
+
+### News Dashboard — Arquitectura CSS Modular (6 archivos)
+
+El dashboard emplea una arquitectura CSS modular en la que las responsabilidades se distribuyen en seis archivos independientes:
+
+| Archivo | Líneas | Responsabilidad |
+|---------|--------|-----------------|
+| `base.css` | 88 | Variables CSS, reset global, tipografía, estilos de `pre`/`code`, layout base |
+| `nav.css` | — | Estilos de navegación y enlaces |
+| `editor.css` | — | Estilos del editor de Markdown |
+| `tools.css` | — | Estilos específicos de las herramientas |
+| `dark-theme.css` | 18 | Override de variables para el modo claro mediante `prefers-color-scheme: light` |
+| `responsive.css` | 32 | Breakpoint único a 768 px |
+
+**Sistema de tema claro/oscuro automático:**
+
+El modo oscuro se define como valor por defecto en el bloque `:root`. Cuando el sistema operativo del usuario indica `prefers-color-scheme: dark`, se aplican automáticamente las variables oscuras. El modo claro se activa mediante una media query que reescribe todas las variables CSS. Una excepción notable es el `.slide-preview`, que mantiene fondo oscuro independientemente del tema activo para preservar la legibilidad de las diapositivas.
+
+**Estructura de los elementos de noticias:**
+```css
+.news-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);       /* 8 px */
+}
+.news-item a {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+}
+.news-item .favicon { width: 20px; height: 20px; border-radius: 4px; }
+.news-text { flex: 1; min-width: 0; }
+.news-title { font-size: 14px; font-weight: 600; -webkit-line-clamp: 2; }
+.news-meta { display: flex; flex-wrap: wrap; gap: 6px; font-size: 12px; }
+```
+
+Cada noticia se renderiza como un elemento `.news-item` que contiene un enlace `<a>` con layout flex. El favicon del sitio se muestra a la izquierda, el contenido del texto ocupa el espacio restante mediante `flex: 1`, y el título se limita a dos líneas mediante `-webkit-line-clamp: 2`.
+
+**Sistema de etiquetas (badges):**
+
+Se definen cinco tipos de badges con colores semánticos diferenciados. Cada uno utiliza un fondo con opacidad reducida del color correspondiente:
+
+```css
+.badge-rss   { background: rgba(59, 130, 246, 0.1); color: var(--accent); }  /* Azul — RSS */
+.badge-news  { background: rgba(34, 197, 94, 0.1);  color: #22c55e; }       /* Verde — Noticias */
+.badge-video { background: rgba(239, 68, 68, 0.1);  color: #ef4444; }       /* Rojo — Vídeos */
+.badge-tech  { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }       /* Púrpura — Tech */
+.badge-cat   { background: var(--bg-card-hover);     color: var(--text-dim); } /* Neutro — Categoría */
+```
+
+**Filtros con chips interactivos:**
+
+Los chips permiten filtrar el contenido por fuente, categoría o canal. Cada chip es un elemento inline-flex con bordes redondeados en forma de cápsula. El estado activo se indica con fondo del color de acento y texto blanco:
+
+```css
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.chip.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+.chip img { width: 16px; height: 16px; border-radius: 50%; }  /* Avatar del canal */
+```
+
+**Campo de búsqueda:**
+```css
+.search-input {
+  width: 100%;
+  max-width: 400px;
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.search-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);  /* Anillo de enfoque accesible */
+}
+```
+
+**Filtros colapsables:**
+
+Se utiliza el elemento nativo `<details>` con `<summary>` para crear secciones de filtros que se expanden y contraen sin JavaScript adicional. El contenido colapsable contiene los chips de filtro en un contenedor flex con wrap:
+
+```css
+.filter-collapse summary {
+  padding: 12px 16px;
+  background: var(--bg-card);
+  cursor: pointer;
+  font-weight: 600;
+}
+.filter-collapse[open] summary {
+  border-bottom: 1px solid var(--border);
+}
+.chip-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 16px;
+}
+```
+
+**Grid de vídeos:**
+
+La cuadrícula de vídeos utiliza CSS Grid con `auto-fill` y `minmax` para crear un layout completamente responsive sin breakpoints adicionales. Cada tarjeta mantiene una proporción de 16:9 en la imagen:
+
+```css
+.video-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+.video-card img {
+  width: 100%;
+  aspect-ratio: 16/9;
+  object-fit: cover;
+}
+```
+
+**Ranking de repositorios GitHub:**
+```css
+.github-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.rank {
+  font-size: 14px;
+  font-weight: 700;
+  min-width: 30px;
+}
+.github-desc {
+  font-size: 12px;
+  color: var(--text-dim);
+  -webkit-line-clamp: 2;         /* Limita la descripción a 2 líneas */
+  overflow: hidden;
+}
+```
+
+**Diseño responsive — dos breakpoints:**
+```css
+/* Tablets y móviles — apilamiento vertical */
+@media (max-width: 768px) {
+  .stats-bar { flex-direction: column; }
+  .video-grid { grid-template-columns: 1fr; }
+  .github-item { flex-direction: column; align-items: flex-start; }
+  .news-item a { flex-direction: column; gap: 8px; }
+}
+
+/* Móviles pequeños — ajustes de espaciado y tipografía */
+@media (max-width: 480px) {
+  .header-gradient { font-size: 20px; }
+  .news-meta { flex-direction: column; }
+  .chip { font-size: 11px; padding: 4px 10px; }
+}
+```
+
+**Animación de entrada:**
+```css
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.news-item, .video-card, .github-item {
+  animation: fadeIn 0.3s ease-out;
+}
+```
+
+### Markdown Tools — Arquitectura CSS Modular (6 archivos)
+
+Markdown Tools reutiliza la misma arquitectura modular que el dashboard. Los seis archivos cubren las mismas responsabilidades, adaptadas a las herramientas de conversión de Markdown:
+
+| Archivo | Líneas | Responsabilidad |
+|---------|--------|-----------------|
+| `base.css` | 88 | Variables, reset, tipografía, estilos de código, layout `.main-content` |
+| `nav.css` | — | Navegación con menú hamburguesa en móvil |
+| `editor.css` | — | Estilos del editor de Markdown y textarea |
+| `tools.css` | — | Estilos específicos de cada herramienta (PDF, slides, tabla, snippets) |
+| `dark-theme.css` | 18 | Override de variables para `prefers-color-scheme: light` |
+| `responsive.css` | 32 | Breakpoint único a 768 px |
+
+**Tipografía y bloques de código:**
+
+Los bloques de código preformateados utilizan una fuente monoespaciada de la pila `Fira Code → Cascadia Code → JetBrains Mono`. El código en línea dentro de párrafos se resalta con un fondo semitransparente del color de acento:
+
+```css
+pre {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+}
+p code {
+  background: var(--accent-soft);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--accent);
+}
+```
+
+**Navegación responsive con menú hamburguesa:**
+
+En pantallas menores a 768 px, la barra de navegación se reorganiza: los enlaces se ocultan y aparece un botón de alternancia (`.nav-toggle`). Al activarlo, se muestra un menú desplegable posicionado debajo de la barra de navegación:
+
+```css
+@media (max-width: 768px) {
+  .nav-toggle { display: flex; }
+  .nav-links {
+    display: none;
+    position: absolute;
+    top: 56px;
+    left: 0;
+    right: 0;
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border);
+    flex-direction: column;
+  }
+  .nav-links.open { display: flex; }
+  .tool-layout { grid-template-columns: 1fr; }
+  .tools-grid { grid-template-columns: 1fr; }
+  .cheatsheet-grid { grid-template-columns: 1fr; }
+}
+```
+
+**Excepción: las diapositivas mantienen tema oscuro en modo claro:**
+
+Para preservar la legibilidad del contenido de las presentaciones, la vista previa de diapositivas siempre utiliza colores oscuros, incluso cuando el usuario tiene activado el modo claro en su sistema:
+
+```css
+@media (prefers-color-scheme: light) {
+  .slide-preview { background: #1e293b; }
+  .slide-preview .slide { background: #0f172a; color: #e2e8f0; }
+}
+```
+
+### Comparación de Estrategias CSS entre Páginas
+
+| Aspecto | Landing | Timeline | Dashboard | Markdown Tools |
+|---------|---------|----------|-----------|----------------|
+| **Ubicación del CSS** | Inline en HTML | Archivo externo | Archivo externo | 6 archivos modulares |
+| **Tamaño total** | ~356 líneas | 688 líneas | 632 líneas | ~180 líneas |
+| **Tema** | Oscuro fijo | Oscuro fijo | Automático (prefers-color-scheme) | Automático (prefers-color-scheme) |
+| **Breakpoints** | 1 (768 px) | 14 | 2 (768 px, 480 px) | 1 (768 px) |
+| **Animaciones** | drift, scan, pulse | 15+ keyframes | fadeIn | Ninguna |
+| **Parallax** | No | Sí — 3 capas + canvas | No | No |
+| **Fuentes** | Inter + JetBrains Mono | Inter + JetBrains Mono | System font stack | Inter + Fira Code |
+
+## 8. AI Agent Skills
+
+Módulo de scraping de habilidades de agentes IA desde múltiples fuentes. Las skills se utilizan para enriquecer las respuestas del bot de Telegram con conocimiento específico sobre agentes IA.
 
 ### Fuentes
 
 | Fuente | Skills | Descripción |
 |--------|--------|-------------|
-| GitHub repos | 39 | Repos de skills de agentes IA (búsqueda por queries) |
-| mattpocock/skills | 29 | El repo de skills más famoso (★258k) — code-review, triage, tdd, domain-modeling, etc. |
-| **Total** | **68** | Combina y deduplica por URL |
+| Repositorios de GitHub | 39 | Repositorios de skills para agentes IA (búsqueda por consultas específicas) |
+| mattpocock/skills | 29 | El repositorio de skills más popular (★258k) — code-review, triage, tdd, domain-modeling, etc. |
+| **Total** | **68** | Se combinan y deduplican por URL |
 
 ### Categorías de mattpocock
 
 - **engineering:** code-review, triage, tdd, diagnosing-bugs, domain-modeling, codebase-design, improve-codebase-architecture, research, implement, prototype, wayfinder, resolving-merge-conflicts, to-spec, to-tickets, grill-with-docs, ask-matt, setup-matt-pocock-skills, wizard
-- **productivity:** (habilidades de productividad personal)
-- **misc:** (habilidades varias)
+- **productivity:** habilidades de productividad personal
+- **misc:** habilidades varias
 
 ### Distribución
 
@@ -336,22 +840,21 @@ Las skills se envían al canal de Telegram **Report herramientas** (`-1004380905
 ### Scraping
 
 ```bash
-# Ejecutar scraper de skills
+# Ejecutar el scraper de skills
 python -m scripts.scrapers.scrape_agent_skills
 ```
 
-El scraper consulta:
-1. **skills.sh** — Índice JSON del directorio oficial
-2. **agentskills.io** — API + fallback web scraping
-3. **GitHub Search** — Queries: `agent-skills SKILL.md`, `claude-skills SKILL.md`, `opencode-skills`, `ai-agent-skills`
-4. **mattpocock/skills** — Explora `skills/engineering/`, `skills/productivity/`, `skills/misc/` y lee `SKILL.md` de cada una
+El scraper consulta las siguientes fuentes en orden:
 
-## 8. Live Demo
+1. **skills.sh** — Índice JSON del directorio oficial de skills
+2. **agentskills.io** — API con fallback a web scraping
+3. **GitHub Search** — Consultas: `agent-skills SKILL.md`, `claude-skills SKILL.md`, `opencode-skills`, `ai-agent-skills`
+4. **mattpocock/skills** — Explora los directorios `skills/engineering/`, `skills/productivity/` y `skills/misc/`, y lee el archivo `SKILL.md` de cada skill
 
-El dashboard está desplegado y accesible públicamente, con actualización automática cada hora y notificaciones cada 30 minutos.
+## 9. Conclusiones
+
+Tech Pulse es el motor de contenido automatizado detrás de las secciones de noticias del blog. El dashboard está desplegado y accesible públicamente, con actualización automática cada hora y notificaciones cada 30 minutos.
 
 👉 **[Abrir Tech Pulse Dashboard](https://jorbencasdownloaderdocument.surge.sh)** | **[Markdown Tools](https://jorbencasdownloaderdocument.surge.sh/mdtools/)**
 
----
-
-*Este proyecto es el motor de contenido automatizado detrás de las secciones de noticias del blog. Incluye Markdown Tools para convertir y transformar Markdown directamente en el navegador.*
+*Incluye Markdown Tools para convertir y transformar Markdown directamente en el navegador, un timeline interactivo de la historia de la tecnología y un sistema de scraping de más de 500 fuentes con resúmenes generados por IA.*
