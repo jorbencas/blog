@@ -3,7 +3,7 @@ draft: false
 title: "Devjobs Automation Suite: Pipelines de Video, Bots IA y Scrapers Automatizados"
 description: "Suite completa de automatización con Docker: pipeline de Twitch a Telegram, pipeline de YouTube a Telegram, bot de Telegram con IA, scrapers de noticias y herramientas de productividad. Todo self-hosted y sin intervención manual."
 pubDate: "2026/09/03"
-updatedDate: "2026/09/12"
+updatedDate: "2026/09/19"
 tags: ["docker", "python", "automatización", "telegram", "ia", "scraping", "pipeline"]
 image: "img/devjobs_automation_suite/devjobs_automation_suite_cover-1200.webp"
 repository: "https://github.com/jorbencas/devjobs"
@@ -46,7 +46,7 @@ Necesitaba **conectar todo** en pipelines automáticos.
 │                    data/pipeline/                                   │
 │                                                                     │
 │  ┌─────────────┐   ┌──────────────┐   ┌──────────────┐            │
-│  │ 158 canales │──▶│  download.py │──▶│  upload.py   │            │
+│  │ 160 canales │──▶│  download.py │──▶│  upload.py   │            │
 │  │  YouTube    │   │  (descargar) │   │ (subir)      │            │
 │  └─────────────┘   └──────────────┘   └──────────────┘            │
 │        │                  │                  │                      │
@@ -85,34 +85,48 @@ Cada canal tiene su propia configuración de horarios, plataformas y comportamie
     "channels": {
         "sendosama": {
             "platform": [
-                { "platform": "web", "url": "https://watch.sendosama.net/", "detectar": true, "corte": true },
-                { "platform": "youtube", "channel": "sendosenpai", "descripcion": true },
-                { "platform": "twitch", "detectar": true, "corte": true },
-                { "platform": "kick", "detectar": true, "corte": true }
+                { "platform": "web", "url": "https://watch.sendosama.net/", "detectar": false, "corte": false },
+                { "platform": "youtube", "channel": "sendosenpai" },
+                { "platform": "twitch", "detectar": false, "corte": false },
+                { "platform": "kick", "detectar": false, "corte": false }
             ],
             "start_time": { "Sunday": "19:00", "*": "21:30" },
             "dias_plataforma": {
-                "Sunday": ["youtube", "twitch", "web", "kick"],
-                "*": ["web", "twitch", "kick"]
+                "Sunday": ["youtube", "web", "kick", "twitch"],
+                "*": ["web"]
             }
         },
         "midudev": {
             "platform": [
-                { "platform": "youtube", "descripcion": true },
+                { "platform": "youtube", "detectar": false, "corte": false },
                 { "platform": "twitch", "detectar": false, "corte": false }
             ],
-            "days": ["Monday", "Tuesday", "Wednesday", "Thursday"],
+            "days": ["Monday"],
+            "start_time": "18:00"
+        },
+        "mouredev": {
+            "platform": [
+                { "platform": "youtube", "detectar": false, "corte": false },
+                { "platform": "twitch", "detectar": false, "corte": false }
+            ],
+            "days": ["Thursday"],
             "start_time": "18:00"
         }
-    }
+    },
+    "record_path": "/recordings",
+    "check_every": 30,
+    "max_duration": "24:00:00",
+    "retry_interval": 1,
+    "copy_to_test": true,
+    "test_path": "/recordings/test"
 }
 ```
 
 **Características clave:**
-- **`dias_plataforma`**: Cambia qué plataformas se prueban según el día (domingo YouTube primero, resto web/twitch/kick)
-- **`days`**: Días de la semana en los que se comprueba si hay directo
+- **`dias_plataforma`**: Cambia qué plataformas se prueban según el día (domingo YouTube primero, resto solo web)
+- **`days`**: Días de la semana en los que se comprueba si hay directo (midudev lunes, mouredev jueves)
 - **`start_time`**: Hora mínima para empezar a comprobar (str o dict por día)
-- **`detectar`/`corte`**: Control de detección de episodios y corte de extremos por fuente
+- **`detectar`/`corte`**: Control de detección de episodios y corte de extremos por fuente (el config real los usa a `false` para no recortar)
 - **`descripcion`**: Usar descripción del directo como caption (para YouTube)
 - **Detección HLS sin navegador**: `is_live()` consulta el `m3u8` de la web directamente (API `/api/playback-domain`) en vez de yt-dlp, más rápido y fiable
 - **Playlist congelada**: `_hls_estado()` detecta la web que sigue sirviendo el stream pero "congelada" (sin avance) y la marca como offline
@@ -124,7 +138,7 @@ Cada canal tiene su propia configuración de horarios, plataformas y comportamie
 | 1. Grabar | `twitchrecorder-sendo` | Graba el directo con calidad original | Twitch no guarda VODs indefinidamente |
 | 2. Keyword | `twitchrecorder-sendo` | Extrae el título y lo pone en el nombre | Para poder ruteear a la serie correcta |
 | 3. Cola | `data/pipeline/grabaciones/test/` | Espera como `*_completed.mp4` | Patrón watcher: el siguiente servicio vigila esta carpeta |
-| 4. Comprimir | `ffmpeg_monitor-sendo` | Convierte a 720p (CRF 28, 2 pasadas si >2GB) | Telegram tiene límite de 2GB; 720p es suficiente |
+| 4. Comprimir | `ffmpeg_monitor-sendo` | Convierte a 720p (CRF 28, 2 pasadas si >1900MB) | Telegram tiene límite de 2GB; 720p es suficiente |
 | 5. OCR | `ffmpeg_monitor-sendo` | Detecta episodios por imagen | Sabe qué serie es por la imagen del frame |
 | 6. Subir | `telegram-uploader-sendo` | Rutea por keyword a temas de Telegram | Cada serie va a su tema/foro |
 
@@ -140,7 +154,7 @@ Cada canal tiene su propia configuración de horarios, plataformas y comportamie
 
 ### Resultado
 
-Un directo grabado a las 21:00 aparece comprimido y subido a su tema/serie sin que yo haga nada. El sistema funciona 24/7: si nameof hace un directo a las 3 de la madrugada, se graba, se comprime y aparece en Telegram al día siguiente.
+Un directo grabado a las 21:00 aparece comprimido y subido a su tema/serie sin que yo haga nada. El sistema funciona 24/7: si Sendosama hace un directo a las 3 de la madrugada, se graba, se comprime y aparece en Telegram al día siguiente.
 
 ```bash
 # Arrancar todo el pipeline
@@ -174,13 +188,77 @@ Así el pipeline no se queda grabando un stream fantasma: cuando la web se cae d
 17:35:28 [sendosama] Grabación finalizada (6.2 GB, 01:28:15)
 ```
 
----
+### 13.1. La keyword que viaja: el contrato `_KW_` del nombre
 
-## Pipeline 2: YouTube → Telegram (158 canales)
+El nombre del archivo es el **único canal de comunicación** entre grabador, monitor y uploader: no hablan entre sí por red, se pasan la información **dentro del propio nombre** del vídeo. Ese nombre sigue un contrato fijo:
 
-Pipeline diario que descarga vídeos de 158 canales de YouTube, los convierte a 720p y los sube a un grupo de Telegram con 158 temas organizados por canal.
+```
+sendosama_2026-08-13_20-15-00_KW_diario__parte1.mp4
+```
 
-### Por qué 158 canales
+| Trozo | Qué es | Quién lo pone | Por qué importa |
+|-------|--------|---------------|-----------------|
+| `sendosama` | @ del canal | TwitchRecorder | El uploader sabe qué config/tema usar |
+| `2026-08-13_20-15-00` | Inicio del directo (fecha y hora) | TwitchRecorder | Ordena y deduplica |
+| `_KW_` | Marcador de que empieza la **keyword** | TwitchRecorder | Es el punto de ruteo |
+| `diario` | La **keyword** (del título del directo) | TwitchRecorder | El uploader la mapea a un tema de Telegram |
+| `__parte1` | Número de parte (si hubo cortes) | TwitchRecorder + concat | Une todas las partes al final |
+
+**Reglas del contrato que lo hacen todo posible:**
+
+1. La keyword se genera **una sola vez**, al principio (cuando se detecta el directo), y **nunca cambia** durante todo el pipeline.
+2. Cada cambio de nombre del archivo (parte, comprimido, subido) **hereda la misma keyword**: por eso el uploader sabe que `diario__parte3.mp4` y `diario_compressed.mp4` son **la misma serie**.
+3. Todo el ruteo (a qué tema de Telegram va cada vídeo) se decide **solo** por la keyword.
+
+### 13.2. La keyword y el OCR: `_descripcion.json` y el sidecar
+
+De cada directo, además del vídeo, se guarda un **sidecar** `<nombre>_descripcion.json` — un archivo JSON que acompaña al mp4 con la info del directo. Tiene dos usos:
+
+1. **Caption de Telegram**: si el directo lleva `descripcion: true`, el uploader usa esa descripción directamente como caption del mensaje (sin pasar por OCR).
+2. **Detección de episodios**: si no hay sidecar (o no trae contenido), el monitor hace **OCR** sobre los frames para detectar episodios y cortar intros/outros.
+
+Cuando el vídeo cambia de nombre (p. ej. de `_parte1` a `_compressed`), **el sidecar conserva el nombre base**, así que siempre se puede relacionar qué sidecar va con qué vídeo.
+
+> 💡 **Detalle del corte:** si `corte: true` y el OCR detectó episodios, el monitor recorta los extremos con **CORTE_MARGEN=300** (5 min de margen por lado) para no cortar diálogo. Los episodios se detectan cada `OCR_STEP=180`s sobre la franja superior del frame.
+
+### 13.3. IPC: cómo se hablan el monitor y el bot sin red
+
+El monitor y el bot **no se comunican por red ni por base de datos**: usan **IPC por ficheros**. El monitor escribe JSON de **estado** en `comprimidos/.pipeline/` (que es el *único* montaje compartido en escritura):
+
+| Fichero | Qué contiene | Quién lo lee |
+|---------|--------------|--------------|
+| `pipeline_status.json` | Estado actual del pipeline (grabando, comprimiendo, cuántos pendientes...) | El bot (para `/estado`) |
+| `pipeline_logs.json` | Las últimas líneas de log | El bot (para `plogs`) |
+
+El uploader también escribe su propio estado ahí. Así el bot **no necesita entrar al docker compose**: lee un fichero plano que el monitor ya ha escrito.
+
+> ### ⚠️ No existe ningún `monitor.json`
+>
+> Error típico al buscar cómo configurar el monitor. El monitor `ffmpeg_monitor-sendo` **no se configura con un JSON**: sus parámetros van como **variables de entorno y flags** en su `docker-compose.yml`.
+
+### 13.4. ¿Qué pasa si el directo cambia de plataforma a mitad?
+
+El grabador no se entera (ni le importa) si el directo salta de YouTube a Kick a mitad de la emisión. Lo detecta así:
+
+1. Mientras graba con yt-dlp, **comprueba el estado del proceso cada `check_every`**.
+2. Si el proceso muere (plataforma X se cae), **espera** un margen antes de rendirse por si el streamer reaparece.
+3. Si reaparece **en la misma plataforma** → **concatena y sigue** en el mismo archivo (sin duplicar nada).
+4. Si reaparece en **otra plataforma** → cierra la parte actual y abre `__parteN`, marcando la nueva parte con **la misma keyword**.
+
+Al final del directo, `concat` une todas las partes → el uploader ve **un único vídeo** con la serie correcta. Que el streamer saltara de plataforma **no cambia nada** para quien recibe el vídeo en Telegram.
+
+> 🔗 El detalle completo de la **detección del directo** (playlist congelada, OCR, SPA sin m3u8) está en [el pipeline en myprojects](#detección-de-directo-y-playlist-congelada-web).
+
+### 13.5. Backup de YouTube entero (`backup_youtube.sh`)
+
+> 💡 ¿Quieres **archivar canales enteros de YouTube** sin subir a Telegram? El repo incluye `backup_youtube.sh`: descarga a `~/Backups/YouTube/<canal>/` con `--download-archive` (idempotente, solo baja lo nuevo) y metadatos incrustados. Toda la operativa está más abajo en [Operación del sistema](#operación-del-sistema).
+
+
+## Pipeline 2: YouTube → Telegram (160 canales)
+
+Pipeline diario que descarga vídeos de 160 canales de YouTube, los convierte a 720p y los sube a un grupo de Telegram con temas organizados por canal.
+
+### Por qué 160 canales
 
 Cada canal de YouTube tiene contenido diferente: tutoriales, noticias, entrevistas, proyectos. En lugar de tener que revisar YouTube cada día, el pipeline descarga automáticamente los nuevos vídeos de cada canal y los organiza en el grupo de Telegram por canal/tema.
 
@@ -195,18 +273,18 @@ Cuando subo un vídeo de Midudev, ese vídeo aparece en el tema de "Midudev" den
 
 | Parámetro | Valor | Por qué |
 |-----------|-------|---------|
-| Canales | 158 (Midudev, MoureDev, Carlos Azaustre, etc.) | Los canales que sigo y quiero archivar |
-| Temas | 158 (uno por canal en "Stream Tecnologia") | Organización por creador de contenido |
+| Canales | 160 en `channels.json` (6 habilitados por defecto: Midudev, MoureDev, etc.) | Los canales que sigo y quiero archivar |
+| Temas | 160 (uno por canal en "Stream Tecnologia") | Organización por creador de contenido |
 | Calidad | 720p H.264/AAC | Balance entre calidad y tamaño (límite 50MB Telegram) |
 | Cron | 01:00 → 18:00 (mismo día) | Horario nocturno para no saturar la red |
-| Límite | 2 vídeos por canal a la vez | Para no descargar todo el historial de cada canal |
+| Límite | 1 vídeo por canal (`"max_videos": 1`) | Para no descargar todo el historial de cada canal |
 
 ### Flujo
 
 ```
 01:00 Cron arranca
   ↓
-download.py (descarga de 158 canales)
+download.py (descarga de 160 canales)
   ↓
 convert.py (convierte a 720p, 95% target size)
   ↓
@@ -505,17 +583,38 @@ Si el cron se para antes de tiempo (por ejemplo, si apagas el PC), los vídeos p
 
 ---
 
+## Backup de YouTube y herramientas bajo demanda
+
+La suite no es solo «grabar y subir». Incluye utilidades para casos concretos:
+
+| Herramienta | Qué hace | Cómo se lanza |
+|-------------|----------|---------------|
+| **backup_youtube.sh** | Archiva canales de YouTube enteros en disco (idempotente, con metadatos) | `backup_youtube.sh <URL>` |
+| **pdfmanager** | Desbloquear, unir, dividir, comprimir PDFs | `pdf_run` |
+| **hdfull-downloader** | Descarga películas/series de HDFull (VNC para captcha) | `hd_run` |
+| **aula-downloader** | Descarga vídeos de Moodle/Vimeo (cursos del aula virtual) | `al_run` |
+| **kick_download.py** | Descarga vídeos de Kick.com por slug + video_id | `kick_dl` |
+| **discord_monitor.py** | Graba streams/llamadas de Discord con OBS | `discord_monitor` |
+
+Todas ellas están explicadas paso a paso en la [guía de instalación](/posts/instalacion-devjobs#19-el-resto-de-herramientas-casos-de-uso) y todas comparten la misma *única* configuración de ffmpeg.
+
+---
+
 ## Herramientas Docker
 
 ### Contenedores
 
 | Contenedor | Proyecto | Función |
 |------------|----------|---------|
-| `twitchrecorder-sendo` | TwitchRecorder | Graba directos de Twitch |
-| `ffmpeg_monitor-sendo` | ffmpeg-yt-dlp | Comprime vídeos a 720p |
-| `telegram-uploader-sendo` | downloader_telegram | Sube a Telegram |
-| `telegram-bot` | downloader_telegram | Bot API interactivo |
-| `yt-to-telegram` | yt-to-telegram | Pipeline YouTube |
+| `twitchrecorder-sendo` | TwitchRecorder | Graba directos (Twitch/YouTube/Kick/web), concatena partes |
+| `ffmpeg_monitor-sendo` | ffmpeg-yt-dlp | Comprime vídeos a 720p y detecta episodios por OCR |
+| `telegram-uploader-sendo` | downloader_telegram | Sube a Telegram por keyword/temas |
+| `telegram-downloader` | downloader_telegram | CLI interactivo (a demanda) |
+| `telegram-bot` | downloader_telegram (Dockerfile.bot) | Bot API interactivo |
+| `yt-pipeline` | yt-to-telegram | Pipeline YouTube (cron 01:00 → 18:00) |
+| `yt-download` / `yt-convert` / `yt-upload` | yt-to-telegram | Fases sueltas para depurar (a demanda) |
+
+> 💡 **Ojo con el monitor:** no existe ningún `monitor.json`. El monitor `ffmpeg_monitor-sendo` se configura por variables de entorno y flags en su `docker-compose.yml` (CRF 28, preset fast, `--completed-only`, `POLL_INTERVAL`...). Lo que sí hay son los JSON de **estado** (`pipeline_status.json`, `pipeline_logs.json`) que él mismo escribe en `comprimidos/.pipeline/` (IPC para el bot). Detalle completo en la [guía de instalación](/posts/instalacion-devjobs#15-el-monitor-de-ffmpeg-y-por-qué-no-hay-un-monitorjson).
 
 ### Volúmenes de datos
 
@@ -526,10 +625,11 @@ data/
 │   ├── grabaciones/test/        Cola de espera *_completed.mp4
 │   ├── comprimidos/             Listos para subir *_compressed.mp4
 │   ├── comprimidos/.processed/  Originales ya comprimidos
+│   ├── comprimidos/.pipeline/   IPC monitor ↔ bot: *_status.json, *_logs.json
 │   ├── partes/                  Partes divididas (>2GB)
 │   └── backups/                 Backups de config
 ├── yt-pipeline/                 ← Pipeline YouTube
-│   ├── downloads/               Vídeos descargados de 158 canales
+│   ├── downloads/               Vídeos descargados de 160 canales
 │   ├── converted/               Convertidos a 720p
 │   ├── uploaded/                Histórico de vídeos subidos
 │   └── logs/                    Logs de uploads/conversiones
@@ -547,8 +647,10 @@ ffmpeg -c:v libx264 -crf 28 -preset fast -vf scale=-2:720
        -c:a aac -b:a 128k -map 0:v:0 -map 0:a:0
        -map_metadata 0 -movflags +faststart -f mp4
 
-# 2 pasadas si >50MB (Telegram) o >1900MB (uploader)
+# 2 pasadas si >50MB (bot Telegram) o >1900MB (monitor/uploader)
 ```
+
+> 💡 ¿Quieres **archivar canales enteros de YouTube** sin subir a Telegram? El repo incluye `backup_youtube.sh`: descarga a `~/Backups/YouTube/<canal>/` con `--download-archive` (idempotente, solo baja lo nuevo) y metadatos incrustados. Toda su explicación está en la [guía de instalación](/posts/instalacion-devjobs#16-backup_youtubesh-respaldar-canales-de-youtube-enteros).
 
 ---
 
@@ -556,7 +658,7 @@ ffmpeg -c:v libx264 -crf 28 -preset fast -vf scale=-2:720
 
 | Tecnología | Uso |
 |------------|-----|
-| [**Docker**](https://www.docker.com/) | Todos los servicios (6 contenedores) |
+| [**Docker**](https://www.docker.com/) | Todos los servicios (7 contenedores + fases on-demand) |
 | [**Python**](https://www.python.org/) | Bots, scrapers, pipelines |
 | [**ffmpeg**](https://ffmpeg.org/) | Conversión de vídeo (720p, CRF 28) |
 | [**yt-dlp**](https://github.com/yt-dlp/yt-dlp) | Descarga de vídeos (1000+ sitios) |
@@ -585,7 +687,7 @@ ffmpeg -c:v libx264 -crf 28 -preset fast -vf scale=-2:720
 
 ## Instalación
 
-¿Cómo montar todo el ecosistema desde cero? Consulta la [guía de instalación completa](/posts/instalacion-devjobs) — 12 pasos con explicación de cada archivo, credencial y configuración.
+¿Cómo montar todo el ecosistema desde cero? Consulta la [guía de instalación completa](/posts/instalacion-devjobs) — paso a paso desde las credenciales hasta el auto-arranque, con cada archivo, comando y caso de uso explicado (config.json, monitor de FFmpeg, backup_youtube.sh, aliases, systemd...).
 
 ---
 
