@@ -133,14 +133,36 @@ Cada canal tiene su propia configuración de horarios, plataformas y comportamie
 
 ### Flujo paso a paso
 
-| Paso | Servicio | Qué hace | Por qué |
-|------|----------|----------|---------|
-| 1. Grabar | `twitchrecorder-sendo` | Graba el directo con calidad original | Twitch no guarda VODs indefinidamente |
-| 2. Keyword | `twitchrecorder-sendo` | Extrae el título y lo pone en el nombre | Para poder ruteear a la serie correcta |
-| 3. Cola | `data/pipeline/grabaciones/test/` | Espera como `*_completed.mp4` | Patrón watcher: el siguiente servicio vigila esta carpeta |
-| 4. Comprimir | `ffmpeg_monitor-sendo` | Convierte a 720p (CRF 28, 2 pasadas si >1900MB) | Telegram tiene límite de 2GB; 720p es suficiente |
-| 5. OCR | `ffmpeg_monitor-sendo` | Detecta episodios por imagen | Sabe qué serie es por la imagen del frame |
-| 6. Subir | `telegram-uploader-sendo` | Rutea por keyword a temas de Telegram | Cada serie va a su tema/foro |
+El pipeline de Twitch → Telegram son 6 pasos encadenados. **Cada paso vigila la carpeta donde el anterior deja su resultado** (patrón *watcher*): cuando un vídeo entra, lo procesa y lo deja listo para el siguiente. No hay una orquestación central que "llame" al paso siguiente — cada servicio se despierta solo al ver la carpeta llena.
+
+```
+ Twitch live
+   │
+   ▼
+ ① twitchrecorder-sendo ──►  título → nombre  (keyword)
+   │  data/pipeline/grabaciones/test/*_completed.mp4
+   ▼
+ ② ffmpeg_monitor-sendo ──►  720p, CRF 28, 2 pasadas si >1900MB
+   │  data/out/*_720p.mp4
+   ▼
+ ③ OCR (ffmpeg_monitor-sendo) ──►  detecta serie por imagen del frame
+   │
+   ▼
+ ④ telegram-uploader-sendo ──►  sube a temas de Telegram por keyword
+   ▼
+ Serie correcta (tema/foro)
+```
+
+1. **Grabar** — `twitchrecorder-sendo` graba el directo con calidad original (Twitch no guarda VODs indefinidamente).
+2. **Keyword** — el mismo servicio extrae el título del directo y lo pone en el nombre, para poder ruteear a la serie correcta.
+3. **Cola** — el vídeo espera en `data/pipeline/grabaciones/test/` como `*_completed.mp4` (patrón watcher: el siguiente servicio vigila esta carpeta).
+4. **Comprimir** — `ffmpeg_monitor-sendo` convierte a 720p (CRF 28, 2 pasadas si >1900MB) porque Telegram tiene límite de 2GB y 720p es suficiente.
+5. **OCR** — detecta episodios por imagen del frame: sabe qué serie es por la imagen (el frame del vídeo se parece a la serie, no al nombre).
+6. **Subir** — `telegram-uploader-sendo` rutea por keyword a temas de Telegram: cada serie va a su tema/foro.
+
+> **Salto de plataforma a mitad:** si el directo empieza en Twitch y el streamer se cambia a YouTube/web a mitad, **el pipeline no se rompe**. `twitchrecorder-sendo` vigila la playlist congelada: si el `m3u8` deja de avanzar, cierra la parte actual y abre `__parte2` esperando el nuevo enlace. Como la **keyword viene del título** (no de la plataforma), el `__parte2` conserva la misma serie y todo sigue ruteando al mismo tema de Telegram. Detalle completo en [13.4](#134-qué-pasa-si-el-directo-cambia-de-plataforma-a-mitad).
+
+> **¿Qué tienes que montar tú?** Nada de Dockerfile a mano: el repo trae `docker-compose.yml` con los 3 servicios listos. Solo necesitas (1) `channels.json` con tus canales y (2) un grupo de Telegram con el sistema de *temas* activado. Lo demás — calendario, calidad, keywords — ya viene configurado. Detalle de cada servicio en [Contenedores Docker](#contenedores-docker).
 
 > **Detalle técnico del compresor:** [FFmpeg + yt-dlp Pipeline: Conversor, Descargador y Editor de Vídeo con 33 Modos](/myprojects/ffmpeg-yt-dlp)
 
@@ -251,7 +273,7 @@ Al final del directo, `concat` une todas las partes → el uploader ve **un úni
 
 ### 13.5. Backup de YouTube entero (`backup_youtube.sh`)
 
-> 💡 ¿Quieres **archivar canales enteros de YouTube** sin subir a Telegram? El repo incluye `backup_youtube.sh`: descarga a `~/Backups/YouTube/<canal>/` con `--download-archive` (idempotente, solo baja lo nuevo) y metadatos incrustados. Toda la operativa está más abajo en [Operación del sistema](#operación-del-sistema).
+> 💡 ¿Quieres **archivar canales enteros de YouTube** sin subir a Telegram? El repo incluye `backup_youtube.sh`: descarga a `~/Backups/YouTube/<canal>/` con `--download-archive` (idempotente, solo baja lo nuevo) y metadatos incrustados. Toda la operativa está más abajo en [Sistema de Aliases: Control desde cualquier Terminal](#sistema-de-aliases-control-desde-cualquier-terminal).
 
 ## Pipeline 2: YouTube → Telegram (160 canales)
 
@@ -270,13 +292,13 @@ Cuando subo un vídeo de Midudev, ese vídeo aparece en el tema de "Midudev" den
 
 ### Configuración
 
-| Parámetro | Valor | Por qué |
-|-----------|-------|---------|
-| Canales | 160 en `channels.json` (6 habilitados por defecto: Midudev, MoureDev, etc.) | Los canales que sigo y quiero archivar |
-| Temas | 160 (uno por canal en "Stream Tecnologia") | Organización por creador de contenido |
-| Calidad | 720p H.264/AAC | Balance entre calidad y tamaño (límite 50MB Telegram) |
-| Cron | 01:00 → 18:00 (mismo día) | Horario nocturno para no saturar la red |
-| Límite | 1 vídeo por canal (`"max_videos": 1`) | Para no descargar todo el historial de cada canal |
+Estos son los parámetros reales del pipeline (los de producción, configurados para que **encajen en los límites de Telegram**):
+
+- **Canales: 160** en `channels.json` (6 habilitados por defecto: Midudev, MoureDev, etc.) — los canales que sigo y quiero archivar.
+- **Temas: 160** (uno por canal en "Stream Tecnologia") — organización por creador de contenido.
+- **Calidad: 720p H.264/AAC** — balance entre calidad y tamaño (límite de 50MB de Telegram).
+- **Cron: 01:00 → 18:00 (mismo día)** — horario nocturno para no saturar la red.
+- **Límite: 1 vídeo por canal** (`"max_videos": 1`) — para no descargar todo el historial de cada canal.
 
 ### Flujo
 
@@ -310,24 +332,22 @@ Bot interactivo con comandos, botones inline y contenido generado por IA. El bot
 
 ### Comandos
 
-| Comando | Descripción | Cómo funciona |
-|---------|-------------|---------------|
-| `/descarga URL` | Descargar vídeo de cualquier plataforma | yt-dlp descarga, el bot convierte y envía como vídeo de Telegram |
-| `/tip` | Tip de programación | Gemini + Wikipedia generan tips con preguntas de entrevista |
-| `/concepto` | Concepto con código de ejemplo | Base de datos de 283 conceptos con interview questions |
-| `/tool` | Herramienta IA | Herramientas seleccionadas de 2108 recursos migrados del blog |
-| `/noticias` | Últimas noticias tech | Scrapers de 80+ fuentes españolas |
+- **`/descarga URL`** — Descarga vídeo de cualquier plataforma. `yt-dlp` baja, el bot convierte y envía como vídeo de Telegram.
+- **`/tip`** — Tip de programación. Gemini + Wikipedia generan tips con preguntas de entrevista.
+- **`/concepto`** — Concepto con código de ejemplo. Base de datos de 283 conceptos con interview questions.
+- **`/tool`** — Herramienta IA. Herramientas seleccionadas de 2108 recursos migrados del blog.
+- **`/noticias`** — Últimas noticias tech. Scrapers de 80+ fuentes españolas.
 
 ### Características técnicas
 
-| Característica | Detalle | Por qué |
-|----------------|---------|---------|
-| **Descarga** | yt-dlp + HLS fallback | yt-dlp no soporta todos los sitios; HLS es el fallback para streams |
-| **Formato** | `bv+ba/b` (video+audio merge automático) | YouTube usa streams separados de video y audio |
-| **Timeout** | 30 minutos | Vídeos grandes tardan; 5 minutos era poco |
-| **Conversión** | H.264/AAC, 720p, 2 pasadas si >50MB | Límite de Bot API de Telegram: 50MB |
-| **IA** | Gemini API para tips y herramientas | Genera contenido dinámico sin repetir |
-| **Noticias** | Scrapers de 80+ fuentes españolas | Agrega noticias de múltiples fuentes en un solo lugar |
+La descarga no es un simple `yt-dlp` (eso solo cubre la mitad de los sitios); el bot mezcla estrategias para que **cualquier link funcione**:
+
+- **Descarga multicapa** — `yt-dlp` primero; si no soporta el sitio, **fallback HLS** para streams directos. Cubre lo que yt-dlp no sabe hacer.
+- **Formato `bv+ba/b`** — baja por separado vídeo y audio y los **fusiona solo** (YouTube sirve streams separados). Sin este merge tendrías archivos mudo o sin vídeo.
+- **Timeout 30 minutos** — los vídeos grandes tardan; 5 minutos era claramente insuficiente.
+- **Conversión H.264/AAC 720p, 2 pasadas si >50MB** — H.264 es lo que Telegram espera; por encima de 50MB la Bot API no deja subir, así que se compressiona más.
+- **IA Gemini** — genera tips, conceptos y noticias dinámicas sin repetir contenido (sin usar plantillas fijas).
+- **Scrapers de 80+ fuentes españolas** — agrega noticias tech de medios españoles en un solo aviso.
 
 ---
 
