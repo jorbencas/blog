@@ -1,35 +1,36 @@
 ---
 draft: false
-title: "Devjobs Automation Suite: Pipelines de Video, Bots IA y Scrapers Automatizados"
-description: "Suite completa de automatización con Docker: pipeline de Twitch a Telegram, pipeline de YouTube a Telegram, bot de Telegram con IA, scrapers de noticias y herramientas de productividad. Todo self-hosted y sin intervención manual."
+title: "Devjobs Automation Suite: Pipelines de Video, Bots IA, Scrapers y Generador de Proyectos"
+description: "Suite completa de automatización con Docker: pipeline de Twitch/YouTube a Telegram, bot con IA, scrapers de noticias, generador automático de ideas de proyectos. Todo self-hosted y sin intervención manual."
 pubDate: "2026/09/03"
-updatedDate: "2026/09/19"
-tags: ["docker", "python", "automatización", "telegram", "ia", "scraping", "pipeline"]
+updatedDate: "2026/09/24"
+tags: ["docker", "python", "automatización", "telegram", "ia", "scraping", "pipeline", "github-actions"]
 image: "img/devjobs_automation_suite/devjobs_automation_suite_cover-1200.webp"
 repository: "https://github.com/jorbencas/devjobs"
 author: "Jorge Beneyto Castelló"
 ---
 
-Llevo meses construyendo un ecosistema completo de automatización que ejecuta pipelines de vídeo, bots de IA, scrapers de noticias y herramientas de productividad — todo auto-hospedado con Docker y sin intervención manual. Lo que empezó como un grabador de directos de Twitch se convirtió en una suite de 6 herramientas interconectadas.
+Llevo meses construyendo un ecosistema de automatización que ejecuta pipelines de vídeo, bots de IA, scrapers de noticias y ahora **un generador de ideas de proyectos** — todo auto-hospedado con Docker y sin que yo tenga que mover un dedo. Lo que empezó como un grabador de directos de Twitch se ha convertido en una suite de 7+ herramientas interconectadas que funcionan 24/7.
 
-**Mi motivación:** Quería automatizar tareas repetitivas: grabar directos, comprimirlos, subirlos a Telegram, descargar vídeos de YouTube, generar contenido de programación con IA, y scrapear noticias de cine. Todo esto ejecutándose solo, 24/7, sin que yo tenga que hacer nada.
+**Mi motivación:** Quería automatizar lo repetitivo: grabar directos, comprimirlos, subirlos a Telegram, descargar de YouTube, generar contenido de programación con IA, scrapear noticias de cine... y ahora también que me salgan ideas de proyectos para programar sin tener que pensarlas yo. Todo ejecutándose solo.
 
 ---
 
 ## El problema real
 
-Cada herramienta existente resolvía un problema:
-- **TwitchRecorder** grababa directos pero no los comprimía ni subía
-- [**ffmpeg**](https://ffmpeg.org/) convertía vídeos pero no los monitorizaba
-- [**yt-dlp**](https://github.com/yt-dlp/yt-dlp) descargaba de YouTube pero no subía a Telegram
-- **Bots de Telegram** existían pero no tenían IA ni descargas
+Cada herramienta existente resolvía un trozo:
+- **TwitchRecorder** grababa pero no comprimía ni subía
+- **ffmpeg** convertía pero no monitorizaba
+- **yt-dlp** descargaba de YouTube pero no subía a Telegram
+- **Bots de Telegram** existían pero sin IA ni descargas
 - **Scrapers** scrapeaban pero no enviaban resultados
+- **Ideas de proyectos** → yo mismo pensando, buscando, filtrando...
 
-Necesitaba **conectar todo** en pipelines automáticos.
+Necesitaba **conectar todo** en pipelines automáticos. Y que las ideas de proyectos me llegaran solas, sin buscarlas.
 
 ---
 
-## Arquitectura completa
+## Arquitectura completa (actualizada)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -59,8 +60,15 @@ Necesitaba **conectar todo** en pipelines automáticos.
 │  │    bot      │   │    IA        │   │  (noticias)  │            │
 │  └─────────────┘   └──────────────┘   └──────────────┘            │
 │                                                                     │
+│  ┌─────────────┐   ┌──────────────┐   ┌──────────────┐            │
+│  │  Project    │──▶│   Gemini/    │──▶│   Telegram   │            │
+│  │  Generator  │   │  Deterministic│  │  (canal)     │            │
+│  └─────────────┘   └──────────────┘   └──────────────┘            │
+│                                                                     │
 └─────────────────────────────────────────────────────────────────────┘
 ```
+
+**Novedad (24/09/2026):** Añadido el **Project Generator** — un workflow de GitHub Actions que usa `workflow_call` (nativo, **sin PAT**) para generar ideas de proyectos con IA (Gemini/OpenAI/Anthropic) o plantillas determinísticas, y enviarlas directo a un canal privado de Telegram. Cero secrets extra, cero cross-repo.
 
 ---
 
@@ -72,13 +80,11 @@ Automatización completa que graba directos de **sendo sama**, los comprime a 72
 
 ### El grupo de Telegram y el sistema de temas
 
-El grupo de Telegram **"Stream Tecnologia"** usa el sistema de **foro/temas** de Telegram. Cada tema es un hilo independiente dedicado a una serie o contenido específico. Cuando subo un vídeo de "One Piece", ese vídeo aparece en el tema de "One Piece" dentro del grupo, no en el chat general.
+El grupo **"Stream Tecnologia"** usa el sistema de **foro/temas** de Telegram. Cada tema es un hilo independiente dedicado a una serie. Cuando subo un vídeo de "One Piece", aparece en el tema de "One Piece", no en el chat general. Mantiene todo ordenado: cada serie su hilo, los usuarios siguen lo que les interesa.
 
-Esto es clave porque mantiene el grupo organizado: cada serie tiene su propio hilo, los usuarios pueden seguir solo las series que les interesan, y el contenido no se mezcla.
+### Configuración por canal (actualizada)
 
-### Configuración por canal
-
-Cada canal tiene su propia configuración de horarios, plataformas y comportamiento:
+Cada canal tiene su config de horarios, plataformas y comportamiento. **Cambio importante (24/09):** mourdev ahora graba en YouTube **sin problemas** (arreglado deno + remote-components para yt-dlp), y tanto él como midudev tienen `detectar: false, corte: false` — es decir, se graba el directo completo, se comprime y se sube sin recortar ni detectar episodios.
 
 ```json
 {
@@ -122,61 +128,53 @@ Cada canal tiene su propia configuración de horarios, plataformas y comportamie
 }
 ```
 
-**Características clave:**
-- **`dias_plataforma`**: Cambia qué plataformas se prueban según el día (domingo YouTube primero, resto solo web)
-- **`days`**: Días de la semana en los que se comprueba si hay directo (midudev lunes, mouredev jueves)
-- **`start_time`**: Hora mínima para empezar a comprobar (str o dict por día)
-- **`detectar`/`corte`**: Control de detección de episodios y corte de extremos por fuente (el config real los usa a `false` para no recortar)
-- **`descripcion`**: Usar descripción del directo como caption (para YouTube)
-- **Detección HLS sin navegador**: `is_live()` consulta el `m3u8` de la web directamente (API `/api/playback-domain`) en vez de yt-dlp, más rápido y fiable
-- **Playlist congelada**: `_hls_estado()` detecta la web que sigue sirviendo el stream pero "congelada" (sin avance) y la marca como offline
+**Qué cambió en YouTube (24/09):**
+- **Problema:** yt-dlp pedía JS runtime (deno) para extraer formatos de YouTube, fallaba con "No supported JavaScript runtime could be found"
+- **Solución:** Dockerfile instala deno en `/home/appuser/.deno` (accesible al user 1000), y en `recorder.py` + `youtube.py` se pasan `--js-runtimes deno --remote-components ejs:github` a yt-dlp
+- **Resultado:** YouTube detection + extraction funcionan. mourdev graba en Twitch ahora mismo (YouTube no está live) pero si estuviera live, pillarías YouTube sin errores
 
-### Flujo paso a paso
+### Flujo paso a paso (sin cambios)
 
-El pipeline de Twitch → Telegram son 6 pasos encadenados. **Cada paso vigila la carpeta donde el anterior deja su resultado** (patrón *watcher*): cuando un vídeo entra, lo procesa y lo deja listo para el siguiente. No hay una orquestación central que "llame" al paso siguiente — cada servicio se despierta solo al ver la carpeta llena.
+El pipeline de Twitch → Telegram son 6 pasos encadenados, patrón *watcher*: cada servicio vigila la carpeta donde el anterior deja su resultado.
 
 ```
  Twitch live
-   │
-   ▼
- ① twitchrecorder-sendo ──►  título → nombre  (keyword)
-   │  data/pipeline/grabaciones/test/*_completed.mp4
-   ▼
+    │
+    ▼
+ ① twitchrecorder-sendo ──►  título → nombre (keyword)
+    │  data/pipeline/grabaciones/test/*_completed.mp4
+    ▼
  ② ffmpeg_monitor-sendo ──►  720p, CRF 28, 2 pasadas si >1900MB
-   │  data/out/*_720p.mp4
-   ▼
+    │  data/out/*_720p.mp4
+    ▼
  ③ OCR (ffmpeg_monitor-sendo) ──►  detecta serie por imagen del frame
-   │
-   ▼
+    │
+    ▼
  ④ telegram-uploader-sendo ──►  sube a temas de Telegram por keyword
-   ▼
+    ▼
  Serie correcta (tema/foro)
 ```
 
-1. **Grabar** — `twitchrecorder-sendo` graba el directo con calidad original (Twitch no guarda VODs indefinidamente).
-2. **Keyword** — el mismo servicio extrae el título del directo y lo pone en el nombre, para poder ruteear a la serie correcta. Para la fuente **web**, el título se obtiene **siempre** de la API real de la plataforma a la que apunta el wrapper (**Kick** → `session_title` de `kick.com/api/v2/channels/{canal}`, o **Twitch**) y no del `<title>` HTML, que queda como último recurso. Como el canal es el mismo (`sendosama`) en Kick y en Twitch, el handle que ya usa el grabador por defecto vale para **ambas** APIs: no hace falta mapeo extra. Para la fuente **web** el título se obtiene **siempre** de la API real de la plataforma a la que envuelve la web — **Kick** (`session_title` de `https://kick.com/api/v2/channels/{canal}`) o **Twitch** si la web es un wrapper de Twitch —; el `<title>` del HTML solo se usa como último recurso, porque en un wrapper suelo dar el título genérico «(live)».
-3. **Cola** — el vídeo espera en `data/pipeline/grabaciones/test/` como `*_completed.mp4` (patrón watcher: el siguiente servicio vigila esta carpeta).
-4. **Comprimir** — `ffmpeg_monitor-sendo` convierte a 720p (CRF 28, 2 pasadas si >1900MB) porque Telegram tiene límite de 2GB y 720p es suficiente.
-5. **OCR** — detecta episodios por imagen del frame: sabe qué serie es por la imagen (el frame del vídeo se parece a la serie, no al nombre).
-6. **Subir** — `telegram-uploader-sendo` rutea por keyword a temas de Telegram: cada serie va a su tema/foro.
+1. **Grabar** — `twitchrecorder-sendo` graba con calidad original
+2. **Keyword** — extrae título del directo y lo pone en el nombre (para ruteo). Para **web**, el título viene **siempre** de la API real (Kick `session_title` o Twitch), no del HTML
+3. **Cola** — vídeo espera en `data/pipeline/grabaciones/test/` como `*_completed.mp4`
+4. **Comprimir** — a 720p (CRF 28) porque Telegram límite 2GB
+5. **OCR** — detecta episodios por imagen del frame
+6. **Subir** — rutea por keyword a temas de Telegram
 
-> **Salto de plataforma a mitad:** si el directo empieza en Twitch y el streamer se cambia a YouTube/web a mitad, **el pipeline no se rompe**. `twitchrecorder-sendo` vigila la playlist congelada: si el `m3u8` deja de avanzar, cierra la parte actual y abre `__parte2` esperando el nuevo enlace. Como la **keyword viene del título** (no de la plataforma), el `__parte2` conserva la misma serie y todo sigue ruteando al mismo tema de Telegram. Detalle completo en [13.4](#134-qué-pasa-si-el-directo-cambia-de-plataforma-a-mitad).
-
-> **¿Qué tienes que montar tú?** Nada de Dockerfile a mano: el repo trae `docker-compose.yml` con los 3 servicios listos. Solo necesitas (1) `channels.json` con tus canales y (2) un grupo de Telegram con el sistema de *temas* activado. Lo demás — calendario, calidad, keywords — ya viene configurado. Detalle de cada servicio en [Contenedores Docker](#contenedores-docker).
-
-> **Detalle técnico del compresor:** [FFmpeg + yt-dlp Pipeline: Conversor, Descargador y Editor de Vídeo con 33 Modos](/myprojects/ffmpeg-yt-dlp)
+> **Salto de plataforma a mitad:** si el directo empieza en Twitch y se cambia a YouTube/web a mitad, **el pipeline no se rompe**. Detecta playlist congelada, cierra parte actual, abre `__parte2` con **misma keyword**. Al final concatena todo → uploader ve **un único vídeo** con la serie correcta.
 
 ### Contenedores Docker
 
 | Contenedor | Servicio | Función |
 |------------|----------|---------|
-| `twitchrecorder-sendo` | Grabador | Detecta directos, graba con calidad original, concatena partes |
+| `twitchrecorder-sendo` | Grabador | Detecta directos, graba calidad original, concatena partes |
 | `ffmpeg_monitor-sendo` | Compresor | Convierte a 720p, detecta episodios por OCR, gestiona sidecars |
 | `telegram-uploader-sendo` | Subidor | Rutea por keyword, sube a temas de Telegram, limpia residuos |
 
 ### Resultado
 
-Un directo grabado a las 21:00 aparece comprimido y subido a su tema/serie sin que yo haga nada. El sistema funciona 24/7: si Sendosama hace un directo a las 3 de la madrugada, se graba, se comprime y aparece en Telegram al día siguiente.
+Un directo a las 21:00 aparece comprimido y subido a su tema/serie sin que yo haga nada. Funciona 24/7: si hay directo a las 3am, se graba, comprime y aparece en Telegram al día siguiente.
 
 ```bash
 # Arrancar todo el pipeline
@@ -189,128 +187,35 @@ plogs
 pipe_down
 ```
 
-### Detección de directo y playlist congelada (web)
-
-La web de Sendo es una SPA de React sin `m3u8` en el HTML. Se obtiene el dominio del servidor HLS con la API interna `/api/playback-domain` y se construye la URL `ts:abr.m3u8`. `is_live()` comprueba ese `m3u8` directamente (mucho más barato que lanzar yt-dlp) y solo cae al extractor como seguridad cuando el estado es indeterminado.
-
-El caso más tramposo es la **playlist congelada**: Sendo apaga el *visualizador* pero el servidor HLS sigue sirviendo un `m3u8` que ya no avanza. Con yt-dlp eso parecería un directo "para siempre". `_hls_estado()` (`utils/web.py`) lo resuelve con dos umbrales:
-
-```python
-_PDT_FUERA = 90   # el último segmento lleva >90s de antigüedad → fuera
-_COLA_FUERA = 60  # la cola de segmentos no avanza durante 60s → fuera
-```
-
-- `#EXT-X-ENDLIST` o 404/410 → final limpio → fuera
-- Último `#EXT-X-PROGRAM-DATE-TIME` con más de 90s → congelado → fuera
-- Sin timestamps: se firma la cola (`#EXT-X-MEDIA-SEQUENCE` + último segmento) y si no cambia durante 60s → congelado → fuera
-
-Así el pipeline no se queda grabando un stream fantasma: cuando la web se cae de verdad, detecta offline y puede cambiar de plataforma (Twitch/Kick) o parar. Al terminar, el log lo confirma:
-
-```
-17:35:28 [sendosama] Grabación finalizada (6.2 GB, 01:28:15)
-```
-
-### 13.1. La keyword que viaja: el contrato `_KW_` del nombre
-
-El nombre del archivo es el **único canal de comunicación** entre grabador, monitor y uploader: no hablan entre sí por red, se pasan la información **dentro del propio nombre** del vídeo. Ese nombre sigue un contrato fijo:
-
-```
-sendosama_2026-08-13_20-15-00_KW_diario__parte1.mp4
-```
-
-| Trozo | Qué es | Quién lo pone | Por qué importa |
-|-------|--------|---------------|-----------------|
-| `sendosama` | @ del canal | TwitchRecorder | El uploader sabe qué config/tema usar |
-| `2026-08-13_20-15-00` | Inicio del directo (fecha y hora) | TwitchRecorder | Ordena y deduplica |
-| `_KW_` | Marcador de que empieza la **keyword** | TwitchRecorder | Es el punto de ruteo |
-| `diario` | La **keyword** (del título del directo) | TwitchRecorder | El uploader la mapea a un tema de Telegram |
-| `__parte1` | Número de parte (si hubo cortes) | TwitchRecorder + concat | Une todas las partes al final |
-
-**Reglas del contrato que lo hacen todo posible:**
-
-1. La keyword se genera **una sola vez**, al principio (cuando se detecta el directo), y **nunca cambia** durante todo el pipeline.
-2. Cada cambio de nombre del archivo (parte, comprimido, subido) **hereda la misma keyword**: por eso el uploader sabe que `diario__parte3.mp4` y `diario_compressed.mp4` son **la misma serie**.
-3. Todo el ruteo (a qué tema de Telegram va cada vídeo) se decide **solo** por la keyword.
-
-### 13.2. La keyword y el OCR: `_descripcion.json` y el sidecar
-
-De cada directo, además del vídeo, se guarda un **sidecar** `<nombre>_descripcion.json` — un archivo JSON que acompaña al mp4 con la info del directo. Tiene dos usos:
-
-1. **Caption de Telegram**: si el directo lleva `descripcion: true`, el uploader usa esa descripción directamente como caption del mensaje (sin pasar por OCR).
-2. **Detección de episodios**: si no hay sidecar (o no trae contenido), el monitor hace **OCR** sobre los frames para detectar episodios y cortar intros/outros.
-
-Cuando el vídeo cambia de nombre (p. ej. de `_parte1` a `_compressed`), **el sidecar conserva el nombre base**, así que siempre se puede relacionar qué sidecar va con qué vídeo.
-
-> 💡 **Detalle del corte:** si `corte: true` y el OCR detectó episodios, el monitor recorta los extremos con **CORTE_MARGEN=300** (5 min de margen por lado) para no cortar diálogo. Los episodios se detectan cada `OCR_STEP=180`s sobre la franja superior del frame.
-
-### 13.3. IPC: cómo se hablan el monitor y el bot sin red
-
-El monitor y el bot **no se comunican por red ni por base de datos**: usan **IPC por ficheros**. El monitor escribe JSON de **estado** en `comprimidos/.pipeline/` (que es el *único* montaje compartido en escritura):
-
-| Fichero | Qué contiene | Quién lo lee |
-|---------|--------------|--------------|
-| `pipeline_status.json` | Estado actual del pipeline (grabando, comprimiendo, cuántos pendientes...) | El bot (para `/estado`) |
-| `pipeline_logs.json` | Las últimas líneas de log | El bot (para `plogs`) |
-
-El uploader también escribe su propio estado ahí. Así el bot **no necesita entrar al docker compose**: lee un fichero plano que el monitor ya ha escrito.
-
-> ### ⚠️ No existe ningún `monitor.json`
->
-> Error típico al buscar cómo configurar el monitor. El monitor `ffmpeg_monitor-sendo` **no se configura con un JSON**: sus parámetros van como **variables de entorno y flags** en su `docker-compose.yml`.
-
-### 13.4. ¿Qué pasa si el directo cambia de plataforma a mitad?
-
-El grabador no se entera (ni le importa) si el directo salta de YouTube a Kick a mitad de la emisión. Lo detecta así:
-
-1. Mientras graba con yt-dlp, **comprueba el estado del proceso cada `check_every`**.
-2. Si el proceso muere (plataforma X se cae), **espera** un margen antes de rendirse por si el streamer reaparece.
-3. Si reaparece **en la misma plataforma** → **concatena y sigue** en el mismo archivo (sin duplicar nada).
-4. Si reaparece en **otra plataforma** → cierra la parte actual y abre `__parteN`, marcando la nueva parte con **la misma keyword**.
-
-Al final del directo, `concat` une todas las partes → el uploader ve **un único vídeo** con la serie correcta. Que el streamer saltara de plataforma **no cambia nada** para quien recibe el vídeo en Telegram.
-
-> 🔗 El detalle completo de la **detección del directo** (playlist congelada, OCR, SPA sin m3u8) está en [el pipeline en myprojects](#detección-de-directo-y-playlist-congelada-web).
-
-### 13.5. Backup de YouTube entero (`backup_youtube.sh`)
-
-> 💡 ¿Quieres **archivar canales enteros de YouTube** sin subir a Telegram? El repo incluye `backup_youtube.sh`: descarga a `~/Backups/YouTube/<canal>/` con `--download-archive` (idempotente, solo baja lo nuevo) y metadatos incrustados. Toda la operativa está más abajo en [Sistema de Aliases: Control desde cualquier Terminal](#sistema-de-aliases-control-desde-cualquier-terminal).
+---
 
 ## Pipeline 2: YouTube → Telegram (160 canales)
 
-Pipeline diario que descarga vídeos de 160 canales de YouTube, los convierte a 720p y los sube a un grupo de Telegram con temas organizados por canal.
+Pipeline diario que descarga vídeos de 160 canales de YouTube, los convierte a 720p y los sube a Telegram con temas por canal.
 
 ### Por qué 160 canales
 
-Cada canal de YouTube tiene contenido diferente: tutoriales, noticias, entrevistas, proyectos. En lugar de tener que revisar YouTube cada día, el pipeline descarga automáticamente los nuevos vídeos de cada canal y los organiza en el grupo de Telegram por canal/tema.
+Cada canal tiene contenido distinto: tutoriales, noticias, entrevistas. El pipeline baja lo nuevo de cada canal y lo organiza en "Stream Tecnologia" por canal/tema. Midudev en su tema, MoureDev en otro, Carlos Azaustre en otro...
 
-Por ejemplo:
-- El canal de **Midudev** tiene su propio tema en el grupo
-- El canal de **MoureDev** tiene otro tema
-- El canal de **Carlos Azaustre** tiene otro
+### Configuración (producción)
 
-Cuando subo un vídeo de Midudev, ese vídeo aparece en el tema de "Midudev" dentro del grupo "Stream Tecnologia".
-
-### Configuración
-
-Estos son los parámetros reales del pipeline (los de producción, configurados para que **encajen en los límites de Telegram**):
-
-- **Canales: 160** en `channels.json` (6 habilitados por defecto: Midudev, MoureDev, etc.) — los canales que sigo y quiero archivar.
-- **Temas: 160** (uno por canal en "Stream Tecnologia") — organización por creador de contenido.
-- **Calidad: 720p H.264/AAC** — balance entre calidad y tamaño (límite de 50MB de Telegram).
-- **Cron: 01:00 → 18:00 (mismo día)** — horario nocturno para no saturar la red.
-- **Límite: 1 vídeo por canal** (`"max_videos": 1`) — para no descargar todo el historial de cada canal.
+- **Canales: 160** en `channels.json` (6 habilitados por defecto)
+- **Temas: 160** (uno por canal en "Stream Tecnologia")
+- **Calidad: 720p H.264/AAC** — balance calidad/tamaño (límite 50MB bot)
+- **Cron: 01:00 → 18:00** — horario nocturno
+- **Límite: 1 vídeo por canal** (`max_videos: 1`)
 
 ### Flujo
 
 ```
 01:00 Cron arranca
-  ↓
-download.py (descarga de 160 canales)
-  ↓
+   ↓
+download.py (descarga 160 canales)
+   ↓
 convert.py (convierte a 720p, 95% target size)
-  ↓
+   ↓
 upload.py (sube a Telegram con topic_id)
-  ↓
+   ↓
 18:00 Cron para
 ```
 
@@ -324,108 +229,166 @@ cd yt-to-telegram && docker compose down
 
 ---
 
+## Project Generator (NUEVO 24/09)
+
+Generador automático de ideas de proyectos que se ejecuta via GitHub Actions y te manda los resultados a Telegram.
+
+### Qué hace
+
+- **Niveles:** Junior / Semisenior / Senior
+- **Scopes:** Miniproyecto (1-2 sem) / Proyecto (3-6 sem) / Multiproyecto (6+ sem)
+- **Lenguajes:** Python, JavaScript, TypeScript, C#, Go, Rust
+- **Tipos:** Web, API, CLI, Mobile, Desktop, Fullstack, Microservicio, Bot, IA/ML, Datos, DevOps, Testing, Seguridad
+- **Tech stack detallado:** Frameworks, libs, BD, infra, IA/ML, testing con justificación `por_que` por herramienta
+- **IA integrada:** Especifica cuándo y por qué usar IA (OpenAI, Anthropic, Gemini, local)
+- **Anti-duplicados:** Hash MD5 para no repetir proyectos
+- **Fuentes inspiración:** Tips de Telegram, tuweb.dev (scraper), plantillas determinísticas
+- **Mobile:** ✅ Flutter, React Native, MAUI — ❌ NO solo iOS nativo
+
+### Arquitectura (sin PAT — workflow_call nativo)
+
+```
+devjobs (cron lunes 9am / manual)
+    │
+    ▼ workflow_call (github.token nativo)
+generate-projects-internal.yml
+    │
+    ├── checkout devjobs (github.token)
+    ├── pip install
+    ├── python -m src.main generate --send-telegram
+    │       └── secrets: TELEGRAM_BOT_TOKEN, TELEGRAM_REPORTS_PROYECTOS_CHANNEL_ID, GEMINI_API_KEY
+    ├── Sends to Telegram
+    ├── Commits history a devjobs (github.token)
+    ▼
+```
+
+**Ventaja clave:** **Cero GH_PAT**. Usa `github.token` nativo porque el workflow reutilizable (`workflow_call`) está en el mismo repo. Antes hacía `repository_dispatch` cross-repo y necesitaba 2 PATs. Ahora: un repo, un token nativo, listo.
+
+### Ejemplo de proyecto generado
+
+```json
+{
+  "titulo": "Sistema de Gestión de Ensayos para Bandas de Música",
+  "descripcion_corta": "App móvil + panel web para gestionar ensayos, convocatorias y asistencia",
+  "nivel": "semisenior",
+  "scope": "proyecto",
+  "tipo": ["mobile", "web", "api"],
+  "tech_stack": {
+    "lenguaje_principal": "typescript",
+    "frameworks": [
+      {"nombre": "React Native (Expo)", "por_que": "Cross-platform iOS/Android, hot reload"},
+      {"nombre": "Next.js", "por_que": "Panel web SSR, API routes, optimizado para SEO"}
+    ],
+    "librerias": [
+      {"nombre": "Zustand", "por_que": "Simple, sin boilerplate, TypeScript nativo"},
+      {"nombre": "React Query", "por_que": "Cache, sync, optimistic updates para API"}
+    ],
+    "bases_datos": [
+      {"nombre": "PostgreSQL", "por_que": "Relacional, JSONB para metadata flexible, multi-tenant nativo"}
+    ],
+    "ia_ml": [
+      {"nombre": "OpenAI Embeddings", "por_que": "Búsqueda semántica de repertorios, clustering de músicos"}
+    ],
+    "testing": [
+      {"nombre": "Jest + React Testing Library", "por_que": "Unit + integration, coverage, snapshot"}
+    ]
+  },
+  "funcionalidades_clave": [
+    "CRUD ensayos/actuaciones con repertorio",
+    "Convocatoria por cuerda/instrumento/individuo",
+    "Respuesta asistencia con estados (pendiente/confirmado/rechazado)",
+    "Notificaciones push (FCM/APNs) + email transaccional",
+    "Panel junta: calendario, lista, transporte, uniformes",
+    "App músico: agenda personal, chat interno, encuestas anónimas"
+  ],
+  "por_que_ia": "Clasificación automática de disponibilidad por patrones históricos + generación de resúmenes de actas con LLM",
+  "cliente_ia_sugerido": "openai",
+  "complejidad_estimada": "media",
+  "tiempo_estimado_semanas": 4
+}
+```
+
+### Secrets necesarios en devjobs
+
+| Secret | Valor |
+|--------|-------|
+| `TELEGRAM_BOT_TOKEN` | Copiar de test_githubActions |
+| `TELEGRAM_REPORTS_PROYECTOS_CHANNEL_ID` | `-1004497081221` |
+| `GEMINI_API_KEY` | Copiar de test_githubActions |
+| `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` | Opcionales |
+
+### Probar manual
+
+Actions → **[PROJECTS] Generate Projects** → Run workflow → elegir parámetros → Run
+
+El historial se guarda en `devjobs/project_generator/data/generated_projects.json`.
+
+---
+
 ## Bot de Telegram (@jorbencas_bot)
 
-Bot interactivo con comandos, botones inline y contenido generado por IA. El bot se conecta al mismo grupo "Stream Tecnologia" para enviar contenido.
+Bot interactivo con comandos, botones inline y contenido IA.
 
-> **Detalle técnico completo:** [Telegram Ultimate Toolbox: Descargador Masivo, Clonador, Vigilante y Uploader con Docker](/myprojects/telegram-ultimate-toolbox)
+> **Detalle técnico:** [Telegram Ultimate Toolbox](/myprojects/telegram-ultimate-toolbox)
 
 ### Comandos
 
-- **`/descarga URL`** — Descarga vídeo de cualquier plataforma. `yt-dlp` baja, el bot convierte y envía como vídeo de Telegram.
-- **`/tip`** — Tip de programación. Gemini + Wikipedia generan tips con preguntas de entrevista.
-- **`/concepto`** — Concepto con código de ejemplo. Base de datos de 283 conceptos con interview questions.
-- **`/tool`** — Herramienta IA. Herramientas seleccionadas de 2108 recursos migrados del blog.
-- **`/noticias`** — Últimas noticias tech. Scrapers de 80+ fuentes españolas.
+| Comando | Qué hace |
+|---------|----------|
+| `/descarga URL` | Descarga vídeo de cualquier plataforma, convierte y envía |
+| `/tip` | Tip de programación (Gemini + DB) |
+| `/concepto` | Concepto con código de ejemplo |
+| `/tool` | Herramienta IA (2108 recursos migrados del blog) |
+| `/noticias` | Últimas noticias tech (scrapers 80+ fuentes) |
 
 ### Características técnicas
 
-La descarga no es un simple `yt-dlp` (eso solo cubre la mitad de los sitios); el bot mezcla estrategias para que **cualquier link funcione**:
-
-- **Descarga multicapa** — `yt-dlp` primero; si no soporta el sitio, **fallback HLS** para streams directos. Cubre lo que yt-dlp no sabe hacer.
-- **Formato `bv+ba/b`** — baja por separado vídeo y audio y los **fusiona solo** (YouTube sirve streams separados). Sin este merge tendrías archivos mudo o sin vídeo.
-- **Timeout 30 minutos** — los vídeos grandes tardan; 5 minutos era claramente insuficiente.
-- **Conversión H.264/AAC 720p, 2 pasadas si >50MB** — H.264 es lo que Telegram espera; por encima de 50MB la Bot API no deja subir, así que se compressiona más.
-- **IA Gemini** — genera tips, conceptos y noticias dinámicas sin repetir contenido (sin usar plantillas fijas).
-- **Scrapers de 80+ fuentes españolas** — agrega noticias tech de medios españoles en un solo aviso.
+- **Descarga multicapa** — yt-dlp primero; fallback HLS para streams directos
+- **Formato `bv+ba/b`** — baja vídeo y audio por separado y los fusiona (YouTube sirve streams separados)
+- **Timeout 30 min** — vídeos grandes tardan
+- **Conversión H.264/AAC 720p, 2 pasadas si >50MB** — lo que Telegram espera
+- **IA Gemini** — tips, conceptos, noticias dinámicas sin repetir
+- **Scrapers 80+ fuentes españolas** — noticias tech agregadas
 
 ---
 
 ## Scrapers Automatizados
 
-> **Detalle técnico completo:** [Tech Pulse: Dashboard Automatizado de Noticias Tech con IA](/myprojects/tech-pulse-dashboard)
+> **Detalle técnico:** [Tech Pulse: Dashboard Automatizado de Noticias Tech con IA](/myprojects/tech-pulse-dashboard)
 
 ### Eixam (Película)
 
-Scraper dedicado a la película "Eixam" (Enjambre) de Óscar Bernàcer:
-
-| Fuente | Tipo | Por qué |
-|--------|------|---------|
-| Directo cinema (Dirigido, Title-Magazine) | Reseñas | Fuentes especializadas en cine |
-| Bing Search | Noticias | Para encontrar artículos recientes |
-| Filmaffinity vía Bing | Reseñas | Filmaffinity tiene las mejores reseñas |
-| MSN | URLs normalizadas | Para encontrar artículos de medios generalistas |
-
-**80 elementos archivados**: 56 noticias, 15 tráilers, 5 reseñas, 2 fotos, 1 entrevista, 1 póster.
+Scraper dedicado a "Eixam" (Enjambre) de Óscar Bernàcer: reseñas, noticias, tráilers, póster. 80 elementos archivados.
 
 ### Tips Generator
 
-Base de datos de **283 conceptos** de programación con preguntas de entrevista:
-
-| Categoría | Conceptos | Por qué |
-|-----------|-----------|---------|
-| Programación general | 45 | Fundamentos que toda entrevista pregunta |
-| JavaScript | 24 | El lenguaje más usado en web |
-| Python | 22 | Segundo más demandado |
-| Testing | 15 | Cada vez se valora más en entrevistas |
-| IA / ML | 14 | El campo con más crecimiento |
-| LLMs | 13 | Lo más nuevo y demandado |
-| Linux | 12 | Saber Linux es casi obligatorio |
-| Design Patterns | 10 | Patrones que diferencian a un senior |
-| Soft Skills | 10 | Las preguntas que más fallan |
-| DevOps | 9 | Cada vez más integrado en el rol |
-
-**Funciones:**
-- Scraping de Wikipedia EN para definiciones (en español no hay buena documentación técnica)
-- Mapeo español → inglés para términos técnicos (ej: "patrón de diseño" → "design pattern")
-- Fallback a Gemini API cuando falla Wikipedia
-- Fallback simple: "X es un concepto técnico..."
-- Preguntas de entrevista incluidas
+Base de datos de **283 conceptos** de programación con preguntas de entrevista (JS, Python, Testing, IA/ML, LLMs, Linux, Design Patterns, Soft Skills, DevOps). Scraping Wikipedia EN, mapeo español→inglés, fallback Gemini, fallback simple.
 
 ---
 
 ## Sistema de Aliases: Control desde cualquier Terminal
 
-El sistema de aliases es la capa de abstracción que hace que todo sea fácil de controlar. Un solo script instala más de 40 aliases en `~/.bashrc` que funcionan desde cualquier carpeta.
+Una sola instalación (`bash servicios/instalar_aliases.sh`) pone 40+ aliases en `~/.bashrc` que funcionan desde cualquier carpeta.
 
-### Cómo se instala
-
-```bash
-# Una sola vez
-bash servicios/instalar_aliases.sh && source ~/.bashrc
-```
-
-### Convención de nombres
-
-Los aliases siguen un patrón claro para que nunca te pierdas:
+### Convención (clave para no perderse)
 
 | Prefijo | Significado | Ejemplo |
 |---------|-------------|---------|
 | `pipe_*` | Los 3 daemons del pipeline a la vez | `pipe_up`, `pipe_down`, `plogs` |
-| `*_logs` | Ver logs de un daemon específico | `ff_logs`, `tw_logs`, `tg_logs` |
-| `*_stop` | Parar un daemon específico | `ff_stop`, `tw_stop`, `tg_stop` |
-| `*_restart` | Reiniciar un daemon | `ff_restart`, `tw_restart` |
-| `*_manual_*` | Versión para probar a mano (con `--rm`) | `ff_midu`, `tw_run` |
-| `*_down` | Parar TODO el proyecto (ambas instancias) | `tg_down`, `tw_down` |
-| `tg_bot_*` | Bot API de Telegram | `tg_bot`, `tg_bot_logs` |
+| `*_logs` | Ver logs de un daemon | `ff_logs`, `tw_logs`, `tg_logs` |
+| `*_stop` | Parar un daemon | `ff_stop`, `tw_stop`, `tg_stop` |
+| `*_restart` | Reiniciar | `ff_restart`, `tw_restart` |
+| `*_manual_*` | Versión para probar a mano | `ff_midu`, `tw_run` |
+| `*_down` | Parar TODO el proyecto | `tg_down`, `tw_down` |
+| `tg_bot_*` | Bot API | `tg_bot`, `tg_bot_logs` |
 | `*_sys_*` | Control vía systemd | `pipe_sys_start`, `tg_bot_sys_status` |
 
 ### Ejemplos reales
 
 ```bash
-# Pipeline completo de Twitch
+# Pipeline completo Twitch
 pipe_up              # Arrancar los 3 daemons
-plogs                # Ver logs de los 3 a la vez (color: azul/amarillo/rojo)
+plogs                # Ver logs de los 3 a la vez (colores)
 pipe_down            # Parar los 3
 pipe_ps              # Estado de los 3 contenedores
 pipe_recreate        # Recrear (aplica cambios de CONFIG)
@@ -435,7 +398,7 @@ pipe_rebuild         # Rebuild + recrear (cambios de CÓDIGO)
 ff_logs              # Logs del monitor ffmpeg
 ff_stop              # Parar el monitor
 ff_restart           # Reiniciar el monitor
-ff_midu              # Lanzar midu.sh interactivo (docker compose run --rm)
+ff_midu              # Lanzar midu.sh interactivo
 
 # Bot de Telegram
 tg_bot               # Arrancar el bot
@@ -444,31 +407,26 @@ tg_bot_stop          # Parar
 tg_bot_rebuild       # Rebuild imagen + arrancar
 ```
 
-### Por qué no `docker compose up` directamente
-
-Si ejecutas `docker compose down` en la carpeta de `downloader_telegram`, pararías **todos** los servicios de esa carpeta (uploader + bot + CLI). Los aliases evitan esto: `pipe_down` solo para los 3 daemons del pipeline, mientras que `tg_down` para todo el proyecto de Telegram.
-
 ---
 
 ## Systemd: Auto-arranque al Boot
 
-Los servicios systemd hacen que el pipeline y el bot se levanten solos al encender el PC. No tienes que acordarte de nada.
+Los servicios systemd levantan el pipeline y el bot solos al encender el PC.
 
-### Servicios instalados
+### Servicios
 
-| Servicio | Qué hace | Por qué |
-|----------|----------|---------|
-| `twitch-stream-pipeline.service` | Arranca los 3 daemons del pipeline | Para que siempre esté grabando |
-| `telegram-bot.service` | Arranca el bot API | Para que siempre esté respondiendo |
+| Servicio | Qué hace |
+|----------|----------|
+| `twitch-stream-pipeline.service` | Arranca los 3 daemons del pipeline |
+| `telegram-bot.service` | Arranca el bot API |
 
 ### Gestión
 
 ```bash
 # Pipeline
-sudo systemctl status   twitch-stream-pipeline.service   # ver estado
-sudo systemctl restart  twitch-stream-pipeline.service   # reiniciar
-sudo systemctl stop     twitch-stream-pipeline.service   # parar
-sudo systemctl disable  twitch-stream-pipeline.service   # quitar auto-arranque
+sudo systemctl status   twitch-stream-pipeline.service
+sudo systemctl restart  twitch-stream-pipeline.service
+sudo systemctl stop     twitch-stream-pipeline.service
 
 # Bot
 sudo systemctl status   telegram-bot.service
@@ -482,21 +440,12 @@ tg_bot_sys_start       # Arrancar bot
 tg_bot_sys_stop        # Parar bot
 ```
 
-### Qué pasa al encender el PC
+Al encender el PC: systemd → docker compose up -d → daemons vigilan carpetas → si hay directo, graba → si hay vídeos en cola, comprime → si hay comprimidos, sube a Telegram.
 
-1. Systemd arranca `twitch-stream-pipeline.service`
-2. El servicio ejecuta `docker compose up -d` en los 3 proyectos
-3. Los 3 daemons empiezan a vigilar sus carpetas
-4. Si hay un directo en curso, se empieza a grabar
-5. Si hay vídeos en `grabaciones/test/`, se comprimen
-6. Si hay vídeos en `comprimidos/`, se suben a Telegram
-
-### Bootstrap automático en otra máquina
-
-Un script hace todo el montaje en una máquina nueva (Windows + WSL2):
+### Bootstrap en máquina nueva (Windows + WSL2)
 
 ```bash
-# Opción A (recomendada, sin descargar nada)
+# Opción A (recomendada)
 bash <(curl -fsSL https://raw.githubusercontent.com/jorbencas/devjobs/main/servicios/bootstrap_instalar.sh)
 
 # Opción B
@@ -505,117 +454,66 @@ chmod +x bootstrap_instalar.sh
 ./bootstrap_instalar.sh
 ```
 
-El script hace 8 pasos:
-1. Comprueba Docker y WSL2
-2. Clona el repo en `~/devjobs`
-3. Ajusta las rutas a tu máquina
-4. Crea las carpetas de vídeo
-5. Revisa secretos y credenciales
-6. Construye las imágenes Docker
-7. Instala el servicio systemd
-8. Añade los aliases al `~/.bashrc`
+El script: comprueba Docker/WSL2, clona repo, ajusta rutas, crea carpetas, revisa secretos, build imágenes, instala systemd, añade aliases.
 
 ---
 
-## Docker Help: El Cheatsheet Completo
+## Docker Help: Cheatsheet Completo
 
-El archivo `docker_help.txt` (482 líneas) es la documentación completa de todo el ecosistema. Se puede consultar con el alias `docker_help`.
+`docker_help.txt` (482 líneas) con todo el ecosistema. Alias `docker_help`.
 
 ### Secciones
 
 | Sección | Contenido |
 |---------|-----------|
 | 1. Docker general | Imágenes, contenedores, limpieza, build, run, red |
-| 2. Docker compose | Comandos genéricos de compose |
-| 3. Proyectos | Cada proyecto con sus alias (daemon + manual) |
+| 2. Docker compose | Comandos genéricos |
+| 3. Proyectos | Cada proyecto con sus alias |
 | 4. Pipeline | Los 3 daemons a la vez (pipe_*) |
 | 5. Systemd | Auto-arranque al boot |
-| 6. Montar en otra máquina | Script bootstrap para Windows + WSL2 |
+| 6. Montar en otra máquina | Script bootstrap Windows + WSL2 |
 | 7. Utilidades | Estado, disco, comandos útiles |
-
-### Ejemplo de consulta
-
-```bash
-# Ver todo el cheatsheet
-docker_help
-
-# Ver solo la sección del pipeline
-docker_help | grep -A 30 "PIPELINE: DIRECTO"
-
-# Ver los aliases de un proyecto
-docker_help | grep -A 20 "FFMPEG-YT-DLP"
-```
 
 ---
 
 ## Cron Pipeline: Automatización Diaria
 
-El pipeline de YouTube se ejecuta automáticamente cada día con un cron job:
-
-### Configuración
+Pipeline de YouTube con cron 01:00 → 18:00.
 
 ```bash
-# Cron: 01:00 arranca, 18:00 para (mismo día)
+# Cron
 0 1 * * * /home/jorge/dev/devjobs/yt-to-telegram/scripts/run_pipeline_cron.sh
 ```
 
-### Flujo interno del script
-
-```
-01:00 cron ejecuta el script
-  ↓
-1. Marca timestamp de inicio
-  ↓
-2. Calcula hora de parada (01:00 + 17h = 18:00)
-  ↓
-3. docker compose up -d yt-pipeline
-  ↓
-4. Bucle cada 5 minutos:
-   - ¿Sigue corriendo el contenedor?
-   - ¿Es hora de parar?
-   - Log cada hora con tiempo restante
-  ↓
-5. 18:00: docker compose down
-  ↓
-6. Resume: vídeos convertidos sin subir
-```
-
-### Gestión manual
+El script: marca timestamp, calcula hora parada, docker compose up, bucle cada 5 min (¿sigue corriendo? ¿es hora de parar?), 18:00 docker compose down, resumen.
 
 ```bash
-# Ver logs del cron de hoy
+# Ver logs de hoy
 cat data/yt-pipeline/logs/cron_$(date +%Y%m%d).log
 
-# Ejecutar manualmente ahora
+# Ejecutar manualmente
 bash /home/jorge/dev/devjobs/yt-to-telegram/scripts/run_pipeline_cron.sh
 
-# Parar el pipeline
+# Parar
 cd yt-to-telegram && docker compose down
-
-# Ver si está corriendo
-docker ps | grep yt-to-telegram
 ```
 
-### Videos pendientes
-
-Si el cron se para antes de tiempo (por ejemplo, si apagas el PC), los vídeos pendientes se guardan en `data/yt-pipeline/logs/pending_videos.log`. La próxima vez que arranque, el pipeline continuará desde donde se quedó.
+Si el cron se para antes (apagas PC), vídeos pendientes se guardan en `pending_videos.log` y la próxima vez continúa desde ahí.
 
 ---
 
-## Backup de YouTube y herramientas bajo demanda
+## Backup YouTube y herramientas bajo demanda
 
-La suite no es solo «grabar y subir». Incluye utilidades para casos concretos:
-
-| Herramienta | Qué hace | Cómo se lanza |
-|-------------|----------|---------------|
-| **backup_youtube.sh** | Archiva canales de YouTube enteros en disco (idempotente, con metadatos) | `backup_youtube.sh <URL>` |
+| Herramienta | Qué hace | Alias |
+|-------------|----------|-------|
+| **backup_youtube.sh** | Archiva canales enteros en disco (idempotente, metadatos) | `backup_youtube.sh <URL>` |
 | **pdfmanager** | Desbloquear, unir, dividir, comprimir PDFs | `pdf_run` |
-| **hdfull-downloader** | Descarga películas/series de HDFull (VNC para captcha) | `hd_run` |
-| **aula-downloader** | Descarga vídeos de Moodle/Vimeo (cursos del aula virtual) | `al_run` |
-| **kick_download.py** | Descarga vídeos de Kick.com por slug + video_id | `kick_dl` |
-| **discord_monitor.py** | Graba streams/llamadas de Discord con OBS | `discord_monitor` |
+| **hdfull-downloader** | Descarga películas/series HDFull (VNC captcha) | `hd_run` |
+| **aula-downloader** | Descarga Moodle/Vimeo (cursos aula virtual) | `al_run` |
+| **kick_download.py** | Descarga Kick.com por slug + video_id | `kick_dl` |
+| **discord_monitor.py** | Graba streams/llamadas Discord con OBS | `discord_monitor` |
 
-Todas ellas están explicadas paso a paso en la [guía de instalación](/posts/instalacion-devjobs#19-el-resto-de-herramientas-casos-de-uso) y todas comparten la misma *única* configuración de ffmpeg.
+Todas comparten la misma config de ffmpeg.
 
 ---
 
@@ -626,14 +524,14 @@ Todas ellas están explicadas paso a paso en la [guía de instalación](/posts/i
 | Contenedor | Proyecto | Función |
 |------------|----------|---------|
 | `twitchrecorder-sendo` | TwitchRecorder | Graba directos (Twitch/YouTube/Kick/web), concatena partes |
-| `ffmpeg_monitor-sendo` | ffmpeg-yt-dlp | Comprime vídeos a 720p y detecta episodios por OCR |
+| `ffmpeg_monitor-sendo` | ffmpeg-yt-dlp | Comprime a 720p, detecta episodios por OCR |
 | `telegram-uploader-sendo` | downloader_telegram | Sube a Telegram por keyword/temas |
 | `telegram-downloader` | downloader_telegram | CLI interactivo (a demanda) |
-| `telegram-bot` | downloader_telegram (Dockerfile.bot) | Bot API interactivo |
+| `telegram-bot` | downloader_telegram | Bot API interactivo |
 | `yt-pipeline` | yt-to-telegram | Pipeline YouTube (cron 01:00 → 18:00) |
-| `yt-download` / `yt-convert` / `yt-upload` | yt-to-telegram | Fases sueltas para depurar (a demanda) |
+| `yt-download` / `yt-convert` / `yt-upload` | yt-to-telegram | Fases sueltas para depurar |
 
-> 💡 **Ojo con el monitor:** no existe ningún `monitor.json`. El monitor `ffmpeg_monitor-sendo` se configura por variables de entorno y flags en su `docker-compose.yml` (CRF 28, preset fast, `--completed-only`, `POLL_INTERVAL`...). Lo que sí hay son los JSON de **estado** (`pipeline_status.json`, `pipeline_logs.json`) que él mismo escribe en `comprimidos/.pipeline/` (IPC para el bot). Detalle completo en la [guía de instalación](/posts/instalacion-devjobs#15-el-monitor-de-ffmpeg-y-por-qué-no-hay-un-monitorjson).
+> **Ojo con el monitor:** no existe `monitor.json`. El monitor `ffmpeg_monitor-sendo` se configura por variables de entorno y flags en su `docker-compose.yml` (CRF 28, preset fast, `--completed-only`, `POLL_INTERVAL`...). Lo que sí hay son JSON de **estado** (`pipeline_status.json`, `pipeline_logs.json`) que escribe en `comprimidos/.pipeline/` (IPC para el bot).
 
 ### Volúmenes de datos
 
@@ -641,25 +539,23 @@ Todas ellas están explicadas paso a paso en la [guía de instalación](/posts/i
 data/
 ├── pipeline/                    ← Pipeline Twitch
 │   ├── grabaciones/2026/        Grabaciones en bruto por fecha
-│   ├── grabaciones/test/        Cola de espera *_completed.mp4
+│   ├── grabaciones/test/        Cola *_completed.mp4
 │   ├── comprimidos/             Listos para subir *_compressed.mp4
 │   ├── comprimidos/.processed/  Originales ya comprimidos
 │   ├── comprimidos/.pipeline/   IPC monitor ↔ bot: *_status.json, *_logs.json
 │   ├── partes/                  Partes divididas (>2GB)
 │   └── backups/                 Backups de config
 ├── yt-pipeline/                 ← Pipeline YouTube
-│   ├── downloads/               Vídeos descargados de 160 canales
+│   ├── downloads/               Vídeos descargados 160 canales
 │   ├── converted/               Convertidos a 720p
-│   ├── uploaded/                Histórico de vídeos subidos
-│   └── logs/                    Logs de uploads/conversiones
-└── jorbencas_bot/               ← Bot de Telegram
+│   ├── uploaded/                Histórico subidos
+│   └── logs/                    Logs uploads/conversiones
+└── jorbencas_bot/               ← Bot Telegram
     ├── *.mp4                    Descargas del bot (/descarga)
     └── .test_githubActions/     Código AI (tips, tools, noticias)
 ```
 
-### Conversión unificada
-
-Todos los pipelines usan la misma configuración de ffmpeg:
+### Conversión unificada (todos los pipelines)
 
 ```bash
 ffmpeg -c:v libx264 -crf 28 -preset fast -vf scale=-2:720
@@ -669,47 +565,48 @@ ffmpeg -c:v libx264 -crf 28 -preset fast -vf scale=-2:720
 # 2 pasadas si >50MB (bot Telegram) o >1900MB (monitor/uploader)
 ```
 
-> 💡 ¿Quieres **archivar canales enteros de YouTube** sin subir a Telegram? El repo incluye `backup_youtube.sh`: descarga a `~/Backups/YouTube/<canal>/` con `--download-archive` (idempotente, solo baja lo nuevo) y metadatos incrustados. Toda su explicación está en la [guía de instalación](/posts/instalacion-devjobs#16-backup_youtubesh-respaldar-canales-de-youtube-enteros).
-
 ---
 
 ## Stack técnico
 
 | Tecnología | Uso |
 |------------|-----|
-| [**Docker**](https://www.docker.com/) | Todos los servicios (7 contenedores + fases on-demand) |
-| [**Python**](https://www.python.org/) | Bots, scrapers, pipelines |
-| [**ffmpeg**](https://ffmpeg.org/) | Conversión de vídeo (720p, CRF 28) |
-| [**yt-dlp**](https://github.com/yt-dlp/yt-dlp) | Descarga de vídeos (1000+ sitios) |
-| [**Telethon**](https://docs.telethon.dev/) | Cliente de Telegram (uploader, CLI) |
-| [**python-telegram-bot**](https://python-telegram-bot.org/) | Bot API de Telegram |
-| [**Gemini API**](https://ai.google.dev/) | Generación de contenido IA |
-| [**BeautifulSoup**](https://www.crummy.com/software/BeautifulSoup/) | Web scraping (noticias, cine) |
-| [**Rich**](https://rich.readthedocs.io/) | CLI con progreso y paneles |
-| [**InquirerPy**](https://inquirerpy.readthedocs.io/) | Menús interactivos |
-| [**Systemd**](https://systemd.io/) | Auto-arranque al boot |
-| [**Cron**](https://en.wikipedia.org/wiki/Cron) | Ejecución diaria del pipeline YouTube |
+| **Docker** | Todos los servicios (7 contenedores + fases on-demand) |
+| **Python** | Bots, scrapers, pipelines, project generator |
+| **ffmpeg** | Conversión vídeo (720p, CRF 28) |
+| **yt-dlp** | Descarga vídeos (1000+ sitios) |
+| **Telethon** | Cliente Telegram (uploader, CLI) |
+| **python-telegram-bot** | Bot API Telegram |
+| **Gemini API** | Generación contenido IA |
+| **BeautifulSoup** | Web scraping (noticias, cine) |
+| **Rich** | CLI con progreso y paneles |
+| **InquirerPy** | Menús interactivos |
+| **Systemd** | Auto-arranque al boot |
+| **Cron** | Ejecución diaria pipeline YouTube |
+| **GitHub Actions** | CI/CD + Project Generator (workflow_call) |
 
 ---
 
-## Lo que aprendí
+## Lo que aprendí (actualizado)
 
-1. **Pipelines complejos**: Conectar 3 servicios que se comunican por archivos (watcher pattern) — cada uno vigila una carpeta y procesa lo que encuentra
-2. **Docker en producción**: Volumes para persistencia, restart policies para resiliencia, health checks para monitoreo
-3. **Bots de Telegram**: Comandos, botones inline, manejo de archivos grandes (>50MB con compresión automática)
-4. **Scraping robusto**: Múltiples fuentes con fallbacks, deduplicación, y envío a Telegram
-5. **Automatización 24/7**: Cron jobs para tareas diarias, systemd para auto-arranque, aliases para control fácil
-6. **IA en producción**: Gemini API para generación de contenido, fallback a bases de datos locales
-7. **Sistemas de aliases**: Convención de nombres clara que hace que 40+ comandos sean fáciles de recordar
+1. **Pipelines complejos**: Conectar 3+ servicios comunicándose por archivos (watcher pattern)
+2. **Docker en producción**: Volumes para persistencia, restart policies, health checks
+3. **Bots Telegram**: Comandos, botones inline, archivos >50MB con compresión auto
+4. **Scraping robusto**: Múltiples fuentes, fallbacks, deduplicación, envío a Telegram
+5. **Automatización 24/7**: Cron jobs, systemd, aliases para control fácil
+6. **IA en producción**: Gemini/OpenAI/Anthropic para generación, fallback a DB local
+6. **Sistema de aliases**: Convención clara que hace 40+ comandos fáciles de recordar
+7. **GitHub Actions nativo**: `workflow_call` + `github.token` = cross-repo sin PATs (este fue el "click" final)
+8. **yt-dlp + deno**: YouTube cambió y ahora pide JS runtime; instalar deno en user-space y pasar flags a yt-dlp soluciona todo
 
 ---
 
 ## Instalación
 
-¿Cómo montar todo el ecosistema desde cero? Consulta la [guía de instalación completa](/posts/instalacion-devjobs) — paso a paso desde las credenciales hasta el auto-arranque, con cada archivo, comando y caso de uso explicado (config.json, monitor de FFmpeg, backup_youtube.sh, aliases, systemd...).
+¿Cómo montar todo desde cero? Consulta la [guía de instalación completa](/posts/instalacion-devjobs) — paso a paso desde credenciales hasta auto-arranque, con cada archivo, comando y caso de uso (config.json, monitor FFmpeg, backup_youtube.sh, aliases, systemd, project generator...).
 
 ---
 
 ## Repositorio
 
-El código completo está en [github.com/jorbencas/devjobs](https://github.com/jorbencas/devjobs):
+Código completo en [github.com/jorbencas/devjobs](https://github.com/jorbencas/devjobs).
