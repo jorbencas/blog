@@ -3,7 +3,7 @@ title: "Weekly Tech Recap W40"
 description: "¿Preparado para ver cómo el coste de la IA se desploma? Esta semana los datos nos confirman que el precio de computar IA baja seis veces más rápido qu"
 pubDate: "2026-10-03"
 author: "Jorge Beneyto Castelló"
-image: "public/img/arquitectura_web.webp"
+image: "img/2026_w40_tech_recap/2026_w40_tech_recap_cover-1200.webp"
 tags: ["tech", "weekly-recap", "ia", "hardware", "ciberseguridad", "llm-local", "copilot", "xataka", "ars-technica", "dev.to"]
 slug: "2026-w40-tech-recap"
 draft: true
