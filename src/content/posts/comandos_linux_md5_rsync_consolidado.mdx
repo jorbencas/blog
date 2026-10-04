@@ -1,0 +1,351 @@
+---
+draft: false
+title: "🐧 Comandos Linux de Supervivencia: md5sum, rsync y compañía"
+description: "Diccionario consolidado de comandos Linux que uso a diario para verificar integridad (md5sum, sha256sum), sincronizar (rsync), comparar (diff) yXZ compressing, con flags y ejemplos reales."
+pubDate: "2026/10/04"
+updatedDate: "2026/10/04"
+tags: ['linux', 'terminal', 'sistemas', 'rsync', 'md5']
+image: "img/git_comandos_flags/git_comandos_flags_cover-1200.webp"
+author: "Jorge Beneyto Castelló"
+---
+
+Hay comandos que no aprendes "en serio" pero que usas todas las semanas. Para mí los clsicos son tres: uno que me dice si un archivo se ha descargado **entero**, otro que me sincroniza dos carpetas **sin tocar lo que ya está**, y un tercero que me dice **qué ha cambiado** entre dos sitios. Son `md5sum`, `rsync` y `diff`, y hay media docena más que los acompañan siempre.
+
+Este post es mi diccionario de referencia. Como el [manual de comandos y flags de Git](/posts/git_comandos_flags/), no es una guía desde cero: es el sitio al que acudo cuando recuerdo el 80% del comando pero no la flag exacta. Cada bloque explica **qué hace**, **cuándo lo uso** y **un ejemplo real**.
+
+---
+
+## 1. 🧾 md5sum — Verificar que un archivo está completo
+
+### Qué es
+
+MD5 es una función hash que convierte cualquier archivo (da igual su tamaño) en una cadena de **32 caracteres hexadecimales**. La propiedad que importa: si el archivo cambia **un solo byte**, el hash cambia por completo. No sirve para cifrar ni para seguridad criptográfica (está roto para eso desde 2004), pero es perfecto para **detectar corrupción o descargas incompletas**.
+
+### ⚠️ Por qué SHA-256 en lugar de MD5
+
+MD5 sigue apareciendo por compatibilidad, pero `sha256sum` es igual de rápido y mucho más seguro contra colisiones. **Úsalo por defecto**; usa MD5 solo si un tercero te da un hash MD5 que debes comparar.
+
+### Comandos y flags
+
+* **`md5sum` / `sha256sum`**:
+    * `-c` (`--check`): Verifica contra un fichero de sumas previamente generado. Si algo falla, avisa y devuelve código de error ≠ 0 (clave para scripts).
+    * `-b` (`--binary`): Modo binario. En Windows convierte el salto de línea, lo que hace que los hashes **no coincidan**.
+    * `-t` (`--text`): Modo texto (por defecto en Linux). Trata los saltos de línea como texto.
+    * `--tag`: Prefija la salida con `MD5 (nombre) = hash`. Formato BSD, más legible.
+    * `-z` (`--zero`): Termina cada línea con NUL en lugar de newline. **Imprescindible para scripts** con nombres de archivo raros.
+    * `--ignore-missing`: Al usar `-c`, no falla si algún fichero del listado no existe.
+    * `--status`: No imprime nada; solo devuelve código de error. Para scripts.
+
+* **`b2sum` / `sha1sum` / `sha512sum`**: Misma interfaz, otros algoritmos. Disponibles en GNU coreutils.
+
+### Ejemplos
+
+```bash
+# Hash de un archivo
+sha256sum movie.mkv
+# 9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08  movie.mkv
+
+# Generar un manifiesto de TODO un directorio (para pasarlo a otro servidor)
+cd /data/peliculas
+sha256sum *.mkv > SHA256SUMS
+wc -l SHA256SUMS          # 42 ficheros
+
+# Verificar en el destino
+sha256sum -c SHA256SUMS
+# movie1.mkv: OK
+# movie2.mkv: OK
+# movie3.mkv: FAILED
+# sha256sum: WARNING: 1 computed checksum did NOT match
+
+# Solo un resultado, sin ruido (para scripts / cron)
+sha256sum -c --status SHA256SUMS && echo "Todo íntegro"
+
+# Comparar el mismo fichero entre dos rutas (drag & drop roto en medio)
+sha256sum /origen/movie.mkv /destino/movie.mkv | awk '{print $1}' | uniq -c
+# 2 d41d8cd98f00b204e9800998ecf8427e   ← mismos hash, copia buena
+```
+
+---
+
+## 2. 🔄 rsync — Sincronizar solo lo que ha cambiado
+
+### Qué es
+
+`rsync` copia archivos **incrementales**: transfiere únicamente los bloques que difieren, no el archivo entero. Es el caballo de batalla de cualquier backup o migración, y tiene una cosa que lo diferencia de `cp`: por defecto **no borra** nada del destino. Si quieres que lo haga, lo dices explícitamente con `--delete`.
+
+### ⚠️ La trampa clásica del `--delete`
+
+`--delete` borra del destino lo que no está en el origen. Si pruebas un `rsync` con `--delete` sin haber hecho antes un `--dry-run`, puedes vaciar una carpeta entera en tres segundos. **Siempre `--dry-run` antes de usar `--delete`.**
+
+### Comandos y flags
+
+* **Selección de qué copiar**:
+    * `-a` (`--archive`): Modo "archive" = `-rlptgoD`. Es el atajo que debes usar el 90% de las veces (recursivo, symlinks, permisos, tiempos, grupo, owner).
+    * `-r` / `-R`: Recursivo / rutas relativas preservadas.
+    * `-u` (`--update`): No sobrescribe archivos **más nuevos** en el destino. Protección básica contra Clock Skew.
+    * `-z` (`--compress`): Comprime los datos en tránsito. Ahorra mucho con texto, JSON o XML; con vídeo ya comprimido (`.mkv`, `.mp4`) es CPU pura y no sirve de nada.
+    * `-t`, `-p`, `-o`, `-g`, `-D`: Preservar tiempos, permisos, propietario, grupo, devices/symlinks (normalmente dentro de `-a`).
+    * `-H` (`--hard-links`): Preserva los hard links. Sin esto, un archivo con 10 enlaces se transfiere 10 veces.
+    * `-A` (`--acls`), `-X` (`--xattrs`): Preserva ACLs y atributos extendidos (imprescindial al copiar de un NAS).
+    * `--sparse`: Trata los archivos con huecos comoSparse (no transfiere los bloques vacíos).
+
+* **Selección de qué NO copiar**:
+    * `--exclude=<patrón>`: Excluye. Admite globs: `--exclude='*.tmp'`, `--exclude='.git/'`.
+    * `--exclude-from=<archivo>`: Lee los patrones de exclusión de un fichero. Mucho más mantenible en scripts.
+    * `--include=<patrón>` / `--filter`: Reglas más complejas, se aplican en orden.
+    * `--max-size=<N>` / `--min-size=<N>`: Filtra por tamaño (`10M`, `1G`).
+    * `-m` (`--prune-empty-dirs`): No crea directorios vacíos en el destino.
+
+* **Control del flujo de datos**:
+    * `-n` (`--dry-run`): **Simula**. No toca nada. Ponlo siempre primero.
+    * `-v` (`--verbose`) / `-vv`: Más detalle sobre qué archivos transfiere.
+    * `--progress`: Barra de progreso por archivo.
+    * `-h` (`--human-readable`): Tamaños legibles.
+    * `-q` (`--quiet`): Silencia todo salvo errores. Para cron.
+    * `-c` (`--checksum`): Compara por **checksum** en vez de por tamaño + fecha. Más lento, pero detecta cambios con la misma fecha.
+    * `--size-only`: Salta la comprobación de checksum (aún más rápido, más arriesgado).
+    * `-b` (`--backup`): Guarda el fichero del destino como `~` antes de sobrescribir.
+    * `--backup-dir=<dir>`: Los backups van a esa carpeta en vez de a `~`.
+    * `-W` (`--whole-file`): Transfiere el archivo entero en vez de bloques. Solo tiene sentido en local (LAN), donde es más rápido.
+    * `--bwlimit=<KB/s>`: Limita ancho de banda. Perfecto para no saturar la conexión durante el día.
+    * `--timeout=<seg>`: Corta la transferencia si no hay progreso.
+    * `--partial` / `--append`: Guarda el progreso y **reanuda** donde se quedó. Perfecto para descargas interrumpidas.
+    * `-e <cmd>`: Envuelve el transporte. Aquí es donde se mete SSH: `rsync -avz -e "ssh -p 2222" ...`
+    * `-4` / `-6`: Fuerza IPv4 o IPv6.
+
+* **Borrado en el remoto (--delete)**:
+    * `--delete`: Borra del destino lo que no está en el origen.
+    * `--delete-excluded`: Borra también lo excluido (combina con `--exclude` de forma agresiva).
+    * `--delete-delay`: Borra al final, no durante el recorrido. Más seguro.
+    * `--delete-before`: Borda antes de transferir. Acelera si hay muchos cambios.
+    * `--max-delete=<N>`: **Límite de seguridad**. Si se borran más de N ficheros, aborta. Debería ser el valor por defecto en tu vida.
+
+### Ejemplos
+
+```bash
+# EL backup del día a día (mismo disco, solo cambios)
+rsync -avh --delete --max-delete=100 /datos/fotos/ /backup/fotos/
+
+# Entre servidores por SSH, comprimido, con progreso y límite de ancho de banda
+rsync -avz --progress --bwlimit=5000 \
+  -e "ssh -p 2222" \
+  /var/www/html/ jorge@servidor:/var/www/html/
+
+# Reanudar una transferencia interrumpida
+rsync -avz --partial --append -e "ssh" grande.iso jorge@servidor:~/
+
+# Espejo exacto excluyendo ruido (SIEMPRE dry-run antes de --delete)
+rsync -avzn --delete \
+  --exclude='.git/' --exclude='*.tmp' --exclude='node_modules/' \
+  -e "ssh" /mi/proyecto/ jorge@servidor:/srv/proyecto/
+
+# Solo los .mkv modificados en las últimas 24h hacia el NAS
+rsync -avz --min-size=100M --include='*.mkv' --exclude='*' /descargas/ /mnt/nas/peliculas/
+
+# Backup local verificable: copia + manifiesto de hashes
+rsync -avh --delete /datos/ /backup/ && \
+  cd /backup && find . -type f -exec sha256sum {} + > SHA256SUMS
+
+# Cron: silencioso y sin overwrite
+0 3 * * * rsync -a --quiet --delete /datos/ /backup/ >> /var/log/backup.log 2>&1
+```
+
+### rsync vs otras alternativas
+
+| Opción | Cuándo elegirla |
+|---|---|
+| `cp -a` | Copia local simple, sin filtro ni incremental. Instantánea y sin magia. |
+| `rsync` | **Cambio incremental, filtros, `--delete`, remoto.** El comodín. |
+| `scp` / `sftp` | Transferencia puntual de 2-3 ficheros, sin filtros. |
+| `rclone` | Nubes (Google Drive, S3, OneDrive). Mucho más lento en local. |
+| `restic` / `borg` | Backups con **historial** y deduplicación. Otra categoría. |
+
+---
+
+## 3. 🔍 diff — Ver qué ha cambiado
+
+### Qué es
+
+`diff` compara dos ficheros línea a línea y te dice qué añadir y qué quitar. Con `--color` es sorprendentemente legible, y combinado con `diff -u` genera un parche que `patch` sabe aplicar.
+
+### Comandos y flags
+
+* **`diff <f1> <f2>`**:
+    * `-u` (`--unified`): Formato unificado con contexto. **El estándar** para parches y para leerlo en humans.
+    * `-r` (`--recursive`): Compara directorios enteros.
+    * `-q` (`--brief`): Solo informa si los ficheros difieren (`differ`). Perfecto para `if`.
+    * `-s` (`--report-identical-files`): Además avisa de los que son idénticos.
+    * `-i` (`--ignore-case`): Ignora mayúsculas.
+    * `-w` (`--ignore-all-space`): Ignora **todos** los espacios.
+    * `-b` (`--ignore-space-change`): Ignora cambios en la cantidad de espacio.
+    * `-B` (`--ignore-blank-lines`): Ignora líneas en blanco.
+    * `-I <regex>` (`--ignore-matching-lines`): Ignora líneas que encajen con un patrón.
+    * `-t` (`--tabsize=<N>`): Tabuladores de N columnas (por defecto 8).
+    * `-y` (`--side-by-side`): Las columnas una al lado de la otra. La mejor vista para comparar a ojo.
+    * `--strip-trailing-cr`: Ignora los `\r` de Windows. **Salva vidas** al comparar ficheros de Windows contra Linux.
+    * `--speed-large-files`: Optimiza para ficheros enormes.
+    * `-a` (`--text`): Tratar todo como texto (ignorar diferencias de binario).
+
+* **`diff3 <f1> <f2> <base>`**: Merges de tres: te enseña qué cambió **en los dos sitios** simultáneamente. Imprescindible cuando el problema es "no sé cuál de mis dos versiones es la buena".
+
+### Ejemplos
+
+```bash
+# Comparar dos ficheros, coloreado
+diff -u config-antes.conf config-despues.conf
+
+# Comparar dos carpetas enteras recursivamente, solo qué difiere
+diff -rq /etc/nginx /etc/nginx.bak
+# Only in /etc/nginx.bak: vhost-antiguo.conf
+# Files /etc/nginx/conf.d/default.conf differ
+
+# Script: "¿cambió algo?"
+diff -rq a/ b/ > /dev/null || echo "Hay cambios"
+
+# Ignorar cambios de formato al comparar código generado
+diff -ruw original/ reformateado/     # -u y -w combinados
+
+# Windows contra Linux (el clásico "pero en mi máquina funciona")
+diff -u --strip-trailing-cr config-win.txt config-linux.txt
+
+# Merges de 3 vías: base, mío, suyo
+diff3 -m base.conf mio.conf suyo.conf
+
+# Generar parche y aplicarlo
+diff -u v1.txt v2.txt > cambio.patch
+patch v1.txt < cambio.patch
+```
+
+---
+
+## 4. 🗜️ xz, gzip y zstd — Comprimir lo que merece la pena
+
+| Comando | Cuándo | Nota |
+|---|---|---|
+| `gzip -9 file` | Uso general, ubiquitario. `.gz` | Descomprime igual de rápido. |
+| `xz -T0 -9 file` | Máximo ratio (backups, texto). `.xz` | **Muy lento**, pero comprime entre un 20-40% mejor que gzip. |
+| `zstd -T0 -19 file` | El equilibrio real. `.zst` | Descomprime **más rápido** que gzip y comprime casi como xz. Recomendado para contenedores. |
+| `tar -I 'zstd -T0' -cf` | Archivos completos | `-I`/`--use-compress-program` elige compresor. |
+
+```bash
+# Backups: xz +Flythrough multiproceso, máxima compresión
+tar -I 'xz -T0 -9' -cf backup.tar.xz /datos/
+
+# Docker: zstd es casi siempre mejor
+tar -I 'zstd -T0 -3' -cf backup.tar.zst /datos/
+
+# Mirar el ratio sin crear nada
+xz -9 -T0 -c < fichero | wc -c
+zstd -T0 -19 -c < fichero | wc -c
+
+# Excluir lo que no aporta (el truco que más ratio da)
+tar -I 'zstd -T0' -cf b.tar.zst \
+  --exclude-vcs --exclude='*.mp4' --exclude='node_modules' /proyecto/
+```
+
+---
+
+## 5. 🧹 El resto de los que siempre necesito
+
+### Ver espacio en disco
+
+```bash
+# Lo más útil de todo: qué ocupa más, y dónde
+du -h -d1 /var | sort -h | tail -10
+du -h -d1 /var/lib/docker | sort -h | tail -20
+
+# Ficheros grandes en todo el sistema
+find / -type f -size +500M -exec ls -lh {} + 2>/dev/null | sort -k5 -h
+
+# Espacio libre por partición (los inodos incluidos)
+df -h
+df -i              # ← inodos agotados = "No space left" con espacio libre
+```
+
+### Comparar y limpiar directorios
+
+```bash
+# ¿Qué hay de diferente entre dos máquinas?
+diff -rq /home/jorge/scripts /home/jorge/scripts.bak
+
+# Archivos duplicados por contenido (el resultado va al temp)
+find . -type f -exec md5sum {} + | sort | awk '{print $1}' | uniq -d | cut -d' ' -f3- | xargs md5sum
+```
+
+### Transferir y renombrar
+
+```bash
+# Mover conservando timestamps (más rápido entre mismo FS)
+mv -i origen/* destino/
+
+# Renombrar en lote con regex (ojo: GNU, no BSD)
+ls *.jpg | rename -n 's/^\D+//' 2>/dev/null \
+  || for f in *.jpg; do mv "$f" "$(echo "$f" | sed 's/^\D*//')"; done
+
+# Bash seguro para la eficiencia: procesar 10.000 ficheros sin fallar
+for f in *.jpg; do convert "$f" -resize 1200x "thumbs/$f"; done
+```
+
+### Permisos y scripts
+
+```bash
+# Modo seguro con rsync: -a -HAX (todo lo que suele olvidarse)
+rsync -aHAX --delete /origen/ /destino/
+
+# Ejecutar sin quitar permisos de ejecución
+bash ./deploy.sh
+
+# Preservar el orden original de bash (y set -euo pipefail)
+set -euo pipefail
+```
+
+---
+
+## 🎯 Recetas que uso casi todos los días
+
+**Backup completo + verificación, en dos líneas:**
+```bash
+rsync -aHAX --delete --max-delete=1000 /datos/ /mnt/nas/datos/ \
+  && cd /mnt/nas/datos && find . -type f -exec sha256sum {} + > SHA256SUMS
+```
+
+**Migrar un proyecto a otro servidor con gitignore respetado:**
+```bash
+rsync -avzn --delete --exclude='.git/' --exclude='.venv/' \
+  --exclude='__pycache__/' --exclude='node_modules/' \
+  -e "ssh" ./proyecto/ usuario@servidor:/srv/proyecto/
+# Revisa la salida... luego quita la -n
+```
+
+**Comprobar que una descarga quedó bien:**
+```bash
+echo "d41d8cd98f00b204e9800998ecf8427e  pelicula.mkv" > esperado.md5
+md5sum -c esperado.md5 && echo "Lista para archivar"
+```
+
+**Limpiar logs antiguos por tamaño (no por fecha):**
+```bash
+find /var/log -name "*.log.gz" -size +50M -print -delete
+```
+
+---
+
+## ⚠️ Errores que he pagado con tiempo perdido
+
+1. **`rsync --delete` sin `--dry-run`**: borré un directorio de fotos. Siempre `--dry-run` + `--max-delete`.
+2. **`md5sum -c` con ficheros de Windows**: los hashes nunca coinciden por el `\r`. Solución: `--strip-trailing-cr` en el diff, `--binary` en md5sum.
+3. **`gzip -9` en ficheros ya comprimidos** (`mp4`, `mkv`): minutos perdidos y 0 bytes ahorrados. Usa `xz`/`zstd` para texto y no comprime vídeo.
+4. **`diff -w` para comparar código**: oculta errores de indentación reales. Úsalo solo para comparar *contenido*.
+5. **`du -sh` vs `df -h`**: si no coinciden, tienes ficheros borrados que siguen abiertos por un proceso. Reinicia el proceso.
+6. **`rsync -z` sobre LAN**: comprime para nada y consume CPU. En local usa `-W` (whole-file).
+
+---
+
+## 🔗 Enlaces y recursos
+
+- [Rsync manual oficial](https://man7.org/linux/man-pages/man1/rsync.1.html)
+- [Coreutils — GNU md5sum](https://www.gnu.org/software/coreutils/manual/html_node/md5sum-invocation.html)
+- [diffutils — manual GNU](https://www.gnu.org/software/diffutils/manual/)
+- [zstd — GitHub oficial](https://github.com/facebook/zstd)
+- [Explain Shell](https://explainshell.com/) — descompone cualquier comando de shell
+- [The Missing Semester — Shell Tools (MIT)](https://missing.csail.mit.edu/2020/course-shell/)
