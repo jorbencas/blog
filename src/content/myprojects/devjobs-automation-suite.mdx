@@ -3,7 +3,7 @@ draft: false
 title: "Devjobs Automation Suite: Pipelines de Video, Bots IA, Scrapers y Generador de Proyectos"
 description: "Suite completa de automatización con Docker: pipeline de Twitch/YouTube a Telegram, bot con IA, scrapers de noticias, generador automático de ideas de proyectos. Todo self-hosted y sin intervención manual."
 pubDate: "2026/09/03"
-updatedDate: "2026/09/24"
+updatedDate: "2026/10/04"
 tags: ["docker", "python", "automatización", "telegram", "ia", "scraping", "pipeline", "github-actions"]
 image: "img/devjobs_automation_suite/devjobs_automation_suite_cover-1200.webp"
 repository: "https://github.com/jorbencas/devjobs"
@@ -133,36 +133,87 @@ Cada canal tiene su config de horarios, plataformas y comportamiento. **Cambio i
 - **Solución:** Dockerfile instala deno en `/home/appuser/.deno` (accesible al user 1000), y en `recorder.py` + `youtube.py` se pasan `--js-runtimes deno --remote-components ejs:github` a yt-dlp
 - **Resultado:** YouTube detection + extraction funcionan. mourdev graba en Twitch ahora mismo (YouTube no está live) pero si estuviera live, pillarías YouTube sin errores
 
-### Flujo paso a paso (sin cambios)
+### Flujo paso a paso (actualizado 04/10/2026)
 
 El pipeline de Twitch → Telegram son 6 pasos encadenados, patrón *watcher*: cada servicio vigila la carpeta donde el anterior deja su resultado.
 
 ```
  Twitch live
-    │
-    ▼
+     │
+     ▼
  ① twitchrecorder-sendo ──►  título → nombre (keyword)
-    │  data/pipeline/grabaciones/test/*_completed.mp4
-    ▼
+     │  data/pipeline/grabaciones/test/*_completed.mp4
+     ▼
  ② ffmpeg_monitor-sendo ──►  720p, CRF 28, 2 pasadas si >1900MB
-    │  data/out/*_720p.mp4
-    ▼
+     │  data/out/*_720p.mp4
+     ▼
  ③ OCR (ffmpeg_monitor-sendo) ──►  detecta serie por imagen del frame
-    │
-    ▼
+     │
+     ▼
  ④ telegram-uploader-sendo ──►  sube a temas de Telegram por keyword
-    ▼
+     ▼
  Serie correcta (tema/foro)
 ```
 
 1. **Grabar** — `twitchrecorder-sendo` graba con calidad original
-2. **Keyword** — extrae título del directo y lo pone en el nombre (para ruteo). Para **web**, el título viene **siempre** de la API real (Kick `session_title` o Twitch), no del HTML
+2. **Keyword** — extrae título del directo y lo pone en el nombre (para ruteo). 
+   - Para **web wrapper** (`watch.sendosama.net`): **solo Kick API** (`session_title`). Si falla → **fallback al nombre del canal** (`sendosama`). **Nunca** cae a yt-dlp/HTML del wrapper (título genérico).
+   - Para **Twitch/YouTube/Kick directo**: yt-dlp; si título genérico (`canal (live)`) → usa **descripción** como título real.
 3. **Cola** — vídeo espera en `data/pipeline/grabaciones/test/` como `*_completed.mp4`
 4. **Comprimir** — a 720p (CRF 28) porque Telegram límite 2GB
 5. **OCR** — detecta episodios por imagen del frame
-6. **Subir** — rutea por keyword a temas de Telegram
+6. **Subir** — rutea por keyword a temas de Telegram (el uploader extrae keyword del nombre y **elimina sufijo `__parteN`** para agrupar todas las partes)
 
-> **Salto de plataforma a mitad:** si el directo empieza en Twitch y se cambia a YouTube/web a mitad, **el pipeline no se rompe**. Detecta playlist congelada, cierra parte actual, abre `__parte2` con **misma keyword**. Al final concatena todo → uploader ve **un único vídeo** con la serie correcta.
+> **Salto de plataforma a mitad (web → Kick → Twitch):** si el directo empieza en la web y se cambia a Kick a mitad, **el pipeline no se rompe**. Detecta cambio de fuente, cierra parte actual, abre `__parte2` con **misma keyword original** (preservada antes del cambio). Al final concatena todo → uploader ve **un único vídeo** con la keyword correcta.
+> 
+> **Nuevos logs de visibilidad:** `Título directo (Kick API): Detective Conan Ep 123` | `Keyword (título): detective_conan` | `Keyword (fallback canal): sendosama`
+
+### Configuración actualizada (config.json)
+
+Cada plataforma tiene su propio `schedule` (días/horas) y flags `detectar`/`corte`. **Cambios recientes:**
+
+```json
+{
+  "channels": {
+    "sendosama": {
+      "enabled": false,
+      "platform": [
+        {
+          "platform": "web",
+          "url": "https://watch.sendosama.net/",
+          "detectar": true,
+          "corte": false,
+          "schedule": [{ "days": [...], "time": "22:00" }]
+        },
+        {
+          "platform": "kick",
+          "detectar": true,
+          "corte": false,
+          "schedule": [{ "days": [...], "time": "22:00" }]
+        },
+        { "platform": "twitch", "detectar": false, "corte": false, "schedule": [] }
+      ]
+    },
+    "sendosenpai": {
+      "platform": [
+        { "platform": "youtube", "detectar": false, "corte": false, "schedule": [{ "days": ["Sunday"], "time": "19:00" }] }
+      ]
+    }
+  },
+  "record_path": "/recordings",
+  "check_every": 30,
+  "max_duration": "24:00:00",
+  "retry_interval": 1,
+  "copy_to_test": true,
+  "test_path": "/recordings/test"
+}
+```
+
+**Notas:**
+- `enabled: false` en sendosama → canal desactivado temporalmente
+- `detectar: true` en Kick → activa OCR + corte para episodios
+- `detectar: false` en Twitch/YouTube → directo completo sin recortar
+- Sidecar `_descripcion.json` **eliminado** (código comentado): la info (título, descripción) queda solo en memoria durante la grabación
 
 ### Contenedores Docker
 
@@ -226,6 +277,24 @@ cat data/yt-pipeline/logs/cron_$(date +%Y%m%d).log
 # Parar manualmente
 cd yt-to-telegram && docker compose down
 ```
+
+### 🔄 Futura unificació / reutilització (pendent)
+
+Actualment el pipeline YouTube → Telegram **reimplementa** lògica que ja existeix als altres projectes:
+
+| Component | Pipeline YouTube | Existeix a | Reutilitzable? |
+|-----------|------------------|------------|----------------|
+| **yt-dlp + flags** | `download.py` | `TwitchRecorder/utils/youtube.py` | ✅ Sí |
+| **Conversió 720p/1080p CRF 28 + 2-pass** | `convert.py` | `ffmpeg-yt-dlp/scripts/monitor_folder.sh` | ✅ Sí |
+| **Subida Telegram (topics/grups)** | `upload.py` (Bot API) | `downloader_telegram/app/subir_videos.py` (Telethon) | ⚠️ Parcial (canviar client) |
+| **OCR episodis** | — | `ffmpeg-yt-dlp/scripts/detectar_episodios.py` | N/A (YouTube no necessita OCR) |
+
+**Objectiu futur:**
+1. Eliminar `convert.py` → usar `monitor_folder.sh` + `get_monitor_config.py` (com el pipeline Sendo)
+2. Unificar `upload.py` → migrar a Telethon (`subir_videos.py`) per compartir ruteig keyword/foros
+3. Config centralitzada `config/pipeline.yaml` per tots els pipelines
+
+---
 
 ---
 
@@ -587,7 +656,7 @@ ffmpeg -c:v libx264 -crf 28 -preset fast -vf scale=-2:720
 
 ---
 
-## Lo que aprendí (actualizado)
+## Lo que aprendí (actualizado 04/10/2026)
 
 1. **Pipelines complejos**: Conectar 3+ servicios comunicándose por archivos (watcher pattern)
 2. **Docker en producción**: Volumes para persistencia, restart policies, health checks
@@ -595,9 +664,11 @@ ffmpeg -c:v libx264 -crf 28 -preset fast -vf scale=-2:720
 4. **Scraping robusto**: Múltiples fuentes, fallbacks, deduplicación, envío a Telegram
 5. **Automatización 24/7**: Cron jobs, systemd, aliases para control fácil
 6. **IA en producción**: Gemini/OpenAI/Anthropic para generación, fallback a DB local
-6. **Sistema de aliases**: Convención clara que hace 40+ comandos fáciles de recordar
-7. **GitHub Actions nativo**: `workflow_call` + `github.token` = cross-repo sin PATs (este fue el "click" final)
-8. **yt-dlp + deno**: YouTube cambió y ahora pide JS runtime; instalar deno en user-space y pasar flags a yt-dlp soluciona todo
+7. **Sistema de aliases**: Convención clara que hace 40+ comandos fáciles de recordar
+8. **GitHub Actions nativo**: `workflow_call` + `github.token` = cross-repo sin PATs (este fue el "click" final)
+9. **yt-dlp + deno**: YouTube cambió y ahora pide JS runtime; instalar deno en user-space y pasar flags a yt-dlp soluciona todo
+10. **Keyword resiliente**: Web wrapper (Kick API) → si falla, fallback a nombre canal (no keyword vacía). Partes de cambio de plataforma → preservar keyword original + uploader limpia `__parteN` → agrupación correcta
+11. **Código inactivo fuera**: Sidecar `_descripcion.json` nunca se escribía → comentado/eliminado; info queda en memoria
 
 ---
 

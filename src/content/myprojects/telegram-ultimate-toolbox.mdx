@@ -3,7 +3,7 @@ draft: false
 title: "Telegram Ultimate Toolbox: Descargador Masivo, Clonador, Vigilante y Uploader con Docker"
 description: "Cuatro herramientas en una: descargador masivo de canales, clonador con traducción automática, vigilante de contenido con alertas por palabras y subidor automático de vídeos a grupos. Bot de Telegram con IA, credenciales cifradas con AES, progreso en tiempo real, todo en Docker."
 pubDate: "2026/08/03"
-updatedDate: "2026/09/03"
+updatedDate: "2026/10/04"
 tags: ["python", "docker", "telegram", "telethon", "automatización"]
 image: "img/telegram_ultimate_toolbox/telegram_ultimate_toolbox_cover-1200.webp"
 repository: "https://github.com/jorbencas/devjobs/tree/master/downloader_telegram"
@@ -147,7 +147,10 @@ docker compose up -d uploader
 ```
 
 Características:
-- **Ruteo por keyword**: el `TwitchRecorder` lee el título del directo y lo incrusta en el nombre (`*_KW_<keyword>_compressed.mp4`). El uploader sube el vídeo **solo al grupo cuyo `nombre` coincida** con la keyword; si no hay coincidencia, al `default`.
+- **Ruteo por keyword**: el `TwitchRecorder` lee el título del directo y lo incrusta en el nombre (`*_KW_<keyword>_compressed.mp4`). 
+  - Para **web wrapper**: keyword = título de **Kick API** (`session_title`). Si API falla → **fallback nombre canal** (`sendosama`).
+  - Para **partes** (`__parteN`): el uploader **elimina el sufijo `__parteN`** antes de rutear, agrupando todas las partes bajo la misma keyword.
+  - El uploader sube el vídeo **solo al grupo cuyo `nombre` coincida** con la keyword; si no hay coincidencia, al `default`.
 - **Sesión propia**: usa `uploader.session`, separada de la sesión del menú interactivo (`ultimate_session`). Así puedes correr el menú de descargas y el uploader **a la vez** sin conflictos.
 - **Límite de 2 GB**: si un vídeo supera 2 GB, lo divide en partes con `ffmpeg -c copy` (sin recompresión) antes de subir.
 - **Registro de enviados** (`enviados.json`): no reenvía lo ya subido y elimina el original al completar.
