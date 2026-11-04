@@ -1,9 +1,9 @@
 ---
 draft: false
 title: "Telegram Ultimate Toolbox: Descargador Masivo, Clonador, Vigilante y Uploader con Docker"
-description: "Cuatro herramientas en una: descargador masivo de canales, clonador con traducción automática, vigilante de contenido con alertas por palabras y subidor automático de vídeos a grupos. Bot de Telegram con IA, credenciales cifradas con AES, progreso en tiempo real, todo en Docker."
+description: "Cuatro herramientas en una: descargador masivo de canales, clonador con traducción automática, vigilante de contenido con alertas por palabras y subidor automático de vídeos a grupos. Credenciales cifradas con AES, progreso en tiempo real, todo en Docker."
 pubDate: "2026/08/03"
-updatedDate: "2026/10/04"
+updatedDate: "2026/10/31"
 tags: ["python", "docker", "telegram", "telethon", "automatización"]
 image: "img/telegram_ultimate_toolbox/telegram_ultimate_toolbox_cover-1200.webp"
 repository: "https://github.com/jorbencas/devjobs/tree/master/downloader_telegram"
@@ -39,11 +39,6 @@ Telegram Ultimate Toolbox
 │   ├── Clonación con traducción
 │   ├── Vigilante en tiempo real
 │   └── Uploader a grupos (subir_videos.py)
-├── Bot API (python-telegram-bot)
-│   ├── Comandos: /descarga, /tip, /concepto, /tool, /noticias
-│   ├── Descarga de vídeos (yt-dlp + HLS fallback)
-│   ├── Contenido IA (Gemini + Wikipedia)
-│   └── Noticias scrapeadas (80+ fuentes)
 ├── Cifrado AES (Fernet)
 │   ├── config.bin → API ID/Hash cifrados
 │   └── secret.key → llave de cifrado
@@ -276,10 +271,6 @@ docker compose up                # menú interactivo (descarga/clonado/vigilante
 # Uploader (pipeline "Grabar → Comprimir → Subir"):
 docker compose up -d uploader    # vigila /comprimidos y sube a los grupos
 docker compose logs -f uploader  # logs del uploader
-
-# Bot de Telegram (@jorbencas_bot):
-docker compose up -d telegram_bot    # arranca el bot API
-docker compose logs -f telegram_bot  # logs del bot
 ```
 
 ### Contenedores
@@ -288,7 +279,6 @@ docker compose logs -f telegram_bot  # logs del bot
 |------------|--------|---------|
 | `telegram` | `telegram-downloader` | CLI interactivo (descarga/clonado/vigilante) |
 | `uploader` | `telegram-uploader-sendo` | Daemon uploader (sube vídeos comprimidos a Telegram) |
-| `telegram_bot` | `telegram-bot` | Bot API interactivo (@jorbencas_bot) |
 
 ### Variables de entorno del uploader
 
@@ -302,7 +292,7 @@ docker compose logs -f telegram_bot  # logs del bot
 
 ## Instalación
 
-¿Cómo instalar el bot, el uploader y el CLI interactivo? Consulta la [guía de instalación completa](/posts/instalacion-telegram) — con Docker, sesiones, grupos, credenciales y cifrado AES.
+¿Cómo instalar el uploader y el CLI interactivo? Consulta la [guía de instalación completa](/posts/instalacion-telegram) — con Docker, sesiones, grupos, credenciales y cifrado AES.
 
 ---
 

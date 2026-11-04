@@ -1,31 +1,27 @@
 ---
 draft: false
-title: "Instalación de Telegram Toolbox: Bot, Uploader y Descargador Masivo"
-description: "Guía completa para instalar y configurar Telegram Ultimate Toolbox: bot de IA, uploader automático, descargador masivo y clonador con traducción. Credenciales, sesiones, grupos y Docker."
+title: "Instalación de Telegram Toolbox: Uploader y Descargador Masivo"
+description: "Guía completa para instalar y configurar Telegram Ultimate Toolbox: uploader automático, descargador masivo y clonador con traducción. Credenciales, sesiones, grupos y Docker."
 pubDate: "2026/09/04"
-updatedDate: "2026/09/19"
-tags: ["telegram", "python", "docker", "instalación", "bot", "telethon"]
+updatedDate: "2026/10/31"
+tags: ["telegram", "python", "docker", "instalación", "telethon"]
 image: "img/instalacion_telegram/instalacion_telegram_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 ---
 
-Telegram Ultimate Toolbox tiene 4 módulos: descarga masiva, clonación con traducción, vigilante de contenido y uploader automático. Pero para que funcione, necesitas configurar varias cosas: credenciales de Telegram, sesiones de autenticación, grupos destino, y el token del bot. Cada pieza tiene su porqué.
+Telegram Ultimate Toolbox tiene 4 módulos: descarga masiva, clonación con traducción, vigilante de contenido y uploader automático. Pero para que funcione, necesitas configurar varias cosas: credenciales de Telegram, sesiones de autenticación y grupos destino. Cada pieza tiene su porqué.
 
 ---
 
-## 1. Por qué Telegram Toolbox (y no otro bot)
+## 1. Por qué Telegram Toolbox
 
 | Herramienta | Qué hace | Limitación |
 |-------------|----------|------------|
 | **Bots normales** | Solo responden comandos | No pueden descargar de canales protegidos |
 | [**Telethon**](https://docs.telethon.dev/) | Cliente de Python para Telegram API | Necesita API ID/Hash (no es un bot) |
-| **Telegram Toolbox** | Descarga + clonación + vigilante + uploader | Usa Telethon para descargas y Bot API para comandos |
+| **Telegram Toolbox** | Descarga + clonación + vigilante + uploader | Usa Telethon con una cuenta de usuario real |
 
-**¿Por qué dos sistemas (Telethon + Bot API)?** Porque son cosas diferentes:
-- **Telethon** = se autentica como **usuario real**. Puede acceder a canales protegidos, descargar archivos grandes, leer mensajes privados.
-- **Bot API** = se autentica como **bot**. Puede recibir comandos (/help, /tip) y enviar mensajes, pero **no** puede acceder a canales protegidos.
-
-El uploader usa Telethon (usuario real) para subir vídeos a canales donde un bot no tendría acceso.
+Telethon se autentica como **usuario real**: puede acceder a canales protegidos, descargar archivos grandes y leer mensajes privados. Por eso el uploader puede subir vídeos a canales donde un bot no tendría acceso.
 
 ---
 
@@ -35,8 +31,6 @@ El uploader usa Telethon (usuario real) para subir vídeos a canales donde un bo
 |-----------|----------|----------------|
 | [**Docker**](https://www.docker.com/) | Ejecutar todo sin instalar dependencias | [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/) |
 | **API ID y Hash de Telegram** | Para autenticarte como usuario real | [my.telegram.org/apps](https://my.telegram.org/apps) — explicado abajo |
-| **Token del bot** (opcional) | Para el bot interactivo | [@BotFather](https://t.me/BotFather) — explicado abajo |
-| **API Key de Gemini** (opcional) | Para tips y herramientas IA | [Google AI Studio](https://aistudio.google.com/) |
 
 ---
 
@@ -60,57 +54,32 @@ Este es el paso más confuso. Telegram exige registrar una "aplicación" para us
 
 **¿Por qué no usar un bot?** Porque el uploader necesita acceder a canales **protegidos**. Un bot no puede leer canales donde no es administrador. Un usuario real sí puede.
 
-**Guarda estos valores:** Los necesitarás en el paso 5.
+**Guarda estos valores:** Los necesitarás en el paso 4.
 
 ---
 
-## 4. Obtener el token del bot (opcional)
-
-Si quieres usar el bot interactivo (@jorbencas_bot), necesitas un token.
-
-**Cómo obtenerlo:**
-
-1. Abre Telegram (en el móvil o en el escritorio) y busca [@BotFather](https://t.me/BotFather). Es el bot oficial de Telegram para crear bots.
-2. Envía `/newbot` (escribe `/newbot` y dale a enviar)
-3. BotFather te preguntará: **"¿Cómo se llamará tu bot?"** — Escribe un nombre descriptivo, ej: "Mi Bot"
-4. BotFather te preguntará: **"¿Cuál será el username?"** — Debe terminar en `bot`. Ejemplo: `mibot_bot`. Si no te deja, prueba con otro nombre.
-5. BotFather te dará un token como `8580222159:AAE4e21gzeq6q...`. **Copia y guarda ese token inmediatamente** — solo se muestra una vez.
-6. Si pierdes el token, puedes pedirlo de nuevo con `/mybots` → selecciona tu bot → "API Token"
-
-**¿Por qué es opcional?** Porque el uploader y el CLI interactivo no necesitan el bot. Solo lo necesitas si quieres comandos como `/tip`, `/descarga`, `/noticias`.
-
----
-
-## 5. Configurar el archivo `.env`
+## 4. Configurar el archivo `.env`
 
 El archivo `.env` es donde le dices al sistema quién eres. Sin él, nada funciona.
 
-### 5.1. Crear el archivo
+### 4.1. Crear el archivo
 
 Crea `downloader_telegram/.env`:
 
 ```bash
 # API de Telegram (obligatorio para uploader y CLI)
-API_ID=39937314
-API_HASH=be1b57db99dfe149a2a06db3b47d68c3
-
-# Bot de Telegram (obligatorio para el bot interactivo)
-BOT_TOKEN=8580222159:AAE4e21gzeq6q...
-
-# Gemini API (opcional, para tips y herramientas IA)
-GEMINI_API_KEY=tu_api_key
+API_ID=tu_api_id
+API_HASH=tu_api_hash
 ```
 
-### 5.2. Por qué cada variable
+### 4.2. Por qué cada variable
 
 | Variable | Para qué | Si no la pones |
 |----------|----------|----------------|
 | `API_ID` | Autenticación de usuario real | El uploader no funciona (no da error, simplemente no conecta) |
 | `API_HASH` | Autenticación de usuario real | El uploader no funciona |
-| `BOT_TOKEN` | Token del bot interactivo | El bot no responde |
-| `GEMINI_API_KEY` | Resúmenes IA, tips, herramientas | Funciona con fallback a DB local (menos variedad) |
 
-### 5.3. Dónde va el archivo
+### 4.3. Dónde va el archivo
 
 En la raíz de `downloader_telegram/`:
 
@@ -124,11 +93,11 @@ devjobs/
 
 ---
 
-## 6. Crear sesión de Telegram
+## 5. Crear sesión de Telegram
 
 La sesión es un archivo que guarda tus credenciales de autenticación. Es como una cookie persistente: la creas una vez y se reutiliza.
 
-### 6.1. Crear sesión del CLI interactivo
+### 5.1. Crear sesión del CLI interactivo
 
 ```bash
 cd downloader_telegram
@@ -149,7 +118,7 @@ docker compose run --rm telegram python test_string.py
 
 **¿Por qué en Docker?** Para no instalar telethon, cryptography ni otras dependencias en tu sistema. Docker trae todo.
 
-### 6.2. Crear sesión del uploader
+### 5.2. Crear sesión del uploader
 
 El uploader usa una sesión **diferente** a la del CLI. Esto es intencional: puedes correr el menú de descargas y el uploader **a la vez** sin conflictos.
 
@@ -164,11 +133,11 @@ docker compose run --rm uploader python /app/subir_videos.py --setup
 
 ---
 
-## 7. Configurar grupos de Telegram
+## 6. Configurar grupos de Telegram
 
 Necesitas decirle al sistema **a qué grupo subir** los vídeos.
 
-### 7.1. Descubrir tus grupos
+### 6.1. Descubrir tus grupos
 
 ```bash
 # Listar todos tus chats y grupos
@@ -191,7 +160,7 @@ Chat: Mi grupo de prueba
 
 **¿Cómo interpretar esto?** El ID es el número que necesitas copiar. Los IDs de grupos son **negativos** y empiezan por `-100`. Si "Tiene topics: sí", el grupo tiene el sistema de foros activado (cada tema es un hilo independiente).
 
-### 7.2. Crear `config/grupos.json`
+### 6.2. Crear `config/grupos.json`
 
 Copia los IDs a `downloader_telegram/config/grupos.json`:
 
@@ -210,20 +179,20 @@ Copia los IDs a `downloader_telegram/config/grupos.json`:
 
 **¿Qué es `nombre`?** El nombre que se usa para ruteo por keyword. Si un vídeo se llama `OnePiece_KW_sendo_compressed.mp4`, se sube al grupo cuyo `nombre` es "sendo".
 
-### 7.3. Verificar que el bot es administrador
+### 6.3. Verificar permisos de la cuenta
 
-Si usas el uploader, el bot (o tu usuario) debe ser **administrador** del grupo. Sin permisos de administración, no puede enviar mensajes ni crear temas.
+El uploader publica con **tu cuenta de Telegram**, así que esa cuenta debe ser **administradora** del grupo. Sin permisos de administración, no puede enviar mensajes ni crear temas.
 
-**Cómo añadir el bot como administrador:**
+**Cómo dar permisos a tu cuenta:**
 1. Abre el grupo en Telegram
 2. Toca el nombre del grupo → "Administradores"
 3. "Añadir administrador"
-4. Busca tu bot por username
+4. Busca tu cuenta
 5. Dale permisos de "Enviar mensajes" y "Añadir temas"
 
 ---
 
-## 8. Variables de entorno del uploader
+## 7. Variables de entorno del uploader
 
 El uploader tiene variables adicionales que puedes configurar:
 
@@ -237,9 +206,9 @@ El uploader tiene variables adicionales que puedes configurar:
 
 ---
 
-## 9. Arrancar los servicios
+## 8. Arrancar los servicios
 
-### 9.1. CLI interactivo (descarga/clonado/vigilante)
+### 8.1. CLI interactivo (descarga/clonado/vigilante)
 
 ```bash
 docker compose up
@@ -247,7 +216,7 @@ docker compose up
 # Seleccionar: Descargas Masivas, Clonación o Vigilante
 ```
 
-### 9.2. Uploader automático (pipeline)
+### 8.2. Uploader automático (pipeline)
 
 ```bash
 # El uploader vigila comprimidos/ y sube a Telegram
@@ -257,29 +226,11 @@ docker compose up -d uploader
 docker compose logs -f uploader
 ```
 
-### 9.3. Bot de Telegram
-
-```bash
-# Configurar variables en .env (si no lo has hecho)
-echo "BOT_TOKEN=tu_token" >> .env
-echo "BOT_ADMINS=tu_user_id" >> .env
-
-# Arrancar el bot
-docker compose up -d telegram_bot
-
-# Ver logs
-docker compose logs -f telegram_bot
-```
-
-**¿Cómo obtengo mi user ID?** Envía un mensaje a tu bot y luego abre `https://api.telegram.org/botTU_TOKEN/getUpdates`. Busca `"from":{"id":12345678}` — ese número es tu user ID.
-
----
-
-## 10. Cómo funciona el uploader por dentro
+## 9. Cómo funciona el uploader por dentro
 
 El uploader (`subir_videos.py`) es el **consumidor final del pipeline de compresión**. No es un bot que espera comandos: es un **daemon que vigila una carpeta** y, cada `UPLOADER_INTERVALO` (60s), hace lo siguiente con cada `*_compressed.mp4` que encuentra en `/comprimidos`:
 
-### 10.1. El ciclo completo de subida
+### 9.1. El ciclo completo de subida
 
 ```
 1. LEER archivo en /comprimidos/<nombre>_compressed.mp4
@@ -295,7 +246,7 @@ El uploader (`subir_videos.py`) es el **consumidor final del pipeline de compres
         ├─ ¿el grupo tiene foros? → busca tema por canal, por keyword, o el general
         └─ sin coincidencia → grupo "default"
         ▼
-4. ¿Tamaño > 2GB? (límite de Bot API / subida estable)
+4. ¿Tamaño > 2GB? (límite de subida / estabilidad)
         ├─ NO → envía el archivo entero
         └─ SÍ → DIVIDIR: ffmpeg -ss ... -t 5400 → partes de 90 min
                 en /app/partes/<base>_part01.mp4, _part02.mp4, ...
@@ -311,7 +262,7 @@ El uploader (`subir_videos.py`) es el **consumidor final del pipeline de compres
 
 > 🔗 Este ciclo es el **consumidor final** del pipeline del [Ecosistema Devjobs](/posts/instalacion-devjobs#135-flujo-del-pipeline-1--directo--telegram-sendosama): los `*_compressed.mp4` los produce el **monitor de FFmpeg** ([ciclo de compresión](/posts/instalacion-ffmpeg#91-el-ciclo-de-compresión-paso-a-paso)).
 
-### 10.2. Qué es la carpeta `partes/`
+### 9.2. Qué es la carpeta `partes/`
 
 Montada como `data/pipeline/partes → /app/partes` (y como `../data/pipeline/partes` en el `docker-compose.yml`), es un **área de trabajo temporal**:
 
@@ -324,7 +275,7 @@ No tienes que crearla manualmente: el componente mkdir la crea solo, y el `boots
 
 **Ojo, no confundir** con las partes del *TwitchRecorder* (las `__parte2.mp4` que se generan cuando un directo cambia de plataforma a mitad de emisión). Esas las concatena el propio recorder al terminar. La carpeta `partes/` es solo el troceado para Telegram.
 
-### 10.3. El ruteo por keyword (grupos.json)
+### 9.3. El ruteo por keyword (grupos.json)
 
 El uploader **no "sabe" de contenidos**: decide el destino mirando el nombre del archivo.
 
@@ -337,7 +288,7 @@ El uploader **no "sabe" de contenidos**: decide el destino mirando el nombre del
 
 Cada vídeo que se sube queda registrado en `enviados.json` para no enviarlo dos veces aunque el archivo aparezca de nuevo en la carpeta.
 
-### 10.4. Las 3 sesiones (y por qué NO chocan)
+### 9.4. Las 3 sesiones (y por qué NO chocan)
 
 El projeto usa **sesiones separadas** para cada rol, porque Telegram solo permite **una conexión activa por sesión**:
 
@@ -351,7 +302,7 @@ Como cada daemon monta su propia sesión (`docker-compose.yml`), puedes descarga
 
 ---
 
-## 11. Seguridad: cifrado AES
+## 10. Seguridad: cifrado AES
 
 Las credenciales se almacenan cifradas con Fernet (AES-CBC):
 
@@ -367,14 +318,11 @@ Las credenciales se almacenan cifradas con Fernet (AES-CBC):
 
 ---
 
-## 12. Verificación
+## 11. Verificación
 
 ```bash
 # Comprobar que todo está corriendo
 docker compose ps
-
-# Probar el bot en Telegram
-# Enviar /ping a @jorbencas_bot
 
 # Probar una descarga
 docker compose run --rm uploader python /app/subir_videos.py --help
@@ -382,7 +330,7 @@ docker compose run --rm uploader python /app/subir_videos.py --help
 
 ---
 
-## 13. Sin Docker
+## 12. Sin Docker
 
 Si prefieres instalar directamente:
 
@@ -404,8 +352,7 @@ python test_download_protected_content_telegram.py
 |----------|-------|----------|
 | `API_IS not recognized` | Typo en `.env` | Cambiar `API_IS` por `API_ID` |
 | `No session file` | No se ha creado la sesión | Ejecutar `--setup` o `test_string.py` |
-| `Bot no responde` | Token incorrecto | Verificar `BOT_TOKEN` en `.env` |
-| `Permission denied for chat` | Bot no es administrador | Añadir bot como admin del grupo |
+| `Permission denied for chat` | La cuenta no es administradora | Añadir la cuenta como admin del grupo |
 | `FloodWaitError` | Telegram te bloquea temporalmente | Esperar el tiempo que indique el error (ej: "wait 300 seconds") |
 | `Config bin corrupted` | `config.bin` dañado | Borrar `config.bin` y `secret.key`, ejecutar `--setup` de nuevo |
 | `2FA failed` | Contraseña 2FA incorrecta | Recuperar contraseña en Ajustes → Privacidad → Verificación en dos pasos |
@@ -430,7 +377,4 @@ Con el toolbox funcionando, sigue escalando el ecosistema:
 ## 🔗 Enlaces y recursos
 
 - [Telegram — My.apps (API ID y Hash)](https://my.telegram.org/apps)
-- [BotFather — crear y gestionar bots](https://t.me/BotFather)
 - [Documentación de Telethon](https://docs.telethon.dev/)
-- [Telegram Bot API — documentación](https://core.telegram.org/bots/api)
-- [Google AI Studio — API Key de Gemini](https://aistudio.google.com/)

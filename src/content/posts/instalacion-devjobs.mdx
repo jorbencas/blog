@@ -1,264 +1,495 @@
 ---
 draft: false
-title: "Instalación del Ecosistema Devjobs: Pipeline Completo desde Cero"
-description: "Guía de instalación paso a paso del ecosistema Devjobs: credenciales de Telegram, grabador de directos, monitor de ffmpeg, pipeline de 160 canales de YouTube, bot, scrapers y auto-arranque con systemd. Solo instalación: toda la explicación del código está en el proyecto."
+title: "Instalación del Pipeline Sendo: de un directo a Telegram desde cero"
+description: "Guía de instalación del pipeline Sendo: Docker, credenciales de Telegram, sesión del uploader, configuración de canales y grupos, build, arranque, verificación y auto-arranque con systemd. Solo instalación: el funcionamiento interno está en el proyecto."
 pubDate: "2026/09/19"
+updatedDate: "2026/10/31"
 
 tags: ["docker", "python", "automatización", "telegram", "twitch", "youtube", "ffmpeg", "systemd", "wsl2", "instalación"]
 image: "img/instalacion_devjobs/instalacion_devjobs_cover-1200.webp"
 ---
 
 
-Este post es **solo la instalación**: credenciales, clonado, configuración, build y auto-arranque.
+Este post es **solo la instalación** del pipeline Sendo: el sistema que graba un directo, lo comprime y lo publica en un foro de Telegram.
 
-> 📚 ¿Buscas entender **cómo funciona el código**, los pipelines, los casos de uso y las situaciones operativas? Eso está explicado para principiantes en [**Ecosistema Devjobs: Suite de Automatización**](/myprojects/devjobs-automation-suite) — allí vive toda la explicación, autocontenida.
-
----
-
-## 1. El mapa del ecosistema
-
-Instalarás **dos repos** que juntos forman toda la suite:
-
-| Repo | Qué instala | Para qué |
-|------|-------------|----------|
-| `devjobs` | El ecosistema completo (pipelines, bot, scrapers, backup) | Todo lo demás de esta guía |
-
-Los componentes que se levantan:
-
-| Componente | Función |
-|------------|---------|
-| **Pipeline 1 (Twitch)** | Graba directos de Sendo Sama y los sube a Telegram |
-| **Pipeline 2 (YouTube)** | Descarga 160 canales de YouTube y los sube a Telegram |
-| **Bot Telegram** | Bot interactivo del grupo |
-| **Scrapers** | Noticias, tips, cine |
-| **Aliases** | Control desde terminal |
-| **Systemd** | Auto-arranque al boot |
-
-> ✅ Todo lo demás (monitores, uploaders, IPC, keywords, OCR) está explicado **en el post de myprojects**, no aquí. Aquí solo se instala.
+> ¿Buscas entender **el código, los contenedores y el flujo de archivos**? Está explicado en [**Pipeline Sendo: directo → compresión → Telegram**](/myprojects/devjobs-automation-suite). Aquí solo se instala y se verifica.
 
 ---
 
-## 2. Requisitos previos
+## 1. Qué vas a instalar
 
-- **Windows 10/11** con **WSL2** y Docker Desktop (o Docker Engine en Linux)
-- **Git** (viene con WSL2)
-- Unos **20 GB de disco libre** y una cuenta de Telegram
+El pipeline son **tres contenedores** que se comunican mediante carpetas y nombres de archivo:
 
-> 📚 **Todo el funcionamiento interno** (keyword `_KW_`, OCR/sidecar, IPC, casos de uso) está explicado y autocontenido en [**Ecosistema Devjobs: Suite de Automatización**](/myprojects/devjobs-automation-suite).
+| Contenedor | Servicio | Función |
+|------------|----------|---------|
+| `twitchrecorder-sendo` | Grabador | Detecta el directo, obtiene la keyword y graba |
+| `ffmpeg_monitor-sendo` | Compresor | Comprime y, si toca, detecta episodios |
+| `telegram-uploader-sendo` | Uploader | Sube a grupos/temas de Telegram y limpia |
 
-## 3. Obtener el API ID y Hash de Telegram
+> El monitor no fuerza 720p por defecto: conserva la resolución del directo. Si quieres escalar, añade `RESOLUTION=720` a las variables del servicio `monitor` en `ffmpeg-yt-dlp/docker-compose.yml`.
 
-> Necesitas un **API ID** y un **API Hash** para que el bot/uploader puedan conectarse a la API de Telegram. Son **tuyos y de tu cuenta**: no uses los de otra persona.
+Las rutas de datos se crean con `DEVJOBS_DATA` (por defecto `/srv/devjobs-data`):
 
-1. Ve a **https://my.telegram.org** e inicia sesión con tu número.
-2. Entra en **API development tools**.
-3. Crea una app: título y short name cualquiera (ej. `Devjobs`, `devjobs`).
-4. Copia el **`api_id`** (número) y el **`api_hash`** (cadena).
-
-> ⚠️ Mantén estos datos en secreto: quien los tenga puede acceder a tu sesión de Telegram.
-
-Desde terminal:
-
-```bash
-# Guardar como variables de entorno
-echo 'export TG_API_ID=12345678' >> ~/.bashrc
-echo 'export TG_API_HASH=abcdef...' >> ~/.bashrc
-source ~/.bashrc
+```text
+/srv/devjobs-data/
+├── grabaciones/
+│   ├── AAAA/MM/          # originales
+│   └── test/             # cola: *_completed.mp4
+├── comprimidos/          # *_compressed.mp4 listos para subir
+└── partes/               # trozos temporales de vídeos > 2 GB
 ```
 
----
-
-## 4. Obtener el token del bot de Telegram
-
-Para el pipeline (uploader/bot) necesitas el **token** de un bot. Crea uno con **@BotFather**:
-
-1. Abre Telegram y busca **@BotFather**.
-2. `/newbot` → nombre → username.
-3. Copia el token (`123456789:AAF...`).
-
-Guárdalo:
-
-```bash
-echo 'export BOT_TOKEN=123456789:AAF...' >> ~/.bashrc
-source ~/.bashrc
-```
-
-> 💡 El bot es para **subir contenido**; la sesión de usuario (paso 7) es para los grupos privados.
+> El resto de herramientas del repositorio (pipeline de YouTube, PDFs, scrapers) se instala por separado. Esta guía no las levanta.
 
 ---
 
-## 5. Clonar el repositorio
+## 2. Requisitos
+
+- **Linux** o **WSL2** en Windows.
+- **Docker Engine + plugin `docker compose` v2**. No sirve un `docker-compose` v1 antiguo.
+- **Git**, `curl` y permisos de `sudo`.
+- Una **cuenta de Telegram** que pueda publicar en el foro de destino.
+- Espacio en disco suficiente: una grabación de varias horas puede ocupar bastante antes de comprimirse.
+
+En WSL, guarda los datos en el sistema de archivos de Linux (`/srv` o `$HOME`). Si usas una ruta de Windows (`/mnt/c/...`), Docker la monta por 9p y el pipeline se vuelve mucho más lento.
+
+---
+
+## 3. Instalación automática recomendada
+
+El instalador principal es idempotente: puedes relanzarlo sin miedo.
 
 ```bash
 cd ~
-git clone git@github.com:jorbencas/devjobs.git
+git clone https://github.com/TU_USUARIO/devjobs.git
 cd devjobs
+
+# No lo ejecutes con sudo: el script pide sudo cuando lo necesita.
+bash servicios/instalar_ubuntu.sh
 ```
 
----
+Sustituye `TU_USUARIO` por tu usuario o por la URL de tu fork. Si ya tienes el repositorio clonado, salta el `git clone` y ejecuta el instalador desde su raíz.
 
-## 6. Configurar variables de entorno
+Qué hace `instalar_ubuntu.sh`:
 
-El repo trae archivos de ejemplo. Cópiate y rellena los reales:
+1. Prepara los repositorios de Ubuntu (incluido `old-releases` en versiones EOL).
+2. Instala o repara **Docker Engine + `docker compose` v2**.
+3. Añade tu usuario al grupo del socket de Docker.
+4. Localiza el repo o lo clona si no lo encuentra.
+5. Crea `${DEVJOBS_DATA}/grabaciones/test`, `comprimidos`, `partes` y `.native`.
+6. Comprueba los secretos del uploader.
+7. Construye las tres imágenes si faltan.
+8. Arranca grabador y compresor; el uploader solo si están credenciales, `grupos.json` y sesión.
+9. Instala el servicio `twitch-stream-pipeline.service`.
+10. Instala los aliases, activa NTP y limita los logs de Docker.
+
+Opciones útiles:
+
+```bash
+bash servicios/instalar_ubuntu.sh --help
+bash servicios/instalar_ubuntu.sh --rebuild   # fuerza recompilar las imágenes
+```
+
+### Si Docker ya está instalado y solo quieres montar el pipeline
 
 ```bash
 cd ~/devjobs
-cp .env.example .env
-nano .env
+bash servicios/bootstrap_instalar.sh
 ```
 
-Rellena al menos:
-- `TG_API_ID` / `TG_API_HASH` (paso 3)
-- `BOT_TOKEN` (paso 4)
+Este bootstrap comprueba Docker, clona o reutiliza el repo, sustituye la ruta antigua por la de esta máquina, crea carpetas, revisa secretos, construye las imágenes, instala systemd y añade los aliases.
 
-> 🤖 La ruta `data/` se crea automáticamente al primer arranque.
+Si el monitor no tiene imagen todavía, constrúyela explícitamente:
+
+```bash
+docker compose -f ffmpeg-yt-dlp/docker-compose.yml build monitor
+```
+
+### Después de la instalación automática
+
+El instalador puede terminar sin uploader si aún no existen las credenciales. El orden recomendado es:
+
+```bash
+# 1. Credenciales y sesión del uploader
+bash servicios/pipe_credenciales.sh
+
+# 2. Revisa la configuración de canales y destinos
+#    TwitchRecorder/config.json
+#    downloader_telegram/config/grupos.json
+
+# 3. Recrea los contenedores para aplicar la configuración
+source ~/.bashrc
+pipe_recreate
+```
+
+El uploader usa una sesión de usuario de Telegram; no necesita el token de un bot.
 
 ---
 
-## 7. Crear la sesión de Telegram
+## 4. Credenciales de Telegram
 
-Para los grupos privados (pipeline 1 y 2) necesitas una **sesión de usuario**. El repo incluye un script:
+El uploader necesita tres cosas distintas:
+
+| Cosa | De dónde sale | Dónde se guarda |
+|------|---------------|-----------------|
+| `api_id` + `api_hash` | https://my.telegram.org/apps | `downloader_telegram/config/config.bin` |
+| Clave de cifrado | Se genera sola | `downloader_telegram/config/secret.key` |
+| Sesión de usuario | Login con teléfono + código + 2FA | `downloader_telegram/sessions/uploader.session` |
+
+Lo normal es que cada equipo use **sus propias credenciales y su propia sesión**. No copies `config.bin`, `secret.key` ni `*.session` si vas a usar otra cuenta: son el login de una cuenta concreta. Solo tiene sentido copiarlos si migras la misma cuenta y la máquina antigua deja de usarla.
+
+### 4.1 Crear la app en Telegram
+
+1. Entra en **https://my.telegram.org/apps** con la cuenta que va a subir los vídeos.
+2. Crea una aplicación con cualquier nombre.
+3. Copia el **`api_id`** (número) y el **`api_hash`** (cadena).
+
+### 4.2 Generar credenciales y sesión con un solo script
 
 ```bash
 cd ~/devjobs
-python3 -m pip install -r requirements.txt  # solo la primera vez
-python3 -m scripts.crear_sesion
+bash servicios/pipe_credenciales.sh
 ```
 
-Sigue las instrucciones: introduce tu número y el código que te llega. Se generará un archivo `.session` que el uploader usará.
+El script:
 
-> 🔐 Mantén ese `.session` en secreto y no lo subas a GitHub.
+1. Construye las imágenes de Telegram si faltan.
+2. Pide `API ID` y `API HASH` si no existen.
+3. Cifra las credenciales en `config/config.bin` y crea `config/secret.key`.
+4. Pide teléfono, código y 2FA para crear `sessions/uploader.session`.
+5. Ejecuta una verificación final sin subir nada.
+
+### 4.3 Si migras la misma cuenta desde otro equipo
+
+Copia estos archivos desde la máquina antigua:
+
+```bash
+scp USUARIO@MAQUINA_ANTIGUA:~/devjobs/downloader_telegram/config/config.bin \
+    ~/devjobs/downloader_telegram/config/
+
+scp USUARIO@MAQUINA_ANTIGUA:~/devjobs/downloader_telegram/config/secret.key \
+    ~/devjobs/downloader_telegram/config/
+
+scp USUARIO@MAQUINA_ANTIGUA:~/devjobs/downloader_telegram/config/grupos.json \
+    ~/devjobs/downloader_telegram/config/
+
+scp USUARIO@MAQUINA_ANTIGUA:~/devjobs/downloader_telegram/sessions/uploader.session \
+    ~/devjobs/downloader_telegram/sessions/
+```
+
+Después valida la sesión:
+
+```bash
+bash servicios/pipe_verificar.sh
+```
+
+Si la sesión está corrupta o caducada:
+
+```bash
+bash servicios/pipe_setup.sh --reset
+```
+
+### 4.4 Verificar sin subir nada
+
+```bash
+bash servicios/pipe_verificar.sh
+```
+
+Comprueba que `config.bin` se descifra con `secret.key`, que `grupos.json` es válido y que `uploader.session` está autorizada.
 
 ---
 
-## 8. Configurar grupos de Telegram
+## 5. Configurar los canales del grabador
 
-El uploader necesita saber **a qué grupo y temas subir**. Configura en `config/`:
-
-```bash
-cd ~/devjobs && nano config/grupos.json
-```
-
-Estructura mínima:
+El grabador lee `TwitchRecorder/config.json`. Ejemplo con datos ficticios:
 
 ```json
 {
-  "grupo": "Stream Tecnologia",
-  "temas": {
-    "wordle": { "topic_id": 5, "keyword": "wordle" },
-    "midudev": { "topic_id": 12, "keyword": "midudev" }
-  }
+  "channels": {
+    "canal_demo": {
+      "enabled": true,
+      "platform": [
+        {
+          "platform": "web",
+          "url": "https://watch.example.com/",
+          "kick_channel": "canal_demo",
+          "detectar": true,
+          "corte": false,
+          "schedule": [
+            { "days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], "time": "21:30" }
+          ]
+        },
+        {
+          "platform": "kick",
+          "detectar": false,
+          "corte": false,
+          "schedule": [
+            { "days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], "time": "22:00" }
+          ]
+        }
+      ]
+    },
+    "canal_youtube_demo": {
+      "platform": [
+        {
+          "platform": "youtube",
+          "detectar": false,
+          "corte": false,
+          "schedule": [{ "days": ["Sunday"], "time": "19:00" }]
+        }
+      ]
+    }
+  },
+  "record_path": "/recordings",
+  "check_every": 30,
+  "max_duration": "24:00:00",
+  "retry_interval": 1,
+  "copy_to_test": true,
+  "test_path": "/recordings/test"
 }
 ```
 
-> 🔗 Cómo se obtiene cada `topic_id` y casuística completa: [el contrato de keyword y el ruteo](/myprojects/devjobs-automation-suite#la-keyword-que-viaja-_kw_-en-el-nombre-del-archivo).
+Lo mínimo que debes revisar:
+
+- `platform`: orden de prioridad de las fuentes.
+- `url`: solo para `web`.
+- `enabled`: `false` desactiva el canal.
+- `schedule`: días y horas. Si lo dejas vacío, el scheduler puede caer en el horario legacy (`days`/`start_time`); revisa `tw_logs` si no arranca cuando esperas.
+- `detectar` / `corte`: si el monitor debe buscar episodios y recortar.
+- `copy_to_test`: debe ser `true` para que el monitor reciba `*_completed.mp4`.
+
+Los nombres de los días van en inglés (`Monday`, `Tuesday`, ...). La hora se interpreta con la zona horaria del contenedor (`TZ` en el compose del grabador).
+
+Tras editar `config.json`:
+
+```bash
+pipe_recreate
+```
+
+El grabador recarga `config.json` en cada vuelta para incorporar canales nuevos, pero los cambios en un canal ya cargado pueden no aplicarse; recrear el contenedor evita dudas.
 
 ---
 
-## 9. Construir las imágenes Docker
+## 6. Configurar los destinos de Telegram
 
-```bash
-cd ~/devjobs
-docker compose build
+El uploader lee `downloader_telegram/config/grupos.json`. Ejemplo ficticio:
+
+```json
+{
+  "default": -1000000000000,
+  "grupos": [
+    { "nombre": "serie_demo", "id": -1000000000001 }
+  ],
+  "foros": [
+    {
+      "id": -1000000000002,
+      "nombre": "foro_demo",
+      "general": 101,
+      "temas": [
+        { "nombre": "serie_a", "id": 102 },
+        { "nombre": "serie_b", "id": 103 },
+        { "nombre": "peliculas", "id": 104 }
+      ]
+    }
+  ]
+}
 ```
 
-O si prefieres construir solo algunos servicios:
+- `default`: grupo de respaldo si ninguna keyword coincide.
+- `grupos`: chats sin temas.
+- `foros`: grupos con foro. `general` es el tema de respaldo.
+- `temas`: nombre del tema y su `topic_id`.
+
+### Obtener los IDs reales
+
+Con la sesión del uploader ya creada:
 
 ```bash
-docker compose build twitchrecorder-sendo ffmpeg_monitor-sendo uploader-sendo
+# Lista tus chats/grupos
+bash servicios/pipe_chats.sh --creados
+
+# Lista los temas de un foro concreto
+bash servicios/pipe_topics.sh -1000000000002
 ```
+
+Los IDs que imprime `pipe_topics` son los que van en `temas[].id`. El ID del foro va en `foros[].id`.
+
+Tras editar `grupos.json`, reinicia el uploader:
+
+```bash
+docker restart telegram-uploader-sendo
+```
+
+El uploader carga `grupos.json` al arrancar, no en cada archivo.
 
 ---
 
-## 10. Instalar los aliases
+## 7. Construir las imágenes
 
-El repo incluye un instalador de aliases (40+ comandos `pipe_*`, `ff_*`, `tg_*`):
+Si usaste el instalador, ya están construidas. Para hacerlo a mano:
 
 ```bash
 cd ~/devjobs
-bash servicios/instalar_aliases.sh
+
+docker compose -f TwitchRecorder/docker-compose.yml build
+docker compose -f ffmpeg-yt-dlp/docker-compose.yml build monitor
+docker compose -f downloader_telegram/docker-compose.yml build uploader
+```
+
+El servicio `telegram` del compose es el CLI interactivo, no el daemon.
+
+---
+
+## 8. Arrancar y verificar
+
+```bash
 source ~/.bashrc
+
+pipe_up        # levanta los tres contenedores
+pipe_ps        # estado de los tres
+plogs          # logs de los tres a la vez
 ```
 
-Verifica:
+Logs individuales:
 
 ```bash
-pipe_help   # muestra todos los aliases
+tw_logs        # grabador
+ff_logs        # monitor/compresor
+tg_logs        # uploader
 ```
 
-> 🔗 Todos los aliases explicados: [Sistema de aliases](/myprojects/devjobs-automation-suite#sistema-de-aliases-control-desde-cualquier-terminal).
-
----
-
-## 11. Probar el pipeline
-
-Arranca todo el ecosistema:
+Comprobaciones:
 
 ```bash
-pipe_up
+docker ps
+bash servicios/pipe_verificar.sh
 ```
 
-- **Pipeline 1**: `twitchrecorder-sendo` (grabador), `ffmpeg_monitor-sendo` (compresor), `uploader-sendo` (subidor a Telegram)
-- **Pipeline 2**: `yt-pipeline` (descarga → convierte → sube) con su cron
-- **Bot**: `telegram-bot`
-
-Prueba el estado con el bot: `/estado` desde Telegram, o en terminal:
+Prueba de subida sin esperar a un directo:
 
 ```bash
-pipe_ps        # contenedores en marcha
-plogs          # logs de los 3 daemons a la vez
+# Copia un vídeo de ejemplo a comprimidos/ con una keyword ficticia
+bash servicios/pipe_test_upload.sh serie_demo
+
+# Ver la subida
+plogs
 ```
 
----
-
-## 12. Auto-arranque con systemd
-
-Para que todo arranque **solo al encender el PC**:
+También puedes forzar una sola pasada del uploader:
 
 ```bash
-# Instalar servicios (una sola vez)
-bash servicios/bootstrap_arrancar.sh
-
-# Gestionar
-sudo systemctl status  twitch-stream-pipeline.service
-sudo systemctl status  telegram-bot.service
+bash servicios/pipe_once.sh
 ```
 
-> 🔗 Servicios, aliases `*_sys_*` y bootstrap en otra máquina: [Systemd](/myprojects/devjobs-automation-suite#systemd-auto-arranque-al-boot).
+---
+
+## 9. Auto-arranque con systemd
+
+`instalar_ubuntu.sh` ya crea y habilita el servicio. Para gestionarlo:
+
+```bash
+sudo systemctl status twitch-stream-pipeline.service
+sudo systemctl restart twitch-stream-pipeline.service
+sudo systemctl stop twitch-stream-pipeline.service
+```
+
+O con los aliases:
+
+```bash
+pipe_sys_status
+pipe_sys_start
+pipe_sys_stop
+```
+
+El servicio es de tipo `oneshot` con `RemainAfterExit=yes`: arranca los tres compose y los para al detenerse. Usa el usuario que ejecutó el instalador y añade el grupo `docker` como suplementario.
+
+### Instalación manual del servicio
+
+```bash
+cd ~/devjobs
+
+# Ajusta User= y las rutas absolutas del archivo a tu usuario y tu ruta.
+# Añade SupplementaryGroups=docker si el archivo no lo trae.
+sudo cp servicios/twitch-stream-pipeline.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now twitch-stream-pipeline.service
+```
+
+Revisa antes de copiarlo:
+
+```bash
+grep -E '^(User|WorkingDirectory|ExecStart|ExecStop)=' servicios/twitch-stream-pipeline.service
+```
+
+### WSL2
+
+Si `systemctl` no funciona, activa systemd en `/etc/wsl.conf`:
+
+```ini
+[boot]
+systemd=true
+```
+
+Luego, desde PowerShell:
+
+```powershell
+wsl --shutdown
+```
+
+Vuelve a entrar en WSL y comprueba:
+
+```bash
+systemctl is-system-running
+```
 
 ---
 
-## Verificación final
+## 10. Actualizar el pipeline
 
-| Comprobación | Cómo |
-|--------------|------|
-| ¿Contenedores arriba? | `docker ps` |
-| ¿Grabando un directo? | `plogs` o `ff_logs` |
-| ¿El bot responde? | `/estado` en Telegram |
-| ¿Pipeline 2 arranca? | `cat data/yt-pipeline/logs/cron_$(date +%Y%m%d).log` |
+| Cambio | Comando |
+|--------|---------|
+| Código Python o Dockerfile | `pipe_rebuild` |
+| `config.json`, `grupos.json` o variable de entorno | `pipe_recreate` |
+| Solo el uploader | `docker restart telegram-uploader-sendo` |
+| Parar todo | `pipe_down` |
+| Volver a arrancar | `pipe_up` |
 
----
-
-## Troubleshooting
-
-| Problema | Solución |
-|----------|----------|
-| La sesión no conecta | Regenera `.session` con `crear_sesion` |
-| El bot no responde | Revisa `BOT_TOKEN` y `DATA_BOT` en `.env` |
-| No graba ningún directo | Comprueba la config del canal y `start_time` |
-| Los contenedores no arrancan | `docker compose build` de nuevo; revisa puertos |
-| No hay tema en Telegram | Revisa `grupos.json` y el `topic_id` |
+`pipe_rebuild` hace build y `--force-recreate` de los tres servicios. Tarda más, pero es el único que garantiza que el código nuevo está dentro de la imagen. Ojo: `pipe_down` hace `down` en los tres compose.
 
 ---
 
-## El resto de piezas (explicadas en myprojects)
+## 11. Problemas habituales
 
-Toda la **explicación del código y los casos de uso** (no instalación) vive ahora en [**Ecosistema Devjobs: Suite de Automatización**](/myprojects/devjobs-automation-suite):
+| Problema | Causa probable | Solución |
+|----------|----------------|----------|
+| `permission denied` al usar Docker | Tu sesión no tiene el grupo del socket | Cierra sesión y entra de nuevo, o `newgrp docker` |
+| `docker compose` no existe | Docker v1 o plugin ausente | Instala `docker-compose-plugin`; comprueba `docker compose version` |
+| El uploader no arranca | Faltan `config.bin`, `secret.key`, `grupos.json` o `uploader.session` | Ejecuta `pipe_credenciales.sh` para credenciales/sesión, crea `grupos.json` y luego `pipe_recreate` |
+| `--verificar` falla | La clave no descifra `config.bin` o la sesión caducó | Revisa `secret.key`/`config.bin`; si la sesión caducó, `pipe_setup.sh --reset` |
+| No graba ningún directo | Canal desactivado, sin `schedule` o fuente mal configurada | Revisa `config.json` y `tw_logs` |
+| Graba pero el monitor no coge el vídeo | El archivo no se llama `*_completed.mp4` | Comprueba `copy_to_test` y `grabaciones/test` |
+| El vídeo se mueve a `.corruptos` | `ffprobe` no lo lee o dura menos de 60 s | Revisa la grabación y los logs del monitor |
+| El uploader no rutea al tema correcto | Keyword y nombre del tema no coinciden | Ajusta `temas` en `grupos.json` o prueba con `pipe_test` |
+| El vídeo sale como documento | Faltan atributos de vídeo o thumbnail | Revisa los logs del uploader y `ffprobe` |
+| Telegram rechaza la subida | El archivo supera el límite y no se dividió | Comprueba el tamaño y los logs de partición; el monitor debería dejarlo por debajo de `TAMANO_MAX_MB` |
+| Se llena el disco | Logs o grabaciones antiguas | El instalador limita logs; revisa `grabaciones/` y `comprimidos/` |
+| La hora no coincide | Contenedor con `TZ` incorrecta o host desincronizado | Ajusta `TZ` y activa NTP (`timedatectl set-ntp true`) |
 
-- **Pipeline 1** (Twitch → Telegram): detección de directo, playlist congelada, keyword `_KW_`, sidecar, IPC, cambio de plataforma a mitad
-- **Pipeline 2** (YouTube → Telegram, 160 canales): configuración, flujo, cron
-- **Monitor de ffmpeg**: por qué no hay un `monitor.json`, flags y variables
-- **`backup_youtube.sh`** y resto de herramientas Docker (casos de uso)
-- **Bot, scrapers, aliases y systemd**: detalles operativos completos
+Para un diagnóstico más detallado:
 
-Ahí está **todo explicado paso a paso** para que cualquiera lo entienda sin haber instalado nada.
+```bash
+plogs
+docker logs --tail 100 twitchrecorder-sendo
+docker logs --tail 100 ffmpeg_monitor-sendo
+docker logs --tail 100 telegram-uploader-sendo
+```
+
+---
+
+## 12. Siguiente paso
+
+Con el pipeline arrancado y verificado:
+
+- Lee el [funcionamiento interno del pipeline](/myprojects/devjobs-automation-suite) para entender keywords, partes, OCR y ruteo.
+- Consulta [Telegram Ultimate Toolbox](/myprojects/telegram-ultimate-toolbox) si quieres usar el uploader como herramienta independiente.
+- Consulta [FFmpeg + yt-dlp](/myprojects/ffmpeg-yt-dlp) para los modos de conversión y el monitor fuera del pipeline.
