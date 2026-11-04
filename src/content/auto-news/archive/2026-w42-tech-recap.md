@@ -3,7 +3,7 @@ title: "Weekly Tech Recap W42"
 description: "¿Has recuperado el aliento después de una semana un poco... agitada? Entre actualizaciones de seguridad de plataformas que usamos a diario y un par de"
 pubDate: "2026-10-17"
 author: "Jorge Beneyto Castelló"
-image: "public/img/arquitectura_web.webp"
+image: "img/2026_w42_tech_recap/2026_w42_tech_recap_cover-1200.webp"
 tags: ["tech", "weekly-recap", "ciberseguridad", "ia", "devops", "hardware", "opensource", "docker", "openai", "android"]
 slug: "2026-w42-tech-recap"
 draft: true

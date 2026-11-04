@@ -3,7 +3,7 @@ title: "Weekly Tech Recap W41"
 description: "¿Cansado de que tu IA te dé pistas falsas en casos de asesinato? Pues bienvenido a la semana previa a la Hispanidad, donde la tecnología no descansa n"
 pubDate: "2026-10-10"
 author: "Jorge Beneyto Castelló"
-image: "public/img/arquitectura_web.webp"
+image: "img/2026_w41_tech_recap/2026_w41_tech_recap_cover-1200.webp"
 tags: ["tech", "weekly-recap", "ia", "rust", "ciberseguridad", "hardware", "nextjs", "kubernetes", "hackernews", "devto"]
 slug: "2026-w41-tech-recap"
 draft: true

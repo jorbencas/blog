@@ -3,7 +3,7 @@ title: "Weekly Tech Recap W43"
 description: "¿Cómo cerramos octubre? Pues con la IA intentando ser más local que nunca, el hardware rompiéndola con nuevas herramientas de desarrollo y y, como sie"
 pubDate: "2026-10-24"
 author: "Jorge Beneyto Castelló"
-image: "public/img/arquitectura_web.webp"
+image: "img/2026_w43_tech_recap/2026_w43_tech_recap_cover-1200.webp"
 tags: ["tech", "weekly-recap", "ia-local", "ciberseguridad", "rust", "nvidia", "devops", "llm", "xataka", "hacker-news"]
 slug: "2026-w43-tech-recap"
 draft: true

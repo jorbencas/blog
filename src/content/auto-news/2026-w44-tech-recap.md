@@ -3,7 +3,7 @@ title: "Weekly Tech Recap W44"
 description: "¿Quién necesita sustos de Halloween cuando la realidad nos da un hackeo récord y la IA ya está cazando bugs por nosotros? Mientras los dulces y el Día"
 pubDate: "2026-10-31"
 author: "Jorge Beneyto Castelló"
-image: "public/img/arquitectura_web.webp"
+image: "img/2026_w44_tech_recap/2026_w44_tech_recap_cover-1200.webp"
 tags: ["tech", "weekly-recap", "ciberseguridad", "ia", "hardware", "rust", "devops", "fintech", "hacker-news", "business-insider"]
 slug: "2026-w44-tech-recap"
 draft: true
