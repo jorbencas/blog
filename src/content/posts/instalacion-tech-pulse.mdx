@@ -1,16 +1,16 @@
 ---
 draft: false
-title: "Instalación de Tech Pulse: Dashboard de Noticias Tech con IA"
-description: "Guía completa para instalar y configurar Tech Pulse: scraping de 515 fuentes, resúmenes con Gemini, notificaciones Telegram, newsletter Mailgun, tips de IT y herramientas IA."
+title: "Instalación de Tech Pulse: Pipeline de Noticias Tech con IA"
+description: "Guía completa para instalar y configurar Tech Pulse: scraping de 572 fuentes, resúmenes con Gemini, notificaciones Telegram (noticias + estrenos), newsletter Mailgun, tips de IT y herramientas IA."
 pubDate: "2026/09/04"
 
-updatedDate: "2026/09/13"
+updatedDate: "2026/11/06"
 tags: ["python", "ia", "web-scraping", "instalación", "github-actions", "telegram"]
 image: "img/instalacion_tech_pulse/instalacion_tech_pulse_cover-1200.webp"
 author: "Jorge Beneyto Castelló"
 ---
 
-Tech Pulse es un pipeline completo de automatización: scraping de 515 fuentes, resúmenes con IA, notificaciones Telegram, newsletter por email, tips de IT y herramientas IA. Pero para que funcione, necesitas configurar varias API keys. Cada una tiene su purpose y te explico cómo obtenerlas.
+Tech Pulse es un pipeline completo de automatización: scraping de 572 fuentes, resúmenes con IA, notificaciones Telegram (noticias cada 30 minutos y estrenos al topic «report img»), newsletter por email, tips de IT y herramientas IA. Pero para que funcione, necesitas configurar varias API keys. Cada una tiene su propósito y te explico cómo obtenerlas.
 
 ---
 
@@ -21,7 +21,7 @@ Tech Pulse es un pipeline completo de automatización: scraping de 515 fuentes, 
 | **Feedly** | Lee RSS | No filtra por relevancia, no genera resúmenes IA |
 | **Google News** | Noticias tech | No scraping directo, no personalizable |
 | **Herramientas manuales** | Scraping a medida | Requieren mantenimiento constante |
-| **Tech Pulse** | Scraping + IA + notificaciones + dashboard | Todo automatizado, 515 fuentes, 134 tests |
+| **Tech Pulse** | Scraping + IA + notificaciones + web | Todo automatizado, 572 fuentes, 214 tests |
 
 **¿Por qué Python?** Ecosistema de scraping (requests, beautifulsoup), IA (google-generativeai), flexibilidad para integrar todo en un solo pipeline.
 
@@ -105,7 +105,7 @@ Tech Pulse es un pipeline completo de automatización: scraping de 515 fuentes, 
 4. Copia la API key (empieza por `key-...`)
 5. En **Domains**, verifica un dominio (o usa el dominio de prueba `sandbox...mailgun.org`)
 
-**¿Es indispensable?** No. Si no configuras Mailgun, el newsletter no se envía pero el resto funciona (dashboard, Telegram, tips).
+**¿Es indispensable?** No. Si no configuras Mailgun, el newsletter no se envía pero el resto funciona (gestor web, Telegram, tips).
 
 **¿Qué pasa si uso el dominio de prueba?** Solo puedes enviar emails a direcciones que hayas verificado en Mailgun. Para envíos reales, necesitas un dominio propio.
 
@@ -179,7 +179,7 @@ test_githubActions/
 ## 8. Probar el scraping
 
 ```bash
-# Scraping completo (todas las 515 fuentes — tarda ~30 min)
+# Scraping completo (todas las 572 fuentes — tarda ~30 min)
 python -m scripts.scrapers.scrape_news --tier full
 
 # Scraping ligero (solo quick sources, ~15 min)
@@ -193,24 +193,23 @@ python -m scripts.scrapers.scrape_tools
 - `noticias_historico.json` — Todas las noticias scrapeadas
 - `herramientas.json` — Herramientas de GitHub
 
-**¿Cuánto tarda?** El scraping completo tarda ~30 minutos. El ligero ~15 minutos. Es normal porque hay 515 fuentes que consultar.
+**¿Cuánto tarda?** El scraping completo tarda ~30 minutos. El ligero ~15 minutos. Es normal porque hay 572 fuentes que consultar.
 
 **¿Qué pasa si falla alguna fuente?** El sistema tiene fallbacks: si una fuente falla, la salta y sigue con las demás. No se detiene por un error individual.
 
 ---
 
-## 9. Generar el dashboard
+## 9. El gestor de fuentes (web)
+
+La web es estática: no hay nada que generar. `public/index.html` es el **gestor de fuentes** (alta/baja de fuentes, filtros por tipo y proyecto, búsqueda, export JSON) y `public/data/fuentes.json` es el snapshot con las 576 fuentes.
 
 ```bash
-# Generar solo el HTML del dashboard
-python -m scripts.publishers.generate_weekly --dashboard-only
-
-# Previsualizar
+# Previsualizar en local
 python -m http.server -d public
 # Abrir http://localhost:8000 en el navegador
 ```
 
-**¿Qué genera?** Un archivo `public/index.html` con el dashboard completo: noticias, vídeos, ranking GitHub, filtros combinables.
+**¿Cómo se despliega?** El workflow `dashboard_update` publica en [Surge](http://jorbencasdownloaderdocument.surge.sh) en cada push que toca `public/**`. Si cambias fuentes desde la web: **⬇ Exportar JSON** → reemplaza `public/data/fuentes.json` → push.
 
 ---
 
@@ -250,7 +249,7 @@ python scripts/ai_tools_generator.py --dry-run
 ## 12. Ejecutar tests
 
 ```bash
-# Todos los tests (134 tests)
+# Todos los tests (214 tests)
 python -m pytest tests/ -v
 
 # Tests específicos
@@ -267,12 +266,16 @@ El proyecto está diseñado para ejecutarse automáticamente via GitHub Actions.
 
 | Workflow | Frecuencia | Qué hace |
 |----------|------------|----------|
-| `scrape_hourly.yml` | Cada hora | Scraping de quick sources |
-| `scrape_6h.yml` | Cada 6 horas | Scraping de standard sources |
-| `daily_tips.yml` | Cada 3 horas | Generar tips de IT |
-| `daily_ai_tools.yml` | Cada 3 horas | Generar herramientas IA |
-| `send_email.yml` | Diario (09:00 UTC) | Enviar newsletter |
-| `send_telegram.yml` | Cada 30 min | Enviar noticias a Telegram |
+| `scrape_all_workflow.yml` | Cada hora | Scraping de fuentes quick |
+| `scraper_workflow.yml` | Sábados 07:00 UTC | Pipeline semanal: noticias + herramientas + recap del blog |
+| `daily_content.yml` | Cada 3 horas | Generar tips de IT y herramientas IA |
+| `daily_resources.yml` | Diario (06:00 UTC) | Actualizar resources del blog |
+| `send_email_workflow.yml` | Diario (09:00 UTC) | Enviar newsletter |
+| `send_telegram_workflow.yml` | Cada 30 minutos | Enviar noticias a Telegram |
+| `formulatv_telegram.yml` | Cada 15 minutos | Enviar estrenos al topic «report img» |
+| `movie_scrapers.yml` | Cada 3 horas | Scrapers de películas concretas |
+| `dashboard_update.yml` | Push a `public/**` | Desplegar el gestor de fuentes a Surge |
+| `tests.yml` | Push/PR a master | Ejecutar pytest |
 
 ### Configurar GitHub Secrets
 
@@ -297,8 +300,8 @@ En tu fork del repo, ve a **Settings** → **Secrets and variables** → **Actio
 # Comprobar que el scraping funciona
 ls -la files/noticias_historico.json
 
-# Comprobar que el dashboard se genera
-ls -la public/index.html
+# Comprobar que el gestor de fuentes está presente
+ls -la public/index.html public/data/fuentes.json
 
 # Comprobar que los tests pasan
 python -m pytest tests/ -v --tb=short
@@ -325,5 +328,5 @@ python -m pytest tests/ -v --tb=short
 - [Instalación del Ecosistema Devjobs: Pipeline Completo desde Cero](/posts/instalacion-devjobs)
 - [Instalación de FFmpeg + yt-dlp: Conversor de Vídeo](/posts/instalacion-ffmpeg)
 - [Instalación de Telegram Toolbox: Bot y Uploader](/posts/instalacion-telegram)
-- [Tech Pulse: Dashboard Automatizado de Noticias Tech](/myprojects/tech-pulse-dashboard)
+- [Tech Pulse: Pipeline Automatizado de Noticias Tech con IA](/myprojects/tech-pulse-dashboard)
 - [Refactor del algoritmo SSIM: de código duplicado a módulo compartido](/posts/centralizar-ssim-duplicado-en-modulo-compartido)

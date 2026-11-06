@@ -1,6 +1,6 @@
 # Contexto del proyecto — Blog
 
-**Última actualización**: 2026-07-07 (Disqus comments + post Docker)
+**Última actualización**: 2026-11-06 (Tech Pulse: gestor de fuentes + Telegram)
 **Stack**: Astro 6.4 + Svelte 5 + Tailwind CSS 4.3 | Vercel static | Node >= 22
 **Idioma**: Español
 **Deploy**: `blog-jorbencas.vercel.app`
@@ -37,6 +37,7 @@
 | 2026-07 | **README actualizado**: sección Resource Management reescrita como API pipeline, eliminados detalles de script Python interno |
 | 2026-07 | **Post Docker**: Nuevo post `docker-instalacion-primeros-pasos.mdx` — instalación Linux/Windows, primer contenedor, Dockerfile, containerizar el blog paso a paso (9 pasos), Docker Desktop, complementos (Compose multi-servicio, volúmenes, redes, .env, comandos día a día, buenas prácticas). Dockerfile + docker-compose.yml + .dockerignore creados en raíz del blog |
 | 2026-07 | **Disqus comments**: Componente `Disqus.astro` añadido a `PostLayout.astro` — comentarios en todos los posts. Shortname: `jorbencas` |
+| 2026-11 | **Tech Pulse actualizado**: páginas del proyecto/guía reescritas (gestor de fuentes, 572 fuentes, 214 tests, estrenos y enlaces Telegram), enlaces mdtools retirados |
 
 ## Mejoras implementadas
 
@@ -94,6 +95,13 @@
 - **9 páginas actualizadas**: `index.astro`, `posts/[page].astro`, `posts/index.astro`, `herramientas/index.astro`, `herramientas/[page].astro`, `retos/[page].astro`, `proyectos/[page].astro`, `tags/[tag]/[page].astro`
 - **ToolCard y ProjectCard**: ahora con `<a>` wrapping (antes tenían link "Detalles_") — todo el card es clickeable, mismo comportamiento que PreviewPost
 - 59 tests pasan (incluyendo visual regression — sin cambios visuales)
+- Build verificado sin errores
+
+### 7. Actualización Tech Pulse (gestor de fuentes + Telegram) ✅
+- **src/content/myprojects/tech-pulse-dashboard.mdx**: título → "Tech Pulse: Pipeline Automatizado de Noticias Tech con IA"; actualizados 572 fuentes / 214 tests; eliminadas subsecciones obsoletas "Refactor SOLID del Frontend JavaScript" y "Renderizado SSR del Dashboard"; notas de retiro en "Reorganización de Scripts"; secciones 5 y 6 reescritas ("Web: Gestor de Fuentes" y "Telegram: estrenos y enlaces correctos"); conclusiones sin mdtools/timeline (821 → ~350 líneas)
+- **src/content/posts/instalacion-tech-pulse.mdx**: title/description sin "Dashboard"; 515 → 572 fuentes, 134 → 214 tests; typo "su purpose" → "propósito"; sección 9 "Generar el dashboard" → "El gestor de fuentes (estático, deploy en push a public/**)"; tabla de workflows actualizada a nombres/crons reales (scrape_all, scraper_workflow, daily_content, daily_resources, send_email_workflow, send_telegram_workflow, formulatv_telegram, movie_scrapers, dashboard_update, tests)
+- **src/content/posts/ia-markdown-configuracion.mdx**: enlaces muertos a `/mdtools/` (vercel y surge → 404) sustituidos por nota de retirada y alternativas
+- **src/content/myprojects/devjobs-automation-suite.mdx** y **src/components/home/MostReadSection.astro**: link text/label al nuevo título ("Tech Pulse")
 - Build verificado sin errores
 
 ## Contenido
