@@ -1,7 +1,7 @@
 ---
 draft: false
 title: "Tech Pulse: Pipeline Automatizado de Noticias Tech con IA"
-description: "Pipeline automatizado que monitoriza 572 fuentes tech (YouTube, RSS, GitHub Topics, Product Hunt), genera resúmenes con IA, filtra por categoría y distribuye por Telegram (noticias cada 30 min + estrenos al topic «report img»), email newsletter + tips + herramientas IA, con web de gestor de fuentes desplegada en Surge."
+description: "Pipeline automatizado que monitoriza 627 fuentes tech (YouTube, RSS, GitHub Topics, Product Hunt), genera resúmenes con IA, filtra por categoría y distribuye por Telegram (noticias cada 30 min + estrenos al topic «report img»), email newsletter + tips + herramientas IA, con web de gestor de fuentes desplegada en Surge."
 pubDate: "2026/06/25"
 updatedDate: "2026/11/06"
 tags: ['python', 'ia', 'web-scraping', 'devops', 'automation', 'github-actions', 'rss']
@@ -243,7 +243,7 @@ En noviembre de 2026 la web se reescribió por completo: **desaparecieron la lan
 
 ### Qué hace
 
-- **Lista completa de las 576 fuentes** del snapshot `public/data/fuentes.json` (572 de `FUENTES` + 4 fuentes de estrenos) con badges por tipo (🌐 web, ▶️ YouTube, 📡 RSS, 🐙 GitHub, 🛠 herramientas) y por proyecto
+- **Lista completa de las 636 fuentes** del snapshot `public/data/fuentes.json` (627 de `FUENTES` + 9 entradas de estrenos/noticias) con badges por tipo (🌐 web, ▶️ YouTube, 📡 RSS, 🐙 GitHub, 🛠 herramientas) y por proyecto
 - **Etiqueta de proyecto derivada automáticamente** para cada fuente: 📰 Noticias tech (histórico → newsletter/Telegram/recap), 🛠 Herramientas/dev (resources del blog), 🎬 Películas/series (topic «report img») y 📚 Otros/recursos — la clasifica `proyectoDe()` a partir de los campos de la fuente (`tipo`, URL, nombre), sin tocar los scrapers
 - **Div explicativo** con la leyenda de cada proyecto y conteos en vivo
 - **Alta y baja de fuentes** con confirmación en dos pasos, búsqueda que incluye la etiqueta de proyecto y filtros por tipo y por proyecto
@@ -258,7 +258,7 @@ public/
 ├── css/fuentes.css     ← Temas dark/light + responsive (tabla → tarjetas en móvil)
 ├── js/fuentes.js       ← Estado, derivación de proyecto, filtros, localStorage, export
 └── data/
-    ├── fuentes.json    ← Snapshot de FUENTES (576 fuentes)
+    ├── fuentes.json    ← Snapshot de FUENTES (636 fuentes)
     └── events.json     ← Eventos de la Tech Timeline (lo lee scrape_october_calendar.py)
 ```
 
@@ -274,8 +274,8 @@ Junto con la reescritura de la web se amplió y formateó la distribución por T
 
 ### Topic «report img» — estrenos del día
 
-- **5 fuentes sin tokens**: FormulaTV (calendario de series), SensaCine (estrenos), Filmaffinity (cartelera), TVMaze (schedule ES, solo S1E1) y **À Punt** (noticias de la serie *Bambalina*: notas de premsa + RSS, filtro por keyword con ventana de 14 días)
-- **Fecha estricta en Europe/Madrid**: solo se envían estrenos con fecha == hoy; las noticias de À Punt se envían una sola vez (dedup `titulo|fecha` en `files/formulatv_sent.json`)
+- **9 fuentes sin tokens**: de estrenos — FormulaTV (calendario de series), SensaCine (cine), Filmaffinity (cartelera), TVMaze (schedule ES, estrenos de temporada SxE1) y **Movistar+** («Hoy en M+ Estrenos», EPG del canal); de noticias — **À Punt** (*Bambalina*: notas de premsa + RSS con keyword) y los RSS de **FormulaTV**, **Fotogramas** y **SensaCine** (ventana de 14 días)
+- **Fecha estricta en Europe/Madrid**: solo se envían estrenos con fecha == hoy; las noticias se envían una sola vez (dedup `titulo|fecha` en `files/formulatv_sent.json`, persistido entre ejecuciones con `actions/cache`) y las de más de 3 días se marcan sin enviar (backfill silencioso)
 - **Blocklist** de títulos (p. ej. «Los ilusos 13+13» dejó de enviarse) y frecuencia **cada 15 minutos** (workflow `formulatv_telegram`)
 - Si una fuente falla, se envían las demás
 
@@ -286,7 +286,7 @@ Junto con la reescritura de la web se amplió y formateó la distribución por T
 
 ### Tests
 
-**214 tests** con pytest, incluyendo los parsers de las 5 fuentes, la ventana de fechas, la blocklist, el dedup y el formato de ambos mensajes de Telegram.
+**224 tests** con pytest, incluyendo los parsers de las 9 fuentes, la ventana de fechas, la blocklist, el dedup/backfill y el formato de ambos mensajes de Telegram.
 
 ---
 
@@ -339,8 +339,8 @@ El scraper consulta las siguientes fuentes en orden:
 
 ## 8. Conclusiones
 
-Tech Pulse es el motor de contenido automatizado detrás de las secciones de noticias del blog: scraping de más de 570 fuentes, resúmenes con IA, newsletter diaria, notificaciones de noticias cada 30 minutos y estrenos de series y películas cada 15 minutos. La web es un gestor de fuentes minimalista desplegado en Surge, con actualización automática en cada push.
+Tech Pulse es el motor de contenido automatizado detrás de las secciones de noticias del blog: scraping de más de 620 fuentes, resúmenes con IA, newsletter diaria, notificaciones de noticias cada 30 minutos y estrenos de series y películas cada 15 minutos. La web es un gestor de fuentes minimalista desplegado en Surge, con actualización automática en cada push.
 
 👉 **[Abrir el Gestor de Fuentes](https://jorbencasdownloaderdocument.surge.sh)**
 
-*Pipeline de scraping de más de 570 fuentes con resúmenes generados por IA, distribución por Telegram y email, y web de gestión de fuentes con etiquetas de proyecto.*
+*Pipeline de scraping de más de 620 fuentes con resúmenes generados por IA, distribución por Telegram y email, y web de gestión de fuentes con etiquetas de proyecto.*
