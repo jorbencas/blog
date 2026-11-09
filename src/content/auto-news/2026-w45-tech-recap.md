@@ -3,7 +3,7 @@ title: "Weekly Tech Recap W45"
 description: "¿Otro Día de la Innovación a la vuelta de la esquina y la IA sigue siendo el centro de todo? Este lunes, con la efeméride en mente, la semana nos ha r"
 pubDate: "2026-11-07"
 author: "Jorge Beneyto Castelló"
-image: "public/img/arquitectura_web.webp"
+image: "img/2026_w45_tech_recap/2026_w45_tech_recap_cover-1200.webp"
 tags: ["tech", "weekly-recap", "ai", "hardware", "ciberseguridad", "devops", "postgresql", "llm", "devto", "xataka"]
 slug: "2026-w45-tech-recap"
 draft: true
