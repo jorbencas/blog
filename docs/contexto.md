@@ -1,6 +1,6 @@
 # Contexto del proyecto — Blog
 
-**Última actualización**: 2026-11-09 (Tech Pulse: contadores sincronizados con más fuentes)
+**Última actualización**: 2026-11-10 (Tech Pulse: contadores sincronizados con más fuentes)
 **Stack**: Astro 6.4 + Svelte 5 + Tailwind CSS 4.3 | Vercel static | Node >= 22
 **Idioma**: Español
 **Deploy**: `blog-jorbencas.vercel.app`
@@ -38,7 +38,7 @@
 | 2026-07 | **Post Docker**: Nuevo post `docker-instalacion-primeros-pasos.mdx` — instalación Linux/Windows, primer contenedor, Dockerfile, containerizar el blog paso a paso (9 pasos), Docker Desktop, complementos (Compose multi-servicio, volúmenes, redes, .env, comandos día a día, buenas prácticas). Dockerfile + docker-compose.yml + .dockerignore creados en raíz del blog |
 | 2026-07 | **Disqus comments**: Componente `Disqus.astro` añadido a `PostLayout.astro` — comentarios en todos los posts. Shortname: `jorbencas` |
 | 2026-11 | **Tech Pulse actualizado**: páginas del proyecto/guía reescritas (gestor de fuentes, 572 fuentes, 214 tests, estrenos y enlaces Telegram), enlaces mdtools retirados |
-| 2026-11 | **Tech Pulse contadores**: sincronizados con test_githubActions — 627 fuentes en FUENTES, 636 en el snapshot del gestor, 224 tests (añadidos Movistar+, 3 RSS de noticias y 55 fuentes al pipeline) |
+| 2026-11 | **Tech Pulse contadores**: sincronizados con test_githubActions — 628 fuentes en FUENTES, 637 en el snapshot del gestor, 224 tests (añadidos Movistar+, 3 RSS de noticias y 55 fuentes al pipeline) |
 
 ## Mejoras implementadas
 
