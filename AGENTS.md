@@ -264,6 +264,30 @@ These rules apply when writing or editing tutorial/guide posts (e.g. `guia-0-100
 - **Keep it tight** — no filler paragraphs. If a sentence doesn't add information, cut it.
 - **The reader is a developer** — assume they know programming basics but not the specific tool. Define acronyms and concepts the first time they appear.
 
+## Blog Post Writing Guidelines
+
+When writing a blog post, **fully develop every idea** step by step:
+
+### Required structure for technical posts:
+1. **Context**: What is this? What is it for? (1-2 paragraphs)
+2. **Prerequisites**: What do you need installed/configured?
+3. **Full step-by-step**: Each step must include:
+   - What command to run
+   - Where to run it (terminal, file, etc.)
+   - What to expect as output
+   - How to verify it worked
+4. **Why explanation**: Not just "do this", but "this is how it works because..."
+5. **Real examples**: Show the complete process from start to finish
+6. **Troubleshooting**: Common errors and how to fix them
+7. **Summary**: Table with commands and what they do
+
+### Rules:
+- **NO loose ideas**: Every concept must be fully developed
+- **NO assumptions**: Explain from scratch
+- **Include exact commands**: Copy+paste should work
+- **Show the real process**: Don't skip steps
+- **Include verification**: How to know each step worked
+
 ## Git Conventions
 - Commits in Spanish (castellano).
 - Scope prefix: `[blog]`, `[retos]`, `[herramientas]`, `[estilos]`, `[infra]`, `[recursos]`, `[config]`, `[ui]`, `[seo]`, `[scripts]`, `[cleanup]`
